@@ -1,0 +1,64 @@
+apply from: "gradle/vertx.gradle"
+apply plugin: 'scala'
+
+dependencies {
+	compile "org.entcore:common:$entCoreVersion"
+	testCompile "org.entcore:tests:$entCoreVersion"
+	testCompile 'io.gatling.highcharts:gatling-charts-highcharts:2.0.3'
+}
+
+javadoc {
+  options.encoding = 'UTF-8'
+  classpath  = configurations.provided
+  classpath += configurations.compile
+}
+
+repositories {
+    maven {
+        url "http://maven.web-education.net/nexus/content/groups/public"
+    }
+}
+
+task testJar(type: Jar) {
+  classifier = 'tests'
+  from sourceSets.test.output
+}
+
+task deploymentJar(type: Jar) {
+  classifier = 'deployment'
+  from 'deployment'
+}
+
+artifacts {
+  archives testJar
+  archives deploymentJar
+}
+
+configurations.all {
+	resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+def configurePom(def pom) {
+	pom.project {
+		description 'Competences (ent-core)'
+		inceptionYear '2018'
+		packaging 'zip'
+		url 'http://code.web-education.net/one/competences'
+
+		developers {
+			developer {
+				id 'CGI'
+				name 'CGI'
+				email 'laurent.potou@cgi.com'
+			}
+		}
+
+		scm {
+			url 'git@code.web-education.net:one/competences.git'
+		}
+
+		properties {
+			setProperty('project.build.sourceEncoding', 'UTF8')
+		}
+	}
+}

@@ -1,0 +1,11 @@
+{
+	"main" : "fr.openent.competences.Competences",
+	"port" : 8129,
+	"app-name" : "Competences",
+	"app-address" : "/competences",
+	"app-icon" : "Competences-large",
+	"app-displayName" : "Competences",
+	"mode": "dev",
+	"entcore.port" : 8090,
+	"auto-redeploy": false
+}

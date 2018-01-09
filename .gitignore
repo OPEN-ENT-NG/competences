@@ -1,0 +1,10 @@
+/build
+/bin
+.DS_Store
+.classpath
+.project
+/.gradle
+/.settings
+.jshintrc
+.idea
+Competences.iml
