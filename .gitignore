@@ -8,3 +8,10 @@
 .jshintrc
 .idea
 Competences.iml
+rev-manifest.json
+src/main/resources/public/dist
+src/main/resources/public/temp
+src/main/resources/public/js
+src/main/resources/public/template/entcore
+src/main/resources/view
+node_modules
