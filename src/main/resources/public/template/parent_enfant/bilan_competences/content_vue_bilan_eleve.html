@@ -1,0 +1,89 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div ng-include="'/viescolaire/public/templates/evaluations/setting.html'"></div>
+<div class="row">
+    <script type="text/ng-template"  id="tree_item_renderer.html">
+
+        <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }" class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1" ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
+        <div ng-class="{'openedSectionDom' : domaine.OpenDom}" ng-if="domaine.competences.all.length > 0" class="twelve cell" style='height: auto;'>
+
+            <h4 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine" ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom" ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
+            <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
+
+                <div class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
+
+                    <div tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                        [[competence.nom]]
+                    </div>
+                    <div class="five inline-block align-center align-top">
+                        <proportion-suivi-competence evaluations="competence.competencesEvaluations"
+                                                     filter="suiviFilter" user="me"
+                                                     is-classe="false"
+                                                     map-couleurs="mapCouleurs"
+                                                     map-lettres="mapLettres">
+
+                        </proportion-suivi-competence>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div ng-repeat="domaine in domaine.domaines.all | filter:FilterNotEvaluatedDomaine" ng-include="'tree_item_renderer.html'">
+        </div>
+    </script>
+
+    <div class="content-suivi-eleve card bilan-suivi-eleve">
+        <div ng-if="searchBilan.parDomaine === 'true'">
+            <div ng-repeat="domaine in evaluations.domaines.all" ng-include="'tree_item_renderer.html'">
+            </div>
+        </div>
+        <div ng-if="searchBilan.parDomaine === 'false'">
+            <div ng-repeat="enseignement in filteredEnseignements = (evaluations.enseignements.all | filter:FilterNotEvaluatedEnseignement)">
+                <h4 ng-class="{'openedDom' : enseignement.OpenDom, 'Domaine' : enseignement.competences.all.length > 0 }" class="margin-top-1em twelve cell " ng-click="enseignement.OpenDom = !enseignement.OpenDom" ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
+                <div ng-class="{'openedSectionDom' : enseignement.OpenDom}" class="twelve cell" style='height: auto;'>
+                    <div ng-repeat="connaissance in enseignement.competences.all | filter:FilterNotEvaluatedConnaissance">
+                        <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}" class="margin-top-1em Domaine" ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom" ng-init="connaissance.OpenSousDom = false">[[connaissance.nom]]</h3>
+                        <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0, 'openedSectionDom' : connaissance.OpenSousDom}" style='height: auto;'>
+                            <div class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)" ng-repeat="competence in connaissance.competences.all | filter:FilterNotEvaluated">
+
+                                <div tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                                    [[competence.nom]]
+                                </div>
+                                <div class="five inline-block align-center align-top">
+                                    <proportion-suivi-competence evaluations="competence.competencesEvaluations"
+                                                                 filter="suiviFilter" user="me"
+                                                                 is-classe="false"
+                                                                 map-couleurs="mapCouleurs"
+                                                                 map-lettres="mapLettres">
+
+                                    </proportion-suivi-competence>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="twelve-mobile centered ng-scope warning-bilan-eleve italic" ng-if="filteredEnseignements.length === 0">
+                <i18n>evaluation.bilan.eleve.empty</i18n>
+            </div>
+        </div>
+    </div>
+</div>

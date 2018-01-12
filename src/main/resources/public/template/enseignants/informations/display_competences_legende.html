@@ -1,0 +1,72 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+
+<div class="header">
+    <h2 ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
+                || route.current.$$route.originalPath.startsWith('/competences/classe')">
+        <i18n>viescolaire.utils.legend</i18n>
+    </h2>
+
+    <h2 ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
+            || template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')">
+        <i18n>viescolaire.utils.legend.conversion</i18n>
+    </h2>
+</div>
+
+<ul ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
+           || route.current.$$route.originalPath.startsWith('/competences/classe')" class="padding-five">
+    <li ng-repeat="niveau in structure.cycle.niveauCompetencesArray ">
+        <c-skills-bubble text="niveau.lettre" color="niveau.couleur"></c-skills-bubble>
+        <span>[[niveau.libelle]].</span>
+    </li>
+    <li><span class="rounded grey"></span><i18n>evaluations.competence.unevaluated</i18n>.</li>
+</ul>
+
+
+<ul ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
+            && route.current.$$route.originalPath.startsWith('/competences/classe')" class="padding-five">
+    <li ng-repeat="niveau in structure.cycle.niveauCompetencesArray ">
+        <c-skills-bubble text="niveau.lettre" color="niveau.couleur"></c-skills-bubble>
+        <span>[[niveau.ordre]].</span>
+    </li>
+    <li><span class="rounded grey"></span> &nbsp <i18n>evaluations.competence.unevaluated.abreviation</i18n></li>
+</ul>
+
+<div ng-if="(template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
+            || template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle'))
+            && route.current.$$route.originalPath.startsWith('/competences/eleve')" class="padding-five">
+    <ul class="conversion-legend bfc">
+        <li class="row" ng-repeat="Conversion in suiviCompetence.tableConversions.all track by $index">
+            <div class="inline-block legende-bfc-left">
+                <span class="maxval">[[Conversion.valmax.toFixed(2)]]</span>
+                <span class="last-minval" ng-if="$index === suiviCompetence.tableConversions.all.length - 1">[[Conversion.valmin.toFixed(2)]]</span>
+            </div>
+            <div class="inline-block legend-line" style="background-color: [[(mapCouleurs[Conversion.ordre-1])]]">
+                <span ng-if="$index === 0" class="tick first-tick"></span>
+                <span class="tick"></span>
+            </div>
+            <div class="inline-block legende-bfc-right">
+                <span class="libelle ellipsis cell conversion-libelle">
+                    [[Conversion.libelle]]
+                </span>
+            </div>
+        </li>
+    </ul>
+
+</div>

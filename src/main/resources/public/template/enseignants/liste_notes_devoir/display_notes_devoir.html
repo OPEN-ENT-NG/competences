@@ -1,0 +1,405 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+
+<lightbox show="printOption.display" class="" on-close="printOption.display=false; exportDevoirObj.errExport=false">
+    <h2><i18n>evaluations.export.format.pdf</i18n>&nbsp;:</h2>
+    <div class="checkbox-grid">
+        <label>
+            <input type="radio" ng-change=""  ng-model="printOption.fileType" value="cartouche">
+            <span>
+                    <i18n>evaluation.devoir.print.cartouches</i18n>
+                </span>
+        </label>
+        <label>
+            <input type="radio" ng-change=""  ng-model="printOption.fileType" value="formSaisie">
+            <span>
+                    <i18n>evaluation.devoir.print.form.saisie</i18n>
+             </span>
+        </label>
+        <label>
+            <input type="radio" ng-change="" ng-model="printOption.fileType" value="devoir">
+            <i18n>evaluations.devoir.print</i18n>
+        </label>
+    </div>
+    <div class="checkbox-grid additional-options" ng-if="printOption.fileType === 'cartouche'">
+        <div class="option-eleve cell">
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-model="printOption.byEleve" >
+                <span><i18n>evaluation.devoir.cartouche.eleve</i18n></span>
+            </label>
+            <span class="help-option-eleve-print" ><i class="help" tooltip="Cette option permet d'imprimer une cartouche par élève."></i></span>
+        </div>
+        <div class="cell">
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-model="printOption.inColor"
+                >
+                <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
+            </label>
+        </div>
+        <div class="cell">
+            <label >
+                <span><i18n>evaluation.devoir.cartouche.number</i18n></span>
+                <input class="nbr-Cartouche" ng-disabled="printOption.byEleve" type="number" ng-model="printOption.cartoucheNmb" min="1" max="80">
+            </label>
+        </div>
+    </div>
+    <div class="checkbox-grid additional-options" ng-if="printOption.fileType === 'devoir'">
+        <div class="cell">
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-model="printOption.inColor"
+                >
+                <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
+            </label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="warning"
+             ng-if="exportDevoirObj.errExport">
+            <i18n>evaluations.export.err</i18n>
+        </div>
+        <button ng-if="printOption.fileType !== 'devoir'" class ="right-magnet" ng-click="printCartouche()">
+            <i18n>evaluations.export</i18n>
+        </button>
+        <button ng-if="printOption.fileType === 'devoir'" class ="right-magnet"
+                ng-click="exportDevoir(currentDevoir.id, !printOption.inColor);">
+            <i18n>evaluations.export</i18n>
+        </button>
+    </div>
+</lightbox>
+
+<div class="row">
+    <!-- Panneau de choix des thèmes -->
+    <div ng-include="'/viescolaire/public/templates/evaluations/setting.html'"></div>
+
+    <div class="twelve cell">
+        <input style="display: none" type="button" i18n-value="evaluations.test.edit"
+               ng-if="isChefEtab()"
+               class="right-magnet">
+
+        <input type="button" ng-click="goTo('/devoir/[[currentDevoir.id]]/edit')" i18n-value="evaluations.test.edit"
+               ng-disabled="endSaisie"
+               ng-if="!isChefEtab()"
+               class="right-magnet" ng-class="{'button-edit-devoir' : currentDevoir.competences.all.length > 0,
+                                        'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
+        <button ng-show=" currentDevoir.competences.all.length > 0"
+                ng-click="printOption.display =true"
+                class="right-magnet ng-scope "
+                tooltip="evaluations.export.format.pdf"
+                ng-class="{'button-print-devoir' : currentDevoir.competences.all.length > 0}">
+            <i class="download">
+            </i>
+        </button>
+
+        <button  ng-show=" currentDevoir.competences.all.length === 0" ng-click="printCartouche('formsaisie')"   class="right-magnet ng-scope " ng-class="{'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
+            <i class="download">
+            </i></button>
+
+
+
+        <section ng-if="endSaisie" class="row twelve-mobile ng-scope">
+            <div class="six warning">
+                <i18n>evaluations.devoir.uncancelable</i18n>
+            </div>
+        </section>
+
+        <header style="margin-left: 5px;" class="header-releve header-notes twelve">
+            <h2><i18n>title</i18n> : <span>[[currentDevoir.name]]</span>
+            </h2>
+        </header>
+
+        <aside class="two cell">
+            <nav class="vertical hash-magnet floating zero-mobile scrolling"
+                 id="left-side-notes">
+            <div class="menuLeftStyle detail-devoir criterion card" ng-class="{opened : openedDetails === true}">
+                <div class="header">
+                    <span class="plus-input" ng-click="openedDetails = !openedDetails"></span>
+                    <h2 ng-click="openedDetails = !openedDetails"><i18n>evaluations.homework.details</i18n></h2>
+                </div>
+                <div>
+                    <section ng-if="currentDevoir.libelle !== null">
+                        <label><i18n class="bold">viescolaire.utils.description</i18n> : [[currentDevoir.libelle]]</label>
+                    </section>
+                    <section ng-if="isChefEtab()">
+                        <span class="bold"><i18n>evaluations.test.teacher</i18n></span> : [[currentDevoir.teacher]]
+                    </section>
+                    <section><span class="bold"><i18n>viescolaire.utils.class</i18n></span> : [[getClasseData(currentDevoir.id_groupe, 'name')]]</section>
+
+                    <section>
+                        <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[getLibelleMatiere(currentDevoir.id_matiere)]]</label>
+                    </section>
+                    <section ng-show="currentDevoir.id_sousmatiere!== null">
+                        <label>
+                            <i18n class="bold">viescolaire.utils.undersubject</i18n> : [[getLibelleSousMatiere(currentDevoir.id_sousmatiere)]]
+                        </label>
+                    </section>
+                    <section>
+                        <label><i18n class="bold">viescolaire.utils.periode</i18n> : [[getI18nPeriode(currentDevoir.periode) + currentDevoir._periode_ordre]]</label>
+                    </section>
+                    <section ng-if="currentDevoir.is_evaluated">
+                        <label><i18n class="bold">viescolaire.utils.coefficient</i18n> : [[currentDevoir.coefficient]]</label>
+                    </section>
+                    <section ng-if="currentDevoir.is_evaluated">
+                        <label><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[currentDevoir.diviseur]]</label>
+                    </section>
+                </div>
+            </div>
+            <div  class="menuLeftStyle statistiques-devoir criterion card" ng-class="{opened : openedStatistiques === true}">
+                <div class="header">
+                    <span class="plus-input" ng-click="openedStatistiques = !openedStatistiques"></span>
+                    <h2 ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
+                </div>
+                <div ng-if="currentDevoir.is_evaluated">
+                    <section><i18n class="bold">evaluation.classe.average</i18n> : <span style="color: #1785E6;font-weight: bold;">[[currentDevoir.statistiques.moyenne | number:2]]</span></section>
+                    <section><i18n class="bold">evaluations.grade.min</i18n> : <span style="color: #E61758;font-weight: bold;">[[currentDevoir.statistiques.noteMin | number:2]]</span></section>
+                    <section><i18n class="bold">evaluations.grade.max</i18n> : <span style="color: #48C593;font-weight: bold;">[[currentDevoir.statistiques.noteMax | number:2]]</span></section>
+                </div>
+                <div>
+                    <progress-bar max="100" filled="currentDevoir.statistiques.percentDone" unit="%"></progress-bar>
+                </div>
+            </div>
+
+                    <div class="marginFive card">
+                        <div class="fiche student-info" ng-class="{opened : openedStudentInfo == true}">
+                            <span class="plus-input" ng-click="openedStudentInfo = !openedStudentInfo"></span>
+                            <container class="cell tailleMax" template="leftSide-userInfo"
+                                       id="notes-devoir-student-info"></container>
+                        </div>
+                    </div>
+            </nav>
+        </aside>
+
+        <section class="cell eight" ng-if="currentDevoir.competences.all.length > 0">
+            <infotip name="saisie-notes-tutorial" class="info marginFive">
+                <strong><i18n>tuto.title</i18n></strong>
+                <br /><i18n>tuto.bienvenu</i18n>
+                <br /><i18n>tuto.raccourci</i18n>
+                <ul class="tuto-legend">
+                    <li>
+                        <c-skills-bubble color="'#555'" text="'0'" classes="'alignVertical'">
+                        </c-skills-bubble>
+                    </li>
+                    <li ng-repeat="niveau in structure.cycle.niveauCompetencesArray | orderBy:'ordre'" class="ng-scope">
+                        <c-skills-bubble color="niveau.couleur" text="niveau.ordre" classes="'alignVertical'">
+                        </c-skills-bubble>
+                    </li>
+
+                </ul>
+            </infotip>
+        </section>
+        <section class="cell" ng-class="{eight : currentDevoir.competences.all.length > 0, ten : currentDevoir.competences.all.length === 0}">
+            <div class="marginFive">
+                <div class="card">
+                    <content class="block row">
+
+                        <div class="devoirs-header" id="liste-notes-devoir-header" current-devoir="currentDevoir" sticky offset="64" confine="true">
+                            <div class="align-center">
+                                <c-skills-color-page devoir="currentDevoir" selected-competences="selected.competences.list"
+                                                     selected-eleves="selected.eleves" ng-if="currentDevoir.competences.all.length > 0"
+                                                     niveau-competences="niveauCompetences"
+                                ></c-skills-color-page>
+                            </div>
+                            <div ng-if="currentDevoir.competences.all.length > 0" class="one inline-block  cell coche-case">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-checked="selected.eleves.all || (selected.eleves.list.length === currentDevoir.eleves.all.length)"
+                                           ng-click="selectAllEleveListe()">
+                                    <span></span>
+                                </label>
+                            </div>
+                            <div class="two indent-fifteen inline-block cell-indent cell">
+                                <i18n>viescolaire.utils.student</i18n>
+                            </div>
+                            <div ng-if="!currentDevoir.is_evaluated" class="header-grade-disable one inline-block cell-indent cell" tooltip="L' évaluation numérique est désactivée">
+                                <i18n>evaluations.grade</i18n>
+                            </div>
+                            <div ng-if="currentDevoir.is_evaluated" class="one inline-block cell-indent cell">
+                                <i18n>evaluations.grade</i18n>
+                            </div>
+                            <!--ng-class="{'six' : currentDevoir.competences.all.length > 7, 'four' : currentDevoir.competences.all.length < 8}"-->
+                            <div class="inline-block cell-indent competence-text-overflow cell four"
+                                 ng-if="currentDevoir.competences.all.length > 0">
+                                    <i18n style="padding-left: 20px;">evaluations.test.competences</i18n>
+                                    <i class="help" ng-click="getInfoCompetencesDevoir()"></i>
+                                    <span id="competence-detail" tooltip=""></span>
+                            </div>
+                            <div class="inline-block cell-indent cell"
+                                 ng-if="currentDevoir.competences.all.length < 8"
+                                 ng-class="{four : currentDevoir.competences.all.length > 0 && currentDevoir.competences.all.length < 8,
+                                            nine: currentDevoir.competences.all.length == 0}">
+                                <i18n>viescolaire.utils.appreciation</i18n>
+
+                                <div class="visiApprec inline-block"
+                                     ng-click="switchVisibilityApprec(currentDevoir)">
+                                    <i ng-class="{'eye-slash': !currentDevoir.apprec_visible, 'eye-open': currentDevoir.apprec_visible}"></i>
+                                    <span ng-if="!currentDevoir.apprec_visible"
+                                      tooltip="evaluations.devoir.appreciation.tooltip.hide">&nbsp;</span>
+                                    <span ng-if="currentDevoir.apprec_visible"
+                                          tooltip="evaluations.devoir.appreciation.tooltip.show">&nbsp;</span>
+                                </div>
+                            </div>
+                            <div class="visiApprec inline-block right-magnet cell alone"
+                                 ng-click="switchVisibilityApprec(currentDevoir)"
+                                 ng-if="currentDevoir.competences.all.length >= 8">
+                                <i ng-class="{'eye-slash': !currentDevoir.apprec_visible, 'eye-open': currentDevoir.apprec_visible}"></i>
+                                <span ng-if="!currentDevoir.apprec_visible"
+                                      tooltip="evaluations.devoir.appreciation.tooltip.hide">&nbsp;</span>
+                                <span ng-if="currentDevoir.apprec_visible"
+                                      tooltip="evaluations.devoir.appreciation.tooltip.show">&nbsp;</span>
+                            </div>
+                        </div>
+                        <div class="expandable-liste notes-devoir-liste" c-navigable-competences>
+                            <div class="expandable row"  ng-if="currentDevoir.competences.all.length > 0">
+                                <div class="four cell">
+                                    &nbsp;
+                                </div>
+                                <div ng-class="{'seven' : currentDevoir.competences.all.length > 7, 'four' : currentDevoir.competences.all.length < 8}"
+                                     class="cell cell-indent" style="padding: 10px 0 5px 10px;">
+                                    <c-skills-color-column devoir="currentDevoir"
+                                                           name-function="buildCompetenceNom" selected-eleves="selected.eleves.list"
+                                                           selected-competences="selected.competences.list" check="selectObject"></c-skills-color-column>
+                                </div>
+                                <div class="cell" ng-class="{one : currentDevoir.competences.all.length ===8, seven : currentDevoir.competences.all.length < 8}">
+                                </div>
+                            </div>
+
+                            <div ng-repeat="eleve in currentDevoir.eleves.all track by $index" ng-class="{openedEleve : openedEleve === $index}">
+
+                                <div class="expandable navigable-row twelve">
+                                    <div class="row navigable-inputs-row">
+                                        <div ng-if="currentDevoir.competences.all.length > 0" class="one inline-block coche-case cell">
+                                            <label class="checkbox">
+                                                <input type="checkbox" ng-model="eleve.selected"
+                                                       ng-init="eleve.selected = false"
+                                                       ng-click="getEleveInfo(eleve);selectEleveListe(eleve)"
+                                                       ng-disabled="eleve.evaluation.id_annotation !== undefined && eleve.evaluation.id_annotation > 0">
+                                                <span></span>
+                                            </label>
+                                        </div>
+                                        <div class="two cell cell-indent expandable-content text-overflow" ng-click="getEleveInfo(eleve);expandNote($index, false)">
+                                            [[eleve.lastName]] [[eleve.firstName]]
+                                        </div>
+
+                                        <div ng-class="{'navigable-cell' : currentDevoir.is_evaluated}" class="one cell cell-input">
+
+                                            <input-text-list items="getListeAnnotations(evaluations,eleve.evaluation)"
+                                                             display-attribute-list="libelle"
+                                                             display-attribute-input="libelle_court"
+                                                                 disabled-input="!currentDevoir.is_evaluated || endSaisie"
+                                                             model="eleve.evaluation"
+                                                             model-attribute="valeur"
+                                                             validation-item-function="saveNoteDevoirEleve(eleve.evaluation, $event, eleve)"
+                                                             get-eleve-info="getEleveInfo"
+                                                             autofocus="$index === 0 && currentDevoir.is_evaluated"
+                                                             error="(eleve.evaluation.valid !== undefined && eleve.evaluation.valid === false)"
+                                                             template="leftSide-userInfo"
+                                                             template-path="../templates/evaluations/enseignants/informations/display_eleve"
+                                                             focus-items="informations"
+                                                             focus-items-attribute="eleve"
+                                                             focus-item="eleve"
+                                            />
+                                        </div>
+                                        <div ng-class="{'seven' : currentDevoir.competences.all.length > 7, 'four' : currentDevoir.competences.all.length < 8}"
+                                             class="cell cell-indent expandable-content"
+                                             ng-click="getEleveInfo(eleve);expandNote($index, false)"
+                                             ng-if="currentDevoir.competences.all.length > 0 ">
+                                            <ul class="skills-eleve-list" ng-if="(eleve.evaluation.id_annotation === undefined || eleve.evaluation.id_annotation === -1)">
+                                                <li ng-mouseenter="highlightCompetence(competence.id_competence, true)"
+                                                    ng-mouseleave="highlightCompetence(competence.id_competence, false)"
+                                                    class="navigable-cell competences-cell"
+                                                    ng-repeat="competence in eleve.evaluation.competenceNotes.all">
+                                                    <c-skill-note-devoir focus="highlightCompetence"
+                                                                         get-eleve-info="getEleveInfo",
+                                                                         eleve="eleve",
+                                                                         eleves="currentDevoir.eleves.all",
+                                                                         blur="highlightCompetence"
+                                                                         current-devoir="currentDevoir"
+                                                                         nb-eleve="currentDevoir.eleves.all.length"
+                                                                         nb-competences-devoir="currentDevoir.competences.all.length"
+                                                                         competence="competence"
+                                                                         index-row="$parent.$index"
+                                                                         index-column="$index"
+                                                                         selected-competences="selected.competences.list"
+                                                                         map-couleurs="mapCouleurs"
+                                                                         map-lettres="mapLettres"
+                                                    ></c-skill-note-devoir>
+                                                </li>
+                                            </ul>
+                                            <div ng-if="(eleve.evaluation.id_annotation !== undefined && eleve.evaluation.id_annotation > -1)">
+                                                &nbsp;
+                                            </div>
+                                        </div>
+                                        <div  ng-if="currentDevoir.competences.all.length > 7" class="cell cell-input add-appreciation" >
+                                            <!--<i class="icon-chat" tooltip="[[translate('viescolaire.utils.appreciation.add')]]" ng-click="addAppreciation(eleve)"></i>-->
+                                            <i ng-if="eleve.evaluation.appreciation !== null
+                                            && eleve.evaluation.appreciation !== undefined
+                                            && eleve.evaluation.appreciation.trim() !== ''"
+                                               class="appreciation icon-chat"
+                                               tooltip="[[translate('viescolaire.utils.appreciation.edit')]]"
+                                               ng-click="getEleveInfo(eleve);expandAppreciation($index, true)">
+                                            </i>
+
+                                            <i ng-if="eleve.evaluation.appreciation === null
+                                            || eleve.evaluation.appreciation === undefined
+                                            || eleve.evaluation.appreciation.trim() === ''"
+                                               class="icon-chat"
+                                               tooltip="[[translate('viescolaire.utils.appreciation.add')]]"
+                                               ng-click="getEleveInfo(eleve);expandAppreciation($index, true)">
+                                            </i>
+                                        </div>
+                                        <div ng-class="{nine : currentDevoir.competences.all.length === 0, four : currentDevoir.competences.all.length > 0}"
+                                             class="cell cell-input " ng-if="currentDevoir.competences.all.length < 8">
+                                            <input type="text" class="eleven input-appreciation" name="appreciation"
+                                                   ng-disabled="endSaisie"
+                                                   ng-model="eleve.evaluation.appreciation" ng-blur="saveNoteDevoirEleve(eleve.evaluation, $event)"
+                                                   ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div ng-if="currentDevoir.competences.all.length > 7"
+                                     class="twelve ng-scope"
+                                     ng-class="{'hide-appreciation' :openedEleve !== $index ,'show-appreciation' : openedEleve === $index && currentDevoir.competences.all.length > 7}">
+
+                                    <div class="row">
+                                        <div class="twelve cell" style="margin: 5px 0;" >
+                                            <input ng-class="{'display-none' :openedEleve !== $index ,'display-block' : openedEleve === $index && currentDevoir.competences.all.length > 7}"
+                                                   placeholder="[[translate('viescolaire.utils.appreciation.add')]]" type="text" class="twelve cell input-appreciation" name="appreciation"
+                                                   ng-model="eleve.evaluation.appreciation"
+                                                   ng-blur="saveNoteDevoirEleve(eleve.evaluation, $event);expandAppreciation($index, true, $event);"
+                                                   ng-focus="getEleveInfo(eleve);expandAppreciation($index, false);"
+                                                   ng-disabled="endSaisie"
+                                                   style="font-style: oblique;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </content>
+                </div>
+            </div>
+        </section>
+        <aside class="two cell card recap-liste-competence-container" ng-if="currentDevoir.competences.all.length > 0">
+            <ul class="recap-liste-competence">
+                <li class="competence" ng-class="{highlighted : competence.hovered}" ng-repeat="competence in currentDevoir.competences.all">[[buildCompetenceNom(competence)]]</li>
+            </ul>
+        </aside>
+    </div>
+</div>

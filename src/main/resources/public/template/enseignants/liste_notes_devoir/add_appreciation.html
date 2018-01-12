@@ -1,0 +1,7 @@
+<h2><i18n>viescolaire.utils.appreciation.add.student</i18n> [[selected.eleve.lastName]] [[selected.eleve.firstName]]</h2>
+<h4><i18n>viescolaire.utils.devoir</i18n> : [[currentDevoir.name]]</h4>
+<h4 ng-if="selected.eleve.evaluation.valeur !== ''"><i18n>evaluations.test.value</i18n> : [[selected.eleve.evaluation.valeur]]</h4>
+<div class="appreciation--form">
+    <textarea name="" id="" cols="30" rows="10" ng-model="selected.eleve.evaluation.appreciation"></textarea>
+</div>
+<input type="button" class="right" i18n-value="viescolaire.utils.save" ng-click="saveNoteDevoirEleve(selected.eleve.evaluation, $event, selected.eleve)">

@@ -1,0 +1,77 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+
+<article class="titre-widget ten centered">
+    <h2><i18n>viescolaire.eleve.recherche</i18n></h2>
+    <autocomplete options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
+</article>
+<article class="ten card twelve-mobile centered" ng-if="suiviCompetence === undefined">
+    <i18n>evaluation.suivi.eleve.empty</i18n>
+</article>
+<div class="content-suivi-eleve twelve-mobile ten card"
+     ng-if="informations.eleve !== '' && informations.eleve !== undefined && suiviCompetence !== undefined">
+
+    <div class="twelve suivi-eleve-ctl" sticky offset="64">
+        <h2 class="align-center">
+            <i class="previous cell" ng-click="incrementEleve(-1)"></i>
+            [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+            <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
+        </h2>
+        <div ng-show="!opened.detailCompetenceSuivi"
+             ng-include="'/viescolaire/public/templates/evaluations/enseignants/suivi_competences_eleve/content_buttons.html'"></div>
+
+        <div ng-show="opened.detailCompetenceSuivi" class="twelve">
+            <div>
+                <a class="button twelve-mobile"  ng-disabled="search.periode.id == undefined" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
+                <a class="button twelve-mobile" ng-disabled="search.periode.id == undefined" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
+            </div>
+            <div class="right-magnet">
+                <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
+                    <i class="icon-back"></i>
+                </a>
+                <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_tableau') }"
+                   ng-click="template.open('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_tableau')"
+                   tooltip="evaluations.suivi.eleve.vue.liste"></i>
+                <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_graph') }"
+                   ng-click="template.open('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_graph')"
+                   tooltip="evaluations.suivi.eleve.vue.graph"></i>
+            </div>
+        </div>
+
+    </div>
+    <div class="suivi-eleve-slider">
+        <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
+            <container template="suivi-competence-content"></container>
+        </div>
+        <div class="detail-competence inline-block six " ng-show="opened.detailCompetenceSuivi">
+            <div ng-show="messages.successEvalLibre" class="info">
+                <i18n>evaluations.evaluation.libre.add.success</i18n>
+            </div>
+            <lightbox show="opened.lightboxEvalLibre" on-close="opened.lightboxEvalLibre=false">
+                <container template="lightboxContainerEvalLibre"></container>
+            </lightbox>
+            <h2 class="ellipsis ten align-center">
+                [[detailCompetence.nom]]
+            </h2>
+
+            <container template="suivi-competence-detail"></container>
+        </div>
+    </div>
+</div>
+<div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_construction_page.html'"></div>

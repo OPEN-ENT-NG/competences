@@ -1,0 +1,207 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="row pannel-in-cell addRemplacement">
+        <div class="twelve cell addRemplacementTable">
+            <div ng-if="gestionRemplacement.showError" class="warning">
+                <i18n>evaluations.remplacement.existe.deja.error</i18n>
+            </div>
+            <!-- Ajouter un remplacement -->
+            <div class="cell twelve legend">
+                <h4>
+                    <i18n>evaluations.remplacement.add</i18n>
+                </h4>
+
+            </div>
+            <div class="cell twelve">
+
+                <!-- Titulaire -->
+                <section class="row twelve-mobile">
+                    <div class="three cell addRemplacementTable__libelle twelve-mobile">
+                        <i18n>evaluations.remplacement.titulaire</i18n>
+                        <i class="asterisk obligatoire"></i>
+                    </div>
+
+                    <div class="five cell twelve-mobile">
+                        <label class="select">
+                            <select  ng-model="gestionRemplacement.remplacement.titulaire" ng-options="enseignant.displayName for enseignant in gestionRemplacement.enseignants.all">
+                                <option class="header-opt" value="">[[translate('evaluations.remplacement.titulaire')]]</option>
+                            </select>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Remplacent -->
+                <section class="row twelve-mobile">
+                    <div class="three cell addRemplacementTable__libelle twelve-mobile">
+                        <i18n>evaluations.remplacement.remplacant</i18n>
+                        <i class="asterisk obligatoire"></i>
+                    </div>
+
+                    <div class="five cell twelve-mobile">
+                        <label class="select">
+                            <select ng-model="gestionRemplacement.remplacement.remplacant" ng-options="enseignant.displayName for enseignant in gestionRemplacement.enseignants.all">
+                                <option class="header-opt" value="">[[translate('evaluations.remplacement.remplacant')]]</option>
+                            </select>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="row twelve-mobile">
+                    <!-- Date début -->
+                    <div class="three cell addRemplacementTable__libelle twelve-mobile">
+                        <i18n>evaluations.remplacement.debut</i18n>
+                        <i class="asterisk obligatoire"></i>
+                    </div>
+
+                    <div class="nine cell twelve-mobile">
+                        <date-picker ng-init="" style="margin: 10px 0;" ng-model="gestionRemplacement.remplacement.date_debut" class="four" ng-change="showDate = true;"></date-picker>
+                    </div>
+                </section>
+
+                <section class="row twelve-mobile">
+                    <!-- Date fin -->
+                    <div class="three cell addRemplacementTable__libelle twelve-mobile">
+                        <i18n>evaluations.remplacement.fin</i18n>
+                        <i class="asterisk obligatoire"></i>
+                    </div>
+
+                    <div class="nine cell twelve-mobile">
+                        <date-picker style="margin: 10px 0;" ng-model="gestionRemplacement.remplacement.date_fin" class="four" ng-change="showDate = true;"></date-picker>
+                    </div>
+                </section>
+
+                <section class="row twelve-mobile">
+                    <div class="three cell addRemplacementTable__libelle twelve-mobile">
+                    </div>
+
+                    <div class="nine cell twelve-mobile">
+                        <input type="button" ng-click="saveNewRemplacement()"
+                               ng-disabled="controleNewRemplacementForm()" i18n-value="evaluations.remplacement.ajouter">
+                    </div>
+                </section>
+
+                <div style="margin-top: 50px" class="separator"/>
+
+            </div>
+
+
+            <!-- Liste des remplacements en cours -->
+            <div class="cell twelve legend">
+                <h4>
+                    <i18n>evaluations.remplacement.en.cours</i18n>
+                </h4>
+
+            </div>
+
+            <div class="cell twelve">
+
+                <h2 ng-if="gestionRemplacement.remplacements.all.length === 0">
+                    <i18n>evaluations.remplacement.aucun</i18n>
+                </h2>
+
+                <table ng-if="gestionRemplacement.remplacements.all.length > 0" class="ten responsive-table listRemplacementsTable">
+                    <thead>
+                    <tr>
+                        <th>
+                            <!-- selection multiple -->
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="gestionRemplacement.selectAll" ng-change="selectAllRemplacements()">
+                                <span></span>
+                            </label>
+                        </th>
+                        <th ng-click="gestionRemplacement.sortType = 'titulaire.displayName'; gestionRemplacement.sortReverse =!gestionRemplacement.sortReverse">
+                            <i18n>evaluations.remplacement.titulaire</i18n>
+                            <span ng-show="gestionRemplacement.sortType == 'titulaire.displayName' && !gestionRemplacement.sortReverse" class="sort-desc"></span>
+                            <span ng-show="gestionRemplacement.sortType == 'titulaire.displayName' && gestionRemplacement.sortReverse" class="sort-asc"></span>
+                        </th>
+                        <th ng-click="gestionRemplacement.sortType = 'remplacant.displayName'; gestionRemplacement.sortReverse =!gestionRemplacement.sortReverse">
+                            <i18n>evaluations.remplacement.remplacant</i18n>
+                            <span ng-show="gestionRemplacement.sortType == 'remplacant.displayName' && !gestionRemplacement.sortReverse" class="sort-desc"></span>
+                            <span ng-show="gestionRemplacement.sortType == 'remplacant.displayName' && gestionRemplacement.sortReverse" class="sort-asc"></span>
+                        </th>
+                        <th ng-click="gestionRemplacement.sortType = 'date_debut'; gestionRemplacement.sortReverse =!gestionRemplacement.sortReverse">
+                            <i18n>evaluations.remplacement.debut</i18n>
+                            <span ng-show="gestionRemplacement.sortType == 'date_debut' && !gestionRemplacement.sortReverse" class="sort-desc"></span>
+                            <span ng-show="gestionRemplacement.sortType == 'date_debut' && gestionRemplacement.sortReverse" class="sort-asc"></span>
+                        </th>
+                        <th ng-click="gestionRemplacement.sortType = 'date_fin'; gestionRemplacement.sortReverse =!gestionRemplacement.sortReverse">
+                            <i18n>evaluations.remplacement.fin</i18n>
+                            <span ng-show="gestionRemplacement.sortType == 'date_fin' && !gestionRemplacement.sortReverse" class="sort-desc"></span>
+                            <span ng-show="gestionRemplacement.sortType == 'date_fin' && gestionRemplacement.sortReverse" class="sort-asc"></span>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="remplacement in gestionRemplacement.remplacements.all | orderBy:gestionRemplacement.sortType:gestionRemplacement.sortReverse">
+                        <td>
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="remplacement.selected" ng-change="selectRemplacement(remplacement)">
+                                <span></span>
+                            </label>
+                        </td>
+                        <td>[[remplacement.titulaire.displayName]]</td>
+                        <td>[[remplacement.remplacant.displayName]]</td>
+                        <td>[[getDateFormated(remplacement.date_debut)]]</td>
+                        <td>[[getDateFormated(remplacement.date_fin)]]</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+
+
+
+    <section class="toggle-buttons" ng-class="{ hide: gestionRemplacement.selectedRemplacements.length === 0 }">
+        <div class="toggle">
+            <div class="row">
+
+                <button ng-show="gestionRemplacement.selectedRemplacements.length === 1" class="cell ng-scope"
+                        onclick="alert('Fonctionnalité bientôt disponible')">
+                    <i18n><span class="no-style">evaluations.remplacement.edit</span></i18n>
+                </button>
+
+                <button class="cell ng-scope" ng-click="gestionRemplacement.confirmation = true">
+                    <i18n><span class="no-style">evaluations.remplacement.delete</span></i18n>
+                </button>
+
+            </div>
+        </div>
+    </section>
+
+    <lightbox  show="gestionRemplacement.confirmation" on-close="gestionRemplacement.confirmation = false">
+        <h4>
+            <i18n>evaluations.remplacement.delete.message</i18n>
+        </h4>
+
+        <p>
+            <i18n>evaluations.remplacement.confirm.delete</i18n>
+        </p>
+
+
+        <button class="marginFive" ng-click="deleteSelectedRemplacement()">
+            <i18n>evaluations.remplacement.delete</i18n>
+        </button>
+        <button class="marginFive" ng-click="gestionRemplacement.confirmation = false">
+            <i18n>evaluations.remplacement.cancel</i18n>
+        </button>
+    </lightbox>
+
+</div>

@@ -1,0 +1,39 @@
+<microbox>
+    <aside class="twelve cell twelve-mobile">
+        <nav class="twelve twelve-mobile scrolling"
+             id="left-side-notes">
+            <div class="menuLeftStyle detail-devoir criterion card opened">
+
+            <div class="header">
+                <h2><i18n>viescolaire.utils.criterion</i18n></h2>
+            </div>
+                <div>
+            <section>
+                <label class="select">
+                    <select ng-model="searchBilan.periode"
+                            ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all track by periode.id" ng-change="changePeriode()">
+                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
+                    </select>
+                </label>
+
+                <p>
+                    <input type="radio" ng-model="searchBilan.parDomaine" value="false">
+                    <span>
+                            <i18n>evaluation.search.by.enseignements</i18n>
+                        </span>
+                </p>
+                <p>
+                    <input type="radio" ng-model="searchBilan.parDomaine" value="true">
+                    <span>
+                            <i18n>evaluation.search.by.domaines</i18n>
+                        </span>
+                </p>
+            </section>
+                </div>
+        </div>
+        <div class="legend menuLeftStyle criterion card"
+             ng-include="'/viescolaire/public/templates/evaluations/parent_enfant/bilan_competences/display_competences_legende.html'">
+        </div>
+        </nav>
+    </aside>
+</microbox>

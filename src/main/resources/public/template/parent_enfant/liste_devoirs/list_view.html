@@ -1,0 +1,162 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="list-view twelve-mobile" ng-if="!checkHaveResult()">
+    <article class="twelve card twelve-mobile centered ng-scope" >
+        <i18n>evaluation.student.list.empty</i18n>
+    </article>
+</div>
+<div class="list-view twelve-mobile" ng-if="checkHaveResult()" >
+    <div class="responsive-table list-devoirs">
+
+        <table>
+            <thead sticky offset="64">
+            <tr>
+                <th class="one-mobile  one ellipsis" ng-click="sortBy('date')">
+                    <i18n>viescolaire.utils.date</i18n>
+                    <span ng-show="propertyName === 'date'"
+                          ng-class="{'up-open':reverse  ,'down-open':!reverse}">
+                    </span>
+                </th>
+                <th class="three-mobile three ellipsis"
+                    ng-click="sortBy('id_matiere')">
+                    <i18n>viescolaire.utils.subject</i18n>
+                    <span ng-show="propertyName === 'id_matiere'"
+                          ng-class="{'up-open':reverse  ,'down-open':!reverse}">
+                    </span>
+                </th>
+                <th class="three-mobile three ellipsis"
+                    ng-click="sortBy('name')">
+                    <i18n>viescolaire.utils.name</i18n>
+                    <span ng-show="propertyName === 'name'"
+                          ng-class="{'up-open':reverse  ,'down-open':!reverse}">
+                    </span>
+                </th>
+                <th class="three-mobile two ellipsis"
+                    ng-click="sortBy('enseignant')">
+                    <i18n>viescolaire.utils.teacher</i18n>
+                    <span ng-show="propertyName === 'enseignant'"
+                          ng-class="{'up-open':reverse  ,'down-open':!reverse}">
+                    </span>
+                </th>
+                <th class="one-mobile one ellipsis"
+                    ng-click="sortBy('competences')">
+                    <i18n>evaluations.skills.nb</i18n>
+                    <span ng-show="propertyName === 'competences'"
+                          ng-class="{'up-open':reverse  ,'down-open':!reverse}">
+                    </span>
+                </th>
+                <th class="one-mobile one ellipsis"
+                    ng-click="sortBy('noteAnnotation')">
+                    <i18n>viescolaire.evaluation.note</i18n>
+                    <span ng-show="propertyName === 'noteAnnotation'"
+                          ng-class="{'up-open':reverse  ,'down-open':!reverse}">
+                    </span>
+                </th>
+
+                <th class="zero-mobile one ellipsis"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr  ng-class="{'opened shadowOne' : openedDevoir === $index}"
+                    ng-repeat-start="devoir in devoirs.all| orderBy:propertyName:reverse| customSearchFilters:search  | filter:search.name ">
+                <td  ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                        data-label="[[translate('viescolaire.utils.date')]]">
+                    <div class="firstElem">[[getDateFormated(devoir.date)]]
+                    </div>
+                </td>
+                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                        class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]" >
+                    <div class="competence-text-overflow">[[getLibelleMatiere(devoir.id_matiere)]]</div>
+                </td>
+                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                        class="testAlignLeft" data-label="[[translate('viescolaire.utils.name')]]">
+                    <div class="competence-text-overflow">[[devoir.name]]</div>
+                </td>
+                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                        class="testAlignLeft" data-label="[[translate('viescolaire.utils.teacher')]]">
+                    <div class="competence-text-overflow">[[getTeacherDisplayName(devoir.owner)]]</div>
+                </td>
+                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                        ng-if="devoir.competences.length !== undefined"
+                     data-label="[[translate('evaluations.skills.nb')]]">
+                    <div>[[devoir.competences.length]]</div>
+                </td>
+                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                        ng-if="devoir.annotation === undefined"
+                    data-label="[[translate('viescolaire.evaluation.note')]]">
+                    <div>[[(devoir.note !== -1) ? devoir.note : "&nbsp;"]]</div>
+                </td>
+                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                        ng-if="devoir.annotation !== undefined"
+                    data-label="[[translate('viescolaire.evaluation.note')]]">
+                    <div>[[devoir.annotation.libelle_court]]</div>
+                </td>
+                <td class="one cell-check expandable-content zero-mobile">
+                    <div class="lastElem"> <span class="plus-input" ng-click="expand($index, true)"></span></div>
+                </td>
+            </tr>
+            <tr ng-repeat-end
+                class="zero-mobile"
+                ng-class="{'zero': openedDevoir !== $index, 'opened shadowTwo' : openedDevoir === $index}">
+                <td class="one"></td>
+                <td class="three expandable-content testAlignLeft" >
+                   <span ng-if="devoir.is_evaluated && devoir.annotation === undefined">
+                        <i18n>evaluations.test.ramenersur</i18n>
+                        : <span class="italic">
+                            <span ng-if="devoir.ramener_sur === true">
+                                <i18n>evaluations.test.ramenersur.true</i18n>
+                            </span>
+                            <span ng-if="devoir.ramener_sur === false">
+                                <i18n>evaluations.test.ramenersur.false</i18n>
+                            </span>
+                        </span>
+                    </span>
+                </td>
+                <td class="three expandable-content testAlignLeft">
+                   <span>
+                        <i18n>viescolaire.utils.type</i18n>
+                        : <span class="italic">
+                       [[devoir._type_libelle]]
+                        </span>
+                    </span>
+                </td>
+                <td class="six expandable-content" colspan="4">
+                    <span ng-if="devoir.competences.length > 0 && devoir.annotation === undefined ">
+                        <i18n>evaluations.competences.title</i18n>
+                        :</span>
+                    <div ng-if="devoir.competences.length > 0 && devoir.annotation === undefined"
+                         class="nine inline-block align-center align-top">
+                        <proportion-suivi-competence evaluations="devoir.competences"
+                                                     filter="suiviFilter" user="me"
+                                                     is-classe="false"
+                                                     map-couleurs="mapCouleurs"
+                                                     map-lettres="mapLettres">
+                        </proportion-suivi-competence>
+                    </div>
+                    <div ng-if="devoir.competences === undefined"
+                         class="three inline-block align-center align-top"
+                         tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>

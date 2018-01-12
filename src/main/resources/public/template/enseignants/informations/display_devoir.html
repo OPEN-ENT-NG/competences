@@ -1,0 +1,46 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="fiche devoir-info" ng-class="{opened : openedDevoirInfo === true}">
+    <span class="plus-input" ng-click="openLeftMenu('openedDevoirInfo', openedDevoirInfo);"></span>
+    <h2 tooltip="[[informations.devoir.name]]" class="head text-overflow" ng-click="openLeftMenu('openedDevoirInfo', openedDevoirInfo);">[[informations.devoir.name]]</h2>
+    <div ng-show="informations.devoir !== undefined">
+        <ul>
+            <li><span class="bold"><i18n>viescolaire.utils.description</i18n></span> : [[informations.devoir.libelle]]</li>
+            <li><span class="bold"><i18n>viescolaire.utils.type</i18n></span> : [[informations.devoir._type_libelle]]</li>
+            <li><span class="bold"><i18n>evaluations.test.coefficient</i18n></span> : [[informations.devoir.coefficient]]</li>
+            <li><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[informations.devoir.diviseur]]</li>
+            <li><span class="bold"><i18n>evaluations.test.date</i18n></span>: [[getDateFormated(informations.devoir.date)]]</li>
+            <li><span class="bold"><i18n>evaluations.test.date.publication</i18n></span>: [[getDateFormated(informations.devoir.datepublication)]]</li>
+        </ul>
+    </div>
+    <h2  ng-show="informations.devoir !== undefined " class="head" ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
+    <div  ng-show="informations.devoir !== undefined ">
+        <ul>
+            <li><span class="bold"><i18n>evaluation.classe.average</i18n></span>: <span style="color: #1785E6;font-weight: bold;">[[informations.devoir.statistiques.moyenne]]</span></li>
+            <li><span class="bold"><i18n>evaluations.grade.min</i18n></span>: <span style="color: #E61758;font-weight: bold;">[[informations.devoir.statistiques.noteMin]]</span></li>
+            <li><span class="bold"><i18n>evaluations.grade.max</i18n></span>: <span style="color: #48C593;font-weight: bold;">[[informations.devoir.statistiques.noteMax]]</span></li>
+            <li>
+                <p><progress-bar max="100" filled="informations.devoir.statistiques.percentDone" unit="%"></progress-bar></p>
+            </li>
+        </ul>
+    </div>
+    <div class="center">
+        <a class="button twelve-mobile" href="/viescolaire/evaluations#/devoir/[[informations.devoir.id]]"><i18n>open.devoir</i18n></a>
+    </div>
+</div>

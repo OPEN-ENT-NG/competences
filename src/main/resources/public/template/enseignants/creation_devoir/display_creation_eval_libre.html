@@ -1,0 +1,186 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="row notes-help evalLibre">
+    <div class="cell twelve legend">
+        <h4>
+            <i18n>evaluations.evaluation.libre.add</i18n>
+        </h4>
+
+        <h2>showIt
+            "[[detailCompetence.nom]]"
+        </h2>
+
+        <div class="separator"></div>
+
+    </div>
+    <div class="cell twelve">
+        <!-- Titre -->
+        <section class="row twelve-mobile">
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>evaluations.test.title</i18n>
+                <i class="asterisk obligatoire"></i>
+            </div>
+
+            <div class="nine cell twelve-mobile">
+                <input type="text" class="eleven twelve-mobile" ng-model="evaluationLibre.name">
+            </div>
+        </section>
+
+        <!-- Description -->
+        <section class="row twelve-mobile">
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>viescolaire.utils.description</i18n>
+            </div>
+
+            <div class="nine cell twelve-mobile">
+                <textarea row="4" type="text" ng-model="evaluationLibre.libelle" class="eleven">
+                </textarea>
+            </div>
+        </section>
+
+        <div class="separator"/>
+
+
+        <section class="row twelve-mobile">
+            <!-- Matiére -->
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>viescolaire.utils.subject</i18n>
+            </div>
+
+            <div class="nine cell twelve-mobile">
+                <label class="select eleven twelve-mobile">
+                    <select ng-model="evaluationLibre.id_matiere"
+                            ng-options="matiere.id as matiere.name for matiere in evaluationLibre.matieres ">
+                        <option  value="" >[[translate('viescolaire.utils.subject')]]
+                        </option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <section class="row twelve-mobile">
+            <!-- Sous matiere -->
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>viescolaire.utils.undersubject</i18n>
+            </div>
+
+            <div class="nine cell twelve-mobile">
+                <label class="select eleven twelve-mobile"
+                       ng-class="{disabled : evaluationLibre.sousmatiere.length === 0
+                       ||  evaluationLibre.sousmatiere === undefined}">
+                    <select ng-model="evaluationLibre.id_sousmatiere"
+                            ng-disabled=" evaluationLibre.sousmatiere.length === 0
+                            ||  evaluationLibre.sousmatiere === undefined"
+                            ng-options=" sousmatiere.id as sousmatiere.libelle for sousmatiere in evaluationLibre.sousmatiere ">
+                        <option  value="">[[translate('viescolaire.utils.undersubject')]]
+                        </option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <div class="separator"/>
+        <!-- Compétence évaluée -->
+        <section class="row twelve-mobile">
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>evaluations.competence.evaluate</i18n>
+                <i class="asterisk obligatoire"></i>
+            </div>
+
+            <div class="inline-block align-center align-top">
+
+                <c-skills-bubble classes="'competence-eval pointer alignVertical'"
+                                 color="(mapCouleurs[evaluationLibre.competenceEvaluee.evaluation])"
+                                 text="(mapLettres[evaluationLibre.competenceEvaluee.evaluation])"
+                                 on-click="switchColor"
+                                 is-disabled="false"
+                ></c-skills-bubble>
+
+            </div>
+        </section>
+
+
+        <div class="separator"/>
+        <section ng-if="endSaisieFree" class="row twelve-mobile">
+            <div class="warning">
+                <i18n>end.saisie</i18n>
+            </div>
+        </section>
+
+        <section class="row twelve-mobile">
+            <!-- Période -->
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>viescolaire.utils.periode</i18n>
+                <i class="asterisk obligatoire"></i>
+            </div>
+
+            <div class="nine cell twelve-mobile">
+
+                <label class="select four twelve-mobile">
+                    <select ng-model="evaluationLibre.id_periode"
+                            ng-change="controleDate()"
+                            ng-options="periode.id_type as getI18nPeriode(periode)
+                            for periode in evaluationLibre.periodes | filter:notYear()">
+                        <option class="header-opt" disabled value="">
+                            [[translate('viescolaire.utils.periode')]]
+                        </option>
+                    </select>
+                </label>
+            </div>
+        </section>
+
+        <section ng-if="errDateEvalFree" class="row twelve-mobile">
+            <div class="warning">
+                <i18n>devoir.errDateDevoir</i18n>
+            </div>
+        </section>
+        <section class="row twelve-mobile">
+            <!-- Date évaluation -->
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>evaluations.test.date</i18n>
+                <i class="asterisk obligatoire"></i>
+            </div>
+
+            <div class="nine cell twelve-mobile">
+                <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.dateDevoir" class="four" ng-change="showDate = true; controleDate(evaluationLibre)"></date-picker>
+            </div>
+        </section>
+
+        <section ng-if="errDatePubliEvalFree" class="row twelve-mobile">
+            <div class="warning">
+                <i18n>devoir.errDatePubli</i18n>
+            </div>
+        </section>
+        <section class="row twelve-mobile">
+            <!-- Date publication -->
+            <div class="three cell addDevoirTable__libelle twelve-mobile">
+                <i18n>evaluations.test.grade.publication.date</i18n>
+                <i class="asterisk obligatoire"></i>
+            </div>
+
+            <div class="nine cell twelve-mobile">
+                <date-picker style="margin: 10px 0;" ng-model="evaluationLibre.datePublication" class="four" ng-change="showDate = true; controleDate(evaluationLibre)"></date-picker>
+            </div>
+        </section>
+        <div class="twelve cell">
+            <input class="button-add-devoir right-magnet" type="button" ng-click="saveNewEvaluationLibre()"
+                   ng-disabled="controleNewEvaluationLibreForm()" i18n-value="viescolaire.utils.save">
+        </div>
+    </div>
+</div>

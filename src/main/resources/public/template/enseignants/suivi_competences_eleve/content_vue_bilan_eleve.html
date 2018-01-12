@@ -1,0 +1,77 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+
+<script type="text/ng-template"  id="tree_item_renderer.html" bottom-scroll="afficherDomaineSuivant();" >
+
+    <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }" class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1" ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
+    <div ng-class="{'openedSectionDom' : domaine.OpenDom}" ng-if="domaine.competences.all.length > 0"  style='height: auto;'>
+
+        <h3 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine" ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom" ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h3>
+        <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
+
+            <div class="suivi-eleve-item competence-line" ng-repeat="competence in domaine.competences.all">
+                <div tooltip="[[competence.nom]]" class="ten cell inline-block ellipsis competence">
+                    [[competence.nom]]
+                </div>
+                <div class="two cell inline-block padding-left align-top">
+                <span ng-repeat="evaluation in competence.competencesEvaluations|filter:isMaxEvaluation(competence.competencesEvaluations)|limitTo:1" tabindex="0">
+                    <span ng-if="evaluation.evaluation === -1">
+                        NE
+                    </span>
+                    <span ng-if="evaluation.evaluation >= 0">
+                        [[evaluation.evaluation + 1]]
+                    </span>
+                </span>
+                    <span ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations)">
+                    NE
+                </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <div ng-repeat="domaine in domaine.domaines.all" ng-include="'tree_item_renderer.html'" ng-init="parent = $parent.$parent.domaine">
+    </div>
+
+
+    <!-- On affiche la moyenne que pour les domaines evalues (sur le niveau le plus haut s'il y a des sous-domaines) -->
+    <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)" class="suivi-eleve-item">
+        <div class="ten cell inline-block ellipsis moyenne">
+            <b><i18n>evaluation.domaine.average</i18n> [[domaine.codification]]</b>
+        </div>
+        <div class="two cell inline-block padding-left ">
+                <span ng-if="domaine.moyenne === -1">
+                    <b><i18n>evaluations.competence.unevaluated.abreviation</i18n></b>
+                </span>
+                <span ng-if="domaine.moyenne > -1">
+                     <div ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
+                        <div ng-if = " $index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <  Conversion.valmax"><b>[[Conversion.libelle]]</b></div>
+                        <div ng-if = " $index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax"><b>[[Conversion.libelle]]</b></div>
+                    </div>
+                </span>
+        </div>
+    </div>
+
+</script>
+
+<div class="content-bilan-eleve">
+    <h2><i18n>evaluations.bilan.eleve.title</i18n></h2>
+    <div ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'" ng-init="parent = tree_item_renderer.html">
+    </div>
+</div>

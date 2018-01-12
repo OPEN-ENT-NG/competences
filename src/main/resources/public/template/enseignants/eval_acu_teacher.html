@@ -1,0 +1,166 @@
+<div class="twelve cell" ng-controller="EvalAcuTeacherController">
+
+    <!--  Left side nav  -->
+    <nav class="two cell vertical menu-accueil mobile-navigation zero-mobile">
+        <ul>
+            <li ><a href="#/devoirs/list"><i18n>evaluations.test.list</i18n></a></li>
+            <li ><a href="#/releve"><i18n>evaluations.releve.title</i18n></a></li>
+            <li ><a href="#/competences/eleve"><i18n>evaluations.suivi.eleve.title</i18n></a></li>
+            <li ><a href="#/competences/classe"><i18n>evaluations.suivi.classe.title</i18n></a></li>
+            <li ng-if="ischefetab()"><a href="#/remplacements/list"><i18n>evaluations.remplacants.title</i18n></a></li>
+            <li workflow="viescolaire.export-lsun"><a href="#/export"><i18n>evaluations.exportLSU</i18n></a></li>
+        </ul>
+    </nav>
+    <!--  Content (main zone) Enseignant -->
+    <div  class="ten cell main-content twelve-mobile">
+        <section class="eleven cell row headerAccueil">
+            <div class="twelve cell ">
+                <header>
+                    <button ng-if="!isChefEtab()" class="marginFive right-magnet" ng-click="openCreateEval()"><i18n>evaluations.evaluation.create</i18n></button>
+                    <label class="select right-magnet" ng-if="evaluations.structures.all.length > 1">
+                        <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in structures.all track by structure.id"  ng-change="changeEtablissementAccueil()"></select>
+                    </label>
+                </header>
+            </div>
+            <article class="twelve cell ">
+                <h2><i18n>viescolaire.eleve.recherche</i18n></h2>
+                <autocomplete options="eleves.all" ng-change="openSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
+            </article>
+        </section>
+
+
+        <section>
+            <article class="five cell box-accueil twelve-mobile">
+                <div class="content-box-accueil">
+                    <div class="titre-widget">
+                        <h2 class="inline-block " ng-if="!isChefEtab()">
+                            <i18n>evaluations.mes.evaluations.par.peridoe</i18n>&nbsp;:
+                        </h2>
+                        <h2 class="inline-block " ng-if="isChefEtab()">
+                            <i18n>evaluations.evaluations.par.peridoe</i18n>&nbsp;:
+                        </h2>
+                        <label class="select right-magnet">
+                            <select ng-model="search.classe"
+                                    ng-change="syncPeriode(search.classe.id); search.periode = '*'"
+                                    ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                                <option value="" class="header-opt">Classe / Groupe</option>
+                            </select>
+                        </label>
+                        <div class="twelve FloatRight periodeWidgetAccueil">
+                        <label class="select right-magnet"
+                               ng-hide="search.classe == null || search.classe == '*' || search.classe == ''"
+                               ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
+                            <select ng-model="search.periode"
+                                    ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
+                                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all ">
+                                <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
+                            </select>
+                        </label>
+                        </div>
+                    </div>
+                    <div class="content-box-accueil--table">
+                        <div class="content-box-accueil--table--header row">
+                            <div class="four cell">
+                                <h5><i18n>date</i18n></h5>
+                            </div>
+                            <div class="five cell">
+                                <h5><i18n>viescolaire.notes.title</i18n></h5>
+                            </div>
+                            <div class="three cell">
+                                <h5><i18n>viescolaire.utils.class</i18n></h5>
+                            </div>
+                        </div>
+                        <div class="content-box-accueil--table--content" style="max-height: 220px;">
+                            <div  ng-repeat="devoir in devoirs.all | filter:filterValidClasse() | customSearchFilters:search | orderBy:'date':true" class="row">
+                                <a ng-href="#/devoir/[[devoir.id]]" >
+                                    <div class="four cell">
+                                        [[getDateFormated(devoir.date)]]
+                                    </div>
+                                    <div class="five cell">
+                                        [[devoir.name]]
+                                    </div>
+                                    <div class="three cell">
+                                        [[(getClasseData(devoir.id_groupe, 'name') === '' || getClasseData(devoir.id_groupe, 'name') === undefined) ? getNameInOtherClasses(devoir.id_groupe,devoir.id)  : getClasseData(devoir.id_groupe, 'name')]]
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section>
+            <article class="five cell box-accueil twelve-mobile">
+                <div class="content-box-accueil">
+                    <h2 ng-if="!isChefEtab()">
+                        <i18n>evaluations.mes.evaluations.non.terminees</i18n>
+                    </h2>
+                    <h2 ng-if="isChefEtab()">
+                        <i18n>evaluations.evaluations.non.terminees</i18n>
+                    </h2>
+                    <div class="content-box-accueil--table">
+                        <div class="content-box-accueil--table--header row">
+                            <div class="four cell">
+                                <h5><i18n>date</i18n></h5>
+                            </div>
+                            <div class="five cell">
+                                <h5><i18n>viescolaire.notes.title</i18n></h5>
+                            </div>
+                            <div class="three cell">
+                                <h5><i18n>viescolaire.utils.class</i18n></h5>
+                            </div>
+                        </div>
+                        <div class="content-box-accueil--table--content">
+                            <div ng-repeat="devoir in devoirsNotDone | orderBy:'date':true |filter:FilterGroupEmpty" class="row">
+                                <a ng-href="#/devoir/[[devoir.id]]" >
+                                    <div class="four cell">
+                                        [[getDateFormated(devoir.date)]]
+                                    </div>
+                                    <div class="five cell">
+                                        [[devoir.name]]
+                                    </div>
+                                    <div class="three cell">
+                                        [[getClasseData(devoir.id_groupe, 'name')]]
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <section >
+            <article class="five cell box-accueil twelve-mobile">
+                <div class="titre-widget">
+                    <h2 ng-if="!isChefEtab()" class="inline-block">
+                        <i18n>evaluations.mes.evaluations.non.terminees.par.classe</i18n>&nbsp;:
+                    </h2>
+                    <h2 ng-if="isChefEtab()" class="inline-block">
+                        <i18n>evaluations.evaluations.non.terminees.par.classe</i18n>&nbsp;:
+                    </h2>
+                    <label class="select right-magnet">
+                        <select class="padding-select-accueil" ng-change="loadChart(chartOptions.selectedClasse);" ng-model="chartOptions.selectedClasse" ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in devoirsClasses | orderBy:['type_groupe_libelle','name'] "
+                        >
+
+                        </select>
+                    </label>
+                </div>
+                <div class="content-box-accueil">
+                    <canvas class="chart chart-bar"
+                            chart-data="chartOptions.classes[chartOptions.selectedClasse].percents"
+                            chart-labels="chartOptions.classes[chartOptions.selectedClasse].names"
+                            chart-options="chartOptions.options"
+                            chart-colors="chartOptions.colors"
+                            chart-click="SaisieNote">
+                    </canvas>
+                </div>
+            </article>
+        </section>
+
+
+    </div>
+
+
+</div>

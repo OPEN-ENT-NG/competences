@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="custom-mobile-releve"
+     ng-include="'/viescolaire/public/templates/evaluations/parent_enfant/accueil/eval_parent_menu.html'"></div>
+
+<div class="row" ng-controller="ReleveController">
+    <div class="twelve cell">
+
+        <header class="header-viescolaire">
+            <h1><span class="no-style ng-scope"><i18n>ariane.viescolaire.displayReleveNotes</i18n></span></h1>
+
+            <section style="margin-top:8px;" ng-if="me.type === 'PERSRELELEVE'" class="row twelve-mobile">
+                <label class="select cell two twelve-mobile" ng-hide="searchReleve.eleve===undefined">
+                    <select ng-model="searchReleve.periode"
+                            ng-change="loadReleveNote()"
+                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all">
+                        <option class="header-opt" disabled value="">
+                            [[translate('viescolaire.utils.periode')]]
+                        </option>
+                    </select>
+                </label>
+                <a ng-show="dataReleve.devoirs.all.length > 0 && searchReleve.eleve !== null
+                && searchReleve.periode !== null" class="twelve-mobile print-i"
+                   tooltip="evaluations.export.format.pdf"
+                   ng-click="getReleve(searchReleve.periode)">
+                    &nbsp;  <i class="download"> </i><i18n>evaluations.export</i18n>
+                </a>
+            </section>
+            <section style="margin-top:8px;" ng-if="me.type === 'ELEVE'" class="row twelve-mobile">
+                <label class="select cell two twelve-mobile">
+                    <select ng-model="searchReleve.periode"
+                            ng-change="loadReleveNote()"
+                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all">
+                        <option class="header-opt" disabled value="">
+                            [[translate('viescolaire.utils.periode')]]
+                        </option>
+                    </select>
+                </label>
+                <a ng-show="dataReleve.devoirs.all.length > 0 && searchReleve.eleve.classe.periode !== null"
+                   class="print-i twelve-mobile"
+                   ng-click="getReleve()">
+
+                    &nbsp;<i class="download"> </i><i18n>print</i18n>
+                </a>
+            </section>
+        </header>
+
+        <content ng-show="checkHaveResult()">
+            <div class="responsive-table">
+            <table navigable>
+                <thead>
+                <tr>
+                    <th class="fontLarge two"><i18n>viescolaire.utils.matiere</i18n></th>
+                    <th class="fontLarge nine center"><i18n>evaluations.grade</i18n></th>
+                    <th class="fontLarge one center"><i18n>average</i18n></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr
+                    ng-repeat="matiere in matieres.all | filter:hasEvaluatedDevoir ">
+                    <td data-label="[[translate('viescolaire.utils.matiere')]]" >
+                        <span class="alignMatiere">[[matiere.name]]</span>
+                        <ul>
+                            <li ng-repeat="ens in matiere.ens track by ens.id">
+                                <span class="nomEnseignant">[[ens.firstName]]. [[ens.name]]</span>
+                            </li>
+                        </ul>
+                    </td>
+
+                    <td class="notesDevoir"
+                        data-label="[[translate('evaluations.grade')]]" >
+                        <div ng-repeat="devoirReleveNotes in dataReleve.devoirs.all | filter:isEvaluated
+                        track by $index">
+                            <div    class=" alignCenterVertically"
+                                    ng-class="{noteDevoir: devoirReleveNotes.id_matiere === matiere.id }">
+                                <div ng-if="devoirReleveNotes.id_matiere === matiere.id">
+                                    <span ng-if="devoirReleveNotes.annotation === undefined"
+                                          class="bold fontXLarge">[[devoirReleveNotes.note]]
+                                    </span>
+                                    <span ng-if="devoirReleveNotes.annotation === undefined">
+                                        / [[devoirReleveNotes.diviseur]]
+                                    </span>
+                                    <span ng-if="devoirReleveNotes.annotation !== undefined"
+                                          class="bold fontXLarge">[[devoirReleveNotes.annotation.libelle_court]]
+                                    </span>
+                                    <span class="releve-coef"
+                                          ng-show='devoirReleveNotes.coefficient != null
+                                      && devoirReleveNotes.coefficient != 1'>
+                                    (<i18n>viescolaire.utils.coef</i18n>. [[devoirReleveNotes.coefficient]])
+                                </span>
+                                </div>
+                                <div class="gradetooltip"
+                                     ng-if="devoirReleveNotes.id_matiere === matiere.id && me.type === 'PERSRELELEVE'"
+                                     tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<p>[[devoirReleveNotes.name]]<div>[[devoirReleveNotes._sousmatiere_libelle]]</p>[[devoirReleveNotes.appreciation]]"></div>
+                                <div class="gradetooltip"
+                                     ng-if="me.type === 'ELEVE' && devoirReleveNotes.id_matiere === matiere.id"
+                                     tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<br>[[devoirReleveNotes.name]]<div>[[devoirReleveNotes._sousmatiere_libelle]]</div>"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td data-label="[[translate('average')]]">
+                        <div class="noteMoyenne alignCenterVertically">
+                            <span class="bold fontXLarge">[[matiere.moyenne]]</span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            </div>
+        </content>
+        <content ng-show="!checkHaveResult()">
+            <h1 class="twelve-mobile" style="color: grey;"><i18n>evaluations.no.summary</i18n></h1>
+        </content>
+
+    </div>
+</div>
+

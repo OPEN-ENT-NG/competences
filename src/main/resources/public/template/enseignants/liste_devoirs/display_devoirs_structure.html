@@ -1,0 +1,297 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_construction_page.html'"></div>
+
+<div class="row">
+    <nav class="twelve cell marginLeftFive nav-devoirs">
+        <div class="cell switch-view-buttons">
+            <i class="show-list" ng-class="{ selected: template.contains('evaluations', '../templates/evaluations/enseignants/liste_devoirs/list_view') }"
+               ng-click="template.open('evaluations', '../templates/evaluations/enseignants/liste_devoirs/list_view')"></i>
+            <i class="show-icons" ng-class="{ selected: template.contains('evaluations', '../templates/evaluations/enseignants/liste_devoirs/icon_view') }"
+               ng-click="template.open('evaluations', '../templates/evaluations/enseignants/liste_devoirs/icon_view')"></i>
+        </div>
+        <button ng-show="!isChefEtab()" class="marginFive" ng-click="goTo('/devoir/create');"><i18n>evaluations.test.new</i18n></button>
+        <button ng-show="isChefEtab()" class="marginFive" ng-click="displayInConstruction();"><i18n>evaluations.test.new</i18n></button>
+        <div class="microbox-wrapper zero">
+            <div class="microbox-content">
+                <i class="close-2x"></i>
+                <div class="microbox-material"></div>
+                <button class="microbox-close"></button>
+            </div>
+        </div>
+    </nav>
+    <div class="twelve cell list-devoirs">
+        <microbox title="evaluations.criteres.titre.bouton.ouvrir" close="evaluations.criteres.titre.bouton.fermer">
+            <div  class="two cell twelve-mobile">
+                <div class="criterion card" >
+                    <div  class="header">
+                        <h2><i18n>viescolaire.utils.criterion</i18n></h2>
+                    </div>
+                    <section ng-if="evaluations.structures.all.length > 1">
+                        <label class="select">
+                            <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"  ng-change="changeEtablissement()"></select>
+                        </label>
+                    </section>
+                    <section>
+                        <label class="select">
+                            <select ng-model="search.classe" ng-change="syncPeriode(search.classe.id); search.periode = '*'; synchronizeStudents(search.classe.id );"
+                                    ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                                <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
+                            </select>
+                        </label>
+                    </section>
+
+                    <section>
+                        <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
+                            <select ng-model="search.periode"
+                                    ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
+                                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all ">
+                                <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]</option>
+                            </select>
+                        </label>
+                    </section>
+                    <section >
+                        <label class="select">
+                            <select ng-model="search.matiere"
+                                    ng-options="matiere.name for matiere in matieres.all | unique:'name'">
+                                <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
+                            </select>
+                        </label>
+                    </section>
+
+                    <section>
+                        <label class="select" ng-hide="selected.matiere.sousMatieres.all.length === 0 || search.matiere === '*' || selected.matiere === undefined">
+                            <select ng-model="search.sousmatiere" ng-options="sousmatiere.libelle for sousmatiere in search.sousmatieres.all">
+                                <option class="header-opt" value="">[[translate('viescolaire.utils.undersubject')]]</option>
+                            </select>
+                        </label>
+                    </section>
+
+                    <section>
+                        <label class="select">
+                            <select ng-model="search.type" ng-options="type.nom for type in types.all">
+                                <option class="header-opt" value="">[[translate('viescolaire.utils.type')]]</option>
+                            </select>
+                        </label>
+                    </section>
+
+
+
+                    <section ng-show="isChefEtab()">
+                        <label class="select">
+                            <select ng-model="search.enseignant" ng-options="enseignant.displayName for enseignant in enseignants.all">
+                                <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
+                            </select>
+                        </label>
+                    </section>
+                </div>
+
+            </div>
+        </microbox>
+        <div class="ten cell twelve-mobile">
+            <article class="ten card twelve-mobile centered ng-scope" ng-if="evaluations.devoirs.all.length === 0">
+                <i18n>evaluation.list.empty</i18n>
+            </article>
+            <div class="marginFive card" ng-if="evaluations.devoirs.all.length !== 0">
+                <header class="headerStyle">
+                    <h2 class="twelve-mobile"><i18n>evaluations.test.owner.list</i18n></h2>
+                    <input type="text" ng-model="search.name" placeholder="[[translate('evaluations.filter.name')]]..." style="width: 99%;font-size: 1em;font-style: italic;">
+                </header>
+                <container template="evaluations" class="twelve cell toggle-buttons-spacer"></container>
+            </div>
+        </div>
+
+    </div>
+</div>
+<section class="toggle-buttons" ng-class="{ hide: selected.devoirs.list.length == 0 }">
+    <div class="toggle">
+        <div class="row">
+            <button ng-show="selected.devoirs.list.length === 1 && !isChefEtab()
+                                && !checkEndSaisie(selected.devoirs.list[0])"
+                    class="cell ng-scope"
+                    ng-click="goTo('/devoir/' + selected.devoirs.list[0].id + '/edit')">
+                <i18n><span class="no-style">evaluations.test.edit</span></i18n>
+            </button>
+           <!--
+           <button ng-show="selected.devoirs.list.length === 1 && isChefEtab()" class="cell ng-scope"
+                    ng-click="displayInConstruction();">
+                <i18n><span class="no-style">evaluations.test.edit</span></i18n>
+            </button>
+            -->
+            <button ng-show="filterDuplicationAction()" class="cell ng-scope"
+                    ng-click="opened.lightboxs.duplication = true;">
+                <i18n><span class="no-style">evaluations.toaster.duplication</span></i18n>
+            </button>
+            <button class="cell ng-scope" ng-click="confirmSuppretion()">
+                <i18n><span class="no-style">evaluations.test.delete</span></i18n>
+            </button>
+            <button class="cell"
+                    tooltip="evaluations.export.format.pdf"
+                    ng-click="opened.evaluation.exportDevoirLB = true"
+                    ng-show="selected.devoirs.list.length === 1">
+                <i18n>evaluations.export</i18n>
+            </button>
+        </div>
+    </div>
+</section>
+
+<lightbox ng-if="selected.devoirs.list.length === 1" on-close="annulerDuplication();" show="opened.lightboxs.duplication">
+    <h2><i18n>evaluations.test.duplication.title</i18n></h2>
+    <h4><i18n>evaluations.lightbox.duplication.mid</i18n> [[selected.devoirs.list[0].name]]</h4>
+    <div class="warning"><i18n>evaluations.lightbox.duplication.top</i18n></div>
+    <input type="text" class="twelve" ng-model="search.duplication" i18n-placeholder="search.groups" style="font-size: 1em;font-style: italic">
+    <div class="row">
+        <h5><i18n>viescolaire.utils.class</i18n></h5>
+        <div class="three cell horizontal-spacing vertical-spacing expandable-content six-mobile" ng-repeat="classe in getClassesByIdCycle(0) | filter:filterValidClasse(classe.id) | filter:filterSearchDuplication() | orderBy:'name'">
+            <label>
+                <label class="checkbox">
+                    <input type="checkbox" ng-checked="isSelected(classe.id)" ng-model="bool" ng-change="selectClasse(classe.id)">
+                    <span></span>
+                </label>
+                <span>[[classe.name]]</span>
+            </label>
+        </div>
+    </div>
+    <div class="row">
+        <h5><i18n>viescolaire.utils.groupeEnseignement</i18n></h5>
+        <div class="three cell horizontal-spacing vertical-spacing expandable-content six-mobile" ng-repeat="classe in getClassesByIdCycle(1) | filter:filterValidClasse(classe.id)| filter:filterSearchDuplication() | orderBy:'name'">
+            <label>
+                <label class="checkbox">
+                    <input type="checkbox" ng-checked="isSelected(classe.id)" ng-model="bool" ng-change="selectClasse(classe.id)">
+                    <span></span>
+                </label>
+                <span>[[classe.name]]</span>
+            </label>
+        </div>
+    </div>
+    <div class="vertical-spacing right-magnet">
+        <button class="marginFive" ng-disabled="selected.classes.length === 0" ng-click="confirmerDuplication();">
+            <i18n>evaluations.devoir.confirmation</i18n>
+        </button>
+        <button class="marginFive" ng-click="annulerDuplication();">
+            <i18n>evaluations.devoir.annuler</i18n>
+        </button>
+    </div>
+</lightbox>
+
+<lightbox ng-if="selected.devoirs.list.length > 0 || devoirsUncancelable.length > 0"
+          show="opened.evaluation.suppretionMsg1" on-close="opened.evaluation.suppretionMsg1=false">
+    <p ng-if="devoirsUncancelable.length > 0 ">
+        <i18n>evaluations.devoir.recaputilatif.suppression.uncancelable</i18n>
+        <span ng-if="(selected.devoirs.list.length + devoirsUncancelable.length)< 12"
+              class="no-style ng-scope">:</span>
+        <span ng-if="(selected.devoirs.list.length + devoirsUncancelable.length)>= 12"
+              class="no-style ng-scope">.</span>
+    </p>
+    <div ng-if="(selected.devoirs.list.length + devoirsUncancelable.length)< 12  ">
+        <ul>
+            <li ng-repeat="devoir in devoirsUncancelable">[[devoir.name]]</li>
+        </ul>
+    </div>
+    <p ng-if="selected.devoirs.list.length > 0">
+        <i18n>evaluations.devoir.information.suppression</i18n>
+        <span ng-if="(selected.devoirs.list.length + devoirsUncancelable.length)< 12"
+              class="no-style ng-scope">:</span>
+        <span ng-if="(selected.devoirs.list.length + devoirsUncancelable.length)>= 12"
+              class="no-style ng-scope">.</span>
+    </p>
+    <div ng-if="(selected.devoirs.list.length + devoirsUncancelable.length) < 12">
+        <ul>
+            <li ng-repeat="devoir in selected.devoirs.list">[[devoir.name]]</li>
+        </ul>
+    </div>
+    <p ng-if="selected.devoirs.list.length > 0 ">
+        <i18n>evaluations.devoir.confirmation.question</i18n>
+    </p>
+    <button  ng-if="selected.devoirs.list.length > 0 "
+            class="marginFive" ng-click="firstConfirmationSuppDevoir()">
+        <i18n>evaluations.devoir.confirmation</i18n>
+    </button>
+    <button class="marginFive" ng-click="annulerSuppretion()">
+        <i18n>evaluations.devoir.annuler</i18n>
+    </button>
+</lightbox>
+
+<lightbox ng-if="selected.devoirs.listwithEvaluatedMarks.length>0 || selected.devoirs.listwithEvaluatedSkills.length>0" show="opened.evaluation.suppretionMsg2" on-close="opened.evaluation.suppretionMsg2=false">
+    <p ng-if="conditionAffichageText(1)" >[[textSuppretionMsg2.Text1]]</p>
+    <p ng-if="conditionAffichageText(2)" >[[textSuppretionMsg2.Text2]]</p>
+    <p ng-if="conditionAffichageText(3)" >[[textSuppretionMsg2.Text3]]</p>
+    <div ng-if="conditionAffichageText(4)">
+        <p  >[[textSuppretionMsg2.Text4]]</p>
+        <div >
+            <p><i18n>evaluations.devoir.recaputilatif.EvaluatedSkills</i18n>:</p>
+            <ul>
+                <li ng-repeat="devoir in selected.devoirs.listwithEvaluatedSkills">[[devoir.name]]</li>
+            </ul>
+        </div>
+    </div>
+    <div ng-if="conditionAffichageText(5)">
+        <p  >[[textSuppretionMsg2.Text5]]</p>
+        <div >
+            <p><i18n>evaluations.devoir.recaputilatif.EvaluatedMarks</i18n>:</p>
+            <ul>
+                <li ng-repeat="devoir in selected.devoirs.listwithEvaluatedMarks">[[devoir.name]]</li>
+            </ul>
+        </div>
+    </div>
+    <div  ng-if="conditionAffichageText(6)" >
+        <p  >[[textSuppretionMsg2.Text6]]</p>
+        <div >
+            <p><i18n>evaluations.devoir.recaputilatif.EvaluatedSkills</i18n>:</p>
+            <ul>
+                <li ng-repeat="devoir in selected.devoirs.listwithEvaluatedSkills">[[devoir.name]]</li>
+            </ul>
+        </div>
+        <div >
+            <p><i18n>evaluations.devoir.recaputilatif.EvaluatedMarks</i18n>:</p>
+            <ul>
+                <li ng-repeat="devoir in selected.devoirs.listwithEvaluatedMarks">[[devoir.name]]</li>
+            </ul>
+        </div>
+    </div>
+    <p>[[textSuppretionMsg2.TextFin]]</p>
+    <button class="marginFive" ng-click="deleteDevoir()">
+        <i18n>evaluations.devoir.confirmation</i18n>
+    </button>
+    <button class="marginFive" ng-click="annulerSuppretion()">
+        <i18n>evaluations.devoir.annuler</i18n>
+    </button>
+</lightbox>
+
+<lightbox show="opened.evaluation.exportDevoirLB" on-close="opened.evaluation.exportDevoirLB = false; exportDevoirObj.errExport = false;">
+    <div class="row">
+        <p>
+            <label class="checkbox" style="float: left">
+                <input type="checkbox" ng-model="textModExport">
+                <i18n>evaluations.export.textMod</i18n>
+            </label>
+        </p>
+    </div>
+    <div class="row">
+        <div class="warning"
+            ng-if="exportDevoirObj.errExport">
+            <i18n>evaluations.export.err</i18n>
+        </div>
+        <button class="right-magnet"
+                tooltip="evaluations.export.format.pdf"
+                ng-click="exportDevoir(selected.devoirs.list[0].id, textModExport)">
+            <i18n>evaluations.export</i18n>
+        </button>
+    </div>
+</lightbox>

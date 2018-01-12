@@ -1,0 +1,51 @@
+<div ng-controller="ExportController" class="ng-scope">
+    <div class="row">
+        <div class="two cell height-two">
+            <div class="lsu">
+                <div ng-if="evaluations.structures.all.length > 1">
+                    <h4>Choix de la structure</h4>
+                    <div>
+                        <select ng-model="lsu.idStructure"
+                                ng-options="structure.id as structure.libelle for structure in evaluations.structures.all"
+                                ng-change="getResponsables()">
+                        </select>
+                    </div>
+                </div>
+                <div class="filtre filtre-classe" ng-class="{opened : pOFilterCtrl.bOFClasse}">
+                    <h4  ng-click="pOFilterCtrl.bOFClasse=!pOFilterCtrl.bOFClasse">Classes
+                        <span class="plus-input"></span>
+                    </h4>
+                    <label class="chip multiselect right-magnet margin-left">
+                        <span><i18n>viescolaire.utils.all.none</i18n></span>
+                        <input type="checkbox" ng-model="bSelectAllClasses" ng-change="switchAllClasses(lsu.classes)"
+                               ng-class="{selected:bSelectAllClasses}">
+                    </label>
+                    <ul class="selectable-list">
+                        <li ng-repeat="classe in lsu.classes|orderBy : 'name'"
+                            ng-click="classe.selected = !classe.selected"
+                            ng-class="{selected : classe.selected}">[[classe.name]]</li>
+                    </ul>
+                </div>
+                <div class="filtre filtre-responsable" ng-class="{opened : pOFilterCtrl.bOFResponsable}">
+                    <h4  ng-click="pOFilterCtrl.bOFResponsable=!pOFilterCtrl.bOFResponsable">Responsables
+                        <span class="plus-input"></span>
+                    </h4>
+                    <label class="chip multiselect right-magnet margin-leftt">
+                        <span><i18n>viescolaire.utils.all.none</i18n></span>
+                        <input type="checkbox" ng-model="bSelectAllResponsables" ng-change="switchAllResponsables(lsu.responsables)"
+                               ng-class="{selected:bSelectAllResponsables}">
+                    </label>
+                    <ul class="selectable-list">
+                        <li ng-repeat="responsable in lsu.responsables.all|orderBy : 'name'"
+                            ng-click="responsable.selected = !responsable.selected"
+                            ng-class="{selected : responsable.selected}">[[responsable.displayName]]</li>
+                    </ul>
+                </div>
+                <button ng-click="exportLSU()" ng-disabled="controleExportLSU()">
+                    <i18n>evaluation.lsu.export.button</i18n>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,50 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="content widget-evaluations">
+    <h1 class="evaluations widget-title">
+        <a href="/viescolaire/evaluations"><span class="view-all-pane pane"></span></a>
+        <i18n>evaluations.title</i18n>
+        <span class="settings-pane pane"></span>
+    </h1>
+    <ul class="tab-header" ng-if="widget.myType == 'PERSRELELEVE'">
+        <li class="tab-title" ng-repeat="eleve in widget.eleves" ng-class="{active : widget.activeId == eleve.id}" ng-click="widget.activeId = eleve.id">[[eleve.displayName]]</li>
+    </ul>
+    <div class="widget-panel" ng-repeat="eleve in widget.eleves" ng-class="{active : widget.activeId == eleve.id}">
+        <h3 ng-if="eleve.evaluations.length == 0"><i18n>evaluations.no.grade</i18n> [[eleve.displayName]]</h3>
+        <table ng-if="eleve.evaluations.length > 0" class="widget-note list-view">
+            <thead>
+            <td><i18n>evaluations.test.date</i18n></td>
+            <td><i18n>viescolaire.utils.subject</i18n></td>
+            <td><i18n>evaluations.grade</i18n></td>
+            </thead>
+            <tr ng-repeat="evaluation in eleve.evaluations">
+                <td class="date">
+                    [[evaluation.date]]
+                </td>
+                <td class="matiere" tooltip="[[note.name]]">
+                    [[evaluation.libelleMatiere | lowercase]]
+                </td>
+                <td>
+                    <span class="value">[[evaluation.valeur]]</span><span class="minimized">/[[evaluation.diviseur]]</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <img src="/notes/public/img/loader.gif" ng-show="widget.eleves.length == 0" style="width: 20% !important; margin: 20px auto; display: block;" />
+</div>

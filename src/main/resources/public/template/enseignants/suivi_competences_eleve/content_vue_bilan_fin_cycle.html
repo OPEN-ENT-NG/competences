@@ -1,0 +1,71 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<script type="text/ng-template"  id="tree_item_renderer.html">
+    <div ng-repeat="domaine in domaine.domaines.all" ng-include="'tree_item_renderer.html'" ng-init="parent = $parent.$parent.domaine">
+    </div>
+    <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)"
+         class="domaine-line">
+        <div class="cell four twelve-mobile domaine-display">
+            [[domaine.codification]] - [[domaine.libelle]]
+            <div ng-if="isChefEtab() && domaine.moyenne !== -1" class="domaine-maitrise">
+                <label>
+                    <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
+                        <div ng-if = " ($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <  Conversion.valmax) || ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax)">
+                                <div ng-if = " domaine.bfc !== undefined">
+                                    <i class="reset" aria-hidden="true" ng-click="deleteBFC()" tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
+                                </div>
+                                <div ng-if = " domaine.bfc === undefined" >
+                                    [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
+                                </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
+        </div>
+        <div class="cell eight twelve-mobile">
+            <rzslider
+                    rz-slider-model="domaine.slider.value"
+                    rz-slider-options="domaine.slider.options"></rzslider>
+        </div>
+
+    </div>
+</script>
+
+<div class="content-bilan-fin-cycle">
+    <h2><i18n>evaluations.bilan.fin.cycle.title</i18n>
+        <dropdown-buttons class="right-magnet">
+            <open class="opener"><i class="download"></i></open>
+            <options>
+                <bt ng-click="exportBFC(search.eleve, search.periode)"><i18n>evaluation.bfc.export.button.eleve</i18n></bt>
+                <bt ng-click="exportBFC(search.classe, search.periode)"><i18n>evaluation.bfc.export.button.classe</i18n></bt>
+            </options>
+        </dropdown-buttons>
+    </h2>
+    <div class="twelve cell">
+        <div ng-repeat="domaine in suiviCompetence.domaines.all"
+             ng-include="'tree_item_renderer.html'"
+             ng-init="parent = tree_item_renderer.html">
+        </div>
+    </div>
+    <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
+    <div ng-show="successCreateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successCreateSynthese</i18n></div>
+    <div ng-show="successUpdateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateSynthese</i18n></div>
+    <textarea ng-disabled="!isChefEtab()" row="4" type="text" placeholder="Saissez la synthèse de l'élève" ng-model="suiviCompetence.bfcSynthese.texte"></textarea>
+    <button  ng-if="isChefEtab()" ng-click="saveSynthese()" ng-disabled="suiviCompetence.synthese.texte.length === 0"><i18n>evaluation.bilan.fin.cycle.save.synthese</i18n></button>
+</div>

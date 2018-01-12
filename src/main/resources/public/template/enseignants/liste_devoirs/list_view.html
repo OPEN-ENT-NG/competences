@@ -1,0 +1,160 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+
+<div class="list-view twelve-mobile" ng-if="evaluations.devoirs.all.length !== 0" >
+    <div class="row devoirs-header" sticky offset="64">
+        <div class="one cell display-check two-mobile">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="$parent.selected.devoirs.all" ng-change="$parent.selectAllDevoirs()">
+                <span></span>
+            </label>
+        </div>
+
+        <div class= "cell cell-indent four-mobile" ng-class="{'one': isChefEtab(), 'two': !isChefEtab()}">
+            <i18n>viescolaire.utils.date</i18n>
+        </div>
+        <div tooltip="Classe / Groupe" class="one cell cell-indent three-mobile ellipsis">
+            <i18n>viescolaire.utils.class.groupe</i18n>
+        </div>
+        <div class="three cell cell-indent three-mobile">
+            <i18n>viescolaire.utils.name</i18n>
+        </div>
+        <div class="one cell cell-indent last zero-mobile">
+            <i18n>evaluations.test.coefficient</i18n>
+        </div>
+        <div tooltip="Nb. compétences"  ng-if="isChefEtab()" class="one ellipsis cell cell-indent last zero-mobile ">
+            <i18n>evaluations.skills.nb</i18n>
+        </div>
+        <div  ng-if="!isChefEtab()" class="two cell cell-indent last zero-mobile ">
+            <i18n>evaluations.skills.nb</i18n>
+        </div>
+
+        <div class="one cell cell-indent zero-mobile">
+            <i18n>evaluations.test.percent</i18n>
+        </div>
+        <div ng-if="isChefEtab()" class="two cell cell-indent four-mobile">
+            <i18n>evaluations.test.teacher</i18n>
+        </div>
+        <div class="one cell display-check zero-mobile">
+            &nbsp;
+        </div>
+    </div>
+
+
+    <div class="expandable-liste card"  bottom-scroll="pOFilterEval.limitTo = pOFilterEval.limitTo + 5" >
+        <div class="expandable twelve"
+             ng-repeat="devoir in devoirs.all | customSearchFilters:search | limitTo:pOFilterEval.limitTo"
+             ng-class="{'opened shadow': openedDevoir === $index, 'DisabledDevoir': disabledDevoir[devoir.id]}" >
+            <div class="row" >
+                <div class="one cell cell-check expandable-content two-mobile">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="devoir.selected" ng-change="selectDevoir(devoir)">
+                        <span></span>
+                    </label>
+                </div>
+                <a ng-href="#/devoir/[[devoir.id]]"
+                   ng-if="isValidClasse(devoir.id_groupe)">
+                    <div class="cell cell-indent expandable-content four-mobile"
+                         ng-class="{'one': isChefEtab(), 'two': !isChefEtab()}" >
+                        [[getDateFormated(devoir.date)]]
+                    </div>
+                    <div class="one cell cell-indent expandable-content three-mobile">
+                        [[(getClasseData(devoir.id_groupe, 'name') === '' || getClasseData(devoir.id_groupe, 'name') === undefined) ? getNameInOtherClasses(devoir.id_groupe,devoir.id)  : getClasseData(devoir.id_groupe, 'name')]]
+                    </div>
+                    <div class="three cell cell-indent expandable-content three-mobile">
+                        [[devoir.name]]
+                    </div>
+                    <div class="one cell cell-indent expandable-content zero-mobile">
+                        [[(devoir.is_evaluated === true) ? devoir.coefficient : 'N/A']]
+                    </div>
+                    <div class="cell cell-indent expandable-content zero-mobile"
+                         ng-class="{'one ellipsis': isChefEtab(), 'two': !isChefEtab()}">
+                        [[devoir.nbcompetences]]
+                    </div>
+                    <div class="one cell cell-indent expandable-content  zero-mobile">
+                        [[devoir.percent = (devoir.percent !== undefined) ? devoir.percent : 0]]%
+                    </div>
+                    <div ng-if="isChefEtab()"
+                            class="two cell cell-indent expandable-content  zero-mobile">
+                        [[devoir.teacher]]
+                    </div>
+                </a>
+                <div ng-if="!isValidClasse(devoir.id_groupe)">
+                    <div class="cell cell-indent expandable-content four-mobile"
+                         ng-class="{'one': isChefEtab(), 'two': !isChefEtab()}">
+                        [[getDateFormated(devoir.date)]]
+                    </div>
+                    <div class="one cell cell-indent expandable-content three-mobile">
+                        [[getClasseData(devoir.id_groupe, 'name')]]
+                    </div>
+                    <div class="three cell cell-indent expandable-content three-mobile">
+                        [[devoir.name]]
+                    </div>
+                    <div class="one cell cell-indent expandable-content zero-mobile">
+                        [[(devoir.is_evaluated === true) ? devoir.coefficient : 'N/A']]
+                    </div>
+                    <div class="cell cell-indent expandable-content zero-mobile"
+                         ng-class="{'one ellipsis': isChefEtab(), 'two': !isChefEtab()}"   >
+                        [[devoir.nbcompetences]]
+                    </div>
+                    <div class="one cell cell-indent expandable-content  zero-mobile">
+                        [[devoir.percent = (devoir.percent !== undefined) ? devoir.percent : 0]]%
+                    </div>
+                    <div ng-if="isChefEtab()"
+                         class="two cell cell-indent expandable-content  zero-mobile">
+                        [[devoir.teacher]]
+                    </div>
+                </div>
+                <div class="one cell cell-check expandable-content zero-mobile">
+                    <span class="plus-input" ng-click="expand($index, true)"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="six cell cell-indent expandable-content">
+                    <i18n>viescolaire.utils.subject</i18n>
+                    : <span class="italic">[[getLibelleMatiere(devoir.id_matiere)]] <span
+                        ng-if="devoir.id_sousmatiere !== null">([[devoir._sousmatiere_libelle]])</span></span>
+                </div>
+                <div class="six cell cell-indent expandable-content">
+                    <span ng-if="devoir.is_evaluated">
+                        <i18n>evaluations.test.ramenersur</i18n>
+                        : <span class="italic">
+                            <span ng-if="devoir.ramener_sur === true">
+                                <i18n>evaluations.test.ramenersur.true</i18n>
+                            </span>
+                            <span ng-if="devoir.ramener_sur === false">
+                                <i18n>evaluations.test.ramenersur.false</i18n>
+                            </span>
+                        </span>
+                    </span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="six cell cell-indent expandable-content">
+                    <i18n>evaluations.test.date.mark.publication</i18n>
+                    : <span class="italic">[[getDateFormated(devoir.date_publication)]]</span>
+                </div>
+                <div class="six cell cell-indent expandable-content">
+                    <i18n>viescolaire.utils.type</i18n>
+                    : <span class="italic">[[getLibelleType(devoir.id_type)]]</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

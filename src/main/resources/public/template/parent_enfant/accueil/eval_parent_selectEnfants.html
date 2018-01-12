@@ -1,0 +1,17 @@
+<div ng-if="me.type === 'PERSRELELEVE'" class="display-children zero-mobile">
+    <div ng-repeat="eleve in eleves track by $index"
+         ng-click="chooseChild(eleve)"
+         ng-class="{'selected': eleve === selectedEleve }">
+         <c-round-avatar eleve="eleve"></c-round-avatar>
+    </div>
+</div>
+<div ng-if="me.type === 'PERSRELELEVE'">
+<section class="row custom-mobile-releve twelve-mobile">
+    <label class="select cell two twelve-mobile">
+        <select ng-model="selectedEleve"
+                ng-change="chooseChild(selectedEleve)"
+                ng-options="e.firstName for e in eleves">
+        </select>
+    </label>
+</section>
+</div>

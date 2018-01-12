@@ -1,0 +1,201 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_construction_page.html'"></div>
+<div class="row">
+    <header>
+        <!--<h1 style="float: left;">Relevé de notes</h1>-->
+        <nav class="right-magnet nav-releve">
+            <a class="button noMarginLeft twelve-mobile" ng-show="!isChefEtab()" href="/viescolaire/evaluations#/devoir/create"><i18n>evaluations.test.new</i18n></a>
+            <a class="button noMarginLeft twelve-mobile" ng-show="isChefEtab()"  ng-click="displayInConstruction();"><i18n>evaluations.test.new</i18n></a>
+            <a class="button twelve-mobile" href="#/devoirs/list"><i18n>evaluations.test.list</i18n></a>
+        </nav>
+    </header>
+
+    <div class="twelve cell">
+        <aside class="two cell twelve-mobile left">
+            <div class="criteres card criterion"  ng-class="{opened : opened.criteres === true}">
+                <span class="plus-input" ng-click="
+
+
+                ('opened.criteres', opened.criteres);"></span>
+                <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
+                    <h2><i18n>viescolaire.utils.criterion</i18n></h2>
+                </div>
+                <section ng-if="evaluations.structures.all.length > 1">
+                    <label class="select">
+                        <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"  ng-change="changeEtablissement()"></select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select">
+                        <select ng-model="search.classe"
+                                ng-change="syncPeriode(search.classe.id); search.periode = '*'; getReleve();"
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
+                            <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        </select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
+                        <select ng-model="search.periode"
+                                ng-change="getReleve()"
+                                ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
+                                ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all ">
+                            <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]</optiondisabled>
+                        </select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select">
+                        <select ng-model="search.matiere" ng-change="getReleve()"
+                                ng-options="matiere.name for matiere in matieres.all|unique:'name'">
+                            <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
+                        </select>
+                    </label>
+                </section>
+
+            </div>
+            <div class="marginFive">
+                <container class="left card tailleMax" template="leftSide-devoirInfo"></container>
+
+                <div ng-if="!template.isEmpty('leftSide-userInfo')" class="fiche student-info card left tailleMax" ng-class="{opened : openedStudentInfo === true}">
+                    <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
+                    <container template="leftSide-userInfo"></container>
+                </div>
+            </div>
+        </aside>
+
+        <section class="ten twelve-mobile cell right">
+
+            <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
+              <div class="tableReleves">
+                <div class="responsive-table">
+                    <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table>
+                        <thead>
+                            <tr>
+                                <th class="col1"><i18n>student</i18n></th>
+                                <th class="colDevoir" ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0, 'ellipsis' : true }"
+                                    ng-repeat="devoir in releveNote.devoirs.all" ng-click="getDevoirInfo(devoir)"
+                                    ng-dblclick="goTo('/devoir/'+devoir.id)" tooltip="[[devoir.name]]">
+
+                                    [[devoir.name]]
+                                </th>
+                                <th class="colMoyenne"><i18n>average</i18n></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="eleve in releveNote.classe.eleves.all">
+                            <td class="col1 text-overflow" ng-click="getEleveInfo(eleve)">[[eleve.lastName]] [[eleve.firstName]]</td>
+                            <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir" ng-repeat="evaluation in eleve.evaluations.all" data-label="[[getLibelleDevoir(evaluation.id_devoir)]]">
+                                <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab() && !evaluation.is_annotation"
+                                       ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
+                                       class="input-note"
+                                       type="text"
+                                       ng-model="evaluation.valeur"
+                                       ng-disabled="true"
+                                       max="20" min="0" step="0.01">
+                                <input ng-if="evaluation.is_evaluated && (!evaluation.endSaisie || isChefEtab()) && !evaluation.is_annotation"
+                                       ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
+                                       class="input-note"
+                                       type="text"
+                                       ng-model="evaluation.valeur"
+                                       ng-blur="saveNoteDevoirEleve(evaluation, $event, eleve)"
+                                       ng-disabled="false"
+                                       max="20" min="0" step="0.01">
+                                <input ng-if="!evaluation.is_evaluated && !evaluation.is_annotation"
+                                       class="input-note"
+                                       type="text"
+                                       ng-disabled="true"
+                                       max="20" min="0" step="0.01">
+                                <input ng-if="evaluation.is_annotation"
+                                       class="input-note"
+                                       ng-model="evaluation.annotation_libelle_court"
+                                       type="text"
+                                       ng-disabled="true"
+                                       max="20" min="0" step="0.01">
+                            </td>
+                            <!--ng-init="initNoteReleve(evaluation)"-->
+                            <td  class="colMoyenne" data-label="Moyenne">
+                                <span style="font-weight: bold;">[[eleve.moyenne]]</span>
+                            </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="responsive-table">
+                    <table id="tableReleveStats" class="tableReleve tableRelevePadding" c-naviga-table>
+                        <tbody>
+                            <tr class="moyenneClasse">
+                                <td class="col1 text-overflow"><i18n>viescolaire.classe.moyenne</i18n></td>
+                                <td class="colDevoir" ng-repeat="devoir in releveNote.devoirs.all" data-label="[[devoir.name]]">
+                                    <div ng-if="devoir.is_evaluated" class="input-note input-moyenne">
+                                        [[devoir.statistiques.moyenne]]
+                                    </div>
+                                    <input ng-if="!devoir.is_evaluated"
+                                           class="input-note"
+                                           type="text"
+                                           ng-disabled="true"
+                                           max="20" min="0" step="0.01">
+                                </td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
+                            </tr>
+                            <tr class="minClasse">
+                                <td class="col1 text-overflow"><i18n>viescolaire.classe.note.min</i18n></td>
+                                <td class="colDevoir"
+                                    ng-repeat="devoir in releveNote.devoirs.all" data-label="[[devoir.name]]">
+                                    <div ng-if="devoir.is_evaluated" class="input-note input-moyenne">
+                                        [[devoir.statistiques.noteMin]]
+                                    </div>
+                                    <input ng-if="!devoir.is_evaluated"
+                                           class="input-note"
+                                           type="text"
+                                           ng-disabled="true"
+                                           max="20" min="0" step="0.01">
+                                </td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
+                            </tr>
+                            <tr class="maxClasse">
+                                <td class="col1 text-overflow"><i18n>viescolaire.classe.note.max</i18n></td>
+                                <td class="colDevoir"  ng-repeat="devoir in releveNote.devoirs.all"
+                                    data-label="[[devoir.name]]">
+                                    <div ng-if="devoir.is_evaluated" class="input-note input-moyenne">
+                                        [[devoir.statistiques.noteMax]]
+                                    </div>
+                                    <input ng-if="!devoir.is_evaluated"
+                                           class="input-note"
+                                           type="text"
+                                           ng-disabled="true"
+                                           max="20" min="0" step="0.01">
+                                </td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+              </div>
+            </content>
+            <content ng-show="releveNote === undefined">
+                <article class="card tableReleves"><i18n>evaluations.no.summary</i18n>.</article>
+            </content>
+        </section>
+
+    </div>
+
+</div>

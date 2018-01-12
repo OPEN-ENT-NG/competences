@@ -1,0 +1,81 @@
+<lightbox show="opened.lightbox" on-close="opened.lightbox=false">
+    <container template="lightboxContainer"></container>
+</lightbox>
+<article class="five cell box-accueil twelve-mobile">
+    <div class="content-box-accueil">
+        <div ng-init="initLimit()" class="titre-widget center">
+            <h2 ng-if="me.type !== 'PERSRELELEVE'"class="inline-block ">
+                <i18n>evaluations.mes.evaluations</i18n>
+            </h2>
+            <h2 ng-if="me.type === 'PERSRELELEVE'" class="inline-block ">
+                <i18n>evaluation.last.child</i18n><span>[[ eleve.firstName ]]</span>
+            </h2>
+            <i class="help" ng-click="getInfoCompetencesDevoir()"></i>
+        </div>
+        <div class="content-box-accueil--table">
+            <div class="content-box-accueil--table--header row">
+                <div class="two cell">
+                    <h5><i18n>date</i18n></h5>
+                </div>
+                <div class="five cell">
+                    <h5><i18n>viescolaire.utils.subject</i18n></h5>
+                </div>
+                <div class="two cell">
+                    <h5><i18n>viescolaire.evaluation.note</i18n></h5>
+                </div>
+                <div class="three cell competence-text-overflow">
+                    <h5><i18n>evaluations.competences.title</i18n></h5>
+                </div>
+            </div>
+            <div class="content-box-accueil--table--content" style="max-height: 220px;">
+                <div  ng-repeat="devoir in devoirs.all | orderBy:'-date' | limitTo:[[limitSelected]] "
+                      class="row">
+                    <a ng-href="#/devoir/[[devoir.id]]">
+                        <div class="two cell competence-text-overflow"
+                             tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                            [[getDateFormated(devoir.date)]]
+                        </div>
+                        <div class="five cell competence-text-overflow"
+                             tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                            [[getLibelleMatiere(devoir.id_matiere)]]
+                        </div>
+                        <div ng-if="devoir.annotation === undefined && devoir.note !== undefined"
+                             class="two center cell competence-text-overflow"
+                             tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                            [[devoir.note]]
+                        </div>
+                        <div ng-if="devoir.annotation === undefined && devoir.note === undefined"
+                             class="two center cell competence-text-overflow"
+                             tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                            &nbsp;
+                        </div>
+                        <div ng-if="devoir.annotation !== undefined"
+                             class="two center cell competence-text-overflow"
+                             tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                            [[devoir.annotation.libelle_court]]
+                        </div>
+                        <div ng-if="devoir.competences !== undefined"
+                             class="three inline-block align-center align-top">
+                            <proportion-suivi-competence evaluations="devoir.competences"
+                                                         filter="suiviFilter" user="me"
+                                                         is-classe="false"
+                                                         map-couleurs="mapCouleurs"
+                                                         map-lettres="mapLettres">
+                            </proportion-suivi-competence>
+                        </div>
+                        <div ng-if="devoir.competences === undefined"
+                             class="three inline-block align-center align-top"
+                             tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="titre-widget">
+
+            <label class="right-magnet">
+                <h5 class="inline-block "><a href="#/devoirs/list"><i18n>show.more</i18n></a></h5>
+            </label>
+        </div>
+    </div>
+</article>

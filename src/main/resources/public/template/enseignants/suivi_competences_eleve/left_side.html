@@ -1,0 +1,109 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="cell card twelve criterion">
+    <div class="header">
+        <h2><i18n>viescolaire.utils.criterion</i18n></h2>
+    </div>
+    <section ng-if="evaluations.structures.all.length > 1">
+        <label class="select">
+            <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"  ng-change="switchEtablissementSuivi();"></select>
+        </label>
+    </section>
+    <section>
+        <label class="select" >
+            <select ng-model="search.classe" ng-change="syncPeriode(search.classe.id); search.periode = '*'; synchronizeStudents(search.classe.id);selectSuivi(route.current.$$route.originalPath);" ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
+                <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+            </select>
+        </label>
+    </section>
+    <section>
+        <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
+            <select ng-model="search.periode"
+                    ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
+                    ng-change="selectSuivi(route.current.$$route.originalPath)"
+                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all ">
+                <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
+            </select>
+        </label>
+    </section>
+    <section ng-if="route.current.$$route.originalPath === '/competences/eleve'">
+        <label class="select"
+               ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
+            <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
+                    ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
+                    ng-change="selectSuivi(route.current.$$route.originalPath)">
+                <option value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
+            </select>
+        </label>
+    </section>
+    <section ng-show="!template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') && !isChefEtab()">
+        <div>
+            <label>
+                <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
+                       ng-model="suiviFilter.mine" value="false">
+                <span>
+                    <i18n>evaluations.test.all</i18n>
+                </span>
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
+                       ng-model="suiviFilter.mine" value="true">
+                <span>
+                    <i18n>evaluations.test.mine</i18n>
+                </span>
+            </label>
+        </div>
+    </section>
+</div>
+<div class="cell card twelve criterion"
+     ng-if="informations.eleve !== '' && informations.eleve !== undefined && route.current.$$route.originalPath === '/competences/eleve'">
+    <div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_eleve.html'"></div>
+</div>
+<div ng-if="!template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')
+    || isChefEtab()" class="cell card twelve criterion notes-help">
+    <div class="legend" ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_competences_legende.html'"></div>
+</div>
+<div ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')&& search.classe.id_cycle === 1"
+     class="cell card twelve criterion">
+    <div class="header">
+        <h2><i18n>viescolaire.utils.enseignementComplement</i18n></h2>
+    </div>
+
+    <section>
+        <label class="select" >
+            <select  ng-model="suiviCompetence.ensCplSelected" ng-change="loadEns()" ng-options ="ensCpl as ensCpl.libelle for ensCpl in suiviCompetence.ensCpls.all">
+                <option class="header-opt" value="" disabled ><i18n>[[translate('viescolaire.utils.enseignements')]]</i18n></option>
+            </select>
+        </label>
+    </section>
+    <section ng-if="suiviCompetence.ensCplSelected.libelle !== suiviCompetence.ensCpls.all[0].libelle">
+        <label class="select" >
+            <select ng-model="suiviCompetence.niveauEnsCplSelected"ng-change="loadNiveau()" ng-options="niveauEnsCpl as niveauEnsCpl.libelle for niveauEnsCpl in suiviCompetence.niveauEnsCpls.all">
+                <option class="header-opt" value="" disabled ><i18n>[[translate('level')]]</i18n></option>
+            </select>
+        </label>
+    </section>
+    <div>
+        <button ng-disabled = "inactif" type ="button" ng-click="saveNiveauEnsCpl()"><i18n>viescolaire.utils.save</i18n></button>
+    </div>
+
+
+</div>

@@ -1,0 +1,70 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="content-suivi-eleve card bilan-suivi-eleve">
+    <div ng-include="'/viescolaire/public/templates/evaluations/parent_enfant/bilan_competences/header_bilan_detail.html'"></div>
+    <div class="detail-competence inline-block twelve">
+
+        <h2 class="ellipsis ten align-center">
+            [[detailCompetence.nom]]
+        </h2>
+        <div class="detail table-view">
+            <div class="ten cell info " ng-if="detailCompetence.competencesEvaluations.length == 0">
+                <i18n>evaluation.not.exist</i18n>
+            </div>
+            <table class="ten responsive-table" ng-if="detailCompetence.competencesEvaluations.length > 0">
+                <thead>
+                <tr>
+                    <th ng-click="sortType = 'evaluation_libelle'; sortReverse =!sortReverse">
+                        <i18n>evaluations.title</i18n>
+                        <span ng-show="sortType == 'evaluation_libelle' && !sortReverse" class="sort-desc"></span>
+                        <span ng-show="sortType == 'evaluation_libelle' && sortReverse" class="sort-asc"></span>
+                    </th>
+                    <th ng-click="sortType = 'owner_name'; sortReverse =!sortReverse"><i18n>viescolaire.utils.teacher</i18n>
+                        <span ng-show="sortType == 'owner_name' && !sortReverse" class="sort-desc"></span>
+                        <span ng-show="sortType == 'owner_name' && sortReverse" class="sort-asc"></span>
+                    </th>
+                    <th ng-click="sortType = 'created'; sortReverse =!sortReverse"><i18n>date</i18n>
+                        <span ng-show="sortType == 'created' && !sortReverse" class="sort-desc"></span>
+                        <span ng-show="sortType == 'created' && sortReverse" class="sort-asc"></span>
+                    </th>
+                    <th ng-click="sortType = 'evaluation'; sortReverse =!sortReverse">
+                        <i18n>level</i18n>
+                        <span ng-show="sortType == 'evaluation' && !sortReverse" class="sort-desc"></span>
+                        <span ng-show="sortType == 'evaluation' && sortReverse" class="sort-asc"></span>
+                    </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="evaluation in detailCompetence.competencesEvaluations | orderBy:sortType:sortReverse" ng-click="redirectToDevoir(evaluation.id_devoir)">
+                    <td>[[evaluation.name]]</td>
+                    <td>[[evaluation.owner_name]]</td>
+                    <td>[[getDateFormated(evaluation.evaluation_date)]]</td>
+                    <td>
+                        <c-skills-bubble text="(mapLettres[evaluation.evaluation])"
+                                         color="(mapCouleurs[evaluation.evaluation])"
+                                         classes="'competence-eval'">
+                        </c-skills-bubble>
+                    </td>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

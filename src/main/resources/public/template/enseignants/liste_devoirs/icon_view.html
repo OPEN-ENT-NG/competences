@@ -1,0 +1,49 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="devoir-icons-view">
+    <div class="cell three devoir-icons-element"
+         ng-repeat="devoir in devoirs.all | customSearchFilters:search | filter:search.name" ng-init="rand(devoir)">
+        <a class="devoir-icons-container-link" ng-href="#/devoir/[[devoir.id]]">
+            <section class="devoir-icons-container">
+                <div class="devoir-percent" ng-style="{width: devoir.percent+'%'}"></div>
+                <header>
+                    <div class="devoir-icons-date expandable-content">[[getDateFormated(devoir.date)]]</div>
+                </header>
+                <div class="devoir-icons-name expandable-content" ng-if="devoir.name.length > 30" tooltip="[[devoir.name]]">[[devoir.name|limitTo:27]]...</div>
+                <div class="devoir-icons-name expandable-content" ng-if="devoir.name.length <= 30">[[devoir.name]]</div>
+                <div class="devoir-icons-description expandable-content"  ng-if="devoir.libelle.length > 30" tooltip="[[devoir.libelle]]">[[devoir.libelle|limitTo:27]]...</div>
+                <div class="devoir-icons-description expandable-content"  ng-if="devoir.libelle.length <= 30">[[devoir.libelle]]</div>
+                <footer>
+                    <div class="devoir-icons-class expandable-content">[[getClasseData(devoir.id_groupe, 'name')]]</div>
+                    <div class="devoir-icons-coef expandable-content" ng-if="devoir.is_evaluated === true">
+                        <i18n>evaluations.test.coefficient</i18n> : [[devoir.coefficient]]
+                    </div>
+                </footer>
+            </section>
+        </a>
+        <div class="devoir-icons-checkbox">
+            <div class="one cell cell-check">
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="devoir.selected" ng-change="selectDevoir(devoir)">
+                    <span></span>
+                </label>
+            </div>
+        </div>
+    </div>
+</div>

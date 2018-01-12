@@ -1,0 +1,13 @@
+<div class="twelve bilan-eleve-ctl" sticky offset="64">
+    <div class="right-magnet">
+        <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
+            <i class="icon-back"></i>
+        </a>
+        <i class="show-list" ng-class="{ selected: template.contains('main', '../templates/evaluations/parent_enfant/bilan_competences/detail_vue_tableau') }"
+           ng-click="template.open('main', '../templates/evaluations/parent_enfant/bilan_competences/detail_vue_tableau')"
+           tooltip="evaluations.suivi.eleve.vue.liste"></i>
+        <i class="show-chart" ng-class="{ selected: template.contains('main', '../templates/evaluations/parent_enfant/bilan_competences/detail_vue_graph') }"
+           ng-click="template.open('main', '../templates/evaluations/parent_enfant/bilan_competences/detail_vue_graph')"
+           tooltip="evaluations.suivi.eleve.vue.graph"></i>
+    </div>
+</div>

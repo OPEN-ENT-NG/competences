@@ -1,0 +1,170 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+
+<!-- Panneau de choix des thèmes -->
+<div ng-include="'/viescolaire/public/templates/evaluations/setting.html'"></div>
+<div class="custom-mobile-releve"
+     ng-include="'/viescolaire/public/templates/evaluations/parent_enfant/accueil/eval_parent_menu.html'"></div>
+
+<div class="row" ng-controller="ListController">
+    <div class="twelve cell twelve-mobile">
+
+        <aside class="two cell twelve-mobile">
+            <nav class="twelve twelve-mobile scrolling"
+                 id="left-side-notes">
+                <div class="menuLeftStyle detail-devoir criterion card" ng-class="{opened : openedDetails === true}">
+                    <div class="header">
+                        <span class="plus-input" ng-click="openedDetails = !openedDetails"></span>
+                        <h2 ng-click="openedDetails = !openedDetails"><i18n>evaluations.homework.details</i18n></h2>
+                    </div>
+                    <div>
+                        <section ng-if="currentDevoir.libelle !== null">
+                            <label><i18n class="bold">viescolaire.utils.description</i18n> : [[currentDevoir.libelle]]</label>
+                        </section>
+                        <div class="devoir-icons-date expandable-content"></div>
+                        <section>
+                            <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[getLibelleMatiere(currentDevoir.id_matiere)]]</label>
+                        </section>
+                        <section>
+                            <label><i18n class="bold">viescolaire.utils.date</i18n> : [[getDateFormated(currentDevoir.date)]]</label>
+                        </section>
+                        <section>
+                            <label><i18n class="bold">viescolaire.utils.type</i18n> :  [[currentDevoir._type_libelle]]</label>
+                        </section>
+                        <section ng-if="currentDevoir.is_evaluated">
+                            <label><i18n class="bold">viescolaire.utils.coefficient</i18n> : [[currentDevoir.coefficient]]</label>
+                        </section>
+                        <section ng-if="currentDevoir.is_evaluated">
+                            <label><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[currentDevoir.diviseur]]</label>
+                        </section>
+                    </div>
+                </div>
+                <div class="legend menuLeftStyle criterion card"
+                     ng-include="'/viescolaire/public/templates/evaluations/parent_enfant/bilan_competences/display_competences_legende.html'">
+                </div>
+
+            </nav>
+        </aside>
+
+        <section class="cell ten twelve-mobile" >
+
+            <div class="marginFive">
+                <div class="card content-suivi-eleve twelve-mobile">
+                    <div sticky offset="64">
+                        <nav class="twelve cell marginFive">
+                            <div class="cell floatRight">
+                                <a href="#/devoirs/list">
+                                    <i class="show-list"
+                                       tooltip="[[translate('evaluation.access.to.list')]]"
+                                    ></i></a>
+                            </div>
+                            <div class="microbox-wrapper zero">
+                                <div class="microbox-content">
+                                    <i class="close-2x"></i>
+                                    <div class="microbox-material"></div>
+                                    <button class="microbox-close"></button>
+                                </div>
+                            </div>
+                        </nav>
+
+                        <div class="twelve suivi-eleve-ctl">
+                            <h1 class="align-center">
+                                <i class="previous cell"
+                                   ng-click="incrementDevoir(-1)"
+                                   tooltip="[[translate('evaluation.change.devoir')]]"></i>
+                                [[currentDevoir.name]]
+                                <i class="next right-magnet"
+                                   tooltip="[[translate('evaluation.change.devoir')]]"
+                                   ng-click="incrementDevoir(1)"></i>
+                            </h1>
+
+                            <div ng-show="opened.detailCompetenceSuivi" class="twelve">
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div>
+                        <h2><i18n>evaluations.competences.title</i18n></h2>
+
+                        <content class="block row">
+                        <script type="text/ng-template"  id="tree_item_renderer.html">
+
+                            <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }" class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1" ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
+                            <div ng-class="{'openedSectionDom' : domaine.OpenDom}" ng-if="domaine.competences.all.length > 0" class="twelve cell" style='height: auto;'>
+
+                                <h3 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine" ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom" ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h3>
+                                <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
+
+                                    <div class="suivi-eleve-item competence-line" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
+
+                                        <div tooltip="[[competence.nom]]" class="six inline-block ellipsis competence nine-mobile">
+                                            [[competence.nom]]
+                                        </div>
+                                        <div class="two inline-block align-center align-top two-mobile">
+                    <span ng-repeat="evaluation in competence.competencesEvaluations"
+                          tabindex="0">
+                        <c-skills-bubble text="(mapLettres[evaluation.evaluation])"
+                                         color="(mapCouleurs[evaluation.evaluation])"
+                                         classes="'competence-eval alignVertical'">
+                        </c-skills-bubble>
+                    </span>
+                                            <span class="competence-eval rounded grey"
+                                                  ng-if="competence.competencesEvaluations.length < 1">
+                    </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div ng-repeat="domaine in domaine.domaines.all | filter:FilterNotEvaluatedDomaine"
+                                 ng-include="'tree_item_renderer.html'">
+                            </div>
+                        </script>
+
+                        <div ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
+                        </div>
+                    </content>
+                    </div>
+                    <hr class="hrForDisplayDevoir"/>
+                    <div>
+                        <h2><i18n>viescolaire.evaluation.result</i18n></h2>
+                        <div class=" one twelve-mobile" ng-if="currentDevoir.annotation === undefined">
+                            <div>[[(currentDevoir.note && currentDevoir.note !== -1)? currentDevoir.note : "&nbsp;"]]</div>
+                        </div>
+                        <div class="one twelve-mobile" ng-if="currentDevoir.annotation !== undefined">
+                            <div tooltip="[[currentDevoir.annotation.libelle]]" class="pointer">
+                                [[currentDevoir.annotation.libelle_court]]</div>
+                        </div>
+                    </div>
+                    <hr class="hrForDisplayDevoir" ng-if="currentDevoir.apprec_visible"/>
+                    <div ng-if="currentDevoir.apprec_visible" style="padding-bottom: 15px">
+                        <h2><i18n>viescolaire.utils.appreciation</i18n></h2>
+                        <div>
+                            [[currentDevoir.appreciation? currentDevoir.appreciation : "&nbsp;"]]
+                        </div>
+                    </div>
+                    <div ng-if="!currentDevoir.apprec_visible" style="padding-bottom: 15px">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+</div>
