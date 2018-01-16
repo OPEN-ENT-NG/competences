@@ -16,15 +16,15 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_construction_page.html'"></div>
+<div ng-include="'/competences/public/template/enseignants/informations/display_construction_page.html'"></div>
 
 <div class="row">
     <nav class="twelve cell marginLeftFive nav-devoirs">
         <div class="cell switch-view-buttons">
-            <i class="show-list" ng-class="{ selected: template.contains('evaluations', '../templates/evaluations/enseignants/liste_devoirs/list_view') }"
-               ng-click="template.open('evaluations', '../templates/evaluations/enseignants/liste_devoirs/list_view')"></i>
-            <i class="show-icons" ng-class="{ selected: template.contains('evaluations', '../templates/evaluations/enseignants/liste_devoirs/icon_view') }"
-               ng-click="template.open('evaluations', '../templates/evaluations/enseignants/liste_devoirs/icon_view')"></i>
+            <i class="show-list" ng-class="{ selected: template.contains('evaluations', 'enseignants/liste_devoirs/list_view') }"
+               ng-click="template.open('evaluations', 'enseignants/liste_devoirs/list_view')"></i>
+            <i class="show-icons" ng-class="{ selected: template.contains('evaluations', 'enseignants/liste_devoirs/icon_view') }"
+               ng-click="template.open('evaluations', 'enseignants/liste_devoirs/icon_view')"></i>
         </div>
         <button ng-show="!isChefEtab()" class="marginFive" ng-click="goTo('/devoir/create');"><i18n>evaluations.test.new</i18n></button>
         <button ng-show="isChefEtab()" class="marginFive" ng-click="displayInConstruction();"><i18n>evaluations.test.new</i18n></button>

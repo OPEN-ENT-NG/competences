@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head >	<title>Relevé de notes</title>
+    <style type="text/css">
+        body{
+            padding: 10px;
+            font-family: "Calibri";
+        }
+        .head, .head tr, .display-student, .display-student tr, .display-bulletin, .display-bulletin tr{
+            width: 100%;
+        }
+        .head tr td:first-child{
+            width: 65%;
+        }
+        h1{
+            text-align: center;
+        }
+        .display-student tr td:first-child{
+            width:60%;
+        }
+        .display-bulletin{
+            text-align: center;
+            border-spacing: 0px;
+            margin: 50px 0 30px 0;
+        }
+        .display-bulletin tr{
+            padding: 0;
+        }
+        .display-bulletin tr td{
+            margin: 0;
+            padding: 10px;
+        }
+        .greyscale{
+            background-color: #f0f0f0;
+        }
+        .upper{
+            text-transform: uppercase;
+        }
+        .align-left{
+            text-align: left;
+            text-indent: 5px;
+        }
+        .align-right{
+            text-align: right;
+            text-indent: 5px;
+        }
+        .matiere{
+            border: none !important;
+            border-left: solid 1px #000 !important;
+        }
+        .professeur{
+            border: none !important;
+            border-bottom: solid 1px #000 !important;
+            border-left: solid 1px #000 !important;
+            font-size: 10px;
+        }
+        .bottom{
+            border-bottom: solid 1px #000;
+        }
+        .left{
+            border-left: solid 1px #000;
+        }
+        .right-bottom{
+            border-right: solid 1px #000;
+            border-bottom: solid 1px #000;
+        }
+        .left-right{
+            border-left: solid 1px #000;
+            border-right: solid 1px #000;
+            border-bottom: solid 1px #000;
+        }
+        .entete-1 td{
+            /*border-left: solid 1px #000;*/
+            border-top: solid 1px #000;
+            border-bottom: solid 1px #000;
+        }
+        .entete-2 td{
+            border-bottom: solid 1px #000;
+            border-left: solid 1px #000;
+        }
+        .diviseur{
+            font-size: 70%;
+        }
+        .note{
+            font-weight: bold;
+            font-size: 90%;
+        }
+
+        .coeff{
+            font-size: 70%;
+        }
+
+        .div-note {
+            width: 30px;
+        }
+    </style>
+    <meta charset="UTF-8" />
+</head>
+<body>
+
+<table class="head">
+    <tr><td><strong>{{#etablissement}}{{name}}{{/etablissement}}</strong></td><td class="align-right">Elève : <strong>{{#user}}{{displayName}}{{/user}}</strong></td></tr>
+    <tr><td><strong>{{#etablissement}}{{address}}{{/etablissement}}</strong></td><td class="align-right">Classe : <strong>{{#classe}}{{name}}{{/classe}}</strong></td></tr>
+    <tr><td><strong>{{#etablissement}}{{zipcode}} {{city}}{{/etablissement}}</strong></td><td class="align-right">Période : <strong>{{#periode}}{{libelle}}{{/periode}}</strong></td></tr>
+    <tr><td><strong>{{#etablissement}}Tél : {{phone}}{{/etablissement}}</strong></td></tr>
+</table>
+
+<h1>Relevé de notes</h1>
+
+
+<table class="display-bulletin">
+    <tr class="greyscale entete-1">
+        <td class="align-left left"><strong>Matière</strong></td>
+        <td class="left-right"><strong>Notes</strong></td>
+        <td class="right-bottom"><strong>Moyenne</strong></td>
+    </tr>
+
+    {{#matieres}}
+    <tr>
+        <td class="upper align-left matiere">{{label}}</td>
+        <td rowspan="3" class="left-right">
+            {{#devoirs}}
+            <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+          </span>
+            {{/devoirs}}
+        </td>
+        <td rowspan="3" class="right-bottom"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+    </tr>
+    <tr></tr>
+    <tr>
+        <td class="align-left professeur">
+            {{#displayNameEnseignant}}
+            <br/><span>{{.}}</span>
+            {{/displayNameEnseignant}}
+        </td>
+    </tr>
+    {{/matieres}}
+
+</table>
+
+* note <sup>(n)</sup> : Note ayant pour coefficient n.
+</body>
+</html>

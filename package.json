@@ -19,9 +19,11 @@
   "dependencies": {
     "entcore": "^2.0.1",
     "@types/core-js": "0.9.42",
+    "angular-chart.js": "^1.1.1",
     "awesome-typescript-loader": "3.2.1",
     "axios": "0.16.2",
     "core-js": "2.4.1",
+    "entcore-toolkit": "^1.0.1",
     "gulp": "3.9.1",
     "gulp-clean": "^0.3.2",
     "gulp-rev": "^7.1.2",
@@ -31,7 +33,6 @@
     "typescript": "2.4.1",
     "webpack": "3.1.0",
     "webpack-stream": "3.2.0",
-    "yargs": "^8.0.2",
-    "entcore-toolkit": "^1.0.1"
+    "yargs": "^8.0.2"
   }
 }

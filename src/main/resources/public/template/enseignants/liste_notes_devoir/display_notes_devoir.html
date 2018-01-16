@@ -88,7 +88,7 @@
 
 <div class="row">
     <!-- Panneau de choix des thèmes -->
-    <div ng-include="'/viescolaire/public/templates/evaluations/setting.html'"></div>
+    <div ng-include="'/competences/public/template/setting.html'"></div>
 
     <div class="twelve cell">
         <input style="display: none" type="button" i18n-value="evaluations.test.edit"
@@ -310,7 +310,7 @@
                                                              autofocus="$index === 0 && currentDevoir.is_evaluated"
                                                              error="(eleve.evaluation.valid !== undefined && eleve.evaluation.valid === false)"
                                                              template="leftSide-userInfo"
-                                                             template-path="../templates/evaluations/enseignants/informations/display_eleve"
+                                                             template-path="enseignants/informations/display_eleve"
                                                              focus-items="informations"
                                                              focus-items-attribute="eleve"
                                                              focus-item="eleve"

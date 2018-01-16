@@ -1,0 +1,54 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<ul class="skills-list twelve-mobile">
+    <li class="skills-header skill-30 skills-section" ng-class="{opened : enseignement.open}"
+        ng-repeat="enseignement in data.all | filter:functionSearch(search.keyword) | filter:functionFilter"
+        ng-init="initHeader(enseignement)">
+        <span class="skills-text-overflow skills-teach bold" title="Enseignement" ng-click="enseignement.open = !enseignement.open; doNotApplySearchFilter();">
+            <i class="skills-open-icon"></i>
+            <span ng-bind-html="enseignementsFilter[enseignement.id].nomHtml"></span>
+        </span>
+        <ul class="twelve-mobile">
+            <li class="twelve skills-header skill-40 underline" ng-repeat="competence in enseignement.competences.all | filter:functionFilterCompetencesByDomaines" ng-init="initHeader(competence); initCheckBox(competence, $parent.enseignement)" ng-class="{opened: competence.open}">
+                <label class="one checkbox skills-checkbox skills-headers-checkbox">
+                    <input id="[[competence.id]]_[[competence.id_enseignement]]" class="competence_[[competence.id]]" type="checkbox" ng-model="competencesFilter[competence.id+'_'+competence.id_enseignement].isSelected" ng-click="toggleCheckbox(competence, $parent.enseignement); doNotApplySearchFilter();">
+                    <span></span>
+                </label>
+                <span ng-class="{whiteSpaceNormal : competence.hovering}" ng-mouseenter="showIt(competence)" ng-mouseleave="hideIt(competence)" ng-click="competence.open = !competence.open; doNotApplySearchFilter();" title="Connaissance" class="skills-text-overflow">
+                    <i class="skills-open-icon"></i>
+                    <span ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml"></span>
+                </span>
+                <ul class="twelve">
+                    <li ng-repeat="sousCompetence in competence.competences.all | filter:functionFilterCompetencesByDomaines" ng-init="initCheckBox(sousCompetence, $parent.$parent)" class="skills-connaissance">
+                        <label class="skills-label">
+                            <label class="one checkbox skills-checkbox">
+                                <input id="[[sousCompetence.id]]_[[sousCompetence.id_enseignement]]" class="competence_[[sousCompetence.id]]" type="checkbox" ng-model="competencesFilter[sousCompetence.id+'_'+sousCompetence.id_enseignement].isSelected" ng-click="toggleCheckbox(sousCompetence, $parent.competence); doNotApplySearchFilter();">
+                                <span></span>
+                            </label>
+                            <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}" ng-mouseenter="showIt(sousCompetence)" ng-mouseleave="hideIt(sousCompetence)" class="ten skills-list-connaissance skills-text-overflow italic" title="Compétence">
+                                <i class="skills-open-icon"></i>
+                                <span ng-bind-html="competencesFilter[sousCompetence.id+'_'+sousCompetence.id_enseignement].nomHtml"></span>
+                            </span>
+                        </label>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+</ul>

@@ -15,9 +15,12 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.awt.*;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -32,8 +35,10 @@ public class BFCController extends ControllerHelper {
     private final BfcSyntheseService syntheseService;
     private final EnseignementComplementService enseignementComplement;
     private final NiveauEnseignementComplementService niveauEnseignementComplement;
+    private final EventBus eb;
 
-    public BFCController() {
+    public BFCController(EventBus eb) {
+        this.eb = eb;
         bfcService = new DefaultBFCService(Competences.COMPETENCES_SCHEMA, Competences.BFC_TABLE);
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         enseignementComplement = new DefaultEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENT_COMPLEMENT);

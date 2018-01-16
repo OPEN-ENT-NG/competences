@@ -52,7 +52,7 @@
             </select>
         </label>
     </section>
-    <section ng-show="!template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') && !isChefEtab()">
+    <section ng-show="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') && !isChefEtab()">
         <div>
             <label>
                 <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
@@ -75,13 +75,13 @@
 </div>
 <div class="cell card twelve criterion"
      ng-if="informations.eleve !== '' && informations.eleve !== undefined && route.current.$$route.originalPath === '/competences/eleve'">
-    <div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_eleve.html'"></div>
+    <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
-<div ng-if="!template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')
+<div ng-if="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')
     || isChefEtab()" class="cell card twelve criterion notes-help">
-    <div class="legend" ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_competences_legende.html'"></div>
+    <div class="legend" ng-include="'/competences/public/template/enseignants/informations/display_competences_legende.html'"></div>
 </div>
-<div ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')&& search.classe.id_cycle === 1"
+<div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')&& search.classe.id_cycle === 1"
      class="cell card twelve criterion">
     <div class="header">
         <h2><i18n>viescolaire.utils.enseignementComplement</i18n></h2>

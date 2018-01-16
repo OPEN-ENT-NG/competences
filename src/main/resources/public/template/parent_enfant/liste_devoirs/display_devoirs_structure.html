@@ -16,17 +16,17 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div ng-include="'/viescolaire/public/templates/evaluations/setting.html'"></div>
+<div ng-include="'/competences/public/template/setting.html'"></div>
 <div class="custom-mobile-releve"
-     ng-include="'/viescolaire/public/templates/evaluations/parent_enfant/accueil/eval_parent_menu.html'"></div>
+     ng-include="'/competences/public/template/parent_enfant/accueil/eval_parent_menu.html'"></div>
 
 <div class="row" ng-controller="ListController">
     <nav class="twelve cell">
         <div class="cell floatRight">
-            <i class="show-list" ng-class="{ selected: template.contains('evaluations', '../templates/evaluations/parent_enfant/liste_devoirs/list_view') }"
-               ng-click="template.open('evaluations', '../templates/evaluations/parent_enfant/liste_devoirs/list_view')"></i>
-            <i class="show-icons" ng-class="{ selected: template.contains('evaluations', '../templates/evaluations/parent_enfant/liste_devoirs/icon_view') }"
-               ng-click="template.open('evaluations', '../templates/evaluations/parent_enfant/liste_devoirs/icon_view')"></i>
+            <i class="show-list" ng-class="{ selected: template.contains('evaluations', 'parent_enfant/liste_devoirs/list_view') }"
+               ng-click="template.open('evaluations', 'parent_enfant/liste_devoirs/list_view')"></i>
+            <i class="show-icons" ng-class="{ selected: template.contains('evaluations', 'parent_enfant/liste_devoirs/icon_view') }"
+               ng-click="template.open('evaluations', 'parent_enfant/liste_devoirs/icon_view')"></i>
         </div>
         <div class="microbox-wrapper zero">
             <div class="microbox-content">

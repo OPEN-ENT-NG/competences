@@ -2,9 +2,10 @@ var webpack = require('webpack');
 var path = require('path');
 
 module.exports = {
-    context: path.resolve(__dirname, './src/main/resources/public/'),
+    context: path.resolve(__dirname, './src/main/resources/public'),
     entry: {
-        application: './ts/app.ts',
+        parents: './ts/parents.ts',
+        teachers: './ts/teachers.ts',
         behaviours: './ts/behaviours.ts'
     },
     output: {

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+
+<head>
+    <title>Relevé de notes</title>
+    <style type="text/css">
+
+        body {
+            font-family: "Calibri", sans-serif;
+            align-content: center;
+        }
+
+        .page {
+            page-break-after: always;
+            padding: 20px;
+        }
+
+        .page:last-child{
+            page-break-after: avoid;
+        }
+
+        img {
+            width: auto;
+            height: 150px;
+            margin-bottom: 20px;
+            margin-left: 30px;
+        }
+
+        h1 {
+            margin-top: 30px;
+            padding: 5px;
+            text-align: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        h1[color="blue"] {
+            background-color: #167bff;
+        }
+
+        h1[color="orange"] {
+            background-color: #e8a223;
+        }
+
+        h1[color="green"] {
+            background-color: #7ac939;
+        }
+
+        td {
+            background-color: #EFF7FC;
+            margin: 4px;
+            padding: 3px;
+        }
+
+        table {
+            width: 100%;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        table tr td {
+            width: 10%;
+        }
+
+        table tr:nth-child(odd) td {
+            background-color: #E2F0FA;
+        }
+
+        table tr:nth-child(even) td {
+            background-color: #EFF7FC;
+        }
+
+        table tr:first-child td:first-child {
+            visibility: hidden;
+        }
+
+        table td:first-child {
+            width: 60%;
+        }
+
+        .blank_row {
+            height: 20px !important;
+        }
+
+        .eleve {
+            margin-left: 30px;
+            padding: 10px;
+            background-color: #c7eff9;
+            width: 30%;
+            font-size: 14px;
+        }
+
+        .eleve > div {
+            margin: 5px 0;
+        }
+
+        .left-align {
+            text-align: left;
+            font-weight: normal;
+        }
+
+        .synthese {
+            margin-top: 10px;
+            background-color: #ffe0a7;
+            height: 150px;
+        }
+
+    </style>
+</head>
+<body>
+{{#classes}}
+{{#error}}
+<span>{{error}}</span>
+{{/error}}
+{{#eleves}}
+<div class="page">
+
+    <img src="img/education_nationale.png" alt="Logo"/>
+
+    <div class="eleve">
+        <div>Nom : {{lastName}}</div>
+        <div>Prenom : {{firstName}}</div>
+        <div>Classe : {{nomClasse}}</div>
+        <div>Cycle : {{cycle}}</div>
+    </div>
+
+    <h1 color="blue">Maîtrise des composantes du socle de fin de cycle</h1>
+    <table>
+
+        <tr>
+            <td></td>
+            {{#niveau}}
+            <td>{{.}}</td>
+            {{/niveau}}
+        </tr>
+
+        {{#domaines}}
+        <tr>
+            <td class="left-align">{{domaine}}</td>
+            {{#notes}}
+            <td>{{#.}}X{{/.}}</td>
+            {{/notes}}
+        </tr>
+        {{/domaines}}
+    </table>
+
+    <h1 color="green">Enseignement de complément</h1>
+    <table>
+        <tr>
+            <td></td>
+            <td>Objectifs atteints</td>
+            <td>Objectifs dépassés</td>
+        </tr>
+        <tr>
+            <td class="blank_row"></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+
+    <h1 color="orange">Synthèse des acquis de l'élève en fin de cycle</h1>
+    <div class="synthese"></div>
+
+</div>
+{{/eleves}}
+{{/classes}}
+
+
+</body>
+</html>

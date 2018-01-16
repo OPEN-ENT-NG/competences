@@ -16,7 +16,7 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_construction_page.html'"></div>
+<div ng-include="'/competences/public/template/enseignants/informations/display_construction_page.html'"></div>
 <div class="row">
     <header>
         <!--<h1 style="float: left;">Relevé de notes</h1>-->
@@ -30,10 +30,7 @@
     <div class="twelve cell">
         <aside class="two cell twelve-mobile left">
             <div class="criteres card criterion"  ng-class="{opened : opened.criteres === true}">
-                <span class="plus-input" ng-click="
-
-
-                ('opened.criteres', opened.criteres);"></span>
+                <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
                 <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
                     <h2><i18n>viescolaire.utils.criterion</i18n></h2>
                 </div>

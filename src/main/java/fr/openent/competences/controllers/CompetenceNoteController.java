@@ -38,6 +38,7 @@ import org.entcore.common.user.UserUtils;
 import org.entcore.directory.services.ClassService;
 import org.entcore.directory.services.impl.DefaultClassService;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -55,9 +56,11 @@ public class CompetenceNoteController extends ControllerHelper {
 
     private final CompetenceNoteService competencesNotesService;
     private ClassService classService;
+    private EventBus eb;
 
 
-    public CompetenceNoteController() {
+    public CompetenceNoteController(EventBus eb) {
+        this.eb = eb;
         competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         classService = new DefaultClassService(eb);
     }

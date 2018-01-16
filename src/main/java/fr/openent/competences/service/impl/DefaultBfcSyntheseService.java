@@ -27,7 +27,7 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
     private static final Logger log = LoggerFactory.getLogger(DefaultBfcSyntheseService.class);
 
     public DefaultBfcSyntheseService(String schema, String table, EventBus eb) {
-        super(schema,table);
+        super(schema, table);
         this.eb = eb;
         utilsService = new DefaultUtilsService();
     }

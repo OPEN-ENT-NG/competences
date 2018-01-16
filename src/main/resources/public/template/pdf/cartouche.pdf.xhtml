@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>Formulaire de saisie</title>
+    <style type="text/css">
+
+        body {
+            font-family: "Calibri", sans-serif;
+            align-content: center;
+        }
+
+        .page {
+            page-break-inside: avoid;
+            page-break-after: always;
+            display: block;
+        }
+
+        .page:last-child{
+            page-break-after: avoid;
+        }
+
+        td {
+
+            padding: 3px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 20px ;
+
+        }
+
+        table tr td {
+            width: 8%;
+            text-align: center;
+            border: 2px solid black;
+        }
+
+        table tr:nth-child(odd) td {
+            /**  background-color: #E2F0FA;**/
+
+        }
+
+        table tr:first-child  {
+            height: 35px !important;
+        }
+
+        table td:first-child {
+            width: 50%;
+            padding: 5px;
+
+            text-align: left;
+        }
+        .circle{
+            position: relative;
+            display: block;
+        }
+
+        .circle > p{
+            z-index: 5;
+            margin-left: auto;
+            margin-right: auto;
+            padding-top:10px;
+            bottom :0px;
+
+
+        }
+        .cercleaufond{
+            background-image:url("img/c1.png");
+            background-position: center;
+            background-repeat: no-repeat ;
+            background-size: 34px 34px;
+            width:35px;
+            height: 35px;
+            margin-right:auto;
+            margin-left:auto;
+        }
+
+        .couleur{
+            width:35px;
+            height: 35px;
+        }
+
+        .Tableau{
+            display: block;
+            width: 100%;
+            position: relative;
+        }
+        .bar{
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 15px;
+            width: 100%;
+            height: 2px;
+            display: block ;
+            position: relative;
+            border-top : 1px dashed grey;    ;
+        }
+        @page{
+            size : A4 ;
+            margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="page">
+    {{#byEleves}}
+    {{#eleves}}
+    <div class="Tableau">
+
+        <table>
+
+            <tr>
+                <td>{{devoirDate}}  {{devoirName}} -  {{lastName}} {{firstName}}</td>
+                <!--> les 5 evaluation competence </-->
+                {{^byColor}}
+                <td ><div class="circle cercleaufond"><p>0</p> </div></td>
+                {{#niveaux}}
+                <td ><div class="circle cercleaufond"><p>{{ordre}}</p> </div></td>
+                {{/niveaux}}
+                {{/byColor}}
+                {{#byColor}}
+                <td ><div class="circle"><img class="couleur" src="img/cercle/0.png" alt="span"></img> </div></td>
+                {{#niveaux}}
+                <td ><div class="circle"><img class="couleur"  src="img/cercle/{{ordre}}.png" alt="span"></img></div></td>
+                {{/niveaux}}
+                {{/byColor}}
+                {{#evaluation}} <td >Note</td> {{/evaluation}}
+            </tr>
+            {{#hasCompetences}}
+            {{#competences}}
+
+            <tr>
+                <td>{{code_domaine}}: {{nom}}</td>
+                <!--> les 5 evaluation competence </-->
+
+                <td>  </td>
+                {{#niveaux}}
+                <td></td>
+                {{/niveaux}}
+
+
+                {{#first}} {{#evaluation}} <td  rowspan="{{nbrCompetences}}" ></td> {{/evaluation}} {{/first}}
+            </tr>
+            {{/competences}}
+            {{/hasCompetences}}
+
+        </table>
+    </div>
+    <div class="bar">
+
+    </div>
+    {{/eleves}}
+    {{/byEleves}}
+
+    {{^byEleves}}
+    {{#number}}
+    <div class="Tableau">
+
+        <table>
+
+            <tr>
+                <td>{{devoirDate}}  {{devoirName}} </td>
+                <!--> les 5 evaliation competence </-->
+                {{^byColor}}
+                <td ><div class="circle cercleaufond"><p>0</p> </div></td>
+                {{#niveaux}}
+                <td ><div class="circle cercleaufond"><p>{{ordre}}</p> </div></td>
+                {{/niveaux}}
+                {{/byColor}}
+                {{#byColor}}
+                <td ><div class="circle"><img class="couleur" src="img/cercle/0.png" alt="span"></img> </div></td>
+                {{#niveaux}}
+                <td ><div class="circle"><img class="couleur"  src="img/cercle/{{ordre}}.png" alt="span"></img></div></td>
+                {{/niveaux}}
+                {{/byColor}}
+                {{#evaluation}} <td >Note</td> {{/evaluation}}
+            </tr>
+            {{#hasCompetences}}
+            {{#competences}}
+
+            <tr>
+                <td>{{code_domaine}}: {{nom}}</td>
+                <!--> les 5 evaliation competence </-->
+
+                <td>  </td>
+                {{#niveaux}}
+                <td></td>
+                {{/niveaux}}
+
+
+                {{#first}} {{#evaluation}} <td  rowspan="{{nbrCompetences}}" ></td> {{/evaluation}} {{/first}}
+            </tr>
+            {{/competences}}
+            {{/hasCompetences}}
+
+        </table>
+    </div>
+    <div class="bar">
+
+    </div>
+    {{/number}}
+    {{/byEleves}}
+</div>
+</body>
+</html>

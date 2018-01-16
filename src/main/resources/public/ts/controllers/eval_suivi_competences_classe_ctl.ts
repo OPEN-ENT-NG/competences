@@ -1,0 +1,367 @@
+/**
+ * Created by ledunoiss on 27/10/2016.
+ */
+
+import {ng, template, model} from 'entcore';
+import {SuiviCompetence, Domaine, SuiviCompetenceClasse, evaluations} from '../models/teacher/eval_teacher_mdl';
+import * as utils from '../utils/teacher';
+import {Defaultcolors} from "../models/eval_niveau_comp";
+
+declare let _:any;
+
+export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClasseCtl', [
+    '$scope', 'route', '$rootScope', '$location', '$filter', '$route',
+    function ($scope, route, $rootScope, $location, $filter, $route) {
+
+        /**
+         * Créer une suivi de compétence
+         */
+        $scope.selectSuivi = function () {
+            $scope.Display = {EvaluatedCompetences: true};
+            $scope.informations.classe = $scope.search.classe;
+            if ($scope.informations.classe !== null && $scope.search.classe !== '' && $scope.search.classe !== '*') {
+                $scope.suiviCompetence = new SuiviCompetenceClasse($scope.search.classe, $scope.search.periode);
+                let niveauCompetence = _.findWhere(evaluations.structure.cycles, {
+                    id_cycle: $scope.search.classe.id_cycle
+                }).niveauCompetencesArray;
+                $scope.niveauCompetences = [];
+                $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
+                $scope.mapLettres = {"-1": " "};
+                $scope.selected.colors = {
+                    0: true,
+                };
+                _.forEach(niveauCompetence, function (niv) {
+                    $scope.mapCouleurs[niv.ordre - 1] = niv.couleur;
+                    $scope.mapLettres[niv.ordre - 1] = niv.lettre;
+                    niv.selected = true;
+                    $scope.niveauCompetences.push(niv);
+                    $scope.selected.colors[niv.ordre] = true;
+                });
+                // on met à jour le fil d'ariane
+                let updatedUrl = '/competences/classe?idClasse=' + $scope.search.classe.id;
+                if ($scope.search.periode)
+                    updatedUrl += '&idPeriode=' + $scope.search.periode.id_type;
+
+                $rootScope.$broadcast('change-params', updatedUrl);
+                $scope.suiviCompetence.sync().then(() => {
+                    $scope.suiviCompetence.domaines.sync();
+                    if ($scope.opened.detailCompetenceSuivi) {
+                        if ($scope.detailCompetence !== undefined) {
+                            $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
+                            if (!$scope.detailCompetence) $scope.backToSuivi();
+                        } else {
+                            $scope.backToSuivi();
+                        }
+                    }
+
+                    // On stocke l'ensemble des élèves de la classe dan une Map
+                    let mapEleves = {};
+                    for (let i = 0; i < $scope.search.classe.eleves.all.length; i++) {
+                        mapEleves[$scope.search.classe.eleves.all[i].id] = $scope.search.classe.eleves.all[i];
+                    }
+                    $scope.search.classe.mapEleves = mapEleves;
+                    utils.safeApply($scope);
+                    if ($scope.displayFromEleve) delete $scope.displayFromEleve;
+
+                    template.close('suivi-competence-content');
+                    utils.safeApply($scope);
+                    template.open('suivi-competence-content', 'enseignants/suivi_competences_classe/content_vue_suivi_classe');
+                    utils.safeApply($scope);
+                });
+            }
+        };
+
+        //sélection de la classe du suivi
+        if($route.current.params.idClasse !== undefined){
+            if($scope.classes !== undefined){
+                $scope.search.classe = $scope.classes.findWhere({id: $route.current.params.idClasse});
+            }
+            else{
+                $scope.classes.sync();
+                $scope.classes.on('classes-sync', function () {
+                    $scope.search.classe = $scope.classes.findWhere({id: $route.current.params.idClasse});
+                    let niveauCompetence =  _.findWhere(evaluations.structure.cycles, {
+                        id_cycle: $scope.search.classe.id_cycle
+                    }).niveauCompetencesArray;
+                    $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
+                    $scope.mapLettres = {"-1": " "};
+                    _.forEach(niveauCompetence, function (niv) {
+                        $scope.mapCouleurs[niv.ordre-1] = niv.couleur;
+                        $scope.mapLettres[niv.ordre-1] = niv.lettre;
+                    });
+                });
+            }
+        }
+        else{
+            $scope.search.classe = "";
+        }
+        delete $scope.informations.eleve;
+        $scope.route = $route;
+
+
+        $scope.initFilterMine = () => {
+            $scope.suiviFilter = {
+                mine: (!$scope.isChefEtab()).toString()
+            };
+        };
+        $scope.initFilterMine();
+
+        utils.safeApply($scope);
+
+        template.open('container', 'layouts/2_10_layout');
+        template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
+        template.open('content', 'enseignants/suivi_competences_classe/content');
+        $scope.selectSuivi($scope.route.current.$$route.originalPath);
+        utils.safeApply($scope);
+        // $scope.displayPeriode = false;
+        // $scope.periodeDisplay = (classe,annee) => {
+        //     if(typeof(classe) == 'object'&& classe !== null){
+        //         if(classe.type_groupe == 0){
+        //             let indexClasse = _.indexOf($scope.classes.all,classe);
+        //             if(!('periode' in classe && classe.periode !== null && classe.periode !== undefined)){
+        //                 $scope.classes.all[indexClasse].periode = _.where($scope.evaluations.structure.periodes.all, {id_classe: $scope.classes.all[indexClasse].id});
+        //             }
+        //             $scope.initPeriodesList(indexClasse,annee);
+        //             $scope.displayPeriode = true ;
+        //             utils.safeApply($scope);
+        //         }else{
+        //             let indexClasse = _.indexOf($scope.classes.all,classe);
+        //             if('periode' in classe && classe.periode !== null && classe.periode !== undefined){
+        //                 $scope.initPeriodesList(indexClasse,annee);
+        //                 $scope.displayPeriode = true ;
+        //                 utils.safeApply($scope);
+        //             }else{
+        //                 $scope.classes.all[indexClasse].getGroupePeriode().then((res)=>{
+        //                     if (! (res == undefined)) {
+        //                         $scope.initPeriodesList(indexClasse,annee);
+        //                         $scope.displayPeriode = true ;
+        //                         utils.safeApply($scope);
+        //                     }else{
+        //                         $scope.initPeriodesList();
+        //                         $scope.displayPeriode = false ;
+        //                         utils.safeApply($scope);
+        //                     }
+        //                 })
+        //             }
+        //         }
+        //     }else {
+        //         $scope.displayPeriode = false ;
+        //         utils.safeApply($scope);
+        //     }
+        // };
+        $scope.switchEtablissementSuivi = () => {
+            delete $scope.suiviCompetence;
+            delete $scope.informations.classe;
+            $scope.changeEtablissement();
+        };
+        $scope.updateColorAndLetterForSkills = function () {
+            let niveauCompetence =  _.findWhere(evaluations.structure.cycles, {
+                id_cycle: $scope.search.classe.id_cycle
+            });
+            if (niveauCompetence!== undefined){
+                niveauCompetence = niveauCompetence.niveauCompetencesArray;
+            }
+            else{
+                niveauCompetence = evaluations.structure.cycles[0].niveauCompetencesArray;
+            }
+            $scope.niveauCompetences = [];
+            $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
+            $scope.mapLettres = {"-1": " "};
+            $scope.selected.colors = {
+                0 : true,
+            };
+            _.forEach(niveauCompetence, function (niv) {
+                $scope.mapCouleurs[niv.ordre-1] = niv.couleur;
+                $scope.mapLettres[niv.ordre-1] = niv.lettre;
+                niv.selected = true;
+                $scope.niveauCompetences.push(niv);
+                $scope.selected.colors[niv.ordre] = true;
+            });
+            utils.safeApply($scope);
+        };
+
+        $scope.updateNiveau = function (usePerso) {
+            if(usePerso === 'true' ){
+                evaluations.structure.niveauCompetences.sync(false).then( () => {
+                    evaluations.structure.niveauCompetences.first().markUser().then( () => {
+                        $scope.structure.usePerso = 'true';
+                        $scope.updateColorAndLetterForSkills();
+                        utils.safeApply($scope);
+                    });
+                });
+
+            }
+            else if (usePerso === 'false'){
+                evaluations.structure.niveauCompetences.sync(true).then( () => {
+                    evaluations.structure.niveauCompetences.first().unMarkUser().then( () => {
+                        $scope.structure.usePerso = 'false';
+                        $scope.updateColorAndLetterForSkills();
+                        utils.safeApply($scope);
+                    });
+                });
+            }
+        };
+
+        $scope.getMaxEvaluations = function (idEleve) {
+            if($scope.detailCompetence === undefined){
+                return ;
+            }
+            if ($scope.suiviFilter === undefined) $scope.initFilterMine();
+            var evaluations = $scope.suiviFilter.mine == 'true'
+                ? _.where($scope.detailCompetence.competencesEvaluations, {id_eleve : idEleve, owner : model.me.userId})
+                : _.where($scope.detailCompetence.competencesEvaluations, {id_eleve : idEleve});
+            if (evaluations.length > 0) {
+                return _.max(evaluations, function (evaluation) { return evaluation.evaluation; });
+            }
+        };
+
+        $scope.pOFilterEval = {
+            limitTo : 2
+        };
+
+        /**
+         * Retourne la classe en fonction de l'évaluation obtenue pour la compétence donnée
+         * @param eleveId identifiant de l'élève
+         * @returns {String} Nom de la classe
+         */
+        $scope.getEvaluationResultColor = function (eleveId) {
+            var evaluation = $scope.getMaxEvaluations(eleveId);
+            if (evaluation !== -Infinity) {
+                return $scope.mapCouleurs[evaluation.evaluation];
+            }
+        };
+
+
+        $scope.FilterColor = function (item){
+            var evaluation = $scope.getMaxEvaluations(item.id);
+            if (evaluation === undefined){
+                return ;
+            }
+            else if (evaluation !== -Infinity){
+                return $scope.selected.colors[evaluation.evaluation + 1];
+            }
+        };
+
+        /**
+         * Retourne si l'utilisateur n'est pas le propriétaire de compétences
+         * @param listeEvaluations Tableau d'évaluations de compétences
+         * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
+         */
+        $scope.notEvalutationOwner = function (listeEvaluations) {
+            if ($scope.suiviFilter === undefined) $scope.initFilterMine();
+            if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
+                return false;
+            }
+            var _t = _.filter(listeEvaluations, function (competence) {
+                return competence.owner === undefined || competence.owner === $scope.me.userId;
+            });
+            return _t.length === 0;
+        };
+
+
+        /*
+         Listener sur le template suivi-competence-detail permettant la transition entre la vue détail
+         et la vue globale
+         */
+        template.watch("suivi-competence-detail", function () {
+            if (!$scope.opened.detailCompetenceSuivi) {
+                $scope.opened.detailCompetenceSuivi = true;
+            }
+        });
+
+        /**
+         * Lance la séquence d'ouverture du détail d'une compétence
+         * @param competence Compétence à ouvrir
+         */
+        $scope.openDetailCompetence = function (competence) {
+            $scope.detailCompetence = competence;
+            template.open("suivi-competence-detail", "enseignants/suivi_competences_classe/detail_vue_classe");
+            utils.scrollTo('top');
+        };
+
+        /**
+         * Lance la séquence de retour à la vue globale du suivi de compétence
+         */
+        $scope.backToSuivi = function () {
+            template.close("suivi-competence-detail");
+            $scope.opened.detailCompetenceSuivi = false;
+            $scope.detailCompetence = null;
+        };
+
+        /**
+         * Retourne si l'utilisateur est le propriétaire de l'évaluation
+         * @param evaluation Evaluation à afficher
+         * @returns {boolean} Retourne true si l'utilisateur est le propriétaire de l'évaluation
+         */
+        $scope.filterOwnerSuivi = function (evaluation) {
+            if ($scope.suiviFilter === undefined) $scope.initFilterMine();
+            if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
+                return true;
+            }
+            return evaluation.owner === $scope.me.userId;
+        };
+
+        // /**
+        //  * Return la periode scolaire courante
+        //  * @returns {any}
+        //  */
+        // $scope.periodeParDefault = function () {
+        //     let PeriodeParD = new Date().toISOString();
+        //     let PeriodeSet = false;
+        //     //let  PeriodeParD = new Date().getFullYear() +"-"+ new Date().getMonth() +1 +"-" +new Date().getDate();
+        //
+        //     for (let i = 0; i < $scope.periodes.all.length; i++) {
+        //         if (PeriodeParD >= $scope.periodes.all[i].timestamp_dt && PeriodeParD <= $scope.periodes.all[i].timestamp_fn) {
+        //             PeriodeSet = true;
+        //             return $scope.periodes.all[i];
+        //         }
+        //     }
+        //     if (PeriodeSet === false) {
+        //         return $scope.textPeriode;
+        //     }
+        // };
+
+        /**
+         * Remplace l'élève recherché par le nouveau suite à l'incrémentation de l'index
+         * @param num pas d'incrémentation. Peut être positif ou négatif
+         */
+        $scope.incrementClasse = function (num) {
+            $scope.Display = {EvaluatedCompetences : true};
+            let index = _.findIndex($scope.classes.all, {id: $scope.search.classe.id});
+            if (index !== -1 && (index + parseInt(num)) >= 0
+                && (index + parseInt(num)) < $scope.classes.all.length) {
+                $scope.search.classe = $scope.classes.all[index + parseInt(num)];
+                $scope.syncPeriode($scope.search.classe.id);
+                $scope.search.periode = '*';
+                $scope.synchronizeStudents($scope.search.classe.id);
+                $scope.selectSuivi('/competences/classe');
+                utils.safeApply($scope);
+            }
+        };
+
+
+        $scope.Display = {EvaluatedCompetences : true};
+        $scope.ClasseFilterNotEvaluated = function (MaCompetence) {
+            if($scope.Display.EvaluatedCompetences === true){
+                let _t = MaCompetence.competencesEvaluations;
+                if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
+                    _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
+                        if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
+                            return evaluation;
+                    });
+                }
+                let EvaluatedOK = false;
+                _.map(_t,function(competenceNote){
+                    if(competenceNote.evaluation != -1){
+                        EvaluatedOK = true;
+                    }
+                });
+                return EvaluatedOK;
+            }else{
+                return true;
+            }
+        };
+
+        $scope.selectSuivi();
+    }
+]);

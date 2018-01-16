@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+
+<head>
+    <title>Formulaire de saisie</title>
+    <style type="text/css">
+        body {
+            font-family: "Calibri", sans-serif;
+            align-content: center;
+        }
+
+        .page {
+            page-break-after: always;
+            display: block;
+        }
+
+        .page:last-child{
+            page-break-after: auto;
+        }
+        td {
+
+            margin: 4px;
+            padding: 5px;
+        }
+        table {
+            border-collapse: collapse;
+            page-break-inside :auto;
+            width: 100%;
+
+            font-size: 12px;
+            text-align: left;
+        }
+
+        table tr td {
+            width: auto;
+            padding-top:10px;
+            padding-bottom:10px;
+            border: 1px solid black;
+
+        }
+        tr{
+            page-break-inside: avoid;
+        }
+
+
+        table .list-eleve td:first-child {
+            width: 20%;
+            max-width: 20%;
+            min-width: 20%;
+        }
+
+        @page {
+            size:  A4 ;
+            margin-left: 5%;
+            margin-right: 5%;
+        {{#hasCompetences}}  margin-top :{{ligne}} ;{{/hasCompetences}}
+        {{^hasCompetences}}  margin-top :25% ;{{/hasCompetences}}
+        @top-center {
+            padding-top : 15px;
+            content: element(repeated-top);
+            height : auto;
+            vertical-align : top ;
+
+        }
+        @top-left-corner{
+            width : 5%;
+
+        }
+        @top-right-corner{
+            width : 5%;
+
+        }
+        }
+
+        #repeated-top{
+            position: running(repeated-top);
+            margin-left : auto;
+            margin-right : auto;
+            width: 98%;
+            > span{
+                  display : block;
+                  margin-top : 1px ;
+              }
+        }
+        .overIt{
+            word-wrap: break-word;
+            width: 120px;
+        }
+        .dashed-border{
+            border-left: 2px dashed grey;
+        }
+        .aligne-center{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <table id="repeated-top">
+        <tr class="list-eleve ">
+            {{#hasCompetences}}<td   rowspan="2"> {{/hasCompetences}}
+            {{^hasCompetences}}<td   > {{/hasCompetences}}
+            <p class="overIt">
+                {{devoirName}}<br/>
+                Classe: {{classeName}}<br/>
+                Matière: {{matiere}}<br/>
+                Periode: {{periode}}<br/>
+                Coefficient: {{devoirCoefficient}}<br/>
+                Note sur: {{devoirDiviseur}}<br/>
+            </p>
+        </td >
+            {{#hasCompetences}}
+            <td  class="dashed-border" colspan="{{nbrCompetences}}">
+                {{#hasCompetences}}
+                {{#competences}}
+                [ C{{i}} ] - {{code_domaine}}: {{nom}} <br/>
+                {{/competences}}
+                {{/hasCompetences}}
+            </td>
+            {{/hasCompetences}}
+            {{^hasCompetences}}
+            <td class="aligne-center" >Note</td>
+            {{/hasCompetences}}
+        </tr>
+        {{#hasCompetences}}
+        <tr >
+            {{#evaluation}}<td >Note</td>{{/evaluation}}
+            {{#hasCompetences}}
+            {{#competences}}
+            <td>[C{{i}}]</td>
+            {{/competences}}
+            {{/hasCompetences}}
+        </tr>
+        {{/hasCompetences}}
+    </table>
+
+
+
+    <table >
+        {{#eleves}}
+        <tr class="list-eleve ">
+            <td class="overIt" >
+                {{lastName}} {{firstName}}
+            </td>
+            {{#evaluation}}<td > </td>{{/evaluation}}
+            {{#hasCompetences}}
+            {{#competences}}
+            <td></td>
+            {{/competences}}
+            {{/hasCompetences}}
+        </tr>
+        {{/eleves}}
+    </table>
+
+
+</div>
+
+
+</body>
+</html>

@@ -18,18 +18,18 @@
   -->
 
 <div class="header">
-    <h2 ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
+    <h2 ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
                 || route.current.$$route.originalPath.startsWith('/competences/classe')">
         <i18n>viescolaire.utils.legend</i18n>
     </h2>
 
-    <h2 ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
-            || template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')">
+    <h2 ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
+            || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')">
         <i18n>viescolaire.utils.legend.conversion</i18n>
     </h2>
 </div>
 
-<ul ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
+<ul ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
            || route.current.$$route.originalPath.startsWith('/competences/classe')" class="padding-five">
     <li ng-repeat="niveau in structure.cycle.niveauCompetencesArray ">
         <c-skills-bubble text="niveau.lettre" color="niveau.couleur"></c-skills-bubble>
@@ -39,7 +39,7 @@
 </ul>
 
 
-<ul ng-if="template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
+<ul ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
             && route.current.$$route.originalPath.startsWith('/competences/classe')" class="padding-five">
     <li ng-repeat="niveau in structure.cycle.niveauCompetencesArray ">
         <c-skills-bubble text="niveau.lettre" color="niveau.couleur"></c-skills-bubble>
@@ -48,8 +48,8 @@
     <li><span class="rounded grey"></span> &nbsp <i18n>evaluations.competence.unevaluated.abreviation</i18n></li>
 </ul>
 
-<div ng-if="(template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
-            || template.contains('suivi-competence-content', '../templates/evaluations/enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle'))
+<div ng-if="(template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
+            || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle'))
             && route.current.$$route.originalPath.startsWith('/competences/eleve')" class="padding-five">
     <ul class="conversion-legend bfc">
         <li class="row" ng-repeat="Conversion in suiviCompetence.tableConversions.all track by $index">

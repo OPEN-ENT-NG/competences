@@ -40,6 +40,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -62,9 +63,10 @@ public class NoteController extends ControllerHelper {
      */
     private final NoteService notesService;
     private final UtilsService utilsService;
+    private EventBus eb;
 
-
-    public NoteController() {
+    public NoteController(EventBus eb) {
+        this.eb = eb;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
         utilsService = new DefaultUtilsService();
     }

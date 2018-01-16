@@ -41,6 +41,7 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -63,8 +64,10 @@ public class DevoirController extends ControllerHelper {
     private final DefaultDevoirService devoirsService;
     private final UtilsService utilsService;
     private final CompetencesService competencesService;
+    private EventBus eb;
 
-    public DevoirController() {
+    public DevoirController(EventBus eb) {
+        this.eb = eb;
         devoirsService = new DefaultDevoirService(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
         utilsService = new DefaultUtilsService();
         competencesService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
@@ -126,7 +129,7 @@ public class DevoirController extends ControllerHelper {
      */
     @Post("/devoir")
     @ApiDoc("Créer un devoir")
-    @SecuredAction("viescolaire.evaluations.createEvaluation")
+    @SecuredAction("competences.create.evaluation")
     public void create(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

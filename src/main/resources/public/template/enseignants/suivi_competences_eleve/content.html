@@ -34,7 +34,7 @@
             <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
         </h2>
         <div ng-show="!opened.detailCompetenceSuivi"
-             ng-include="'/viescolaire/public/templates/evaluations/enseignants/suivi_competences_eleve/content_buttons.html'"></div>
+             ng-include="'/competences/public/template/enseignants/suivi_competences_eleve/content_buttons.html'"></div>
 
         <div ng-show="opened.detailCompetenceSuivi" class="twelve">
             <div>
@@ -45,11 +45,11 @@
                 <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
                     <i class="icon-back"></i>
                 </a>
-                <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_tableau') }"
-                   ng-click="template.open('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_tableau')"
+                <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau') }"
+                   ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau')"
                    tooltip="evaluations.suivi.eleve.vue.liste"></i>
-                <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_graph') }"
-                   ng-click="template.open('suivi-competence-detail', '../templates/evaluations/enseignants/suivi_competences_eleve/detail_vue_graph')"
+                <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph') }"
+                   ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph')"
                    tooltip="evaluations.suivi.eleve.vue.graph"></i>
             </div>
         </div>
@@ -74,4 +74,4 @@
         </div>
     </div>
 </div>
-<div ng-include="'/viescolaire/public/templates/evaluations/enseignants/informations/display_construction_page.html'"></div>
+<div ng-include="'/competences/public/template/enseignants/informations/display_construction_page.html'"></div>

@@ -1,0 +1,43 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<ul class="skills-color-page">
+    <li ng-click="confirme(-1)">
+        <span class="tooltip-overlay" tooltip="Compétence non évaluée." >
+        </span>
+        <c-skills-bubble color="'#555'" classes="'textColorPage'">
+    </li>
+    <li ng-repeat="niveau in niveauCompetences | orderBy:'ordre'"  ng-click="confirme(niveau.ordre -1)">
+        <span class="tooltip-overlay" tooltip="[[niveau.libelle]]." ></span>
+        <c-skills-bubble text="niveau.lettre" color="niveau.couleur" classes="'textColorPage'">
+        </c-skills-bubble>
+    </li>
+
+</ul>
+
+<lightbox show="opened.lightbox" on-close="opened.lightbox=false">
+    <p ng-if="devoir.endSaisie"><i18n>evaluations.devoir.uncancelable</i18n></p>
+    <p ng-if="!devoir.endSaisie"><i18n>evalutions.competences.confirmation</i18n></p>
+    <p ng-if="!devoir.endSaisie"><i18n>evaluations.devoir.confirmation.question</i18n></p>
+    <button ng-if="!devoir.endSaisie" class="marginFive" ng-click="selectColor()">
+        <i18n>confirmer</i18n>
+    </button>
+    <button ng-if="!devoir.endSaisie" class="marginFive" ng-click="annuler()">
+        <i18n>annuler</i18n>
+    </button>
+</lightbox>

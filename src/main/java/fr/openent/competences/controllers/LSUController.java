@@ -19,6 +19,7 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
@@ -62,8 +63,10 @@ public class LSUController extends ControllerHelper {
     private BfcSyntheseService bfcSynthseService;
     private NiveauEnseignementComplementService niveauEnsCpl;
     private JsonArray listErreursEleves;
+    private EventBus eb;
 
-    public LSUController() {
+    public LSUController(EventBus eb) {
+        this.eb = eb;
         utilsService = new DefaultUtilsService();
         bfcService = new DefaultBFCService(Competences.COMPETENCES_SCHEMA, Competences.BFC_TABLE);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
@@ -786,7 +789,7 @@ public class LSUController extends ControllerHelper {
      */
     @Get("/exportLSU/lsu")
     @ApiDoc("Export data to LSUN xml format")
-    @SecuredAction("viesco.lsun.export")
+    @SecuredAction("competences.lsun.export")
     public void getXML(final HttpServerRequest request) {
         //instancier le lsunBilans qui sera composé de entete,donnees et version
         final LsunBilans lsunBilans = objectFactory.createLsunBilans();

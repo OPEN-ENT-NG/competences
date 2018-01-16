@@ -1,0 +1,14 @@
+<div ng-if="userbook">
+    <div class="round-avatar">
+        <img ng-src="/userbook/avatar/[[ eleve.id ]]" alt="[[eleve.displayName]]"/>
+        <span>[[ eleve.firstName ]]</span>
+    </div>
+</div>
+
+<div ng-if="!userbook">
+    <div class="round-avatar">
+        <img ng-src="/assets/themes/[[ skin.skin ]]/img/illustrations/no-avatar.svg" alt="[[eleve.displayName]]"/>
+        <span>[[ eleve.firstName ]]</span>
+    </div>
+</div>
+

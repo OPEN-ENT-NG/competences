@@ -78,19 +78,19 @@ public class Competences extends BaseServer {
 		addController(new CompetencesController());
 		addController(new AnnotationController());
 		addController(new AppreciationController());
-		addController(new BFCController());
-		addController(new CompetencesController());
-		addController(new CompetenceNoteController());
-		addController(new DevoirController());
+		addController(new BFCController(eb));
+		addController(new CompetenceController());
+		addController(new CompetenceNoteController(eb));
+		addController(new DevoirController(eb));
 		addController(new DomaineController());
 		addController(new EnseignementController());
 		addController(new ExportPDFController(eb, notification));
-		addController(new LSUController());
+		addController(new LSUController(eb));
 		addController(new NiveauDeMaitriseController());
-		addController(new NoteController());
+		addController(new NoteController(eb));
 		addController(new RemplacementController());
 		addController(new UtilsController());
 
-	}
+    }
 
 }
