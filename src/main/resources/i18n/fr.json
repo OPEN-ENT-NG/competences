@@ -255,5 +255,13 @@
   "viescolaire.utils.annee" : "Année",
   "viescolaire.utils.user.birthdate.undefined": "Date de naissance non renseignée",
   "viescolaire.utils.enseignementComplement":"Enseignement de complément",
-  "viescolaire.utils.save":"Enregister"
+  "viescolaire.utils.save":"Enregister",
+  "viescolaire.utils.undersubject":"Sous matière",
+  "viescolaire.utils.school":"Etablissement",
+  "viescolaire.utils.all.none": "Tous / Aucun",
+  "viescolaire.utils.cycle":"Cycle",
+  "viescolaire.utils.student":"Elève",
+  "custom": "Personnalisé",
+  "viescolaire.utils.class":"Classe",
+  "viescolaire.utils.description":"Description"
 }
