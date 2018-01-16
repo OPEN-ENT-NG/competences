@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "libelle": {
+      "type": ["string","null"]
+    },
+    "id_groupe": {
+      "type": "string"
+    },
+    "id_sousmatiere": {
+      "type": ["integer","null"]
+    },
+    "id_periode": {
+      "type": "integer"
+    },
+    "id_type" : {
+      "type" : "integer"
+    },
+    "id_etablissement" : {
+      "type" : "string"
+    },
+    "id_matiere" : {
+      "type" : "string"
+    },
+    "id_etat" : {
+      "type" : "integer"
+    },
+    "diviseur" : {
+      "type" : "integer"
+    },
+    "ramener_sur" : {
+      "type" : "boolean"
+    },
+    "apprec-visible" : {
+      "type" : "boolean"
+    }
+  },
+  "required": [
+    "name",
+    "id_groupe",
+    "id_periode",
+    "id_type",
+    "id_etablissement",
+    "id_matiere",
+    "id_etat",
+    "diviseur",
+    "ramener_sur"
+  ]
+}
