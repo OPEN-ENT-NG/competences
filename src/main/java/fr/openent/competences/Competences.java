@@ -4,6 +4,8 @@ import fr.openent.competences.controllers.*;
 import fr.wseduc.webutils.email.EmailSender;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
+import org.entcore.common.service.impl.SqlCrudService;
+import org.entcore.common.share.impl.SqlShareService;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -16,7 +18,6 @@ public class Competences extends BaseServer {
     public static JsonObject LSUN_CONFIG;
 
     public static final String NOTES_TABLE = "notes";
-    public static final String DEVOIR_TABLE = "devoirs";
     public static final String ANNOTATIONS = "annotations";
     public static final String COMPETENCES_TABLE = "competences";
     public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
@@ -54,9 +55,11 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_NOTES_UPDATE = "eval_updateNote";
     public final static String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
     public final static String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
+    public final static String DEVOIR_TABLE = "devoirs";
+    public final static String DEVOIR_SHARE_TABLE = "devoirs_shares";
 
 
-    public final static String DEVOIR_ACTION_UPDATE = "fr-openent-evaluations-controller-DevoirController|updateDevoir";
+    public final static String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
 
     public final static Integer MAX_NBR_COMPETENCE = 12;
 
@@ -81,7 +84,13 @@ public class Competences extends BaseServer {
 		addController(new BFCController(eb));
 		addController(new CompetenceController());
 		addController(new CompetenceNoteController(eb));
-		addController(new DevoirController(eb));
+
+        // devoir controller
+        DevoirController devoirController = new DevoirController(eb);
+        SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE, new JsonArray().addString("*"), new JsonArray().add("*"), true);
+        devoirController.setCrudService(devoirSqlCrudService);
+        devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions, null));
+        addController(devoirController);
 		addController(new DomaineController());
 		addController(new EnseignementController());
 		addController(new ExportPDFController(eb, notification));
