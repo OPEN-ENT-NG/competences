@@ -19,6 +19,9 @@
         "sql": true,
         "lsun": {
             "xsd_path": "mods/fr.openent~viescolaire~0.9-SNAPSHOT/public/lsun/import-complet-strict.xsd"
+        },
+        "exports" : {
+           "template-path" : "./public/template/pdf/"
         }
       }
     }
