@@ -74,7 +74,7 @@ export class EleveEnseignementCpl extends Model implements IModel{
 
     get api(){
         return {
-            create :`/competencess/CreateNiveauEnsCpl`,
+            create :`/competences/CreateNiveauEnsCpl`,
             update : `/competences/UpdateNiveauEnsCpl?id=${this.id}`,
             get :`/competences/GetNiveauEnsCpl?idEleve=${this.id_eleve}`
         }

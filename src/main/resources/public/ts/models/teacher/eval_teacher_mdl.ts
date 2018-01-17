@@ -1114,11 +1114,11 @@ export class Devoir extends Model implements IModel{
     name : string ;
     owner : string;
     libelle : string;
-    id_sousmatiere : number;
-    id_periode : number;
-    id_type : number;
+    id_sousmatiere : number | string;
+    id_periode : number | string;
+    id_type : number | string;
     id_matiere : string;
-    id_etat : number;
+    id_etat : number | string;
     date_publication : any;
     id_etablissement : string;
     diviseur : number;
@@ -1265,11 +1265,11 @@ export class Devoir extends Model implements IModel{
             old_id_groupe   : this.old_id_groupe,
             id_groupe       : id_groupe,
             type_groupe     : type_groupe,
-            id_sousmatiere   : parseInt(this.id_sousmatiere.toString()),
-            id_periode       : parseInt(this.id_periode.toString()),
-            id_type          : parseInt(this.id_type.toString()),
+            id_sousmatiere   : parseInt(this.id_sousmatiere as string),
+            id_periode       : parseInt(this.id_periode as string),
+            id_type          : parseInt(this.id_type as string),
             id_matiere       : this.id_matiere,
-            id_etat          : parseInt(this.id_etat.toString()),
+            id_etat          : parseInt(this.id_etat as string),
             date_publication : this.date_publication,
             id_etablissement : this.id_etablissement,
             diviseur        : this.diviseur,
@@ -1938,7 +1938,7 @@ export class CompetenceNote extends Model implements IModel {
 
     get api() {
         return {
-            create: '/competencess/competence/note',
+            create: '/competences/competence/note',
             update: '/competences/competence/note?id=' + this.id,
             delete: '/competences/competence/note?id=' + this.id
         }

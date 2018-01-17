@@ -335,7 +335,7 @@ public class NoteController extends ControllerHelper {
                     JsonObject action = new JsonObject()
                             .putString("action", "user.getMoyenne")
                             .putString("idEleve", idEleve)
-                            .putArray("idDevoirsArray", new JsonArray(idDevoirsArray));
+                            .putArray("idDevoirs", new JsonArray(idDevoirsArray));
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                         @Override
                         public void handle(Message<JsonObject> message) {

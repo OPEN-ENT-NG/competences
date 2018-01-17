@@ -95,7 +95,7 @@
                ng-if="isChefEtab()"
                class="right-magnet">
 
-        <input type="button" ng-click="goTo('/devoir/[[currentDevoir.id]]/edit')" i18n-value="evaluations.test.edit"
+        <input type="button" ng-click="goTo('/devoir/' + currentDevoir.id + '/edit')" i18n-value="evaluations.test.edit"
                ng-disabled="endSaisie"
                ng-if="!isChefEtab()"
                class="right-magnet" ng-class="{'button-edit-devoir' : currentDevoir.competences.all.length > 0,

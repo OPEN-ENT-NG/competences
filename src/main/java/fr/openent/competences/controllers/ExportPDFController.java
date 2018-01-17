@@ -1214,7 +1214,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                         public void handle(Message<JsonObject> message) {
                                                                             JsonObject body = message.body();
                                                                             if ("ok".equals(body.getString("status"))) {
-                                                                                result.putString("classeName",body.getObject("result").getObject("data").getString("name"));
+                                                                                result.putString("classeName", body.getObject("result").getObject("c").getObject("data").getString("name"));
                                                                                 if(devoirInfos.getBoolean("is_evaluated") == true){
                                                                                     Integer nbrColone = (devoirInfos.getInteger("nbrcompetence") + 1 );
                                                                                     result.putString("nbrCompetences",nbrColone.toString());
@@ -1585,7 +1585,7 @@ public class ExportPDFController extends ControllerHelper {
 
         JsonObject action = new JsonObject()
                 .putString("action", "eleve.getInfoEleve")
-                .putArray("getInfoEleve", new JsonArray(new String[]{idEleve}));
+                .putArray("idEleves", new JsonArray(new String[]{idEleve}));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
             @Override
