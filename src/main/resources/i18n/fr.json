@@ -263,5 +263,12 @@
   "viescolaire.utils.student":"Elève",
   "custom": "Personnalisé",
   "viescolaire.utils.class":"Classe",
-  "viescolaire.utils.description":"Description"
+  "viescolaire.utils.description":"Description",
+  "error.note.outbound":"La note doit être comprise entre 0 et ",
+  "viescolaire.classe.moyenne" :"Moyenne de la classe",
+  "viescolaire.classe.note.min":"Note min",
+  "viescolaire.classe.note.max":"Note max",
+  "viescolaire.utils.stats":"Statistiques",
+  "evaluations.homework.details":"Détails de l'évaluation",
+  "viescolaire.utils.appreciation":"Appréciation"
 }
