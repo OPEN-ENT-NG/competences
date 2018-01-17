@@ -1,5 +1,5 @@
 import { ng, moment, _ } from 'entcore';
-import {evaluations} from '../models/teacher/eval_teacher_mdl';
+import { evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 
 export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', [

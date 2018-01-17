@@ -22,10 +22,10 @@
  */
 
 import { model, ng, idiom as lang, template, skin, moment } from 'entcore';
-import {evaluations} from '../models/eval_parent_mdl';
+import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
-import {Classe} from "../models/parent_eleve/Classe";
-import {Defaultcolors} from "../models/eval_niveau_comp";
+import { Classe } from "../models/parent_eleve/Classe";
+import { Defaultcolors } from "../models/eval_niveau_comp";
 
 declare let _: any;
 declare let location: any;

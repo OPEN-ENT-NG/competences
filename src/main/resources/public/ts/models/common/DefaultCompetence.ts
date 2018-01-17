@@ -1,5 +1,5 @@
 import { Model, Collection } from 'entcore';
-import { Competence } from "../teacher/eval_teacher_mdl";
+import { Competence } from "../teacher";
 
 export class DefaultCompetence extends Model {
     competences: Collection<Competence>;

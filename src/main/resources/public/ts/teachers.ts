@@ -1,7 +1,8 @@
 /**
  * Created by ledunoiss on 12/09/2016.
  */
-import {routes, ng} from 'entcore';
+import { routes, ng, model } from 'entcore';
+import { evaluations } from './models/teacher';
 
 ng.addRequiredModule('chart.js');
 
@@ -85,3 +86,10 @@ routes.define(function($routeProvider){
             redirectTo : '/'
         });
 });
+
+declare let require: any;
+
+model.build = function () {
+    require('angular-chart.js');
+    (this as any).evaluations = evaluations;
+};

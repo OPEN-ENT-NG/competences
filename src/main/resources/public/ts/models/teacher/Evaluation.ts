@@ -1,0 +1,247 @@
+import { Model, IModel, Collection, http } from 'entcore';
+import { CompetenceNote } from './index';
+
+export class Evaluation extends Model implements IModel {
+    id : number;
+    id_eleve : string;
+    id_devoir : number;
+    id_appreciation : number;
+    valeur : any;
+    appreciation : any;
+    coefficient : number;
+    ramener_sur : boolean;
+    competenceNotes : Collection<CompetenceNote>;
+    oldValeur : any;
+    is_evaluated  : boolean;
+    oldAppreciation : any;
+    oldId_annotation : number;
+    id_annotation : number;
+
+    //TODO Delete when infra-front will be fixed
+    one: (name, mixin) => void;
+    on: (name, mixin) => void;
+    findWhere: (params) => any;
+    trigger: (action: string) => void;
+    updateData: (o) => void;
+    collection: (type, mixin?, name?) => void;
+    where: (params) => any;
+
+    get api () {
+        return {
+            create : '/competences/note',
+            update : '/competences/note?idNote=' + this.id,
+            delete : '/competences/note?idNote=' + this.id,
+            createAppreciation : '/competences/appreciation',
+            updateAppreciation : '/competences/appreciation?idAppreciation=' + this.id_appreciation,
+            deleteAppreciation : '/competences/appreciation?idAppreciation=' + this.id_appreciation,
+            updateAnnotation : '/competences/annotation?idDevoir=' + this.id_devoir,
+            deleteAnnotation : '/competences/annotation?idDevoir=' + this.id_devoir+'&idEleve='+this.id_eleve,
+            createAnnotation : '/competences/annotation'
+        };
+    }
+
+    constructor (o? : any) {
+        super();
+        if (o) this.updateData(o);
+        this.collection(CompetenceNote);
+    }
+
+    toJSON () {
+        let o = new Evaluation();
+        if(this.id !== null) o.id = this.id;
+        o.id_eleve  = this.id_eleve;
+        o.id_devoir = parseInt(this.id_devoir.toString());
+        o.valeur   = parseFloat(this.valeur);
+        if (this.appreciation) o.appreciation = this.appreciation;
+        delete o.competenceNotes;
+        return o;
+    }
+
+
+    save () : Promise<Evaluation> {
+        return new Promise((resolve) => {
+            if ( this.id_annotation !== undefined && this.id_annotation !== -1){
+                this.deleteAnnotationDevoir().then(()=>{
+                    delete this.oldId_annotation;
+                    delete this.id_annotation;
+                    this.oldValeur = "";
+                    this.create().then((data) => {
+                        resolve(data);
+                    });
+                });
+            }else {
+                if (!this.id) {
+                    this.create().then((data) => {
+                        resolve(data);
+                    });
+                } else {
+                    this.update().then((data) =>  {
+                        resolve(data);
+                    });
+                }
+            }
+
+
+        });
+    }
+
+    saveAppreciation () : Promise<Evaluation> {
+        return new Promise((resolve) => {
+            if (!this.id_appreciation) {
+                this.createAppreciation().then((data) => {
+                    resolve(data);
+                });
+            } else {
+                this.updateAppreciation().then((data) =>  {
+                    resolve(data);
+                });
+            }
+        });
+    }
+    create () : Promise<Evaluation> {
+        return new Promise((resolve) => {
+            let _noteData = this.toJSON();
+            delete _noteData.appreciation;
+            delete _noteData.id_appreciation;
+            http().postJson(this.api.create, _noteData).done(function (data) {
+                if(resolve && (typeof(resolve) === 'function')) {
+                    resolve(data);
+                }
+            });
+        });
+    }
+
+    update () : Promise<Evaluation> {
+        return new Promise((resolve) => {
+            let _noteData = this.toJSON();
+            delete _noteData.appreciation;
+            delete _noteData.id_appreciation;
+            http().putJson(this.api.update, _noteData).done(function (data) {
+                if(resolve && (typeof(resolve) === 'function')) {
+                    resolve(data);
+                }
+            });
+        });
+    }
+
+    delete () : Promise<any> {
+        return new Promise((resolve) => {
+            http().delete(this.api.delete).done(function (data) {
+                if(resolve && typeof(resolve) === 'function'){
+                    resolve(data);
+                }
+            });
+        });
+    }
+    createAppreciation () : Promise<Evaluation> {
+        return new Promise((resolve) => {
+            let _appreciation = {
+                id_devoir : this.id_devoir,
+                id_eleve  : this.id_eleve,
+                valeur    : this.appreciation
+            };
+            http().postJson(this.api.createAppreciation, _appreciation).done ( function (data) {
+                if(resolve && (typeof(resolve) === 'function')) {
+                    resolve(data);
+                }
+            }) ;
+
+        });
+
+    }
+
+    updateAppreciation () : Promise<Evaluation> {
+        return new Promise((resolve) => {
+            let _appreciation = {
+                id : this.id_appreciation,
+                id_devoir : this.id_devoir,
+                id_eleve  : this.id_eleve,
+                valeur    : this.appreciation
+            };
+            http().putJson(this.api.updateAppreciation, _appreciation).done(function (data) {
+                if(resolve && (typeof(resolve) === 'function')) {
+                    resolve(data);
+                }
+            });
+
+        });
+    }
+
+    saveAnnotation (): Promise<Evaluation> {
+        return new Promise((resolve) => {
+            if (this.oldId_annotation !== undefined && this.oldId_annotation > 0) {
+                this.updateAnnotationDevoir().then((data) => {
+                    resolve(data);
+                });
+            } else {
+                this.createAnnotationDevoir().then((data) =>  {
+                    resolve(data);
+                });
+            }
+        });
+    }
+
+    createAnnotationDevoir (): Promise<Evaluation> {
+        return new Promise((resolve) => {
+            let _annotation = {
+                id_devoir : this.id_devoir,
+                id_annotation  : this.id_annotation,
+                id_eleve    : this.id_eleve
+            };
+            http().postJson(this.api.createAnnotation, _annotation).done ( function (data) {
+                if (resolve && (typeof(resolve) === 'function')) {
+                    resolve(data);
+                }
+            });
+        });
+
+    }
+
+    updateAnnotationDevoir (): Promise<Evaluation> {
+        return new Promise((resolve) => {
+            let _annotation = {
+                id_devoir : this.id_devoir,
+                id_annotation  : parseInt(this.id_annotation.toString()),
+                id_eleve    : this.id_eleve
+            };
+            http().putJson(this.api.updateAnnotation, _annotation).done ( function (data) {
+                if (resolve && (typeof(resolve) === 'function')) {
+                    resolve(data);
+                }
+            });
+        });
+    }
+    deleteAnnotationDevoir () : Promise<any> {
+        return new Promise((resolve) => {
+            let _annotation = {
+                id_devoir : this.id_devoir,
+                id_eleve    : this.id_eleve
+            };
+            http().delete(this.api.deleteAnnotation,_annotation).done(function (data) {
+                if(resolve && typeof(resolve) === 'function') {
+                    resolve(data);
+                }
+            });
+        });
+    }
+
+    deleteAppreciation () : Promise<any> {
+        return new Promise((resolve) => {
+            http().delete(this.api.deleteAppreciation).done(function (data) {
+                if(resolve && typeof(resolve) === 'function') {
+                    resolve(data);
+                }
+            });
+        });
+    }
+
+    formatMoyenne() {
+        return {
+            valeur : parseFloat(this.valeur),
+            coefficient : this.coefficient,
+            ramenersur : this.ramener_sur
+        }
+    }
+
+
+}

@@ -22,7 +22,7 @@
  */
 
 import { ng, idiom as lang } from 'entcore';
-import {evaluations} from '../models/eval_parent_mdl';
+import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
 
 declare let _: any;

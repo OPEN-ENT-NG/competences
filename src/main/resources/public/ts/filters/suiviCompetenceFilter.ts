@@ -5,7 +5,7 @@
  * Created by ledunoiss on 20/09/2016.
  */
 import { ng, moment, _ } from 'entcore';
-import {CompetenceNote} from "../models/teacher/eval_teacher_mdl";
+import {CompetenceNote} from "../models/teacher";
 
 export let fitlerCompetenceSuivi = ng.filter('fitlerCompetenceSuivi', function(){
     return function(competences, mine, user){

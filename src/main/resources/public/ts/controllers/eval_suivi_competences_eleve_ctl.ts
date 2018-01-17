@@ -3,10 +3,18 @@
  */
 
 import { ng, template, model, moment } from 'entcore';
-import {SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve} from '../models/teacher/eval_teacher_mdl';
+import {
+    SuiviCompetence,
+    Devoir,
+    CompetenceNote,
+    evaluations,
+    Structure,
+    Classe,
+    Eleve
+} from '../models/teacher';
 import * as utils from '../utils/teacher';
-import {NiveauEnseignementCpls} from "../models/eval_ens_complement_mdl";
-import {Defaultcolors} from "../models/eval_niveau_comp";
+import { NiveauEnseignementCpls } from "../models/eval_ens_complement_mdl";
+import { Defaultcolors } from "../models/eval_niveau_comp";
 
 declare let _:any;
 declare let Chart:any;

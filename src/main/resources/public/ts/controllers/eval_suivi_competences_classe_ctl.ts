@@ -2,10 +2,10 @@
  * Created by ledunoiss on 27/10/2016.
  */
 
-import {ng, template, model} from 'entcore';
-import {SuiviCompetence, Domaine, SuiviCompetenceClasse, evaluations} from '../models/teacher/eval_teacher_mdl';
+import { ng, template, model } from 'entcore';
+import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
-import {Defaultcolors} from "../models/eval_niveau_comp";
+import { Defaultcolors } from "../models/eval_niveau_comp";
 
 declare let _:any;
 

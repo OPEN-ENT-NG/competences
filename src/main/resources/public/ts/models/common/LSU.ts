@@ -2,7 +2,7 @@
  * Created by agnes.lapeyronnie on 19/09/2017.
  */
 import { Collection, _ } from 'entcore';
-import { Responsable, Classe } from '../Teacher/eval_teacher_mdl';
+import { Responsable, Classe } from '../teacher';
 
 export class LSU {
     responsables : Collection<Responsable>;

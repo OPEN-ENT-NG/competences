@@ -1,7 +1,14 @@
 import { model, notify, idiom as lang, ng, template, moment, _, angular, http } from 'entcore';
 import {
-    Devoir, Evaluation, evaluations, ReleveNote, GestionRemplacement, Classe, Structure, Annotation,
-} from '../models/teacher/eval_teacher_mdl';
+    Devoir,
+    Evaluation,
+    evaluations,
+    ReleveNote,
+    GestionRemplacement,
+    Classe,
+    Structure,
+    Annotation
+} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import { Periode } from "../models/common/Periode";
