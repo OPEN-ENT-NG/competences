@@ -24,7 +24,7 @@
     <div class="twelve cell">
 
         <header class="header-viescolaire">
-            <h1><span class="no-style ng-scope"><i18n>ariane.viescolaire.displayReleveNotes</i18n></span></h1>
+            <h1><span class="no-style ng-scope"><i18n>evaluations.releve.title</i18n></span></h1>
 
             <section style="margin-top:8px;" ng-if="me.type === 'PERSRELELEVE'" class="row twelve-mobile">
                 <label class="select cell two twelve-mobile" ng-hide="searchReleve.eleve===undefined">
@@ -67,7 +67,7 @@
             <table navigable>
                 <thead>
                 <tr>
-                    <th class="fontLarge two"><i18n>viescolaire.utils.matiere</i18n></th>
+                    <th class="fontLarge two"><i18n>viescolaire.utils.subject</i18n></th>
                     <th class="fontLarge nine center"><i18n>evaluations.grade</i18n></th>
                     <th class="fontLarge one center"><i18n>average</i18n></th>
                 </tr>
@@ -75,7 +75,7 @@
                 <tbody>
                 <tr
                     ng-repeat="matiere in matieres.all | filter:hasEvaluatedDevoir ">
-                    <td data-label="[[translate('viescolaire.utils.matiere')]]" >
+                    <td data-label="[[translate('viescolaire.utils.subject')]]" >
                         <span class="alignMatiere">[[matiere.name]]</span>
                         <ul>
                             <li ng-repeat="ens in matiere.ens track by ens.id">

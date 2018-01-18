@@ -80,9 +80,15 @@
                     <div class="firstElem">[[getDateFormated(devoir.date)]]
                     </div>
                 </td>
-                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                        class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]" >
+                <td ng-if="devoir.id_matiere !== ''"
+                    ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                    class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]" >
                     <div class="competence-text-overflow">[[getLibelleMatiere(devoir.id_matiere)]]</div>
+                </td>
+                <td ng-if="devoir.id_matiere === ''"
+                    ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
+                    class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]" >
+                    <div class="competence-text-overflow">&nbsp;</div>
                 </td>
                 <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
                         class="testAlignLeft" data-label="[[translate('viescolaire.utils.name')]]">

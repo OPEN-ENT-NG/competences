@@ -48,10 +48,17 @@
                                      tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
                                     [[getDateFormated(devoir.date)]]
                                 </div>
-                                <div class="five cell competence-text-overflow"
+                                <div ng-if="devoir.id_matiere !== ''"
+                                     class="five cell competence-text-overflow"
                                      tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
                                     [[getLibelleMatiere(devoir.id_matiere)]]
                                 </div>
+                                <div ng-if="devoir.id_matiere === ''"
+                                     class="five cell competence-text-overflow"
+                                     tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
+                                    &nbsp;
+                                </div>
+
                                 <div ng-if="devoir.annotation === undefined && devoir.note !== undefined"
                                      class="two center cell competence-text-overflow"
                                      tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
