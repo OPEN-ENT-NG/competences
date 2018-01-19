@@ -37,7 +37,7 @@
                                     <div class="nine cell twelve-mobile">
                                         <label class="select eight cell twelve-mobile" ng-class="{disabled : devoir.id !== undefined}">
                                             <select ng-model="devoir.id_etablissement"
-                                                    ng-change="syncPeriode(devoir.id_groupe); switchStructureCreation()"
+                                                    ng-change="switchStructureCreation()"
                                                     ng-disabled="devoir.id !== undefined">
                                                 <option ng-repeat="etab in evaluations.structures.all"
                                                         ng-selected="etab.id == evaluations.structure.id"
