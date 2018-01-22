@@ -1,21 +1,24 @@
 {
   "competences.title": "Competences",
-
   "competences.notify.saved": "La donnée a été sauvegardée",
   "competences.notify.modified": "La donnée a été modifiée",
   "competences.notify.deleted": "La donnée a été supprimée",
   "competences.notify.shared": "La donnée a été partagée",
   "competences.notify.trashed": "La donnée a été mise à la corbeille",
   "competences.notify.restored": "La donnée a été restaurée",
-
+  "competences.manager": "Gestion",
+  "competences.contrib": "Contribution",
+  "competences.read": "Lecture",
   "competences.root": "Mes competencess",
+  "competences.create": "Créer un Competences",
+
+  "custom": "Personnalisé",
+
+
   "list.title": "Mes competencess",
   "folder.trash": "Corbeille",
   "show": "Afficher",
   "show.more": "voir plus",
-  "competences.manager": "Gestion",
-  "competences.contrib": "Contribution",
-  "competences.read": "Lecture",
 
   "group.Teacher": "Tous les enseignants du groupe {0}.",
   "group.Personnel": "Tous les personnels du groupe {0}.",
@@ -29,22 +32,25 @@
   "group.class.Personnel": "Tous les personnels de la classe {0}.",
   "group.class.Student": "Tous les élèves de la classe {0}.",
   "group.class.Relative": "Tous les parents de la classe {0}.",
-  "competences.create": "Créer un Competences",
+
   "title": "Titre",
   "from": "De",
   "date": "Date",
   "share.search.title": "Rechercher des utilisateurs et des groupes",
+
   "tuto.title": "Naviguez au sein de vos documents en vue vignettes : ",
   "tuto.action.select": "Cliquez",
   "tuto.text.select": "pour séléctionner et accéder au menu d'options,",
   "tuto.action.open": "Double-cliquez",
   "tuto.text.open": "pour ouvrir un dossier ou un fichier.",
+  "tuto.bienvenu":"Bienvenue sur l'écran de saisie de notes et de compétences.Vous avez la possiblité d'évaluer les compétences au clavier. ",
+  "tuto.raccourci":"Il suffit pour cela , de se positionner sur une pastille et utiliser la touche numérique correspondante :",
+
   "modified.on": "Modifié le ",
+
   "view": "Afficher",
   "remove.confirm": "Voulez-vous vraiment supprimer ce contenu ?",
   "open": "Ouvrir",
-  "tuto.bienvenu":"Bienvenue sur l'écran de saisie de notes et de compétences.Vous avez la possiblité d'évaluer les compétences au clavier. ",
-  "tuto.raccourci":"Il suffit pour cela , de se positionner sur une pastille et utiliser la touche numérique correspondante :",
 
   "evaluations.devoir.updateDevoir.firstConfirmSupp.part2" : "Souhaitez vous continuer ?",
   "evaluations.devoir.updateDevoir.secondConfirmSupp.part1" : "Confirmez-vous le choix de retirer une ou plusieurs compétences évaluées ?",
@@ -234,6 +240,10 @@
   "viescolaire.structure.load": "Chargement de l'établissement",
   "viescolaire.structure.load.end": "en cours...",
   "viescolaire.eleve.recherche":"Recherche Elève",
+
+  "viescolaire.utils.annee" : "Année",
+  "viescolaire.utils.all.none": "Tous / Aucun",
+  "viescolaire.utils.appreciation":"Appréciation",
   "viescolaire.utils.classe":"classe",
   "viescolaire.utils.class.groupe":"Classe / Groupe",
   "viescolaire.utils.periode":"Période",
@@ -243,6 +253,20 @@
   "viescolaire.utils.name":"Nom",
   "viescolaire.utils.criterion":"Vos critères",
   "viescolaire.utils.teacher" : "Enseignant",
+  "viescolaire.utils.legend" : "Légende",
+  "viescolaire.utils.legend.conversion" : "Légende conversion",
+  "viescolaire.utils.user.birthdate":"Date de naissance",
+  "viescolaire.utils.user.birthdate.undefined": "Date de naissance non renseignée",
+  "viescolaire.utils.enseignementComplement":"Enseignement de complément",
+  "viescolaire.utils.save":"Enregister",
+  "viescolaire.utils.undersubject":"Sous matière",
+  "viescolaire.utils.school":"Etablissement",
+  "viescolaire.utils.cycle":"Cycle",
+  "viescolaire.utils.student":"Elève",
+  "viescolaire.utils.class":"Classe",
+  "viescolaire.utils.description":"Description",
+  "viescolaire.utils.stats":"Statistiques",
+
   "ariane.competences.createDevoir":"Ajouter une évaluation",
   "ariane.competences.editDevoir":"Modifier une évaluation",
   "ariane.competences.displayReleveNotes":"Relevé de notes",
@@ -256,24 +280,11 @@
   "ariane.competences.export":"Export LSU",
   "viescolaire.periode.2":"Semestre",
   "viescolaire.periode.3":"Trimestre",
-  "viescolaire.utils.annee" : "Année",
-  "viescolaire.utils.user.birthdate.undefined": "Date de naissance non renseignée",
-  "viescolaire.utils.enseignementComplement":"Enseignement de complément",
-  "viescolaire.utils.save":"Enregister",
-  "viescolaire.utils.undersubject":"Sous matière",
-  "viescolaire.utils.school":"Etablissement",
-  "viescolaire.utils.all.none": "Tous / Aucun",
-  "viescolaire.utils.cycle":"Cycle",
-  "viescolaire.utils.student":"Elève",
-  "custom": "Personnalisé",
-  "viescolaire.utils.class":"Classe",
-  "viescolaire.utils.description":"Description",
+
   "error.note.outbound":"La note doit être comprise entre 0 et ",
   "viescolaire.classe.moyenne" :"Moyenne de la classe",
   "viescolaire.classe.note.min":"Note min",
   "viescolaire.classe.note.max":"Note max",
   "viescolaire.evaluation.note": "Note",
-  "viescolaire.utils.stats":"Statistiques",
-  "evaluations.homework.details":"Détails de l'évaluation",
-  "viescolaire.utils.appreciation":"Appréciation"
+  "evaluations.homework.details":"Détails de l'évaluation"
 }

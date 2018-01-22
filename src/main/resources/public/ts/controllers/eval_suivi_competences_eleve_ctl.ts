@@ -611,12 +611,13 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.incrementEleve = async function (num) {
             $scope.selected.grey = true;
             let index = _.findIndex($scope.search.classe.eleves.all, {id: $scope.search.eleve.id});
-            if (index !== -1 && (index + parseInt(num)) >= 0
-                && (index + parseInt(num)) < $scope.search.classe.eleves.all.length) {
+            if (index !== -1 && index + parseInt(num) >= 0
+                && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
                 $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
                 let content = $scope.template.containers['suivi-competence-content'].split('.html?hash=')[0].split('template/')[1];
 
-                await $scope.selectSuivi();
+                await
+                $scope.selectSuivi($scope.route.current.$$route.originalPath);
                 $scope.template.open('suivi-competence-content', content);
                 utils.safeApply($scope);
             }
