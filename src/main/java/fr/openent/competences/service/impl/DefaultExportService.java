@@ -211,7 +211,7 @@ public class DefaultExportService implements ExportService {
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject();
             _maitrise.putString("libelle", maitrise.getString("libelle"));
-            _maitrise.putString("visu", text ? maitrise.getString("lettre") : String.valueOf(maitrise.getLong("ordre")));
+            _maitrise.putString("visu", text ? getMaitrise(maitrise.getString("lettre"), String.valueOf(maitrise.getLong("ordre"))) : String.valueOf(maitrise.getLong("ordre")));
             maitrisesArray.add(_maitrise);
         }
         result.putArray("maitrise", maitrisesArray);
@@ -265,10 +265,10 @@ public class DefaultExportService implements ExportService {
                 } else if (competenceNotes.containsKey(eleve.getKey()) && competenceNotes.get(eleve.getKey()).containsKey(competence)) {
                     Map<String, JsonObject> competenceNotesEleve = competenceNotes.get(eleve.getKey());
                     String evaluation = String.valueOf(competenceNotesEleve.get(competence).getLong("evaluation"));
-                    comptenceNotesEleves.addString(text ? maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("lettre")
+                    comptenceNotesEleves.addString(text ? getMaitrise(maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("lettre"), String.valueOf(Integer.valueOf(evaluation) + 1))
                             : String.valueOf(Integer.valueOf(evaluation) + 1));
                 } else {
-                    comptenceNotesEleves.addString(text ? maitrises.get("0").getString("lettre")
+                    comptenceNotesEleves.addString(text ? getMaitrise(maitrises.get("0").getString("lettre"), "0")
                             : "0");
                 }
                 eleveObject.putArray("competenceNotes", comptenceNotesEleves);
@@ -530,7 +530,7 @@ public class DefaultExportService implements ExportService {
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject();
             _maitrise.putString("libelle", maitrise.getString("libelle"));
-            _maitrise.putString("visu", text ? maitrise.getString("lettre") : String.valueOf(maitrise.getLong("ordre")));
+            _maitrise.putString("visu", text ? getMaitrise(maitrise.getString("lettre"), String.valueOf(maitrise.getLong("ordre"))) : String.valueOf(maitrise.getLong("ordre")));
             headerMiddle.add(_maitrise);
         }
         header.putArray("right", headerMiddle);
@@ -710,7 +710,7 @@ public class DefaultExportService implements ExportService {
         JsonArray resultList = new JsonArray();
         for(Map.Entry<Long, Integer> notesMaitrises : occNote.entrySet()) {
             JsonObject competenceNotesObj = new JsonObject();
-            String number = (text ? maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("lettre") + " - " : "") + String.valueOf(notesMaitrises.getValue());
+            String number = (text ? getMaitrise(maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("lettre"), String.valueOf(notesMaitrises.getKey())) + " - " : "") + String.valueOf(notesMaitrises.getValue());
             competenceNotesObj.putString("number", number);
             String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
             competenceNotesObj.putString("color", color);
@@ -718,5 +718,27 @@ public class DefaultExportService implements ExportService {
             resultList.add(competenceNotesObj);
         }
         return resultList;
+    }
+
+    private String getMaitrise(String maitrise, String key){
+        if(maitrise == null){
+            return getMaitrise(key);
+        } else if(maitrise.equals("  ")) {
+            return getMaitrise(key);
+        } else {
+            return maitrise;
+        }
+    }
+    private String getMaitrise(String key){
+        switch (key) {
+            case "1":
+                return "MI";
+            case "2":
+                return "MF";
+            case "3":
+                return "MS";
+            default:
+                return "TB";
+        }
     }
 }
