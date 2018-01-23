@@ -17,10 +17,10 @@
   },
   "homepage": "https://github.com/OPEN-ENT-NG/Competences#readme",
   "dependencies": {
-    "entcore": "^2.0.1",
+    "entcore": "~3.0.0-dev.1",
     "@types/core-js": "0.9.42",
     "angular-chart.js": "^1.1.1",
-    "awesome-typescript-loader": "3.2.1",
+    "ts-loader": "^3.3.0",
     "axios": "0.16.2",
     "core-js": "2.4.1",
     "entcore-toolkit": "^1.0.1",

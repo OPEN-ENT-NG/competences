@@ -22,15 +22,6 @@ export class ReleveNote extends  Model implements IModel{
     idEtablissement: string;
     _tmp : any;
 
-    //TODO Delete when infra-front will be fixed
-    one: (name, mixin) => void;
-    on: (name, mixin) => void;
-    findWhere: (params) => any;
-    trigger: (action: string) => void;
-    updateData: (o) => void;
-    collection: (type, mixin, name?) => void;
-    where: (params) => any;
-
     get api () {
         return {
             get : '/competences/releve?idEtablissement='+this.structure.id+'&idClasse='+this.idClasse+'&idMatiere='+this.idMatiere

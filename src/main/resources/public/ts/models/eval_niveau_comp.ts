@@ -16,10 +16,6 @@ export class NiveauCompetence extends Model {
     id_cycle: number;
     cycle: string;
 
-    //TODO Delete when infra-front will be fixed
-    collection:  (type, mixin?, name?) => void;
-    updateData: (o) => void;
-
     constructor (o?: any) {
         super();
         if (o && typeof o === 'object') { this.updateData(o); }

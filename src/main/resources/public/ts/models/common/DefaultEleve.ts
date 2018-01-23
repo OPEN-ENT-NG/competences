@@ -10,7 +10,4 @@ export class DefaultEleve extends Model {
     lastName: string;
     idClasse: string;
     displayName: string;
-
-    //TODO Delete when infra-front will be fixed
-    updateData: (o) => void;
 }

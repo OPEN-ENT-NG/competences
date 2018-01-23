@@ -3,9 +3,6 @@ export class Devoir extends Model {
     id : number;
     appreciation: string;
 
-    //TODO Delete when infra-front will be fixed
-    updateData: (o) => void;
-
     get api() {
         return {
             GET_APPRECIATION: '/viescolaire/appreciation/devoir/' + this.id +  '/eleve/'

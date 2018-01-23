@@ -7,10 +7,6 @@ export class BfcSynthese extends Model {
     id_cycle: number;
     texte: string;
 
-    //TODO Delete when infra-front will be fixed
-    collection:  (type, mixin?, name?) => void;
-    updateData: (o) => void;
-
     get api() {
         return {
             create: '/competences/BfcSynthese',

@@ -7,15 +7,6 @@ export class CompetenceNote extends Model implements IModel {
     evaluation: number;
     id_eleve: string;
 
-    //TODO Delete when infra-front will be fixed
-    one: (name, mixin) => void;
-    on: (name, mixin) => void;
-    findWhere: (params) => any;
-    trigger: (action: string) => void;
-    updateData: (o) => void;
-    collection: (type, mixin?, name?) => void;
-    where: (params) => any;
-
     get api() {
         return {
             create: '/competences/competence/note',

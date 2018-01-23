@@ -10,16 +10,7 @@ export class GestionRemplacement extends Model {
     sortReverse : boolean; // sens de tri de la liste des remplaçants
     showError : boolean; // condition d'affichage d'un message d'erreur
     confirmation : boolean; // condition d'affichage de la popup de confirmation
-    selectAll : boolean; // booleen de sélection de tous/aucun remplacement/s
-
-    //TODO Delete when infra-front will be fixed
-    one: (name, mixin) => void;
-    on: (name, mixin) => void;
-    findWhere: (params) => any;
-    trigger: (action: string) => void;
-    updateData: (o) => void;
-    collection: (type, mixin?, name?) => void;
-    where: (params) => any;
+    selectAll : boolean; // booleen de sélection de tous/aucun remplacement/
 
     get api () {
         return {

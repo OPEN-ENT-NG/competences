@@ -25,15 +25,6 @@ export class SuiviCompetence extends Model {
     ensCplSelected : EnsCpl;
     eleveEnsCpl : EleveEnseignementCpl;
 
-    //TODO Delete when infra-front will be fixed
-    one: (name, mixin) => void;
-    on: (name, mixin) => void;
-    findWhere: (params) => any;
-    trigger: (action: string) => void;
-    updateData: (o) => void;
-    collection: (type, mixin?, name?) => void;
-    where: (params) => any;
-
     get api() {
         return {
             getCompetencesNotes : '/competences/competence/notes/eleve/',

@@ -44,10 +44,6 @@ export class Structure extends Model {
     private syncRemplacement: () => any;
     responsables: Collection<Responsable>;
 
-    //TODO Delete when infra-front will be fixed
-    collection:  (type, mixin?, name?) => void;
-    updateData: (o) => void;
-
 
     get api() {
         return {

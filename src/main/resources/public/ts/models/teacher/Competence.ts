@@ -11,15 +11,6 @@ export class Competence extends Model {
     ids_domaine : string;
     composer : any;
 
-    //TODO Delete when infra-front will be fixed
-    one: (name, mixin) => void;
-    on: (name, mixin) => void;
-    findWhere: (params) => any;
-    trigger: (action: string) => void;
-    updateData: (o) => void;
-    collection: (type, mixin?, name?) => void;
-    where: (params) => any;
-
     constructor () {
         super();
         this.collection(Competence);

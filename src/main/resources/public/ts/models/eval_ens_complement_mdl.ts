@@ -57,10 +57,6 @@ export class EleveEnseignementCpl extends Model implements IModel{
     niveau : number;
     libelle : string;
 
-    //TODO Delete when infra-front will be fixed
-    collection:  (type, mixin?, name?) => void;
-    updateData: (o) => void;
-
     constructor(id_eleve : string){
         super();
         this.id_eleve = id_eleve;

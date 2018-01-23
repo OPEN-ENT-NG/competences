@@ -10,10 +10,6 @@ export class Classe extends DefaultClasse {
     typePeriodes: Collection<TypePeriode>;
     id_cycle: number;
 
-    //TODO Delete when infra-front will be fixed
-    collection:  (type, mixin, name?) => void;
-    updateData: (o) => void;
-
 
     get api() {
         return {

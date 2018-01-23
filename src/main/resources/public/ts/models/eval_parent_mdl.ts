@@ -50,8 +50,6 @@ export class Evaluations extends Model {
     usePerso: any;
     composer: any;
 
-    collection: (type, mixin, name?) => void;
-
     get api() {
         return {
             EVAL_ENFANTS: '/competences/enfants?userId=' + model.me.userId,

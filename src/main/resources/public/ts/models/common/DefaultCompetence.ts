@@ -10,8 +10,4 @@ export class DefaultCompetence extends Model {
     code_domaine: string;
     ids_domaine: string;
     composer: any;
-
-    //TODO Delete when infra-front will be fixed
-    collection:  (type, mixin?, name?) => void;
-    updateData: (o) => void;
 }

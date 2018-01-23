@@ -31,15 +31,6 @@ export class Evaluations extends Model {
     structures : Collection<Structure>;
     eleves : Collection<Eleve>;
 
-    //TODO Delete when infra-front will be fixed
-    one: (name, mixin) => void;
-    on: (name, mixin) => void;
-    findWhere: (params) => any;
-    trigger: (action: string) => void;
-    updateData: (o) => void;
-    collection: (type, mixin?, name?) => void;
-    where: (params) => any;
-
     constructor () {
         super();
         this.synchronized = {

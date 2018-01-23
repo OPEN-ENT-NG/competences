@@ -18,15 +18,6 @@ export class Domaine extends Model {
     id_chef_etablissement : string;
     id_etablissement : string;
 
-    //TODO Delete when infra-front will be fixed
-    one: (name, mixin) => void;
-    on: (name, mixin) => void;
-    findWhere: (params) => any;
-    trigger: (action: string) => void;
-    updateData: (o) => void;
-    collection: (type, mixin?, name?) => void;
-    where: (params) => any;
-
 
     /**
      * Méthode activant l'affichage des sous domaines d'un domaine
