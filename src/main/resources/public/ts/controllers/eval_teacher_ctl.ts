@@ -1816,14 +1816,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.devoir.date = $scope.getDateFormated($scope.devoir.dateDevoir);
             $scope.devoir.date_publication = $scope.getDateFormated($scope.devoir.datePublication);
 
-            // Pour la sauvegarde on ne recupere que les id des competences
+            // Pour la création on ne recupere que les id des competences
             if ($location.path() !== "/devoir/" + $scope.devoir.id + "/edit") {
                 if (evaluations.competencesDevoir !== undefined) {
                     $scope.devoir.competences = [];
-                    for (var i = 0; i < evaluations.competencesDevoir.length; i++) {
+
+                    for (let i = 0; i < evaluations.competencesDevoir.length; i++) {
                         let  _c = _.findWhere(evaluations.competencesDevoir, {index:i});
                         if (_c !== undefined) {
                             $scope.devoir.competences.push(_c.id);
+                        }
+                        else {
+                            $scope.devoir.competences.push(evaluations.competencesDevoir[i].id);
                         }
                     }
                 }
