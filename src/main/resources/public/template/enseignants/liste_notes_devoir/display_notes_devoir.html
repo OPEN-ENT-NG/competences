@@ -293,7 +293,7 @@
                                                 <span></span>
                                             </label>
                                         </div>
-                                        <div class="two cell cell-indent expandable-content text-overflow" ng-click="getEleveInfo(eleve);expandNote($index, false)">
+                                        <div class="two cell cell-indent expandable-content text-overflow" class="tooltip-overlay" tooltip="[[eleve.lastName]] [[eleve.firstName]]" ng-click="getEleveInfo(eleve);expandNote($index, false)">
                                             [[eleve.lastName]] [[eleve.firstName]]
                                         </div>
 

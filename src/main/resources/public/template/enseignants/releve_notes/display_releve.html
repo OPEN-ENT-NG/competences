@@ -98,7 +98,9 @@
                         </thead>
                         <tbody>
                         <tr ng-repeat="eleve in releveNote.classe.eleves.all">
-                            <td class="col1 text-overflow" ng-click="getEleveInfo(eleve)">[[eleve.lastName]] [[eleve.firstName]]</td>
+                            <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]" ng-click="getEleveInfo(eleve)">
+                                [[eleve.lastName]] [[eleve.firstName]]
+                            </td>
                             <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir" ng-repeat="evaluation in eleve.evaluations.all" data-label="[[getLibelleDevoir(evaluation.id_devoir)]]">
                                 <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab() && !evaluation.is_annotation"
                                        ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
