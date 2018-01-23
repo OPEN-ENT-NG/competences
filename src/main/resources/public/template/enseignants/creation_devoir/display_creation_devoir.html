@@ -364,7 +364,7 @@
 
     <!-- PARTIE RECAPITULATIF -->
     <div class="ten-mobile four cell fixed-top-right">
-        <div class="twelve-mobile pannel-in-cell">
+        <div class="twelve-mobile pannel-in-cell overFlowAuto">
             <h2 class="eight cell twelve-mobile"><i18n>evaluations.devoir.recaputilatif</i18n></h2>
 
             <div class="devoir-recapitulatif twelve-mobile">
@@ -460,20 +460,24 @@
 
                 <!-- Competences selectionnees sur le devoir -->
                 <section>
-                    <ul class="twelve twelve-mobile devoir-skills-list">
-                        <li ng-repeat="itemCompetence in evaluations.competencesDevoir" class="skills-connaissance">
+                    <ul sortable-list class="twelve twelve-mobile devoir-skills-list thought-out-actions">
+                        <li sortable-element
+                            ng-repeat="itemCompetence in evaluations.competencesDevoir| orderBy:'index'"
+                            ng-model="itemCompetence.index"
+                            ng-change="updateOrder()"
+                            class="skills-connaissance">
                             <label class="skills-label twelve-mobile">
                                 <span ng-class="{whiteSpaceNormal : itemCompetence.hoveringRecap}"
                                       ng-mouseenter="showIt(itemCompetence)"
                                       ng-mouseleave="hideIt(itemCompetence)"
-                                      class="eleven skills-list-connaissance skills-text-overflow italic" title="Connaissance">
+                                      class="eleven skills-list-connaissance skills-text-overflow italic"
+                                      title="Connaissance">
                                     [[buildCompetenceNom(itemCompetence)]]
                                 </span>
                             </label>
                         </li>
                     </ul>
                 </section>
-
             </div>
         </div>
 

@@ -6,7 +6,7 @@
  */
 export function safeApply(that) {
     return new Promise((resolve, reject) => {
-        var phase = that.$root.$$phase;
+        let phase = (that.$root !== null)?that.$root.$$phase : undefined;
         if(phase === '$apply' || phase === '$digest') {
             if(resolve && (typeof(resolve) === 'function')) resolve();
         } else {
