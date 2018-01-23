@@ -1566,7 +1566,12 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final String idEleve = request.params().get("idEleve");
-        final String idMatiere = request.params().get("idMatiere");
+        final List<String> listIdMatieres = request.params().getAll("idMatiere");
+
+        final JsonArray idMatieres = new JsonArray();
+        for(int i = 0; i < listIdMatieres.size(); i++){
+            idMatieres.add(listIdMatieres.get(i));
+        }
 
 
         Long idPeriode = null;
@@ -1620,7 +1625,7 @@ public class ExportPDFController extends ControllerHelper {
                                 idGroupes.add(idClasse);
                                 nomGroupes.add(nomClasse);
 
-                                exportService.getExportReleveComp(text, idEleve, idGroupes.toArray(new String[0]), idEtablissement, idMatiere, finalIdPeriode, new Handler<Either<String, JsonObject>>() {
+                                exportService.getExportReleveComp(text, idEleve, idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres, finalIdPeriode, new Handler<Either<String, JsonObject>>() {
                                     @Override
                                     public void handle(final Either<String, JsonObject> stringJsonObjectEither) {
                                         if (stringJsonObjectEither.isRight()) {
@@ -1631,16 +1636,22 @@ public class ExportPDFController extends ControllerHelper {
                                                 headerEleve.putString("classe", nomGroupes.toString().substring(1, nomGroupes.toString().length() - 1));
 
                                                 JsonObject action = new JsonObject()
-                                                        .putString("action", "matiere.getMatiere")
-                                                        .putString("idMatiere", idMatiere);
+                                                        .putString("action", "matiere.getMatieres")
+                                                        .putArray("idMatieres", idMatieres);
                                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                                                     @Override
                                                     public void handle(Message<JsonObject> message) {
                                                         JsonObject body = message.body();
 
                                                         if ("ok".equals(body.getString("status"))) {
-                                                            String matiere = body.getObject("result").getObject("n").getObject("data").getString("label");
-                                                            headerEleve.putString("matiere", matiere);
+                                                            //String matiere = body.getObject("result").getObject("n").getObject("data").getString("label");
+                                                            //headerEleve.putString("matiere", matiere);
+                                                            JsonArray results = body.getArray("results");
+                                                            String matieres = ((JsonObject)results.get(0)).getString("name");
+                                                            for (int i = 1; i < results.size(); i++) {
+                                                                matieres = matieres+", "+((JsonObject) results.get(i)).getString("name");
+                                                            }
+                                                            headerEleve.putString("matiere", matieres);
 
                                                             JsonObject jsonRequest = new JsonObject()
                                                                     .putObject("headers", new JsonObject().putString("Accept-Language",

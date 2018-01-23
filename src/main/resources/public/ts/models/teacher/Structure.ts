@@ -250,26 +250,39 @@ export class Structure extends Model {
         this.collection(Matiere, {
             sync: function () {
                 return new Promise((resolve, reject) => {
-                    if (Utils.isChefEtab()) {
-                        http().getJson(that.api.MATIERE.synchronizationCE).done(function (res) {
-                            this.load(res);
-                            that.synchronized.matieres = true;
-                            resolve();
-                        }.bind(this));
-                    } else {
-                        http().getJson(that.api.MATIERE.synchronization)
-                            .done(function (res) {
-                                this.load(res);
-                                this.each(function (matiere) {
-                                    if (matiere.hasOwnProperty('sous_matieres')) {
-                                        matiere.sousMatieres.load(matiere.sous_matieres);
-                                        delete matiere.sous_matieres;
-                                    }
-                                });
-                                that.synchronized.matieres = true;
-                                resolve();
-                            }.bind(this));
-                    }
+                    http().getJson(that.api.MATIERE.synchronizationCE).done(function (res) {
+                        this.load(res);
+                        if(!Utils.isChefEtab()){
+                            this.each(function (matiere) {
+                                if (matiere.hasOwnProperty('sous_matieres')) {
+                                    matiere.sousMatieres.load(matiere.sous_matieres);
+                                    delete matiere.sous_matieres;
+                                }
+                            });
+                        }
+                        that.synchronized.matieres = true;
+                        resolve();
+                    }.bind(this));
+                    // if (Utils.isChefEtab()) {
+                    //     http().getJson(that.api.MATIERE.synchronizationCE).done(function (res) {
+                    //         this.load(res);
+                    //         that.synchronized.matieres = true;
+                    //         resolve();
+                    //     }.bind(this));
+                    // } else {
+                    //     http().getJson(that.api.MATIERE.synchronization)
+                    //         .done(function (res) {
+                    //             this.load(res);
+                    //             this.each(function (matiere) {
+                    //                 if (matiere.hasOwnProperty('sous_matieres')) {
+                    //                     matiere.sousMatieres.load(matiere.sous_matieres);
+                    //                     delete matiere.sous_matieres;
+                    //                 }
+                    //             });
+                    //             that.synchronized.matieres = true;
+                    //             resolve();
+                    //         }.bind(this));
+                    // }
                 });
             }
         });

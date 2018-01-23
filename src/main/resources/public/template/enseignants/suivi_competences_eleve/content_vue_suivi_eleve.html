@@ -94,32 +94,46 @@
                 </select>
             </label>
         </div>
+    </div>
+    <div class="row">
         <div class="twelve cell twelve-mobile">
-            <label class="six select">
-                <select ng-model="releveComp.matiere"
-                        ng-options="matiere as matiere.name for matiere in matieres.all|unique:'name'"
-                ng-change="exportRelCompObj.errExport = false;">
-                    <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
-                </select>
+            <h3><i18n>viescolaire.utils.subjects</i18n></h3>
+            <label class="chip multiselect all">
+                <span><i18n>viescolaire.utils.all.none</i18n></span>
+                <input type="checkbox" ng-model="selectAllMatieres" ng-change="selectUnselectMatieres(selectAllMatieres)"/>
             </label>
+        </div>
+        <div class="twelve cell twelve-mobile">
+            <div class="three cell horizontal-spacing vertical-spacing expandable-content"
+                 ng-repeat="matiere in matieres.all">
+                <div class="two cell">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="matiere.select" ng-change="selectMatiere(matiere.id)">
+                        <span></span>
+                    </label>
+                </div>
+                <div class="ten cell">
+                    <span class="export-competences">[[matiere.name]]</span>
+                </div>
+            </div>
+        </div>
+        <div class="twelve cell twelve-mobile">
+            <div class="three cell horizontal-spacing vertical-spacing expandable-content">
+                <label class="checkbox">
+                    <input type="checkbox"
+                           ng-model="releveComp.textMod">
+                    <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
+                </label>
+            </div>
         </div>
     </div>
     <div class="row">
-        <div class="two cell">
-            <label class="checkbox">
-                <input type="checkbox"
-                       ng-model="releveComp.textMod">
-                <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
-            </label>
-        </div>
-    </div>
-        <div class="row">
         <div class="warning"
              ng-if="exportRelCompObj.errExport">
             <i18n>evaluations.export.err</i18n>
         </div>
         <button class="right-magnet"
-                ng-disabled = "releveComp.matiere.id === undefined || releveComp.matiere === null"
+                ng-disabled = "allUnselect === true"
                 tooltip="evaluations.export.format.pdf"
                 ng-click="exportReleveComp(informations.eleve.id, releveComp.matiere.id, releveComp.periode.id_type, !releveComp.textMod)">
             <i18n>evaluations.export</i18n>

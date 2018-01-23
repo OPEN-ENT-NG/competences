@@ -266,6 +266,7 @@
   "viescolaire.utils.class":"Classe",
   "viescolaire.utils.description":"Description",
   "viescolaire.utils.stats":"Statistiques",
+  "viescolaire.utils.subjects":"Matières",
 
   "ariane.competences.createDevoir":"Ajouter une évaluation",
   "ariane.competences.editDevoir":"Modifier une évaluation",
