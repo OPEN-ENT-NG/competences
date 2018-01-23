@@ -100,6 +100,8 @@ public class Competences extends BaseServer {
 		addController(new RemplacementController());
 		addController(new UtilsController());
 
+		addController(new EventBusController());
+
     }
 
 }

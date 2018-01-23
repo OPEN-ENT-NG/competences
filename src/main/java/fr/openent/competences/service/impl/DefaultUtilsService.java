@@ -334,30 +334,6 @@ public class DefaultUtilsService  implements UtilsService {
         neo4j.execute(query, params,  Neo4jResult.validResultHandler(results));
     }
 
-
-
-    @Override
-    public JsonObject mapListNumber(JsonArray list, String key, String value) {
-        JsonObject values = new JsonObject();
-        JsonObject o;
-        for (int i = 0; i < list.size(); i++) {
-            o = list.get(i);
-            values.putNumber(o.getString(key), o.getNumber(value));
-        }
-        return values;
-    }
-
-    @Override
-    public JsonObject mapListString (JsonArray list, String key, String value) {
-        JsonObject values = new JsonObject();
-        JsonObject o;
-        for (int i = 0; i < list.size(); i++) {
-            o = list.get(i);
-            values.putString(o.getString(key), o.getString(value));
-        }
-        return values;
-    }
-
     @Override
     public JsonArray saUnion(JsonArray recipient, JsonArray list) {
         for (int i = 0; i < list.size(); i++) {

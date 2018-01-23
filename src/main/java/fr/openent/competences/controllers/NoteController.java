@@ -110,7 +110,7 @@ public class NoteController extends ControllerHelper {
     @Post("/note")
     @ApiDoc("Créer une note")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-	@ResourceFilter(CreateEvaluationWorkflow.class)
+    @ResourceFilter(CreateEvaluationWorkflow.class)
     public void create(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -332,18 +332,23 @@ public class NoteController extends ControllerHelper {
                         idDevoirsArray[i] = Long.parseLong(idDevoirsList.get(i));
                     }
 
-                    JsonObject action = new JsonObject()
-                            .putString("action", "user.getMoyenne")
-                            .putString("idEleve", idEleve)
-                            .putArray("idDevoirs", new JsonArray(idDevoirsArray));
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                    notesService.getNotesParElevesParDevoirs(new String[]{idEleve}, idDevoirsArray, new Handler<Either<String, JsonArray>>() {
                         @Override
-                        public void handle(Message<JsonObject> message) {
-                            JsonObject body = message.body();
-                            if ("ok".equals(body.getString("status"))) {
-                                Renders.renderJson(request, body.getObject("result"));
+                        public void handle(Either<String, JsonArray> event) {
+                            if (event.isRight()) {
+                                JsonArray notesEleve = event.right().getValue();
+                                List<NoteDevoir> notes = new ArrayList<>();
+
+                                for (int i = 0; i < notesEleve.size(); i++) {
+                                    JsonObject note = notesEleve.get(i);
+                                    notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur")),
+                                            Double.parseDouble(note.getNumber("diviseur").toString()),
+                                            note.getBoolean("ramener_sur"),
+                                            Double.parseDouble(note.getString("coefficient"))));
+                                }
+                                Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20));
                             } else {
-                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
+                                renderError(request, new JsonObject().putString("error", event.left().getValue()));
                             }
                         }
                     });
