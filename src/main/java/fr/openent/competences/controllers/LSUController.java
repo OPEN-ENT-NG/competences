@@ -17,6 +17,7 @@ import fr.wseduc.webutils.http.Renders;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
+import org.vertx.java.core.AsyncResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.eventbus.EventBus;
@@ -110,7 +111,7 @@ public class LSUController extends ControllerHelper {
     private void getBaliseResponsables(final Donnees donnees, final List<String> idsResponsable, final Handler<String> handler) {
         JsonObject action = new JsonObject()
                 .putString("action", "user.getResponsablesEtabl")
-                .putArray("idsReponsable", new JsonArray(idsResponsable.toArray()));
+                .putArray("idsResponsable", new JsonArray(idsResponsable.toArray()));
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
@@ -154,7 +155,7 @@ public class LSUController extends ControllerHelper {
         JsonObject action = new JsonObject()
                 .putString("action", "user.getElevesRelatives")
                 .putArray("idsClass", new JsonArray(Classids.toArray()));
-        eb.send(Competences.VIESCO_BUS_ADDRESS, "user.getElevesRelatives", new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -433,11 +434,11 @@ public class LSUController extends ControllerHelper {
                                     millesimeClass = getMillesimeClass(calcMillesimeValue.getInteger("increment"));
                                 }
                             }
-                            bilanCycle.setMillesime(Integer.toString(millesimeClass));
                             // Cas particulier : si aucun millésime on sette celui de cette année
                             if (millesimeClass == 0) {
                                 millesimeClass = getMillesimeClass(0);
                             }
+                            bilanCycle.setMillesime(Integer.toString(millesimeClass));
                             bilansCycle.getBilanCycle().add(bilanCycle);
                         } else {
                             //supprimer l'élève de la liste de la Balise ELEVES
@@ -556,11 +557,11 @@ public class LSUController extends ControllerHelper {
                                 millesimeClass = getMillesimeClass(calcMillesimeValue.getInteger("increment"));
                             }
                         }
-                        bilanCycle.setMillesime(Integer.toString(millesimeClass));
                         // Cas particulier : si aucun millésime on sette celui de cette année
                         if (millesimeClass == 0) {
                             millesimeClass = getMillesimeClass(0);
                         }
+                        bilanCycle.setMillesime(Integer.toString(millesimeClass));
                         //on ajoute le bilan de cycle de l'élève à la liste des bilans de cycle
                         bilansCycle.getBilanCycle().add(bilanCycle);
                     } else {
@@ -746,14 +747,13 @@ public class LSUController extends ControllerHelper {
      * @param lsunBilans
      */
 
-    private void returnResponse(HttpServerRequest request, LsunBilans lsunBilans) {
+    private void returnResponse(final HttpServerRequest request, LsunBilans lsunBilans) {
         log.info("DEBUT method returnResponse ");
-        StringWriter response = new StringWriter();
-        try {
+        try (StringWriter response = new StringWriter()) {
 
             JAXBContext jc = JAXBContext.newInstance(LsunBilans.class);
             Marshaller marshaller = jc.createMarshaller();
-           // écriture de la réponse
+            // écriture de la réponse
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
             marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -761,26 +761,41 @@ public class LSUController extends ControllerHelper {
             marshaller.marshal(lsunBilans, response);
 
             /* Vérification du fichier xml généré par rapport au xsd */
-            File schemaFile = new File(Competences.LSUN_CONFIG.getString("xsd_path"));
-            InputStream us = new ByteArrayInputStream(response.toString().getBytes());
-            Source xmlFile = new StreamSource(us);
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema schema = schemaFactory.newSchema(schemaFile);
-            log.info("method returnResponse avant la validation");
-            Validator validator = schema.newValidator();
-            validator.validate(xmlFile);
-            //préparation de la requête
-            request.response().putHeader("content-type", "text/xml");
-            request.response().putHeader("charset", "utf-8");
-            //request.response().putHeader("standalone", "yes");
-            request.response().putHeader("Content-Disposition", "attachment; filename=import_lsun_"+ new Date().getTime() +".xml");
-            request.response().end(new Buffer(response.toString()));
+            final String templatePath = Competences.LSUN_CONFIG.getString("xsd_path");
+            vertx.fileSystem().readFile(templatePath, new Handler<AsyncResult<Buffer>>() {
+                @Override
+                public void handle(AsyncResult<Buffer> result) {
+                    if (!result.succeeded()) {
+                        badRequest(request);
+                        return;
+                    }
 
-        } catch (JAXBException |  SAXException | IOException e) {
-            Renders.renderJson(request, new JsonObject().putString("status", "validation.error"), 500);
+                    try {
+                        SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+                        Schema schema = schemaFactory.newSchema(new StreamSource(new ByteArrayInputStream(result.result().getBytes())));
+                        log.info("method returnResponse avant la validation");
+                        Validator validator = schema.newValidator();
+                        Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
+                        validator.validate(xmlFile);
+                    } catch (SAXException | IOException e) {
+                        e.printStackTrace();
+                        badRequest(request);
+                        return;
+                    }
+                    //préparation de la requête
+                    request.response().putHeader("content-type", "text/xml");
+                    request.response().putHeader("charset", "utf-8");
+                    //request.response().putHeader("standalone", "yes");
+                    request.response().putHeader("Content-Disposition", "attachment; filename=import_lsun_" + new Date().getTime() + ".xml");
+                    request.response().end(new Buffer(response.toString()));
+                    log.info("FIN method returnResponse");
+                }
+            });
+        } catch (IOException | JAXBException e) {
             e.printStackTrace();
+            badRequest(request);
+            return;
         }
-        log.info("FIN method returnResponse");
     }
 
     /**
