@@ -119,11 +119,18 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
             JsonObject o = classes.get(i);
             if (o.containsField("id_groupe")) ids.addString(o.getString("id_groupe"));
         }
-        String query = "MATCH c " +
+        String query = "MATCH (c:Class) " +
                 "WHERE NOT (:User {id: {userId}})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
-                "AND NOT (:User {id:{userId}})-[:IN]->(c:FunctionalGroup) " +
                 "AND c.id IN {ids} " +
-                "RETURN collect({id: c.id, name: c.name, remplacement: true, type_groupe: CASE WHEN labels(c) = ['Class'] THEN 0 ELSE 1 END}) as classes";
+                "RETURN  c.id as id, c.name as name, true as remplacement, 0 as type_groupe";
+
+        query += " UNION ALL ";
+
+        query += "MATCH (c:FunctionalGroup) " +
+                "WHERE NOT (:User {id:{userId}})-[:IN]->(c:FunctionalGroup) " +
+                "AND c.id IN {ids} " +
+                "RETURN  c.id as id, c.name as name, true as remplacement, 1 as type_groupe";
+
         JsonObject params = new JsonObject()
                 .putArray("ids", ids)
                 .putString("userId", user.getUserId());

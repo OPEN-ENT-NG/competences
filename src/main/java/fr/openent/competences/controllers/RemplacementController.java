@@ -166,8 +166,7 @@ public class RemplacementController extends ControllerHelper {
                                     public void handle(Either<String, JsonArray> event) {
                                         if (event.isRight()) {
                                             JsonArray values = event.right().getValue();
-                                            JsonObject o = values.get(0);
-                                            renderJson(request, o.getArray("classes"));
+                                            renderJson(request, values);
                                         } else {
                                             renderError(request);
                                         }
