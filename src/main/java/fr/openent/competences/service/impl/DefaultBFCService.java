@@ -19,6 +19,9 @@ import org.vertx.java.core.logging.impl.LoggerFactory;
 
 import java.util.*;
 
+import static org.entcore.common.sql.Sql.parseId;
+import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
+
 /**
  * Created by vogelmt on 29/03/2017.
  */
@@ -55,7 +58,21 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
      * @param handler handler portant le resultat de la requête
      */
     public void updateBFC(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler){
-        super.update(data.getValue("id").toString(), data, user, handler);
+        data.removeField("id");
+        StringBuilder sb = new StringBuilder();
+        JsonArray values = new JsonArray();
+        for (String attr : data.getFieldNames()) {
+            sb.append(attr).append(" = ?, ");
+            values.add(data.getValue(attr));
+        }
+        String query =
+                "UPDATE " + resourceTable +
+                        " SET " + sb.toString() + "modified = NOW() " +
+                        "WHERE id_domaine = ?  AND id_eleve = ? ";
+
+        values.addNumber((Number)data.getValue("id_domaine"))
+                .add(data.getValue("id_eleve"));
+        sql.prepared(query, values,validRowsResultHandler(handler));
     }
 
     /**
@@ -64,8 +81,9 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
      * @param user user
      * @param handler handler portant le résultat de la requête
      */
-    public void deleteBFC(Long idBFC, UserInfos user, Handler<Either<String, JsonObject>> handler) {
-        super.delete(idBFC.toString(), user, handler);
+    public void deleteBFC(long idBFC, String idEleve, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+        String query = "DELETE FROM " + resourceTable + " WHERE id_domaine = ? AND id_eleve = ?";
+        sql.prepared(query, new JsonArray().addNumber(idBFC).addString(idEleve), validRowsResultHandler(handler));
     }
 
     /**

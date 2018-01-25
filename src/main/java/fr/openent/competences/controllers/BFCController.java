@@ -120,14 +120,15 @@ public class BFCController extends ControllerHelper {
 
                     Long idBFC;
                     try {
-                        idBFC = Long.parseLong(request.params().get("id"));
+                        idBFC = Long.parseLong(request.params().get("idDomaine"));
                     } catch (NumberFormatException e) {
-                        log.error("Error : idAppreciation must be a long object", e);
+                        log.error("Error : idDomaine  must be a long object", e);
                         badRequest(request, e.getMessage());
                         return;
                     }
 
-                    bfcService.deleteBFC(idBFC, user, defaultResponseHandler(request));
+                    String idEleve = request.params().get("idEleve");
+                    bfcService.deleteBFC(idBFC, idEleve, user, defaultResponseHandler(request));
                 } else {
                     unauthorized(request);
                 }

@@ -1,16 +1,16 @@
 import { Model, http } from 'entcore';
 
 export class BilanFinDeCycle extends Model {
-    id : number;
-    id_eleve : string;
-    id_domaine : number;
-    id_etablissement : string;
-    owner : string;
-    valeur : number;
+    id: number;
+    id_eleve: string;
+    id_domaine: number;
+    id_etablissement: string;
+    owner: string;
+    valeur: number;
 
-    constructor(p? : any) {
+    constructor(p?: any) {
         super();
-        if(p !== undefined){
+        if (p !== undefined) {
             this.id = p.id;
             this.id_eleve = p.id_eleve;
             this.id_domaine = p.id_domaine;
@@ -23,13 +23,13 @@ export class BilanFinDeCycle extends Model {
     get api () {
         return {
             createBFC : '/competences/bfc',
-            updateBFC : '/competences/bfc?id=' + this.id,
-            deleteBFC : '/competences/bfc?id=' + this.id
-        }
+            updateBFC : `/competences/bfc?idDomaine=${this.id_domaine}&idEleve=${this.id_eleve}`,
+            deleteBFC : `/competences/bfc?idDomaine=${this.id_domaine}&idEleve=${this.id_eleve}`
+        };
     }
 
-    saveBilanFinDeCycle () : Promise<BilanFinDeCycle> {
-        return new Promise((resolve, reject) => {
+    saveBilanFinDeCycle (): Promise<BilanFinDeCycle> {
+        return new Promise((resolve) => {
             if (!this.id) {
                 this.createBilanFinDeCycle().then((data) => {
                     resolve(data);
@@ -42,26 +42,30 @@ export class BilanFinDeCycle extends Model {
         });
     }
 
-    createBilanFinDeCycle () : Promise<BilanFinDeCycle> {
+    createBilanFinDeCycle (): Promise<BilanFinDeCycle> {
         return new Promise((resolve, reject) => {
-            var _bilanFinDeCycle = {
+            let _bilanFinDeCycle = {
                 id_eleve : this.id_eleve,
                 id_domaine : this.id_domaine,
                 id_etablissement : this.id_etablissement,
                 owner : this.owner,
                 valeur : this.valeur
             };
-            http().postJson(this.api.createBFC, _bilanFinDeCycle).done ( function (data) {
-                if(resolve && (typeof(resolve) === 'function')) {
-                    resolve(data);
-                }
-            }) ;
+            http().postJson(this.api.createBFC, _bilanFinDeCycle)
+                .done ( function (data) {
+                    if (resolve && (typeof(resolve) === 'function')) {
+                        resolve(data);
+                    }
+                })
+                .error(function () {
+                    reject();
+                });
         });
     }
 
-    updateBilanFinDeCycle () : Promise<BilanFinDeCycle> {
+    updateBilanFinDeCycle (): Promise<BilanFinDeCycle> {
         return new Promise((resolve, reject) => {
-            var _bilanFinDeCycle = {
+            let _bilanFinDeCycle = {
                 id : this.id,
                 id_eleve : this.id_eleve,
                 id_domaine : this.id_domaine,
@@ -69,21 +73,29 @@ export class BilanFinDeCycle extends Model {
                 owner : this.owner,
                 valeur : this.valeur
             };
-            http().putJson(this.api.updateBFC, _bilanFinDeCycle).done(function (data) {
-                if(resolve && (typeof(resolve) === 'function')) {
-                    resolve(data);
-                }
-            });
+            http().putJson(this.api.updateBFC, _bilanFinDeCycle)
+                .done(function (data) {
+                    if (resolve && (typeof(resolve) === 'function')) {
+                        resolve(data);
+                    }
+                })
+                .error(function () {
+                    reject();
+                });
         });
     }
 
-    deleteBilanFinDeCycle () : Promise<any> {
+    deleteBilanFinDeCycle (): Promise<any> {
         return new Promise((resolve, reject) => {
-            http().delete(this.api.deleteBFC).done(function (data) {
-                if(resolve && typeof(resolve) === 'function'){
-                    resolve(data);
-                }
-            });
+            http().delete(this.api.deleteBFC)
+                .done(function (data) {
+                    if (resolve && typeof(resolve) === 'function') {
+                        resolve(data);
+                    }
+                })
+                .error(function () {
+                    reject();
+                });
         });
     }
 }

@@ -32,10 +32,11 @@ public interface BFCService extends CrudService {
     /**
      * Suppression d'un BFC pour un élève
      * @param idBFC identifiant de la note
+     * @param idEleve identifiant de l'élève
      * @param user user
      * @param handler handler portant le résultat de la requête
      */
-    public void deleteBFC(Long idBFC, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    public void deleteBFC(long idBFC, String idEleve, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupère les BFCs d'un élève pour chaque domaine
