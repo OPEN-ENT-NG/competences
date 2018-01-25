@@ -323,5 +323,48 @@ public class BFCController extends ControllerHelper {
     }
 
 
+    @Put("/bfc/moyennes/visible/structures/:structureId/:visible")
+    @ApiDoc("Active la visibilité pour les enseignants d'un établissement donné de la moyenne calculée sur le BFC")
+    @SecuredAction(value="competences.set.visibility.bfc.average", type = ActionType.WORKFLOW)
+    public void setVisibility(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+
+                if(null != user  && request.params().contains("structureId")) {
+                    final String structureId = request.params().get("structureId");
+                    final Boolean visible = Boolean.valueOf(request.params().get("visible"));
+                    if(user.getStructures().contains(structureId)) {
+                        Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
+                        bfcService.setVisibility(structureId, user, visible, handler);
+                    }
+                    else {
+                        unauthorized(request);
+                    }
+                }else{
+                    badRequest(request);
+                }
+            }
+        });
+    }
+
+
+    @Get("/bfc/moyennes/visible/structures/:structureId")
+    @ApiDoc("Active la visibilité pour les enseignants d'un établissement donné de la moyenne calculée sur le BFC")
+    @SecuredAction(value="", type=ActionType.AUTHENTICATED)
+    public void getVisibility(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if(user != null && request.params().contains("structureId")) {
+                    final String structureId = request.params().get("structureId");
+                    Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
+                    bfcService.getVisibility(structureId, user,handler);
+                }else{
+                    badRequest(request);
+                }
+            }
+        });
+    }
 
 }

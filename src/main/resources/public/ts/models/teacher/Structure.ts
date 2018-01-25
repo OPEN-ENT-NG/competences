@@ -43,6 +43,7 @@ export class Structure extends Model {
     usePerso: any;
     private syncRemplacement: () => any;
     responsables: Collection<Responsable>;
+    moyenneVisible: boolean;
 
 
     get api() {
@@ -81,7 +82,7 @@ export class Structure extends Model {
             TYPEPERIODES : {
                 synchronisation: '/viescolaire/periodes/types'
             }
-        }
+        };
     }
 
     constructor(o?: any) {
@@ -102,15 +103,20 @@ export class Structure extends Model {
             this.synchronized.enseignants = false;
         }
         let that: Structure = this;
+        http().get(`/competences/bfc/moyennes/visible/structures/${that.id}`)
+            .done(function (res) {
+                that.moyenneVisible = res[0].visible;
+            }.bind(this));
+
         this.collection(NiveauCompetence, {
             sync: async function (defaut) {
-                if (typeof(defaut) == 'undefined') {
+                if (typeof(defaut) === 'undefined') {
                     defaut = true;
                 }
                 // Récupération (sous forme d'arbre) des niveaux de compétences de l'établissement en cours
                 return new Promise((resolve, reject) => {
                     http().getJson(that.api.NIVEAU_COMPETENCES.synchronisation).done(function (niveauCompetences) {
-                        if (_.filter(niveauCompetences, {couleur: null}).length == niveauCompetences.length) {
+                        if (_.filter(niveauCompetences, {couleur: null}).length === niveauCompetences.length) {
                             that.usePerso = 'noPerso';
                         }
                         else {
@@ -163,27 +169,27 @@ export class Structure extends Model {
                             if (reject && typeof reject === 'function') {
                                 reject();
                             }
-                        })
-                })
+                        });
+                });
             }
         });
         this.collection(Enseignant);
-        this.collection(Responsable, {//responsable de Direction
+        this.collection(Responsable, {// responsable de Direction
             sync :  function(){
-                return new Promise ((resolve, reject)=>{
+                return new Promise ((resolve, reject) => {
                     http().getJson(that.api.RESPONSABLE.synchronisation).done(function (res) {
                         that.responsables.load(res);
                         resolve();
                     });
-                })
+                });
             }
         });
         this.collection(Eleve, {
             sync: function () {
                 return new Promise((resolve, reject) => {
-                    //chargement des élèves Pour les enseignants ou personnel de l'établissement
+                    // chargement des élèves Pour les enseignants ou personnel de l'établissement
                     let url = that.api.ELEVE.synchronization;
-                    //filtre par classe pour les enseignants
+                    // filtre par classe pour les enseignants
                     if ((model.me.type === 'ENSEIGNANT')) {
                         that.classes.forEach((classe) => {
                             url += '&idClasse=' + classe.id;
@@ -217,7 +223,7 @@ export class Structure extends Model {
         this.collection(Enseignement, {
             sync: function (idClasse: string) {
                 return new Promise((resolve, reject) => {
-                    var uri = that.api.ENSEIGNEMENT.synchronization;
+                    let uri = that.api.ENSEIGNEMENT.synchronization;
                     if (idClasse !== undefined) {
                         uri += '?idClasse=' + idClasse;
                         http().getJson(uri).done(function (res) {
@@ -252,7 +258,7 @@ export class Structure extends Model {
                 return new Promise((resolve, reject) => {
                     http().getJson(that.api.MATIERE.synchronizationCE).done(function (res) {
                         this.load(res);
-                        if(!Utils.isChefEtab()){
+                        if (!Utils.isChefEtab()) {
                             this.each(function (matiere) {
                                 if (matiere.hasOwnProperty('sous_matieres')) {
                                     matiere.sousMatieres.load(matiere.sous_matieres);
@@ -331,7 +337,7 @@ export class Structure extends Model {
                         model.trigger('apply');
                         resolve();
                     });
-            })
+            });
         };
         this.collection(Classe, {
             sync: function () {
@@ -461,10 +467,10 @@ export class Structure extends Model {
                     reject();
                 }
                 if (res.length > 0) {
-                    resolve(true)
+                    resolve(true);
                 }
                 else {
-                    resolve(false)
+                    resolve(false);
                 }
             });
         });

@@ -1,0 +1,11 @@
+<div class="inline-block"
+     ng-click="save()" workflow="competences.setVisibilityAverageBfc">
+    <span ng-if="!visible"
+          tooltip="evaluation.bfc.set.visiblity.true">
+        <i ng-class="{'eye-slash': !visible, 'eye-open': visible}"></i>
+    </span>
+    <span ng-if="visible"
+          tooltip="evaluation.bfc.set.visiblity.false">
+        <i ng-class="{'eye-slash': !visible, 'eye-open': visible}"></i>
+    </span>
+</div>

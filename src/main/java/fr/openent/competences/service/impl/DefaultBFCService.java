@@ -9,6 +9,7 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
+import org.entcore.common.sql.SqlStatementsBuilder;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
@@ -406,7 +407,35 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
     public void getCalcMillesimeValues (Handler<Either<String,JsonArray>> handler){
         JsonArray values = new JsonArray();
         String query = "SELECT * " +
-                        "FROM notes.calc_millesime";
+                "FROM notes.calc_millesime";
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+    @Override
+    public void setVisibility(String structureId, UserInfos user, Boolean visible,
+                              Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder().append("INSERT INTO ")
+                .append( Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc (id_etablissement, visible) ")
+                .append(" VALUES " )
+                .append(" ( ? , ? )" )
+                .append(" ON CONFLICT (id_etablissement) DO UPDATE SET visible = ?");
+        JsonArray values = new JsonArray();
+        values.addString(structureId).addBoolean(visible).addBoolean(visible);
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getVisibility(String structureId, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder().append(" SELECT id_etablissement, visible ")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc ")
+                .append(" WHERE id_etablissement = ? " )
+                .append(" UNION ALL " )
+                .append(" SELECT ? , ")
+                .append(" false ")
+                .append(" WHERE NOT EXISTS (SELECT id_etablissement, visible ")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc")
+                .append(" WHERE id_etablissement = ? );    ");
+        JsonArray values = new JsonArray();
+        values.addString(structureId).addString(structureId).addString(structureId);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 }

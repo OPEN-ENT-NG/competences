@@ -23,14 +23,19 @@
          class="domaine-line">
         <div class="cell four twelve-mobile domaine-display">
             [[domaine.codification]] - [[domaine.libelle]]
-            <div ng-if="isChefEtab() && domaine.moyenne !== -1" class="domaine-maitrise">
+            <div ng-if="(isChefEtab() || evaluations.structure.moyenneVisible) && domaine.moyenne !== -1"
+                 class="domaine-maitrise">
                 <label>
                     <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
                         <div ng-if = " ($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <  Conversion.valmax) || ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax)">
-                                <div ng-if = " domaine.bfc !== undefined">
-                                    <i class="reset" aria-hidden="true" ng-click="deleteBFC()" tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
+                                <div ng-if = " isChefEtab() && domaine.bfc !== undefined">
+                                    <i class="reset" aria-hidden="true" ng-click="deleteBFC()"
+                                       tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
                                 </div>
-                                <div ng-if = " domaine.bfc === undefined" >
+                                <div ng-if = " !isChefEtab() && domaine.bfc !== undefined">
+                                    [[Conversion.libelle]] ([[domaine.bfc.valeur]])
+                                </div>
+                                <div ng-if = "domaine.bfc === undefined" >
                                     [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
                                 </div>
                         </div>
@@ -57,6 +62,13 @@
             </options>
         </dropdown-buttons>
     </h2>
+    <div class="twelve" ng-init="source.idStructure = evaluations.structure.id;">
+        <sniplet
+                template="averageBFC"
+                application="competences"
+                source="source"
+        ></sniplet>
+    </div>
     <div class="twelve cell">
         <div ng-repeat="domaine in suiviCompetence.domaines.all"
              ng-include="'tree_item_renderer.html'"

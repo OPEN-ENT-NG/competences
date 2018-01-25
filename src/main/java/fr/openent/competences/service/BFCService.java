@@ -69,4 +69,22 @@ public interface BFCService extends CrudService {
      * @param handler
      */
     public void getCalcMillesimeValues(Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Active la visibilité des moyennes sur l'écran de BFC
+     * @param structureId
+     * @param user
+     * @param handler
+     */
+    public void setVisibility(String structureId, UserInfos user, Boolean visible,
+                              Handler<Either<String, JsonArray>> handler);
+
+
+    /**
+     *  Récupère la valeur de l'état de la visibilité (active/inactive/absente) des moyennes sur l'écran de BFC.
+     * @param structureId
+     * @param user
+     * @param handler
+     */
+    public void getVisibility(String structureId, UserInfos user, Handler<Either<String, JsonArray>> handler);
 }
