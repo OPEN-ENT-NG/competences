@@ -25,12 +25,14 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
+
+import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -47,39 +49,32 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void getCompetencesItem(final String idEtablissement, final String idClasse,
-                                   final Handler<Either<String, JsonArray>> handler) {
+    public void getCompetencesItem(String idClasse, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-
-        query.append("SELECT rel_competences_domaines.id_domaine, competences.* , competences.nom as nomHtml, ")
-                .append(" perso.nom as name, perso.masque ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ")
-                .append(" ON (competences.id = rel_competences_domaines.id_competence) ")
-                .append(" LEFT OUTER JOIN " + COMPETENCES_PERSO_TABLE  )
-                .append("  AS perso ")
-                .append(" ON ( competences.id = perso.id_competence AND  perso.id_etablissement = ? )" )
-                .append(" WHERE  (competences.id_etablissement IS null OR competences.id_etablissement = ? ) AND ");
+        query.append("SELECT rel_competences_domaines.id_domaine, competences.* , competences.nom as nomHtml ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_domaines ")
+                .append(" ON (competences.id = rel_competences_domaines.id_competence) WHERE ");
 
         if (null != idClasse) {
-            query.append(" competences.id_cycle = (SELECT id_cycle FROM " + Competences.COMPETENCES_SCHEMA +
-                    ".rel_groupe_cycle WHERE id_groupe = ? ) AND");
+            query.append(" competences.id_cycle = (SELECT id_cycle FROM " + COMPETENCES_SCHEMA +
+                    ".rel_groupe_cycle WHERE id_groupe = ?) AND");
         }
 
         query.append(" NOT EXISTS ( ")
                 .append("SELECT 1 ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences AS competencesChildren ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences AS competencesChildren ")
                 .append("WHERE competencesChildren.id_parent = competences.id ");
 
         if (null != idClasse) {
-            query.append("AND competences.id_cycle = (SELECT id_cycle FROM " + Competences.COMPETENCES_SCHEMA +
+            query.append("AND competences.id_cycle = (SELECT id_cycle FROM " + COMPETENCES_SCHEMA +
                     ".rel_groupe_cycle WHERE id_groupe = ?) ");
         }
 
         query.append(") ")
-                .append("ORDER BY id_cycle, competences.nom ASC,  perso.nom ASC ");
+                .append("ORDER BY id_cycle, competences.nom ASC");
 
-        JsonArray params = new JsonArray().addString(idEtablissement).addString(idEtablissement);
+        JsonArray params = new JsonArray();
         if (null != idClasse) {
             params.addString(idClasse);
             params.addString(idClasse);
@@ -88,12 +83,11 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
 
-
     @Override
     public void getCompetences(Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         query.append("SELECT competences.id, competences.nom, competences.description, competences.id_type, competences.id_parent, type_competences.nom as type, competences.id_cycle ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
                 .append("WHERE competences.id_type = type_competences.id ")
                 .append("ORDER BY competences.id ASC");
         Sql.getInstance().prepared(query.toString(), new JsonArray(), SqlResult.validResultHandler(handler));
@@ -103,7 +97,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void setDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray data = new JsonArray();
-        query.append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs (id_devoir, id_competence) VALUES ");
+        query.append("INSERT INTO "+ COMPETENCES_SCHEMA +".competences_devoirs (id_devoir, id_competence) VALUES ");
         for(int i = 0; i < values.size(); i++){
             query.append("(?, ?)");
             data.addNumber(devoirId);
@@ -121,7 +115,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void remDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray data = new JsonArray();
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs WHERE ");
+        query.append("DELETE FROM "+ COMPETENCES_SCHEMA +".competences_devoirs WHERE ");
         for(int i = 0; i < values.size(); i++){
             query.append("(id_devoir = ? AND  id_competence = ?)");
             data.addNumber(devoirId);
@@ -144,10 +138,10 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 .append("string_agg( cast (domaines.id as text), ',') as ids_domaine, competences.id as id_competence,")
                 .append(" competences_devoirs.*, competences.nom as nom, competences.id_type as id_type, ")
                 .append(" competences.id_parent as id_parent, competences_devoirs.index as index ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs ON (competences.id = competences_devoirs.id_competence ) ")
-                .append("LEFT OUTER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
-                .append("LEFT OUTER JOIN "+ Competences.COMPETENCES_SCHEMA +".domaines ON (domaines.id = rel_competences_domaines.id_domaine) ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".competences_devoirs ON (competences.id = competences_devoirs.id_competence ) ")
+                .append("LEFT OUTER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append("LEFT OUTER JOIN "+ COMPETENCES_SCHEMA +".domaines ON (domaines.id = rel_competences_domaines.id_domaine) ")
                 .append("WHERE competences_devoirs.id_devoir = ? ")
                 .append("GROUP BY competences_devoirs.id, competences.nom, competences.id_type, competences.id_parent, competences.id ")
                 .append("ORDER BY (competences_devoirs.index ,competences_devoirs.id);");
@@ -161,10 +155,10 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         StringBuilder query = new StringBuilder();
 
         query.append("SELECT competences_devoirs.*, competences.nom as nom ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs, "+ Competences.COMPETENCES_SCHEMA +".competences ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences_devoirs, "+ COMPETENCES_SCHEMA +".competences ")
                 .append("WHERE competences_devoirs.id_competence = competences.id ")
                 .append("AND id_devoir IN ")
-                .append("(SELECT id FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs WHERE devoirs.owner = ? ORDER BY devoirs.created DESC LIMIT 1);");
+                .append("(SELECT id FROM "+ COMPETENCES_SCHEMA +".devoirs WHERE devoirs.owner = ? ORDER BY devoirs.created DESC LIMIT 1);");
 
         Sql.getInstance().prepared(query.toString(), new JsonArray().addString(userId), SqlResult.validResultHandler(handler));
     }
@@ -174,7 +168,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         StringBuilder query = new StringBuilder();
 
         query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
                 .append("WHERE competences.id_parent = ?;");
 
         Sql.getInstance().prepared(query.toString(), new JsonArray().addNumber(skillId), SqlResult.validResultHandler(handler));
@@ -185,8 +179,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         StringBuilder query = new StringBuilder();
 
         query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_enseignements ON (competences.id = rel_competences_enseignements.id_competence) ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_enseignements ON (competences.id = rel_competences_enseignements.id_competence) ")
                 .append("WHERE rel_competences_enseignements.id_enseignement = ? ")
                 .append("AND competences.id_parent = 0 ;");
 
@@ -194,37 +188,30 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void getCompetencesByLevel(final String idEtablissement, final String filter, final String idClasse,
-                                      final Handler<Either<String, JsonArray>> handler) {
-
+    public void getCompetencesByLevel(String filter, String idClasse, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray params = new JsonArray().addString(idEtablissement).addString(idEtablissement);
+        JsonArray params = new JsonArray();
 
-        query.append("SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine, ")
-                .append(" string_agg( cast (domaines.id as text), ',') as ids_domaine, competences.id, ")
-                .append(" competences.nom, competences.id_parent, competences.id_type, ")
-                .append(" rel_competences_enseignements.id_enseignement, competences.id_cycle, perso.nom as name, perso.masque ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_enseignements ON (competences.id = rel_competences_enseignements.id_competence) ");
+        query.append("SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine, string_agg( cast (domaines.id as text), ',') as ids_domaine, competences.id, competences.nom, competences.id_parent, competences.id_type, rel_competences_enseignements.id_enseignement, competences.id_cycle ")
+
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_enseignements ON (competences.id = rel_competences_enseignements.id_competence) ");
 
         if (idClasse != null) {
-            query.append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ON (rel_groupe_cycle.id_cycle = competences.id_cycle) ");
+            query.append("INNER JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle ON (rel_groupe_cycle.id_cycle = competences.id_cycle) ");
         }
 
-        query.append("LEFT OUTER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
-                .append("LEFT OUTER JOIN "+ Competences.COMPETENCES_SCHEMA +".domaines ON (domaines.id = rel_competences_domaines.id_domaine) ")
-                .append(" LEFT OUTER JOIN "+ COMPETENCES_PERSO_TABLE + " AS perso")
-                .append(" ON ( competences.id = perso.id_competence AND perso.id_etablissement = ? ) ")
-                .append(" WHERE  (competences.id_etablissement is null OR competences.id_etablissement = ? ) AND ")
-                .append(" competences."+ filter);
+        query.append("LEFT OUTER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append("LEFT OUTER JOIN "+ COMPETENCES_SCHEMA +".domaines ON (domaines.id = rel_competences_domaines.id_domaine) ")
+                .append("WHERE competences."+ filter);
 
         if (idClasse != null) {
-            query.append(" AND rel_groupe_cycle.id_groupe = ? ");
+            query.append(" AND rel_groupe_cycle.id_groupe = ?");
             params.addString(idClasse);
         }
 
-        query.append(" GROUP BY perso.nom, perso.masque, competences.id, competences.nom, competences.id_parent, competences.id_type, rel_competences_enseignements.id_enseignement, competences.id_cycle ")
-                .append("ORDER BY competences.nom ASC, perso.nom ASC;");
+        query.append(" GROUP BY competences.id, competences.nom, competences.id_parent, competences.id_type, rel_competences_enseignements.id_enseignement, competences.id_cycle ")
+                .append("ORDER BY competences.nom ASC;");
 
         Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
     }
@@ -234,7 +221,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
-        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".rel_competences_domaines WHERE id_domaine IN " + Sql.listPrepared(idDomaines));
+        query.append("SELECT * FROM " + COMPETENCES_SCHEMA + ".rel_competences_domaines WHERE id_domaine IN " + Sql.listPrepared(idDomaines));
 
         for(Long l : idDomaines) {
             params.addNumber(l);
@@ -244,7 +231,42 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void delete(String idEtablissement, Handler<Either<String, JsonObject>> handler) {
+    public void create(JsonObject competence, Handler<Either<String, JsonObject>> handler) {
+
+        String query = "WITH new_competence AS(" +
+                "INSERT INTO " + COMPETENCES_SCHEMA + ".competences(nom, id_parent, id_type, id_cycle) " +
+                "VALUES (?, ?, ?, ?) " +
+                "RETURNING id" +
+                ") INSERT INTO rel_competences_domaines VALUES (new_competence.id, ?);" +
+                "   INSERT INTO rel_competences_enseignements VALUES (new_competence.id, ?)";
+
+        JsonArray values = new JsonArray().addString(competence.getString("nom"))
+                .addNumber(competence.getInteger("id_parent"))
+                .addNumber(competence.getInteger("id_type"))
+                .addNumber(competence.getInteger("id_cycle"))
+                .addNumber(competence.getInteger("id_domaine"))
+                .addNumber(competence.getInteger("id_enseignement"));
+
+        sql.prepared(query, values, validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void update(JsonObject competence, Handler<Either<String, JsonArray>> handler) {
+
+    }
+
+    @Override
+    public void delete(Number id, Handler<Either<String, JsonArray>> handler) {
+
+    }
+
+    @Override
+    public void getDevoirCompetence(Number id, Handler<Either<String, JsonArray>> handler) {
+
+    }
+
+    @Override
+    public void deleteCustom(String idEtablissement, Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new JsonArray();
 
         // SUPPRESSION DE COMPETENCES MANUELLES

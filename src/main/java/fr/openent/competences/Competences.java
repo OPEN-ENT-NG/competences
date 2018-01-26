@@ -39,32 +39,35 @@ public class Competences extends BaseServer {
     public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
 
 
-    public final static String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
-    public final static String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
-    public final static String SCHEMA_APPRECIATIONS_UPDATE = "eval_updateAppreciation";
-    public final static String SCHEMA_BFC_CREATE = "eval_createBFC";
-    public final static String SCHEMA_BFC_UPDATE = "eval_updateBFC";
-    public final static String SCHEMA_BFCSYNTHESE_CREATE = "eval_createBfcSynthese";
-    public final static String SCHEMA_NIVEAUENSCPL_CREATE = "eval_createNiveauEnsCpl";
+    public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
+    public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
+    public static final String SCHEMA_APPRECIATIONS_UPDATE = "eval_updateAppreciation";
+    public static final String SCHEMA_BFC_CREATE = "eval_createBFC";
+    public static final String SCHEMA_BFC_UPDATE = "eval_updateBFC";
+    public static final String SCHEMA_BFCSYNTHESE_CREATE = "eval_createBfcSynthese";
+    public static final String SCHEMA_NIVEAUENSCPL_CREATE = "eval_createNiveauEnsCpl";
     public static final String SCHEMA_COMPETENCE_NOTE_CREATE = "eval_createCompetenceNote";
     public static final String SCHEMA_COMPETENCE_NOTE_UPDATE = "eval_updateCompetenceNote";
     public static final String SCHEMA_DEVOIRS_UPDATE = "eval_updateDevoir";
     public static final String SCHEMA_DEVOIRS_CREATE = "eval_createDevoir";
-    public final static String SCHEMA_MAITRISE_CREATE = "eval_createMaitrise";
+    public static final String SCHEMA_MAITRISE_CREATE = "eval_createMaitrise";
     public static final String SCHEMA_REL_PROFESSEURS_REMPLACANTS_CREATE = "eval_createRel_professeurs_remplacants";
     public static final String SCHEMA_NOTES_CREATE = "eval_createNote";
     public static final String SCHEMA_NOTES_UPDATE = "eval_updateNote";
-    public final static String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
-    public final static String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
-    public final static String DEVOIR_TABLE = "devoirs";
-    public final static String DEVOIR_SHARE_TABLE = "devoirs_shares";
+    public static final  String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
+    public static final String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
+    public static final String DEVOIR_TABLE = "devoirs";
+    public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
+    public static final String SCHEMA_COMPETENCE = "eval_createCompetence";
 
 
-    public final static String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
+    public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
 
-    public final static Integer MAX_NBR_COMPETENCE = 12;
+    public static final String PARAM_COMPETENCE_RIGHT = "competences.param.competences";
 
-    public final static String VIESCO_BUS_ADDRESS = "viescolaire";
+    public static final Integer MAX_NBR_COMPETENCE = 12;
+
+    public static final String VIESCO_BUS_ADDRESS = "viescolaire";
 
     @Override
 	public void start() {

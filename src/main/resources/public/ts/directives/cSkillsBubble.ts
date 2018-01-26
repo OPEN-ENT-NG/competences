@@ -1,5 +1,5 @@
 /**
- * Created by ledunoiss on 09/11/2016.
+ * Created by anabah on 09/11/2016.
  */
 
 import {ng, appPrefix} from 'entcore';
@@ -23,10 +23,10 @@ export let cSkillsBubble = ng.directive('cSkillsBubble', function () {
             selectCond : '=?',
             onClick: '=?'
         },
-        templateUrl : "/"+appPrefix+"/public/template/directives/cSkillsBubble.html",
+        templateUrl : '/' + appPrefix + '/public/template/directives/cSkillsBubble.html',
         controller : ['$scope', function ($scope) {
             $scope.activeClick = false;
-            if($scope.classes === undefined){
+            if ($scope.classes === undefined) {
                 $scope.classes = ' ';
             }
             if ($scope.selectCond === undefined) {

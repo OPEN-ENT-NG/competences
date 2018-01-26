@@ -28,7 +28,7 @@ export class SuiviCompetence extends Model {
     static get api() {
         return {
             getCompetencesNotes : '/competences/competence/notes/eleve/',
-            getArbreDomaines : '/competences/domaines/classe/',
+            getArbreDomaines : '/competences/domaines?idClasse=',
             getDomainesBFC : '/competences/bfc/eleve/',
             getCompetenceNoteConverssion : '/competences/competence/notes/bilan/conversion'
         };

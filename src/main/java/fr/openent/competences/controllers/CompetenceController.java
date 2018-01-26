@@ -21,18 +21,19 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessEvaluationFilter;
-import fr.openent.competences.security.AccessMaitriseFilter;
-import fr.openent.competences.service.CompetenceNoteService;
+import fr.openent.competences.security.ParamCompetenceRight;
 import fr.openent.competences.service.CompetencesService;
-import fr.openent.competences.service.impl.DefaultCompetenceNoteService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Put;
+import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -55,11 +56,9 @@ public class CompetenceController extends ControllerHelper {
      * Déclaration des services
      */
     private final CompetencesService competencesService;
-    private final CompetenceNoteService competencesNotesService;
 
     public CompetenceController() {
         competencesService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
-        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
     }
 
     /**
@@ -258,5 +257,44 @@ public class CompetenceController extends ControllerHelper {
         }
 
         competencesService.getCompetencesEnseignement(id, arrayResponseHandler(request));
+    }
+
+    @Post("/competences")
+    @ApiDoc("Crée une nouvelle compétence")
+    @SecuredAction(value = "", type =  ActionType.RESOURCE)
+    @ResourceFilter(ParamCompetenceRight.class)
+    public void createCompetence(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(final JsonObject competence) {
+
+                    }
+                });
+            }
+        });
+    }
+
+    @Put("/competences")
+    @ApiDoc("Met à jour une compétence")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ParamCompetenceRight.class)
+    public void updateCompetence(HttpServerRequest request) {
+
+    }
+
+    @Delete("/competences")
+    @ApiDoc("Supprime une compétence")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ParamCompetenceRight.class)
+    public void deleteCompetence(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos userInfos) {
+
+            }
+        });
     }
 }

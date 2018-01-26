@@ -24,11 +24,11 @@ export const itemsCompetences = {
                 this.lastSelectedCycle = this.$parent.lastSelectedCycle;
                 utils.safeApply(this);
             });
-            this.$watch(() => this.search.keyword, (newValue, oldValue) => {
+            this.$watch( () => this.search.keyword, (newValue, oldValue) => {
                 this.search.haschange = (newValue !== oldValue);
                 utils.safeApply(this);
             });
-            http().getJson(`/competences/domaines?idStructure=${this.idStructure}`)
+            http().get(`/competences/domaines?idStucture=${this.idStructure}`)
                 .done((resDomaines) => {
                     if (resDomaines) {
                         let _res = [];
@@ -49,7 +49,7 @@ export const itemsCompetences = {
                         all: []
                     };
                 }).bind(this);
-            http().getJson(`/competences/enseignements?idStructure=${this.idStructure}`).done(function (res) {
+            http().get('/competences/enseignements').done(function (res) {
                 _.forEach(res, function (enseignement) {
                     enseignement.competences = {
                         all: enseignement['competences_1']
@@ -168,11 +168,11 @@ export const itemsCompetences = {
         deletePersoItem: function () {
             http().delete(`/competences/items/${this.idStructure}`)
                 .done((res) => {
-                    //this.getPersoItem().then(() => {
+                    // this.getPersoItem().then(() => {
                     console.log('delete work');
                     this.opened.lightboxDeletePersoItem = false;
                     utils.safeApply(this);
-                    //});
+                    // });
                 })
                 .error(function () {
                     console.log('delete not work');

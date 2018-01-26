@@ -1,0 +1,44 @@
+<script type="text/ng-template"  id="tree_items_renderer.html">
+    <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }"
+        class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1"
+        ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">
+
+        <label ng-if="domaine.competences.all.length > 0" class="checkbox">
+            <input type="checkbox"
+                   ng-init="selectDomaine(domaine)"
+                   ng-click=";"
+                   ng-model="domaine.selected">
+            <span></span>
+        </label> [[domaine.codification]] - [[domaine.libelle]]
+    </h4>
+    <div ng-class="{'openedSectionDom' : domaine.OpenDom}"
+         ng-if="domaine.competences.all.length > 0"
+         class="twelve cell"
+         style='height: auto;'>
+
+        <h4 ng-class="{'openedDom' : domaine.OpenSousDom}"
+            class="margin-top-1em Domaine"
+            ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0"
+            ng-click="domaine.OpenSousDom = !domaine.OpenSousDom"
+            ng-init="domaine.OpenSousDom = false">
+
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-click=";"
+                       ng-init="selectDomaine(domaine)"
+                       ng-model="domaine.selected">
+                <span></span>
+            </label> [[domaine.codification]] - [[domaine.libelle]]
+        </h4>
+
+    </div>
+
+    <div ng-repeat="domaine in domaine.domaines.all" ng-include="'tree_items_renderer.html'">
+    </div>
+</script>
+<div class="content-suivi-eleve card bilan-suivi-eleve">
+    <div>
+        <div ng-repeat="domaine in printDomaines.all" ng-include="'tree_items_renderer.html'">
+        </div>
+    </div>
+</div>

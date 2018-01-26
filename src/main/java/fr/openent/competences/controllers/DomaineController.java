@@ -73,7 +73,6 @@ public class DomaineController extends ControllerHelper {
     public void getArbreDomaines(final HttpServerRequest request){
         final JsonArray oArbreDomainesArray = new JsonArray();
         final String idClasse = request.params().get("idClasse");
-        final String idStructure = request.params().get("idStructure");
 
         // 1 - Chargement des domaines ordonnés selon l'arbre recursif
         domainesService.getArbreDomaines(idClasse, new Handler<Either<String, JsonArray>>() {
@@ -85,13 +84,14 @@ public class DomaineController extends ControllerHelper {
                     final JsonArray oDomainesArray = event.right().getValue();
 
                     // 2 - Chargement de toutes les competences evaluables du cycle
-                    competencesService.getCompetencesItem(idStructure,idClasse,
-                            new Handler<Either<String, JsonArray>>() {
+                    competencesService.getCompetencesItem(idClasse, new Handler<Either<String, JsonArray>>() {
                                 @Override
                                 public void handle(Either<String, JsonArray> event) {
                                     if (event.right().isRight()) {
+
                                         // La liste des competences evaluables du cycle (feuilles)
                                         JsonArray oCompetencesItemArray = event.right().getValue();
+
 
                                         // 3 - Positionnement des compétences sur les domaines
                                         for (int i = 0; i < oCompetencesItemArray.size(); i++) {
@@ -119,6 +119,7 @@ public class DomaineController extends ControllerHelper {
 
                                         }
 
+
                                         // 4 - Construction de l'arbre des domaines à partir de la liste ordonnée
                                         for (int i = 0; i < oDomainesArray.size(); i++) {
                                             JsonObject oDomaineAinserer = oDomainesArray.get(i);
@@ -137,6 +138,7 @@ public class DomaineController extends ControllerHelper {
                                             }
 
                                         }
+
                                         Renders.renderJson(request, oArbreDomainesArray);
                                     } else {
                                         leftToResponse(request, event.left());

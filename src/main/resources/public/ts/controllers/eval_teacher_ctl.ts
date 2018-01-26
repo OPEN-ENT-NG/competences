@@ -20,7 +20,7 @@ declare let console: any;
 declare let location: any;
 
 export let evaluationsController = ng.controller('EvaluationsController', [
-    '$scope', 'route', '$rootScope', '$location', '$filter', '$sce', '$compile', '$timeout','$route',
+    '$scope', 'route', '$rootScope', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
     function ($scope, route, $rootScope, $location, $filter, $sce, $compile, $timeout, $route) {
         // $scope.initPeriodesList = (Index?: number,annee?:boolean) => {
         //     $scope.periodesList = {
@@ -123,7 +123,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // if ($scope.Structure === undefined) {
                     //     $scope.Structure = new Structure();
                     // }
-                    //si les Eleves ne sont pas sync
+                    // si les Eleves ne sont pas sync
                     // if ( $scope.Structure.synchronized.Eleve !== false) {
                     //     if($scope.isChefEtab() ) {
                     //         evaluations.on('eleves-sync', function () {
@@ -655,14 +655,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.updateFilter = function () {
-            //tableau des connaissances à cocher éventuellement
+            // tableau des connaissances à cocher éventuellement
             let parentToCheck = [];
 
             for (let i = 0; i < $scope.evaluations.competencesDevoir.length; i++) {
                 for (let j = 0; j < $scope.evaluations.enseignements.all.length; j++) {
                     if ($scope.competencesFilter[$scope.evaluations.competencesDevoir[i].id_competence + '_'
                         + $scope.evaluations.enseignements.all[j].id] !== undefined) {
-                        //selection des competences du devoir
+                        // selection des competences du devoir
                         $scope.competencesFilter[$scope.evaluations.competencesDevoir[i].id_competence
                         + '_' + $scope.evaluations.enseignements.all[j].id].isSelected = true;
 
@@ -670,7 +670,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             = $scope.evaluations.competencesDevoir[i].id_competence;
                         $scope.devoir.competences.all[i].id = $scope.devoir.competences.all[i].id_competence;
 
-                        //remplissage des connaissances parent  à cocher éventuellement
+                        // remplissage des connaissances parent  à cocher éventuellement
                         let parentCo = $scope.competencesFilter[$scope.evaluations.competencesDevoir[i].id_parent
                         + '_' + $scope.evaluations.enseignements.all[j].id];
                         if (parentToCheck.indexOf(parentCo) === -1 && parentCo !== undefined) {
@@ -682,7 +682,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
 
-            //On coche la connaissance si elle n'a aucun fils sélectionné
+            // On coche la connaissance si elle n'a aucun fils sélectionné
             for (let i = 0; i < parentToCheck.length; i++) {
                 let checkIt = true;
                 for (let j in  $scope.competencesFilter) {
@@ -706,7 +706,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     parentToCheck[i].isSelected = false;
                     parentToCheck[i].id = parentToCheck[i].id_competence;
                 }
-                //depliement de l'enseignement pour les compétences sélectionnées
+                // depliement de l'enseignement pour les compétences sélectionnées
                 // du devoir à modifier
                 let enseignementToOpen = $scope.devoir.enseignements.all.find(
                     function (elem) {
@@ -714,7 +714,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     });
                 enseignementToOpen.open = true;
 
-                //depliement des connaissances parent des compétences du devoir à modifier
+                // depliement des connaissances parent des compétences du devoir à modifier
                 parentToCheck[i].data.open = true;
                 parentToCheck[i].open = true;
                 utils.safeApply($scope);
@@ -1117,7 +1117,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Récupère toutes les sous matière de la matière recherchée
          */
         $scope.getSousMatieres = function () {
-            var matiere = evaluations.matieres.findWhere({id: $scope.search.matiere.id});
+            let matiere = evaluations.matieres.findWhere({id: $scope.search.matiere.id});
             if (matiere) $scope.selected.matiere = matiere;
         };
 
@@ -1493,7 +1493,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             if (currentIdCycle !== newIdCycle) {
                 evaluations.enseignements.sync(classe_Id).then(function () {
-                    //suppression des compétences qui n'appartiennent pas au cycle
+                    // suppression des compétences qui n'appartiennent pas au cycle
                     $scope.initFilter(true);
                     evaluations.competencesDevoir = [];
                     utils.safeApply($scope);

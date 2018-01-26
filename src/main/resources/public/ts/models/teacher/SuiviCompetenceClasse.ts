@@ -9,7 +9,7 @@ export class SuiviCompetenceClasse extends Model {
     get api() {
         return {
             getCompetencesNotesClasse : '/competences/competence/notes/classe/',
-            getArbreDomaines : '/competences/domaines/classe/'
+            getArbreDomaines : '/competences/domaines?idClasse='
         }
     }
 

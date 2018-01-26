@@ -41,8 +41,7 @@
                         </span>
         </p>
     </div>
-    <!-- <div class="twelve tabs vertical-spacing-twice heading-tabs"> -->
-    <div class="zero">
+    <div class="twelve tabs vertical-spacing-twice heading-tabs">
         <header ng-repeat="cycle in cycles"
                 ng-class="{selected : cycle.selected}"
                 class="horizontal-spacing-twice ng-scope">
@@ -108,17 +107,14 @@
                 <div
                         ng-class="{'openedSectionDom' : enseignement.OpenDom}"
                         class="twelve cell" style='height: auto;'>
-                    <div ng-repeat="connaissance in enseignement.competences.all"
-                         ng-init="connaissance.OpenSousDom = false; connaissance.action = false"
-                         ng-mouseover="connaissance.action = true"
-                         ng-mouseleave="connaissance.action = false">
-                        <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}"
-                            class="margin-top-1em Domaine six inline-block"
-                            ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom">
-                           [[connaissance.nom]]
+                    <div ng-repeat="connaissance in enseignement.competences.all">
+                        <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}" class="margin-top-1em Domaine"
+                            ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom"
+                            ng-init="connaissance.OpenSousDom = false; connaissance.action = false"
+                            ng-mouseover="connaissance.action = true"
+                            ng-mouseleave="connaissance.action = false">
+                           [[connaissance.nom]]<span><i ng-show="connaissance.action" class="plus"></i></span>
                         </h3>
-                        <h3 data-ng-click="opened.lightboxCreateItem = true"
-                                class="inline-block"><i ng-show="connaissance.action" class="plus"></i></h3>
                         <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
                         'openedSectionDom' : connaissance.OpenSousDom}"
                              style='height: auto;'>

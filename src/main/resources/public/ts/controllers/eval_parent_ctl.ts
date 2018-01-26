@@ -24,17 +24,17 @@
 import { model, ng, idiom as lang, template, skin, moment } from 'entcore';
 import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
-import { Classe } from "../models/parent_eleve/Classe";
-import { Defaultcolors } from "../models/eval_niveau_comp";
+import { Classe } from '../models/parent_eleve/Classe';
+import { Defaultcolors } from '../models/eval_niveau_comp';
 
 declare let _: any;
 declare let location: any;
 declare let window: any;
-declare let Chart:any;
+declare let Chart: any;
 
 export let evaluationsController = ng.controller('EvaluationsController', [
-    '$scope', 'route', '$location','$filter', '$sce', '$compile', '$timeout','$route',
-    function ($scope, route, $location, $filter, $sce, $compile, $timeout,$route) {
+    '$scope', 'route', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
+    function ($scope, route, $location, $filter, $sce, $compile, $timeout, $route) {
         route({
             accueil : async function (params) {
                 await $scope.init();
@@ -102,7 +102,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     enseignant: null,
                     sousmatiere: null,
                     type: null,
-                    name: ""
+                    name: ''
                 };
                 await $scope.chooseChild (evaluations.eleve);
             };
@@ -118,14 +118,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.getI18nPeriode = (periode) => {
             let result;
             if (periode.id === null ) {
-                result = lang.translate("viescolaire.utils.annee");
+                result = lang.translate('viescolaire.utils.annee');
             }
             else {
                 let type_periode = _.findWhere(evaluations.eleve.classe.typePeriodes.all, {id: periode.id_type});
 
                 result = type_periode ?
-                    lang.translate("viescolaire.periode." + type_periode.type) + " " + type_periode.ordre
-                    : lang.translate("viescolaire.utils.periodeError");
+                    lang.translate('viescolaire.periode.' + type_periode.type) + ' ' + type_periode.ordre
+                    : lang.translate('viescolaire.utils.periodeError');
             }
             return result;
         };

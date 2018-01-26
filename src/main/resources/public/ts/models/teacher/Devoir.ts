@@ -145,7 +145,7 @@ export class Devoir extends Model implements IModel{
         });
     }
 
-    getLastSelectedCompetence () : Promise<[any]> {
+    getLastSelectedCompetence (): Promise<[any]> {
         return new Promise((resolve, reject) => {
             http().getJson(this.api.getCompetencesLastDevoir).done(function(competencesLastDevoirList){
                 if(resolve && (typeof(resolve) === 'function')) {

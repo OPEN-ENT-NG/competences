@@ -21,18 +21,18 @@
  * Created by ledunoiss on 08/08/2016.
  */
 import { model, http, Model, Collection, moment, _ } from 'entcore';
-import { Classe } from "./parent_eleve/Classe";
-import { Devoir } from "./parent_eleve/Devoir";
-import { Matiere } from "./parent_eleve/Matiere";
-import { Eleve } from "./parent_eleve/Eleve";
-import { Enseignant } from "./parent_eleve/Enseignant";
-import { Periode } from "./parent_eleve/Periode";
-import { Domaine, Structure } from "./teacher";
-import { NiveauCompetence } from "./eval_niveau_comp";
-import { Enseignement } from "./parent_eleve/Enseignement";
+import { Classe } from './parent_eleve/Classe';
+import { Devoir } from './parent_eleve/Devoir';
+import { Matiere } from './parent_eleve/Matiere';
+import { Eleve } from './parent_eleve/Eleve';
+import { Enseignant } from './parent_eleve/Enseignant';
+import { Periode } from './parent_eleve/Periode';
+import { Domaine, Structure } from './teacher';
+import { NiveauCompetence } from './eval_niveau_comp';
+import { Enseignement } from './parent_eleve/Enseignement';
 
 declare let location: any;
-declare let console : any;
+declare let console: any;
 declare let require: any;
 
 export class Evaluations extends Model {
@@ -40,7 +40,7 @@ export class Evaluations extends Model {
     matieres: Collection<Matiere>;
     classes: Collection<Classe>;
     enseignants: Collection<Enseignant>;
-    enseignements : Collection<Enseignement>;
+    enseignements: Collection<Enseignement>;
     devoirs: Collection<Devoir>;
     eleve: Eleve; // Elève courant
     periode: Periode; // Période courante
@@ -50,15 +50,15 @@ export class Evaluations extends Model {
     usePerso: any;
     composer: any;
 
-    get api() {
+    static get api() {
         return {
-            EVAL_ENFANTS: '/competences/enfants?userId=' + model.me.userId,
+            EVAL_ENFANTS: `/competences/enfants?userId=${model.me.userId}`,
             GET_EVALUATIONS : '/competences/devoirs?idEtablissement=',
             GET_MATIERES : '/viescolaire/matieres/infos?',
             GET_ENSEIGNANTS : '/viescolaire/enseignants?',
-            GET_COMPETENCES :'/viescolaire/competences/eleve/',
+            GET_COMPETENCES : '/viescolaire/competences/eleve/',
             GET_ANNOTATION : '/viescolaire/annotations/eleve/',
-            GET_ARBRE_DOMAINE : '/competences/domaines/classe/',
+            GET_ARBRE_DOMAINE : '/competences/domaines?idClasse=',
             GET_ENSEIGNEMENT: '/competences/enseignements'
         };
     }
@@ -67,23 +67,27 @@ export class Evaluations extends Model {
         super(o);
     }
 
-    async sync  () : Promise<any> {
-        return new Promise(async (resolve, reject) => {
+    async sync  (): Promise<any> {
+        return new Promise(async (resolve) => {
             // await this.classes.sync(model.me.structures[0]);
             this.collection(Eleve, {
                 sync: async () => {
                     return new Promise((resolve, reject) => {
-                        http().get(this.api.EVAL_ENFANTS).done((enfants) => {
-                            this.eleves.load(enfants);
-                            resolve();
-                        });
+                        http().get(Evaluations.api.EVAL_ENFANTS)
+                            .done((enfants) => {
+                                this.eleves.load(enfants);
+                                resolve();
+                            })
+                            .error(function () {
+                                reject();
+                            });
                     });
                 }
             });
             this.collection(Enseignant, {
                 sync: async (mapEnseignant) => {
                     return new Promise((resolve) => {
-                        let uri = this.api.GET_ENSEIGNANTS;
+                        let uri = Evaluations.api.GET_ENSEIGNANTS;
                         for (let enseignant in mapEnseignant) {
                             uri += '&idUser=' + enseignant;
                         }
@@ -97,7 +101,7 @@ export class Evaluations extends Model {
             this.collection(Matiere, {
                 sync: async (mapMatiere) => {
                     return new Promise((resolve) => {
-                        let uri = this.api.GET_MATIERES;
+                        let uri = Evaluations.api.GET_MATIERES;
                         for (let matiere in mapMatiere) {
                             uri = uri + '&idMatiere=' + matiere;
                         }
@@ -109,25 +113,24 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Devoir, {
-                sync: async(structureId, userId, classeId,idPeriode) => {
+                sync: async(structureId, userId, classeId, idPeriode) => {
                     return new Promise( (resolve) => {
                         let that = this;
-                        let uri = this.api.GET_EVALUATIONS
+                        let uri = Evaluations.api.GET_EVALUATIONS
                             + structureId + '&idEleve=' + userId;
                         if (classeId !== undefined) {
                             uri = uri + '&idClasse=' + classeId;
                         }
                         if (idPeriode !== undefined) {
-                            uri = uri + '&idPeriode=' +idPeriode;
+                            uri = uri + '&idPeriode=' + idPeriode;
                         }
-                        // TODO RECUPERER LES COMPETENCES ET METTRE A JOUR LA COLONNE NB_COMPETENCES SUR LA VUE LISTE
                         http().getJson(uri).done((devoirs) => {
 
                             // RECUPERATION DES COMPETENCES
-                            let uriCompetences = this.api.GET_COMPETENCES + userId;
+                            let uriCompetences = Evaluations.api.GET_COMPETENCES + userId;
                             uriCompetences = uriCompetences + '?idClasse=' + this.eleve.classe.id;
                             if (idPeriode !== undefined) {
-                                uriCompetences = uriCompetences + '&idPeriode=' +idPeriode;
+                                uriCompetences = uriCompetences + '&idPeriode=' + idPeriode;
                             }
                             http().getJson(uriCompetences).done((competences) => {
                                 competences.forEach(function (competence) {
@@ -164,9 +167,9 @@ export class Evaluations extends Model {
                                 });
 
                                 // RECUPERATION DES ANNOTIONS
-                                let uriAnnotations = this.api.GET_ANNOTATION  + userId;
+                                let uriAnnotations = Evaluations.api.GET_ANNOTATION  + userId;
                                 if (idPeriode !== undefined) {
-                                    uriAnnotations = uriAnnotations + '?idPeriode=' +idPeriode;
+                                    uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode;
                                 }
                                 http().getJson(uriAnnotations).done((annotations) => {
                                     annotations.forEach(function () {
@@ -213,7 +216,7 @@ export class Evaluations extends Model {
                                     let matieresDevoirs = _.groupBy(devoirs, 'id_matiere');
                                     let enseignants = _.groupBy(devoirs, 'owner');
                                     this.enseignants.sync(enseignants).then(() => {
-                                        this.matieres.sync(matieresDevoirs).then(()=>{
+                                        this.matieres.sync(matieresDevoirs).then(() => {
                                             for (let o in matieresDevoirs) {
                                                 matieresDevoirs[o].forEach(function (element) {
                                                     let devoir = element;
@@ -238,21 +241,21 @@ export class Evaluations extends Model {
                 sync: async function (classe, eleve, competences) {
                     let that = this.composer;
                     return new Promise((resolve, reject) => {
-                        var url = that.api.GET_ARBRE_DOMAINE + classe.id;
+                        let url = that.api.GET_ARBRE_DOMAINE + classe.id;
                         http().getJson(url).done((resDomaines) => {
-                                if (resDomaines) {
-                                    let _res = [];
-                                    for (let i = 0; i < resDomaines.length; i++) {
+                            if (resDomaines) {
+                                let _res = [];
+                                for (let i = 0; i < resDomaines.length; i++) {
 
-                                        let domaine = new Domaine(resDomaines[i]);
-                                        that.setCompetenceNotes(domaine,competences)
-                                        _res.push(domaine);
-                                    }
-                                    that.domaines.load(_res);
+                                    let domaine = new Domaine(resDomaines[i]);
+                                    that.setCompetenceNotes(domaine, competences);
+                                    _res.push(domaine);
                                 }
-                                if (resolve && typeof (resolve) === 'function') {
-                                    resolve();
-                                }
+                                that.domaines.load(_res);
+                            }
+                            if (resolve && typeof (resolve) === 'function') {
+                                resolve();
+                            }
                         }).bind(this);
                     });
                 }
@@ -261,7 +264,7 @@ export class Evaluations extends Model {
                 sync: async function (idClasse: string, competences) {
                     let that = this.composer;
                     return new Promise((resolve, reject) => {
-                        var uri = that.api.GET_ENSEIGNEMENT;
+                        let uri = that.api.GET_ENSEIGNEMENT;
                         if (idClasse !== undefined) {
                             uri += '?idClasse=' + idClasse;
                             http().getJson(uri).done(function (res) {
@@ -338,7 +341,7 @@ export class Evaluations extends Model {
         location.replace(uri);
     }
     setCompetenceNotes(poDomaine, poCompetencesNotes) {
-        if(poDomaine.competences) {
+        if (poDomaine.competences) {
             _.map(poDomaine.competences.all, function (competence) {
                 competence.competencesEvaluations = _.where(poCompetencesNotes, {
                     id_competence: competence.id
@@ -347,8 +350,8 @@ export class Evaluations extends Model {
             });
         }
 
-        if( poDomaine.domaines) {
-            for (var i = 0; i < poDomaine.domaines.all.length; i++) {
+        if ( poDomaine.domaines) {
+            for (let i = 0; i < poDomaine.domaines.all.length; i++) {
                 this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes);
             }
         }

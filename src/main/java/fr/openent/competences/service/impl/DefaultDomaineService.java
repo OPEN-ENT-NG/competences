@@ -39,21 +39,31 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         JsonArray params = new JsonArray();
 
 
-        query.append("WITH RECURSIVE search_graph(niveau, id, id_parent, libelle, codification, evaluated, pathinfo) AS ");
-            query.append("( ");
-                query.append("SELECT 1 as niveau, id, id_parent, libelle, codification, evaluated, array[id] as pathinfo ");
-                query.append("FROM "+ Competences.COMPETENCES_SCHEMA +".domaines ");
-                query.append("WHERE id_parent = 0 ");
-                query.append("AND id_cycle = (SELECT id_cycle FROM "+ Competences.COMPETENCES_SCHEMA +"" +
-                        ".rel_groupe_cycle WHERE id_groupe = ?) ");
-            query.append("UNION ");
-                query.append("SELECT sg.niveau + 1  as niveau , dom.id, dom.id_parent, dom.libelle, dom.codification, dom.evaluated, sg.pathinfo||dom.id ");
-                query.append("FROM "+ Competences.COMPETENCES_SCHEMA +".domaines dom , search_graph sg ");
-                query.append("WHERE dom.id_parent = sg.id ");
-            query.append(") ");
-        query.append("SELECT niveau, id, id_parent, libelle, codification, evaluated FROM search_graph ORDER BY pathinfo");
+        query.append("WITH RECURSIVE search_graph(niveau, id, id_parent, libelle, codification, ")
+                .append(" evaluated, pathinfo, id_cycle) AS ")
+                .append(" ( ")
+                .append(" SELECT 1 as niveau, id, id_parent, libelle, codification, evaluated, array[id] as pathinfo ")
+                .append(" , id_cycle")
+                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines ")
+                .append(" WHERE id_parent = 0 ");
 
-        params.addString(idClasse);
+        if(null != idClasse) {
+            query.append(" AND id_cycle = (SELECT id_cycle FROM " + Competences.COMPETENCES_SCHEMA)
+                    .append(".rel_groupe_cycle WHERE id_groupe = ?) ");
+        }
+        query.append("UNION ")
+                .append(" SELECT sg.niveau + 1  as niveau , dom.id, dom.id_parent, dom.libelle, ")
+                .append(" dom.codification, dom.evaluated, sg.pathinfo||dom.id, dom.id_cycle ")
+                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines dom , search_graph sg ")
+                .append(" WHERE dom.id_parent = sg.id ")
+                .append(") ")
+                .append(" SELECT niveau, id, id_parent, libelle, codification, evaluated, id_cycle, " )
+                .append(" libelle as nom, libelle as nomHtml FROM search_graph ")
+                .append(" ORDER BY pathinfo, id_cycle");
+
+        if(null != idClasse) {
+            params.addString(idClasse);
+        }
         Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
     }
 
@@ -93,11 +103,12 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         query.append("WITH evaluated_domaines AS ")
                 .append("(SELECT id, id_parent, libelle, codification ")
                 .append("FROM notes.domaines ")
-                .append("LEFT JOIN notes.rel_groupe_cycle ON notes.domaines.id_cycle = notes.rel_groupe_cycle.id_cycle " )
-                .append("WHERE domaines.evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
+                .append("LEFT JOIN notes.rel_groupe_cycle ON notes.domaines.id_cycle = notes.rel_groupe_cycle.id_cycle")
+                .append(" WHERE domaines.evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
         params.addString(idClasse);
 
-        //Puis on sélectionne les domaines dont le parent n'existe pas dans la requête précente, c'est-à-dire un domaine racine (id_parent = 0) ou dont le domaine parent n'est pas évalué
+        //Puis on sélectionne les domaines dont le parent n'existe pas dans la requête précente,
+        // c'est-à-dire un domaine racine (id_parent = 0) ou dont le domaine parent n'est pas évalué
         query.append("SELECT id, libelle, codification ")
                 .append("FROM evaluated_domaines ")
                 .append("WHERE id NOT IN ")
