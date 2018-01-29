@@ -425,6 +425,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 evaluations.competencesDevoir = res;
             }
         };
+        $scope.lightboxChampsObligatoire = false;
         $scope.MAX_NBR_COMPETENCE = 12;
         $scope.opened = {
             devoir: -1,
@@ -1013,6 +1014,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
+        $scope.lightboxChampsApparition = function () {
+            if ($scope.controleNewDevoirForm() == true) {
+                $scope.lightboxChampsObligatoire = true;
+            } else {
+                $scope.beforSaveDevoir();
+            }
+        };
+
         /**
          * Controle la validité du formulaire de création d'un devoir
          * @returns {boolean} Validité du formulaire
@@ -1038,6 +1047,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && $scope.evaluations.competencesDevoir.length <= $scope.MAX_NBR_COMPETENCE
             );
         };
+
+
 
         /**
          * Retourne la valeur de la clé i18n
@@ -3079,6 +3090,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 $scope.allUnselect = true;
             }
+        };
+
+        $scope.closeLightboxChampsObligatoire = function(){
+            $scope.lightboxChampsObligatoire = false;
         }
     }
 ]);

@@ -8,7 +8,9 @@ export let pane = ng.directive('pane', function() {
         require: '^tabs',
         restrict: 'E',
         transclude: true,
-        scope: { title: '@' },
+        scope: {
+            template: '='
+        },
         link: function(scope, element, attrs, tabsCtrl) {
             tabsCtrl.addPane(scope);
         },
@@ -17,4 +19,4 @@ export let pane = ng.directive('pane', function() {
         '</div>',
         replace: true
     };
-})
+});

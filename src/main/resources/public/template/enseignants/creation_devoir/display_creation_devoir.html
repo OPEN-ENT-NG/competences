@@ -22,10 +22,16 @@
     <div class="eight cell twelve-mobile">
         <div class="pannel-in-cell">
             <tabs>
-                <pane title="Informations évaluation">
+                <pane template="'competences/public/template/enseignants/creation_devoir/informations_evaluationsTabHeader.html'">
                     <div class="row">
                         <form name="addDevoirForm" novalidate>
                             <div class="twelve cell addDevoirTable">
+
+                                <i class="asterisk obligatoire"></i>
+                                <i18n>legend.of.simple.asterisk</i18n>
+                                <br/>
+                                <i class="asterisk obligatoire"></i><i class="asterisk obligatoire"></i>
+                                <i18n>legend.of.double.asterisk</i18n>
 
                                 <!-- Etablissement -->
                                 <section class="row twelve-mobile ">
@@ -150,6 +156,7 @@
 
                                     <div class="nine cell ten-mobile indent-eight">
                                         <i18n>evaluations.test.is.evaluated</i18n>
+                                        <i class="asterisk obligatoire"></i><i class="asterisk obligatoire"></i>
                                     </div>
                                 </section>
 
@@ -275,7 +282,7 @@
                         </form>
                     </div>
                 </pane>
-                <pane title="Compétences">
+                <pane template="'competences/public/template/enseignants/creation_devoir/competenceTabHeader.html'">
                     <h3><i18n>evaluations.test.competences</i18n> : </h3>
 
                     <!-- Recherche de competences -->
@@ -352,14 +359,14 @@
         </div>
 
         <div class="twelve cell">
-            <input class="button-add-devoir " type="button" ng-click="beforSaveDevoir()"
-                   ng-disabled="controleNewDevoirForm()" i18n-value="viescolaire.utils.save">
+            <input class="button-add-devoir " type="button" ng-click="lightboxChampsApparition()"
+                   i18n-value="viescolaire.utils.save">
         </div>
 
     </div>
 
-    <input class="button-add-devoir zero-mobile button-fixed-top-right" type="button" ng-click="beforSaveDevoir()"
-           ng-disabled="controleNewDevoirForm()" i18n-value="viescolaire.utils.save">
+    <input class="button-add-devoir zero-mobile button-fixed-top-right" type="button" ng-click="lightboxChampsApparition()"
+    i18n-value="viescolaire.utils.save">
 
 
     <!-- PARTIE RECAPITULATIF -->
@@ -483,6 +490,31 @@
 
     </div>
 </div>
+<lightbox show="lightboxChampsObligatoire == true" on-close="closeLightboxChampsObligatoire()">
+    <div ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
+        <h3><i18n>choose.evaluation.type</i18n></h3>
+    </div>
+    <div ng-if="devoir.id_groupe == undefined || !devoir.name || devoir.id_periode == undefined || devoir.dateDevoir == undefined">
+        <p><i18n>required.fields.not.selected</i18n></p>
+        <ol>
+            <li ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
+                <em><i18n>choose.evaluation.type</i18n></em>
+            </li>
+            <li ng-if="devoir.id_groupe == undefined">
+                <em><i18n>viescolaire.utils.class.groupe</i18n></em>
+            </li>
+            <li ng-if="!devoir.name">
+                <em><i18n>evaluations.test.title</i18n></em></em>
+            </li>
+            <li ng-if="devoir.id_periode == undefined">
+                <em><i18n>viescolaire.utils.periode</i18n></em>
+            </li>
+            <li ng-if="devoir.dateDevoir == undefined">
+                <em><i18n>evaluations.test.date</i18n></em>
+            </li>
+        </ol>
+    </div>
+</lightbox>
 <lightbox  show="evaluations.competencesDevoir.length > MAX_NBR_COMPETENCE" on-close="controleNewDevoirForm()">
     <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
     <p><i18n>evaluations.max.competences</i18n></p>

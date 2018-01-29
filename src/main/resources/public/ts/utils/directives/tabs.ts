@@ -1,7 +1,7 @@
 /**
  * Created by ledunoiss on 21/09/2016.
  */
-import { ng, angular } from 'entcore';
+import { ng , angular } from 'entcore';
 
 export let tabs = ng.directive('tabs', function() {
     return {
@@ -27,7 +27,7 @@ export let tabs = ng.directive('tabs', function() {
         '<div class="tabbable">' +
         '<ul class="nav nav-tabs">' +
         '<li ng-repeat="pane in panes" ng-click="select(pane)" ng-class="{active:pane.selected}" class="six">'+
-        '<a href=""">{{pane.title}}</a>' +
+        '<div ng-include="pane.template"/>'+
         '</li>' +
         '</ul>' +
         '<div class="tab-content twelve-mobile" ng-transclude></div>' +
