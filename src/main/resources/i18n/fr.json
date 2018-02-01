@@ -1,4 +1,9 @@
 {
+  "home" : "Accueil",
+  "level":"Niveau",
+  "student":"Eleve",
+  "average":"Moyenne",
+
   "competences.title": "Competences",
   "competences.notify.saved": "La donnée a été sauvegardée",
   "competences.notify.modified": "La donnée a été modifiée",
@@ -14,6 +19,7 @@
 
   "custom": "Personnalisé",
 
+  "search.groups": "Rechercher une classe ou un groupe d'enseignement...",
 
   "list.title": "Mes competencess",
   "folder.trash": "Corbeille",
@@ -45,6 +51,8 @@
   "tuto.text.open": "pour ouvrir un dossier ou un fichier.",
   "tuto.bienvenu":"Bienvenue sur l'écran de saisie de notes et de compétences.Vous avez la possiblité d'évaluer les compétences au clavier. ",
   "tuto.raccourci":"Il suffit pour cela , de se positionner sur une pastille et utiliser la touche numérique correspondante :",
+
+  "evaluations.devoir.updateDevoir.firstConfirmSupp.part1": "Des compétences évaluées seront supprimées.",
 
   "modified.on": "Modifié le ",
 
@@ -247,10 +255,12 @@
   "evaluation.search.by.domaines" : "Vue par domaines",
   "evaluation.lsu.export.button.classes" : "Exporter le bilan de fin de cycle de la classe au format XML",
   "evaluations.devoir.updateDevoir.firstConfirmSupp.change.classe":"Suite au changement de classe, les évaluations, annotations et appréciations ne seront pas conservées.",
+  "viescolaire.utils.enseignements":"Enseignements",
   "viescolaire.structure.load": "Chargement de l'établissement",
   "viescolaire.structure.load.end": "en cours...",
   "viescolaire.eleve.recherche":"Recherche Elève",
 
+  "viescolaire.utils.groupeEnseignement":"Groupe d'enseignement",
   "viescolaire.utils.annee" : "Année",
   "viescolaire.utils.all.none": "Tous / Aucun",
   "viescolaire.utils.appreciation":"Appréciation",
@@ -292,11 +302,17 @@
   "ariane.competences.export":"Export LSU",
   "viescolaire.periode.2":"Semestre",
   "viescolaire.periode.3":"Trimestre",
+  "viescolaire.utils.appreciation.add" : "Ajouter une appréciation",
+  "viescolaire.utils.appreciation.edit" : "Modifier l'appréciation",
 
   "error.note.outbound":"La note doit être comprise entre 0 et ",
   "viescolaire.classe.moyenne" :"Moyenne de la classe",
   "viescolaire.classe.note.min":"Note min",
   "viescolaire.classe.note.max":"Note max",
   "viescolaire.evaluation.note": "Note",
-  "evaluations.homework.details":"Détails de l'évaluation"
+  "evaluations.homework.details":"Détails de l'évaluation",
+
+  "add.annotation":"Ajouter une annotation. Sélectionner 'Evaluer' pour enlever l'annotation.",
+  "keyboard.button":"Raccourci clavier" ,
+  "no.annotation":"Evaluer"
 }
