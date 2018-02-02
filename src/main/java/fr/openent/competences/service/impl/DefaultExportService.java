@@ -598,7 +598,7 @@ public class DefaultExportService implements ExportService {
 
         JsonObject bodyHeader = new JsonObject();
         bodyHeader.putString("left", "Domaines / items");
-        bodyHeader.putString("right", " et Niveau des competences et ");
+        bodyHeader.putString("right", "Niveau des competences et Nombre d'evaluations");
         body.putObject("header", bodyHeader);
 
         JsonArray bodyBody = new JsonArray();
