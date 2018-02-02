@@ -58,6 +58,33 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     }
 
     @Override
+    public void getDomainesLibCod(int[] idDomaines, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new JsonArray();
+
+
+        query.append("SELECT id, id_parent, libelle, codification ");
+        query.append("FROM notes.domaines ");
+        query.append("WHERE id IN " + listIntPrepared(idDomaines));
+
+        for(int s : idDomaines) {
+            params.add(s);
+        }
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+    }
+
+    private static String listIntPrepared(int[] array) {
+        StringBuilder sb = new StringBuilder("(");
+        if (array != null && array.length > 0) {
+            for (int i = 0; i< array.length; i++) {
+                sb.append("?,");
+            }
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        return sb.append(")").toString();
+    }
+
+    @Override
     public void getDomainesRacines(String idClasse, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();

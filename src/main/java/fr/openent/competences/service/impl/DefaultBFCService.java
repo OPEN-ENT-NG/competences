@@ -270,44 +270,48 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
      *                                eleve
      * @param handler                 handler contenant une map des niveaux de maitrise par domaine de chaque eleve
      */
-    private void calcMoyBFC(String[] idEleves,
+    private void calcMoyBFC(boolean recapEval,
+                            String[] idEleves,
                             Map<String, Map<Long, Integer>> bfcEleves,
                             Map<String, Map<Long, Long>> notesCompetencesEleves,
                             SortedSet<Double> bornes,
                             List<Domaine> domainesRacine,
-                            Handler<Either<String, Map<String, Map<Long, Integer>>>> handler) {
+                            Handler<Either<String, JsonObject>> handler) {
 
         if(domainesRacine.isEmpty() || bornes.isEmpty() || notesCompetencesEleves.isEmpty() || bfcEleves.isEmpty()) {
             //Si les domaines, les bornes, les BFCs ou les notes ne sont pas remplis, la fonction s'arrête sans avoir effectuer aucun traitement.
             return;
-        } else if(notesCompetencesEleves.get("empty") != null && bfcEleves.get("empty") != null) {
+        } else if(recapEval && (notesCompetencesEleves.get("empty") != null || bfcEleves.get("empty") != null)) {
             //Par contre, si les domaines et les bornes sont renseignées mais qu'aucune compétence n'a été évaluée, une réponse vide est retournée.
-            handler.handle(new Either.Right<String, Map<String, Map<Long, Integer>>>(new HashMap<String, Map<Long, Integer>>()));
+            handler.handle(new Either.Left<String, JsonObject>("Impossible de recuperer les evaluations pour la classe selectionnee"));
+            return;
+        } else if(!recapEval && notesCompetencesEleves.get("empty") != null && bfcEleves.get("empty") != null) {
+            //Par contre, si les domaines et les bornes sont renseignées mais qu'aucune compétence n'a été évaluée, une réponse vide est retournée.
+            handler.handle(new Either.Right<String, JsonObject>(new JsonObject()));
             return;
         }
 
-        Map<String, Map<Long, Integer>> result = new HashMap<>();
+        JsonObject result = new JsonObject();
 
         for(String eleve : idEleves) {
             if(!bfcEleves.containsKey(eleve) && !notesCompetencesEleves.containsKey(eleve)) {
                 continue;
             }
 
-            Map<Long, Integer> resultEleve = new HashMap<>();
+            JsonArray resultEleve = new JsonArray();
 
             for (Domaine d : domainesRacine) {
-                if (bfcEleves.containsKey(eleve) && bfcEleves.get(eleve).containsKey(d.getId()) && bfcEleves.get(eleve).get(d.getId()) >= bornes.first() && bfcEleves.get(eleve).get(d.getId()) <= bornes.last()) {
-                    resultEleve.put(d.getId(), bfcEleves.get(eleve).get(d.getId()));
-                } else if (notesCompetencesEleves.containsKey(eleve)) {
-                    Long total = (long) 0;
-                    Long diviseur = (long) 0;
-                    for (Long idCompetence : d.getCompetences()) {
-                        if (notesCompetencesEleves.get(eleve).containsKey(idCompetence)) {
-                            total += notesCompetencesEleves.get(eleve).get(idCompetence) + 1;
-                            diviseur++;
-                        }
+                JsonObject note = new JsonObject();
+                if (bfcEleves.containsKey(eleve) && bfcEleves.get(eleve).containsKey(d.getId()) &&
+                        bfcEleves.get(eleve).get(d.getId()) >= bornes.first() && bfcEleves.get(eleve).get(d.getId()) <= bornes.last()) {
+                        note.putNumber("idDomaine",d.getId());
+                        note.putNumber("niveau", bfcEleves.get(eleve).get(d.getId()));
+                    if(recapEval){
+                        Double moy = calculMoyenne(d, notesCompetencesEleves, eleve);
+                        note.putNumber("moyenne", Math.round(moy * 100.0) / 100.0);
                     }
-                    Double moy = (diviseur != 0 ? ((double) total / diviseur) : null);
+                } else if (notesCompetencesEleves.containsKey(eleve)) {
+                    Double moy = calculMoyenne(d, notesCompetencesEleves, eleve);
                     if (moy != null) {
                         Iterator<Double> bornesIterator = bornes.iterator();
                         int simplifiedMoy = 0;
@@ -315,20 +319,47 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
                             simplifiedMoy++;
                         }
                         if(simplifiedMoy >= bornes.first() && simplifiedMoy <= bornes.last()) {
-                            resultEleve.put(d.getId(), simplifiedMoy);
+                            note.putNumber("idDomaine",d.getId());
+                            note.putNumber("niveau", simplifiedMoy);
+                            if(recapEval)
+                                note.putNumber("moyenne", Math.round(moy * 100.0) / 100.0);
                         }
                     }
                 }
+                if(note.size() > 0) {
+                    resultEleve.add(note);
+                }
             }
-            if(!resultEleve.isEmpty()) {
-                result.put(eleve, resultEleve);
+            if(resultEleve.size() > 0) {
+                result.putArray(eleve, resultEleve);
             }
         }
-        handler.handle(new Either.Right<String, Map<String, Map<Long, Integer>>>(result));
+        if(recapEval){
+            JsonArray domainesR = new JsonArray();
+            for (Domaine d : domainesRacine) {
+                domainesR.add(d.getId());
+            }
+            result.putArray("domainesRacine", domainesR);
+        }
+
+        handler.handle(new Either.Right<String, JsonObject>(result));
+    }
+
+    private Double calculMoyenne(Domaine d, Map<String, Map<Long, Long>> notesCompetencesEleves, String eleve){
+        Long total = (long) 0;
+        Long diviseur = (long) 0;
+        for (Long idCompetence : d.getCompetences()) {
+            if (notesCompetencesEleves.get(eleve).containsKey(idCompetence)) {
+                total += notesCompetencesEleves.get(eleve).get(idCompetence) + 1;
+                diviseur++;
+            }
+        }
+        Double moy = (diviseur != 0 ? ((double) total / diviseur) : null);
+        return moy;
     }
 
     @Override
-    public void buildBFC(final String[] idEleves, final String idClasse, final String idStructure, final Long idPeriode,final Long idCycle, final Handler<Either<String, Map<String, Map<Long, Integer>>>> handler) {
+    public void buildBFC(final boolean recapEval, final String[] idEleves, final String idClasse, final String idStructure, final Long idPeriode,final Long idCycle, final Handler<Either<String, JsonObject>> handler) {
 
         final Map<String, Map<Long, Long>> notesCompetencesEleve = new HashMap<>();
         final Map<String, Map<Long, Integer>> bfcEleve = new HashMap<>();
@@ -349,9 +380,9 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
                     if (notesCompetencesEleve.isEmpty()) {
                         notesCompetencesEleve.put("empty", new HashMap<Long, Long>());
                     }
-                    calcMoyBFC(idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
+                    calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
                 } else {
-                    handler.handle(new Either.Left<String, Map<String, Map<Long, Integer>>>("Impossible de recuperer les evaluations pour la classe selectionnee :\n" + event.left().getValue()));
+                    handler.handle(new Either.Left<String, JsonObject>("Impossible de recuperer les evaluations pour la classe selectionnee :\n" + event.left().getValue()));
                     log.error("buildBFC : getMaxNoteCompetenceEleve : " + event.left().getValue());
                 }
             }
@@ -378,9 +409,9 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
                         bfcEleve.put("empty", new HashMap<Long, Integer>());
                         // Ajouter une valeur inutilisee dans la map permet de s'assurer que le traitement a ete effectue
                     }
-                    calcMoyBFC(idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
+                    calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
                 } else {
-                    handler.handle(new Either.Left<String, Map<String, Map<Long, Integer>>>("Impossible de recuperer le bilan de fin de cycle pour la classe selectionnee :\n" + event.left().getValue()));
+                    handler.handle(new Either.Left<String, JsonObject>("Impossible de recuperer le bilan de fin de cycle pour la classe selectionnee :\n" + event.left().getValue()));
                     log.error("buildBFC : getBFCsByEleve : " + event.left().getValue());
                 }
             }
@@ -391,9 +422,9 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
             public void handle(Either<String, SortedSet<Double>> event) {
                 if (event.isRight()) {
                     echelleConversion.addAll(event.right().getValue());
-                    calcMoyBFC(idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
+                    calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
                 } else {
-                    handler.handle(new Either.Left<String, Map<String, Map<Long, Integer>>>("Impossible de recuperer l'echelle de conversion pour la classe selectionnee :\n" + event.left().getValue()));
+                    handler.handle(new Either.Left<String, JsonObject>("Impossible de recuperer l'echelle de conversion pour la classe selectionnee :\n" + event.left().getValue()));
                     log.error("buildBFC : getEchelleConversion : " + event.left().getValue());
                 }
             }
@@ -412,9 +443,9 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
                         }
                     }
                     domainesRacine.addAll(setDomainesRacine);
-                    calcMoyBFC(idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
+                    calcMoyBFC(recapEval, idEleves, bfcEleve, notesCompetencesEleve, echelleConversion, domainesRacine, handler);
                 } else {
-                    handler.handle(new Either.Left<String, Map<String, Map<Long, Integer>>>("Impossible de recuperer les domaines racines pour la classe selectionne :\n" + event.left().getValue()));
+                    handler.handle(new Either.Left<String, JsonObject>("Impossible de recuperer les domaines racines pour la classe selectionne :\n" + event.left().getValue()));
                     log.error("buildBFC : getDomaines : " + event.left().getValue());
                 }
             }

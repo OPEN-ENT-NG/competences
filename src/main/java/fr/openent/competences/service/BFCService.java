@@ -51,11 +51,12 @@ public interface BFCService extends CrudService {
      * Retourne les moyennes par domaines des élève dont l'id est passé en paramètre.
      * La map retournee a pour clé l'id de l'élève, et contient une autre map qui contient, pour chaque id de domaine racine, la moyenne simplifiée (
      * @param idEleves id des élèves dont on souhaite obtenir les moyennes pour le BFC
+     * @param recapEval indique si on est dans un export de récapitulation d'évaluation
      * @param idClasse l'id de la classe à laquelle appartient l'élève
      * @param idStructure l'id de l'établissement auquel appartient la classe
      * @param handler handler portant le résultat du calcul de moyenne
      */
-    public void buildBFC(String[] idEleves, String idClasse, String idStructure, Long idPeriode, Long idCycle, Handler<Either<String, Map<String, Map<Long, Integer>>>> handler);
+    public void buildBFC(boolean recapEval, String[] idEleves, String idClasse, String idStructure, Long idPeriode, Long idCycle, Handler<Either<String, JsonObject>> handler);
 
     /**
      * retourne la date de creation du BFC, si null la date de modification sinon la date du jour

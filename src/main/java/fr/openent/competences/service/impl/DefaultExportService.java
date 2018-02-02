@@ -340,6 +340,32 @@ public class DefaultExportService implements ExportService {
         });
     }
 
+    @Override
+    public void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement, final Handler<Either<String, JsonArray>> handler){
+
+        niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
+                if (stringJsonArrayEither.isRight()) {
+                    JsonArray legende = new JsonArray();
+                    JsonArray result = stringJsonArrayEither.right().getValue();
+                    for (int i = 0; i < result.size(); i++){
+                        JsonObject niveau = new JsonObject();
+                        JsonObject o = result.get(i);
+                        niveau.putString("libelle", o.getString("libelle"));
+                        niveau.putString("visu", text ? getMaitrise(o.getString("lettre"), o.getNumber("ordre").toString()) : o.getString("default"));
+                        niveau.putNumber("ordre", o.getNumber("ordre"));
+                        legende.add(niveau);
+                    }
+                    boolean b = true;
+                    handler.handle(new Either.Right<String, JsonArray>(legende));
+                } else {
+                    handler.handle(new Either.Left<String, JsonArray>("exportReleveComp : empty result."));
+                }
+            }
+        });
+    }
+
     private Handler<Either<String, JsonArray>> getIntermediateHandler(final JsonArray collection, final Handler<Either<String, JsonArray>> finalHandler) {
         return new Handler<Either<String, JsonArray>>() {
             @Override
@@ -730,6 +756,7 @@ public class DefaultExportService implements ExportService {
             return maitrise;
         }
     }
+
     private String getMaitrise(String key){
         switch (key) {
             case "1":

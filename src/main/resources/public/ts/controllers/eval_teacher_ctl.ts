@@ -3095,5 +3095,24 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.closeLightboxChampsObligatoire = function(){
             $scope.lightboxChampsObligatoire = false;
         }
+
+        $scope.exportRecapEval = async (textMod) =>{
+            let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
+            if($scope.search.periode.id_type) {
+                url += "&idPeriode=" + $scope.search.periode.id_type;
+            }
+            await http().getJson(url + "&json=true")
+                .error(() => {
+                    $scope.exportRecapEval.errExport = true;
+                    utils.safeApply($scope);
+                })
+                .done(() => {
+                    delete $scope.recapEval;
+                    $scope.opened.recapEval = false;
+                    $scope.exportRecapEval.errExport = false;
+                    location.replace(url);
+                });
+            utils.safeApply($scope);
+        };
     }
 ]);

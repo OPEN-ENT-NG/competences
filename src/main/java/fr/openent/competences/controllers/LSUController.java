@@ -630,11 +630,21 @@ public class LSUController extends ControllerHelper {
                         for (Map.Entry<String, List<String>> stringListEntry : mapIdClassIdsEleve.entrySet()) {
                             final String[] idsEleve = stringListEntry.getValue().toArray(new String[stringListEntry.getValue().size()]);
                             final String idClass = stringListEntry.getKey();
-                            bfcService.buildBFC(idsEleve, idClass, idStructure, null, (Long) mapIdClassIdCycle.get(idClass), new Handler<Either<String, Map<String, Map<Long, Integer>>>>() {
+                            bfcService.buildBFC(false, idsEleve, idClass, idStructure, null, (Long) mapIdClassIdCycle.get(idClass), new Handler<Either<String, JsonObject>>() {
                                 @Override
-                                public void handle(Either<String, Map<String, Map<Long, Integer>>> repBuildBFC) {
+                                public void handle(Either<String, JsonObject> repBuildBFC) {
                                     if (repBuildBFC.isRight()) {
-                                        final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition = repBuildBFC.right().getValue();
+                                        Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
+                                        for (String idEleve : idsEleve){
+                                            JsonArray resultats = repBuildBFC.right().getValue().getArray(idEleve);
+                                            Map<Long, Integer> resultEleves  = new HashMap<>();
+                                            for (Object resultat : resultats){
+                                                resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), (Integer)((JsonObject) resultat).getNumber("niveau"));
+                                            }
+                                            resultatsEleves.put(idEleve, resultEleves);
+                                        }
+
+                                        final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition = resultatsEleves;
                                         getMapCodeDomaineById(idClass, new Handler<Either<String, Map<Long, String>>>() {
                                             @Override
                                             public void handle(Either<String, Map<Long, String>> repMapCodeDomaineId) {

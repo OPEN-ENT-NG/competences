@@ -38,4 +38,11 @@ public interface DomainesService extends CrudService {
      * @param handler handler portant le résultat de la requête.
      */
     public void getDomainesRacines(String idClasse, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupère les libellés et codifications des domaines passés en paramètre
+     * @param idDomaines L'identifiant de la classe.
+     * @param handler handler portant le résultat de la requête.
+     */
+    public void getDomainesLibCod(int[] idDomaines, Handler<Either<String, JsonArray>> handler);
 }
