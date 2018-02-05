@@ -247,6 +247,7 @@
   "evaluation.last.child": "Les dernières évaluations de ",
   "evaluation.change.devoir": "Changer de devoir",
   "evaluation.access.to.list": "Accès à la liste des évaluations",
+  "evaluation.bfc.average": "Moyenne calculée",
   "evaluation.bfc.export.button.eleve" : "Exporter le bilan de fin de cycle de l'élève au format PDF",
   "evaluation.bfc.export.button.classe" : "Exporter le bilan de fin de cycle de la classe au format PDF",
   "evaluation.bfc.set.visiblity.true" : "Rendre visibles pour les enseignants les moyennes calculées sur le BFC.",
