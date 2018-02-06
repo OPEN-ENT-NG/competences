@@ -26,7 +26,7 @@
     </div>
     <i18n>evaluation.suivieleve.filtre.competence</i18n>
     </label>
-    <button ng-click="opened.recapEval = true; exportRecapEval.errExport = false"
+    <button ng-click="openedRecapEval()"
             style="position: absolute; right: 0; top: 0;"
             tooltip="evaluations.export.recapEval">
         <i class="download"></i>
@@ -66,28 +66,3 @@
 
 <div ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
 </div>
-<lightbox show="opened.recapEval" on-close="opened.releveComp = false; exportRelCompObj.errExport = false;">
-    <h2>
-        <i18n>evaluations.export.format.pdf</i18n>
-    </h2>
-    <div class="row">
-        <div class="warning"
-             ng-if="exportRecapEval.errExport">
-            <i18n>evaluations.export.err</i18n>
-        </div>
-        <div class="twelve cell twelve-mobile">
-            <div class="three cell horizontal-spacing vertical-spacing expandable-content">
-                <label class="checkbox">
-                    <input type="checkbox"
-                           ng-model="textMod">
-                    <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
-                </label>
-            </div>
-        </div>
-        <button class="right-magnet"
-                tooltip="evaluations.export.format.pdf"
-                ng-click="exportRecapEval(textMod)">
-            <i18n>evaluations.export</i18n>
-        </button>
-    </div>
-</lightbox>

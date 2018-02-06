@@ -354,6 +354,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
                     let display = () => {
+                        $scope.selected.matieres = [];
+                        $scope.allUnselect = true;
                         template.open('main', 'enseignants/suivi_competences_eleve/container');
                         if ($scope.informations.eleve === undefined) {
                             $scope.informations.eleve = null;
@@ -384,11 +386,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                         $scope.cleanRoot();
                         let display = () => {
-                            template.open('main', 'enseignants/suivi_competences_classe/container');
+                            $scope.selected.matieres = [];
+                            $scope.allUnselect = true;
                             $scope.allRefreshed = false;
+                            $scope.opened.recapEval = false;
+                            $scope.exportRecapEvalObj = {
+                                errExport: false
+                            };
                             $scope.sortType = 'title'; // set the default sort type
                             $scope.sortReverse = false;  // set the default sort order
                             $scope.usePerso = evaluations.structure.usePerso;
+                            template.open('main', 'enseignants/suivi_competences_classe/container');
                             utils.safeApply($scope);
                         };
                         if (params.idClasse != undefined) {
@@ -427,6 +435,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
         $scope.lightboxChampsObligatoire = false;
         $scope.MAX_NBR_COMPETENCE = 12;
+        $scope.exportRecapEvalObj = {
+            errExport: false
+        };
         $scope.opened = {
             devoir: -1,
             note: -1,
@@ -437,6 +448,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             devoirInfo: true,
             lightbox: false,
             lightboxEvalLibre: false,
+            recapEval: false,
             lightboxs: {
                 updateDevoir: {
                     firstConfirmSupp: false,
@@ -2901,8 +2913,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.enseignants = evaluations.structure.enseignants;
             $scope.usePerso = evaluations.structure.usePerso;
             $scope.useDefaut = !$scope.usePerso;
-            $scope.selected.matieres = [];
-            $scope.allUnselect = true;
             // $scope.initPeriodesList();
             utils.safeApply($scope);
         };
@@ -3038,9 +3048,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.exportReleveComp = async (idEleve : String, idMatiere:String, idPeriode:Number, textMod:Boolean = false) => {
             let url = "/competences/releveComp/print/" + idEleve + "/export?text=" + textMod;
-            // if(idMatiere) {
-            //     url += "&idMatiere=" + idMatiere;
-            // }
             for(var m = 0; m < $scope.selected.matieres.length; m++){
                 url += "&idMatiere=" + $scope.selected.matieres[m];
             }
@@ -3096,23 +3103,5 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.lightboxChampsObligatoire = false;
         }
 
-        $scope.exportRecapEval = async (textMod) =>{
-            let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
-            if($scope.search.periode.id_type) {
-                url += "&idPeriode=" + $scope.search.periode.id_type;
-            }
-            await http().getJson(url + "&json=true")
-                .error(() => {
-                    $scope.exportRecapEval.errExport = true;
-                    utils.safeApply($scope);
-                })
-                .done(() => {
-                    delete $scope.recapEval;
-                    $scope.opened.recapEval = false;
-                    $scope.exportRecapEval.errExport = false;
-                    location.replace(url);
-                });
-            utils.safeApply($scope);
-        };
     }
 ]);

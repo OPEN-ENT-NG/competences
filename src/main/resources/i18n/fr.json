@@ -78,6 +78,7 @@
   "evaluations.export.format.pdf" : "Exporter au format PDF",
   "evaluations.export.textMod" : "Exporter en texte plutôt qu'en couleur",
   "evaluations.export.releveComp" : "Exporter le relevé de compétences au format PDF",
+  "evaluations.export.recapEval" : "Exporter le récapitulatif des évaluations au format PDF",
   "evaluations.export.err" : "Impossible d'exporter le fichier PDF",
   "evaluations.devoir.print" : " Les résultats du devoir",
   "evaluations.remplacants.title":"Gérer les remplacements",

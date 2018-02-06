@@ -2,7 +2,7 @@
  * Created by ledunoiss on 27/10/2016.
  */
 
-import { ng, template, model } from 'entcore';
+import { ng, template, model, http } from 'entcore';
 import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import { Defaultcolors } from "../models/eval_niveau_comp";
@@ -11,8 +11,8 @@ declare let _:any;
 
 export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClasseCtl', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route',
-    function ($scope, route, $rootScope, $location, $filter, $route) {
-
+     function ($scope, route, $rootScope, $location, $filter, $route) {
+        template.open('container', 'layouts/2_10_layout');
         /**
          * Créer une suivi de compétence
          */
@@ -69,6 +69,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     utils.safeApply($scope);
                 });
             }
+            template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
+            utils.safeApply($scope);
         };
 
         //sélection de la classe du suivi
@@ -108,47 +110,11 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         utils.safeApply($scope);
 
-        template.open('container', 'layouts/2_10_layout');
-        template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
-        template.open('content', 'enseignants/suivi_competences_classe/content');
-        $scope.selectSuivi($scope.route.current.$$route.originalPath);
-        utils.safeApply($scope);
-        // $scope.displayPeriode = false;
-        // $scope.periodeDisplay = (classe,annee) => {
-        //     if(typeof(classe) == 'object'&& classe !== null){
-        //         if(classe.type_groupe == 0){
-        //             let indexClasse = _.indexOf($scope.classes.all,classe);
-        //             if(!('periode' in classe && classe.periode !== null && classe.periode !== undefined)){
-        //                 $scope.classes.all[indexClasse].periode = _.where($scope.evaluations.structure.periodes.all, {id_classe: $scope.classes.all[indexClasse].id});
-        //             }
-        //             $scope.initPeriodesList(indexClasse,annee);
-        //             $scope.displayPeriode = true ;
-        //             utils.safeApply($scope);
-        //         }else{
-        //             let indexClasse = _.indexOf($scope.classes.all,classe);
-        //             if('periode' in classe && classe.periode !== null && classe.periode !== undefined){
-        //                 $scope.initPeriodesList(indexClasse,annee);
-        //                 $scope.displayPeriode = true ;
-        //                 utils.safeApply($scope);
-        //             }else{
-        //                 $scope.classes.all[indexClasse].getGroupePeriode().then((res)=>{
-        //                     if (! (res == undefined)) {
-        //                         $scope.initPeriodesList(indexClasse,annee);
-        //                         $scope.displayPeriode = true ;
-        //                         utils.safeApply($scope);
-        //                     }else{
-        //                         $scope.initPeriodesList();
-        //                         $scope.displayPeriode = false ;
-        //                         utils.safeApply($scope);
-        //                     }
-        //                 })
-        //             }
-        //         }
-        //     }else {
-        //         $scope.displayPeriode = false ;
-        //         utils.safeApply($scope);
-        //     }
-        // };
+
+
+        // ICI WATCH
+        // $scope.selectSuivi($scope.route.current.$$route.originalPath);
+
         $scope.switchEtablissementSuivi = () => {
             delete $scope.suiviCompetence;
             delete $scope.informations.classe;
@@ -339,8 +305,32 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
+         $scope.openedRecapEval = function (){
+             $scope.opened.recapEval = true;
+             $scope.exportRecapEvalObj.errExport = false
+             utils.safeApply($scope);
+         };
 
-        $scope.Display = {EvaluatedCompetences : true};
+         $scope.exportRecapEval =  (textMod) =>{
+             let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
+             if($scope.search.periode.id_type) {
+                 url += "&idPeriode=" + $scope.search.periode.id_type;
+             }
+            http().getJson(url + "&json=true")
+                 .error((res) => {
+                     $scope.exportRecapEvalObj.errExport = true;
+                     utils.safeApply($scope);
+                 })
+                 .done(() => {
+                     delete $scope.recapEval;
+                     $scope.opened.recapEval = false;
+                     $scope.exportRecapEvalObj.errExport = false;
+                     location.replace(url);
+                 });
+             utils.safeApply($scope);
+         };
+
+        // $scope.Display = {EvaluatedCompetences : true};
         $scope.ClasseFilterNotEvaluated = function (MaCompetence) {
             if($scope.Display.EvaluatedCompetences === true){
                 let _t = MaCompetence.competencesEvaluations;
@@ -362,6 +352,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
-        $scope.selectSuivi();
+        // $scope.selectSuivi();
+        $scope.selectSuivi($scope.route.current.$$route.originalPath);
+        template.open('content', 'enseignants/suivi_competences_classe/content');
+        utils.safeApply($scope);
     }
 ]);
