@@ -6,7 +6,8 @@ Behaviours.register('competences', {
     rights: {
         workflow: {
             'export-lsun': 'fr.openent.evaluations.controller.LSUController|getXML',
-            setVisibilityAverageBfc: 'fr.openent.competences.controllers.BFCController|setVisibility'
+            setVisibilityAverageBfc: 'fr.openent.competences.controllers.BFCController|setVisibility',
+            paramCompetences: 'competences.paramCompetences|createCompetence'
         },
         resource: {}
     },

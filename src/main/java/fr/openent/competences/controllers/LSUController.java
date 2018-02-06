@@ -69,7 +69,7 @@ public class LSUController extends ControllerHelper {
     public LSUController(EventBus eb) {
         this.eb = eb;
         utilsService = new DefaultUtilsService();
-        bfcService = new DefaultBFCService(Competences.COMPETENCES_SCHEMA, Competences.BFC_TABLE);
+        bfcService = new DefaultBFCService(eb);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         niveauEnsCpl = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA,Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
     }

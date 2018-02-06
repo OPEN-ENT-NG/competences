@@ -39,7 +39,7 @@ public class BFCController extends ControllerHelper {
 
     public BFCController(EventBus eb) {
         this.eb = eb;
-        bfcService = new DefaultBFCService(Competences.COMPETENCES_SCHEMA, Competences.BFC_TABLE);
+        bfcService = new DefaultBFCService(eb);
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         enseignementComplement = new DefaultEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENT_COMPLEMENT);
         niveauEnseignementComplement = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);

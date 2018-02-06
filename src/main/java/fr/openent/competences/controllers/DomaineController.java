@@ -59,7 +59,7 @@ public class DomaineController extends ControllerHelper {
 
     public DomaineController() {
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
-        competencesService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
+        competencesService = new DefaultCompetencesService(eb);
         domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
     }
 

@@ -1,28 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "additionalProperties": true,
   "properties": {
+    "id_competence": {
+      "type": "number"
+    },
     "nom": {
       "type": "string"
     },
-    "description": {
+    "id_etablissement": {
       "type": "string"
     },
-    "id_parent": {
-      "type": "integer"
+    "id_domaine": {
+      "type": "array"
     },
-    "id_type": {
-      "type": "integer"
-    },
-    "id_enseignement": {
-      "type": "integer"
+    "masque": {
+      "type": "boolean"
     }
   },
   "required": [
-    "nom",
-    "id_parent",
-    "id_type",
-    "id_enseignement"
+    "id"
   ]
 }

@@ -47,9 +47,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private DefaultUtilsService utilsService;
     private DefaultNoteService noteService;
-    private final Neo4j neo4j = Neo4j.getInstance();
-    public DefaultDevoirService(String schema, String table) {
-        super(schema, table);
+
+    public DefaultDevoirService() {
+        super(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
         utilsService = new DefaultUtilsService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
     }

@@ -21,6 +21,8 @@ public class Competences extends BaseServer {
     public static final String ANNOTATIONS = "annotations";
     public static final String COMPETENCES_TABLE = "competences";
     public static final String PERSO_COMPETENCES_TABLE = "perso_competences";
+    public static final String REL_COMPETENCES_DOMAINES_TABLE = "rel_competences_domaines";
+    public static final String REL_COMPETENCES_ENSEIGNEMENTS_TABLE = "rel_competences_enseignements";
     public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
     public static final String ENSEIGNEMENTS_TABLE = "enseignements";
     public static final String DOMAINES_TABLE = "domaines";
@@ -54,16 +56,17 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_REL_PROFESSEURS_REMPLACANTS_CREATE = "eval_createRel_professeurs_remplacants";
     public static final String SCHEMA_NOTES_CREATE = "eval_createNote";
     public static final String SCHEMA_NOTES_UPDATE = "eval_updateNote";
-    public static final  String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
+    public static final String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
     public static final String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
     public static final String DEVOIR_TABLE = "devoirs";
     public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
-    public static final String SCHEMA_COMPETENCE = "eval_createCompetence";
+    public static final String SCHEMA_COMPETENCE_CREATE = "eval_createCompetence";
+    public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
 
 
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
 
-    public static final String PARAM_COMPETENCE_RIGHT = "competences.param.competences";
+    public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
 
     public static final Integer MAX_NBR_COMPETENCE = 12;
 
@@ -86,7 +89,7 @@ public class Competences extends BaseServer {
 		addController(new AnnotationController());
 		addController(new AppreciationController());
 		addController(new BFCController(eb));
-		addController(new CompetenceController());
+		addController(new CompetenceController(eb));
 		addController(new CompetenceNoteController(eb));
 
         // devoir controller

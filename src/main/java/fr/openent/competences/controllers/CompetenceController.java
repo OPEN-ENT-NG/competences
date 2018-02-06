@@ -39,13 +39,14 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
+import java.util.*;
+
+import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -57,8 +58,9 @@ public class CompetenceController extends ControllerHelper {
      */
     private final CompetencesService competencesService;
 
-    public CompetenceController() {
-        competencesService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
+    public CompetenceController(EventBus eb) {
+        this.eb = eb;
+        competencesService = new DefaultCompetencesService(eb);
     }
 
     /**
@@ -69,7 +71,7 @@ public class CompetenceController extends ControllerHelper {
      */
     public Boolean isParent(JsonObject competence, JsonArray values){
         Integer id = competence.getInteger("id");
-        JsonObject o = new JsonObject();
+        JsonObject o;
         for(int i = 0 ; i < values.size(); i++){
             o = values.get(i);
             if(o.getInteger("id_parent") == id){
@@ -88,7 +90,7 @@ public class CompetenceController extends ControllerHelper {
     public JsonArray findChildren(JsonObject competence, JsonArray values){
         JsonArray children = new JsonArray();
         Integer id = competence.getInteger("id");
-        JsonObject o = new JsonObject();
+        JsonObject o;
         for(int i = 0; i < values.size(); i++){
             o = values.get(i);
             if(o.getInteger("id_parent") == id){
@@ -105,7 +107,7 @@ public class CompetenceController extends ControllerHelper {
      */
     public JsonArray orderCompetences(JsonArray values){
         JsonArray resultat = new JsonArray();
-        JsonObject o = new JsonObject();
+        JsonObject o;
         for(int i = 0; i < values.size(); i++){
             o = values.get(i);
             o.putBoolean("selected", false);
@@ -120,26 +122,6 @@ public class CompetenceController extends ControllerHelper {
     }
 
     /**
-     * Recupère toute la liste des compétences
-     * @param request
-     */
-    @Get("/competences")
-    @ApiDoc("Recupère toute la liste des compétences")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getCompetences(final HttpServerRequest request){
-        competencesService.getCompetences(new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if(event.isRight()){
-                    Renders.renderJson(request, event.right().getValue());
-                }else{
-                    leftToResponse(request, event.left());
-                }
-            }
-        });
-    }
-
-    /**
      * Recupère la liste des compétences pour un devoir donné
      * @param request
      */
@@ -148,7 +130,6 @@ public class CompetenceController extends ControllerHelper {
     @ResourceFilter(AccessEvaluationFilter.class)
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     public void getCompetencesDevoir(final HttpServerRequest request){
-        Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
 
         Long lIdDevoir;
 
@@ -182,7 +163,7 @@ public class CompetenceController extends ControllerHelper {
             public void handle(final UserInfos user) {
                 String idEtablissement = request.params().get("idEtablissement");
                 if(user != null && user.getStructures().contains(idEtablissement)){
-                    competencesService.delete(idEtablissement, defaultResponseHandler(request));
+                    competencesService.deleteCustom(idEtablissement, defaultResponseHandler(request));
                 }else{
                     unauthorized(request);
                 }
@@ -202,7 +183,8 @@ public class CompetenceController extends ControllerHelper {
             @Override
             public void handle(UserInfos user) {
                 if(user != null){
-                    competencesService.getLastCompetencesDevoir(user.getUserId(), new Handler<Either<String, JsonArray>>() {
+                    String idEtablissement = request.params().get("idStructure");
+                    competencesService.getLastCompetencesDevoir(idEtablissement, user.getUserId(), new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> event) {
                             if(event.isRight()){
@@ -219,82 +201,79 @@ public class CompetenceController extends ControllerHelper {
         });
     }
 
-    /**
-     * Récupère la liste des sous compétences
-     * @param request
-     */
-    @Get("/competence/:id/competences")
-    @ApiDoc("Récupère la liste des sous compétences")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getSousCompetences(final HttpServerRequest request){
-        Long id;
-        try {
-            id = Long.parseLong(request.params().get("id"));
-        } catch(NumberFormatException e) {
-            log.error("Error : id must be a long object", e);
-            badRequest(request, e.getMessage());
-            return;
-        }
-        competencesService.getSousCompetences(id, arrayResponseHandler(request));
-    }
-
-    /**
-     * Récupère la liste des compétences pour un enseignement donné
-     * @param request
-     */
-    @Get("/enseignement/:id/competences")
-    @ApiDoc("Récupère la liste des compétences pour un enseignement donné")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getCompetencesEnseignement(final HttpServerRequest request){
-
-        Long id;
-        try {
-            id = Long.parseLong(request.params().get("id"));
-        } catch(NumberFormatException e) {
-            log.error("Error : id must be a long object", e);
-            badRequest(request, e.getMessage());
-            return;
-        }
-
-        competencesService.getCompetencesEnseignement(id, arrayResponseHandler(request));
-    }
-
-    @Post("/competences")
+    @Post("/competence")
     @ApiDoc("Crée une nouvelle compétence")
-    @SecuredAction(value = "", type =  ActionType.RESOURCE)
-    @ResourceFilter(ParamCompetenceRight.class)
+    @SecuredAction(Competences.PARAM_COMPETENCE_RIGHT)
     public void createCompetence(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
-                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE, new Handler<JsonObject>() {
+                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_CREATE, new Handler<JsonObject>() {
                     @Override
                     public void handle(final JsonObject competence) {
-
+                        competencesService.create(competence, defaultResponseHandler(request));
                     }
                 });
             }
         });
     }
 
-    @Put("/competences")
+    @Put("/competence/:id")
     @ApiDoc("Met à jour une compétence")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ParamCompetenceRight.class)
-    public void updateCompetence(HttpServerRequest request) {
-
+    public void updateCompetence(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_UPDATE, new Handler<JsonObject>() {
+            @Override
+            public void handle(final JsonObject competence) {
+                Map.Entry<String, String> id =
+                        new AbstractMap.SimpleEntry<>("id", String.valueOf(competence.getNumber("id")));
+                ArrayList<Map.Entry<String, Object>> param = new ArrayList(Collections.singletonList(id));
+                competencesService.getCompetences(param,
+                        new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
+                                if(stringJsonArrayEither.isLeft() || stringJsonArrayEither.right().getValue().size() > 1) {
+                                    Either.Left<String, Object> error = new Either.Left<>(
+                                            stringJsonArrayEither.isLeft()
+                                            ? stringJsonArrayEither.left().getValue()
+                                            : "An error occured while gathering the competences");
+                                    leftToResponse(request, error);
+                                } else {
+                                    JsonObject compBDD = stringJsonArrayEither.right().getValue().get(0);
+                                    for(Map.Entry<String,Object> prop : competence.toMap().entrySet()) {
+                                        if(!compBDD.containsField(prop.getKey())
+                                                || compBDD.getField(prop.getKey()).equals(prop.getValue())) {
+                                            competence.removeField(prop.getKey());
+                                        } else if ("ids_domaine".equals(prop.getKey())
+                                                && compBDD.getBoolean("manuelle")) {
+                                            competence.removeField(prop.getKey());
+                                        }
+                                    }
+                                    if(competence.size() != 0) {
+                                        competencesService.update(competence, defaultResponseHandler(request));
+                                    } else {
+                                        leftToResponse(request, new Either.Left<>("No field to update"));
+                                    }
+                                }
+                            }
+                        });
+            }
+        });
     }
 
-    @Delete("/competences")
+    @Delete("/competence/:id")
     @ApiDoc("Supprime une compétence")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ParamCompetenceRight.class)
     public void deleteCompetence(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(UserInfos userInfos) {
 
-            }
-        });
+        try {
+            Number idComp = Long.getLong(request.params().get("id"));
+            String idEtablissement = request.params().get("id_etablissement");
+            competencesService.delete(idComp, idEtablissement, defaultResponseHandler(request));
+        } catch (Exception e) {
+            leftToResponse(request, new Either.Left<>(e.toString()));
+        }
     }
 }

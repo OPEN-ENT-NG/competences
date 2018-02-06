@@ -80,12 +80,12 @@ public class ExportPDFController extends ControllerHelper {
     private ExportService exportService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
-        devoirService = new DefaultDevoirService(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
+        devoirService = new DefaultDevoirService();
         utilsService = new DefaultUtilsService();
-        bfcService = new DefaultBFCService(Competences.COMPETENCES_SCHEMA, Competences.BFC_TABLE);
+        bfcService = new DefaultBFCService(eb);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
-        competencesService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
+        competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         exportService = new DefaultExportService(eb);
     }

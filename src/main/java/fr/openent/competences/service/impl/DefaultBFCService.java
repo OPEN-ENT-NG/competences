@@ -2,6 +2,7 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.Domaine;
+import fr.openent.competences.service.BFCService;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.DomainesService;
@@ -9,36 +10,36 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.entcore.common.sql.SqlStatementsBuilder;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
+import org.vertx.java.core.eventbus.EventBus;
 
 import java.util.*;
 
-import static org.entcore.common.sql.Sql.parseId;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
 
 /**
  * Created by vogelmt on 29/03/2017.
  */
-public class DefaultBFCService  extends SqlCrudService implements fr.openent.competences.service.BFCService {
+public class DefaultBFCService extends SqlCrudService implements BFCService {
 
+    private EventBus eb;
 
     private CompetenceNoteService competenceNoteService;
     private DomainesService domaineService;
     private CompetencesService competenceService;
     private static final Logger log = LoggerFactory.getLogger(DefaultBFCService.class);
 
-
-    public DefaultBFCService(String schema, String table) {
-        super(schema, table);
+    public DefaultBFCService(EventBus eb) {
+        super(Competences.COMPETENCES_SCHEMA, Competences.BFC_TABLE);
+        this.eb = eb;
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
-        competenceService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
+        competenceService = new DefaultCompetencesService(eb);
     }
 
     /**
@@ -152,7 +153,7 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
                     }
                     if(!domaines.isEmpty()) {
 
-                        competenceService.getCompetencesDomaines(domaines.keySet().toArray(new Long[0]), new Handler<Either<String, JsonArray>>() {
+                        competenceService.getCompetencesDomaines(idClasse, domaines.keySet().toArray(new Long[0]), new Handler<Either<String, JsonArray>>() {
                             @Override
                             public void handle(Either<String, JsonArray> event) {
                                 if (event.isRight()) {

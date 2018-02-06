@@ -25,6 +25,9 @@ import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by ledunoiss on 05/08/2016.
  */
@@ -39,11 +42,14 @@ public interface CompetencesService extends CrudService {
      */
     void getCompetencesItem(String idClasse, Handler<Either<String, JsonArray>> handler);
 
-    /**
-     * Récupération des compétences
-     * @param handler handler portant le résultat de la requête
-     */
-    void getCompetences(Handler<Either<String, JsonArray>> handler);
+    void getCompetences(List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler);
+
+    //    @Override
+    //    public void getCompetences(List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler) {
+    //        getCompetences(null, null, params, handler);
+    //    }
+    //
+    void getCompetences(String idEtablissement, List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Setter des compétences pour un devoir donné
@@ -51,7 +57,7 @@ public interface CompetencesService extends CrudService {
      * @param values Objet contenant les compétences (JsonObject)
      * @param handler handler portant le résultat de la requête
      */
-    void setDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler);
+    public void setDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Enlever des compétences pour un devoir donné
@@ -66,7 +72,7 @@ public interface CompetencesService extends CrudService {
      * @param devoirId id du Devoir (Integer)
      * @param handler handler portant le résultat de la requête
      */
-     void getDevoirCompetences(Long devoirId, Handler<Either<String, JsonArray>> handler);
+    void getDevoirCompetences(Long devoirId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Getter : Récupération des compétences sélectionné sur le dernier devoir créé par
@@ -74,21 +80,7 @@ public interface CompetencesService extends CrudService {
      * @param userId identifiant de l'utilisateur connecté
      * @param handler handler portant le résultat de la requête
      */
-   void getLastCompetencesDevoir(String userId, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Getter : Récupération des connaissances liées à une compétence
-     * @param skillId Id de la compétence (Integer)
-     * @param handler Handler portant le résultat de la requête
-     */
-     void getSousCompetences(Long skillId, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Getter : Récupération des compétences liées à un module d'enseignement
-     * @param teachingId Id de l'enseignement
-     * @param handler Handler portant le résultat de la requête
-     */
-    void getCompetencesEnseignement(Long teachingId, Handler<Either<String, JsonArray>> handler);
+    void getLastCompetencesDevoir(String idEtablissement, String userId, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Getter : Récupération des compétences suivant le niveau spécifié en paramètre
@@ -103,39 +95,19 @@ public interface CompetencesService extends CrudService {
      * @param idDomaines id des domaines dont on souhaite récupérer les compétences
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesDomaines(Long[] idDomaines, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesDomaines(String idClasse, Long[] idDomaines, Handler<Either<String, JsonArray>> handler);
 
-    /**
-     *
-     * @param competence
-     * @param handler
-     */
     void create(JsonObject competence, Handler<Either<String, JsonObject>> handler);
 
-    /**
-     *
-     * @param competence
-     * @param handler
-     */
-    void update(JsonObject competence, Handler<Either<String, JsonArray>> handler);
+    void isCompManuelle(Number id, Handler<Either<String, Boolean>> handler);
 
-    /**
-     *
-     * @param id
-     * @param handler
-     */
-    void delete(Number id, Handler<Either<String, JsonArray>> handler);
+    void update(JsonObject competence, Handler<Either<String, JsonObject>> handler);
 
-    /**
-     *
-     * @param id
-     * @param handler
-     */
-    void getDevoirCompetence (Number id, Handler < Either < String, JsonArray >> handler);
+    void delete(Number id, String idEtablissement, Handler<Either<String, JsonObject>> handler);
     /**
      * Supprime les compétences customs
      * @param idEtablissement
      * @param handler handler portant le résultat de la requête
      */
-    void delete(String idEtablissement,  Handler<Either<String, JsonObject>> handler);
+    void deleteCustom(String idEtablissement,  Handler<Either<String, JsonObject>> handler);
 }

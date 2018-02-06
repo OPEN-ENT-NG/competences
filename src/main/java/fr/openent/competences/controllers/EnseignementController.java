@@ -55,7 +55,7 @@ public class EnseignementController extends ControllerHelper {
 
     public EnseignementController() {
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
-        competencesService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
+        competencesService = new DefaultCompetencesService(eb);
     }
 
     /**

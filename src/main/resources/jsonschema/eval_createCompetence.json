@@ -6,6 +6,9 @@
     "nom": {
       "type": "string"
     },
+    "id_etablissement": {
+      "type": "string"
+    },
     "id_parent": {
       "type": "integer"
     },
@@ -14,11 +17,15 @@
     },
     "id_cycle": {
       "type": "integer"
+    },
+    "id_enseignement": {
+      "type": "integer"
     }
   },
   "required": [
     "nom",
     "id_parent",
+    "id_cycle",
     "id_type",
     "id_enseignement"
   ]

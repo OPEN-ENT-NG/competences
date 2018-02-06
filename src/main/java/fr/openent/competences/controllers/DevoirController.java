@@ -64,13 +64,12 @@ public class DevoirController extends ControllerHelper {
     private final DefaultDevoirService devoirsService;
     private final UtilsService utilsService;
     private final CompetencesService competencesService;
-    private EventBus eb;
 
     public DevoirController(EventBus eb) {
         this.eb = eb;
-        devoirsService = new DefaultDevoirService(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
+        devoirsService = new DefaultDevoirService();
         utilsService = new DefaultUtilsService();
-        competencesService = new DefaultCompetencesService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_TABLE);
+        competencesService = new DefaultCompetencesService(eb);
     }
 
     @Get("/devoirs")
