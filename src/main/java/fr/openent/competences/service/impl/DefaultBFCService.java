@@ -281,11 +281,7 @@ public class DefaultBFCService  extends SqlCrudService implements fr.openent.com
         if(domainesRacine.isEmpty() || bornes.isEmpty() || notesCompetencesEleves.isEmpty() || bfcEleves.isEmpty()) {
             //Si les domaines, les bornes, les BFCs ou les notes ne sont pas remplis, la fonction s'arrête sans avoir effectuer aucun traitement.
             return;
-        } else if(recapEval && (notesCompetencesEleves.get("empty") != null || bfcEleves.get("empty") != null)) {
-            //Par contre, si les domaines et les bornes sont renseignées mais qu'aucune compétence n'a été évaluée, une réponse vide est retournée.
-            handler.handle(new Either.Left<String, JsonObject>("Impossible de recuperer les evaluations pour la classe selectionnee"));
-            return;
-        } else if(!recapEval && notesCompetencesEleves.get("empty") != null && bfcEleves.get("empty") != null) {
+        } else if(notesCompetencesEleves.get("empty") != null && bfcEleves.get("empty") != null) {
             //Par contre, si les domaines et les bornes sont renseignées mais qu'aucune compétence n'a été évaluée, une réponse vide est retournée.
             handler.handle(new Either.Right<String, JsonObject>(new JsonObject()));
             return;

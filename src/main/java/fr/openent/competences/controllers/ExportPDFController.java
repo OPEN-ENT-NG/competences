@@ -1770,7 +1770,7 @@ public class ExportPDFController extends ControllerHelper {
                                                         JsonArray result = stringJsonArrayEither.right().getValue();
                                                         moy = ((JsonObject)result.get(0)).getBoolean("visible");;
                                                     }
-                                                    final boolean isHabilite = moy; // isHabilite est true si user est un chef etab ou un enseignant qui est abilité à voir les moyennes
+                                                    final boolean isHabilite = moy;
 
                                                     exportService.getExportRecapEval(text, idCycle, idEtablissement, new Handler<Either<String, JsonArray>>() {
 
@@ -1808,112 +1808,106 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         if(stringMapEither.isRight()){
                                                                                             final JsonArray eleves = new JsonArray();
                                                                                             JsonObject bfc = stringMapEither.right().getValue();
+                                                                                            if(bfc.size() > 0){
+                                                                                                final int[] idDomaines = new int[bfc.getArray("domainesRacine").size()];
+                                                                                                for(int l = 0; l <  bfc.getArray("domainesRacine").size(); l++){
+                                                                                                    Long idDomaine = bfc.getArray("domainesRacine").get(l);
+                                                                                                    idDomaines[l] = idDomaine.intValue();
+                                                                                                }
 
-                                                                                            final int[] idDomaines = new int[bfc.getArray("domainesRacine").size()];
-                                                                                            for(int l = 0; l <  bfc.getArray("domainesRacine").size(); l++){
-                                                                                                Long idDomaine = bfc.getArray("domainesRacine").get(l);
-                                                                                                idDomaines[l] = idDomaine.intValue();
-                                                                                            }
+                                                                                                for (int i = 0; i < idEleves.length - 1; i++){
+                                                                                                    JsonObject eleve = new JsonObject();
+                                                                                                    JsonArray notesEleve = new JsonArray();
+                                                                                                    List domainesEvalues = new ArrayList();
+                                                                                                    if(bfc.containsField(idEleves[i])) {
+                                                                                                        for (Object resultNote : bfc.getArray(idEleves[i])) {
+                                                                                                            for (Object niveau : legende) {
+                                                                                                                JsonObject note = new JsonObject();
 
-                                                                                            for (int i = 0; i < bfc.size() - 1; i++){
-                                                                                                JsonObject eleve = new JsonObject();
-                                                                                                JsonArray notesEleve = new JsonArray();
-                                                                                                List domainesEvalues = new ArrayList();
-                                                                                                if(bfc.containsField(idEleves[i])) {
-                                                                                                    for (Object resultNote : bfc.getArray(idEleves[i])) {
-                                                                                                        for (Object niveau : legende) {
-                                                                                                            JsonObject note = new JsonObject();
+                                                                                                                if (((JsonObject) resultNote).getNumber("niveau").toString()
+                                                                                                                        .equals(((JsonObject) niveau).getLong("ordre").toString())) {
+                                                                                                                    note.putNumber("id", ((JsonObject) resultNote).getNumber("idDomaine"));
+                                                                                                                    note.putString("visu", ((JsonObject) niveau).getString("visu"));
+                                                                                                                    note.putBoolean("nonEvalue", false);
+                                                                                                                    if (isHabilite)
+                                                                                                                        note.putString("moyenne", text ? "- " + ((JsonObject) resultNote).getNumber("moyenne")
+                                                                                                                                : "" + ((JsonObject) resultNote).getNumber("moyenne"));
 
-                                                                                                            if (((JsonObject) resultNote).getNumber("niveau").toString()
-                                                                                                                    .equals(((JsonObject) niveau).getLong("ordre").toString())) {
-                                                                                                                note.putNumber("id", ((JsonObject) resultNote).getNumber("idDomaine"));
-                                                                                                                note.putString("visu", ((JsonObject) niveau).getString("visu"));
-                                                                                                                note.putBoolean("nonEvalue", false);
-                                                                                                                if (isHabilite)
-                                                                                                                    note.putString("moyenne", text ? "- " + ((JsonObject) resultNote).getNumber("moyenne")
-                                                                                                                            : "" + ((JsonObject) resultNote).getNumber("moyenne"));
-
-                                                                                                                domainesEvalues.add(((JsonObject) note).getNumber("id").intValue());
-                                                                                                                notesEleve.add(note);
+                                                                                                                    domainesEvalues.add(((JsonObject) note).getNumber("id").intValue());
+                                                                                                                    notesEleve.add(note);
+                                                                                                                }
                                                                                                             }
                                                                                                         }
                                                                                                     }
-
-                                                                                                    for (int idDomaine : idDomaines) {
-                                                                                                        if (!domainesEvalues.contains(idDomaine)) {
-                                                                                                            JsonObject note = new JsonObject();
-                                                                                                            note.putNumber("id", new Long(idDomaine));
-                                                                                                            note.putString("visu", text ? "NE" : "white");
-                                                                                                            note.putBoolean("nonEvalue", true);
-                                                                                                            notesEleve.add(note);
-                                                                                                        }
-                                                                                                    }
+                                                                                                    addMaitriseNE(domainesEvalues, notesEleve, idDomaines, text);
                                                                                                     eleve.putString("id", idEleves[i]);
                                                                                                     eleve.putString("nom", nameEleves[i]);
                                                                                                     eleve.putArray("notes", sortJsonArrayById(notesEleve));
                                                                                                     eleves.add(eleve);
                                                                                                 }
-                                                                                            }
 
-                                                                                            domaineService.getDomainesLibCod(idDomaines, new Handler<Either<String, JsonArray>>(){
-                                                                                                @Override
-                                                                                                public void handle(Either<String, JsonArray> stringJsonArrayEither){
-                                                                                                    if(stringJsonArrayEither.isRight()){
-                                                                                                        JsonArray domaines = stringJsonArrayEither.right().getValue();
-                                                                                                        result.putArray("domaines", isDomaineParent(sortJsonArrayById(domaines)));
-                                                                                                        result.putArray("eleves", eleves);
-                                                                                                        JsonObject action = new JsonObject()
-                                                                                                                .putString("action", "classe.getClasseInfo")
-                                                                                                                .putString("idClasse", idClasse);
-                                                                                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-                                                                                                            @Override
-                                                                                                            public void handle(Message<JsonObject> message) {
-                                                                                                                JsonObject body = message.body();
+                                                                                                domaineService.getDomainesLibCod(idDomaines, new Handler<Either<String, JsonArray>>(){
+                                                                                                    @Override
+                                                                                                    public void handle(Either<String, JsonArray> stringJsonArrayEither){
+                                                                                                        if(stringJsonArrayEither.isRight()){
+                                                                                                            JsonArray domaines = stringJsonArrayEither.right().getValue();
+                                                                                                            result.putArray("domaines", isDomaineParent(sortJsonArrayById(domaines)));
+                                                                                                            result.putArray("eleves", eleves);
+                                                                                                            JsonObject action = new JsonObject()
+                                                                                                                    .putString("action", "classe.getClasseInfo")
+                                                                                                                    .putString("idClasse", idClasse);
+                                                                                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                                                                                @Override
+                                                                                                                public void handle(Message<JsonObject> message) {
+                                                                                                                    JsonObject body = message.body();
 
-                                                                                                                if ("ok".equals(body.getString("status"))) {
-                                                                                                                    final String classeName = body.getObject("result").getObject("c").getObject("data").getString("name");
-                                                                                                                    result.putString("classe", classeName);
+                                                                                                                    if ("ok".equals(body.getString("status"))) {
+                                                                                                                        final String classeName = body.getObject("result").getObject("c").getObject("data").getString("name");
+                                                                                                                        result.putString("classe", classeName);
 
-                                                                                                                    JsonObject jsonRequest = new JsonObject()
-                                                                                                                            .putObject("headers", new JsonObject().putString("Accept-Language", request.headers().get("Accept-Language")))
-                                                                                                                            .putString("Host", getHost(request));
-                                                                                                                    JsonObject action = new JsonObject()
-                                                                                                                            .putString("action", "periode.getLibellePeriode")
-                                                                                                                            .putNumber("idType", finalIdPeriode)
-                                                                                                                            .putObject("request", jsonRequest);
-                                                                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-                                                                                                                        @Override
-                                                                                                                        public void handle(Message<JsonObject> message) {
-                                                                                                                            JsonObject body = message.body();
+                                                                                                                        JsonObject jsonRequest = new JsonObject()
+                                                                                                                                .putObject("headers", new JsonObject().putString("Accept-Language", request.headers().get("Accept-Language")))
+                                                                                                                                .putString("Host", getHost(request));
+                                                                                                                        JsonObject action = new JsonObject()
+                                                                                                                                .putString("action", "periode.getLibellePeriode")
+                                                                                                                                .putNumber("idType", finalIdPeriode)
+                                                                                                                                .putObject("request", jsonRequest);
+                                                                                                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                                                                                            @Override
+                                                                                                                            public void handle(Message<JsonObject> message) {
+                                                                                                                                JsonObject body = message.body();
 
-                                                                                                                            if ("ok".equals(body.getString("status"))) {
-                                                                                                                                String libellePeriode = body.getString("result")
-                                                                                                                                        .replace("é", "e")
-                                                                                                                                        .replace("è", "e");
-                                                                                                                                result.putString("periode", libellePeriode);
-                                                                                                                                result.putBoolean("text", text);
-                                                                                                                                result.putBoolean("isHabilite", isHabilite);
-                                                                                                                                if (json) {
-                                                                                                                                    Renders.renderJson(request, result);
+                                                                                                                                if ("ok".equals(body.getString("status"))) {
+                                                                                                                                    String libellePeriode = body.getString("result")
+                                                                                                                                            .replace("é", "e")
+                                                                                                                                            .replace("è", "e");
+                                                                                                                                    result.putString("periode", libellePeriode);
+                                                                                                                                    result.putBoolean("text", text);
+                                                                                                                                    result.putBoolean("isHabilite", isHabilite);
+                                                                                                                                    if (json) {
+                                                                                                                                        Renders.renderJson(request, result);
+                                                                                                                                    } else {
+                                                                                                                                        String fileName = classeName.replace(' ', '_') + "_export_recapitulatif";
+                                                                                                                                        genererPdf(request, result, "recapitulatif-evaluations.pdf.xhtml", fileName);
+                                                                                                                                    }
                                                                                                                                 } else {
-                                                                                                                                    String fileName = classeName.replace(' ', '_') + "_export_recapitulatif";
-                                                                                                                                    genererPdf(request, result, "recapitulatif-evaluations.pdf.xhtml", fileName);
+                                                                                                                                    leftToResponse(request, new Either.Left<>(body.getString("message")));
                                                                                                                                 }
-                                                                                                                            } else {
-                                                                                                                                leftToResponse(request, new Either.Left<>(body.getString("message")));
                                                                                                                             }
-                                                                                                                        }
-                                                                                                                    });
-                                                                                                                } else {
-                                                                                                                    leftToResponse(request, new Either.Left<>(body.getString("message")));
+                                                                                                                        });
+                                                                                                                    } else {
+                                                                                                                        leftToResponse(request, new Either.Left<>(body.getString("message")));
+                                                                                                                    }
                                                                                                                 }
-                                                                                                            }
-                                                                                                        });
-                                                                                                    } else {
-                                                                                                        leftToResponse(request, stringJsonArrayEither.left());
+                                                                                                            });
+                                                                                                        } else {
+                                                                                                            leftToResponse(request, stringJsonArrayEither.left());
+                                                                                                        }
                                                                                                     }
-                                                                                                }
-                                                                                            });
+                                                                                                });
+                                                                                            } else {
+                                                                                                leftToResponse(request, new Either.Left<>("Aucune Evaluation trouvée"));
+                                                                                            }
                                                                                         } else {
                                                                                             leftToResponse(request, new Either.Left<>("Impossible de recuperer le bilan de fin d'etude pour la classe selectionnee :\n" + stringMapEither.left().getValue()));
                                                                                             log.error("getExportRecapEval : buildBFC : " + stringMapEither.left().getValue());
@@ -2004,5 +1998,17 @@ public class ExportPDFController extends ControllerHelper {
             newDomaines.add(domaine);
         }
         return newDomaines;
+    }
+
+    private void addMaitriseNE(List domainesEvalues, JsonArray notesEleve, int[] idDomaines, boolean text){
+        for (int idDomaine : idDomaines) {
+            if (!domainesEvalues.contains(idDomaine)) {
+                JsonObject note = new JsonObject();
+                note.putNumber("id", new Long(idDomaine));
+                note.putString("visu", text ? "NE" : "white");
+                note.putBoolean("nonEvalue", true);
+                notesEleve.add(note);
+            }
+        }
     }
 }
