@@ -28,7 +28,7 @@ export const itemsCompetences = {
                 this.search.haschange = (newValue !== oldValue);
                 utils.safeApply(this);
             });
-            http().get(`/competences/domaines?idStucture=${this.idStructure}`)
+            http().getJson(`/competences/domaines?idStructure=${this.idStructure}`)
                 .done((resDomaines) => {
                     if (resDomaines) {
                         let _res = [];
@@ -49,7 +49,7 @@ export const itemsCompetences = {
                         all: []
                     };
                 }).bind(this);
-            http().get('/competences/enseignements').done(function (res) {
+            http().getJson(`/competences/enseignements?idStructure=${this.idStructure}`).done(function (res) {
                 _.forEach(res, function (enseignement) {
                     enseignement.competences = {
                         all: enseignement['competences_1']

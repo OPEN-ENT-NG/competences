@@ -68,73 +68,52 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void getCompetencesItem(final String idClasse, final Handler<Either<String, JsonArray>> handler) {
-        JsonObject action = new JsonObject()
-                .putString("action", "classe.getEtabClasses")
-                .putArray("idClasses", new JsonArray(new String[]{idClasse}));
+    public void getCompetencesItem(final String idEtablissement, final String idClasse,
+                                   final Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        query.append("SELECT rel_competences_domaines.id_domaine, competences.* , competences.nom as nomHtml, ")
+                .append(" perso.nom as name, perso.masque ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_domaines ")
+                .append(" ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append(" LEFT OUTER JOIN " + COMPETENCES_PERSO_TABLE  )
+                .append("  AS perso ")
+                .append(" ON ( competences.id = perso.id_competence AND  perso.id_etablissement = ? )" )
+                .append(" WHERE  (competences.id_etablissement IS null OR competences.id_etablissement = ? ) AND ");
 
-                if ("ok".equals(body.getString("status"))) {
-                    final String idEtablissement = body.getObject("result").getString("id_etablissement");
+        if (null != idClasse) {
+            query.append(" competences.id_cycle = (SELECT id_cycle FROM " + COMPETENCES_SCHEMA +
+                    ".rel_groupe_cycle WHERE id_groupe = ? ) AND");
+        }
 
-                    JsonObject action = new JsonObject()
-                            .putString("action", "eleve.getCycle")
-                            .putString("idClasse", idClasse);
+        query.append(" NOT EXISTS ( ")
+                .append("SELECT 1 ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences AS competencesChildren ")
+                .append("WHERE competencesChildren.id_parent = competences.id ");
 
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-                        @Override
-                        public void handle(Message<JsonObject> message) {
-                            JsonObject body = message.body();
+        if (null != idClasse) {
+            query.append("AND competences.id_cycle = (SELECT id_cycle FROM " + COMPETENCES_SCHEMA +
+                    ".rel_groupe_cycle WHERE id_groupe = ?) ");
+        }
 
-                            if ("ok".equals(body.getString("status"))) {
-                                final Number cycle = body.getObject("result").getNumber("id_cycle");
+        query.append(") ")
+                .append("ORDER BY id_cycle, competences.nom ASC,  perso.nom ASC ");
 
-                                String query = "SELECT comp.id, COALESCE(compPerso.nom, comp.nom) AS nom," +
-                                        " comp.description, comp.id_type, comp.id_parent, competences.id_cycle," +
-                                        " compDom.id_domaine" +
-                                        " FROM " + COMPETENCES_TABLE + " AS comp " +
-                                        " LEFT JOIN " + COMPETENCES_DOMAINES_TABLE + " AS compDom" +
-                                        " ON comp.id = compDom.id_competence " +
-                                        " LEFT JOIN (SELECT nom FROM " + COMPETENCES_PERSO_TABLE +
-                                        " WHERE id_etablissement = ? AND masque = false) AS compPerso" +
-                                        " ON comp.id = compPerso.id_competence " +
-                                        " WHERE competences.id_type = 2 ";
+        JsonArray params = new JsonArray().addString(idEtablissement).addString(idEtablissement);
+        if (null != idClasse) {
+            params.addString(idClasse);
+            params.addString(idClasse);
+        }
 
-                                if (cycle != null) {
-                                    query += "AND comp.id_cycle = ?";
-                                }
-                                query += " AND comp.id_etablissement IS NULL OR comp.id_etablissement = ? " +
-                                        " ORDER BY comp.id ASC";
-
-                                JsonArray values = new JsonArray()
-                                        .addString(idEtablissement)
-                                        .addNumber(cycle)
-                                        .addString(idEtablissement);
-                                Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
-
-                            } else {
-                                log.error(body.getString("message"));
-                                handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                            }
-                        }
-                    });
-                } else {
-                    log.error(body.getString("message"));
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                }
-            }
-        });
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void getCompetences(List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler) {
         String idEtablissement = null;
-        for (Map.Entry<String, Object> param : params) {
-            if ("id_etablissement".equals(param.getKey())) {
+        for(Map.Entry<String, Object> param : params) {
+            if("id_etablissement".equals(param.getKey())) {
                 idEtablissement = (String) param.getValue();
             }
         }
@@ -158,8 +137,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
         JsonArray values = new JsonArray().addString(idEtablissement);
 
-        if (!params.isEmpty()) {
-            for (Map.Entry<String, Object> param : params) {
+        if(!params.isEmpty()) {
+            for(Map.Entry<String, Object> param : params) {
                 query += " AND ? = ?";
                 values.addString(param.getKey()).add(param.getValue());
             }
@@ -192,14 +171,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void setDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray data = new JsonArray();
-        query.append("INSERT INTO " + COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence) VALUES ");
-        for (int i = 0; i < values.size(); i++) {
+        query.append("INSERT INTO "+ COMPETENCES_SCHEMA +".competences_devoirs (id_devoir, id_competence) VALUES ");
+        for(int i = 0; i < values.size(); i++){
             query.append("(?, ?)");
             data.addNumber(devoirId);
             data.addNumber((Number) values.get(i));
-            if (i != values.size() - 1) {
+            if(i != values.size()-1){
                 query.append(",");
-            } else {
+            }else{
                 query.append(";");
             }
         }
@@ -211,14 +190,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void remDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray data = new JsonArray();
-        query.append("DELETE FROM " + COMPETENCES_SCHEMA + ".competences_devoirs WHERE ");
-        for (int i = 0; i < values.size(); i++) {
+        query.append("DELETE FROM "+ COMPETENCES_SCHEMA +".competences_devoirs WHERE ");
+        for(int i = 0; i < values.size(); i++){
             query.append("(id_devoir = ? AND  id_competence = ?)");
             data.addNumber(devoirId);
             data.addNumber((Number) values.get(i));
-            if (i != values.size() - 1) {
+            if(i != values.size()-1){
                 query.append(" OR ");
-            } else {
+            }else{
                 query.append(";");
             }
         }
@@ -248,112 +227,95 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 SqlResult.validResultHandler(handler));
     }
 
+
     @Override
     public void getLastCompetencesDevoir(String idEtablissement, String userId, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
 
-        String query = "WITH lastDevoir AS (SELECT * FROM " + DEVOIRS_TABLE + " AS devoirs" +
-                " WHERE devoirs.owner = ? ORDER BY devoirs.created DESC LIMIT 1)" +
-                " SELECT compDevoir.*, COALESCE(compPerso.nom, comp.nom) AS nom" +
-                " FROM " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir" +
-                " LEFT JOIN " + COMPETENCES_TABLE + " AS comp ON comp.id = compDevoir.id_competence" +
-                " LEFT JOIN (SELECT nom FROM " + COMPETENCES_PERSO_TABLE +
-                " WHERE id_etablissement = lastDevoir.id_etablissement ) AS compPerso" +
-                " ON comp.id = compPerso.id_competence" +
-                " WHERE competences_devoirs.id_devoir = lastDevoir.id ";
+        query.append("SELECT competences_devoirs.*, competences.nom as nom ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences_devoirs, "+ COMPETENCES_SCHEMA +".competences ")
+                .append("WHERE competences_devoirs.id_competence = competences.id ")
+                .append("AND id_devoir IN ")
+                .append("(SELECT id FROM "+ COMPETENCES_SCHEMA +".devoirs WHERE devoirs.owner = ? ORDER BY devoirs.created DESC LIMIT 1);");
 
-        Sql.getInstance().prepared(query, new JsonArray().addString(userId), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), new JsonArray().addString(userId), SqlResult.validResultHandler(handler));
+    }
+
+    public void getSousCompetences(Long skillId, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+
+        query.append("SELECT * ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("WHERE competences.id_parent = ?;");
+
+        Sql.getInstance().prepared(query.toString(), new JsonArray().addNumber(skillId), SqlResult.validResultHandler(handler));
+    }
+
+    public void getCompetencesEnseignement(Long teachingId, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+
+        query.append("SELECT * ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_enseignements ON (competences.id = rel_competences_enseignements.id_competence) ")
+                .append("WHERE rel_competences_enseignements.id_enseignement = ? ")
+                .append("AND competences.id_parent = 0 ;");
+
+        Sql.getInstance().prepared(query.toString(), new JsonArray().addNumber(teachingId), SqlResult.validResultHandler(handler));
+    }
+
+
+
+
+    @Override
+    public void getCompetencesByLevel(final String idEtablissement, final String filter, final String idClasse,
+                                      final Handler<Either<String, JsonArray>> handler) {
+
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new JsonArray().addString(idEtablissement).addString(idEtablissement);
+
+        query.append("SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine, ")
+            .append(" string_agg( cast (domaines.id as text), ',') as ids_domaine, competences.id, ")
+            .append(" competences.nom, competences.id_parent, competences.id_type, ")
+            .append(" rel_competences_enseignements.id_enseignement, competences.id_cycle, perso.nom as name, perso.masque ")
+                .append("FROM "+ COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_enseignements ON (competences.id = rel_competences_enseignements.id_competence) ");
+
+        if (idClasse != null) {
+            query.append("INNER JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle ON (rel_groupe_cycle.id_cycle = competences.id_cycle) ");
+        }
+
+        query.append("LEFT OUTER JOIN "+ COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append("LEFT OUTER JOIN "+ COMPETENCES_SCHEMA +".domaines ON (domaines.id = rel_competences_domaines.id_domaine) ")
+                .append(" LEFT OUTER JOIN "+ COMPETENCES_PERSO_TABLE + " AS perso")
+                .append(" ON ( competences.id = perso.id_competence AND perso.id_etablissement = ? ) ")
+                .append(" WHERE  (competences.id_etablissement is null OR competences.id_etablissement = ? ) AND ")
+                .append(" competences."+ filter);
+
+        if (idClasse != null) {
+            query.append(" AND rel_groupe_cycle.id_groupe = ? ");
+            params.addString(idClasse);
+        }
+
+        query.append(" GROUP BY perso.nom, perso.masque, competences.id, competences.nom, competences.id_parent, competences.id_type, rel_competences_enseignements.id_enseignement, competences.id_cycle ")
+                .append("ORDER BY competences.nom ASC, perso.nom ASC;");
+
+        Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
     }
 
     @Override
-    public void getCompetencesByLevel(final String filter, final String idClasse, final Handler<Either<String, JsonArray>> handler) {
-        final JsonObject action = new JsonObject()
-                .putString("action", "classe.getEtabClasses")
-                .putArray("idClasses", new JsonArray(new String[]{idClasse}));
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    String idEtablissement = body.getObject("result").getString("id_etablissement");
-
+    public void getCompetencesDomaines(String idClasse, Long[] idDomaines, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
                     JsonArray params = new JsonArray();
 
-                    String query = "SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine," +
-                            " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id," +
-                            " COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_parent, comp.id_type," +
-                            " compDom.id_enseignement, comp.id_cycle " +
+        query.append("SELECT * FROM " + COMPETENCES_SCHEMA + ".rel_competences_domaines WHERE id_domaine IN " + Sql.listPrepared(idDomaines));
 
-                            "FROM " + COMPETENCES_TABLE + " AS comp " +
-                            "INNER JOIN " + COMPETENCES_ENSEIGNEMENTS_TABLE + " AS compEns" +
-                            " ON (competences.id = rel_competences_enseignements.id_competence) ";
-
-                    if (idClasse != null) {
-                        query += "INNER JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle" +
-                                " ON (rel_groupe_cycle.id_cycle = competences.id_cycle) ";
-                    }
-
-                    query += " LEFT JOIN " + COMPETENCES_DOMAINES_TABLE + " AS compDom" +
-                            " ON (comp.id = compDom.id_competence)" +
-                            " LEFT JOIN " + COMPETENCES_SCHEMA + ".domaines" +
-                            " ON (domaines.id = compDom.id_domaine) " +
-                            " LEFT JOIN (SELECT nom FROM " + COMPETENCES_PERSO_TABLE +
-                            " WHERE id_etablissement = ?) AS compPerso" +
-                            " ON comp.id = compPerso.id_competence" +
-                            "WHERE comp." + filter;
-
-                    params.addString(idEtablissement);
-
-                    if (idClasse != null) {
-                        query += " AND rel_groupe_cycle.id_groupe = ?";
-                        params.addString(idClasse);
-                    }
-
-                    query += " GROUP BY comp.id, nom, comp.id_parent, comp.id_type, compEns.id_enseignement, comp.id_cycle" +
-                            " ORDER BY nom ASC";
-
-                    Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
-                } else {
-                    log.error(body.getString("message"));
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                }
-            }
-        });
-    }
-
-    @Override
-    public void getCompetencesDomaines(String idClasse, final Long[] idDomaines, final Handler<Either<String, JsonArray>> handler) {
-
-        final JsonObject action = new JsonObject()
-                .putString("action", "classe.getEtabClasses")
-                .putArray("idClasses", new JsonArray(new String[]{idClasse}));
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    String idEtablissement = body.getObject("result").getString("id_etablissement");
-                    JsonArray params = new JsonArray();
-
-                    String query = "SELECT * FROM " + COMPETENCES_DOMAINES_TABLE + " AS compEns" +
-                            " WHERE id_domaine IN " + Sql.listPrepared(idDomaines) + " AND id_competence IN (" +
-                            "SELECT id FROM " + COMPETENCES_TABLE + " WHERE id_etablissement IS NULL OR id_etablissement = ?)";
-
-                    for (Long l : idDomaines) {
+                    for(Long l : idDomaines) {
                         params.addNumber(l);
                     }
 
-                    Sql.getInstance().prepared(query, params.addString(idEtablissement), SqlResult.validResultHandler(handler));
-                } else {
-                    log.error(body.getString("message"));
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                }
-            }
-        });
+        Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
     }
+
 
     @Override
     public void create(JsonObject competence, Handler<Either<String, JsonObject>> handler) {
@@ -382,7 +344,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 new Handler<Either<String, JsonObject>>() {
                     @Override
                     public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                        if (stringJsonObjectEither.isRight()) {
+                        if(stringJsonObjectEither.isRight()) {
                             handler.handle(new Either.Right<String, Boolean>(
                                     stringJsonObjectEither.right().getValue().getBoolean("isManuelle")));
                         } else {
@@ -399,12 +361,12 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         String queryDelete = "DELETE FROM " + COMPETENCES_DOMAINES_TABLE
                 + " WHERE id_competence = ? AND id_domaine NOT IN " + Sql.listPrepared(idDomains);
         String queryCreate = "INSERT INTO " + COMPETENCES_DOMAINES_TABLE
-                + " VALUES (?, unnest( " + Sql.arrayPrepared(idDomains) + "))"
+                + " VALUES (?, unnest( " + Sql.arrayPrepared(idDomains)+ "))"
                 + " ON CONFLICT DO NOTHING RETURNING id_competence, array_agg(id_domaine) as ids_domaine";
         JsonArray values = new JsonArray().addNumber(id);
 
 
-        for (Number n : idDomains) {
+        for(Number n : idDomains) {
             values.addNumber(n);
         }
 
@@ -428,7 +390,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             public void handle(Either<String, Boolean> stringBooleanEither) {
                 if (stringBooleanEither.isLeft()) {
                     handler.handle(new Either.Left<String, JsonObject>(stringBooleanEither.left().getValue()));
-                } else if (stringBooleanEither.right().getValue()) {
+                } else if (stringBooleanEither.right().getValue()){
                     handler.handle(new Either.Right<String, JsonObject>(
                             new JsonObject().putString("error", "Competence is the last of its domain")));
                 } else {
@@ -462,14 +424,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         sql.prepared(query, values, validResultHandler(new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                if (stringJsonArrayEither.isLeft()) {
+                if(stringJsonArrayEither.isLeft()) {
                     handler.handle(new Either.Left<String, Boolean>(stringJsonArrayEither.left().getValue()));
-                } else if (stringJsonArrayEither.right().getValue().size() == 0) {
+                } else if(stringJsonArrayEither.right().getValue().size() == 0) {
                     handler.handle(new Either.Right<String, Boolean>(false));
                 } else {
                     for (Object o : stringJsonArrayEither.right().getValue()) {
                         JsonObject domaine = (JsonObject) o;
-                        if (domaine.getNumber("count") == 1) {
+                        if(domaine.getNumber("count") == 1) {
                             handler.handle(new Either.Right<String, Boolean>(true));
                             return;
                         }
@@ -488,7 +450,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         initPerso(competence, new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                if (stringJsonObjectEither.isRight()) {
+                if(stringJsonObjectEither.isRight()) {
                     for (Map.Entry<String, Object> property : competence.toMap().entrySet()) {
                         if ("masque".equals(property.getKey())) {
                             hideComp(idComp, idEtab, (Boolean) property.getValue(), handler);
@@ -513,12 +475,12 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
-    private void initPerso(final JsonObject competence, final Handler<Either<String, JsonObject>> handler) {
+    private void initPerso (final JsonObject competence, final Handler<Either<String, JsonObject>> handler) {
 
         getPerso(competence, new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                if (stringJsonObjectEither.isLeft()) {
+                if(stringJsonObjectEither.isLeft()) {
                     handler.handle(stringJsonObjectEither.left());
                 } else if (stringJsonObjectEither.right().getValue().size() == 0) {
                     String query = "INSERT INTO " + COMPETENCES_PERSO_TABLE + " "
@@ -546,12 +508,12 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         isCompManuelle(id, new Handler<Either<String, Boolean>>() {
             @Override
             public void handle(final Either<String, Boolean> isManuelle) {
-                if (isManuelle.isRight()) {
+                if(isManuelle.isRight()) {
                     hasCompetenceDevoir(id, new Handler<Either<String, Boolean>>() {
                         @Override
                         public void handle(Either<String, Boolean> hasDevoir) {
                             if (hasDevoir.isRight()) {
-                                if (hasDevoir.right().getValue() || !isManuelle.right().getValue()) {
+                                if(hasDevoir.right().getValue() || !isManuelle.right().getValue()) {
                                     hideComp(id, idEtablissement, true, handler);
                                 } else {
                                     delete(String.valueOf(id), handler);
@@ -605,7 +567,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         sql.prepared(query, new JsonArray().addNumber(id), validResultHandler(new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                if (stringJsonArrayEither.isRight() && stringJsonArrayEither.right().getValue().size() == 0) {
+                if(stringJsonArrayEither.isRight() && stringJsonArrayEither.right().getValue().size() == 0) {
                     handler.handle(new Either.Right<String, Boolean>(false));
                 } else if (stringJsonArrayEither.isRight() && stringJsonArrayEither.right().getValue().size() != 0) {
                     handler.handle(new Either.Right<String, Boolean>(true));
@@ -615,5 +577,4 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             }
         }));
     }
-
 }

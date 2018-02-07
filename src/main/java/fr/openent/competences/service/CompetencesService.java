@@ -37,10 +37,11 @@ public interface CompetencesService extends CrudService {
     /**
      * Récupération des compétences évaluables (feuille de l'arbre) du cycle donné.
      *
+     * @param idStructure l'identifiant de la structure.
      * @param idClasse l'identifiant de la classe.
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesItem(String idClasse, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesItem(String idStructure, String idClasse, Handler<Either<String, JsonArray>> handler);
 
     void getCompetences(List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler);
 
@@ -88,7 +89,7 @@ public interface CompetencesService extends CrudService {
      * @param  idClasse : identifiant de la classe
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesByLevel(String filter, String idClasse, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesByLevel(String idEtablissement,String filter, String idClasse, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère les compétences des domaines dont l'id est passé en paramètre
