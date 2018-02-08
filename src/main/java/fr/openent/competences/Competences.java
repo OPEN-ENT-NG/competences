@@ -20,6 +20,7 @@ public class Competences extends BaseServer {
     public static final String NOTES_TABLE = "notes";
     public static final String ANNOTATIONS = "annotations";
     public static final String COMPETENCES_TABLE = "competences";
+    public static final String PERSO_COMPETENCES_TABLE = "perso_competences";
     public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
     public static final String ENSEIGNEMENTS_TABLE = "enseignements";
     public static final String DOMAINES_TABLE = "domaines";

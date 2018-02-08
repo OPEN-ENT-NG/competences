@@ -67,15 +67,14 @@ public class DomaineController extends ControllerHelper {
      * Récupère la liste des enseignements
      * @param request
      */
-    @Get("/domaines/classe/:idClasse")
+    @Get("/domaines")
     @ApiDoc("Recupère l'arbre des domaines pour un cycle donné.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getArbreDomaines(final HttpServerRequest request){
         final JsonArray oArbreDomainesArray = new JsonArray();
-        if (!request.params().contains("idClasse")) {
-            renderError(request);
-        }
         final String idClasse = request.params().get("idClasse");
+        final String idStructure = request.params().get("idStructure");
+
         // 1 - Chargement des domaines ordonnés selon l'arbre recursif
         domainesService.getArbreDomaines(idClasse, new Handler<Either<String, JsonArray>>() {
             @Override
@@ -86,14 +85,13 @@ public class DomaineController extends ControllerHelper {
                     final JsonArray oDomainesArray = event.right().getValue();
 
                     // 2 - Chargement de toutes les competences evaluables du cycle
-                    competencesService.getCompetencesItem(idClasse, new Handler<Either<String, JsonArray>>() {
+                    competencesService.getCompetencesItem(idStructure,idClasse,
+                            new Handler<Either<String, JsonArray>>() {
                                 @Override
                                 public void handle(Either<String, JsonArray> event) {
                                     if (event.right().isRight()) {
-
                                         // La liste des competences evaluables du cycle (feuilles)
                                         JsonArray oCompetencesItemArray = event.right().getValue();
-
 
                                         // 3 - Positionnement des compétences sur les domaines
                                         for (int i = 0; i < oCompetencesItemArray.size(); i++) {
@@ -103,19 +101,23 @@ public class DomaineController extends ControllerHelper {
                                             for (int j = 0; j < oDomainesArray.size(); j++) {
                                                 JsonObject oDomaine = oDomainesArray.get(j);
 
-                                                if(oDomaine.getLong("id").equals(oCompetenceItem.getLong("id_domaine"))) {
-                                                    // initialisation de la liste des competences du domaine si cela n'a pas encore été fait
+                                                if(oDomaine.getLong("id")
+                                                        .equals(oCompetenceItem.getLong("id_domaine"))
+                                                        && oDomaine.getLong("id_cycle")
+                                                        .equals(oCompetenceItem.getLong("id_cycle"))) {
+                                                    // initialisation de la liste des competences du
+                                                    // domaine si cela n'a pas encore été fait
                                                     if (oDomaine.getArray("competences") == null) {
                                                         oDomaine.putArray("competences", new JsonArray());
                                                     }
 
-                                                    oDomaine.getArray("competences").addObject(oCompetenceItem);
+                                                    oDomaine.getArray("competences")
+                                                            .addObject(oCompetenceItem);
                                                 }
 
                                             }
 
                                         }
-
 
                                         // 4 - Construction de l'arbre des domaines à partir de la liste ordonnée
                                         for (int i = 0; i < oDomainesArray.size(); i++) {
@@ -126,14 +128,15 @@ public class DomaineController extends ControllerHelper {
                                                 oArbreDomainesArray.addObject(oDomaineAinserer);
                                             } else {
 
-                                                // sinon cela veut dire que le domaine en cours de parcous est un sous domaine du
+                                                // sinon cela veut dire que le domaine en cours
+                                                // de parcous est un sous domaine du
                                                 // dernier domaine racine ajouté
-                                                JsonObject oDomaineRacine = oArbreDomainesArray.get(oArbreDomainesArray.size() - 1);
+                                                JsonObject oDomaineRacine = oArbreDomainesArray
+                                                        .get(oArbreDomainesArray.size() - 1);
                                                 ajouterDomaineSousArbre(oDomaineRacine, oDomaineAinserer);
                                             }
 
                                         }
-
                                         Renders.renderJson(request, oArbreDomainesArray);
                                     } else {
                                         leftToResponse(request, event.left());

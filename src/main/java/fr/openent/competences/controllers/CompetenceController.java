@@ -21,11 +21,13 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessEvaluationFilter;
+import fr.openent.competences.security.AccessMaitriseFilter;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.impl.DefaultCompetenceNoteService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import fr.wseduc.rs.ApiDoc;
+import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -41,6 +43,7 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
@@ -166,6 +169,23 @@ public class CompetenceController extends ControllerHelper {
                     Renders.renderJson(request, event.right().getValue());
                 }else{
                     leftToResponse(request, event.left());
+                }
+            }
+        });
+    }
+
+    @Delete("/items/:idEtablissement")
+    @ApiDoc("Supprimer toutes les données personnalisées sur les items d'un étbalissement donné")
+    @SecuredAction(value = "competence.delete.items")
+    public void delete(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                String idEtablissement = request.params().get("idEtablissement");
+                if(user != null && user.getStructures().contains(idEtablissement)){
+                    competencesService.delete(idEtablissement, defaultResponseHandler(request));
+                }else{
+                    unauthorized(request);
                 }
             }
         });

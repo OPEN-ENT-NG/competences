@@ -1,0 +1,150 @@
+<div class="twelve">
+
+    <h3>
+        <i18n>evaluations.competences.items.title</i18n>
+
+    </h3>
+    <div class="twelve">
+        <!-- Recherche de competences -->
+        <div class="twelve cell twelve-mobile">
+            <input type="text" ng-model="search.keyword" placeholder="rechercher une compétence" style="width: 99%;font-size: 1em;font-style: italic;">
+        </div>
+        <button class="marginFive right-magnet" ng-click="openDeletePersoItem()">
+            <i18n>evaluations.perso.delete</i18n>
+        </button>
+        <lightbox show="opened.lightboxDeletePersoItem" on-close="!opened.lightboxDeletePersoItem">
+            <p><i18n>evaluations.perso.item.delete.message</i18n></p>
+            <button class="marginFive magnet-right" ng-click="deletePersoItem()">
+                <i18n>evaluations.perso.ok</i18n>
+            </button>
+            <button data-ng-click="opened.lightboxDeletePersoItem=false;" class="right-magnet cancel">
+                <span><i18n>evaluations.perso.cancel</i18n></span>
+            </button>
+        </lightbox>
+        <lightbox show="opened.lightboxCreateItem" on-close="!opened.lightboxCreateItem">
+            <container template="lightboxContainerCreateItem"></container>
+        </lightbox>
+    </div>
+    <div class="twelve">
+
+        <p class="inline-block">
+            <input type="radio" ng-model="searchBilan.parDomaine" value="false">
+            <span>
+                            <i18n>evaluation.search.by.enseignements</i18n>
+                        </span>
+        </p>
+        <p class="inline-block">
+            <input type="radio" ng-model="searchBilan.parDomaine" value="true">
+            <span>
+                            <i18n>evaluation.search.by.domaines</i18n>&nbsp;
+                             <i18n>evaluation.search.read.only</i18n>
+                        </span>
+        </p>
+    </div>
+    <!-- <div class="twelve tabs vertical-spacing-twice heading-tabs"> -->
+    <div class="zero">
+        <header ng-repeat="cycle in cycles"
+                ng-class="{selected : cycle.selected}"
+                class="horizontal-spacing-twice ng-scope">
+            <div class="horizontal-spacing"  ng-click="selectCycle(cycle);">
+                <span><i18n><span class="no-style ng-scope">[[cycle.libelle]]</span></i18n></span>
+            </div>
+        </header>
+    </div>
+</div>
+<div class="row">
+    <script type="text/ng-template"  id="tree_item_renderer.html">
+
+        <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }"
+            class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1"
+            ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">
+            [[domaine.codification]] - [[domaine.libelle]]
+        </h4>
+        <div ng-class="{'openedSectionDom' : domaine.OpenDom}"
+             ng-if="domaine.competences.all.length > 0"
+             class="twelve cell"
+             style='height: auto;'>
+
+            <h4 ng-class="{'openedDom' : domaine.OpenSousDom}"
+                class="margin-top-1em Domaine"
+                ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0"
+                ng-click="domaine.OpenSousDom = !domaine.OpenSousDom"
+                ng-init="domaine.OpenSousDom = false">
+                [[domaine.codification]] - [[domaine.libelle]]
+            </h4>
+            <div ng-class="{'margin-top-1em': domaine.competences.length > 0, 'openedSectionDom': domaine.OpenSousDom}"
+                 style='height: auto;'>
+
+                <div ng-class="{'zero': competence.hide && search.keyword !== ''}"
+                        class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)"
+                     ng-repeat="competence in domaine.competences.all|filter:customFilterComp(competence,search)">
+
+                    <div tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                        <span ng-bind-html="competence.nomhtml"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div ng-repeat="domaine in domaine.domaines.all"
+             ng-include="'tree_item_renderer.html'">
+        </div>
+    </script>
+    <div class="content-suivi-eleve card bilan-suivi-eleve">
+        <div ng-if="searchBilan.parDomaine === 'true'"  class="row patchwork">
+            <div    class="padding-left"
+                    ng-repeat="domaine in lastSelectedCycle.domaines.all"
+                    ng-include="'tree_item_renderer.html'">
+            </div>
+        </div>
+        <div ng-if="searchBilan.parDomaine === 'false'" class="row patchwork">
+            <div class="padding-left"
+                 ng-repeat="enseignement in lastSelectedCycle.enseignements.all|filter:customFilterEns(search.keyword,
+                 enseignementsFilter,competencesFilter, search)"
+            >
+                <h4 ng-class="{'openedDom': enseignement.OpenDom, 'Domaine': enseignement.competences.all.length > 0 }"
+                    class="margin-top-1em twelve cell " ng-click="enseignement.OpenDom = !enseignement.OpenDom"
+                    ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
+                <div
+                        ng-class="{'openedSectionDom' : enseignement.OpenDom}"
+                        class="twelve cell" style='height: auto;'>
+                    <div ng-repeat="connaissance in enseignement.competences.all"
+                         ng-init="connaissance.OpenSousDom = false; connaissance.action = false"
+                         ng-mouseover="connaissance.action = true"
+                         ng-mouseleave="connaissance.action = false">
+                        <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}"
+                            class="margin-top-1em Domaine six inline-block"
+                            ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom">
+                           [[connaissance.nom]]
+                        </h3>
+                        <h3 data-ng-click="opened.lightboxCreateItem = true"
+                                class="inline-block"><i ng-show="connaissance.action" class="plus"></i></h3>
+                        <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
+                        'openedSectionDom' : connaissance.OpenSousDom}"
+                             style='height: auto;'>
+
+                            <div class="suivi-eleve-item competence-line"
+                                 ng-repeat="competence in connaissance.competences.all"
+                                 ng-class="{'zero': competencesFilter[competence.id+'_'+competence.id_enseignement].data.open
+                                            === false && search.keyword !== ''}">
+
+                                <div ng-class="{'selected-item': lastCompetence.id === competence.id}"
+                                     ng-click="openItemDomaine(competence,competencesFilter,lastSelectedCycle.domaines)"
+                                        tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                                    <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                        <span ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
+                                        </span>
+                                    </span>
+                                </div>
+                                <container
+                                        template="patchwork[[competence.id]]" class="flexible content cell">
+                                </container>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

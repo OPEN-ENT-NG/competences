@@ -76,6 +76,10 @@ public class EnseignementController extends ControllerHelper {
                     if (request.params().contains("idClasse")) {
                         idClasse = request.params().get("idClasse");
                     }
+                    final String idStructure = request.params().get("idStructure");
+                    if (null != idStructure) {
+                        idClasse = null;
+                    }
 
                     JsonArray sortedJsonArray = new JsonArray();
                     List<JsonObject> jsonList = new ArrayList<JsonObject>();
@@ -98,15 +102,15 @@ public class EnseignementController extends ControllerHelper {
                     }
 
                     _datas.putArray("enseignements", sortedJsonArray);
-
                     final String finalIdClasse = idClasse;
 
-                    competencesService.getCompetencesByLevel("id_type = 1", finalIdClasse, new Handler<Either<String, JsonArray>>() {
+
+                    competencesService.getCompetencesByLevel(idStructure,"id_type = 1", finalIdClasse, new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> eventCompetences_1) {
                             if (eventCompetences_1.right().isRight()) {
                                 _datas.putArray("_competences_1", eventCompetences_1.right().getValue());
-                                competencesService.getCompetencesByLevel("id_type = 2", finalIdClasse, new Handler<Either<String, JsonArray>>() {
+                                competencesService.getCompetencesByLevel(idStructure,"id_type = 2", finalIdClasse, new Handler<Either<String, JsonArray>>() {
                                     @Override
                                     public void handle(Either<String, JsonArray> eventCompetences_2) {
                                         if (eventCompetences_2.right().isRight()) {

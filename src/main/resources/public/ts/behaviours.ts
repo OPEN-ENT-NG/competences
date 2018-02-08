@@ -1,5 +1,6 @@
 import {Behaviours, http} from 'entcore';
 import { averageBFC } from './sniplets/averageBFC';
+import { itemsCompetences } from './sniplets/itemsCompetences';
 
 Behaviours.register('competences', {
     rights: {
@@ -11,6 +12,7 @@ Behaviours.register('competences', {
     },
     loadResources: async function(callback) {},
     sniplets: {
-        averageBFC: averageBFC
+        averageBFC: averageBFC,
+        itemsCompetences: itemsCompetences
     }
 });
