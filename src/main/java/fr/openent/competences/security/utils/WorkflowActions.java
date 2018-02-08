@@ -4,8 +4,7 @@ package fr.openent.competences.security.utils;
  * Created by ledunoiss on 01/06/2017.
  */
 public enum WorkflowActions {
-	CREATE_EVALUATION ("competences.create.evaluation"),
-	PARAM_COMPETENCE_RIGHT ("competences.param.competences");
+	CREATE_EVALUATION ("competences.create.evaluation");
 
 	private final String actionName;
 

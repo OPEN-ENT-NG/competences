@@ -44,8 +44,6 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.*;
-
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
@@ -59,7 +57,6 @@ public class CompetenceController extends ControllerHelper {
     private final CompetencesService competencesService;
 
     public CompetenceController(EventBus eb) {
-        this.eb = eb;
         competencesService = new DefaultCompetencesService(eb);
     }
 
@@ -205,15 +202,10 @@ public class CompetenceController extends ControllerHelper {
     @ApiDoc("Crée une nouvelle compétence")
     @SecuredAction(Competences.PARAM_COMPETENCE_RIGHT)
     public void createCompetence(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+        RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_CREATE, new Handler<JsonObject>() {
             @Override
-            public void handle(final UserInfos user) {
-                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_CREATE, new Handler<JsonObject>() {
-                    @Override
-                    public void handle(final JsonObject competence) {
-                        competencesService.create(competence, defaultResponseHandler(request));
-                    }
-                });
+            public void handle(final JsonObject competence) {
+                competencesService.create(competence, defaultResponseHandler(request));
             }
         });
     }
@@ -226,38 +218,9 @@ public class CompetenceController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_UPDATE, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject competence) {
-                Map.Entry<String, String> id =
-                        new AbstractMap.SimpleEntry<>("id", String.valueOf(competence.getNumber("id")));
-                ArrayList<Map.Entry<String, Object>> param = new ArrayList(Collections.singletonList(id));
-                competencesService.getCompetences(param,
-                        new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                                if(stringJsonArrayEither.isLeft() || stringJsonArrayEither.right().getValue().size() > 1) {
-                                    Either.Left<String, Object> error = new Either.Left<>(
-                                            stringJsonArrayEither.isLeft()
-                                            ? stringJsonArrayEither.left().getValue()
-                                            : "An error occured while gathering the competences");
-                                    leftToResponse(request, error);
-                                } else {
-                                    JsonObject compBDD = stringJsonArrayEither.right().getValue().get(0);
-                                    for(Map.Entry<String,Object> prop : competence.toMap().entrySet()) {
-                                        if(!compBDD.containsField(prop.getKey())
-                                                || compBDD.getField(prop.getKey()).equals(prop.getValue())) {
-                                            competence.removeField(prop.getKey());
-                                        } else if ("ids_domaine".equals(prop.getKey())
-                                                && compBDD.getBoolean("manuelle")) {
-                                            competence.removeField(prop.getKey());
-                                        }
-                                    }
-                                    if(competence.size() != 0) {
-                                        competencesService.update(competence, defaultResponseHandler(request));
-                                    } else {
-                                        leftToResponse(request, new Either.Left<>("No field to update"));
-                                    }
-                                }
-                            }
-                        });
+                Number idComp = Long.valueOf(request.params().get("id"));
+                String idEtablissement = request.params().get("idEtablissement");
+                competencesService.update(idComp, idEtablissement, competence, defaultResponseHandler(request));
             }
         });
     }

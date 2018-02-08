@@ -32,6 +32,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import org.entcore.common.controller.ControllerHelper;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -53,7 +54,7 @@ public class EnseignementController extends ControllerHelper {
     private final EnseignementService enseignementService;
     private final CompetencesService competencesService;
 
-    public EnseignementController() {
+    public EnseignementController(EventBus eb) {
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         competencesService = new DefaultCompetencesService(eb);
     }

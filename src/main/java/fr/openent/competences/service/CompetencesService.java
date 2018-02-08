@@ -33,24 +33,16 @@ import java.util.Map;
  */
 public interface CompetencesService extends CrudService {
 
-
     /**
      * Récupération des compétences évaluables (feuille de l'arbre) du cycle donné.
      *
-     * @param idStructure l'identifiant de la structure.
      * @param idClasse l'identifiant de la classe.
-     * @param handler handler portant le résultat de la requête
+     * @param handler  handler portant le résultat de la requête
      */
-    void getCompetencesItem(String idStructure, String idClasse, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesItem(String idEtablissement, String idClasse,
+                            Handler<Either<String, JsonArray>> handler);
 
-    void getCompetences(List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler);
-
-    //    @Override
-    //    public void getCompetences(List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler) {
-    //        getCompetences(null, null, params, handler);
-    //    }
-    //
-    void getCompetences(String idEtablissement, List<Map.Entry<String, Object>> params, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesItem(String idEtablissement, Number idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Setter des compétences pour un devoir donné
@@ -89,7 +81,10 @@ public interface CompetencesService extends CrudService {
      * @param  idClasse : identifiant de la classe
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesByLevel(String idEtablissement,String filter, String idClasse, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesByLevel(String filter, String idClasse, Handler<Either<String, JsonArray>> handler);
+
+    void getCompetencesByLevel(String idEtablissement, String filter, String idClasse,
+                               Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère les compétences des domaines dont l'id est passé en paramètre
@@ -102,7 +97,7 @@ public interface CompetencesService extends CrudService {
 
     void isCompManuelle(Number id, Handler<Either<String, Boolean>> handler);
 
-    void update(JsonObject competence, Handler<Either<String, JsonObject>> handler);
+    void update(Number id, String idEtablissement, final JsonObject competence, final Handler<Either<String, JsonObject>> handler);
 
     void delete(Number id, String idEtablissement, Handler<Either<String, JsonObject>> handler);
     /**

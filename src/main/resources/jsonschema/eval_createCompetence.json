@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
-  "additionalProperties": true,
+  "additionalProperties": false,
   "properties": {
     "nom": {
       "type": "string"
@@ -10,16 +10,19 @@
       "type": "string"
     },
     "id_parent": {
-      "type": "integer"
+      "type": "number"
     },
     "id_type": {
-      "type": "integer"
+      "type": "number"
     },
     "id_cycle": {
-      "type": "integer"
+      "type": "number"
     },
     "id_enseignement": {
-      "type": "integer"
+      "type": "number"
+    },
+    "id_domaine": {
+      "type": "number"
     }
   },
   "required": [
@@ -27,6 +30,8 @@
     "id_parent",
     "id_cycle",
     "id_type",
-    "id_enseignement"
+    "id_enseignement",
+    "id_etablissement",
+    "id_domaine"
   ]
 }

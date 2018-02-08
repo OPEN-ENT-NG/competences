@@ -34,6 +34,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import org.entcore.common.controller.ControllerHelper;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
@@ -57,7 +58,7 @@ public class DomaineController extends ControllerHelper {
     private final CompetencesService competencesService;
     private final DomainesService domainesService;
 
-    public DomaineController() {
+    public DomaineController(EventBus eb) {
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         competencesService = new DefaultCompetencesService(eb);
         domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
@@ -89,9 +90,11 @@ public class DomaineController extends ControllerHelper {
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
                                 public void handle(Either<String, JsonArray> event) {
-                                    if (event.right().isRight()) {
+                                    if (event.isRight()) {
+
                                         // La liste des competences evaluables du cycle (feuilles)
                                         JsonArray oCompetencesItemArray = event.right().getValue();
+
 
                                         // 3 - Positionnement des compétences sur les domaines
                                         for (int i = 0; i < oCompetencesItemArray.size(); i++) {
@@ -119,6 +122,7 @@ public class DomaineController extends ControllerHelper {
 
                                         }
 
+
                                         // 4 - Construction de l'arbre des domaines à partir de la liste ordonnée
                                         for (int i = 0; i < oDomainesArray.size(); i++) {
                                             JsonObject oDomaineAinserer = oDomainesArray.get(i);
@@ -137,6 +141,7 @@ public class DomaineController extends ControllerHelper {
                                             }
 
                                         }
+
                                         Renders.renderJson(request, oArbreDomainesArray);
                                     } else {
                                         leftToResponse(request, event.left());

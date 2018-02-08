@@ -98,8 +98,8 @@ public class Competences extends BaseServer {
         devoirController.setCrudService(devoirSqlCrudService);
         devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions, null));
         addController(devoirController);
-		addController(new DomaineController());
-		addController(new EnseignementController());
+		addController(new DomaineController(eb));
+		addController(new EnseignementController(eb));
 		addController(new ExportPDFController(eb, notification));
 		addController(new LSUController(eb));
 		addController(new NiveauDeMaitriseController());

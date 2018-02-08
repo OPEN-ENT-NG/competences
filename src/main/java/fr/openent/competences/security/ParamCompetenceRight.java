@@ -1,7 +1,7 @@
 package fr.openent.competences.security;
 
+import fr.openent.competences.Competences;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
-import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
@@ -19,6 +19,6 @@ public class ParamCompetenceRight implements ResourcesProvider {
 
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user, final Handler<Boolean> handler) {
-        handler.handle(WorkflowActionUtils.hasRight(user, WorkflowActions.PARAM_COMPETENCE_RIGHT.toString()));
+        handler.handle(WorkflowActionUtils.hasRight(user, Competences.PARAM_COMPETENCE_RIGHT));
     }
 }

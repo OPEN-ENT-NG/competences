@@ -1,24 +1,16 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "id_competence": {
-      "type": "number"
-    },
     "nom": {
       "type": "string"
     },
-    "id_etablissement": {
+    "ids_domaine": {
       "type": "string"
-    },
-    "id_domaine": {
-      "type": "array"
     },
     "masque": {
       "type": "boolean"
     }
-  },
-  "required": [
-    "id"
-  ]
+  }
 }
