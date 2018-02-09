@@ -17,6 +17,7 @@ export const itemsCompetences = {
                 domaines: false,
                 enseingments: false
             };
+            this.opened.errorDeletePersoItem = false;
             this.lastSelectedCycle = this.$parent.lastSelectedCycle;
             this.showCompetencesDomaine = {};
             this.displayFilterDomaine = false;
@@ -28,6 +29,11 @@ export const itemsCompetences = {
                 this.search.haschange = (newValue !== oldValue);
                 utils.safeApply(this);
             });
+            this.getCompetences();
+        },
+        initSource: function () {
+        },
+        getCompetences: function () {
             http().getJson(`/competences/domaines?idStructure=${this.idStructure}`)
                 .done((resDomaines) => {
                     if (resDomaines) {
@@ -76,8 +82,6 @@ export const itemsCompetences = {
                 this.synchronized.enseignements = true;
                 this.initCycles();
             }.bind(this));
-        },
-        initSource: function () {
         },
         initCycles: function () {
             if (this.synchronized.enseignements && this.synchronized.domaines) {
@@ -168,14 +172,15 @@ export const itemsCompetences = {
         deletePersoItem: function () {
             http().delete(`/competences/items/${this.idStructure}`)
                 .done((res) => {
-                    // this.getPersoItem().then(() => {
-                    console.log('delete work');
                     this.opened.lightboxDeletePersoItem = false;
+                    this.opened.errorDeletePersoItem = false;
+                    this.getCompetences();
                     utils.safeApply(this);
-                    // });
                 })
-                .error(function () {
+                .error( () => {
+                    this.opened.errorDeletePersoItem = true;
                     console.log('delete not work');
+                    utils.safeApply(this);
                 }).bind(this);
         }
     }

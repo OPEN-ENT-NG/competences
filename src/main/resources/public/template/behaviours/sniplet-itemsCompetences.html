@@ -13,7 +13,10 @@
             <i18n>evaluations.perso.delete</i18n>
         </button>
         <lightbox show="opened.lightboxDeletePersoItem" on-close="!opened.lightboxDeletePersoItem">
-            <p><i18n>evaluations.perso.item.delete.message</i18n></p>
+            <p ng-hide="opened.errorDeletePersoItem"><i18n>evaluations.perso.item.delete.message</i18n></p>
+            <div class="warning" ng-show="opened.errorDeletePersoItem">
+                <p><i18n>evaluations.perso.item.delete.error</i18n></p>
+            </div>
             <button class="marginFive magnet-right" ng-click="deletePersoItem()">
                 <i18n>evaluations.perso.ok</i18n>
             </button>

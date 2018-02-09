@@ -36,6 +36,7 @@ import org.vertx.java.core.logging.impl.LoggerFactory;
 import java.util.Map;
 
 import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
+import static fr.openent.competences.Competences.PERSO_COMPETENCES_TABLE;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
@@ -534,9 +535,11 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void deleteCustom(String idEtablissement, Handler<Either<String, JsonObject>> handler) {
         JsonArray statements = new JsonArray();
 
-        // SUPPRESSION DE COMPETENCES MANUELLES
-        StringBuilder query = new StringBuilder().append(" DELETE FROM " + Competences.COMPETENCES_SCHEMA)
-                .append(".competences WHERE id_etablissement = ? ");
+        // SUPPRESSION DE COMPETENCES MANUELLES NON UTILISEES
+        StringBuilder query = new StringBuilder().append(" DELETE FROM " + COMPETENCES_TABLE)
+                .append(" WHERE id_etablissement = ? AND id NOT IN (SELECT  DISTINCT id_competence FROM ")
+                .append(COMPETENCES_DEVOIRS_TABLE + " WHERE id_competence IS NOT NULL )")
+                .append(" AND id_etablissement IS NOT NULL ");
         JsonArray params = new JsonArray();
         params.addString(idEtablissement);
         statements.add(new JsonObject()
@@ -544,15 +547,31 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 .putArray("values", params)
                 .putString("action", "prepared"));
 
-        // SSUPPRESSION D'INFO PERSO
-        StringBuilder query_perso = new StringBuilder().append("DELETE FROM " + Competences.COMPETENCES_SCHEMA)
-                .append(".perso_competences WHERE id_etablissement = ? ");
-        JsonArray params_perso = new JsonArray();
+        // SUPPRESSION D'INFO PERSONNALISATION
+        StringBuilder queryPerso = new StringBuilder().append("DELETE FROM " + COMPETENCES_PERSO_TABLE)
+                .append(" WHERE id_etablissement = ? ");
+        JsonArray paramsPerso = new JsonArray();
 
-        params_perso.addString(idEtablissement);
+        paramsPerso.addString(idEtablissement);
         statements.add(new JsonObject()
-                .putString("statement", query_perso.toString())
-                .putArray("values", params_perso)
+                .putString("statement", queryPerso.toString())
+                .putArray("values", paramsPerso)
+                .putString("action", "prepared"));
+
+        // CREER PERSO DE MASQUAGE
+        StringBuilder queryMask = new StringBuilder()
+                .append("INSERT INTO "+ COMPETENCES_PERSO_TABLE + " (id_competence, masque, id_etablissement) ( ")
+                .append(" SELECT DISTINCT competences_devoirs.id_competence, true, id_etablissement ")
+                .append(" FROM " + COMPETENCES_DEVOIRS_TABLE)
+                .append(" INNER JOIN " + COMPETENCES_TABLE)
+                .append(" ON competences_devoirs.id_competence = competences.id AND id_etablissement = ? )")
+                .append(" ON CONFLICT (id_competence, id_etablissement) DO UPDATE SET masque = true ");
+        JsonArray paramsMask = new JsonArray();
+
+        paramsMask.addString(idEtablissement);
+        statements.add(new JsonObject()
+                .putString("statement", queryMask.toString())
+                .putArray("values", paramsMask)
                 .putString("action", "prepared"));
         Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
     }
