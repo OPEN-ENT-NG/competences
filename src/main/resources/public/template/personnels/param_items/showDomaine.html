@@ -1,12 +1,13 @@
 <script type="text/ng-template"  id="tree_items_renderer.html">
-    <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }"
+    <!-- ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }" -->
+    <h4
         class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1"
         ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">
 
         <label ng-if="domaine.competences.all.length > 0" class="checkbox">
             <input type="checkbox"
-                   ng-init="selectDomaine(domaine)"
-                   ng-click=";"
+                   ng-init="initSelectDomaine(domaine)"
+                   ng-click="selectDomaine(domaine)"
                    ng-model="domaine.selected">
             <span></span>
         </label> [[domaine.codification]] - [[domaine.libelle]]
@@ -16,7 +17,8 @@
          class="twelve cell"
          style='height: auto;'>
 
-        <h4 ng-class="{'openedDom' : domaine.OpenSousDom}"
+        <!-- ng-class="{'openedDom' : domaine.OpenSousDom}" -->
+        <h4
             class="margin-top-1em Domaine"
             ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0"
             ng-click="domaine.OpenSousDom = !domaine.OpenSousDom"
@@ -24,7 +26,8 @@
 
             <label class="checkbox">
                 <input type="checkbox"
-                       ng-click=";"
+                       ng-init="initSelectDomaine(domaine);"
+                       ng-click="selectDomaine(domaine);"
                        ng-init="selectDomaine(domaine)"
                        ng-model="domaine.selected">
                 <span></span>

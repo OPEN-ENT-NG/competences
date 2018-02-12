@@ -1,4 +1,4 @@
-import {_, http} from 'entcore';
+import {_, http, template} from 'entcore';
 import {Domaine} from '../models/teacher';
 import * as utils from '../utils/teacher';
 
@@ -6,8 +6,10 @@ import * as utils from '../utils/teacher';
 export const itemsCompetences = {
     title: 'Ajout/Modification items de compétences',
     description: "Permet d'ajouter ou de modifier les items de compétences pour un établissement",
+    that: undefined,
     controller: {
         init: function () {
+            itemsCompetences.that = this;
             this.idStructure = this.source.idStructure;
             this.cycles = this.source.cycles;
             this.search = {
@@ -18,17 +20,12 @@ export const itemsCompetences = {
                 enseingments: false
             };
             this.opened.errorDeletePersoItem = false;
+            this.newItem = {};
+            this.opened = this.$parent.opened;
             this.lastSelectedCycle = this.$parent.lastSelectedCycle;
             this.showCompetencesDomaine = {};
             this.displayFilterDomaine = false;
-            this.$watch(() => this.$parent.lastSelectedCycle, () => {
-                this.lastSelectedCycle = this.$parent.lastSelectedCycle;
-                utils.safeApply(this);
-            });
-            this.$watch( () => this.search.keyword, (newValue, oldValue) => {
-                this.search.haschange = (newValue !== oldValue);
-                utils.safeApply(this);
-            });
+            this.enableWatchers();
             this.getCompetences();
         },
         initSource: function () {
@@ -43,15 +40,15 @@ export const itemsCompetences = {
                             let domaine = new Domaine(resDomaines[i]);
                             _res.push(domaine);
                         }
-                        this.domaines = {
+                        itemsCompetences.that.domaines = {
                             all: _res
                         };
-                        this.synchronized.domaines = true;
+                        itemsCompetences.that.synchronized.domaines = true;
                     }
                 })
                 .error(function () {
                     console.log('domaine not founded');
-                    this.domaines = {
+                    itemsCompetences.that.domaines = {
                         all: []
                     };
                 }).bind(this);
@@ -76,19 +73,29 @@ export const itemsCompetences = {
                     });
                     delete enseignement['competences_1'];
                 });
-                this.enseignements = {
+                itemsCompetences.that.enseignements = {
                     all: res
                 };
-                this.synchronized.enseignements = true;
-                this.initCycles();
+                itemsCompetences.that.synchronized.enseignements = true;
+                itemsCompetences.that.initCycles();
             }.bind(this));
+        },
+        enableWatchers: function () {
+            this.$watch(() => this.$parent.lastSelectedCycle, () => {
+                this.lastSelectedCycle = this.$parent.lastSelectedCycle;
+                utils.safeApply(this);
+            });
+            this.$watch( () => this.search.keyword, (newValue, oldValue) => {
+                this.search.haschange = (newValue !== oldValue);
+                utils.safeApply(this);
+            });
         },
         initCycles: function () {
             if (this.synchronized.enseignements && this.synchronized.domaines) {
                 let domaines = _.groupBy(this.domaines.all, 'id_cycle');
                 for (let index in domaines) {
                     let cycle = _.findWhere(this.source.cycles, {id_cycle: parseInt(index)});
-                    if (cycle !== undefined) {
+                    if (cycle !== undefined ) {
                         cycle.domaines = {
                             all: domaines[index]
                         };
@@ -122,21 +129,21 @@ export const itemsCompetences = {
             }
         },
         initFilter: function (pbInitSelected) {
-            this.enseignementsFilter = {};
-            this.competencesFilter = {};
-            this._domaines = [];
-            this.showCompetencesDomaine = {};
-            this.displayFilterDomaine = false;
-            for (let i = 0; i < this.enseignements.all.length; i++) {
-                let currEnseignement = this.enseignements.all[i];
-                this.enseignementsFilter[currEnseignement.id] = {
+            itemsCompetences.that.enseignementsFilter = {};
+            itemsCompetences.that.competencesFilter = {};
+            itemsCompetences.that._domaines = [];
+            itemsCompetences.that.showCompetencesDomaine = {};
+            itemsCompetences.that.displayFilterDomaine = false;
+            for (let i = 0; i < itemsCompetences.that.enseignements.all.length; i++) {
+                let currEnseignement = itemsCompetences.that.enseignements.all[i];
+                itemsCompetences.that.enseignementsFilter[currEnseignement.id] = {
                     isSelected: pbInitSelected,
                     nomHtml: currEnseignement.nom
                 };
                 // on initialise aussi les compétences
                 this.initFilterRec(currEnseignement.competences, pbInitSelected);
             }
-            this._domaines = _.sortBy(this._domaines, 'code_domaine');
+            itemsCompetences.that._domaines = _.sortBy(this._domaines, 'code_domaine');
         },
 
         /**
@@ -153,11 +160,12 @@ export const itemsCompetences = {
                 for (let i = 0; i < poCompetences.all.length; i++) {
                     let currCompetence = poCompetences.all[i];
                     if ((currCompetence.ids_domaine_int !== undefined && currCompetence.ids_domaine_int[0].lengh === 1
-                            && this.showCompetencesDomaine[currCompetence.ids_domaine_int[0]] === true)
-                        || this.showCompetencesDomaine.length === undefined) {
+                            && itemsCompetences.that.showCompetencesDomaine[currCompetence.ids_domaine_int[0]] === true)
+                        || itemsCompetences.that.showCompetencesDomaine.length === undefined) {
                         comp = _.findWhere(poCompetences.all, {id: poCompetences.all[i].id}) !== undefined;
                         if (comp !== undefined) _b = false;
-                        this.competencesFilter[currCompetence.id + '_' + currCompetence.id_enseignement] = {
+                        itemsCompetences.that.competencesFilter[
+                            currCompetence.id + '_' + currCompetence.id_enseignement] = {
                             isSelected: _b,
                             nomHtml: currCompetence.nom,
                             data: currCompetence
@@ -171,7 +179,7 @@ export const itemsCompetences = {
 
         deletePersoItem: function () {
             http().delete(`/competences/items/${this.idStructure}`)
-                .done((res) => {
+                .done(() => {
                     this.opened.lightboxDeletePersoItem = false;
                     this.opened.errorDeletePersoItem = false;
                     this.getCompetences();
@@ -182,6 +190,91 @@ export const itemsCompetences = {
                     console.log('delete not work');
                     utils.safeApply(this);
                 }).bind(this);
+        },
+
+        // suppression de la personnalisation des items de compétences
+        openDeletePersoItem: function () {
+            this.opened.lightboxDeletePersoItem = true;
+        },
+        openCreateItem: function (connaissance, domaines) {
+            this.itemsCompetences.that.opened.lightboxCreateItem = true;
+            this.itemsCompetences.that.newItem = {
+                nom: undefined,
+                id_parent: connaissance.id,
+                id_cycle: connaissance.id_cycle,
+                id_enseignement: connaissance.id_enseignement,
+                id_type: 2,
+                ids_domaine: connaissance.ids_domaine_int,
+                id_etablissement: this.itemsCompetences.that.structure.id
+            };
+            this.itemsCompetences.that.printDomaines = _.clone(domaines);
+            this.itemsCompetences.that.selectedDomaines = this.itemsCompetences.that.newItem.ids_domaine;
+            utils.safeApply(this.itemsCompetences.that);
+        }.bind(this),
+
+        initSelectDomaine: function (domaine) {
+            domaine.selected = _.contains(this.itemsCompetences.that.selectedDomaines, domaine.id);
+        }.bind(this),
+
+        selectDomaine: function (domaine) {
+            if (domaine.selected && ! _.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id) ) {
+                this.itemsCompetences.that.newItem.ids_domaine.push(domaine.id);
+            }
+            else if (!domaine.selected) {
+                this.itemsCompetences.that.newItem.ids_domaine =
+                    _.without(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
+            }
+        }.bind(this),
+
+        // Affichage des Domaines d'une compétence
+        openItemDomaine: function (competence, competencesFilter, domaines) {
+            let _c = competencesFilter[competence.id + '_' + competence.id_enseignement];
+            this.itemsCompetences.that.printDomaines = _.clone(domaines);
+            this.itemsCompetences.that.selectedDomaines = _c.data.ids_domaine_int;
+            if (template.isEmpty('patchwork' + competence.id)) {
+                template.open('patchwork' + competence.id,
+                    '../../../competences/public/template/personnels/param_items/showDomaine');
+            }
+            else {
+                template.close('patchwork' + competence.id);
+            }
+            if (this.itemsCompetences.that.lastCompetence !== undefined
+                && this.itemsCompetences.that.lastCompetence.id !== competence.id
+                && !template.isEmpty('patchwork' + this.itemsCompetences.that.lastCompetence.id)) {
+                template.close('patchwork' + this.itemsCompetences.that.lastCompetence.id);
+                utils.safeApply(this.itemsCompetences.that);
+            }
+            this.itemsCompetences.that.lastCompetence = competence;
+            utils.safeApply(this.itemsCompetences.that);
+        }.bind(this),
+
+        jsonCreateItem: function (item) {
+            return {
+                nom: item.nom,
+                id_etablissement: item.id_etablissement,
+                id_parent: item.id_parent,
+                id_type: item.id_type,
+                id_cycle: item.id_cycle,
+                id_enseignement: item.id_enseignement,
+                ids_domaine: item.ids_domaine
+            };
+        },
+        saveItem: function (item, action) {
+            switch (action) {
+                case 'create': {
+                    http().postJson(`competences/competence`, this.jsonCreateItem(item))
+                        .done(() => {
+                            this.opened.lightboxCreateItem = false;
+                            this.getCompetences();
+                            utils.safeApply(this);
+                        })
+                        .error(function () {
+                            this.opened.lightboxCreateItem = false;
+                            console.log(' error createItem');
+                        }).bind(this);
+                }
+                default: break;
+            }
         }
     }
 };

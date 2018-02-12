@@ -24,7 +24,7 @@
                 <span><i18n>evaluations.perso.cancel</i18n></span>
             </button>
         </lightbox>
-        <lightbox show="opened.lightboxCreateItem" on-close="!opened.lightboxCreateItem">
+        <lightbox show="opened.lightboxCreateItem" on-close="opened.lightboxCreateItem=!opened.lightboxCreateItem">
             <container template="lightboxContainerCreateItem"></container>
         </lightbox>
     </div>
@@ -120,7 +120,7 @@
                             ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom">
                            [[connaissance.nom]]
                         </h3>
-                        <h3 data-ng-click="opened.lightboxCreateItem = true"
+                        <h3 data-ng-click="openCreateItem(connaissance,lastSelectedCycle.domaines);"
                                 class="inline-block"><i ng-show="connaissance.action" class="plus"></i></h3>
                         <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
                         'openedSectionDom' : connaissance.OpenSousDom}"
@@ -135,7 +135,7 @@
                                      ng-click="openItemDomaine(competence,competencesFilter,lastSelectedCycle.domaines)"
                                         tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
                                     <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
-                                        <span ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
+                                        <span   ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
                                         </span>
                                     </span>
                                 </div>

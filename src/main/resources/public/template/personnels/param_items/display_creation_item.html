@@ -1,0 +1,42 @@
+<div class="row">
+    <div class="cell twelve legend">
+
+        <h4>
+            <i18n>viescolaire.create.item</i18n>
+        </h4>
+
+
+        <div class="separator"></div>
+
+    </div>
+
+
+    <div  class="cell twelve">
+        <!-- Libelle -->
+    <section class="row twelve-mobile">
+        <div class="three cell twelve-mobile">
+            <i18n>viescolaire.libelle</i18n>
+            <i class="asterisk obligatoire"></i>
+        </div>
+
+        <div class="nine cell twelve-mobile">
+            <input type="text" class="eleven twelve-mobile" ng-model="newItem.nom">
+        </div>
+    </section>
+        <section ng-include="'../../../competences/public/template/personnels/param_items/showDomaine.html'">
+        </section>
+        <div class="twelve cell">
+            <input type="button"
+                   ng-disabled="isStringUndefinedOrEmpty(newItem.nom)|| newItem.ids_domaine.length === 0"
+                   ng-click="saveItem(newItem, 'create')"
+                   i18n-value="viescolaire.utils.save">
+
+            <div ng-if="!isModif" class="three cell right-magnet">
+                <button data-ng-click="opened.lightboxCreateItem = false" class="right-magnet cancel">
+                    <span><i18n>evaluations.remplacement.cancel</i18n></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+</div>
