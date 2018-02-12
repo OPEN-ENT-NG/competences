@@ -3,11 +3,17 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
+    "id": {
+      "type": "number"
+    },
+    "id_etablissement": {
+      "type": "string"
+    },
     "nom": {
       "type": "string"
     },
     "ids_domaine": {
-      "type": "string"
+      "type": "array"
     },
     "masque": {
       "type": "boolean"

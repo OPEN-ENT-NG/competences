@@ -21,8 +21,8 @@
     "id_enseignement": {
       "type": "number"
     },
-    "id_domaine": {
-      "type": "number"
+    "ids_domaine": {
+      "type": "array"
     }
   },
   "required": [
@@ -32,6 +32,6 @@
     "id_type",
     "id_enseignement",
     "id_etablissement",
-    "id_domaine"
+    "ids_domaine"
   ]
 }

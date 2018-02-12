@@ -146,7 +146,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void setDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray data = new JsonArray();
-        query.append("INSERT INTO "+ COMPETENCES_SCHEMA +".competences_devoirs (id_devoir, id_competence) VALUES ");
+        query.append("INSERT INTO " + COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence) VALUES ");
         for(int i = 0; i < values.size(); i++){
             query.append("(?, ?)");
             data.addNumber(devoirId);
@@ -165,7 +165,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void remDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray data = new JsonArray();
-        query.append("DELETE FROM "+ COMPETENCES_SCHEMA +".competences_devoirs WHERE ");
+        query.append("DELETE FROM " + COMPETENCES_SCHEMA + ".competences_devoirs WHERE ");
         for(int i = 0; i < values.size(); i++){
             query.append("(id_devoir = ? AND  id_competence = ?)");
             data.addNumber(devoirId);
@@ -327,26 +327,34 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     @Override
     public void create(JsonObject competence, Handler<Either<String, JsonObject>> handler) {
 
-        String query = "WITH new_competence AS(" +
-                "INSERT INTO " + COMPETENCES_TABLE + " (nom, id_parent, id_type, id_cycle, id_etablissement) " +
-                "VALUES (?, ?, ?, ?, ?) " +
-                "RETURNING id" +
-                ") INSERT INTO " + COMPETENCES_ENSEIGNEMENTS_TABLE + " SELECT id, ? FROM new_competence;" +
-                " INSERT INTO " + COMPETENCES_DOMAINES_TABLE + " SELECT id, ? FROM new_competence;";
+        String query = "WITH new_competence AS (" +
+                " INSERT INTO " + COMPETENCES_TABLE + " (nom, id_parent, id_type, id_cycle, id_etablissement)" +
+                " VALUES (?, ?, ?, ?, ?)" +
+                " RETURNING id)," +
+                " ens_insert AS (" +
+                " INSERT INTO " + COMPETENCES_ENSEIGNEMENTS_TABLE + " (id_competence, id_enseignement)" +
+                " SELECT id, ? FROM new_competence )" +
+                " INSERT INTO " + COMPETENCES_DOMAINES_TABLE + " (id_competence, id_domaine)" +
+                " SELECT id, unnest(" + Sql.arrayPrepared(competence.getArray("ids_domaine").toArray()) +
+                ") FROM new_competence;";
 
         JsonArray values = new JsonArray().addString(competence.getString("nom"))
                 .addNumber(competence.getInteger("id_parent"))
                 .addNumber(competence.getInteger("id_type"))
                 .addNumber(competence.getInteger("id_cycle"))
                 .addString(competence.getString("id_etablissement"))
-                .addNumber(competence.getInteger("id_domaine"));
+                .addNumber(competence.getNumber("id_enseignement"));
+
+        for(Object n : competence.getArray("ids_domaine")) {
+            values.addNumber((Number) n);
+        }
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
     @Override
     public void isCompManuelle(Number id, final Handler<Either<String, Boolean>> handler) {
-        String query = "SELECT CASE WHEN id_etablissement IS NULL THEN TRUE ELSE FALSE END AS isManuelle"
+        String query = "SELECT CASE WHEN id_etablissement IS NULL THEN FALSE ELSE TRUE END AS isManuelle"
                 + "FROM " + COMPETENCES_TABLE + " WHERE id = ?";
 
         sql.prepared(query, new JsonArray().addNumber(id), validUniqueResultHandler(
@@ -363,172 +371,235 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 }));
     }
 
-    private void updateDomain(final Number id, final String idsDomaine, final Handler<Either<String, JsonObject>> handler) {
+//    private void updateDomain(final Number idComp, final String idEtablissement,
+//                              final String idsDomaine, final Handler<Either<String, JsonObject>> handler) {
+//
+//        isCompManuelle(idComp, new Handler<Either<String, Boolean>>() {
+//            @Override
+//            public void handle(Either<String, Boolean> stringBooleanEither) {
+//                if(stringBooleanEither.isLeft()) {
+//                    handler.handle(new Either.Left<String, JsonObject>(stringBooleanEither.left().getValue()));
+//                } else if (!stringBooleanEither.right().getValue()) {
+//                    handler.handle(new Either.Left<String, JsonObject>("Impossible de mettre a jour les domaines" +
+//                            " d'une competence non-manuelle"));
+//                } else {
+//                    lastOfDomain(idComp, idEtablissement, new Handler<Either<String, JsonArray>>() {
+//                        @Override
+//                        public void handle(Either<String, JsonArray> stringJsonArrayEither) {
+//                            if(stringJsonArrayEither.isRight()) {
+//
+//                            } else {
+//                                handler.handle(new Either.Left<String, JsonObject>(stringJsonArrayEither.left().getValue()));
+//                            }
+//                        }
+//                    });
+//                }
+//            }
+//        });
+//        JsonArray transaction = new JsonArray();
+//
+//        String queryDelete = "DELETE FROM " + COMPETENCES_DOMAINES_TABLE
+//                + " WHERE id_competence = ? AND id_domaine NOT IN string_to_array(?)";
+//        String queryCreate = "INSERT INTO " + COMPETENCES_DOMAINES_TABLE
+//                + " VALUES (?, unnest(string_to_array(?)))"
+//                + " ON CONFLICT DO NOTHING RETURNING id_competence, string_agg(cast(id_domaine as text), ',') as ids_domaine";
+//        JsonArray values = new JsonArray().addNumber(id).addString(idsDomaine);
+//
+//        transaction.add(new JsonObject()
+//                .putString("statement", queryCreate)
+//                .putArray("values", values)
+//                .putString("action", "prepared"));
+//
+//        transaction.add(new JsonObject()
+//                .putString("statement", queryDelete)
+//                .putArray("values", values)
+//                .putString("action", "prepared"));
+//
+//        sql.transaction(transaction, validUniqueResultHandler(handler));
+//    }
 
-        JsonArray transaction = new JsonArray();
+//    private void hideComp(final Number id, final String idEtablissement,
+//                          final Handler<Either<String, JsonObject>> handler) {
+//        lastOfDomain(id, idEtablissement, new Handler<Either<String, Boolean>>() {
+//            @Override
+//            public void handle(Either<String, Boolean> stringBooleanEither) {
+//                if (stringBooleanEither.isLeft()) {
+//                    handler.handle(new Either.Left<String, JsonObject>(stringBooleanEither.left().getValue()));
+//                } else if (stringBooleanEither.right().getValue()){
+//                    handler.handle(new Either.Right<String, JsonObject>(
+//                            new JsonObject().putString("error", "Competence is the last of its domain")));
+//                } else {
+//                    updatePerso(id, idEtablissement, "masque", true, handler);
+//                }
+//            }
+//        });
+//    }
 
-        String queryDelete = "DELETE FROM " + COMPETENCES_DOMAINES_TABLE
-                + " WHERE id_competence = ? AND id_domaine NOT IN string_to_array(?)";
-        String queryCreate = "INSERT INTO " + COMPETENCES_DOMAINES_TABLE
-                + " VALUES (?, unnest(string_to_array(?)))"
-                + " ON CONFLICT DO NOTHING RETURNING id_competence, string_agg(cast(id_domaine as text), ',') as ids_domaine";
-        JsonArray values = new JsonArray().addNumber(id).addString(idsDomaine);
-
-        transaction.add(new JsonObject()
-                .putString("statement", queryCreate)
-                .putArray("values", values)
-                .putString("action", "prepared"));
-
-        transaction.add(new JsonObject()
-                .putString("statement", queryDelete)
-                .putArray("values", values)
-                .putString("action", "prepared"));
-
-        sql.transaction(transaction, validUniqueResultHandler(handler));
-    }
-
-    private void hideComp(final Number id, final String idEtablissement, final Boolean masque,
-                          final Handler<Either<String, JsonObject>> handler) {
-        lastOfDomain(id, idEtablissement, new Handler<Either<String, Boolean>>() {
+    private void changeNameComp(final Number idComp, final String idEtablissment, final String name, final Handler<Either<String, JsonObject>> handler) {
+        isCompManuelle(idComp, new Handler<Either<String, Boolean>>() {
             @Override
             public void handle(Either<String, Boolean> stringBooleanEither) {
-                if (stringBooleanEither.isLeft()) {
+                if(stringBooleanEither.isLeft()) {
                     handler.handle(new Either.Left<String, JsonObject>(stringBooleanEither.left().getValue()));
-                } else if (stringBooleanEither.right().getValue()){
-                    handler.handle(new Either.Right<String, JsonObject>(
-                            new JsonObject().putString("error", "Competence is the last of its domain")));
+                } else if (!stringBooleanEither.right().getValue()) {
+                    updatePerso(idComp, idEtablissment, "nom", name, handler);
                 } else {
-                    sql.prepared("UPDATE " + COMPETENCES_PERSO_TABLE
-                                    + " SET masque = ? WHERE id_competence = ? AND id_etablissement = ?"
-                                    + " RETURNING id_competence, masque",
-                            new JsonArray().addBoolean(masque).addNumber(id).addString(idEtablissement),
-                            validUniqueResultHandler(handler));
-                }
-            }
-        });
-    }
-
-    private void changeNameComp(Number id, String idEtablissment, String name, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + COMPETENCES_PERSO_TABLE + " SET nom = ? WHERE id_competence = ? "
-                + "AND id_etablissement = ? RETURNING id_competence, nom";
-        JsonArray values = new JsonArray().addString(name).addNumber(id).addString(idEtablissment);
-        sql.prepared(query, values, validUniqueResultHandler(handler));
-    }
-
-    private void lastOfDomain(Number id, String idEtablissement, final Handler<Either<String, Boolean>> handler) {
-        String query = "SELECT count(id), id_domaine FROM " + COMPETENCES_TABLE + " RIGHT JOIN"
-                + " (SELECT id_competence, comp1.id_domaine FROM " + COMPETENCES_DOMAINES_TABLE + " AS compDom1 INNER JOIN"
-                + " (SELECT id_domaine FROM " + COMPETENCES_DOMAINES_TABLE + " WHERE id_competence = ?) AS compDom2"
-                + " ON compDom1.id_domaine = compDom2.id_domaine) AS compSameDomain"
-                + " ON competences.id = compSameDomain.id_competence"
-                + " WHERE id_etablissement IS NULL OR id_etablissement = ? GROUP BY id_domaine";
-
-        JsonArray values = new JsonArray().addNumber(id).addString(idEtablissement);
-
-        sql.prepared(query, values, validResultHandler(new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                if(stringJsonArrayEither.isLeft()) {
-                    handler.handle(new Either.Left<String, Boolean>(stringJsonArrayEither.left().getValue()));
-                } else if(stringJsonArrayEither.right().getValue().size() == 0) {
-                    handler.handle(new Either.Right<String, Boolean>(false));
-                } else {
-                    for (Object o : stringJsonArrayEither.right().getValue()) {
-                        JsonObject domaine = (JsonObject) o;
-                        if(domaine.getNumber("count") == 1) {
-                            handler.handle(new Either.Right<String, Boolean>(true));
-                            return;
-                        }
-                    }
-                    handler.handle(new Either.Right<String, Boolean>(false));
-                }
-            }
-        }));
-    }
-
-    @Override
-    public void update(final Number idComp, final String idEtab, final JsonObject competence, final Handler<Either<String, JsonObject>> handler) {
-        initPerso(idComp, idEtab, competence, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                if(stringJsonObjectEither.isRight()) {
-                    JsonObject currentPerso = stringJsonObjectEither.right().getValue();
-                    for (Map.Entry<String, Object> property : competence.toMap().entrySet()) {
-                        if ("masque".equals(property.getKey())
-                                && !currentPerso.getBoolean("masque").equals(property.getValue())) {
-                            hideComp(idComp, idEtab, (Boolean) property.getValue(), handler);
-                        } else if ("ids_domaine".equals(property.getKey())) {
-                            updateDomain(idComp, (String) property.getValue(), handler);
-                        } else if ("nom".equals(property.getKey())
-                                && !currentPerso.getBoolean("nom").equals(property.getValue())) {
-                            changeNameComp(idComp, idEtab, (String) property.getValue(), handler);
-                        }
-                    }
-                } else {
-                    handler.handle(stringJsonObjectEither.left());
-                }
-            }
-        });
-    }
-
-    private void getPerso(Number idComp, String idEtab, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT * FROM " + COMPETENCES_PERSO_TABLE + " WHERE id_competence = ? AND id_etablissement = ?";
-        JsonArray values = new JsonArray()
-                .addNumber(idComp)
-                .addString(idEtab);
-
-        sql.prepared(query, values, validUniqueResultHandler(handler));
-    }
-
-    private void initPerso (final Number idComp, final String idEtab, final JsonObject competence,
-                            final Handler<Either<String, JsonObject>> handler) {
-
-        getPerso(idComp, idEtab, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                if(stringJsonObjectEither.isLeft()) {
-                    handler.handle(stringJsonObjectEither.left());
-                } else if (stringJsonObjectEither.right().getValue().size() == 0) {
-                    String query = "INSERT INTO " + COMPETENCES_PERSO_TABLE + " (id_competence, id_etablissement, nom)" +
-                            " VALUES (?, ?, ?) RETURNING *";
-                    JsonArray values = new JsonArray().addNumber(idComp).addString(idEtab)
-                            .addString(competence.getString("nom"));
-
+                    String query = "UPDATE " + COMPETENCES_TABLE + " SET nom = ?" +
+                            " WHERE id = ? AND id_etablissement = ? RETURNING *";
+                    JsonArray values = new JsonArray().addString(name).addNumber(idComp).addString(idEtablissment);
                     sql.prepared(query, values, validUniqueResultHandler(handler));
-                } else {
-                    handler.handle(stringJsonObjectEither.right());
                 }
+
             }
         });
 
     }
 
-    @Override
-    public void delete(final Number id, final String idEtablissement, final Handler<Either<String, JsonObject>> handler) {
-        isCompManuelle(id, new Handler<Either<String, Boolean>>() {
-            @Override
-            public void handle(final Either<String, Boolean> isManuelle) {
-                if(isManuelle.isRight()) {
-                    hasCompetenceDevoir(id, new Handler<Either<String, Boolean>>() {
-                        @Override
-                        public void handle(Either<String, Boolean> hasDevoir) {
-                            if (hasDevoir.isRight()) {
-                                if(hasDevoir.right().getValue() || !isManuelle.right().getValue()) {
-                                    hideComp(id, idEtablissement, true, handler);
-                                } else {
-                                    delete(String.valueOf(id), handler);
-                                }
-                            } else {
-                                handler.handle(new Either.Left<String, JsonObject>(hasDevoir.left().getValue()));
-                            }
-                        }
-                    });
-                } else {
-                    handler.handle(new Either.Left<String, JsonObject>(isManuelle.left().getValue()));
-                }
-            }
-        });
+    private void updatePerso(Number idComp, String idEtablissement, String field, Object value,
+                             Handler<Either<String, JsonObject>> handler) {
+
+        String query = "INSERT INTO " + COMPETENCES_PERSO_TABLE + " (id_competence, id_etablissement, ?)" +
+                " VALUES (?, ?, ?)" +
+                " ON CONFLICT ON CONSTRAINT perso_competences_pk DO UPDATE" +
+                " SET ? = EXCLUDED.? RETURNING *";
+        JsonArray values = new JsonArray();
+
+        values.addString(field)
+                .addNumber(idComp)
+                .addString(idEtablissement)
+                .add(value)
+                .addString(field)
+                .addString(field);
+
+        sql.prepared(query, values, validUniqueResultHandler(handler));
     }
+
+//    private void lastOfDomain(Number id, String idEtablissement, final Handler<Either<String, JsonArray>> handler) {
+//        String query = "SELECT CASE WHEN count(compDom1.id_competence) = 1 THEN TRUE ELSE FALSE END AS isLastOfDom," +
+//                " compDom1.id_domaine" +
+//                " FROM" +
+//                "  (SELECT id_competence, id_domaine" +
+//                "   FROM notes.rel_competences_domaines" +
+//                "   RIGHT JOIN notes.competences ON id_competence = id" +
+//                "   WHERE competences.id_etablissement IS NULL" +
+//                "     OR competences.id_etablissement = ?) AS compDom1" +
+//                "INNER JOIN" +
+//                "  (SELECT *" +
+//                "   FROM notes.rel_competences_domaines" +
+//                "   WHERE id_competence = ?) AS compDom2 ON compDom1.id_domaine = compDom2.id_domaine" +
+//                "GROUP BY compDom1.id_domaine";
+//
+//        JsonArray values = new JsonArray().addString(idEtablissement).addNumber(id);
+//
+//        sql.prepared(query, values, validResultHandler(new Handler<Either<String, JsonArray>>() {
+//            @Override
+//            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
+//                if(stringJsonArrayEither.isLeft()) {
+//                    handler.handle(new Either.Left<String, Boolean>(stringJsonArrayEither.left().getValue()));
+//                } else if(stringJsonArrayEither.right().getValue().size() == 0) {
+//                    handler.handle(new Either.Right<String, Boolean>(false));
+//                } else {
+//                    for (Object o : stringJsonArrayEither.right().getValue()) {
+//                        JsonObject domaine = (JsonObject) o;
+//                        if(domaine.getBoolean("isLastOfDom")) {
+//                            handler.handle(new Either.Right<String, Boolean>(true));
+//                            return;
+//                        }
+//                    }
+//                    handler.handle(new Either.Right<String, Boolean>(false));
+//                }
+//            }
+//        }));
+//    }
+
+//    @Override
+//    public void update(Number idComp, String idEtab, String fieldToUpdate, Object valueToUpdate,
+//                       Handler<Either<String, JsonObject>> handler) {
+//
+//        switch (fieldToUpdate) {
+//            case "masque":
+//                if ((Boolean) valueToUpdate) {
+//                    hideComp(idComp, idEtab, handler);
+//                } else {
+//                    updatePerso(idComp, idEtab, "masque", false, handler);
+//                }
+//                break;
+//            case "ids_domaine":
+//                updateDomain(idComp, (String) valueToUpdate, handler);
+//                break;
+//            case "nom":
+//                changeNameComp(idComp, idEtab, (String) valueToUpdate, handler);
+//                break;
+//        }
+//    }
+
+//    private void getPerso(Number idComp, String idEtab, Handler<Either<String, JsonObject>> handler) {
+//        String query = "SELECT string_agg( cast (domaines.id as text), ',') as ids_domaine, compPerso.nom AS persoNom," +
+//                " comp.nom AS nom, " +
+//                " CASE WHEN comp.id_etablissement IS NULL THEN FALSE ELSE TRUE END AS isManuelle," +
+//                " CASE WHEN compPerso.masque IS TRUE THEN TRUE ELSE FALSE END AS masque" +
+//                " FROM " + COMPETENCES_TABLE + " AS comp" +
+//                " LEFT JOIN " + COMPETENCES_DOMAINES_TABLE + " AS compDom ON (comp.id = compDom.id_competence)" +
+//                " LEFT JOIN" +
+//                " (SELECT id_competence, nom, masque FROM " + COMPETENCES_PERSO_TABLE + " WHERE id_etablissement = ?) AS compPerso" +
+//                " ON comp.id = compPerso.id_competence" +
+//                " WHERE comp.id = ?";
+//        JsonArray values = new JsonArray()
+//                .addNumber(idComp)
+//                .addString(idEtab);
+//
+//        sql.prepared(query, values, validUniqueResultHandler(handler));
+//    }
+
+//    private void initPerso (final Number idComp, final String idEtab, final JsonObject competence,
+//                            final Handler<Either<String, JsonObject>> handler) {
+//
+//        getPerso(idComp, idEtab, new Handler<Either<String, JsonObject>>() {
+//            @Override
+//            public void handle(Either<String, JsonObject> stringJsonObjectEither) {
+//                if(stringJsonObjectEither.isLeft()) {
+//                    handler.handle(stringJsonObjectEither.left());
+//                } else if (stringJsonObjectEither.right().getValue().size() == 0) {
+//                    String query = "INSERT INTO " + COMPETENCES_PERSO_TABLE + " (id_competence, id_etablissement, nom)" +
+//                            " VALUES (?, ?, ?) RETURNING *";
+//                    JsonArray values = new JsonArray().addNumber(idComp).addString(idEtab)
+//                            .addString(competence.getString("nom"));
+//
+//                    sql.prepared(query, values, validUniqueResultHandler(handler));
+//                } else {
+//                    handler.handle(stringJsonObjectEither.right());
+//                }
+//            }
+//        });
+//
+//    }
+
+//    @Override
+//    public void delete(final Number id, final String idEtablissement, final Handler<Either<String, JsonObject>> handler) {
+//        isCompManuelle(id, new Handler<Either<String, Boolean>>() {
+//            @Override
+//            public void handle(final Either<String, Boolean> isManuelle) {
+//                if(isManuelle.isRight()) {
+//                    hasCompetenceDevoir(id, new Handler<Either<String, Boolean>>() {
+//                        @Override
+//                        public void handle(Either<String, Boolean> hasDevoir) {
+//                            if (hasDevoir.isRight()) {
+//                                if(hasDevoir.right().getValue() || !isManuelle.right().getValue()) {
+//                                    hideComp(id, idEtablissement, handler);
+//                                } else {
+//                                    delete(String.valueOf(id), handler);
+//                                }
+//                            } else {
+//                                handler.handle(new Either.Left<String, JsonObject>(hasDevoir.left().getValue()));
+//                            }
+//                        }
+//                    });
+//                } else {
+//                    handler.handle(new Either.Left<String, JsonObject>(isManuelle.left().getValue()));
+//                }
+//            }
+//        });
+//    }
 
 
     @Override
@@ -578,9 +649,9 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
 
     private void hasCompetenceDevoir(Number id, final Handler<Either<String, Boolean>> handler) {
-        String query = "SELECT devoir.id FROM " + DEVOIRS_TABLE +
-                " LEFT JOIN rel_comp_devoir ON rel_comp_devoir.id_devoir = devoir.id" +
-                " WHERE rel_comp_devoir.id_com = ?";
+        String query = "SELECT devoir.id FROM " + DEVOIRS_TABLE + " AS devoir" +
+                " LEFT JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON compDevoir.id_devoir = devoir.id" +
+                " WHERE compDevoir.id_comp = ?";
 
         sql.prepared(query, new JsonArray().addNumber(id), validResultHandler(new Handler<Either<String, JsonArray>>() {
             @Override
