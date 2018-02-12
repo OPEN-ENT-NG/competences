@@ -3013,7 +3013,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else {
                 switch ($scope.printOption.fileType) {
                     case 'cartouche' : {
-                        url = "/competences/devoirs/print/" + $scope.currentDevoir.id + "/cartouche?eleve=" + $scope.printOption.byEleve + '&color=' + $scope.printOption.inColor + "&nbr=" + $scope.printOption.cartoucheNmb;
+                        url = "/competences/devoirs/print/" + $scope.currentDevoir.id + "/cartouche?eleve=" + $scope.printOption.byEleve
+                            + '&color=' + $scope.printOption.inColor + "&nbr=" + $scope.printOption.cartoucheNmb + "&image=" + $scope.printOption.image;
                         break;
                     }
                     case 'formSaisie' : {
@@ -3022,10 +3023,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             }
-            $scope.exportDevoirObj.errExport = false;
-            $scope.printOption.display=false;
+            http().getJson(url + "&json=true").error(() => {
+                $scope.exportDevoirObj.errExport = true;
+                utils.safeApply($scope);
+            }).done(() => {
+                $scope.exportDevoirObj.errExport = false;
+                $scope.printOption.display=false;
+                utils.safeApply($scope);
+                location.replace(url);
+
+            });
             utils.safeApply($scope);
-            location.replace(url);
         };
 
         $scope.exportDevoirObj = {};
@@ -3035,7 +3043,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             http().getJson(url + "&json=true").error(() => {
                 $scope.exportDevoirObj.errExport = true;
                 utils.safeApply($scope);
-            }).done(() => {
+            }).done((result) => {
+                console.log("result", result);
                 $scope.opened.evaluation.exportDevoirLB = false;
                 $scope.textModExport = false;
                 $scope.exportDevoirObj.errExport = false;

@@ -40,8 +40,16 @@
     <div class="checkbox-grid additional-options" ng-if="printOption.fileType === 'cartouche'">
         <div class="option-eleve cell">
             <label class="checkbox">
-                <input type="checkbox"
-                       ng-model="printOption.byEleve" >
+                <input type="checkbox" ng-model="printOption.image" ng-click="printOption.byEleve = false">
+                <span><i18n>evaluations.export.image</i18n></span>
+            </label>
+            <span class="help-option-eleve-print" >
+                <i class="help" tooltip="evaluation.devoir.cartouche.image.help"></i>
+            </span>
+        </div>
+        <div class="option-eleve cell">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="printOption.byEleve" ng-disabled="printOption.image">
                 <span><i18n>evaluation.devoir.cartouche.eleve</i18n></span>
             </label>
             <span class="help-option-eleve-print" >
@@ -50,16 +58,14 @@
         </div>
         <div class="cell">
             <label class="checkbox">
-                <input type="checkbox"
-                       ng-model="printOption.inColor"
-                >
+                <input type="checkbox" ng-model="printOption.inColor">
                 <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
             </label>
         </div>
         <div class="cell">
             <label >
                 <span><i18n>evaluation.devoir.cartouche.number</i18n></span>
-                <input class="nbr-Cartouche" ng-disabled="printOption.byEleve" type="number" ng-model="printOption.cartoucheNmb" min="1" max="80">
+                <input class="nbr-Cartouche" ng-disabled="printOption.byEleve || printOption.image" type="number" ng-model="printOption.cartoucheNmb" min="1" max="80">
             </label>
         </div>
     </div>
@@ -111,11 +117,10 @@
             </i>
         </button>
 
-        <button  ng-show=" currentDevoir.competences.all.length === 0" ng-click="printCartouche('formsaisie')"   class="right-magnet ng-scope " ng-class="{'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
+        <button  ng-show=" currentDevoir.competences.all.length === 0" ng-click="printCartouche('formsaisie')"
+                 class="right-magnet ng-scope " ng-class="{'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
             <i class="download">
             </i></button>
-
-
 
         <section ng-if="endSaisie" class="row twelve-mobile ng-scope">
             <div class="six warning">

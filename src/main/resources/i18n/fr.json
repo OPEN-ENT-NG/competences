@@ -69,6 +69,8 @@
   "evaluation.devoir.cartouche.eleve.help":"Cette option permet d'imprimer une cartouche par élève.",
   "evaluation.devoir.cartouche.couleur" : "En couleur",
   "evaluation.devoir.cartouche.number": "Nombre de cartouches",
+  "evaluations.export.image" : "Exporter au format image",
+  "evaluation.devoir.cartouche.image.help":"Cette option permet d'imprimer une cartouche au format image.",
   "evaluation.suivieleve.filtre.competence":"Afficher uniquement les compétences évaluées",
   "evaluations.evaluation.theme":"Couleur des Compétences",
   "viescolaire.notes.title":"Evaluation",
