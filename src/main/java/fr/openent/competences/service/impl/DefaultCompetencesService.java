@@ -333,10 +333,11 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " RETURNING id)," +
                 " ens_insert AS (" +
                 " INSERT INTO " + COMPETENCES_ENSEIGNEMENTS_TABLE + " (id_competence, id_enseignement)" +
-                " SELECT id, ? FROM new_competence )" +
+                " SELECT id, ? FROM new_competence )," +
+                " dom_insert AS (" +
                 " INSERT INTO " + COMPETENCES_DOMAINES_TABLE + " (id_competence, id_domaine)" +
                 " SELECT id, unnest(" + Sql.arrayPrepared(competence.getArray("ids_domaine").toArray()) +
-                ") FROM new_competence;";
+                ") FROM new_competence) SELECT id FROM new_competence;";
 
         JsonArray values = new JsonArray().addString(competence.getString("nom"))
                 .addNumber(competence.getInteger("id_parent"))

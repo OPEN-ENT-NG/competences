@@ -232,7 +232,7 @@ public class CompetenceController extends ControllerHelper {
     public void deleteCompetence(HttpServerRequest request) {
 
         try {
-            Number idComp = Long.getLong(request.params().get("id"));
+            Number idComp = Long.valueOf(request.params().get("id"));
             String idEtablissement = request.params().get("id_etablissement");
             competencesService.delete(idComp, idEtablissement, defaultResponseHandler(request));
         } catch (Exception e) {
