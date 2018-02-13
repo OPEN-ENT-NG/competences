@@ -273,8 +273,24 @@ export const itemsCompetences = {
                             console.log(' error createItem');
                         }).bind(this);
                 }
+                case 'mask': {
+                    console.dir('mask Off' + item.nom);
+                    console.log('' );
+                    item.masque = !item.masque;
+                }
                 default: break;
             }
+        },
+        trash: function (item) {
+            console.dir('trash' + item.nom);
+            http().delete(`competences/competence?id=${item.id}&id_etablissement=${item.id_etablissement}`)
+                .done(() => {
+                    this.getCompetences();
+                    utils.safeApply(this);
+                })
+                .error(function () {
+                    console.log(' error createItem');
+                }).bind(this);
         }
     }
 };

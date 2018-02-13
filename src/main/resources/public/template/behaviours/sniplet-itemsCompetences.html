@@ -78,11 +78,11 @@
                  style='height: auto;'>
 
                 <div ng-class="{'zero': competence.hide && search.keyword !== ''}"
-                        class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)"
+                     class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)"
                      ng-repeat="competence in domaine.competences.all|filter:customFilterComp(competence,search)">
 
                     <div ng-init="competence.nomhtml = competence.nom"
-                            tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                         tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
                         <span ng-bind-html="competence.nomhtml"></span>
                     </div>
                 </div>
@@ -111,43 +111,69 @@
                 <div
                         ng-class="{'openedSectionDom' : enseignement.OpenDom}"
                         class="twelve cell" style='height: auto;'>
-                    <div ng-repeat="connaissance in enseignement.competences.all"
-                         ng-init="connaissance.OpenSousDom = false; connaissance.action = false"
-                         ng-mouseover="connaissance.action = true"
-                         ng-mouseleave="connaissance.action = false">
-                        <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}"
-                            class="margin-top-1em Domaine six inline-block"
-                            ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom">
-                           [[connaissance.nom]]
-                        </h3>
-                        <h3 data-ng-click="openCreateItem(connaissance,lastSelectedCycle.domaines);"
+                    <div ng-repeat="connaissance in enseignement.competences.all">
+                        <div ng-init="connaissance.OpenSousDom = false; connaissance.action = false"
+                             ng-mouseover="connaissance.action = true"
+                             ng-mouseleave="connaissance.action = false">
+                            <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}"
+                                class="margin-top-1em Domaine six inline-block"
+                                ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom">
+                                [[connaissance.nom]]
+                            </h3>
+                            <h3 data-ng-click="openCreateItem(connaissance,lastSelectedCycle.domaines);"
                                 class="inline-block"><i ng-show="connaissance.action" class="plus"></i></h3>
-                        <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
-                        'openedSectionDom' : connaissance.OpenSousDom}"
-                             style='height: auto;'>
-
-                            <div class="suivi-eleve-item competence-line"
-                                 ng-repeat="competence in connaissance.competences.all"
-                                 ng-class="{'zero': competencesFilter[competence.id+'_'+competence.id_enseignement].data.open
-                                            === false && search.keyword !== ''}">
-
-                                <div ng-class="{'selected-item': lastCompetence.id === competence.id}"
-                                     ng-click="openItemDomaine(competence,competencesFilter,lastSelectedCycle.domaines)"
-                                        tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
-                                    <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
-                                        <span   ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
-                                        </span>
-                                    </span>
-                                </div>
-                                <container
-                                        template="patchwork[[competence.id]]" class="flexible content cell">
-                                </container>
+                            <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
+                            'openedSectionDom' : connaissance.OpenSousDom}"
+                                 style='height: auto;'>
                             </div>
+                        </div>
+                        <div class="suivi-eleve-item competence-line"
+                             ng-repeat="competence in connaissance.competences.all"
+                             ng-init="competence.action = false"
+                             ng-mouseover="competence.action = true"
+                             ng-mouseleave="competence.action = false"
+                             ng-class="{'zero':
+                                 competencesFilter[competence.id+'_'+competence.id_enseignement].data.open
+                                        === false && search.keyword !== ''}">
+                            <div ng-if="competence.ismanuelle" data-ng-click="trash(competence);"
+                                 class="inline-block ellipsis competence">
+                                <i ng-show="competence.action" class="trash"></i>
+                            </div>
+                            <div ng-if="!competence.ismanuelle" data-ng-click="undo(competence);"
+                                 class="inline-block ellipsis competence">
+                                <i ng-show="competence.action" class="arrows-cw"></i>
+                            </div>
+                            <div ng-class="{'selected-item': lastCompetence.id === competence.id}"
+                                 ng-click="openItemDomaine(competence,competencesFilter,lastSelectedCycle.domaines)"
+                                 tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                                   <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                    <span
+                                            ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
+                                     </span>
+                                    </span>
+                            </div>
+                            <div data-ng-click="saveItem(competence, 'mask');"
+                                 class="inline-block ellipsis competence">
+                                <i ng-show="competence.action"
+                                   ng-if="!competence.masque"
+                                   tooltip="item.mask"
+                                   ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}"></i>
+                                <i ng-show="competence.action"
+                                   ng-if="competence.masque"
+                                   tooltip="item.demask"
+                                   ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}"></i>
+                            </div>
+                            <div  data-ng-click="rename(competence);"
+                                 class="inline-block ellipsis competence">
+                                <i ng-show="competence.action" class="pencil"></i>
+                            </div>
+                            <container
+                                    template="patchwork[[competence.id]]" class="flexible content cell">
+                            </container>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </div>
