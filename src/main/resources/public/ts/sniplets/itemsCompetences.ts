@@ -199,6 +199,7 @@ export const itemsCompetences = {
         openCreateItem: function (connaissance, domaines) {
             this.itemsCompetences.that.opened.lightboxCreateItem = true;
             this.itemsCompetences.that.newItem = {
+                ismanuelle: true,
                 nom: undefined,
                 id_parent: connaissance.id,
                 id_cycle: connaissance.id_cycle,
@@ -217,17 +218,25 @@ export const itemsCompetences = {
         }.bind(this),
 
         selectDomaine: function (domaine) {
-            if (domaine.selected && ! _.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id) ) {
-                this.itemsCompetences.that.newItem.ids_domaine.push(domaine.id);
+            if ( this.itemsCompetences.that.newItem.hasOwnProperty('id') ) {
+                this.itemsCompetences.that.updatedDomaineId = domaine.id;
+                this.itemsCompetences.that.saveItem(this.itemsCompetences.that.newItem, 'updateDomaine');
             }
-            else if (!domaine.selected) {
-                this.itemsCompetences.that.newItem.ids_domaine =
-                    _.without(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
+            else {
+                if (domaine.selected && !_.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id)) {
+                    this.itemsCompetences.that.newItem.ids_domaine.push(domaine.id);
+                }
+                else if (!domaine.selected) {
+                    this.itemsCompetences.that.newItem.ids_domaine =
+                        _.without(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
+                }
             }
         }.bind(this),
 
         // Affichage des Domaines d'une compétence
         openItemDomaine: function (competence, competencesFilter, domaines) {
+            itemsCompetences.that.newItem = competence;
+            itemsCompetences.that.newItem.ids_domaine = competence.ids_domaine_int;
             let _c = competencesFilter[competence.id + '_' + competence.id_enseignement];
             this.itemsCompetences.that.printDomaines = _.clone(domaines);
             this.itemsCompetences.that.selectedDomaines = _c.data.ids_domaine_int;
@@ -251,12 +260,33 @@ export const itemsCompetences = {
         jsonCreateItem: function (item) {
             return {
                 nom: item.nom,
-                id_etablissement: item.id_etablissement,
+                id_etablissement: itemsCompetences.that.structure.id,
                 id_parent: item.id_parent,
                 id_type: item.id_type,
                 id_cycle: item.id_cycle,
                 id_enseignement: item.id_enseignement,
                 ids_domaine: item.ids_domaine
+            };
+        },
+        jsonUpdateMaskItem: function (item) {
+            return {
+                id: item.id,
+                id_etablissement: itemsCompetences.that.structure.id,
+                masque: item.masque
+            };
+        },
+        jsonUpdateNameItem: function (item) {
+            return {
+                id: item.id,
+                id_etablissement: itemsCompetences.that.structure.id,
+                nom: item.nom
+            };
+        },
+        jsonUpdateDomaineItem: function (item) {
+            return {
+                id: item.id,
+                id_etablissement: itemsCompetences.that.structure.id,
+                id_domaine: itemsCompetences.that.updatedDomaineId
             };
         },
         saveItem: function (item, action) {
@@ -272,11 +302,46 @@ export const itemsCompetences = {
                             this.opened.lightboxCreateItem = false;
                             console.log(' error createItem');
                         }).bind(this);
+                    break;
                 }
                 case 'mask': {
                     console.dir('mask Off' + item.nom);
                     console.log('' );
-                    item.masque = !item.masque;
+                    http().putJson(`competences/competence`, this.jsonUpdateMaskItem(item))
+                        .done(() => {
+                            item.masque = !item.masque;
+                            utils.safeApply(this);
+                        })
+                        .error(function () {
+                            console.log(' error Mask Item');
+                        }).bind(this);
+                    break;
+                }
+                case 'rename': {
+                    http().putJson(`competences/competence`, this.jsonUpdateNameItem(item))
+                        .done(() => {
+                            this.getCompetences();
+                            utils.safeApply(this);
+                        })
+                        .error(function () {
+                            console.log(' error Rename Item');
+                        }).bind(this);
+                    break;
+                }
+                case 'updateDomaine': {
+                    http().putJson(`competences/competence`, this.jsonUpdateDomaineItem(item))
+                        .done(() => {
+                            this.getCompetences();
+                            utils.safeApply(this);
+                        })
+                        .error(function () {
+                            console.log(' error updateDomaine Item');
+                        }).bind(this);
+                    break;
+                }
+                case 'reinitItem': {
+                    console.dir('reinit Item');
+                    break;
                 }
                 default: break;
             }

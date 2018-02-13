@@ -129,7 +129,7 @@
                         </div>
                         <div class="suivi-eleve-item competence-line"
                              ng-repeat="competence in connaissance.competences.all"
-                             ng-init="competence.action = false"
+                             ng-init="competence.action = false; competence.rename = false;"
                              ng-mouseover="competence.action = true"
                              ng-mouseleave="competence.action = false"
                              ng-class="{'zero':
@@ -139,18 +139,37 @@
                                  class="inline-block ellipsis competence">
                                 <i ng-show="competence.action" class="trash"></i>
                             </div>
-                            <div ng-if="!competence.ismanuelle" data-ng-click="undo(competence);"
+                            <div ng-if="!competence.ismanuelle" data-ng-click="saveItem(competence, 'reinitItem');"
                                  class="inline-block ellipsis competence">
                                 <i ng-show="competence.action" class="arrows-cw"></i>
                             </div>
-                            <div ng-class="{'selected-item': lastCompetence.id === competence.id}"
+                            <div ng-class="{'selected-item': lastCompetence.id === competence.id && !competence.rename}"
                                  ng-click="openItemDomaine(competence,competencesFilter,lastSelectedCycle.domaines)"
-                                 tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
-                                   <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
-                                    <span
-                                            ng-bind-html="competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
-                                     </span>
+                                 tooltip="[[competence.nom]]" class="six inline-block ellipsis competence"
+                                 ng-hide="competence.rename">
+                                   <span   ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                        <span ng-bind-html="
+                                               competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
+                                         </span>
                                     </span>
+                            </div>
+                            <div ng-class="{'selected-item': lastCompetence.id === competence.id && !competence.rename}"
+                                 tooltip="[[competence.nom]]" class="six inline-block ellipsis competence"
+                                 ng-show="competence.rename">
+
+                                <span
+                                    ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                    <ng-form name="skillsTextForm" >
+                                        <input type="text"
+                                               style="margin-bottom: 0px;"
+                                               class="twelve inline-block ellipsis competence"
+                                               ng-blur="saveItem(competence, 'rename')"
+                                               ng-model="competence.nom">
+                                        <div ng-if="skillsTextForm.letter.$error.maxlength" class="warning">
+                                            <i18n>evaluation.skill.text.invalid</i18n>
+                                        </div>
+                                    </ng-form>
+                                </span>
                             </div>
                             <div data-ng-click="saveItem(competence, 'mask');"
                                  class="inline-block ellipsis competence">
@@ -163,7 +182,7 @@
                                    tooltip="item.demask"
                                    ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}"></i>
                             </div>
-                            <div  data-ng-click="rename(competence);"
+                            <div  data-ng-click="competence.rename = ! competence.rename;"
                                  class="inline-block ellipsis competence">
                                 <i ng-show="competence.action" class="pencil"></i>
                             </div>

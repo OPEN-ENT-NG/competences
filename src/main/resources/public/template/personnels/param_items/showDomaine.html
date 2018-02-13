@@ -6,6 +6,7 @@
 
         <label ng-if="domaine.competences.all.length > 0" class="checkbox">
             <input type="checkbox"
+                   ng-disabled="!newItem.ismanuelle"
                    ng-init="initSelectDomaine(domaine)"
                    ng-click="selectDomaine(domaine)"
                    ng-model="domaine.selected">
@@ -19,13 +20,14 @@
 
         <!-- ng-class="{'openedDom' : domaine.OpenSousDom}" -->
         <h4
-            class="margin-top-1em Domaine"
+            class="margin-top-0-5em"
             ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0"
             ng-click="domaine.OpenSousDom = !domaine.OpenSousDom"
             ng-init="domaine.OpenSousDom = false">
 
             <label class="checkbox">
                 <input type="checkbox"
+                       ng-disabled="!newItem.ismanuelle"
                        ng-init="initSelectDomaine(domaine);"
                        ng-click="selectDomaine(domaine);"
                        ng-init="selectDomaine(domaine)"
