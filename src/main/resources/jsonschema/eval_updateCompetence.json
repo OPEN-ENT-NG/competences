@@ -13,7 +13,7 @@
       "type": "string"
     },
     "id_domaine": {
-      "type": "integer"
+      "type": "number"
     },
     "masque": {
       "type": "boolean"

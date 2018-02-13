@@ -371,18 +371,17 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 }));
     }
 
-    private void updateDomain(Number idComp, String idEtablissement, Number idDomaine, Boolean add,
+    private void updateDomain(Number idComp, String idEtablissement, Number idDomaine,
                               Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT updateDomaineCompetence(?, ?, ?, ?);";
-        JsonArray values = new JsonArray().addNumber(idComp).addString(idEtablissement)
-                .addNumber(idDomaine).addBoolean(add);
+        String query = "SELECT updateDomaineCompetence(?, ?, ?);";
+        JsonArray values = new JsonArray().addNumber(idComp).addString(idEtablissement).addNumber(idDomaine);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
     private void updateMasqueComp(Number id, String idEtablissement, Boolean masque, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT masqueCompetence(?, ?);";
-        JsonArray values = new JsonArray().addNumber(id).addString(idEtablissement);
+        String query = "SELECT masqueCompetence(?, ?, ?);";
+        JsonArray values = new JsonArray().addNumber(id).addString(idEtablissement).addBoolean(masque);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
@@ -427,7 +426,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 updateMasqueComp(idComp, idEtab, (Boolean) valueToUpdate, handler);
                 break;
             case "id_domaine":
-//                updateDomain(idComp, idEtab, )
+                updateDomain(idComp, idEtab, (Number) valueToUpdate, handler);
                 break;
             case "nom":
                 changeNameComp(idComp, idEtab, (String) valueToUpdate, handler);

@@ -230,7 +230,6 @@ public class CompetenceController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ParamCompetenceRight.class)
     public void deleteCompetence(HttpServerRequest request) {
-
         try {
             Number idComp = Long.valueOf(request.params().get("id"));
             String idEtablissement = request.params().get("id_etablissement");
