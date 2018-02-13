@@ -12,8 +12,8 @@
     "nom": {
       "type": "string"
     },
-    "ids_domaine": {
-      "type": "array"
+    "id_domaine": {
+      "type": "integer"
     },
     "masque": {
       "type": "boolean"

@@ -95,12 +95,11 @@ public interface CompetencesService extends CrudService {
 
     void create(JsonObject competence, Handler<Either<String, JsonObject>> handler);
 
-    void isCompManuelle(Number id, Handler<Either<String, Boolean>> handler);
+    void update(Number idComp, String idEtab, String fieldToUpdate, Object valueToUpdate,
+                Handler<Either<String, JsonObject>> handler);
 
-//    void update(Number idComp, String idEtab, String fieldToUpdate, Object valueToUpdate,
-//                Handler<Either<String, JsonObject>> handler);
-//
-//    void delete(Number id, String idEtablissement, Handler<Either<String, JsonObject>> handler);
+    void delete(Number id, String idEtablissement, Handler<Either<String, JsonObject>> handler);
+
     /**
      * Supprime les compétences customs
      * @param idEtablissement
