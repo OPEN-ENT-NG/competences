@@ -612,7 +612,7 @@ public class DevoirController extends ControllerHelper {
                                 // Calcul du taux d'avancement en fonction du nombre d'élève(s)
                                 JsonObject action = new JsonObject()
                                         .putString("action", "classe.getNbElevesGroupe")
-                                        .putArray("idGroups", idGroupes);
+                                        .putArray("idGroupes", idGroupes);
                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                                     @Override
                                     public void handle(Message<JsonObject> res) {

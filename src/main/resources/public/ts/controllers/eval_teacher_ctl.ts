@@ -283,7 +283,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 utils.safeApply($scope);
                             });
                             $scope.currentDevoir.eleves.sync().then(() => {
-                                $scope.$broadcast('initHeaderColumn');
+                                //$scope.$broadcast('initHeaderColumn');
                                 var _evals = [];
                                 for (var i = 0; i < $scope.currentDevoir.eleves.all.length; i++) {
                                     if ($scope.currentDevoir.eleves.all[i].evaluation.valeur !== null
@@ -1075,7 +1075,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Permet de faire la jointure entre les directive de compétences cSkilllsColorColumn et cSkillsNoteDevoir
          */
         $scope.$on('majHeaderColumn', function (event, competence) {
-            $scope.$broadcast('changeHeaderColumn', competence);
+           // $scope.$broadcast('changeHeaderColumn', competence);
         });
 
         /**
@@ -2978,7 +2978,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     evaluations.structure.niveauCompetences.first().markUser().then(() => {
                         $scope.structure.usePerso = 'true';
                         $scope.updateColorAndLetterForSkills();
-                        utils.safeApply($scope);
+                        //utils.safeApply($scope);
                     });
                 });
 
@@ -2988,7 +2988,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     evaluations.structure.niveauCompetences.first().unMarkUser().then(() => {
                         $scope.structure.usePerso = 'false';
                         $scope.updateColorAndLetterForSkills();
-                        utils.safeApply($scope);
+                        //utils.safeApply($scope);
                     });
                 });
             }

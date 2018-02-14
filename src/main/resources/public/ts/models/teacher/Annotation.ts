@@ -6,7 +6,7 @@ export class Annotation extends Model {
 
     constructor (o?) {
         super();
-        if (o) this.updateData(o);
+        if (o) this.updateData(o, false);
     }
 
     toString () {

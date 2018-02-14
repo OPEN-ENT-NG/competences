@@ -18,7 +18,7 @@ export class NiveauCompetence extends Model {
 
     constructor (o?: any) {
         super();
-        if (o && typeof o === 'object') { this.updateData(o); }
+        if (o && typeof o === 'object') { this.updateData(o, false); }
     }
 
     get api () {

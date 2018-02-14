@@ -26,7 +26,7 @@ export class Classe extends Model {
 
     constructor (o? : any) {
         super();
-        if (o !== undefined) this.updateData(o);
+        if (o !== undefined) this.updateData(o, false);
         this.collection(Eleve, {
             sync : () : Promise<any> => {
                 return new Promise((resolve, reject) => {

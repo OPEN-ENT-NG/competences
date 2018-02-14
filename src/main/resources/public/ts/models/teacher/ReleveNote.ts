@@ -30,7 +30,7 @@ export class ReleveNote extends  Model implements IModel{
 
     constructor (o? : any) {
         super();
-        if (o && o !== undefined) this.updateData(o);
+        if (o && o !== undefined) this.updateData(o, false);
         this.synchronized = {
             classe : false,
             devoirs : false,

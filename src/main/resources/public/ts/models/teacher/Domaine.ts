@@ -39,7 +39,7 @@ export class Domaine extends Model {
             let sousDomaines = poDomaine.domaines;
             let sousCompetences = poDomaine.competences;
 
-            this.updateData(poDomaine);
+            this.updateData(poDomaine, false);
 
             if(sousDomaines !== undefined) {
                 this.domaines.load(sousDomaines);

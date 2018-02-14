@@ -17,7 +17,7 @@ export class CompetenceNote extends Model implements IModel {
 
     constructor(o? : any) {
         super();
-        if (o !== undefined) this.updateData(o);
+        if (o !== undefined) this.updateData(o, false);
     }
 
     toJSON() {

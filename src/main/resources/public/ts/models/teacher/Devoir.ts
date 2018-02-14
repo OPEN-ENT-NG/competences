@@ -131,7 +131,7 @@ export class Devoir extends Model implements IModel{
                 });
             }
         });
-        if (p) this.updateData(p);
+        if (p) this.updateData(p, false);
     }
 
     switchVisibilityApprec(): Promise<any> {
@@ -295,7 +295,7 @@ export class Devoir extends Model implements IModel{
                         return "";
                     });
                 }
-                model.trigger('apply');
+                //model.trigger('apply');
                 if(resolve && typeof(resolve) === 'function'){
                     resolve();
                 }

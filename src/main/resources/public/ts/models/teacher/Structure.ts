@@ -87,7 +87,7 @@ export class Structure extends Model {
 
     constructor(o?: any) {
         super();
-        if (o) this.updateData(o);
+        if (o) this.updateData(o, false);
         this.isSynchronized = false;
         this.synchronized = {
             devoirs: false,

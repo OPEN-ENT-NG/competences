@@ -143,29 +143,29 @@
                 </div>
                 <div>
                     <section ng-if="currentDevoir.libelle !== null">
-                        <label><i18n class="bold">viescolaire.utils.description</i18n> : [[currentDevoir.libelle]]</label>
+                        <label><i18n class="bold">viescolaire.utils.description</i18n> : [[::currentDevoir.libelle]]</label>
                     </section>
                     <section ng-if="isChefEtab()">
-                        <span class="bold"><i18n>evaluations.test.teacher</i18n></span> : [[currentDevoir.teacher]]
+                        <span class="bold"><i18n>evaluations.test.teacher</i18n></span> : [[::currentDevoir.teacher]]
                     </section>
-                    <section><span class="bold"><i18n>viescolaire.utils.class</i18n></span> : [[getClasseData(currentDevoir.id_groupe, 'name')]]</section>
+                    <section><span class="bold"><i18n>viescolaire.utils.class</i18n></span> : [[::getClasseData(currentDevoir.id_groupe, 'name')]]</section>
 
                     <section>
-                        <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[getLibelleMatiere(currentDevoir.id_matiere)]]</label>
+                        <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[::getLibelleMatiere(currentDevoir.id_matiere)]]</label>
                     </section>
                     <section ng-show="currentDevoir.id_sousmatiere!== null">
                         <label>
-                            <i18n class="bold">viescolaire.utils.undersubject</i18n> : [[getLibelleSousMatiere(currentDevoir.id_sousmatiere)]]
+                            <i18n class="bold">viescolaire.utils.undersubject</i18n> : [[::getLibelleSousMatiere(currentDevoir.id_sousmatiere)]]
                         </label>
                     </section>
                     <section>
-                        <label><i18n class="bold">viescolaire.utils.periode</i18n> : [[getI18nPeriode(currentDevoir.periode) + currentDevoir._periode_ordre]]</label>
+                        <label><i18n class="bold">viescolaire.utils.periode</i18n> : [[::getI18nPeriode(currentDevoir.periode) + currentDevoir._periode_ordre]]</label>
                     </section>
                     <section ng-if="currentDevoir.is_evaluated">
-                        <label><i18n class="bold">viescolaire.utils.coefficient</i18n> : [[currentDevoir.coefficient]]</label>
+                        <label><i18n class="bold">viescolaire.utils.coefficient</i18n> : [[::currentDevoir.coefficient]]</label>
                     </section>
                     <section ng-if="currentDevoir.is_evaluated">
-                        <label><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[currentDevoir.diviseur]]</label>
+                        <label><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[::currentDevoir.diviseur]]</label>
                     </section>
                 </div>
             </div>
@@ -301,7 +301,7 @@
                                             </label>
                                         </div>
                                         <div class="two cell cell-indent expandable-content text-overflow" class="tooltip-overlay" tooltip="[[eleve.lastName]] [[eleve.firstName]]" ng-click="getEleveInfo(eleve);expandNote($index, false)">
-                                            [[eleve.lastName]] [[eleve.firstName]]
+                                            [[::eleve.lastName]] [[::eleve.firstName]]
                                         </div>
 
                                         <div ng-class="{'navigable-cell' : currentDevoir.is_evaluated}" class="one cell cell-input">

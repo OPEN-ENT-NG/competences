@@ -21,7 +21,7 @@ export class Eleve extends Model {
     constructor (o?: any) {
         super();
         if (o) {
-            this.updateData(o);
+            this.updateData(o, false);
         }
         this.collection(Evaluation);
         this.collection(SuiviCompetence);
