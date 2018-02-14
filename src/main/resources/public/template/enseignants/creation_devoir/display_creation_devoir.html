@@ -492,8 +492,8 @@
 </div>
 <lightbox show="lightboxChampsObligatoire == true" on-close="closeLightboxChampsObligatoire()">
     <div ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
-        <h3><i18n>choose.evaluation.type</i18n></h3>
-    </div>
+    <h3><i18n>legend.of.double.asterisk.message</i18n></h3>
+</div>
     <div ng-if="devoir.id_groupe == undefined || !devoir.name || devoir.id_periode == undefined || devoir.dateDevoir == undefined">
         <p><i18n>required.fields.not.selected</i18n></p>
         <ol>

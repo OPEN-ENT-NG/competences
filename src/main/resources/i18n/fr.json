@@ -164,6 +164,7 @@
   "evaluations.max.competences" : "Vous ne pouvez pas rajouter plus de 12 compétences pour une même évaluation.",
   "legend.of.simple.asterisk": " : Champs de saisie obligatoire",
   "legend.of.double.asterisk": ": Sélectionner l'évaluation numérique et/ou au moins une compétence",
+  "legend.of.double.asterisk.message": "Veuillez activer l'évaluation numérique et/ou sélectionner au moins une compétence.",
   "you.have": "Vous avez sélectionné ",
   "evaluations.competences": " compétences.",
   "unselected.control.name": "Vous devez donner un nom au devoir.",
