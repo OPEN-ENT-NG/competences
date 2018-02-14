@@ -83,7 +83,8 @@
 
                     <div ng-init="competence.nomhtml = competence.nom"
                          tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
-                        <span ng-bind-html="competence.nomhtml"></span>
+                        <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
+                                ng-bind-html="competence.nomhtml"></span>
                     </div>
                 </div>
             </div>
@@ -144,11 +145,12 @@
                                 <i ng-show="competence.action" class="arrows-cw"></i>
                             </div>
                             <div ng-class="{'selected-item': lastCompetence.id === competence.id && !competence.rename}"
-                                 ng-click="openItemDomaine(competence,competencesFilter,lastSelectedCycle.domaines)"
+                                 ng-click="openItemDomaine(competence)"
                                  tooltip="[[competence.nom]]" class="six inline-block ellipsis competence"
                                  ng-hide="competence.rename">
-                                   <span   ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
-                                        <span ng-bind-html="
+                                   <span  ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                        <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
+                                                ng-bind-html="
                                                competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
                                          </span>
                                     </span>

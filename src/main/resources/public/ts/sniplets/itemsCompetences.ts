@@ -165,7 +165,7 @@ export const itemsCompetences = {
                         comp = _.findWhere(poCompetences.all, {id: poCompetences.all[i].id}) !== undefined;
                         if (comp !== undefined) _b = false;
                         itemsCompetences.that.competencesFilter[
-                            currCompetence.id + '_' + currCompetence.id_enseignement] = {
+                        currCompetence.id + '_' + currCompetence.id_enseignement] = {
                             isSelected: _b,
                             nomHtml: currCompetence.nom,
                             data: currCompetence
@@ -214,32 +214,28 @@ export const itemsCompetences = {
         }.bind(this),
 
         initSelectDomaine: function (domaine) {
-            domaine.selected = _.contains(this.itemsCompetences.that.selectedDomaines, domaine.id);
+            domaine.selected = _.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
         }.bind(this),
 
         selectDomaine: function (domaine) {
+            if (domaine.selected && !_.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id)) {
+                this.itemsCompetences.that.newItem.ids_domaine.push(domaine.id);
+            }
+            else if (!domaine.selected) {
+                this.itemsCompetences.that.newItem.ids_domaine =
+                    _.without(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
+            }
             if ( this.itemsCompetences.that.newItem.hasOwnProperty('id') ) {
                 this.itemsCompetences.that.updatedDomaineId = domaine.id;
                 this.itemsCompetences.that.saveItem(this.itemsCompetences.that.newItem, 'updateDomaine');
             }
-            else {
-                if (domaine.selected && !_.contains(this.itemsCompetences.that.newItem.ids_domaine, domaine.id)) {
-                    this.itemsCompetences.that.newItem.ids_domaine.push(domaine.id);
-                }
-                else if (!domaine.selected) {
-                    this.itemsCompetences.that.newItem.ids_domaine =
-                        _.without(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
-                }
-            }
         }.bind(this),
 
         // Affichage des Domaines d'une compétence
-        openItemDomaine: function (competence, competencesFilter, domaines) {
-            itemsCompetences.that.newItem = competence;
-            itemsCompetences.that.newItem.ids_domaine = competence.ids_domaine_int;
-            let _c = competencesFilter[competence.id + '_' + competence.id_enseignement];
-            this.itemsCompetences.that.printDomaines = _.clone(domaines);
-            this.itemsCompetences.that.selectedDomaines = _c.data.ids_domaine_int;
+        openItemDomaine: function (competence) {
+            this.itemsCompetences.that.newItem = competence;
+            this.itemsCompetences.that.newItem.ids_domaine = competence.ids_domaine_int;
+            this.itemsCompetences.that.printDomaines = _.clone(this.itemsCompetences.that.lastSelectedCycle.domaines);
             if (template.isEmpty('patchwork' + competence.id)) {
                 template.open('patchwork' + competence.id,
                     '../../../competences/public/template/personnels/param_items/showDomaine');
@@ -332,6 +328,10 @@ export const itemsCompetences = {
                     http().putJson(`competences/competence`, this.jsonUpdateDomaineItem(item))
                         .done(() => {
                             this.getCompetences();
+                            template.close('patchwork' + item.id);
+                            utils.safeApply(this);
+                            template.open('patchwork' + item.id,
+                                '../../../competences/public/template/personnels/param_items/showDomaine');
                             utils.safeApply(this);
                         })
                         .error(function () {
@@ -340,7 +340,7 @@ export const itemsCompetences = {
                     break;
                 }
                 case 'reinitItem': {
-                    console.dir('reinit Item');
+                    this.trash(item);
                     break;
                 }
                 default: break;
@@ -348,7 +348,7 @@ export const itemsCompetences = {
         },
         trash: function (item) {
             console.dir('trash' + item.nom);
-            http().delete(`competences/competence?id=${item.id}&id_etablissement=${item.id_etablissement}`)
+            http().delete(`competences/competence?id=${item.id}&id_etablissement=${itemsCompetences.that.structure.id}`)
                 .done(() => {
                     this.getCompetences();
                     utils.safeApply(this);
