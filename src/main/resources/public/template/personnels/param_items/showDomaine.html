@@ -1,5 +1,4 @@
 <script type="text/ng-template"  id="tree_items_renderer.html">
-    <!-- ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }" -->
     <h4
         class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1"
         ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">
@@ -18,7 +17,6 @@
          class="twelve cell"
          style='height: auto;'>
 
-        <!-- ng-class="{'openedDom' : domaine.OpenSousDom}" -->
         <h4
             class="margin-top-0-5em"
             ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0"

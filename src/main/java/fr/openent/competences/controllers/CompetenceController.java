@@ -153,7 +153,8 @@ public class CompetenceController extends ControllerHelper {
 
     @Delete("/items/:idEtablissement")
     @ApiDoc("Supprimer toutes les données personnalisées sur les items d'un étbalissement donné")
-    @SecuredAction(value = "competence.delete.items")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(ParamCompetenceRight.class)
     public void delete(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

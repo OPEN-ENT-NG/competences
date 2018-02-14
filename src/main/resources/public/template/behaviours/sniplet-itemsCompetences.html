@@ -144,7 +144,9 @@
                                  class="inline-block ellipsis competence">
                                 <i ng-show="competence.action" class="arrows-cw"></i>
                             </div>
-                            <div ng-class="{'selected-item': lastCompetence.id === competence.id && !competence.rename}"
+                            <div ng-class="{'selected-item': lastCompetence.id === competence.id
+                                                            && !competence.rename
+                                                            && !template.isEmpty('patchwork' + competence.id)}"
                                  ng-click="openItemDomaine(competence)"
                                  tooltip="[[competence.nom]]" class="six inline-block ellipsis competence"
                                  ng-hide="competence.rename">
@@ -155,7 +157,9 @@
                                          </span>
                                     </span>
                             </div>
-                            <div ng-class="{'selected-item': lastCompetence.id === competence.id && !competence.rename}"
+                            <div ng-class="{'selected-item': lastCompetence.id === competence.id
+                                                            && !competence.rename
+                                                            && !template.isEmpty('patchwork' + competence.id)}"
                                  tooltip="[[competence.nom]]" class="six inline-block ellipsis competence"
                                  ng-show="competence.rename">
 
