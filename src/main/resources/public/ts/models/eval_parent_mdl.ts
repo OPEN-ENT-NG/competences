@@ -241,7 +241,7 @@ export class Evaluations extends Model {
                 sync: async function (classe, eleve, competences) {
                     let that = this.composer;
                     return new Promise((resolve, reject) => {
-                        let url = that.api.GET_ARBRE_DOMAINE + classe.id;
+                        var url = Evaluations.api.GET_ARBRE_DOMAINE + classe.id;
                         http().getJson(url).done((resDomaines) => {
                             if (resDomaines) {
                                 let _res = [];
@@ -264,7 +264,7 @@ export class Evaluations extends Model {
                 sync: async function (idClasse: string, competences) {
                     let that = this.composer;
                     return new Promise((resolve, reject) => {
-                        let uri = that.api.GET_ENSEIGNEMENT;
+                        let uri = Evaluations.api.GET_ENSEIGNEMENT;
                         if (idClasse !== undefined) {
                             uri += '?idClasse=' + idClasse;
                             http().getJson(uri).done(function (res) {

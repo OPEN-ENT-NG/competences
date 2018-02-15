@@ -265,6 +265,7 @@
   "viescolaire.utils.enseignements":"Enseignements",
   "viescolaire.structure.load": "Chargement de l'établissement",
   "viescolaire.structure.load.end": "en cours...",
+  "viescolaire.evaluation.result": "Résultat",
   "viescolaire.eleve.recherche":"Recherche Elève",
 
   "viescolaire.utils.groupeEnseignement":"Groupe d'enseignement",
@@ -296,7 +297,7 @@
   "viescolaire.utils.stats":"Statistiques",
   "viescolaire.utils.subjects":"Matières",
   "viescolaire.utils.coefficient":"Coefficient",
-
+  "viescolaire.utils.coef" : "Coef",
   "ariane.competences.createDevoir":"Ajouter une évaluation",
   "ariane.competences.editDevoir":"Modifier une évaluation",
   "ariane.competences.displayReleveNotes":"Relevé de notes",
