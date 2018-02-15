@@ -73,48 +73,40 @@
             </tr>
             </thead>
             <tbody>
-            <tr  ng-class="{'opened shadowOne' : openedDevoir === $index}"
-                    ng-repeat-start="devoir in devoirs.all| orderBy:propertyName:reverse| customSearchFilters:search  | filter:search.name ">
-                <td  ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                        data-label="[[translate('viescolaire.utils.date')]]">
-                    <div class="firstElem">[[getDateFormated(devoir.date)]]
-                    </div>
+            <tr ng-class="{'opened shadowOne' : openedDevoir === $index}"
+                ng-repeat-start="devoir in devoirs.all| orderBy:propertyName:reverse| customSearchFilters:search  | filter:search.name "
+                ng-click="goToDevoir(devoir.id)">
+                <td data-label="[[translate('viescolaire.utils.date')]]">
+                    <div class="firstElem">[[getDateFormated(devoir.date)]]</div>
                 </td>
                 <td ng-if="devoir.id_matiere !== ''"
-                    ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                    class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]" >
+                    class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]">
                     <div class="competence-text-overflow">[[getLibelleMatiere(devoir.id_matiere)]]</div>
                 </td>
                 <td ng-if="devoir.id_matiere === ''"
-                    ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                    class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]" >
+                    class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]">
                     <div class="competence-text-overflow">&nbsp;</div>
                 </td>
-                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                        class="testAlignLeft" data-label="[[translate('viescolaire.utils.name')]]">
+                <td class="testAlignLeft" data-label="[[translate('viescolaire.utils.name')]]">
                     <div class="competence-text-overflow">[[devoir.name]]</div>
                 </td>
-                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                        class="testAlignLeft" data-label="[[translate('viescolaire.utils.teacher')]]">
+                <td class="testAlignLeft" data-label="[[translate('viescolaire.utils.teacher')]]">
                     <div class="competence-text-overflow">[[getTeacherDisplayName(devoir.owner)]]</div>
                 </td>
-                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                        ng-if="devoir.competences.length !== undefined"
-                     data-label="[[translate('evaluations.skills.nb')]]">
+                <td ng-if="devoir.competences.length !== undefined"
+                    data-label="[[translate('evaluations.skills.nb')]]">
                     <div>[[devoir.competences.length]]</div>
                 </td>
-                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                        ng-if="devoir.annotation === undefined"
+                <td ng-if="devoir.annotation === undefined"
                     data-label="[[translate('viescolaire.evaluation.note')]]">
                     <div>[[(devoir.note !== -1) ? devoir.note : "&nbsp;"]]</div>
                 </td>
-                <td ng-click="goToDevoir('#/devoir/[[devoir.id]]')"
-                        ng-if="devoir.annotation !== undefined"
+                <td ng-if="devoir.annotation !== undefined"
                     data-label="[[translate('viescolaire.evaluation.note')]]">
                     <div>[[devoir.annotation.libelle_court]]</div>
                 </td>
                 <td class="one cell-check expandable-content zero-mobile">
-                    <div class="lastElem"> <span class="plus-input" ng-click="expand($index, true)"></span></div>
+                    <div class="lastElem"><span class="plus-input" ng-click="expand($index, true)"></span></div>
                 </td>
             </tr>
             <tr ng-repeat-end

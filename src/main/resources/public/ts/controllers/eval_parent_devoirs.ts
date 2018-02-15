@@ -109,8 +109,9 @@ export let listController = ng.controller('ListController', [
             await $scope.initListDevoirs();
             utils.safeApply($scope);
         });
-        $scope.goToDevoir = function(url) {
-            window.location.hash=url;
+
+        $scope.goToDevoir = (idDevoir) => {
+            window.location.hash = '#/devoir/' + idDevoir;
         };
 
         /**
