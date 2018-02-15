@@ -3042,17 +3042,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             }
-            http().getJson(url + "&json=true").error(() => {
-                $scope.exportDevoirObj.errExport = true;
-                utils.safeApply($scope);
-            }).done(() => {
-                $scope.exportDevoirObj.errExport = false;
-                $scope.printOption.display=false;
-                utils.safeApply($scope);
-                location.replace(url);
-
-            });
+            $scope.exportDevoirObj.errExport = false;
+            $scope.printOption.display = false;
             utils.safeApply($scope);
+            location.replace(url);
         };
 
         $scope.exportDevoirObj = {};
