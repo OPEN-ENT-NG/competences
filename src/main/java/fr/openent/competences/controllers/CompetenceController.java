@@ -219,9 +219,22 @@ public class CompetenceController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_UPDATE, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject competence) {
-                Number idComp = Long.valueOf(request.params().get("id"));
-                String idEtablissement = request.params().get("idEtablissement");
-                competencesService.update(idComp, idEtablissement, competence, defaultResponseHandler(request));
+                Number idComp = competence.getNumber("id");
+                competence.removeField("id");
+                String idEtablissement = competence.getString("id_etablissement");
+                competence.removeField("id_etablissement");
+                if (competence.getFieldNames().size() == 0) {
+                    leftToResponse(request, new Either.Left<>("Nothing to update"));
+                } else {
+                    String fieldToUpdate = competence.getFieldNames().iterator().next();
+                    Object valueToUpdate = competence.getField(fieldToUpdate);
+                    if (idComp != null && idEtablissement != null && valueToUpdate != null) {
+                        competencesService.update(idComp, idEtablissement, fieldToUpdate, valueToUpdate,
+                                defaultResponseHandler(request));
+                    } else {
+                        leftToResponse(request, new Either.Left<>("Nothing to update"));
+                    }
+                }
             }
         });
     }
