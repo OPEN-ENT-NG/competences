@@ -210,7 +210,7 @@ public class CompetenceController extends ControllerHelper {
         });
     }
 
-    @Put("/competence/:id")
+    @Put("/competence")
     @ApiDoc("Met à jour une compétence")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ParamCompetenceRight.class)
@@ -225,7 +225,7 @@ public class CompetenceController extends ControllerHelper {
         });
     }
 
-    @Delete("/competence/:id")
+    @Delete("/competence")
     @ApiDoc("Supprime une compétence")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ParamCompetenceRight.class)
