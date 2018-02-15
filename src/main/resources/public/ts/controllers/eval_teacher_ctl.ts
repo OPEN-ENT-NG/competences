@@ -356,6 +356,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let display = () => {
                         $scope.selected.matieres = [];
                         $scope.allUnselect = true;
+                        $scope.releveComp = {
+                            textMod: true
+                        };
+                        $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+
                         template.open('main', 'enseignants/suivi_competences_eleve/container');
                         if ($scope.informations.eleve === undefined) {
                             $scope.informations.eleve = null;
@@ -514,6 +519,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
             chartClasse: false,
             classes: [],
+            matieres: [],
         };
 
         $scope.syncPeriode = (idClasse) => {
@@ -3057,7 +3063,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.exportDevoirObj.errExport = true;
                 utils.safeApply($scope);
             }).done((result) => {
-                console.log("result", result);
                 $scope.opened.evaluation.exportDevoirLB = false;
                 $scope.textModExport = false;
                 $scope.exportDevoirObj.errExport = false;
@@ -3083,6 +3088,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 })
                 .done(() => {
                     delete $scope.releveComp;
+                    $scope.releveComp = {
+                        textMod: true
+                    };
                     $scope.opened.releveComp = false;
                     $scope.exportRelCompObj.errExport = false;
                     location.replace(url);
@@ -3125,5 +3133,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.lightboxChampsObligatoire = false;
         }
 
+        $scope.openedLigthbox = function(){
+            $scope.opened.releveComp = true;
+            $scope.releveComp.textMod = true;
+            $scope.selectUnselectMatieres(false);
+        }
     }
 ]);

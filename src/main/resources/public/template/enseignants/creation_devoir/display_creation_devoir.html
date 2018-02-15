@@ -491,29 +491,34 @@
 
     </div>
 </div>
+
 <lightbox show="lightboxChampsObligatoire == true" on-close="closeLightboxChampsObligatoire()">
-    <div ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
-    <h3><i18n>legend.of.double.asterisk.message</i18n></h3>
-</div>
-    <div ng-if="devoir.id_groupe == undefined || !devoir.name || devoir.id_periode == undefined || devoir.dateDevoir == undefined">
+    <h2><i18n>formulaire.incomplet</i18n></h2>
+    <div ng-if="devoir.id_groupe == undefined || !devoir.name || devoir.id_periode == undefined || devoir.dateDevoir == undefined
+                || devoir.id_type == undefined">
         <p><i18n>required.fields.not.selected</i18n></p>
-        <ol>
-            <li ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
-                <em><i18n>choose.evaluation.type</i18n></em>
+        <ul>
+            <li ng-if="devoir.id_type == undefined">
+                <span><i18n>choose.evaluation.type</i18n></span>
             </li>
             <li ng-if="devoir.id_groupe == undefined">
-                <em><i18n>viescolaire.utils.class.groupe</i18n></em>
+                <span><i18n>viescolaire.utils.class.groupe</i18n></span>
             </li>
             <li ng-if="!devoir.name">
-                <em><i18n>evaluations.test.title</i18n></em></em>
+                <span><i18n>evaluations.test.title</i18n></span>
             </li>
             <li ng-if="devoir.id_periode == undefined">
-                <em><i18n>viescolaire.utils.periode</i18n></em>
+                <span><i18n>viescolaire.utils.periode</i18n></span>
             </li>
             <li ng-if="devoir.dateDevoir == undefined">
-                <em><i18n>evaluations.test.date</i18n></em>
+                <span><i18n>evaluations.test.date</i18n></span>
             </li>
-        </ol>
+        </ul>
+    </div>
+    <div ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
+        <p ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
+            <i18n>required.fields.double.asterisk</i18n>
+        </p>
     </div>
 </lightbox>
 <lightbox  show="evaluations.competencesDevoir.length > MAX_NBR_COMPETENCE" on-close="controleNewDevoirForm()">

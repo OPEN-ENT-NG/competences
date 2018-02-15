@@ -29,9 +29,6 @@
             word-wrap: break-word;
             vertical-align: middle;
         }
-        .white-line {
-            border-left: solid 1px white;
-        }
 
         .header {
             margin-bottom: 10px;
@@ -53,23 +50,6 @@
         img {
             width: 10px;
             height: 10px;
-        }
-
-        .barEvaluation {
-            width: 80%;
-            height: 80%;
-            margin: auto;
-            background-color: black;
-        }
-
-        .barEvaluation td {
-            margin: auto;
-            padding: 0px;
-        }
-
-        .invert {
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
         }
 
         .rectangle{
@@ -138,7 +118,7 @@
 					{{ visu }}
 					{{/ text }}
 					{{^ text }}
-					<img src="img/cercle/{{ visu }}.png"/>
+					<img src="img/cercle/{{ ordre }}.png" alt=""/>
 					{{/ text }}
 					{{ libelle }}
 				</span><br/>

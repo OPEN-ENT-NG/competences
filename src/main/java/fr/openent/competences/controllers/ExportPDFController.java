@@ -1671,7 +1671,7 @@ public class ExportPDFController extends ControllerHelper {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
+                if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
                     JsonObject eleve = body.getArray("results").get(0);
                     final String name = eleve.getString("lastName").toUpperCase() + " " + eleve.getString("firstName");
                     final String idClasse = eleve.getString("idClasse");

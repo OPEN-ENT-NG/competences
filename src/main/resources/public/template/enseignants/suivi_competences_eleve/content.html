@@ -31,6 +31,17 @@
     </h2>
     <div class="row">
         <div class="twelve cell twelve-mobile">
+            <label><i18n class="titre-libelle">viescolaire.utils.type</i18n></label><br/>
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-model="releveComp.textMod">
+                <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
+            </label>
+        </div>
+    </div>
+    <div class="row">
+        <div class="twelve cell twelve-mobile">
+            <br/><label><i18n class="titre-libelle">viescolaire.utils.periode</i18n></label><br/>
             <label class=" six select">
                 <select ng-model="releveComp.periode"
                         ng-init="releveComp.periode=search.periode"
@@ -38,20 +49,20 @@
                         ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all track by periode.id ">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
-            </label>
+            </label><br/>
         </div>
     </div>
     <div class="row">
         <div class="twelve cell twelve-mobile">
-            <h3><i18n>viescolaire.utils.subjects</i18n></h3>
+            <label><i18n class="titre-libelle">viescolaire.utils.subjects</i18n></label><br/>
             <label class="chip multiselect all">
-                <span><i18n>viescolaire.utils.all.none</i18n></span>
+                <span><i18n>viescolaire.utils.all.none.feminin</i18n></span>
                 <input type="checkbox" ng-model="selectAllMatieres" ng-change="selectUnselectMatieres(selectAllMatieres)"/>
             </label>
         </div>
         <div class="twelve cell twelve-mobile">
             <div class="three cell horizontal-spacing vertical-spacing expandable-content"
-                 ng-repeat="matiere in matieres.all">
+                 ng-repeat="matiere in allMatieresSorted">
                 <div class="three cell">
                     <label class="checkbox">
                         <input type="checkbox" ng-model="matiere.select" ng-change="selectMatiere(matiere.id)">
@@ -61,15 +72,6 @@
                 <div class="nine cell">
                     <span class="export-competences">[[matiere.name]]</span>
                 </div>
-            </div>
-        </div>
-        <div class="twelve cell twelve-mobile">
-            <div class="three cell horizontal-spacing vertical-spacing expandable-content">
-                <label class="checkbox">
-                    <input type="checkbox"
-                           ng-model="releveComp.textMod">
-                    <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
-                </label>
             </div>
         </div>
     </div>
@@ -85,6 +87,9 @@
             <i18n>evaluations.export</i18n>
         </button>
     </div>
+    <!--<div class="row">-->
+        <!--<img ng-src="competences/public/template/enseignants/suivi_competences_eleve/0.png" alt=""/>-->
+    <!--</div>-->
 </lightbox>
 <div class="content-suivi-eleve twelve-mobile ten card"
      ng-if="informations.eleve !== '' && informations.eleve !== undefined && suiviCompetence !== undefined">
