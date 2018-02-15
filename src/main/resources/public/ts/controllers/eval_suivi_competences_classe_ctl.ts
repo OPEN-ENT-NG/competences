@@ -332,7 +332,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         // $scope.Display = {EvaluatedCompetences : true};
         $scope.ClasseFilterNotEvaluated = function (MaCompetence) {
-            if($scope.Display.EvaluatedCompetences === true){
+            if($scope.Display.EvaluatedCompetences === true || ($scope.Display.EvaluatedCompetences === false && MaCompetence.masque)){
                 let _t = MaCompetence.competencesEvaluations;
                 if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
                     _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {

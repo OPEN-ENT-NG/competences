@@ -825,7 +825,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.selected.grey = true;
 
         $scope.FilterNotEvaluated = function (MaCompetence) {
-            if($scope.selected.grey === true){
+            if($scope.selected.grey === true || ($scope.selected.grey === false && MaCompetence.masque)) {
                 let _t = MaCompetence.competencesEvaluations;
                 if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
                     _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {

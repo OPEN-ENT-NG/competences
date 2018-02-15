@@ -21,6 +21,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             functionFilter : '=',
             functionSearch : '=',
             functionFilterCompetencesByDomaines : '=',
+            functionFilterHidden : '=',
             enseignementsFilter : '=',
             competencesFilter: '=',
             search: '='
@@ -136,13 +137,17 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.$on('checkConnaissances', function(event, parentItem){
                 return (parentItem.competences.each(function(e){
-                    $scope.competencesFilter[e.id+"_"+e.id_enseignement].isSelected = $scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected;
+                    $scope.competencesFilter[e.id+"_"+e.id_enseignement].isSelected = $scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected
+                                                                                    && !$scope.competencesFilter[e.id + "_" + e.id_enseignement].data.masque;
                 }));
             });
 
             // item pas utilise ici mais utilise dans la creation d'un devoir
             $scope.$on('checkParent', function(event, parentItem, item){
-                return ($scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected = parentItem.competences.every(function(e){ return $scope.competencesFilter[e.id+"_"+e.id_enseignement].isSelected === true; }));
+                return ($scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected = parentItem.competences.every(function(e){
+                    let comp = $scope.competencesFilter[e.id + "_" + e.id_enseignement];
+                    return comp.isSelected === true || comp.data.masque;
+                }));
             });
 
 

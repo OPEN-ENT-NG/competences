@@ -690,7 +690,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         let currComp = $scope.competencesFilter[j];
                         if (currComp !== undefined &&
                             currComp.data.id_parent === parentToCheck[i].data.id) {
-                            checkIt = currComp.isSelected;
+                            checkIt = currComp.isSelected || currComp.data.masque;
                         }
                         // si on rencontre un fils non selectionné on arrête de chercher
                         if (!checkIt) {
@@ -1296,6 +1296,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return false;
         };
 
+        $scope.hideHiddenCompetence = (competence) => {
+            if(!_.isEmpty(competence.competences.all)) {
+                return _.some(competence.competences.all, {masque: false});
+            } else if(_.findWhere($scope.devoir.competences.all, {id_competence : competence.id})) {
+                return true;
+            } else {
+                return !competence.masque;
+            }
+        };
+
 
         /**
          * Sélectionne/désélectionne tous les enseignements dans l'écran de filtre des compétences
@@ -1593,7 +1603,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 // ie on doit ajouter/supprimer toutes les sous competences dans le recap
         $scope.$on('checkConnaissances', function (event, parentItem) {
             parentItem.competences.each(function (e) {
-                if ($scope.competencesFilter[parentItem.id + "_" + parentItem.id_enseignement].isSelected === true) {
+                if(e.masque) {
+                    return;
+                } else if ($scope.competencesFilter[parentItem.id + "_" + parentItem.id_enseignement].isSelected === true) {
                     // check si on a pas deja ajoute pour eviter les doublons
                     var competence = _.findWhere(evaluations.competencesDevoir, {id: e.id});
 
@@ -1787,6 +1799,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 });
 
+                utils.safeApply($scope);
 
             } else {
                 $scope.firstConfirmSuppSkill = true;
