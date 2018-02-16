@@ -46,7 +46,7 @@
                                 <option value="" class="header-opt">Classe / Groupe</option>
                             </select>
                         </label>
-                        <div class="FloatRight periodeWidgetAccueil">
+                        <div ng-class="{twelve : isChefEtab()}" class="FloatRight periodeWidgetAccueil">
                         <label class="select right-magnet"
                                ng-hide="search.classe == null || search.classe == '*' || search.classe == ''"
                                ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
