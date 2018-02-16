@@ -1827,8 +1827,7 @@ public class ExportPDFController extends ControllerHelper {
                         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
                             @Override
                             public void handle(final UserInfos user) {
-                                final boolean isChefEtab = (user!= null)?("Personnel".equals(user.getType())  &&
-                                        user.getFunctions().containsKey("DIR")):true;
+                                final boolean isChefEtab = (user!= null)?("Personnel".equals(user.getType()) && user.getFunctions().containsKey("DIR")):true;
                                     if((user != null) || isChefEtab ) {
                                         bfcService.getVisibility(idEtablissement, user, new Handler<Either<String, JsonArray>>() {
                                             @Override
@@ -1839,6 +1838,8 @@ public class ExportPDFController extends ControllerHelper {
                                                         JsonArray result = stringJsonArrayEither.right().getValue();
                                                         moy = ((JsonObject)result.get(0)).getBoolean("visible");;
                                                     }
+                                                    if(isChefEtab)
+                                                        moy = true;
                                                     final boolean isHabilite = moy;
 
                                                     exportService.getExportRecapEval(text, idCycle, idEtablissement, new Handler<Either<String, JsonArray>>() {
