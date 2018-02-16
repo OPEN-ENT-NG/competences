@@ -136,7 +136,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         }
 
         query += " AND comp.id_etablissement IS NULL OR comp.id_etablissement = ? " +
-                " ORDER BY comp.id ASC";
+                " ORDER BY nom ASC";
 
         values.addString(idEtablissement);
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
