@@ -268,7 +268,7 @@ export const itemsCompetences = {
             return {
                 id: item.id,
                 id_etablissement: itemsCompetences.that.structure.id,
-                masque: item.masque
+                masque: !item.masque
             };
         },
         jsonUpdateNameItem: function (item) {
