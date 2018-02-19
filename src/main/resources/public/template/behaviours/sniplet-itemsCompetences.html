@@ -24,7 +24,8 @@
                 <span><i18n>evaluations.perso.cancel</i18n></span>
             </button>
         </lightbox>
-        <lightbox show="opened.lightboxCreateItem" on-close="opened.lightboxCreateItem=!opened.lightboxCreateItem">
+        <lightbox show="opened.lightboxCreateItem"
+                  on-close="opened.lightboxCreateItem=!opened.lightboxCreateItem">
             <container template="lightboxContainerCreateItem"></container>
         </lightbox>
     </div>
@@ -84,7 +85,7 @@
                     <div ng-init="competence.nomhtml = competence.nom"
                          tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
                         <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
-                                ng-bind-html="competence.nomhtml"></span>
+                              ng-bind-html="competence.nomhtml"></span>
                     </div>
                 </div>
             </div>
@@ -112,8 +113,8 @@
                 <div
                         ng-class="{'openedSectionDom' : enseignement.OpenDom}"
                         class="twelve cell" style='height: auto;'>
-                    <div ng-repeat="connaissance in enseignement.competences.all">
-                        <div ng-init="connaissance.OpenSousDom = false; connaissance.action = false"
+                    <div  ng-repeat="connaissance in enseignement.competences.all">
+                        <div ng-init="initEnseignementConnaissance(connaissance);"
                              ng-mouseover="connaissance.action = true"
                              ng-mouseleave="connaissance.action = false">
                             <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}"
@@ -128,43 +129,37 @@
                                  style='height: auto;'>
                             </div>
                         </div>
-                        <div class="suivi-eleve-item competence-line"
-                             ng-repeat="competence in connaissance.competences.all"
-                             ng-init="competence.action = false; competence.rename = false;"
-                             ng-mouseover="competence.action = true"
-                             ng-mouseleave="competence.action = false"
-                             ng-class="{'zero':
+                        <div  sortable-list ng-model="connaissance.competences.all"
+                              ng-change="updateOrderConnaisance(connaissance)       " class="thought-out-actions">
+                            <div sortable-element
+                                 class="suivi-eleve-item competence-line"
+                                 ng-repeat="competence in connaissance.competences.all| orderBy:'index'"
+                                 ng-init="initEnseignementItem(competence, $index);"
+                                 ng-model="competence.index"
+                                 ng-change="updateOrder(competence)"
+                                 ng-class="{'zero':
                                  competencesFilter[competence.id+'_'+competence.id_enseignement].data.open
                                         === false && search.keyword !== ''}">
-                            <div ng-if="competence.ismanuelle" data-ng-click="trash(competence);"
-                                 class="inline-block ellipsis competence">
-                                <i ng-show="competence.action" class="trash"></i>
-                            </div>
-                            <div ng-if="!competence.ismanuelle" data-ng-click="saveItem(competence, 'reinitItem');"
-                                 class="inline-block ellipsis competence">
-                                <i ng-show="competence.action" class="arrows-cw"></i>
-                            </div>
-                            <div ng-class="{'selected-item': lastCompetence.id === competence.id
+                                <div ng-class="{'selected-item': lastCompetence.id === competence.id
                                                             && !competence.rename
-                                                            && !template.isEmpty('patchwork' + competence.id)}"
-                                 ng-click="openItemDomaine(competence)"
-                                 tooltip="[[competence.nom]]" class="six inline-block ellipsis competence"
-                                 ng-hide="competence.rename">
+                                                            && !isEmptyShowDomaine(competence.id)}"
+                                     class="six inline-block ellipsis competence"
+                                     ng-hide="competence.rename">
                                    <span  ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
                                         <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
-                                                ng-bind-html="
+                                              ng-bind-html="
                                                competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
                                          </span>
                                     </span>
-                            </div>
-                            <div ng-class="{'selected-item': lastCompetence.id === competence.id
+                                </div>
+                                <div ng-class="{'selected-item': lastCompetence.id === competence.id
                                                             && !competence.rename
-                                                            && !template.isEmpty('patchwork' + competence.id)}"
-                                 tooltip="[[competence.nom]]" class="six inline-block ellipsis competence"
-                                 ng-show="competence.rename">
+                                                            && !isEmptyShowDomaine(competence.id)}"
+                                     class="six inline-block ellipsis competence"
+                                     ng-show="competence.rename">
 
                                 <span
-                                    ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                        ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
                                     <ng-form name="skillsTextForm" >
                                         <input type="text"
                                                style="margin-bottom: 0px;"
@@ -176,25 +171,40 @@
                                         </div>
                                     </ng-form>
                                 </span>
+                                </div>
+                                <dots-menu>
+                                    <opt  data-ng-click="saveItem(competence, 'mask');"
+                                          ng-if="!competence.masque">
+                                        <i ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}">
+                                        </i>
+                                        &nbsp;<i18n>item.mask</i18n>
+                                    </opt>
+                                    <opt  data-ng-click="saveItem(competence, 'mask');"
+                                          ng-if="competence.masque">
+                                        <i ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}">
+                                        </i>
+                                        &nbsp;<i18n>item.demask</i18n>
+                                    </opt>
+                                    <opt data-ng-click="competence.rename = ! competence.rename;">
+                                        <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
+                                    </opt>
+                                    <opt ng-if="competence.ismanuelle" data-ng-click="trash(competence);">
+                                        <i  class="trash"></i>&nbsp;<i18n>item.delete</i18n>
+                                    </opt>
+                                    <opt ng-if="!competence.ismanuelle"
+                                         data-ng-click="saveItem(competence, 'reinitItem');">
+                                        <i  class="arrows-cw"></i>&nbsp;<i18n>item.reinit</i18n>
+                                    </opt>
+                                    <opt ng-click="openItemDomaine(competence)">
+                                        <i  class="updateDomaine"></i>&nbsp;<i18n>item.show.domaine</i18n>
+                                    </opt>
+                                </dots-menu>
+
+
+                                <container
+                                        template="patchwork[[competence.id]]" class="flexible content cell">
+                                </container>
                             </div>
-                            <div data-ng-click="saveItem(competence, 'mask');"
-                                 class="inline-block ellipsis competence">
-                                <i ng-show="competence.action"
-                                   ng-if="!competence.masque"
-                                   tooltip="item.mask"
-                                   ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}"></i>
-                                <i ng-show="competence.action"
-                                   ng-if="competence.masque"
-                                   tooltip="item.demask"
-                                   ng-class="{'eye-slash': competence.masque, 'eye-open': !competence.masque}"></i>
-                            </div>
-                            <div  data-ng-click="competence.rename = ! competence.rename;"
-                                 class="inline-block ellipsis competence">
-                                <i ng-show="competence.action" class="pencil"></i>
-                            </div>
-                            <container
-                                    template="patchwork[[competence.id]]" class="flexible content cell">
-                            </container>
                         </div>
                     </div>
                 </div>

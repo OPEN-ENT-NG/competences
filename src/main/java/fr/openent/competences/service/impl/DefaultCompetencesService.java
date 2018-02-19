@@ -55,6 +55,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             + "." + Competences.REL_COMPETENCES_ENSEIGNEMENTS_TABLE;
     private static final String COMPETENCES_PERSO_TABLE = Competences.COMPETENCES_SCHEMA
             + "." + Competences.PERSO_COMPETENCES_TABLE;
+    private static final String COMPETENCES_PERSO_ORDRE_TABLE = Competences.COMPETENCES_SCHEMA
+            + "." + Competences.PERSO_COMPETENCES_ORDRE_TABLE;
     private static final String COMPETENCES_DEVOIRS_TABLE = Competences.COMPETENCES_SCHEMA
             + "." + Competences.COMPETENCES_DEVOIRS;
     private static final String DEVOIRS_TABLE = Competences.COMPETENCES_SCHEMA
@@ -256,12 +258,15 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             String query = "SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine," +
                     " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id," +
                     " COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_parent, comp.id_type," +
-                    " compEns.id_enseignement, comp.id_cycle," +
+                    " compEns.id_enseignement, comp.id_cycle, perso_ordre.index as index,  " +
                     " CASE WHEN comp.id_etablissement IS NULL THEN FALSE ELSE TRUE END AS isManuelle," +
                     " CASE WHEN compPerso.masque IS TRUE THEN TRUE ELSE FALSE END AS masque" +
                     " FROM " + COMPETENCES_TABLE + " AS comp" +
                     " INNER JOIN " + COMPETENCES_ENSEIGNEMENTS_TABLE + " AS compEns" +
-                    " ON (comp.id = compEns.id_competence) ";
+                    " ON (comp.id = compEns.id_competence) " +
+                    " LEFT OUTER JOIN " + COMPETENCES_SCHEMA + ".perso_order_item_enseignement AS perso_ordre" +
+                    " ON ( perso_ordre.id_competence = compEns.id_competence AND " +
+                    " perso_ordre.id_enseignement = compEns.id_enseignement ) ";
 
             if (idClasse != null) {
                 query += "INNER JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle" +
@@ -285,7 +290,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             }
 
             query += " GROUP BY comp.id, COALESCE(compPerso.nom, comp.nom), comp.id_parent, comp.id_type," +
-                    " compEns.id_enseignement, comp.id_cycle, compPerso.masque ORDER BY nom ASC";
+                    " compEns.id_enseignement, comp.id_cycle, compPerso.masque, perso_ordre.index " +
+                    " ORDER BY index, nom ASC";
 
             sql.prepared(query, params, SqlResult.validResultHandler(handler));
         }
@@ -416,21 +422,46 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         });
     }
 
-//    private void diffDomaine()
+    private void changeIndexComp(final Number idComp, final Number idEnseignement,final String idEtablissement,
+                                 final JsonArray index , final Handler<Either<String, JsonObject>> handler) {
+
+        StringBuffer query = new StringBuffer("INSERT INTO " + COMPETENCES_PERSO_ORDRE_TABLE +
+                " (id_competence, id_etablissement, id_enseignement, index)  VALUES ") ;
+        JsonArray values = new JsonArray();
+        for(int i = 0; i < index.size(); i++){
+            query.append("(?, ?, ? ,?) ");
+            JsonObject rel_comp_ens = (JsonObject) index.get(i);
+            values.addNumber(rel_comp_ens.getNumber("id"))
+                    .addString(rel_comp_ens.getString("id_etablissement"))
+                    .addNumber(rel_comp_ens.getNumber("id_enseignement"))
+                    .addNumber(rel_comp_ens.getNumber("index"));
+            if(i != index.size()-1){
+                query.append(",");
+            }else{
+                query.append(" ON CONFLICT ON CONSTRAINT order_items_etablissement_pk DO UPDATE" +
+                        " SET index = EXCLUDED.index RETURNING *");
+            }
+        }
+
+        sql.prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
+
+    }
 
     @Override
     public void update(Number idComp, String idEtab, String fieldToUpdate, Object valueToUpdate,
-                       Handler<Either<String, JsonObject>> handler) {
+                       Handler<Either<String, JsonObject>> handler, Number idEns) {
         switch (fieldToUpdate) {
             case "masque":
                 updateMasqueComp(idComp, idEtab, (Boolean) valueToUpdate, handler);
                 break;
             case "id_domaine":
-                updateDomain(idComp, idEtab, (Number) valueToUpdate, handler);
+//                updateDomain(idComp, idEtab, )
                 break;
             case "nom":
                 changeNameComp(idComp, idEtab, (String) valueToUpdate, handler);
                 break;
+            case "index":
+                changeIndexComp(idComp, idEns, idEtab, (JsonArray) valueToUpdate, handler);
             default:
         }
     }
@@ -485,6 +516,18 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 .putString("statement", queryMask.toString())
                 .putArray("values", paramsMask)
                 .putString("action", "prepared"));
+
+        // SUPPRESSION D'INFO PERSONNALISATION D'ORDRE
+        StringBuilder queryPersoOrdre = new StringBuilder().append("DELETE FROM " + COMPETENCES_PERSO_ORDRE_TABLE)
+                .append(" WHERE id_etablissement = ? ");
+        JsonArray paramsPersoOrdre = new JsonArray();
+
+        paramsPersoOrdre.addString(idEtablissement);
+        statements.add(new JsonObject()
+                .putString("statement", queryPersoOrdre.toString())
+                .putArray("values", paramsPersoOrdre)
+                .putString("action", "prepared"));
+
         Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
     }
 }

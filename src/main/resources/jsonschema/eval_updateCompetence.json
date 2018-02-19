@@ -13,10 +13,17 @@
       "type": "string"
     },
     "id_domaine": {
-      "type": "number"
+      "type": "integer"
     },
     "masque": {
       "type": "boolean"
+    },
+    "index": {
+      "type": "array"
+    },
+    "id_enseignement": {
+      "type": "number"
     }
   }
 }
+

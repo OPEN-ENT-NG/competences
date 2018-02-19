@@ -212,7 +212,7 @@ public class CompetenceController extends ControllerHelper {
     }
 
     @Put("/competence")
-    @ApiDoc("Met à jour une compétence")
+    @ApiDoc("Met à jour une compétence ou l'ordre des compétences d'une connaissance")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(ParamCompetenceRight.class)
     public void updateCompetence(final HttpServerRequest request) {
@@ -223,14 +223,18 @@ public class CompetenceController extends ControllerHelper {
                 competence.removeField("id");
                 String idEtablissement = competence.getString("id_etablissement");
                 competence.removeField("id_etablissement");
-                if (competence.getFieldNames().size() == 0) {
+                Number idEns = competence.getNumber("id_enseignement");
+                competence.removeField("id_enseignement");
+
+                if(competence.getFieldNames().size() == 0) {
                     leftToResponse(request, new Either.Left<>("Nothing to update"));
                 } else {
                     String fieldToUpdate = competence.getFieldNames().iterator().next();
                     Object valueToUpdate = competence.getField(fieldToUpdate);
-                    if (idComp != null && idEtablissement != null && valueToUpdate != null) {
+                    if ((idComp != null && idEtablissement != null && valueToUpdate != null)
+                            || "index".equals(fieldToUpdate) ) {
                         competencesService.update(idComp, idEtablissement, fieldToUpdate, valueToUpdate,
-                                defaultResponseHandler(request));
+                                defaultResponseHandler(request), idEns);
                     } else {
                         leftToResponse(request, new Either.Left<>("Nothing to update"));
                     }

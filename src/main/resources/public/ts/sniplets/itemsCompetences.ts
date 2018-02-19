@@ -1,4 +1,4 @@
-import {_, http, template} from 'entcore';
+import {_, http, notify, template, idiom as lang} from 'entcore';
 import {Domaine} from '../models/teacher';
 import * as utils from '../utils/teacher';
 
@@ -85,7 +85,7 @@ export const itemsCompetences = {
                 this.lastSelectedCycle = this.$parent.lastSelectedCycle;
                 utils.safeApply(this);
             });
-            this.$watch( () => this.search.keyword, (newValue, oldValue) => {
+            this.$watch(() => this.search.keyword, (newValue, oldValue) => {
                 this.search.haschange = (newValue !== oldValue);
                 utils.safeApply(this);
             });
@@ -95,7 +95,7 @@ export const itemsCompetences = {
                 let domaines = _.groupBy(this.domaines.all, 'id_cycle');
                 for (let index in domaines) {
                     let cycle = _.findWhere(this.source.cycles, {id_cycle: parseInt(index)});
-                    if (cycle !== undefined ) {
+                    if (cycle !== undefined) {
                         cycle.domaines = {
                             all: domaines[index]
                         };
@@ -185,7 +185,7 @@ export const itemsCompetences = {
                     this.getCompetences();
                     utils.safeApply(this);
                 })
-                .error( () => {
+                .error(() => {
                     this.opened.errorDeletePersoItem = true;
                     console.log('delete not work');
                     utils.safeApply(this);
@@ -225,7 +225,7 @@ export const itemsCompetences = {
                 this.itemsCompetences.that.newItem.ids_domaine =
                     _.without(this.itemsCompetences.that.newItem.ids_domaine, domaine.id);
             }
-            if ( this.itemsCompetences.that.newItem.hasOwnProperty('id') ) {
+            if (this.itemsCompetences.that.newItem.hasOwnProperty('id')) {
                 this.itemsCompetences.that.updatedDomaineId = domaine.id;
                 this.itemsCompetences.that.saveItem(this.itemsCompetences.that.newItem, 'updateDomaine');
             }
@@ -285,6 +285,14 @@ export const itemsCompetences = {
                 id_domaine: itemsCompetences.that.updatedDomaineId
             };
         },
+        jsonUpdateOrderItem: function (item) {
+            return {
+                id: item.id,
+                id_etablissement: itemsCompetences.that.structure.id,
+                id_enseignement: item.id_enseignement,
+                index: item.index
+            };
+        },
         saveItem: function (item, action) {
             switch (action) {
                 case 'create': {
@@ -292,24 +300,34 @@ export const itemsCompetences = {
                         .done(() => {
                             this.opened.lightboxCreateItem = false;
                             this.getCompetences();
+                            notify.success('item.success.create');
                             utils.safeApply(this);
                         })
-                        .error(function () {
+                        .error((res) => {
+                            console.dir(res);
                             this.opened.lightboxCreateItem = false;
-                            console.log(' error createItem');
+                            this.opened.error = true;
+                            if (res.status === 401) {
+                                notify.error('item.error.unautorize.create');
+                                utils.safeApply(this);
+                            }
+                            else {
+                                notify.error('item.error.create');
+                                utils.safeApply(this);
+                            }
                         }).bind(this);
                     break;
                 }
                 case 'mask': {
-                    console.dir('mask Off' + item.nom);
-                    console.log('' );
                     http().putJson(`competences/competence`, this.jsonUpdateMaskItem(item))
                         .done(() => {
                             item.masque = !item.masque;
+                            notify.info('item.success.updateMask');
                             utils.safeApply(this);
                         })
                         .error(function () {
-                            console.log(' error Mask Item');
+                            notify.error('item.error.updateMask');
+                            utils.safeApply(this);
                         }).bind(this);
                     break;
                 }
@@ -317,10 +335,12 @@ export const itemsCompetences = {
                     http().putJson(`competences/competence`, this.jsonUpdateNameItem(item))
                         .done(() => {
                             this.getCompetences();
+                            notify.info('item.success.updateName');
                             utils.safeApply(this);
                         })
                         .error(function () {
-                            console.log(' error Rename Item');
+                            notify.error('item.error.updateName');
+                            utils.safeApply(this);
                         }).bind(this);
                     break;
                 }
@@ -332,30 +352,82 @@ export const itemsCompetences = {
                             utils.safeApply(this);
                             template.open('patchwork' + item.id,
                                 '../../../competences/public/template/personnels/param_items/showDomaine');
+                            notify.info('item.success.updateDomaine');
                             utils.safeApply(this);
                         })
                         .error(function () {
-                            console.log(' error updateDomaine Item');
+                            notify.error('item.error.updateDomaine');
+                            utils.safeApply(this);
                         }).bind(this);
                     break;
                 }
                 case 'reinitItem': {
-                    this.trash(item);
+                    this.trash(item, true);
                     break;
                 }
-                default: break;
+                default:
+                    break;
             }
         },
-        trash: function (item) {
+        trash: function (item, reinit) {
             console.dir('trash' + item.nom);
             http().delete(`competences/competence?id=${item.id}&id_etablissement=${itemsCompetences.that.structure.id}`)
                 .done(() => {
                     this.getCompetences();
-                    utils.safeApply(this);
+                    if(reinit) {
+                        notify.success('item.success.reinit');
+                        utils.safeApply(this);
+                    }else {
+                        notify.success('item.success.delete');
+                        utils.safeApply(this);
+                    }
                 })
                 .error(function () {
-                    console.log(' error createItem');
+                    notify.error('item.error.delete');
+                    utils.safeApply(this);
                 }).bind(this);
+        },
+        updateOrder: function (competence) {
+            if (competence.oldIndex !== competence.index) {
+                console.log(' ');
+                competence.oldIndex = competence.index;
+                this.competence.oldIndex = competence.oldIndex;
+                let res = [];
+                for (let i = 0 ; i < this.$parent.connaissance.competences.all.length; i++) {
+                    let _c = _.findWhere(this.$parent.connaissance.competences.all, {index: i});
+                    if (_c !== undefined) {
+                        res.push(this.jsonUpdateOrderItem(_c));
+                    }
+                }
+                if (res.length === this.$parent.connaissance.competences.all.length) {
+                    console.dir(competence.index + ' update competence ' + competence.id);
+
+                    http().putJson(`competences/competence`, {index: res})
+                        .done(() => {
+                            notify.success('item.success.updateOrder');
+                            utils.safeApply(this);
+                        })
+                        .error(function () {
+                            notify.error('item.error.updateOrder');
+                            utils.safeApply(this);
+                        }).bind(this);
+                }
+            }
+        },
+        initEnseignementItem: function(competence, index) {
+            competence.action = false;
+            competence.rename = false;
+            if ( competence.index === undefined) {
+                competence.index = index;
+                competence.oldIndex = index;
+            }
+        },
+        initEnseignementConnaissance: function (connaissance) {
+            connaissance.OpenSousDom = false;
+            connaissance.action = false;
+        },
+        isEmptyShowDomaine: function(id) {
+            return template.isEmpty('patchwork' + id);
         }
     }
 };

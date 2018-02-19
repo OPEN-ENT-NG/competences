@@ -96,7 +96,7 @@ public interface CompetencesService extends CrudService {
     void create(JsonObject competence, Handler<Either<String, JsonObject>> handler);
 
     void update(Number idComp, String idEtab, String fieldToUpdate, Object valueToUpdate,
-                Handler<Either<String, JsonObject>> handler);
+                Handler<Either<String, JsonObject>> handler, Number idEns);
 
     void delete(Number id, String idEtablissement, Handler<Either<String, JsonObject>> handler);
 
