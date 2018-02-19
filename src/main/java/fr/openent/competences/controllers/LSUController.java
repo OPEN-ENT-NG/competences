@@ -92,7 +92,7 @@ public class LSUController extends ControllerHelper {
                 if ("ok".equals(body.getString("status"))) {
                     JsonObject valueUAI = body.getObject("result");
                     if (valueUAI != null) {
-                        Entete entete = objectFactory.createEntete("EDITEUR","LOGICIEL", valueUAI.getString("uai"));
+                        Entete entete = objectFactory.createEntete("CGI","OpenENT", valueUAI.getString("uai"));
                         lsunBilans.setEntete(entete);
                         handler.handle("success");
                     } else {
