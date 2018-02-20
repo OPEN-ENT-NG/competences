@@ -1691,11 +1691,11 @@ public class ExportPDFController extends ControllerHelper {
                                 JsonArray result = body.getArray("results");
                                 final List<String> idGroupes = new ArrayList<>();
                                 final List<String> nomGroupes = new ArrayList<>();
-                                for (int i = 0; i < result.size(); i++) {
-                                    JsonObject groupe = ((JsonObject) result.get(i)).getObject("g").getObject("data");
-                                    idGroupes.add(groupe.getString("id"));
-                                    nomGroupes.add(groupe.getString("name"));
-                                }
+//                                for (int i = 0; i < result.size(); i++) {
+//                                    JsonObject groupe = ((JsonObject) result.get(i)).getObject("g").getObject("data");
+//                                    idGroupes.add(groupe.getString("id"));
+//                                    nomGroupes.add(groupe.getString("name"));
+//                                }
                                 idGroupes.add(idClasse);
                                 nomGroupes.add(nomClasse);
 
@@ -1885,7 +1885,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                     idDomaines[l] = idDomaine.intValue();
                                                                                                 }
 
-                                                                                                for (int i = 0; i < idEleves.length - 1; i++){
+                                                                                                for (int i = 0; i < idEleves.length; i++){
                                                                                                     JsonObject eleve = new JsonObject();
                                                                                                     JsonArray notesEleve = new JsonArray();
                                                                                                     List domainesEvalues = new ArrayList();
