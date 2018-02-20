@@ -300,7 +300,7 @@ export const itemsCompetences = {
                         .done(() => {
                             this.opened.lightboxCreateItem = false;
                             this.getCompetences();
-                            notify.success('item.success.create');
+                            notify.info('item.success.create');
                             utils.safeApply(this);
                         })
                         .error((res) => {
@@ -332,17 +332,21 @@ export const itemsCompetences = {
                     break;
                 }
                 case 'rename': {
-                    http().putJson(`competences/competence`, this.jsonUpdateNameItem(item))
-                        .done(() => {
-                            this.getCompetences();
-                            notify.info('item.success.updateName');
-                            utils.safeApply(this);
-                        })
-                        .error(function () {
-                            notify.error('item.error.updateName');
-                            utils.safeApply(this);
-                        }).bind(this);
+                    if (item.name !== item.nom) {
+                        item.nom = item.name;
+                        http().putJson(`competences/competence`, this.jsonUpdateNameItem(item))
+                            .done(() => {
+                                this.getCompetences();
+                                notify.info('item.success.updateName');
+                                utils.safeApply(this);
+                            })
+                            .error(function () {
+                                notify.error('item.error.updateName');
+                                utils.safeApply(this);
+                            }).bind(this);
+                    }
                     break;
+
                 }
                 case 'updateDomaine': {
                     http().putJson(`competences/competence`, this.jsonUpdateDomaineItem(item))
@@ -352,7 +356,6 @@ export const itemsCompetences = {
                             utils.safeApply(this);
                             template.open('patchwork' + item.id,
                                 '../../../competences/public/template/personnels/param_items/showDomaine');
-                            notify.info('item.success.updateDomaine');
                             utils.safeApply(this);
                         })
                         .error(function () {
@@ -375,10 +378,10 @@ export const itemsCompetences = {
                 .done(() => {
                     this.getCompetences();
                     if(reinit) {
-                        notify.success('item.success.reinit');
+                        notify.info('item.success.reinit');
                         utils.safeApply(this);
                     }else {
-                        notify.success('item.success.delete');
+                        notify.info('item.success.delete');
                         utils.safeApply(this);
                     }
                 })
@@ -404,7 +407,7 @@ export const itemsCompetences = {
 
                     http().putJson(`competences/competence`, {index: res})
                         .done(() => {
-                            notify.success('item.success.updateOrder');
+                            // notify.success('item.success.updateOrder');
                             utils.safeApply(this);
                         })
                         .error(function () {

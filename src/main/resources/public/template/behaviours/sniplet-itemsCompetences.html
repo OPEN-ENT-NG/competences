@@ -146,6 +146,7 @@
                                      class="six inline-block ellipsis competence"
                                      ng-hide="competence.rename">
                                    <span  ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                       <i ng-class="{'manual-item' : competence.ismanuelle}"></i>
                                         <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
                                               ng-bind-html="
                                                competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
@@ -165,7 +166,8 @@
                                                style="margin-bottom: 0px;"
                                                class="twelve inline-block ellipsis competence"
                                                ng-blur="saveItem(competence, 'rename')"
-                                               ng-model="competence.nom">
+                                               ng-init="competence.name = competence.nom "
+                                               ng-model="competence.name">
                                         <div ng-if="skillsTextForm.letter.$error.maxlength" class="warning">
                                             <i18n>evaluation.skill.text.invalid</i18n>
                                         </div>
@@ -191,7 +193,7 @@
                                     <opt ng-if="competence.ismanuelle" data-ng-click="trash(competence);">
                                         <i  class="trash"></i>&nbsp;<i18n>item.delete</i18n>
                                     </opt>
-                                    <opt ng-if="!competence.ismanuelle"
+                                    <opt ng-if="!competence.ismanuelle && competence.hasnameperso"
                                          data-ng-click="saveItem(competence, 'reinitItem');">
                                         <i  class="arrows-cw"></i>&nbsp;<i18n>item.reinit</i18n>
                                     </opt>

@@ -260,6 +260,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_parent, comp.id_type," +
                     " compEns.id_enseignement, comp.id_cycle, perso_ordre.index as index,  " +
                     " CASE WHEN comp.id_etablissement IS NULL THEN FALSE ELSE TRUE END AS isManuelle," +
+                    " CASE WHEN compPerso.nom IS NULL THEN FALSE ELSE TRUE END AS hasNamePerso," +
                     " CASE WHEN compPerso.masque IS TRUE THEN TRUE ELSE FALSE END AS masque" +
                     " FROM " + COMPETENCES_TABLE + " AS comp" +
                     " INNER JOIN " + COMPETENCES_ENSEIGNEMENTS_TABLE + " AS compEns" +
@@ -290,7 +291,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             }
 
             query += " GROUP BY comp.id, COALESCE(compPerso.nom, comp.nom), comp.id_parent, comp.id_type," +
-                    " compEns.id_enseignement, comp.id_cycle, compPerso.masque, perso_ordre.index " +
+                    " compEns.id_enseignement, comp.id_cycle, compPerso.masque, perso_ordre.index, compPerso.nom  " +
                     " ORDER BY index, nom ASC";
 
             sql.prepared(query, params, SqlResult.validResultHandler(handler));
