@@ -28,6 +28,34 @@
              ng-if="exportRecapEvalObj.errExport">
             <i18n>evaluations.export.err</i18n>
         </div>
+        <div class="warning"
+             ng-if="evalNotFound">
+            <i18n>evaluations.export.eval.not.found.err</i18n>
+        </div>
+        <div class="warning"
+             ng-if="periodeNotFound">
+            <i18n>evaluations.export.periode.not.found.err</i18n>
+        </div>
+        <div class="warning"
+             ng-if="classeNotFound">
+            <i18n>evaluations.export.classe.not.found.err</i18n>
+        </div>
+        <div class="warning"
+             ng-if="etabNotFound">
+            <i18n>evaluations.export.etab.not.found.err</i18n>
+        </div>
+        <div class="warning"
+             ng-if="elevesNotFound">
+            <i18n>evaluations.export.eleves.not.found.err</i18n>
+        </div>
+        <div class="warning"
+             ng-if="bfcNotFound">
+            <i18n>evaluations.export.bfc.not.found.err</i18n>
+        </div>
+        <div class="warning"
+             ng-if="cycleNotFound">
+            <i18n>evaluations.export.cycle.not.found.err</i18n>
+        </div>
         <div class="twelve cell twelve-mobile">
             <div class="three cell horizontal-spacing vertical-spacing expandable-content">
                 <label class="checkbox">

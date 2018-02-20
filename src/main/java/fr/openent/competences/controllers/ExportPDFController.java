@@ -1812,7 +1812,7 @@ public class ExportPDFController extends ControllerHelper {
                     JsonObject cycleObj = stringJsonArrayEither.right().getValue().get(0);
 
                     if (!idCycle.equals(cycleObj.getLong("id_cycle"))) {
-                        leftToResponse(request, new Either.Left<>("getExportRecapEval : Given groups belong to different cycle."));
+                        leftToResponse(request, new Either.Left<>("different cycle"));
                     } else {
                         final JsonObject action = new JsonObject()
                                 .putString("action", "classe.getEtabClasses")
@@ -1961,12 +1961,12 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                                         genererPdf(request, result, "recapitulatif-evaluations.pdf.xhtml", fileName, false);
                                                                                                                                     }
                                                                                                                                 } else {
-                                                                                                                                    leftToResponse(request, new Either.Left<>(body.getString("message")));
+                                                                                                                                    leftToResponse(request, new Either.Left<>("periode not found")); //leftToResponse(request, new Either.Left<>(body.getString("message")));
                                                                                                                                 }
                                                                                                                             }
                                                                                                                         });
                                                                                                                     } else {
-                                                                                                                        leftToResponse(request, new Either.Left<>(body.getString("message")));
+                                                                                                                        leftToResponse(request, new Either.Left<>("classe not found"));
                                                                                                                     }
                                                                                                                 }
                                                                                                             });
@@ -1976,16 +1976,15 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                     }
                                                                                                 });
                                                                                             } else {
-                                                                                                leftToResponse(request, new Either.Left<>("Aucune Evaluation trouvée"));
+                                                                                                leftToResponse(request, new Either.Left<>("eval not found"));
                                                                                             }
                                                                                         } else {
-                                                                                            leftToResponse(request, new Either.Left<>("Impossible de recuperer le bilan de fin d'etude pour la classe selectionnee :\n" + stringMapEither.left().getValue()));
-                                                                                            log.error("getExportRecapEval : buildBFC : " + stringMapEither.left().getValue());
+                                                                                            leftToResponse(request, new Either.Left<>("bfc not found"));
                                                                                         }
                                                                                     }
                                                                                 });
                                                                             } else {
-                                                                                leftToResponse(request, new Either.Left<>(body.getString("message")));
+                                                                                leftToResponse(request, new Either.Left<>("eleves not found"));
                                                                             }
                                                                         }
                                                                     });
@@ -2008,7 +2007,7 @@ public class ExportPDFController extends ControllerHelper {
                                     }
                                 });
                                 } else {
-                                    leftToResponse(request, new Either.Left<>(body.getString("message")));
+                                    leftToResponse(request, new Either.Left<>("etab not found"));
                                 }
                             }
                         });

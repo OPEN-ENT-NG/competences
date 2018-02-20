@@ -311,8 +311,7 @@ public class DefaultExportService implements ExportService {
                                 competenceNoteService.getCompetencesNotes(idDevoir, idEleve,
                                         getIntermediateHandler(idDevoir, competencesNotesArray, finalHandler));
                             }
-                            domaineService.getDomainesRacines(idGroupes[0],
-                                    getIntermediateHandler(domainesArray, finalHandler));
+                            domaineService.getDomainesRacines(idGroupes[0], getIntermediateHandler(domainesArray, finalHandler));
                         } else if (stringJsonArrayEither.right().getValue().get(0) instanceof String){
                             finalHandler.handle(new Either.Left<String, JsonArray>("getExportReleveComp : No exams on given period and/or material."));
                         } else {
@@ -324,7 +323,7 @@ public class DefaultExportService implements ExportService {
             @Override
             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                 if (stringJsonArrayEither.isRight()) {
-                    Long idCycle = ((JsonObject) stringJsonArrayEither.right().getValue().get(0)).getLong("id_cycle");
+                    Long idCycle = new Long( ((JsonObject) stringJsonArrayEither.right().getValue().get(0)).getLong("id_cycle"));
                     for (int i = 0; i < stringJsonArrayEither.right().getValue().size(); i++) {
                         JsonObject cycleObj = stringJsonArrayEither.right().getValue().get(i);
                         if(!idCycle.equals(cycleObj.getLong("id_cycle"))) {
@@ -360,7 +359,7 @@ public class DefaultExportService implements ExportService {
                     boolean b = true;
                     handler.handle(new Either.Right<String, JsonArray>(legende));
                 } else {
-                    handler.handle(new Either.Left<String, JsonArray>("exportReleveComp : empty result."));
+                    handler.handle(new Either.Left<String, JsonArray>("exportRecapEval : empty result."));
                 }
             }
         });
@@ -487,10 +486,12 @@ public class DefaultExportService implements ExportService {
                                 && competencesNotesDone.get()) {
                             answered.set(true);
 
-                            if (devoirs.contains("empty")
-                                    || maitrises.contains("empty")
-                                    || domaines.contains("empty")) {
-                                responseHandler.handle(new Either.Left<String, JsonObject>("exportReleveComp : empty result."));
+                            if (devoirs.contains("empty")) {
+                                responseHandler.handle(new Either.Left<String, JsonObject>("devoirs not found"));
+                            } else if (maitrises.contains("empty")) {
+                                responseHandler.handle(new Either.Left<String, JsonObject>("maitrises not found"));
+                            } else if (domaines.contains("empty")) {
+                                responseHandler.handle(new Either.Left<String, JsonObject>("domaines not found"));
                             } else {
                                 Map<String, Map<String, Long>> competenceNotesMap = new HashMap<>();
 
@@ -522,7 +523,7 @@ public class DefaultExportService implements ExportService {
                         }
                     } else {
                         answered.set(true);
-                        responseHandler.handle(new Either.Left<String, JsonObject>("exportReleveComp : empty result."));
+                        responseHandler.handle(new Either.Left<String, JsonObject>(stringJsonArrayEither.left().getValue()));
                     }
                 }
             }

@@ -3075,8 +3075,32 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 url += "&idPeriode=" + idPeriode;
             }
             await http().getJson(url + "&json=true")
-                .error(() => {
-                    $scope.exportRelCompObj.errExport = true;
+                .error((result) => {
+                    switch (result.responseText){
+                        case "{\"error\":\"getExportReleveComp : No exams on given period and/or material.\"}" :
+                            $scope.evalNotFound = true;
+                            break;
+                        case "{\"error\":\"devoirs not found\"}" :
+                            $scope.periodeNotFound = true;
+                            break;
+                        case "{\"error\":\"matieres not found\"}" :
+                            $scope.classeNotFound = true;
+                            break;
+                        case "{\"error\":\"domaines not found\"}" :
+                            $scope.etabNotFound = true;
+                            break;
+                        case "{\"error\":\"bfc not found\"}" :
+                            $scope.bfcNotFound = true;
+                            break;
+                        case "{\"error\":\"eleves not found\"}" :
+                            $scope.elevesNotFound = true;
+                            break;
+                        case "{\"error\":\"getExportReleveComp : Given groups belong to different cycle.\"}" :
+                            $scope.cycleNotFound = true;
+                            break;
+                        default :
+                            $scope.exportRecapEvalObj.errExport = true;
+                    }
                     utils.safeApply($scope);
                 })
                 .done(() => {
@@ -3085,14 +3109,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         textMod: true
                     };
                     $scope.opened.releveComp = false;
-                    $scope.exportRelCompObj.errExport = false;
                     location.replace(url);
                 });
             utils.safeApply($scope);
         };
 
         $scope.selectMatiere = function (id) {
-            $scope.exportRelCompObj.errExport = false;
+            $scope.closeWarningMessages();
             if (!$scope.selected.matieres.includes(id)) {
                 $scope.selected.matieres.push(id);
             } else {
@@ -3106,6 +3129,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.selectUnselectMatieres = function (selectAllMatieres) {
+            $scope.closeWarningMessages();
             if(selectAllMatieres){
                 for(var m = 0; m < $scope.matieres.all.length; m++){
                     if (!$scope.selected.matieres.includes($scope.matieres.all[m].id))
@@ -3126,9 +3150,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.lightboxChampsObligatoire = false;
         }
 
+        $scope.closeWarningMessages = function () {
+            $scope.evalNotFound = false;
+            $scope.periodeNotFound = false;
+            $scope.classeNotFound = false;
+            $scope.etabNotFound = false;
+            $scope.bfcNotFound = false;
+            $scope.elevesNotFound = false;
+            $scope.cycleNotFound = false;
+            $scope.exportRelCompObj.errExport = false;
+            $scope.exportRecapEvalObj.errExport = false;
+        }
+
         $scope.openedLigthbox = function(){
             $scope.opened.releveComp = true;
             $scope.releveComp.textMod = true;
+            $scope.closeWarningMessages();
             $scope.selectUnselectMatieres(false);
         }
     }

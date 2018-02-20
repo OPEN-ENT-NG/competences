@@ -307,7 +307,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
          $scope.openedRecapEval = function (){
              $scope.opened.recapEval = true;
-             $scope.exportRecapEvalObj.errExport = false
+             $scope.closeWarningMessages();
              utils.safeApply($scope);
          };
 
@@ -318,13 +318,36 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
              }
             http().getJson(url + "&json=true")
                  .error((res) => {
-                     $scope.exportRecapEvalObj.errExport = true;
+                     switch (res.responseText){
+                         case "{\"error\":\"eval not found\"}" :
+                             $scope.evalNotFound = true;
+                             break;
+                         case "{\"error\":\"periode not found\"}" :
+                             $scope.periodeNotFound = true;
+                             break;
+                         case "{\"error\":\"classe not found\"}" :
+                             $scope.classeNotFound = true;
+                             break;
+                         case "{\"error\":\"etab not found\"}" :
+                             $scope.etabNotFound = true;
+                             break;
+                         case "{\"error\":\"bfc not found\"}" :
+                             $scope.bfcNotFound = true;
+                             break;
+                         case "{\"error\":\"eleves not found\"}" :
+                             $scope.elevesNotFound = true;
+                             break;
+                         case "{\"error\":\"different cycle\"}" :
+                             $scope.cycleNotFound = true;
+                             break;
+                         default :
+                             $scope.exportRecapEvalObj.errExport = true;
+                     }
                      utils.safeApply($scope);
                  })
                  .done(() => {
                      delete $scope.recapEval;
                      $scope.opened.recapEval = false;
-                     $scope.exportRecapEvalObj.errExport = false;
                      location.replace(url);
                  });
              utils.safeApply($scope);
