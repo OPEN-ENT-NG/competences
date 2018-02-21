@@ -182,7 +182,9 @@ export const itemsCompetences = {
                 .done(() => {
                     this.opened.lightboxDeletePersoItem = false;
                     this.opened.errorDeletePersoItem = false;
+                    this.opened.lightboxConfirmDeletePersoItem = false;
                     this.getCompetences();
+                    notify.info('item.success.delete.perso');
                     utils.safeApply(this);
                 })
                 .error(() => {

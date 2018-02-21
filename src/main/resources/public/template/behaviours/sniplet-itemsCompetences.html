@@ -13,14 +13,25 @@
             <i18n>evaluations.perso.delete</i18n>
         </button>
         <lightbox show="opened.lightboxDeletePersoItem" on-close="!opened.lightboxDeletePersoItem">
-            <p ng-hide="opened.errorDeletePersoItem"><i18n>evaluations.perso.item.delete.message</i18n></p>
+            <p><i18n>evaluations.perso.item.delete.message</i18n></p>
+            <button class="marginFive magnet-right"
+                    ng-click="opened.lightboxDeletePersoItem=false; opened.lightboxConfirmDeletePersoItem = true;">
+                <i18n>evaluations.perso.ok</i18n>
+            </button>
+            <button data-ng-click="opened.lightboxDeletePersoItem=false;" class="right-magnet cancel">
+                <span><i18n>evaluations.perso.cancel</i18n></span>
+            </button>
+        </lightbox>
+        <lightbox show="opened.lightboxConfirmDeletePersoItem" on-close="!opened.lightboxDeletePersoItem">
+            <p ng-hide="opened.errorDeletePersoItem"><i18n>item.message.delete.perso.confirm</i18n></p>
             <div class="warning" ng-show="opened.errorDeletePersoItem">
                 <p><i18n>evaluations.perso.item.delete.error</i18n></p>
             </div>
             <button class="marginFive magnet-right" ng-click="deletePersoItem()">
                 <i18n>evaluations.perso.ok</i18n>
             </button>
-            <button data-ng-click="opened.lightboxDeletePersoItem=false;" class="right-magnet cancel">
+            <button data-ng-click="opened.lightboxDeletePersoItem=false;opened.lightboxConfirmDeletePersoItem=false;"
+                    class="right-magnet cancel">
                 <span><i18n>evaluations.perso.cancel</i18n></span>
             </button>
         </lightbox>
@@ -84,6 +95,7 @@
 
                     <div ng-init="competence.nomhtml = competence.nom"
                          tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                        <i ng-class="{'manual-item' : competence.ismanuelle}"></i>
                         <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
                               ng-bind-html="competence.nomhtml"></span>
                     </div>
@@ -146,7 +158,6 @@
                                      class="six inline-block ellipsis competence"
                                      ng-hide="competence.rename">
                                    <span  ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
-                                       <i ng-class="{'manual-item' : competence.ismanuelle}"></i>
                                         <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
                                               ng-bind-html="
                                                competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
