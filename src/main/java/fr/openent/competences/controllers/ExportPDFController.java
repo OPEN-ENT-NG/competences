@@ -1852,6 +1852,7 @@ public class ExportPDFController extends ControllerHelper {
 
                                                                     final JsonArray legende = stringJsonObjectEither.right().getValue();
                                                                     result.putArray("legende", legende);
+                                                                    result.putBoolean("displayMoy", isHabilite);
 
                                                                     final JsonObject action = new JsonObject()
                                                                             .putString("action", "classe.getEleveClasse")

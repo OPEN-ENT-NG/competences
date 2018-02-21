@@ -111,7 +111,13 @@
                 <span class="bold">Classe : </span>{{ classe }}<br/>
                 <span class="bold">Période : </span>{{ periode }}<br/>
             </td>
-            <td><span class="bold">Légende</span><br/>
+            <td><span class="bold">Légende</span>
+                {{# displayMoy }}
+                <span class="bold">Valeurs affichées par domaine : niveau atteint + niveau calculé</span><br/>
+                {{/ displayMoy }}
+                {{^ displayMoy }}
+                <span class="bold">Valeurs affichées par domaine : niveau atteint</span><br/>
+                {{/ displayMoy }}
                 {{# legende }}
                 <span>
 					{{# text }}

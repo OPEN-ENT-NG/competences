@@ -348,7 +348,7 @@ public class DefaultExportService implements ExportService {
                 if (stringJsonArrayEither.isRight()) {
                     JsonArray legende = new JsonArray();
                     JsonArray result = stringJsonArrayEither.right().getValue();
-                    for (int i = 0; i < result.size(); i++){
+                    for (int i = result.size() - 1; i >= 0 ; i--){
                         JsonObject niveau = new JsonObject();
                         JsonObject o = result.get(i);
                         niveau.putString("libelle", o.getString("libelle"));
