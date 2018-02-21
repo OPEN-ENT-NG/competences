@@ -51,6 +51,7 @@ import org.vertx.java.core.logging.impl.LoggerFactory;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
@@ -1852,7 +1853,9 @@ public class ExportPDFController extends ControllerHelper {
 
                                                                     final JsonArray legende = stringJsonObjectEither.right().getValue();
                                                                     result.putArray("legende", legende);
-                                                                    result.putBoolean("displayMoy", isHabilite);
+                                                                    String atteint_calcule = new String("Valeurs affichées par domaine : niveau atteint + niveau calculé".getBytes(), StandardCharsets.UTF_8);
+                                                                    String atteint = new String("Valeurs affichées par domaine : niveau atteint".getBytes(), StandardCharsets.UTF_8);
+                                                                    result.putString("displayMoy", isHabilite ? atteint_calcule : atteint);
 
                                                                     final JsonObject action = new JsonObject()
                                                                             .putString("action", "classe.getEleveClasse")

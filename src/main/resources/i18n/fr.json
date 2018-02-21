@@ -175,7 +175,7 @@
   "evaluations.competences": " compétences.",
   "unselected.control.name": "Vous devez donner un nom au devoir.",
   "required.fields.not.selected": "Vous n'avez pas sélectionné ou rempli les champs obligatoires suivants :",
-  "required.fields.double.asterisk": "Vous devez choisir de créer une évaluation de compétences en sélectionnant au moins une compétence dans l'onglet Compétences et/ou un évaluation numérique en cochant la case \"Activer une évaluation numérique ?\"",
+  "required.fields.double.asterisk": "Vous devez choisir de créer une évaluation de compétences en sélectionnant au moins une compétence dans l'onglet Compétences et/ou une évaluation numérique en cochant la case \"Activer une évaluation numérique ?\"",
   "formulaire.incomplet": "Formulaire incomplet",
   "choose.evaluation.type": "Le type d'évaluation",
   "evaluations.competences.title": "Compétences",

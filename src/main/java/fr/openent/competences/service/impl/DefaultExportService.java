@@ -13,6 +13,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -532,7 +533,8 @@ public class DefaultExportService implements ExportService {
 
     private JsonArray addMaitriseNE(JsonArray maitrises) {
         JsonObject nonEvalue = new JsonObject();
-        nonEvalue.putString("libelle", "Competence non evaluee");
+        String libelle = new String("Compétence non évaluée".getBytes(), StandardCharsets.UTF_8);
+        nonEvalue.putString("libelle", libelle);
         nonEvalue.putNumber("ordre", 0);
         nonEvalue.putString("default", "grey");
         nonEvalue.putString("lettre", "NE");
@@ -599,7 +601,8 @@ public class DefaultExportService implements ExportService {
 
         JsonObject bodyHeader = new JsonObject();
         bodyHeader.putString("left", "Domaines / items");
-        bodyHeader.putString("right", "Niveau des competences et Nombre d'evaluations");
+        String right = new String("Niveau des compétences et Nombre d'évaluations".getBytes(), StandardCharsets.UTF_8);
+        bodyHeader.putString("right", right);
         body.putObject("header", bodyHeader);
 
         JsonArray bodyBody = new JsonArray();
