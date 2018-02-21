@@ -380,14 +380,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     private void updateDomain(Number idComp, String idEtablissement, Number idDomaine,
                               Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT updateDomaineCompetence(?, ?, ?);";
+        String query = "SELECT notes.updateDomaineCompetence(?, ?, ?);";
         JsonArray values = new JsonArray().addNumber(idComp).addString(idEtablissement).addNumber(idDomaine);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
     private void updateMasqueComp(Number id, String idEtablissement, Boolean masque, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT masqueCompetence(?, ?, ?);";
+        String query = "SELECT notes.masqueCompetence(?, ?, ?);";
         JsonArray values = new JsonArray().addNumber(id).addString(idEtablissement).addBoolean(masque);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
@@ -469,7 +469,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     @Override
     public void delete(final Number id, final String idEtablissement, final Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT deleteCompetence(?, ?);";
+        String query = "SELECT notes.deleteCompetence(?, ?);";
         JsonArray values = new JsonArray().addNumber(id).addString(idEtablissement);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
