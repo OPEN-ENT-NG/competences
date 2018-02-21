@@ -322,9 +322,14 @@ export const itemsCompetences = {
                 }
                 case 'mask': {
                     http().putJson(`competences/competence`, this.jsonUpdateMaskItem(item))
-                        .done(() => {
+                        .done((res) => {
                             item.masque = !item.masque;
-                            notify.info('item.success.updateMask');
+                            if(item.masque && res.masquecompetence === 'use') {
+                                notify.info('item.message.isUse');
+                            }
+                            else {
+                                notify.info('item.success.updateMask');
+                            }
                             utils.safeApply(this);
                         })
                         .error(function () {
@@ -377,13 +382,18 @@ export const itemsCompetences = {
         trash: function (item, reinit) {
             console.dir('trash' + item.nom);
             http().delete(`competences/competence?id=${item.id}&id_etablissement=${itemsCompetences.that.structure.id}`)
-                .done(() => {
+                .done((res) => {
                     this.getCompetences();
                     if(reinit) {
                         notify.info('item.success.reinit');
                         utils.safeApply(this);
                     }else {
-                        notify.info('item.success.delete');
+                        if (res.deletecompetence === 'MASQUAGE') {
+                            notify.info('item.success.delete.mask');
+                        }
+                        else {
+                            notify.info('item.success.delete');
+                        }
                         utils.safeApply(this);
                     }
                 })
