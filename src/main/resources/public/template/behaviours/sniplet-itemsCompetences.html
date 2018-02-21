@@ -135,11 +135,10 @@
                             </h3>
                             <h3 data-ng-click="openCreateItem(connaissance,lastSelectedCycle.domaines);"
                                 class="inline-block"><i ng-show="connaissance.action" class="plus"></i></h3>
-                            <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
-                            'openedSectionDom' : connaissance.OpenSousDom}"
-                                 style='height: auto;'>
-                            </div>
                         </div>
+                        <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0,
+                            'openedSectionDom' : connaissance.OpenSousDom}"
+                             style='height: auto;'>
                         <div  sortable-list ng-model="connaissance.competences.all"
                               ng-change="updateOrderConnaisance(connaissance)       " class="thought-out-actions">
                             <div sortable-element
@@ -219,6 +218,7 @@
                                 </container>
                             </div>
                         </div>
+                       </div>
                     </div>
                 </div>
             </div>
