@@ -426,7 +426,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     private void changeIndexComp(final Number idComp, final Number idEnseignement,final String idEtablissement,
                                  final JsonArray index , final Handler<Either<String, JsonObject>> handler) {
 
-        StringBuffer query = new StringBuffer("INSERT INTO " + COMPETENCES_PERSO_ORDRE_TABLE +
+        StringBuilder query = new StringBuilder("INSERT INTO " + COMPETENCES_PERSO_ORDRE_TABLE +
                 " (id_competence, id_etablissement, id_enseignement, index)  VALUES ") ;
         JsonArray values = new JsonArray();
         for(int i = 0; i < index.size(); i++){
@@ -456,14 +456,16 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 updateMasqueComp(idComp, idEtab, (Boolean) valueToUpdate, handler);
                 break;
             case "id_domaine":
-//                updateDomain(idComp, idEtab, )
+                updateDomain(idComp, idEtab, (Number) valueToUpdate, handler);
                 break;
             case "nom":
                 changeNameComp(idComp, idEtab, (String) valueToUpdate, handler);
                 break;
             case "index":
                 changeIndexComp(idComp, idEns, idEtab, (JsonArray) valueToUpdate, handler);
+                break;
             default:
+                break;
         }
     }
 

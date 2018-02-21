@@ -165,7 +165,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         valueParams.append("( ?");
         params.addNumber(idDevoir);
         for (String attr : devoir.getFieldNames()) {
-            if(attr.contains("date") && !attr.equals("competencesUpdate")){
+            if(attr.contains("date") && !"competencesUpdate".equals(attr)){
                 queryParams.append(" , ").append(attr);
                 valueParams.append(" , to_date(?,'YYYY-MM-DD') ");
                 params.add(formatDate(devoir.getString(attr)).toString());

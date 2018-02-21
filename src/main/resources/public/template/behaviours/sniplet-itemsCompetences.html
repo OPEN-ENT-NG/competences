@@ -94,8 +94,7 @@
                      ng-repeat="competence in domaine.competences.all|filter:customFilterComp(competence,search)">
 
                     <div ng-init="competence.nomhtml = competence.nom"
-                         tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
-                        <i ng-class="{'manual-item' : competence.ismanuelle}"></i>
+                         tooltip="[[competence.nom]]" class="eleven inline-block ellipsis competence">
                         <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
                               ng-bind-html="competence.nomhtml"></span>
                     </div>
@@ -158,6 +157,7 @@
                                      class="six inline-block ellipsis competence"
                                      ng-hide="competence.rename">
                                    <span  ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
+                                       <i ng-class="{'manual-item' : competence.ismanuelle}"></i>
                                         <span ng-class="{'mask-item': competence.masque, 'item': !competence.masque}"
                                               ng-bind-html="
                                                competencesFilter[competence.id+'_'+competence.id_enseignement].nomHtml">
@@ -168,7 +168,7 @@
                                                             && !competence.rename
                                                             && !isEmptyShowDomaine(competence.id)}"
                                      class="six inline-block ellipsis competence"
-                                     ng-show="competence.rename">
+                                     ng-show="  competence.rename">
 
                                 <span
                                         ng-class="{whiteSpaceNormal : sousCompetence.hovering}">
