@@ -2171,6 +2171,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         let annotation = _.findWhere($scope.evaluations.annotations.all, {id: evaluation.id_annotation});
                         evaluation.oldValeur = annotation.libelle_court;
                         evaluation.valeur = annotation.libelle_court;
+                        delete evaluation.id;
+                        delete evaluation.data.id;
                         for (let i = 0; i < evaluation.competenceNotes.all.length; i++) {
                             evaluation.competenceNotes.all[i].evaluation = -1;
                         }
@@ -2299,9 +2301,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                                     $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
                                                 } else {
                                                     $scope.calculStatsDevoir();
-                                                    if (evaluation.id_annotation !== undefined && evaluation.id_annotation > 0) {
-                                                        $scope.deleteAnnotationDevoir(evaluation, false);
-                                                    }
                                                 }
                                                 $scope.opened.lightbox = false;
                                                 delete $scope.selected.eleve;
