@@ -62,13 +62,13 @@
             </options>
         </dropdown-buttons>
     </h2>
-    <div class="twelve" ng-init="source.idStructure = evaluations.structure.id;">
-        <sniplet
-                template="averageBFC"
-                application="competences"
-                source="source"
-        ></sniplet>
-    </div>
+    <!--<div class="twelve" ng-init="source.idStructure = evaluations.structure.id;">-->
+        <!--<sniplet-->
+                <!--template="averageBFC"-->
+                <!--application="competences"-->
+                <!--source="source"-->
+        <!--&gt;</sniplet>-->
+    <!--</div>-->
     <div class="twelve cell">
         <div ng-repeat="domaine in suiviCompetence.domaines.all"
              ng-include="'tree_item_renderer.html'"
