@@ -28,16 +28,16 @@
                 <label>
                     <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
                         <div ng-if = " ($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <  Conversion.valmax) || ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax)">
-                                <div ng-if = " isChefEtab() && domaine.bfc !== undefined">
-                                    <i class="reset" aria-hidden="true" ng-click="deleteBFC()"
-                                       tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
-                                </div>
-                                <div ng-if = " !isChefEtab() && domaine.bfc !== undefined">
-                                    [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
-                                </div>
-                                <div ng-if = "domaine.bfc === undefined" >
-                                    [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
-                                </div>
+                            <div ng-if = " isChefEtab() && domaine.bfc !== undefined">
+                                <i class="reset" aria-hidden="true" ng-click="deleteBFC()"
+                                   tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
+                            </div>
+                            <div ng-if = " !isChefEtab() && domaine.bfc !== undefined">
+                                [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
+                            </div>
+                            <div ng-if = "domaine.bfc === undefined" >
+                                [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
+                            </div>
                         </div>
                     </div>
                 </label>
@@ -63,11 +63,11 @@
         </dropdown-buttons>
     </h2>
     <!--<div class="twelve" ng-init="source.idStructure = evaluations.structure.id;">-->
-        <!--<sniplet-->
-                <!--template="averageBFC"-->
-                <!--application="competences"-->
-                <!--source="source"-->
-        <!--&gt;</sniplet>-->
+    <!--<sniplet-->
+    <!--template="averageBFC"-->
+    <!--application="competences"-->
+    <!--source="source"-->
+    <!--&gt;</sniplet>-->
     <!--</div>-->
     <div class="twelve cell">
         <div ng-repeat="domaine in suiviCompetence.domaines.all"
@@ -75,9 +75,11 @@
              ng-init="parent = tree_item_renderer.html">
         </div>
     </div>
-    <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
-    <div ng-show="successCreateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successCreateSynthese</i18n></div>
-    <div ng-show="successUpdateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateSynthese</i18n></div>
-    <textarea ng-disabled="!isChefEtab()" row="4" type="text" placeholder="Saissez la synthèse de l'élève" ng-model="suiviCompetence.bfcSynthese.texte"></textarea>
-    <button  ng-if="isChefEtab()" ng-click="saveSynthese()" ng-disabled="suiviCompetence.synthese.texte.length === 0"><i18n>evaluation.bilan.fin.cycle.save.synthese</i18n></button>
+    <div ng-if="false"">
+        <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
+        <div ng-show="successCreateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successCreateSynthese</i18n></div>
+        <div ng-show="successUpdateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateSynthese</i18n></div>
+        <textarea ng-disabled="!isChefEtab()" row="4" type="text" placeholder="Saissez la synthèse de l'élève" ng-model="suiviCompetence.bfcSynthese.texte"></textarea>
+        <button  ng-if="isChefEtab()" ng-click="saveSynthese()" ng-disabled="suiviCompetence.synthese.texte.length === 0"><i18n>evaluation.bilan.fin.cycle.save.synthese</i18n></button>
+    </div>
 </div>
