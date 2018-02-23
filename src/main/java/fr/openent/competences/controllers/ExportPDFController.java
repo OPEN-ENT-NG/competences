@@ -1076,10 +1076,11 @@ public class ExportPDFController extends ControllerHelper {
                             final String prefixPdfName, final boolean image) {
 
         final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
-        if(image)
+        if(image) {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation Image du template " + templateName);
-        else
+        } else {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation PDF du template " + templateName);
+        }
 
 //        this.assetsPath = (String) vertx.sharedData().ge  tMap("server").get("assetPath");
 //        this.skins = vertx.sharedData().getMap("skins");
@@ -1093,12 +1094,14 @@ public class ExportPDFController extends ControllerHelper {
         if (node == null) {
             node = "";
         }
+        
         vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
 
             @Override
             public void handle(AsyncResult<Buffer> result) {
                 if (!result.succeeded()) {
-                    badRequest(request);
+                    badRequest(request, "Error while reading template : " + templatePath + templateName);
+                    log.error("Error while reading template : " + templatePath + templateName);
                     return;
                 }
                 StringReader reader = new StringReader(result.result().toString("UTF-8"));
@@ -1108,7 +1111,11 @@ public class ExportPDFController extends ControllerHelper {
                     public void handle(Writer writer) {
                         String processedTemplate = ((StringWriter) writer).getBuffer().toString();
                         if (processedTemplate == null) {
-                            badRequest(request);
+                            badRequest(request, "Error while processing.");
+                            if(templateProps != null) {
+                                log.error("processing error : \ntemplateProps : " + templateProps.toString() 
+                                        + "\ntemplateName : " + templateName);
+                            }
                             return;
                         }
                         JsonObject actionObject = new JsonObject();
