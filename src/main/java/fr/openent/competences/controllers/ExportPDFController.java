@@ -1167,8 +1167,10 @@ public class ExportPDFController extends ControllerHelper {
                                             File imageFile = null;
                                             for (PDPage page : list) {
                                                 BufferedImage image = page.convertToImage();
+                                                int height = 140 + Integer.parseInt(templateProps.getString("nbrCompetences"))*90;
+                                                BufferedImage SubImage = image.getSubimage(0, 0, 1191, height);
                                                 imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
-                                                ImageIO.write(image, "jpg", imageFile);
+                                                ImageIO.write(SubImage, "jpg", imageFile);
                                             }
                                             document.close();
                                             FileInputStream fis = new FileInputStream(imageFile);
