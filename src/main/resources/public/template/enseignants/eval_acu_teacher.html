@@ -34,19 +34,19 @@
                 <div class="content-box-accueil">
                     <div class="titre-widget">
                         <h2 class="inline-block " ng-if="!isChefEtab()">
-                            <i18n>evaluations.mes.evaluations.par.peridoe</i18n>&nbsp;:
+                            <i18n>evaluations.mes.evaluations.par.classe</i18n>&nbsp;:
                         </h2>
                         <h2 class="inline-block " ng-if="isChefEtab()">
-                            <i18n>evaluations.evaluations.par.peridoe</i18n>&nbsp;:
+                            <i18n>evaluations.evaluations.par.classe</i18n>&nbsp;:
                         </h2>
                         <label class="select right-magnet">
                             <select ng-model="search.classe"
                                     ng-change="syncPeriode(search.classe.id); search.periode = '*'"
                                     ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
-                                <option value="" class="header-opt">Classe / Groupe</option>
+                                <option value="" class="header-opt"><i18n>Classe / Groupe</i18n></option>
                             </select>
                         </label>
-                        <div ng-class="{twelve : isChefEtab()}" class="FloatRight periodeWidgetAccueil">
+                        <div class="twelve FloatRight periodeWidgetAccueil">
                         <label class="select right-magnet"
                                ng-hide="search.classe == null || search.classe == '*' || search.classe == ''"
                                ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
