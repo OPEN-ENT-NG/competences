@@ -365,8 +365,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             utils.safeApply($scope);
                         });
 
-                        // $scope.allMatieresSorted = _.sortBy($scope.allMatieres, 'name');
-
                         template.open('main', 'enseignants/suivi_competences_eleve/container');
                         if ($scope.informations.eleve === undefined) {
                             $scope.informations.eleve = null;
@@ -3127,7 +3125,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.selected.matieres.splice(_.indexOf($scope.selected.matieres, id), 1);
             }
             if($scope.selected.matieres.length == 0)
-
                 $scope.allUnselect = true;
             else
                 $scope.allUnselect = false;
@@ -3136,16 +3133,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.selectUnselectMatieres = function (selectAllMatieres) {
             $scope.closeWarningMessages();
             if(selectAllMatieres){
-                for(var m = 0; m < $scope.matieres.all.length; m++){
-                    if (!$scope.selected.matieres.includes($scope.matieres.all[m].id))
-                        $scope.selected.matieres.push($scope.matieres.all[m].id);
-                    $scope.matieres.all[m].select = true;
+                for(var m = 0; m < $scope.allMatieresSorted.length; m++){
+                    if(!$scope.selected.matieres.includes($scope.allMatieresSorted[m].id))
+                        $scope.selected.matieres.push($scope.allMatieresSorted[m].id);
+                    $scope.allMatieresSorted[m].select = true;
                 }
                 $scope.allUnselect = false;
             } else {
                 $scope.selected.matieres = [];
-                for(var m = 0; m < $scope.matieres.all.length; m++){
-                    $scope.matieres.all[m].select = false;
+                for(var m = 0; m < $scope.allMatieresSorted.length; m++){
+                    $scope.allMatieresSorted[m].select = false;
                 }
                 $scope.allUnselect = true;
             }
