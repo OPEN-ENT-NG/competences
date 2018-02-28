@@ -1076,7 +1076,7 @@ public class ExportPDFController extends ControllerHelper {
                             final String prefixPdfName) {
 
         final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
-        if(templateProps.getBoolean("image")) {
+        if(templateProps.containsField("image") && templateProps.getBoolean("image")) {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation Image du template " + templateName);
         } else {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation PDF du template " + templateName);
@@ -1140,7 +1140,7 @@ public class ExportPDFController extends ControllerHelper {
                                 }
                                 byte[] pdf = pdfResponse.getBinary("content");
 
-                                if(templateProps.getBoolean("image")){
+                                if(templateProps.containsField("image") && templateProps.getBoolean("image")){
                                     File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
                                     OutputStream outStream = null;
                                     try {
