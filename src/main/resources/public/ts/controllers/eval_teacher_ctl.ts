@@ -359,7 +359,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.releveComp = {
                             textMod: true
                         };
-                        $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
+                            $scope.allMatieres = res;
+                            $scope.allMatieresSorted = _.sortBy($scope.allMatieres, 'name');
+                            utils.safeApply($scope);
+                        });
+
+                        // $scope.allMatieresSorted = _.sortBy($scope.allMatieres, 'name');
 
                         template.open('main', 'enseignants/suivi_competences_eleve/container');
                         if ($scope.informations.eleve === undefined) {
