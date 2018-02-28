@@ -185,7 +185,7 @@ public class ExportPDFController extends ControllerHelper {
                     etablissementName = etablissementName.trim().replaceAll(" ", "-");
                     prefixPdfName+= "-" + etablissementName;
 
-                    genererPdf(request, templateProps, templateName, prefixPdfName, false);
+                    genererPdf(request, templateProps, templateName, prefixPdfName);
 
                 }else{
                     leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
@@ -937,7 +937,7 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     /**
-     * Genere le BFC des entites passees en parametre au format PDF via la fonction {@link #genererPdf(HttpServerRequest, JsonObject, String, String, Boolean)}.
+     * Genere le BFC des entites passees en parametre au format PDF via la fonction {@link #genererPdf(HttpServerRequest, JsonObject, String, String)}.
      * Ces entites peuvent etre au choix un etablissement, un ou plusieurs classes, un ou plusieurs eleves.
      * Afin de prefixer le fichier PDF cree, appelle {@link DefaultUtilsService#getNameEntity(String[], Handler)} afin
      * de recuperer le nom de l'entite fournie.
@@ -1053,7 +1053,7 @@ public class ExportPDFController extends ControllerHelper {
                     if ("ok".equals(body.getString("status"))) {
                         String periodeName = body.getString("result");
                         periodeName = periodeName.replace(" ", "_");
-                        genererPdf(request, result, "BFC.pdf.xhtml", "BFC_" + fileNamePrefix + "_" + periodeName, false);
+                        genererPdf(request, result, "BFC.pdf.xhtml", "BFC_" + fileNamePrefix + "_" + periodeName);
                     } else {
                         leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                         log.error("getPeriode : Unable to get the label of the specified entity (idPeriode).");
@@ -1061,7 +1061,7 @@ public class ExportPDFController extends ControllerHelper {
                 }
             });
         } else {
-            genererPdf(request, result, "BFC.pdf.xhtml", "BFC_" + fileNamePrefix, false);
+            genererPdf(request, result, "BFC.pdf.xhtml", "BFC_" + fileNamePrefix);
         }
     }
 
@@ -1073,10 +1073,10 @@ public class ExportPDFController extends ControllerHelper {
      * @param prefixPdfName prefixe du nom du pdf (qui sera complété de la date de génération)
      */
     private void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
-                            final String prefixPdfName, final boolean image) {
+                            final String prefixPdfName) {
 
         final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
-        if(image) {
+        if(templateProps.getBoolean("image")) {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation Image du template " + templateName);
         } else {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation PDF du template " + templateName);
@@ -1140,7 +1140,7 @@ public class ExportPDFController extends ControllerHelper {
                                 }
                                 byte[] pdf = pdfResponse.getBinary("content");
 
-                                if(image){
+                                if(templateProps.getBoolean("image")){
                                     File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
                                     OutputStream outStream = null;
                                     try {
@@ -1167,8 +1167,8 @@ public class ExportPDFController extends ControllerHelper {
                                             File imageFile = null;
                                             for (PDPage page : list) {
                                                 BufferedImage image = page.convertToImage();
-                                                int height = 140 + Integer.parseInt(templateProps.getString("nbrCompetences"))*90;
-                                                BufferedImage SubImage = image.getSubimage(0, 0, 1191, height);
+                                                int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences"))*50;
+                                                BufferedImage SubImage = image.getSubimage(0, 0, 1684, height);
                                                 imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
                                                 ImageIO.write(SubImage, "jpg", imageFile);
                                             }
@@ -1333,7 +1333,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                     result.putBoolean("hasCompetences",false);
                                                                                                 }
                                                                                                 result.putArray("competences",CompetencesNew);
-                                                                                                genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie", false);
+                                                                                                genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie");
                                                                                             }else{
                                                                                                 log.error("Error :can not get competences devoir ");
                                                                                                 badRequest(request, "Error :can not get competences devoir ");
@@ -1341,7 +1341,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         }
                                                                                     });
                                                                                 }else{
-                                                                                    genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie", false);
+                                                                                    genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie");
                                                                                 }
                                                                             }else{
                                                                                 log.error("Error :can not get classe informations ");
@@ -1497,7 +1497,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                 }
                                                                                                 result.putString("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString());
                                                                                                 result.putArray("competences",CompetencesNew);
-                                                                                                genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche", false);
+                                                                                                genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
                                                                                             }else{
                                                                                                 log.error("Error :can not get competences devoir ");
                                                                                                 badRequest(request, "Error :can not get competences devoir ");
@@ -1505,7 +1505,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         }
                                                                                     });
                                                                                 }else{
-                                                                                    genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche", false);
+                                                                                    genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
                                                                                 }
                                                                             }else{
                                                                                 log.error("Error :can not get students ");
@@ -1540,12 +1540,8 @@ public class ExportPDFController extends ControllerHelper {
                                                                                     }
                                                                                     result.putString("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString() );
                                                                                     result.putArray("competences",CompetencesNew);
-                                                                                    Boolean image = Boolean.parseBoolean(request.params().get("image"));
-                                                                                    if(image){
-                                                                                        genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche", true);
-                                                                                    } else {
-                                                                                        genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche", false);
-                                                                                    }
+                                                                                    result.putBoolean("image", Boolean.parseBoolean(request.params().get("image")));
+                                                                                    genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
                                                                                 }else{
                                                                                     log.error("Error :can not get competences devoir ");
                                                                                     badRequest(request, "Error :can not get competences devoir ");
@@ -1553,7 +1549,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                             }
                                                                         });
                                                                     }else{
-                                                                        genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche", false);
+                                                                        genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
                                                                     }
                                                                 }
                                                             }else{
@@ -1627,7 +1623,7 @@ public class ExportPDFController extends ControllerHelper {
                                         Renders.renderJson(request, result);
                                     } else {
                                         String fileName = result.getObject("devoir").getString("classe") + "_" + result.getObject("devoir").getString("nom").replace(' ', '_');
-                                        genererPdf(request, result, "evaluation.pdf.xhtml", fileName, false);
+                                        genererPdf(request, result, "evaluation.pdf.xhtml", fileName);
                                     }
                                 } catch (Error err){
                                     leftToResponse(request, new Either.Left<>("An error occured while rendering pdf export : " + err.getMessage()));
@@ -1760,7 +1756,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                             Renders.renderJson(request, result);
                                                                         } else {
                                                                             String fileName = name.replace(' ', '_') + "_export_competences";
-                                                                            genererPdf(request, result, "releve-competences.pdf.xhtml", fileName, false);
+                                                                            genererPdf(request, result, "releve-competences.pdf.xhtml", fileName);
                                                                         }
                                                                     } else {
                                                                         leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
@@ -1971,7 +1967,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                                         Renders.renderJson(request, result);
                                                                                                                                     } else {
                                                                                                                                         String fileName = classeName.replace(' ', '_') + "_export_recapitulatif";
-                                                                                                                                        genererPdf(request, result, "recapitulatif-evaluations.pdf.xhtml", fileName, false);
+                                                                                                                                        genererPdf(request, result, "recapitulatif-evaluations.pdf.xhtml", fileName);
                                                                                                                                     }
                                                                                                                                 } else {
                                                                                                                                     leftToResponse(request, new Either.Left<>("periode not found")); //leftToResponse(request, new Either.Left<>(body.getString("message")));

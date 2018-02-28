@@ -100,10 +100,19 @@
             position: relative;
             border-top : 1px dashed grey;    ;
         }
+        {{#image}}
+        @page{
+            size : landscape ;
+            margin: 0px;
+        }
+        {{/image}}
+        {{^image}}
         @page{
             size : A4 ;
             margin-top: 10px;
         }
+        {{/image}}
+
 
     </style>
 </head>

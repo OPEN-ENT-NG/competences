@@ -12,6 +12,7 @@ import {
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import { Periode } from "../models/common/Periode";
+import {Utils} from "../models/teacher/Utils";
 
 declare let $: any;
 declare let document: any;
@@ -359,11 +360,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.releveComp = {
                             textMod: true
                         };
-                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
-                            $scope.allMatieres = res;
-                            $scope.allMatieresSorted = _.sortBy($scope.allMatieres, 'name');
-                            utils.safeApply($scope);
-                        });
+                        if(!Utils.isChefEtab()){
+                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
+                                $scope.allMatieresSorted = _.sortBy(res, 'name');
+                                utils.safeApply($scope);
+                            });
+                        } else {
+                            $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+                        }
 
                         template.open('main', 'enseignants/suivi_competences_eleve/container');
                         if ($scope.informations.eleve === undefined) {
