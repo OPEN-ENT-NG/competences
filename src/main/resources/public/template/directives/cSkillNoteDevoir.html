@@ -1,5 +1,5 @@
-<span autofocus ng-if="indexRow === 0 && indexColumn ===0 && !currentDevoir.is_evaluated && !currentDevoir.endSaisie"
-             ng-disabled="currentDevoir.endSaisie"
+<span autofocus ng-if="indexRow === 0 && indexColumn ===0 && !currentDevoir.is_evaluated && !(currentDevoir.endSaisie && !hasRight)"
+             ng-disabled="(currentDevoir.endSaisie && !hasRight)"
              ng-click="switchColor()"
              tabindex="0"
              ng-focus="focus(competence.id_competence, true);getEleveInfo(eleve);"
@@ -12,8 +12,8 @@
              ng-class="{compselected : highlightCompetenceNote()}">
 <span style="color:[[(mapCouleurs[competence.evaluation])]]; invert(100%); -webkit-filter: invert(100%);" class="lettreNiv">[[(mapLettres[competence.evaluation])]]</span>
 </span>
-<span ng-if="(indexRow !== 0 || indexColumn !==0 || currentDevoir.is_evaluated) && !currentDevoir.endSaisie"
-      ng-disabled="currentDevoir.endSaisie"
+<span ng-if="(indexRow !== 0 || indexColumn !==0 || currentDevoir.is_evaluated) && !(currentDevoir.endSaisie && !hasRight)"
+      ng-disabled="(currentDevoir.endSaisie && !hasRight)"
       ng-click="switchColor()" tabindex="0" ng-focus="focus(competence.id_competence, true);getEleveInfo(eleve);"
       ng-blur="blur(competence.id_competence, false); saveCompetence()"
       ng-keydown="keyColor($event)"  ng-mouseleave="saveCompetence()" ng-blur="saveCompetence()"
@@ -22,14 +22,14 @@
       ng-class="{compselected : highlightCompetenceNote()}">
 <span style="color:[[(mapCouleurs[competence.evaluation])]]; invert(100%); -webkit-filter: invert(100%);" class="lettreNiv">[[(mapLettres[competence.evaluation])]]</span>
 </span>
-<span autofocus ng-if="indexRow === 0 && indexColumn ===0 && !currentDevoir.is_evaluated && currentDevoir.endSaisie"
+<span autofocus ng-if="indexRow === 0 && indexColumn ===0 && !currentDevoir.is_evaluated && (currentDevoir.endSaisie && !hasRight)"
       tabindex="0" ng-focus="focus(competence.id_competence, true);getEleveInfo(eleve);"
       ng-blur="blur(competence.id_competence, false);"
       ng-init="init()"  class="competence-eval rounded" style="background-color:[[(mapCouleurs[competence.evaluation]) ]]"
       ng-class="{compselected : highlightCompetenceNote()}">
 <span style="color:[[(mapCouleurs[competence.evaluation])]]; invert(100%); -webkit-filter: invert(100%);" class="lettreNiv">[[(mapLettres[competence.evaluation])]]</span>
 </span>
-<span ng-if="(indexRow !== 0 || indexColumn !==0 || currentDevoir.is_evaluated) && currentDevoir.endSaisie"
+<span ng-if="(indexRow !== 0 || indexColumn !==0 || currentDevoir.is_evaluated) && (currentDevoir.endSaisie && !hasRight)"
       tabindex="0" ng-focus="focus(competence.id_competence, true);getEleveInfo(eleve);" ng-blur="blur(competence.id_competence, false); "    ng-init="init()"
       class="competence-eval rounded" style="background-color:[[(mapCouleurs[competence.evaluation])]]"
       ng-class="{compselected : highlightCompetenceNote()}">

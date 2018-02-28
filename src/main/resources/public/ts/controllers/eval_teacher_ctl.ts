@@ -273,7 +273,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.currentDevoir.periode = _.findWhere($scope.currentDevoir.groupe.periodes.all,
                         {id_type: $scope.currentDevoir.id_periode});
 
-                    $scope.currentDevoir.endSaisie = await $scope.checkEndSaisie($scope.currentDevoir);
+                    $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir);
 
                     let syncStudents = () => {
                         $scope.openedDetails = true;

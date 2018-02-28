@@ -9,7 +9,9 @@ export let inputTextList = ng.directive('inputTextList', function() {
             modelAttribute : '@',               // Champ sauvegardée dans le model : model[modelAttribute]
             displayAttributeList : '@',         // Champs utilisé pour le libellé de la liste : item[displayAttributeList]
             displayAttributeInput : '@',        // Champs utilisé pour la valeur à positionner dans l'input : item[$scope.displayAttributeInput]
-            disabledInput : '=',                // Désactive/Active le champs texte
+            isEvaluated: '=',                   // le devoir est il une évaluation numérique?
+            hasRight: '=',                      // La personne qui modifie l'item a-t-elle le droit?
+            endSaisie: '=',
             validationItemFunction : '&',       // Valide et Sauvegarde l'item
             autofocus : '=',                    // Autofocus de l'input
             error : '=',                        // Erreur remontée lors de la validation : validationItemFunction

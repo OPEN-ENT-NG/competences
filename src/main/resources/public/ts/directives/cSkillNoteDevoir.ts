@@ -12,6 +12,7 @@ export let cSkillNoteDevoir = ng.directive('cSkillNoteDevoir', function($compile
             nbEleve : '=',
             nbCompetencesDevoir : '=',
             currentDevoir   : '=',
+            hasRight : '=',
             disabled : '=?',
             focus : '=',
             blur : '=',

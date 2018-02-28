@@ -1,5 +1,5 @@
-<i class="input-list up-open" ng-if="openedList" ng-click="changeOpenedList()" />
-<i class="input-list down-open" ng-if="!openedList" ng-click="changeOpenedList()"
+<i class="input-list up-open" ng-if="openedList && (hasRight || !endSaisie)" ng-click="changeOpenedList()" />
+<i class="input-list down-open" ng-if="!openedList && (hasRight || !endSaisie)" ng-click="changeOpenedList()"
    tooltip="add.annotation"/>
 <input
         type="text"
@@ -9,7 +9,7 @@
         ng-focus="focusMe($event);"
         ng-class="{error : error == true}"
         ng-model="model[modelAttribute]"
-        ng-disabled="disabledInput"
+        ng-disabled="(!hasRight && endSaisie) || (!isEvaluated)"
         ng-if="autofocus" autofocus/>
 
 <input
@@ -20,10 +20,10 @@
         ng-focus="focusMe($event);"
         ng-class="{error : error == true}"
         ng-model="model[modelAttribute]"
-        ng-disabled="disabledInput"
+        ng-disabled="(!hasRight && endSaisie) || (!isEvaluated)"
         ng-if="!autofocus" />
 
-<ul ng-if="openedList" class="input-list">
+<ul ng-if="openedList && (hasRight || !endSaisie)" class="input-list">
     <li class="input-list" tooltip="[[(item[displayAttributeList])]]" ng-repeat="item in itemsToDisplay"
         ng-click="addItem(item);">[[(item[displayAttributeList])]]</li>
 </ul>

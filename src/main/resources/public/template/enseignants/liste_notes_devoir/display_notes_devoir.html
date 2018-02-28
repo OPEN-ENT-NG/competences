@@ -104,7 +104,7 @@
                class="right-magnet">
 
         <input type="button" ng-click="goTo('/devoir/' + currentDevoir.id + '/edit')" i18n-value="evaluations.test.edit"
-               ng-disabled="endSaisie"
+               ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
                ng-if="!isChefEtab()"
                class="right-magnet" ng-class="{'button-edit-devoir' : currentDevoir.competences.all.length > 0,
                                         'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
@@ -122,7 +122,7 @@
             <i class="download">
             </i></button>
 
-        <section ng-if="endSaisie" class="row twelve-mobile ng-scope">
+        <section ng-if="currentDevoir.endSaisie && !isChefEtab()" class="row twelve-mobile ng-scope">
             <div class="six warning">
                 <i18n>evaluations.devoir.uncancelable</i18n>
             </div>
@@ -221,7 +221,7 @@
                             <div class="align-center">
                                 <c-skills-color-page devoir="currentDevoir" selected-competences="selected.competences.list"
                                                      selected-eleves="selected.eleves" ng-if="currentDevoir.competences.all.length > 0"
-                                                     niveau-competences="niveauCompetences"
+                                                     niveau-competences="niveauCompetences" has-right="isChefEtab()"
                                 ></c-skills-color-page>
                             </div>
                             <div ng-if="currentDevoir.competences.all.length > 0" class="one inline-block  cell coche-case">
@@ -309,7 +309,9 @@
                                             <input-text-list items="getListeAnnotations(evaluations,eleve.evaluation)"
                                                              display-attribute-list="libelle"
                                                              display-attribute-input="libelle_court"
-                                                                 disabled-input="!currentDevoir.is_evaluated || endSaisie"
+                                                             is-evaluated="currentDevoir.is_evaluated"
+                                                             has-right="isChefEtab()"
+                                                             end-saisie="currentDevoir.endSaisie"
                                                              model="eleve.evaluation"
                                                              model-attribute="valeur"
                                                              validation-item-function="saveNoteDevoirEleve(eleve.evaluation, $event, eleve)"
@@ -338,6 +340,7 @@
                                                                          eleves="currentDevoir.eleves.all",
                                                                          blur="highlightCompetence"
                                                                          current-devoir="currentDevoir"
+                                                                         has-right="isChefEtab()"
                                                                          nb-eleve="currentDevoir.eleves.all.length"
                                                                          nb-competences-devoir="currentDevoir.competences.all.length"
                                                                          competence="competence"
@@ -374,7 +377,7 @@
                                         <div ng-class="{nine : currentDevoir.competences.all.length === 0, four : currentDevoir.competences.all.length > 0}"
                                              class="cell cell-input " ng-if="currentDevoir.competences.all.length < 8">
                                             <input type="text" class="eleven input-appreciation" name="appreciation"
-                                                   ng-disabled="endSaisie"
+                                                   ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
                                                    ng-model="eleve.evaluation.appreciation" ng-blur="saveNoteDevoirEleve(eleve.evaluation, $event)"
                                                    ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
                                         </div>
@@ -392,7 +395,7 @@
                                                    ng-model="eleve.evaluation.appreciation"
                                                    ng-blur="saveNoteDevoirEleve(eleve.evaluation, $event);expandAppreciation($index, true, $event);"
                                                    ng-focus="getEleveInfo(eleve);expandAppreciation($index, false);"
-                                                   ng-disabled="endSaisie"
+                                                   ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
                                                    style="font-style: oblique;">
                                         </div>
                                     </div>

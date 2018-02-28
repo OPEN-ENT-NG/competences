@@ -8,6 +8,7 @@ export let cSkillsColorPage = ng.directive("cSkillsColorPage", function(){
         restrict : 'E',
         scope : {
             devoir : '=',
+            hasRight: '=',
             selectedEleves : '=',
             selectedCompetences : '=',
             niveauCompetences: '='
@@ -73,7 +74,7 @@ export let cSkillsColorPage = ng.directive("cSkillsColorPage", function(){
                 lightbox : false
             };
             $scope.confirme = function(evaluation){
-                if($scope.devoir.endSaisie){
+                if($scope.devoir.endSaisie && !$scope.hasRight){
                     $scope.text= lang.translate('evaluations.devoir.uncancelable');
                 } // des élèves et des compétences sélectionnées
                 else if($scope.selectedEleves.list.length > 0 && $scope.selectedCompetences.length > 0) {

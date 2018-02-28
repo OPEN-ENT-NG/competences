@@ -31,13 +31,13 @@
 </ul>
 
 <lightbox show="opened.lightbox" on-close="opened.lightbox=false">
-    <p ng-if="devoir.endSaisie"><i18n>evaluations.devoir.uncancelable</i18n></p>
-    <p ng-if="!devoir.endSaisie"><i18n>evalutions.competences.confirmation</i18n></p>
-    <p ng-if="!devoir.endSaisie"><i18n>evaluations.devoir.confirmation.question</i18n></p>
-    <button ng-if="!devoir.endSaisie" class="marginFive" ng-click="selectColor()">
+    <p ng-if="devoir.endSaisie && !hasRight"><i18n>evaluations.devoir.uncancelable</i18n></p>
+    <p ng-if="!(devoir.endSaisie && !hasRight)"><i18n>evalutions.competences.confirmation</i18n></p>
+    <p ng-if="!(devoir.endSaisie && !hasRight)"><i18n>evaluations.devoir.confirmation.question</i18n></p>
+    <button ng-if="!(devoir.endSaisie && !hasRight)" class="marginFive" ng-click="selectColor()">
         <i18n>confirmer</i18n>
     </button>
-    <button ng-if="!devoir.endSaisie" class="marginFive" ng-click="annuler()">
+    <button ng-if="!(devoir.endSaisie && !hasRight)" class="marginFive" ng-click="annuler()">
         <i18n>annuler</i18n>
     </button>
 </lightbox>
