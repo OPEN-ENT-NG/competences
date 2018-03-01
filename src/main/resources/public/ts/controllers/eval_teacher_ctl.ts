@@ -1913,8 +1913,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     //Remplissage des competences a supprimer
 
                     for (let j = 0; j < $scope.competencesSupp.length; j++) {
-
-                        $scope.devoir.competencesRem.push($scope.competencesSupp[j].id_competence);
+                        if(_.findWhere($scope.devoir.competencesUpdate,
+                                {id: $scope.competencesSupp[j].id_competence}) === undefined) {
+                            $scope.devoir.competencesRem.push($scope.competencesSupp[j].id_competence);
+                        }
                     }
                 }
                 utils.safeApply($scope);
