@@ -137,8 +137,10 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
 
             $scope.$on('checkConnaissances', function(event, parentItem){
                 return (parentItem.competences.each(function(e){
-                    $scope.competencesFilter[e.id+"_"+e.id_enseignement].isSelected = $scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected
-                                                                                    && !$scope.competencesFilter[e.id + "_" + e.id_enseignement].data.masque;
+                    $scope.competencesFilter[e.id+"_"+e.id_enseignement].isSelected
+                        = $scope.competencesFilter[parentItem.id+"_"+parentItem.id_enseignement].isSelected
+                            && !($scope.competencesFilter[e.id + "_" + e.id_enseignement].data.masque
+                                && _.findWhere($scope.devoir.competences.all,{id: e.id}) === undefined);
                 }));
             });
 

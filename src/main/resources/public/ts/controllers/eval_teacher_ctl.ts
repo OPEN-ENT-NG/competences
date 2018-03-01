@@ -1617,7 +1617,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 // ie on doit ajouter/supprimer toutes les sous competences dans le recap
         $scope.$on('checkConnaissances', function (event, parentItem) {
             parentItem.competences.each(function (e) {
-                if(e.masque) {
+                if(e.masque && _.findWhere($scope.devoir.competences.all,{id: e.id}) === undefined ) {
                     return;
                 } else if ($scope.competencesFilter[parentItem.id + "_" + parentItem.id_enseignement].isSelected === true) {
                     // check si on a pas deja ajoute pour eviter les doublons
