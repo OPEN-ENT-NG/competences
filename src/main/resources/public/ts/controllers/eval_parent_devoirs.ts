@@ -94,10 +94,10 @@ export let listController = ng.controller('ListController', [
                 }
                 else {
                     if(evaluations.devoirs.all.length > 0 ) {
-                        $scope.goToDevoir('#/devoir/'+ evaluations.devoirs.all[0].id);
+                        $scope.goToDevoir( evaluations.devoirs.all[0].id);
                     }
                     else {
-                        $scope.goToDevoir('#/');
+                        window.location.hash = '#/';
                     }
                 }
             }
@@ -134,7 +134,7 @@ export let listController = ng.controller('ListController', [
             if (index !== -1 && (index + parseInt(num)) >= 0
                 && (index + parseInt(num)) < evaluations.devoirs.all.length) {
                 let target = evaluations.devoirs.all[index + parseInt(num)];
-                $scope.goToDevoir('#/devoir/' +target.id);
+                $scope.goToDevoir(target.id);
                 utils.safeApply($scope);
             }
         };
