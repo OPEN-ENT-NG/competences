@@ -1,0 +1,21 @@
+@mixin box-shadow($in) {
+  box-shadow: $in;
+  -moz-box-shadow: $in;
+  -o-box-shadow: $in;
+  -webkit-box-shadow: $in;
+}
+
+@mixin transition($transition) {
+  -moz-transition:    $transition;
+  -o-transition:      $transition;
+  -webkit-transition: $transition;
+  transition:         $transition;
+}
+
+
+@mixin animation($animation){
+  animation: $animation;
+  -moz-animation: $animation;
+  -webkit-animation: $animation;
+}
+
