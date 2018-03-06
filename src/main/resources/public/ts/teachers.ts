@@ -24,11 +24,15 @@ import {uniqueFilter} from './utils/filters/unique';
 import {customSearchFilter} from './filters/customSearch';
 import {customSearchCompetencesFilter} from './filters/customSearchCompetences';
 import {getMatiereClasseFilter} from './utils/filters/getMatiereClasse';
+import {customClassFilters} from './filters/customClassPeriodeFilter';
+import {customPeriodeFilters} from "./filters/customClassPeriodeFilter";
 
 ng.filters.push(uniqueFilter);
 ng.filters.push(customSearchFilter);
 ng.filters.push(customSearchCompetencesFilter);
 ng.filters.push(getMatiereClasseFilter);
+ng.filters.push(customClassFilters);
+ng.filters.push(customPeriodeFilters);
 
 //DIRECTIVES
 import {cFilAriane} from './utils/directives/cFilAriane';

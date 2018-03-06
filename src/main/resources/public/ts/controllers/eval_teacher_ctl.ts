@@ -11,7 +11,6 @@ import {
 } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
-import { Periode } from "../models/common/Periode";
 import {Utils} from "../models/teacher/Utils";
 
 declare let $: any;
@@ -77,10 +76,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             inColor: false,
         };
 
-        $scope.getI18nPeriode = (periode: Periode) => {
+
+        $scope.getI18nPeriode = (periode: any) => {
             let result;
             if (periode.id === null ) {
                 result = lang.translate("viescolaire.utils.annee");
+            }
+            else if (!periode.hasOwnProperty('id_classe')){
+                result = periode ?
+                    lang.translate("viescolaire.periode." + periode.type) + " " + periode.ordre
+                    : lang.translate("viescolaire.utils.periodeError");
             }
             else {
                 let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: periode.id_type});

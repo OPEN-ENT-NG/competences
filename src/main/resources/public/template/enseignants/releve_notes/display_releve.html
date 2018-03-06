@@ -41,20 +41,20 @@
                 </section>
                 <section>
                     <label class="select">
-                        <select ng-model="search.classe"
-                                ng-change="syncPeriode(search.classe.id); search.periode = '*'; getReleve();"
-                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
-                            <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        <select ng-model="search.periode"
+                                ng-change="getReleve()"
+                                ng-options="getI18nPeriode(periode) for periode in structure.typePeriodes.all | customPeriodeFilters:devoirs.all:search | orderBy:'-type'">
+                            <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
+                            </option>
                         </select>
                     </label>
                 </section>
                 <section>
-                    <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
-                        <select ng-model="search.periode"
-                                ng-change="getReleve()"
-                                ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                                ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all ">
-                            <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]</optiondisabled>
+                    <label class="select">
+                        <select ng-model="search.classe"
+                                ng-change="getReleve();"
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all:search">
+                            <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>
                     </label>
                 </section>
@@ -71,7 +71,8 @@
             <div class="marginFive">
                 <container class="left card tailleMax" template="leftSide-devoirInfo"></container>
 
-                <div ng-if="!template.isEmpty('leftSide-userInfo')" class="fiche student-info card left tailleMax" ng-class="{opened : openedStudentInfo === true}">
+                <div ng-if="!template.isEmpty('leftSide-userInfo')" class="fiche student-info card left tailleMax"
+                     ng-class="{opened : openedStudentInfo === true}">
                     <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
                     <container template="leftSide-userInfo"></container>
                 </div>

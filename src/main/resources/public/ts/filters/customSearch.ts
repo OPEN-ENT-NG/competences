@@ -27,7 +27,10 @@ export let customSearchFilter = ng.filter('customSearchFilters', function(){
         }
         if (searchParams.periode !== undefined && searchParams.periode !== '*' && searchParams.periode !== null &&
             searchParams.periode.id !== null) {
-            tempTable = _.where(output, {id_periode : parseInt(searchParams.periode.id_type  )});
+            if(searchParams.periode.id_type === undefined) {
+                searchParams.periode.id_type = searchParams.periode.id;
+            }
+            tempTable = _.where(output, {id_periode : parseInt(searchParams.periode.id_type )});
             output = tempTable;
         }
         if (searchParams.name !== "" && searchParams.name !== null) {

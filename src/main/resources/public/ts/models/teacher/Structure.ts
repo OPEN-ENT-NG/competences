@@ -1,4 +1,4 @@
-import { Model, Collection, http, moment, _, model, idiom as lang } from 'entcore';
+import { Model, Collection, http, _, model, idiom as lang } from 'entcore';
 import * as utils from '../../utils/teacher';
 import {
     Eleve,
@@ -151,7 +151,7 @@ export class Structure extends Model {
                                 niveauCompetencesArray: _.sortBy(node, function (niv) {
                                     return niv.ordre;
                                 })
-                            }
+                            };
                             cycleNode.niveauCompetencesArray = cycleNode.niveauCompetencesArray.reverse();
                             cycles.push(cycleNode);
                         });
@@ -176,7 +176,7 @@ export class Structure extends Model {
         this.collection(Enseignant);
         this.collection(Responsable, {// responsable de Direction
             sync :  function(){
-                return new Promise ((resolve, reject) => {
+                return new Promise ((resolve) => {
                     http().getJson(that.api.RESPONSABLE.synchronisation).done(function (res) {
                         that.responsables.load(res);
                         resolve();
@@ -186,7 +186,7 @@ export class Structure extends Model {
         });
         this.collection(Eleve, {
             sync: function () {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     // chargement des élèves Pour les enseignants ou personnel de l'établissement
                     let url = that.api.ELEVE.synchronization;
                     // filtre par classe pour les enseignants
@@ -352,6 +352,7 @@ export class Structure extends Model {
         this.collection(TypePeriode, {
             sync: async () : Promise<any> => {
                 return await http().getJson(this.api.TYPEPERIODES.synchronisation).done((res) => {
+                    res.push({id: null, type: 0 });
                     this.typePeriodes.load(res);
                     this.synchronized.typePeriodes = true;
                 });
