@@ -58,6 +58,9 @@ export class Classe extends Model {
                         res.push({id: null});
                         this.periodes.load(res);
                         resolve();
+                    }).error( (res) =>{
+                        this.periodes.load([]);
+                        resolve();
                     });
                 });
             }

@@ -36,7 +36,7 @@
         <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
             <select ng-model="search.periode"
                     ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                    ng-change="selectSuivi(route.current.$$route.originalPath)"
+                    ng-change="changeContent()"
                     ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all ">
                 <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
             </select>
@@ -47,7 +47,7 @@
                ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
             <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
                     ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
-                    ng-change="selectSuivi(route.current.$$route.originalPath)">
+                    ng-change="changeContent()">
                 <option value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
             </select>
         </label>
@@ -78,8 +78,9 @@
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
 <div ng-if="isChefEtab()
-            || ( !template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')
-            || evaluations.structure.moyenneVisible)"
+            || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
+            || template.contains('suivi-competence-content', 'enseignants/suivi_competences_classe/content_vue_suivi_classe')
+            || evaluations.structure.moyenneVisible"
      class="cell card twelve criterion notes-help">
     <div class="legend"
          ng-include="'/competences/public/template/enseignants/informations/display_competences_legende.html'">

@@ -101,6 +101,20 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 });
             };
 
+            $scope.getCurrentDevoirsNotDone = function () {
+                $scope.getDevoirsNotDone().then(async (devoirs) => {
+                    $scope.currentDevoirsNotDone = [];
+                    for(var d = 0; d < devoirs.length; d++){
+                        let classe = _.findWhere($scope.structure.classes.all, {id: devoirs[d].id_groupe});
+                        let current_periode = await $scope.getCurrentPeriode(classe);
+                        if(current_periode === -1 || current_periode.id_type === devoirs[d].id_periode){
+                            $scope.currentDevoirsNotDone.push($scope.devoirsNotDone[d]);
+                        }
+                    }
+                    utils.safeApply($scope);
+                });
+            }
+
             $scope.initChartListNotDone = function () {
                 $scope.getDevoirsNotDone().then((devoirs) => {
                     $scope.devoirsNotDone = devoirs;
@@ -208,6 +222,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 $scope.usePerso = evaluations.structure.usePerso;
                 $scope.classes = evaluations.structure.classes;
                 $scope.initChartListNotDone();
+                $scope.getCurrentDevoirsNotDone();
                 utils.safeApply($scope);
             };
             if (!evaluations.structure.isSynchronized) {
@@ -237,10 +252,12 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
 
         evaluations.devoirs.on('sync', function () {
             $scope.initChartListNotDone();
+            $scope.getCurrentDevoirsNotDone();
         });
 
         if (evaluations.structure.isSynchronized) {
             $scope.initChartListNotDone();
+            $scope.getCurrentDevoirsNotDone();
             $scope.initSearch();
         }
 

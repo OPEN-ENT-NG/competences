@@ -323,7 +323,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         };
 
         /**
-         * Créer une suivi de compétence
+         * Créer un suivi de compétence
          */
         $scope.selectSuivi = async function () {
             $scope.selected.grey = true;
@@ -614,13 +614,15 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
                 $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
-                let content = $scope.template.containers['suivi-competence-content'].split('.html?hash=')[0].split('template/')[1];
-
-                await
-                $scope.selectSuivi($scope.route.current.$$route.originalPath);
-                $scope.template.open('suivi-competence-content', content);
-                utils.safeApply($scope);
+                $scope.changeContent();
             }
+        };
+
+        $scope.changeContent = async function () {
+            let content = $scope.template.containers['suivi-competence-content'].split('.html?hash=')[0].split('template/')[1];
+            await $scope.selectSuivi($scope.route.current.$$route.originalPath);
+            $scope.template.open('suivi-competence-content', content);
+            utils.safeApply($scope);
         };
         $scope.textPeriode = "Hors periode scolaire";
 
