@@ -508,13 +508,20 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         $scope.isMaxEvaluation = function (listeEvaluations) {
             return function (evaluation) {
-                var _t = listeEvaluations;
+                var _evalFiltered = listeEvaluations;
                 if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
-                    _t = _.filter(listeEvaluations, function (competence) {
+                    _evalFiltered = _.filter(listeEvaluations, function (competence) {
                         return competence.owner !== undefined && competence.owner === $scope.me.userId;
                     });
                 }
-                var max = _.max(_t, function (competence) {
+
+                // filtre sur les competences prises dans le calcul
+                _evalFiltered = _.filter(_evalFiltered, function (competence) {
+                    return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
+                });
+
+                // calcul du max parmis les competences
+                var max = _.max(_evalFiltered, function (competence) {
                     return competence.evaluation;
                 });
                 if (typeof max === 'object') {
@@ -808,7 +815,12 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     if(ListEval[i].evaluation !== -1){colorValue = $scope.mapCouleurs[ListEval[i].evaluation];}
                     else{colorValue = Defaultcolors.unevaluated;}
                     $scope.chartOptionsEval.colors.push(colorValue);
-                    $scope.chartOptionsEval.tooltipLabels.push(ListEval[i].evaluation_libelle+' : '+ListEval[i].owner_name);
+
+                    let libelle = ListEval[i].evaluation_libelle;
+                    if(ListEval[i].formative) {
+                       libelle += " (F)"
+                    }
+                    $scope.chartOptionsEval.tooltipLabels.push(libelle+' : '+ListEval[i].owner_name);
 
                 }
 
@@ -852,6 +864,30 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
         };
 
+
+        $scope.hasMaxNotFormative = function (MaCompetence) {
+            let _evalFiltered = MaCompetence.competencesEvaluations;
+            if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
+                _evalFiltered = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
+                    if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
+                        return evaluation;
+                });
+            }
+
+            // filtre sur les competences prises dans le calcul
+            _evalFiltered = _.filter(_evalFiltered, function (competence) {
+                return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
+            });
+
+            let max = _.max(_evalFiltered, function (evaluation) {
+                return evaluation.evaluation;
+            });
+            if (typeof max === 'object' ) {
+                return (!(max.evaluation == -1));
+            } else {
+                return false;
+            }
+        }
 
     }
 ]);

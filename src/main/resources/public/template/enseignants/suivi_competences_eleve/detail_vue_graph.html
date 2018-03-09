@@ -20,6 +20,11 @@
     <div class="ten cell info " ng-if="EvaluationExiste(detailCompetence.competencesEvaluations)">
         <i18n>evaluation.not.exist</i18n>
     </div>
+
+    <div class="ten formative-legend">
+        * (F) : Evaluation de type Formative
+    </div>
+
     <div ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)" class = "ten cell">
         <div class="box-accueil twelve-mobile">
                 <canvas class="chart chart-bubble chartSuiviEleve align-center"

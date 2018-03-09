@@ -38,7 +38,7 @@
                         [[evaluation.evaluation + 1]]
                     </span>
                 </span>
-                    <span ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations)">
+                    <span ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
                     NE
                 </span>
                 </div>

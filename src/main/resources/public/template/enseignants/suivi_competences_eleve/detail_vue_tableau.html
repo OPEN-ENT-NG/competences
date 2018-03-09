@@ -20,6 +20,11 @@
     <div class="ten cell info " ng-if="EvaluationExiste(detailCompetence.competencesEvaluations)">
         <i18n>evaluation.not.exist</i18n>
     </div>
+
+    <div class="ten formative-legend">
+        * (F) : Evaluation de type Formative
+    </div>
+
     <table class="ten responsive-table" ng-if="!EvaluationExiste(detailCompetence.competencesEvaluations)">
         <thead>
         <tr>
@@ -45,7 +50,8 @@
         </thead>
         <tbody>
         <tr ng-repeat="evaluation in detailCompetence.competencesEvaluations|filter:filterOwnerSuivi | orderBy:sortType:sortReverse">
-            <td>[[evaluation.evaluation_libelle]]</td>
+            <td ng-if="!evaluation.formative">[[evaluation.evaluation_libelle]]</td>
+            <td ng-if="evaluation.formative">[[evaluation.evaluation_libelle]] (F)</td>
             <td>[[evaluation.owner_name]]</td>
             <td>[[getDateFormated(evaluation.evaluation_date)]]</td>
             <td>

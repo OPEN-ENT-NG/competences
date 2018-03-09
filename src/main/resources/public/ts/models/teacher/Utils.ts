@@ -135,19 +135,24 @@ export class Utils {
         if(poDomaine.evaluated) {
             for (let i = 0; i < poDomaine.competences.all.length; i++) {
                 var competencesEvaluations = poDomaine.competences.all[i].competencesEvaluations;
-                var _t = competencesEvaluations;
+                var _evalFiltered = competencesEvaluations;
 
                 // filtre sur les compétences évaluées par l'enseignant
                 if (pbMesEvaluations) {
-                    _t = _.filter(competencesEvaluations, function (competence) {
+                    _evalFiltered = _.filter(competencesEvaluations, function (competence) {
                         return competence.owner !== undefined && competence.owner === model.me.userId;
                     });
                 }
 
-                if (_t && _t.length > 0) {
+                // filtre sur les competences prises dans le calcul
+                _evalFiltered = _.filter(_evalFiltered, function (competence) {
+                    return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
+                });
+
+                if (_evalFiltered && _evalFiltered.length > 0) {
                     // TODO récupérer la vrai valeur numérique :
                     // par exemple 0 correspond à rouge ce qui mais ça correspond à une note de 1 ou 0.5 ou 0 ?
-                    poMaxEvaluationsDomaines.push(_.max(_t, function (_t) {
+                    poMaxEvaluationsDomaines.push(_.max(_evalFiltered, function (_t) {
                         return _t.evaluation;
                     }).evaluation + 1);
                 }
@@ -182,7 +187,7 @@ export class Utils {
             poDomaine.moyenne = -1;
         }
 
-        this.setSliderOptions(poDomaine,tableConversions)
+        this.setSliderOptions(poDomaine,tableConversions);
 
         // Chefs d'établissement
 

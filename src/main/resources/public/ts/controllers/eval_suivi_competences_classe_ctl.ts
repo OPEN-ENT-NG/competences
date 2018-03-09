@@ -177,6 +177,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 ? _.where($scope.detailCompetence.competencesEvaluations, {id_eleve : idEleve, owner : model.me.userId})
                 : _.where($scope.detailCompetence.competencesEvaluations, {id_eleve : idEleve});
             if (evaluations.length > 0) {
+                // filtre sur les competences prises dans le calcul
+                evaluations = _.filter(evaluations, function (competence) {
+                    return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
+                });
                 return _.max(evaluations, function (evaluation) { return evaluation.evaluation; });
             }
         };

@@ -162,11 +162,12 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
                 .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
                 .append("rel_competences_domaines.id_domaine, ")
-                .append("users.username as owner_name ")
+                .append("users.username as owner_name, type.formative AS formative ")
                 .append("FROM notes.competences ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users ON (users.id = devoirs.owner) ")
                 .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
         if (idPeriode != null) {
@@ -203,6 +204,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
             query.append("AND devoirs.id_periode = ? ");
             values.addNumber(idPeriode);
         }
+
+        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ");
+        query.append("WHERE type.formative = false ");
         query.append("GROUP BY competences.id, competences.id_cycle,rel_competences_domaines.id_domaine, competences_notes.id_eleve, competences_notes.owner ");
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
@@ -270,7 +274,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_competences_domaines ON competences_notes.id_competence = rel_competences_domaines.id_competence ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".competences ON competences_notes.id_competence = competences.id ")
                 .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ON competences_notes.id_devoir = devoirs.id ")
-                .append("WHERE competences_notes.id_eleve IN ").append(Sql.listPrepared(id_eleve)).append(" AND evaluation >= 0 ");
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".type ON (type.id = devoirs.id_type) ")
+                .append("WHERE type.formative = false ")
+                .append("AND competences_notes.id_eleve IN ").append(Sql.listPrepared(id_eleve)).append(" AND evaluation >= 0 ");
 
         for(String s : id_eleve) {
             values.addString(s);
