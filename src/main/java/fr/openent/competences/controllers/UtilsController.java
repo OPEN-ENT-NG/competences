@@ -24,17 +24,25 @@ import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
+import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
+import org.vertx.java.core.json.JsonObject;
+
+import java.util.Arrays;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -112,5 +120,57 @@ public class UtilsController extends ControllerHelper {
             }
         });
     }
+
+    @Put("/link/groupes/cycles")
+    @ApiDoc("Met à jour  les classes de l'établissement")
+    @SecuredAction(value = Competences.PARAM_LINK_GROUP_CYCLE_RIGHT)
+    public void updateLinkGroupesCycles(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+            @Override
+            public void handle(final JsonObject ressource) {
+                Number id_cycle = ressource.getNumber("id_cycle");
+                final String[] idClasses = Arrays.asList(ressource.getArray("idClasses").toArray())
+                        .toArray(new String[0]);
+                final Number[] typesGroupes = Arrays.asList(ressource.getArray("typesGroupes").toArray())
+                        .toArray(new Number[0]);
+
+                utilsService.linkGroupesCycles(idClasses, id_cycle, typesGroupes,
+                        new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if(event.isRight()){
+                                    Renders.renderJson(request, event.right().getValue());
+                                }else{
+                                    leftToResponse(request, event.left());
+                                }
+                            }
+                        });
+            }
+        });
+    }
+    @Post("/link/check/data/classes")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    public void checkDataOnClasses(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+            @Override
+            public void handle(final JsonObject ressource) {
+                Number id_cycle = ressource.getNumber("id_cycle");
+                final String[] idClasses = Arrays.asList(ressource.getArray("idClasses").toArray())
+                        .toArray(new String[0]);
+
+                utilsService.checkDataOnClasses(idClasses, new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if(event.isRight()){
+                            Renders.renderJson(request, event.right().getValue());
+                        }else{
+                            leftToResponse(request, event.left());
+                        }
+                    }
+                });
+            }
+        });
+    }
+
 
 }

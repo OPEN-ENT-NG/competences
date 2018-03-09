@@ -69,6 +69,8 @@ public class Competences extends BaseServer {
 
     public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
 
+    public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
+
     public static final Integer MAX_NBR_COMPETENCE = 12;
 
     public static final String VIESCO_BUS_ADDRESS = "viescolaire";

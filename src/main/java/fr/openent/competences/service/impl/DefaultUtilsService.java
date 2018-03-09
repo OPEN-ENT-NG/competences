@@ -23,6 +23,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.http.Renders;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
@@ -42,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 
@@ -71,7 +73,7 @@ public class DefaultUtilsService  implements UtilsService {
         JsonArray values = new JsonArray();
 
         query.append("SELECT DISTINCT id_remplacant ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
                 .append("WHERE id_titulaire = ? ")
                 .append("AND id_etablissement = ? ")
                 .append("AND date_debut <= current_date ")
@@ -97,7 +99,7 @@ public class DefaultUtilsService  implements UtilsService {
         JsonArray values = new JsonArray();
 
         query.append("SELECT DISTINCT id_titulaire ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
                 .append("WHERE id_remplacant = ? ")
                 .append("AND id_etablissement = ? ")
                 .append("AND date_debut <= current_date ")
@@ -116,7 +118,7 @@ public class DefaultUtilsService  implements UtilsService {
         JsonArray values = new JsonArray();
 
         query.append("SELECT type.* ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".type ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".type ")
                 .append("WHERE type.id_etablissement = ? ");
         values.add(idEtablissement);
 
@@ -141,21 +143,22 @@ public class DefaultUtilsService  implements UtilsService {
         //query.append("MATCH (m:`User` {id: {id}})-[:COMMUNIQUE_DIRECT]->(n:`User`) RETURN n");
 
         query.append("MATCH (m:`User`{id: {id}})<-[:RELATED]-(n:`User`)-[:ADMINISTRATIVE_ATTACHMENT]->(s:`Structure`) ")
-        .append("WITH n.id as id, n.displayName as displayName, n.classes as externalIdClasse, s.id as idStructure,  ")
-        .append("n.firstName as firstName, n.lastName as lastName MATCH(c:Class)WHERE c.externalId IN externalIdClasse")
-        .append(" RETURN id, displayName, firstName, lastName, c.id as idClasse, idStructure");
+                .append("WITH n.id as id, n.displayName as displayName, n.classes as externalIdClasse, s.id as idStructure,  ")
+                .append("n.firstName as firstName, n.lastName as lastName MATCH(c:Class)WHERE c.externalId IN externalIdClasse")
+                .append(" RETURN id, displayName, firstName, lastName, c.id as idClasse, idStructure");
         neo4j.execute(query.toString(), new JsonObject().putString("id", id), Neo4jResult.validResultHandler(handler));
     }
+
     /**
      * Fonction de calcul générique de la moyenne
-     * @param listeNoteDevoirs : contient une liste de NoteDevoir.
-     * La formule suivante est utilisée :(SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
      *
-     * @param diviseurM : diviseur de la moyenne. Par défaut, cette valeur est égale à 20 (optionnel).
+     * @param listeNoteDevoirs : contient une liste de NoteDevoir.
+     *                         La formule suivante est utilisée :(SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
+     * @param diviseurM        : diviseur de la moyenne. Par défaut, cette valeur est égale à 20 (optionnel).
      **/
     @Override
     public JsonObject calculMoyenne(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques, Integer diviseurM) {
-        if(diviseurM == null){
+        if (diviseurM == null) {
             diviseurM = 20;
         }
         Double noteMax = new Double(0);
@@ -181,7 +184,7 @@ public class DefaultUtilsService  implements UtilsService {
                 sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
                 sumCJDJ += (currNote * currCoefficient);
             } else {
-                sumNIMCIParD += ((currNote * diviseurM * currCoefficient ) / currDiviseur);
+                sumNIMCIParD += ((currNote * diviseurM * currCoefficient) / currDiviseur);
                 sumCI += currCoefficient;
             }
 
@@ -196,7 +199,7 @@ public class DefaultUtilsService  implements UtilsService {
             }
         }
 
-        Double moyenne = ((sumNIMCIParD + sumCJDJ)/(sumCI + sumCJDJParM));
+        Double moyenne = ((sumNIMCIParD + sumCJDJ) / (sumCI + sumCJDJParM));
 
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("fr", "FR"));
         symbols.setDecimalSeparator('.');
@@ -205,7 +208,7 @@ public class DefaultUtilsService  implements UtilsService {
         try {
             moyenne = Double.valueOf(df.format(moyenne));
         } catch (NumberFormatException e) {
-            log.error("Moyenne : "+String.valueOf(moyenne), e);
+            log.error("Moyenne : " + String.valueOf(moyenne), e);
         }
         JsonObject r = new JsonObject().putNumber("moyenne", moyenne);
         if (statistiques) {
@@ -217,6 +220,7 @@ public class DefaultUtilsService  implements UtilsService {
     /**
      * Fonction de calcul générique de la moyenne
      * La formule suivante est utilisée : SUM(notes)/ nombre/Notes
+     *
      * @param listeNoteDevoirs : contient une liste de NoteDevoir.
      **/
     @Override
@@ -229,11 +233,12 @@ public class DefaultUtilsService  implements UtilsService {
 
         for (NoteDevoir noteDevoir : listeNoteDevoirs) {
             Double currNote = noteDevoir.getNote();
-            notes+= currNote;
+            notes += currNote;
             // Calcul de la note min et max
             if (statistiques) {
-                if(null == noteMin){
-                    noteMin = new Double(noteDevoir.getDiviseur());;
+                if (null == noteMin) {
+                    noteMin = new Double(noteDevoir.getDiviseur());
+                    ;
                 }
                 if (currNote > noteMax) {
                     noteMax = currNote;
@@ -244,7 +249,7 @@ public class DefaultUtilsService  implements UtilsService {
             }
         }
 
-        Double moyenne = ((notes)/(listeNoteDevoirs.size()));
+        Double moyenne = ((notes) / (listeNoteDevoirs.size()));
 
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("fr", "FR"));
         symbols.setDecimalSeparator('.');
@@ -253,7 +258,7 @@ public class DefaultUtilsService  implements UtilsService {
         try {
             moyenne = Double.valueOf(df.format(moyenne));
         } catch (NumberFormatException e) {
-            log.error("Moyenne : "+String.valueOf(moyenne), e);
+            log.error("Moyenne : " + String.valueOf(moyenne), e);
         }
         JsonObject r = new JsonObject().putNumber("moyenne", moyenne);
         if (statistiques) {
@@ -264,7 +269,8 @@ public class DefaultUtilsService  implements UtilsService {
 
     /**
      * Recupere un établissemnt sous sa representation en BDD
-     * @param id identifiant de l'etablissement
+     *
+     * @param id      identifiant de l'etablissement
      * @param handler handler comportant le resultat
      */
     @Override
@@ -303,14 +309,14 @@ public class DefaultUtilsService  implements UtilsService {
         String condition = "";
         String functionMatch = "WITH u MATCH (s:Structure)<-[:DEPENDS]-(pg:ProfileGroup)-[:HAS_PROFILE]->(p:Profile), u-[:IN]->pg ";
 
-        if(nameFilter != null && !nameFilter.trim().isEmpty()){
+        if (nameFilter != null && !nameFilter.trim().isEmpty()) {
             condition += "AND u.displayName =~ {regex}  ";
             params.putString("regex", "(?i)^.*?" + Pattern.quote(nameFilter.trim()) + ".*?$");
         }
-        if(filterActivated != null){
-            if("inactive".equals(filterActivated)){
+        if (filterActivated != null) {
+            if ("inactive".equals(filterActivated)) {
                 condition += "AND NOT(u.activationCode IS NULL)  ";
-            } else if("active".equals(filterActivated)){
+            } else if ("active".equals(filterActivated)) {
                 condition += "AND u.activationCode IS NULL ";
             }
         }
@@ -331,7 +337,7 @@ public class DefaultUtilsService  implements UtilsService {
                         "HEAD(COLLECT(distinct parent.externalId)) as parent1ExternalId, " + // Hack for GEPI export
                         "HEAD(TAIL(COLLECT(distinct parent.externalId))) as parent2ExternalId " + // Hack for GEPI export
                         "ORDER BY type DESC, displayName ASC ";
-        neo4j.execute(query, params,  Neo4jResult.validResultHandler(results));
+        neo4j.execute(query, params, Neo4jResult.validResultHandler(results));
     }
 
     @Override
@@ -358,21 +364,22 @@ public class DefaultUtilsService  implements UtilsService {
 
     /**
      * Récupère les cycles des classes dans la relation classe_cycle
+     *
      * @param idClasse liste des identifiants des classes.
-     * @param handler Handler portant le résultat de la requête.
+     * @param handler  Handler portant le résultat de la requête.
      */
     @Override
-    public void getCycle(List<String> idClasse, Handler<Either<String, JsonArray>> handler){
-        StringBuilder query =new StringBuilder();
+    public void getCycle(List<String> idClasse, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
         query.append("SELECT id_groupe, id_cycle, libelle, value_cycle ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".rel_groupe_cycle,  ")
-                .append( Competences.COMPETENCES_SCHEMA +".cycle ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle,  ")
+                .append(Competences.COMPETENCES_SCHEMA + ".cycle ")
                 .append("WHERE id_groupe IN " + Sql.listPrepared(idClasse.toArray()))
                 .append(" AND id_cycle = cycle.id");
 
-        for(String id :  idClasse){
+        for (String id : idClasse) {
             params.addString(id);
         }
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
@@ -380,21 +387,22 @@ public class DefaultUtilsService  implements UtilsService {
 
     /**
      * Récupère le cycle de la classe dans la relation classe_cycle
+     *
      * @param idClasse Identifiant de la classe.
-     * @param handler Handler portant le résultat de la requête.
+     * @param handler  Handler portant le résultat de la requête.
      */
     @Override
-    public void getCycle(String idClasse, Handler<Either<String, JsonObject>> handler){
-        StringBuilder query =new StringBuilder();
+    public void getCycle(String idClasse, Handler<Either<String, JsonObject>> handler) {
+        StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
         query.append("SELECT id_cycle ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".rel_groupe_cycle,  ")
-                .append( Competences.COMPETENCES_SCHEMA +".cycle ")
-                .append("WHERE id_groupe = ? " )
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle,  ")
+                .append(Competences.COMPETENCES_SCHEMA + ".cycle ")
+                .append("WHERE id_groupe = ? ")
                 .append(" AND id_cycle = cycle.id");
 
-            params.addString(idClasse);
+        params.addString(idClasse);
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler));
     }
@@ -410,4 +418,89 @@ public class DefaultUtilsService  implements UtilsService {
 
         neo4j.execute(query.toString(), params, Neo4jResult.validResultHandler(handler));
     }
+
+    @Override
+    public void linkGroupesCycles(final String[] idClasses, final Number id_cycle, final Number[] typeGroupes,
+                                 final Handler<Either<String, JsonArray>> handler) {
+        if (idClasses.length > 0 ) {
+            checkDataOnClasses(idClasses, new Handler<Either<String, JsonArray>>() {
+                @Override
+                public void handle(Either<String, JsonArray> event) {
+                    if (event.isRight()) {
+                        final JsonArray listDevoir = event.right().getValue();
+
+                        JsonArray statements = new JsonArray();
+
+                        // SUPPRESSION DES DEVOIRS AVEC COMPETENCES AVANT LE CHANGEMENT
+                        if (listDevoir.size() > 0 ) {
+                            StringBuilder queryDeleteDevoir = new StringBuilder();
+                            JsonArray idDevoirs = new JsonArray();
+                            queryDeleteDevoir.append("DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs")
+                                    .append(" WHERE id IN " + Sql.listPrepared(listDevoir.toArray()));
+                            for(int i =0; i < listDevoir.size(); i++) {
+                                idDevoirs.addNumber(((JsonObject)listDevoir.get(i)).getNumber("id"));
+                            }
+
+                            statements.add(new JsonObject()
+                                    .putString("statement", queryDeleteDevoir.toString())
+                                    .putArray("values", idDevoirs)
+                                    .putString("action", "prepared"));
+                        }
+
+                        // CREATION DU LIEN VERS LE NOUVEAU CYCLE
+                        StringBuilder queryLink = new StringBuilder()
+                                .append("INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
+                                .append(" (id_cycle, id_groupe, type_groupe) VALUES ");
+                        JsonArray values = new JsonArray();
+                        for (int i = 0; i < idClasses.length; i++) {
+                            queryLink.append(" (?, ?, ?) ");
+                            values.addNumber(id_cycle)
+                                    .addString(idClasses[i]).addNumber(typeGroupes[i]);
+                            if (i != (idClasses.length - 1)) {
+                                queryLink.append(",");
+                            } else {
+                                queryLink.append(" ON CONFLICT (id_cycle, id_groupe) DO UPDATE SET id_cycle = ? ");
+                                values.addNumber(id_cycle);
+                            }
+                        }
+                        statements.add(new JsonObject()
+                                .putString("statement", queryLink.toString())
+                                .putArray("values", values)
+                                .putString("action", "prepared"));
+
+
+                        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
+                    } else {
+                        handler.handle(event.left());
+                    }
+                }
+            });
+        }
+        else {
+            handler.handle(new Either.Left<String, JsonArray>("IdClasses is Empty "));
+        }
+    }
+    @Override
+    public void checkDataOnClasses(String[] idClasses, final Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new JsonArray();
+        query.append(" SELECT devoirs.id, devoirs.name, id_groupe, COUNT(competences_devoirs.id) as nbcompetences ")
+                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ")
+                .append(" LEFT JOIN notes.rel_devoirs_groupes ")
+                .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id ")
+                .append(" LEFT OUTER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs ")
+                .append(" ON devoirs.id = competences_devoirs.id_devoir ")
+                .append(" WHERE rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared(idClasses))
+                .append(" GROUP BY devoirs.id, devoirs.name, id_groupe ")
+                .append(" HAVING COUNT(competences_devoirs.id) > 0 ")
+                .append(" ORDER BY id_groupe ");
+
+
+        for (String id : idClasses) {
+            values.addString(id);
+        }
+
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
+
 }

@@ -1,0 +1,158 @@
+<div class="twelve ">
+    <div class="twelve cell">
+
+        <h3>
+            <i18n>evaluations.competences.items.title</i18n>
+
+        </h3>
+        <div class="twelve">
+            <!-- Recherche de competences -->
+            <h2 class="two cell">
+                <i18n>viescolaire.viescolaire.rechercheClasse</i18n>
+            </h2>
+            <input class="ten cell"
+                   type="text"
+                   ng-model="search.name"
+                   placeholder="Nom de la classe">
+        </div>
+
+        <div class="twelve tabs vertical-spacing-twice heading-tabs">
+            <header ng-class="{selected : search.id_cycle === undefined}"
+                    class="horizontal-spacing-twice ng-scope">
+                <div class="horizontal-spacing"  ng-click="search.id_cycle = undefined;">
+                    <span><i18n>all</i18n></span>
+                </div>
+            </header>
+            <header ng-repeat="cycle in cycles"
+                    ng-class="{selected : search.id_cycle === cycle.id_cycle}"
+                    class="horizontal-spacing-twice ng-scope">
+                <div class="horizontal-spacing"  ng-click="search.id_cycle = cycle.id_cycle;">
+                    <span><i18n><span class="no-style ng-scope">[[::cycle.libelle]]</span></i18n></span>
+                </div>
+            </header>
+            <header ng-class="{selected : search.id_cycle === null}"
+                    class="horizontal-spacing-twice ng-scope">
+                <div class="horizontal-spacing"  ng-click="search.id_cycle = null;">
+                    <span><i18n>evaluation.link.notset</i18n></span>
+                </div>
+            </header>
+        </div>
+    </div>
+
+    <div class="card expandable-list twelve row">
+        </br>
+        <div class="expandable-list-header two cell">
+            <div class="padding-left twelve cell">
+                </br>
+                </br>
+                <ul class="selectable-list twelve-mobile">
+                    <li ng-repeat="type in groupLibelle"
+                        ng-class="{selected : type.isSelected}"
+                        ng-click="selectType(type, search);">
+                        [[::type.name]]
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="ten cell padding-left">
+            </br>
+            <div class="row">
+                <label class="chip margin-left" ng-class="{multiselect: search.classeAll}">
+                    <span><i18n>viescolaire.utils.all.none</i18n></span>
+                    <input type="checkbox"
+                           ng-init="bSelectAllClasse = search.classeAll"
+                           ng-model="bSelectAllClasse"
+                           ng-change="selectAllClasses(filteredItems);"/>
+                </label>
+            </div>
+            </br>
+            <div class="row"
+                 ng-repeat="classe in (filteredItems = (classesGroupes.all | filter:filterLinkSearch(search) | orderBy:['type_groupe','name']))">
+                <div class="row" ng-click="classe.displayed = !classe.displayed">
+                    <div class="cell">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   ng-change="checkSelectedClasses(filteredItems)"
+                                   ng-model="classe.selected">
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="cell">
+                        <div>
+                            <span ng-if="(classe.name).length > 2" tooltip="[[::classe.name ]]">[[::classe.name ]]</span>
+                            <span ng-if="(classe.name).length <= 2">[[::classe.name ]]</span>
+                        </div>
+                    </div>
+                    <div class="cell">
+                        <div>
+                            <span>&nbsp;-&nbsp;</span>
+                        </div>
+                    </div>
+                    <div class="cell">
+                        <div ng-if="classe.id_cycle !== null">
+                            <span>[[getClasseCycle(classe.id_cycle)]]</span>
+                        </div>
+                        <div ng-if="classe.id_cycle === null">
+                            <i18n>viescolaire.utils.no.cycle</i18n>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<lightbox show="opened.lightboxLinkGroupCycle" on-close="!opened.lightboxLinkGroupCycle">
+    <h3><i18n>evaluation.link.group.lightbox.title</i18n></h3>
+    <form name="SelectCycleForm">
+        <p  ng-repeat="cycle in cycles">
+            <label>
+            <input type="radio" ng-model="selectedRadio.id_cycle"
+                   value="[[::cycle.id_cycle]]">
+            [[::cycle.libelle]]
+            </label>
+        </p><br/>
+    </form>
+
+    <button class="marginFive magnet-right"
+            ng-click="checkDataOnClasses(selectedClasses);">
+        <i18n>viescolaire.utils.save</i18n>
+    </button>
+    <button data-ng-click="opened.lightboxLinkGroupCycle=false;" class="right-magnet cancel">
+        <span><i18n>evaluations.perso.cancel</i18n></span>
+    </button>
+</lightbox>
+<lightbox show="opened.lightboxDataOnDevoirs" on-close="!opened.lightboxDataOnDevoirs">
+    <h3><i18n>evaluation.link.group.to</i18n>[[getClasseCycle(selectedRadio.id_cycle)]]</h3>
+    <p><i18n>evaluation.link.message</i18n></p>
+    <section>
+        <ul class="devoirToDelete">
+        <li ng-repeat="devoir in dataOnClasses">
+            <span>[[::devoir.name]]</span>&nbsp;-&nbsp;<span>([[::devoir.classe]])</span>
+        </li>
+        </ul>
+    </section>
+    <p><i18n>evaluations.devoir.confirmation.question</i18n></p>
+
+    <button class="marginFive magnet-right"
+            ng-click="save(selectedClasses);">
+        <i18n>evaluations.perso.ok</i18n>
+    </button>
+    <button data-ng-click="opened.lightboxDataOnDevoirs=false;opened.lightboxLinkGroupCycle = true;"
+            class="right-magnet cancel">
+        <span><i18n>evaluations.perso.cancel</i18n></span>
+    </button>
+</lightbox>
+<section class="toggle-buttons"
+         ng-show="checkSelectedClasses(filteredItems).length > 0">
+    <div class="toggle">
+        <div class="row">
+            <button class="cell"
+                    ng-click="initRadio(filteredItems);opened.lightboxLinkGroupCycle = true;">
+                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle === null">
+                    <i18n>evaluation.link.group.edit</i18n></span>
+                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle !== null">
+                    <i18n>item.modify</i18n></span>
+            </button>
+        </div>
+    </div>
+</section>

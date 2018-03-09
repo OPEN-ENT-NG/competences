@@ -44,7 +44,7 @@ public interface UtilsService {
      * @param psIdEtablissement identifiant de l'établissement
      * @param handler handler portant le resultat de la requête : la liste des identifiants neo4j des rempacants
      */
-    public void getRemplacants(String psIdTitulaire, String psIdEtablissement, Handler<Either<String, JsonArray>> handler);
+    void getRemplacants(String psIdTitulaire, String psIdEtablissement, Handler<Either<String, JsonArray>> handler);
 
 
     /**
@@ -54,7 +54,7 @@ public interface UtilsService {
      * @param psIdEtablissement identifiant de l'établissement
      * @param handler handler portant le resultat de la requête : la liste des identifiants neo4j des titulaires
      */
-    public void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler);
+    void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Liste les types de devoirs pour un etablissement donné
@@ -62,7 +62,7 @@ public interface UtilsService {
      * @param idEtablissement identifiant de l'établissement
      * @param handler         handler portant le resultat de la requête
      */
-    public void listTypesDevoirsParEtablissement(String idEtablissement, Handler<Either<String, JsonArray>> handler);
+    void listTypesDevoirsParEtablissement(String idEtablissement, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Recupère les informations de l'élève
@@ -70,7 +70,7 @@ public interface UtilsService {
      * @param id     identifiant de l'élève
      * @param result handler portant le résultat de la requête
      */
-    public void getInfoEleve(String id, Handler<Either<String, JsonObject>> result);
+    void getInfoEleve(String id, Handler<Either<String, JsonObject>> result);
 
     /**
      * Récupère les enfants d'une parent donné
@@ -78,7 +78,7 @@ public interface UtilsService {
      * @param id      identifiant du parent
      * @param handler handler portant la résultat de la requête
      */
-    public void getEnfants(String id, Handler<Either<String, JsonArray>> handler);
+    void getEnfants(String id, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Fonction de calcul générique de la moyenne
@@ -105,7 +105,7 @@ public interface UtilsService {
      * @param id      identifiant de l'etablissement
      * @param handler handler comportant le resultat
      */
-    public void getStructure(String id, Handler<Either<String, JsonObject>> handler);
+    void getStructure(String id, Handler<Either<String, JsonObject>> handler);
 
 
     /**
@@ -113,14 +113,14 @@ public interface UtilsService {
      * @param idClasse liste des identifiants des classes.
      * @param handler Handler portant le résultat de la requête.
      */
-    public void getCycle(List<String> idClasse, Handler<Either<String, JsonArray>> handler);
+    void getCycle(List<String> idClasse, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère le cycle de la classe dans la relation classe_cycle
      * @param idClasse Identifiant de la classe.
      * @param handler Handler portant le résultat de la requête.
      */
-    public void getCycle(String idClasse, Handler<Either<String, JsonObject>> handler);
+    void getCycle(String idClasse, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupère la liste des utilisateurs selon les paramètres précisés
@@ -135,7 +135,7 @@ public interface UtilsService {
      * @param user
      * @param eitherHandler
      */
-    public void list(String structureId, String classId, String groupId, JsonArray types, String filterActive, String nameFilter, UserInfos user, Handler<Either<String, JsonArray>> eitherHandler);
+    void list(String structureId, String classId, String groupId, JsonArray types, String filterActive, String nameFilter, UserInfos user, Handler<Either<String, JsonArray>> eitherHandler);
 
     /**
      * Réalise une union de deux JsonArray de String
@@ -143,7 +143,7 @@ public interface UtilsService {
      * @param list Tableau à transférer
      * @return Un JsonArray contenant les deux tableau
      */
-    public JsonArray saUnion(JsonArray recipient, JsonArray list);
+     JsonArray saUnion(JsonArray recipient, JsonArray list);
 
     /**
      * Ajoute la NoteDevoir passé en paramètre à la collection associée à la clé passée. Si la collection n'existe pas, la crée.
@@ -152,11 +152,27 @@ public interface UtilsService {
      * @param valueToAdd La valeur à ajouter.
      * @param <K> Le type de la clé
      */
-    public <K> void addToMap(K key, HashMap<K, ArrayList<NoteDevoir>> map, NoteDevoir valueToAdd);
+     <K> void addToMap(K key, HashMap<K, ArrayList<NoteDevoir>> map, NoteDevoir valueToAdd);
 
     /**
      * Récupère le nom de l'entité à qui appartient l'identifiant passé en paramètre.
      * @param name  l'identifiant de l'entité
      */
-    public void getNameEntity(String[] name, Handler<Either<String, JsonArray>> handler);
+    void getNameEntity(String[] name, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * 
+     * @param idClasses liste des classes à lier
+     * @param id_cycle cycle vers lequel on lie les classes
+     * @param handler
+     */
+    void linkGroupesCycles(final String[] idClasses, final Number id_cycle,final Number[] typeGroupes,
+                           Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *
+     * @param idClasses
+     * @param handler
+     */
+    void checkDataOnClasses(String[] idClasses, final Handler<Either<String, JsonArray>> handler);
 }
