@@ -58,6 +58,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
@@ -1640,25 +1642,32 @@ public class ExportPDFController extends ControllerHelper {
         });
     }
 
-    @Get("/releveComp/print/:idEleve/export")
+    @Get("/releveComp/print/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportReleveComp(final HttpServerRequest request) {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
-        final String idEleve = request.params().get("idEleve");
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
 
         final JsonArray idMatieres = new JsonArray();
-        for(int i = 0; i < listIdMatieres.size(); i++){
+        for (int i = 0; i < listIdMatieres.size(); i++) {
             idMatieres.add(listIdMatieres.get(i));
         }
 
 
         Long idPeriode = null;
+        String idClasse = null;
+        String idEleve = null;
 
         try {
-            if(request.params().contains("idPeriode")) {
+            if (request.params().contains("idPeriode")) {
                 idPeriode = Long.parseLong(request.params().get("idPeriode"));
+            }
+            if (request.params().contains("idClasse")) {
+                idClasse = request.params().get("idClasse");
+            }
+            if (request.params().contains("idEleve")) {
+                idEleve = request.params().get("idEleve");
             }
         } catch (NumberFormatException err) {
             badRequest(request, err.getMessage());
@@ -1667,116 +1676,130 @@ public class ExportPDFController extends ControllerHelper {
         }
 
         final Long finalIdPeriode = idPeriode;
+        final String finalIdClasse = idClasse;
+        final String finalIdEleve = idEleve;
+
+        final List<String> idGroupes = new ArrayList<>();
+        final List<String> nomGroupes = new ArrayList<>();
 
         JsonObject action = new JsonObject()
-                .putString("action", "eleve.getInfoEleve")
-                .putArray("idEleves", new JsonArray(new String[]{idEleve}));
-
+                .putString("action", "matiere.getMatieres")
+                .putArray("idMatieres", idMatieres);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
-                    JsonObject eleve = body.getArray("results").get(0);
-                    final String name = eleve.getString("lastName").toUpperCase() + " " + eleve.getString("firstName");
-                    final String idClasse = eleve.getString("idClasse");
-                    final String nomClasse = eleve.getString("classeName");
-                    final String idEtablissement = eleve.getString("idEtablissement");
-
+                if ("ok".equals(body.getString("status"))) {
+                    final JsonArray results = body.getArray("results");
+                    String mat = ((JsonObject) results.get(0)).getString("name");
+                    for (int i = 1; i < results.size(); i++) {
+                        mat = mat + ", " + ((JsonObject) results.get(i)).getString("name");
+                    }
+                    final String matieres = mat;
+                    JsonObject jsonRequest = new JsonObject()
+                            .putObject("headers", new JsonObject().putString("Accept-Language",
+                                    request.headers().get("Accept-Language")))
+                            .putString("Host", getHost(request));
                     JsonObject action = new JsonObject()
-                            .putString("action", "groupe.listGroupesEnseignementsByUserId")
-                            .putString("userId", idEleve);
-
+                            .putString("action", "periode.getLibellePeriode")
+                            .putNumber("idType", finalIdPeriode)
+                            .putObject("request", jsonRequest);
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                         @Override
                         public void handle(Message<JsonObject> message) {
-                            JsonObject body = message.body();
-
+                            final JsonObject body = message.body();
                             if ("ok".equals(body.getString("status"))) {
-                                JsonArray result = body.getArray("results");
-                                final List<String> idGroupes = new ArrayList<>();
-                                final List<String> nomGroupes = new ArrayList<>();
-//                                for (int i = 0; i < result.size(); i++) {
-//                                    JsonObject groupe = ((JsonObject) result.get(i)).getObject("g").getObject("data");
-//                                    idGroupes.add(groupe.getString("id"));
-//                                    nomGroupes.add(groupe.getString("name"));
-//                                }
-                                idGroupes.add(idClasse);
-                                nomGroupes.add(nomClasse);
+                                final String libellePeriode = body.getString("result")
+                                        .replace("é", "e")
+                                        .replace("è", "e");
 
-                                exportService.getExportReleveComp(text, idEleve, idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres, finalIdPeriode, new Handler<Either<String, JsonObject>>() {
-                                    @Override
-                                    public void handle(final Either<String, JsonObject> stringJsonObjectEither) {
-                                        if (stringJsonObjectEither.isRight()) {
-                                            try {
-                                                final JsonObject result = stringJsonObjectEither.right().getValue();
-                                                final JsonObject headerEleve = new JsonObject();
-                                                headerEleve.putString("nom", name);
-                                                headerEleve.putString("classe", nomGroupes.toString().substring(1, nomGroupes.toString().length() - 1));
+                                if (finalIdClasse == null) {
+                                    JsonObject action = new JsonObject()
+                                            .putString("action", "eleve.getInfoEleve")
+                                            .putArray("idEleves", new JsonArray(new String[]{finalIdEleve}));
+
+                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                        @Override
+                                        public void handle(Message<JsonObject> message) {
+                                            JsonObject body = message.body();
+
+                                            if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
+                                                JsonObject eleve = body.getArray("results").get(0);
+                                                final String nomClasse = eleve.getString("classeName");
+                                                final String idClasse = eleve.getString("idClasse");
+                                                final String idEtablissement = eleve.getString("idEtablissement");
+                                                final String[] idEleves = new String[1];
+                                                final String[] nameEleves = new String[1];
+                                                idEleves[0] = finalIdEleve;
+                                                nameEleves[0] = eleve.getString("firstName") + " " + eleve.getString("lastName");
+                                                idGroupes.add(idClasse);
+                                                nomGroupes.add(nomClasse);
+
+
+                                                final AtomicBoolean answered = new AtomicBoolean();
+                                                JsonArray resultFinal = new JsonArray();
+                                                final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, nameEleves, nomGroupes, matieres,
+                                                        libellePeriode, json, answered, resultFinal);
+                                                exportService.getExportReleveComp(text, idEleves[0], idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres,
+                                                        finalIdPeriode, finalHandler);
+                                            } else {
+                                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    final JsonObject action = new JsonObject()
+                                            .putString("action", "classe.getEleveClasse")
+                                            .putString("idClasse", finalIdClasse);
+                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                        @Override
+                                        public void handle(Message<JsonObject> message) {
+                                            if ("ok".equals(message.body().getString("status"))) {
+                                                final JsonArray eleves = message.body().getArray("results");
+                                                final String[] idEleves = new String[eleves.size()];
+                                                final String[] nameEleves = new String[eleves.size()];
+
+                                                for (int i = 0; i < eleves.size(); i++) {
+                                                    idEleves[i] = ((JsonObject) eleves.get(i)).getString("id");
+                                                    nameEleves[i] = ((JsonObject) eleves.get(i)).getString("firstName") + " " + ((JsonObject) eleves.get(i)).getString("lastName");
+                                                }
 
                                                 JsonObject action = new JsonObject()
-                                                        .putString("action", "matiere.getMatieres")
-                                                        .putArray("idMatieres", idMatieres);
+                                                        .putString("action", "eleve.getInfoEleve")
+                                                        .putArray("idEleves", new JsonArray(new String[]{idEleves[0]}));
                                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                                                     @Override
                                                     public void handle(Message<JsonObject> message) {
                                                         JsonObject body = message.body();
 
-                                                        if ("ok".equals(body.getString("status"))) {
-                                                            //String matiere = body.getObject("result").getObject("n").getObject("data").getString("label");
-                                                            //headerEleve.putString("matiere", matiere);
-                                                            JsonArray results = body.getArray("results");
-                                                            String matieres = ((JsonObject)results.get(0)).getString("name");
-                                                            for (int i = 1; i < results.size(); i++) {
-                                                                matieres = matieres+", "+((JsonObject) results.get(i)).getString("name");
+                                                        if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
+                                                            JsonObject eleve = body.getArray("results").get(0);
+                                                            final String nomClasse = eleve.getString("classeName");
+                                                            final String idClasse = eleve.getString("idClasse");
+                                                            final String idEtablissement = eleve.getString("idEtablissement");
+                                                            idGroupes.add(idClasse);
+                                                            nomGroupes.add(nomClasse);
+
+                                                            final AtomicBoolean answered = new AtomicBoolean();
+                                                            JsonArray resultFinal = new JsonArray();
+                                                            final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, nameEleves, nomGroupes, matieres,
+                                                                    libellePeriode, json, answered, resultFinal);
+                                                            for (int i = 0; i < eleves.size(); i++) {
+                                                                exportService.getExportReleveComp(text, idEleves[i], idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres,
+                                                                        finalIdPeriode, finalHandler);
                                                             }
-                                                            headerEleve.putString("matiere", matieres);
-
-                                                            JsonObject jsonRequest = new JsonObject()
-                                                                    .putObject("headers", new JsonObject().putString("Accept-Language",
-                                                                            request.headers().get("Accept-Language")))
-                                                                    .putString("Host", getHost(request));
-                                                            JsonObject action = new JsonObject()
-                                                                    .putString("action", "periode.getLibellePeriode")
-                                                                    .putNumber("idType", finalIdPeriode)
-                                                                    .putObject("request", jsonRequest);
-                                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-                                                                @Override
-                                                                public void handle(Message<JsonObject> message) {
-                                                                    JsonObject body = message.body();
-
-                                                                    if ("ok".equals(body.getString("status"))) {
-                                                                        String libellePeriode = body.getString("result")
-                                                                                .replace("é", "e")
-                                                                                .replace("è", "e");
-                                                                        headerEleve.putString("periode", libellePeriode);
-                                                                        result.getObject("header").putObject("left", headerEleve);
-                                                                        if (json) {
-                                                                            Renders.renderJson(request, result);
-                                                                        } else {
-                                                                            String fileName = name.replace(' ', '_') + "_export_competences";
-                                                                            genererPdf(request, result, "releve-competences.pdf.xhtml", fileName);
-                                                                        }
-                                                                    } else {
-                                                                        leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                                                    }
-                                                                }
-                                                            });
                                                         } else {
-                                                            leftToResponse(request, stringJsonObjectEither.left());
+                                                            leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                                         }
                                                     }
                                                 });
-
-                                            } catch (Error err) {
-                                                leftToResponse(request, new Either.Left<>("An error occured while rendering pdf export : " + err.getMessage()));
+                                            } else {
+                                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                             }
-                                        } else {
-                                            leftToResponse(request, stringJsonObjectEither.left());
                                         }
-                                    }
-                                });
+                                    });
+                                }
                             } else {
                                 leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                             }
@@ -2026,6 +2049,51 @@ public class ExportPDFController extends ControllerHelper {
                 }
             }
         });
+    }
+
+    private Handler<Either<String, JsonObject>> getReleveCompetences(final HttpServerRequest request, final String[] nameEleves, final List<String> nomGroupes,
+                                                                     final String matieres, final String libellePeriode, final Boolean json,
+                                                                     final AtomicBoolean answered, final JsonArray result){
+
+        final AtomicInteger elevesDone = new AtomicInteger();
+
+        return new Handler<Either<String, JsonObject>>() {
+            @Override
+            public void handle(final Either<String, JsonObject> stringJsonArrayEither) {
+                if (!answered.get()) {
+                    if (stringJsonArrayEither.isRight()) {
+                        result.add(stringJsonArrayEither.right().getValue());
+                        try {
+                            final JsonObject headerEleve = new JsonObject();
+                            headerEleve.putString("nom", nameEleves[elevesDone.get()]);
+                            headerEleve.putString("classe", nomGroupes.toString().substring(1, nomGroupes.toString().length() - 1));
+                            headerEleve.putString("matiere", matieres);
+                            headerEleve.putString("periode", libellePeriode);
+
+                            ((JsonObject)result.get(elevesDone.get())).getObject("header").putObject("left", headerEleve);
+                            if(elevesDone.addAndGet(1) == nameEleves.length) {
+                                answered.set(true);
+                                JsonObject resultFinal = new JsonObject();
+                                resultFinal.putArray("eleves", result);
+                                    if (json) {
+                                        Renders.renderJson(request, result);
+                                    } else {
+                                        String fileName = elevesDone.get() == 1 ? nameEleves[0].replace(' ', '_') + "_export_competences"
+                                                : nomGroupes.toString().substring(1, nomGroupes.toString().length() - 1).replace(' ', '_') + "_export_competences";
+                                        genererPdf(request, resultFinal, "releve-competences.pdf.xhtml", fileName);
+                                    }
+
+                            }
+                        } catch (Error err) {
+                            leftToResponse(request, new Either.Left<>("An error occured while rendering pdf export : " + err.getMessage()));
+                        }
+                    }
+                } else {
+                    answered.set(true);
+                    leftToResponse(request, stringJsonArrayEither.left());
+                }
+            }
+        };
     }
 
     private JsonArray sortJsonArrayById(JsonArray jsonArray){

@@ -315,45 +315,98 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
              utils.safeApply($scope);
          };
 
-         $scope.exportRecapEval =  (textMod) =>{
-             let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
-             if($scope.search.periode.id_type) {
-                 url += "&idPeriode=" + $scope.search.periode.id_type;
-             }
-            http().getJson(url + "&json=true")
-                 .error((res) => {
-                     switch (res.responseText){
-                         case "{\"error\":\"eval not found\"}" :
-                             $scope.evalNotFound = true;
-                             break;
-                         case "{\"error\":\"periode not found\"}" :
-                             $scope.periodeNotFound = true;
-                             break;
-                         case "{\"error\":\"classe not found\"}" :
-                             $scope.classeNotFound = true;
-                             break;
-                         case "{\"error\":\"etab not found\"}" :
-                             $scope.etabNotFound = true;
-                             break;
-                         case "{\"error\":\"bfc not found\"}" :
-                             $scope.bfcNotFound = true;
-                             break;
-                         case "{\"error\":\"eleves not found\"}" :
-                             $scope.elevesNotFound = true;
-                             break;
-                         case "{\"error\":\"different cycle\"}" :
-                             $scope.cycleNotFound = true;
-                             break;
-                         default :
-                             $scope.exportRecapEvalObj.errExport = true;
+         $scope.exportRecapEval = (textMod, printSuiviClasse) =>{
+             switch (printSuiviClasse) {
+                 case 'printRecapEval' : {
+                     let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
+                     if($scope.search.periode.id_type) {
+                         url += "&idPeriode=" + $scope.search.periode.id_type;
                      }
-                     utils.safeApply($scope);
-                 })
-                 .done(() => {
-                     delete $scope.recapEval;
-                     $scope.opened.recapEval = false;
-                     location.replace(url);
-                 });
+                     http().getJson(url + "&json=true")
+                         .error((res) => {
+                             switch (res.responseText){
+                                 case "{\"error\":\"eval not found\"}" :
+                                     $scope.evalNotFound = true;
+                                     break;
+                                 case "{\"error\":\"periode not found\"}" :
+                                     $scope.periodeNotFound = true;
+                                     break;
+                                 case "{\"error\":\"classe not found\"}" :
+                                     $scope.classeNotFound = true;
+                                     break;
+                                 case "{\"error\":\"etab not found\"}" :
+                                     $scope.etabNotFound = true;
+                                     break;
+                                 case "{\"error\":\"bfc not found\"}" :
+                                     $scope.bfcNotFound = true;
+                                     break;
+                                 case "{\"error\":\"eleves not found\"}" :
+                                     $scope.elevesNotFound = true;
+                                     break;
+                                 case "{\"error\":\"different cycle\"}" :
+                                     $scope.cycleNotFound = true;
+                                     break;
+                                 default :
+                                     $scope.exportRecapEvalObj.errExport = true;
+                             }
+                             utils.safeApply($scope);
+                         })
+                         .done(() => {
+                             delete $scope.recapEval;
+                             $scope.opened.recapEval = false;
+                             location.replace(url);
+                         });
+                     break;
+                 }
+                 case 'printReleveComp' : {
+                     let url = "/competences/releveComp/print/export?text=" + !textMod;
+                     for(var m = 0; m < $scope.selected.matieres.length; m++){
+                         url += "&idMatiere=" + $scope.selected.matieres[m];
+                     }
+                     if($scope.search.periode) {
+                         url += "&idPeriode=" + $scope.search.periode.id_type;
+                     }
+                     url += "&idClasse=" + $scope.search.classe.id;
+                     http().getJson(url + "&json=true")
+                         .error((result) => {
+                             switch (result.responseText){
+                                 case "{\"error\":\"getExportReleveComp : No exams on given period and/or material.\"}" :
+                                     $scope.evalNotFound = true;
+                                     break;
+                                 case "{\"error\":\"devoirs not found\"}" :
+                                     $scope.periodeNotFound = true;
+                                     break;
+                                 case "{\"error\":\"matieres not found\"}" :
+                                     $scope.classeNotFound = true;
+                                     break;
+                                 case "{\"error\":\"domaines not found\"}" :
+                                     $scope.etabNotFound = true;
+                                     break;
+                                 case "{\"error\":\"bfc not found\"}" :
+                                     $scope.bfcNotFound = true;
+                                     break;
+                                 case "{\"error\":\"eleves not found\"}" :
+                                     $scope.elevesNotFound = true;
+                                     break;
+                                 case "{\"error\":\"getExportReleveComp : Given groups belong to different cycle.\"}" :
+                                     $scope.cycleNotFound = true;
+                                     break;
+                                 default :
+                                     $scope.exportRecapEvalObj.errExport = true;
+                             }
+                             utils.safeApply($scope);
+                         })
+                         .done(() => {
+                             delete $scope.releveComp;
+                             $scope.releveComp = {
+                                 textMod: true
+                             };
+                             $scope.opened.releveComp = false;
+                             location.replace(url);
+                         });
+                     break;
+                 }
+             }
              utils.safeApply($scope);
          };
 

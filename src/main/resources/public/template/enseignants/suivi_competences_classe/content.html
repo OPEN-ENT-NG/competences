@@ -20,9 +20,58 @@
     <i18n>evaluation.suivi.classe.empty</i18n>
 </article>
 <lightbox show="opened.recapEval" on-close="opened.recapEval = false; exportRecapEvalObj.errExport = false;">
-    <h2>
-        <i18n>evaluations.export.format.pdf</i18n>
-    </h2>
+    <h2><i18n>evaluations.export.format.pdf</i18n>&nbsp;:</h2>
+
+    <div class="checkbox-grid">
+        <label>
+            <input type="radio" ng-change="" ng-model="printSuiviClasse" value="printRecapEval">
+            <span><i18n>evaluations.recapEval</i18n></span>
+        </label>
+        <label>
+            <input type="radio" ng-change=""  ng-model="printSuiviClasse" value="printReleveComp">
+            <span><i18n>evaluations.releveComp.classe</i18n></span>
+        </label>
+    </div>
+    <div ng-if="printSuiviClasse === 'printReleveComp'">
+        <div class="row">
+            <div class="twelve cell twelve-mobile">
+                <br/><label><i18n class="titre-libelle">viescolaire.utils.periode</i18n></label><br/>
+                <label class=" six select">
+                    <select ng-model="releveComp.periode"
+                            ng-init="releveComp.periode=search.periode"
+                            ng-change="exportRelCompObj.errExport = false; closeWarningMessages();"
+                            ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
+                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
+                    </select>
+                </label><br/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="twelve cell twelve-mobile">
+                <label><i18n class="titre-libelle">viescolaire.utils.subjects</i18n></label><br/>
+                <label class="chip multiselect all">
+                    <span><i18n>viescolaire.utils.all.none.feminin</i18n></span>
+                    <input type="checkbox" ng-model="selectAllMatieres" ng-change="selectUnselectMatieres(selectAllMatieres)"/>
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="twelve cell twelve-mobile">
+                <div class="three cell horizontal-spacing vertical-spacing expandable-content"
+                     ng-repeat="matiere in allMatieresSorted">
+                    <div class="three cell">
+                        <label class="checkbox">
+                            <input type="checkbox" ng-model="matiere.select" ng-change="selectMatiere(matiere.id)">
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="nine cell">
+                        <span class="export-competences">[[matiere.name]]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="warning"
              ng-if="exportRecapEvalObj.errExport">
@@ -67,7 +116,7 @@
         </div>
         <button class="right-magnet"
                 tooltip="evaluations.export.format.pdf"
-                ng-click="exportRecapEval(textMod)">
+                ng-click="exportRecapEval(textMod, printSuiviClasse)">
             <i18n>evaluations.export</i18n>
         </button>
     </div>

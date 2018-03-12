@@ -108,26 +108,37 @@
             background-color: #46BFAF;
         }
 
+        .page {
+            page-break-after: always;
+            padding: 20px;
+        }
+
+        .page:last-child{
+            page-break-after: avoid;
+        }
+
     </style>
 </head>
 <body>
-{{# header }}
-<div class="header">
-    <table>
-        <tr> {{# left }}
-            <td class="dashed">
+{{#eleves}}
+<div class="page">
+    {{# header }}
+    <div class="header">
+        <table>
+            <tr> {{# left }}
+                <td class="dashed">
 
-                <span class="bold">{{ nom }}</span><br/>
-                <span class="bold">Matière : </span>{{ matiere }}<br/>
-                <span class="bold">Classe : </span>{{ classe }}<br/>
-                <span class="bold">Période : </span>{{ periode }}<br/>
+                    <span class="bold">{{ nom }}</span><br/>
+                    <span class="bold">Matière : </span>{{ matiere }}<br/>
+                    <span class="bold">Classe : </span>{{ classe }}<br/>
+                    <span class="bold">Période : </span>{{ periode }}<br/>
 
-            </td>
-            {{/ left }}
-            <td>
-                {{# right }}
+                </td>
+                {{/ left }}
+                <td>
+                    {{# right }}
 
-                <span class="maitrise">
+                    <span class="maitrise">
                         {{# text }}
                         {{ visu }}
                         {{/ text }}
@@ -136,56 +147,58 @@
                         {{/ text }}
                         {{ libelle }}
                     </span><br/>
-                {{/ right }}
-            </td>
-        </tr>
-    </table>
+                    {{/ right }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    {{/ header }}
+    {{# body }}
+    <div class="body">
+        <table>
+
+            {{# header}}
+            <tr>
+                <td class="textCenter">
+                    {{ left }}
+                </td>
+                <td class="textCenter">
+                    {{ right }}
+                </td>
+            </tr>
+            {{/ header}}
+
+            {{# body }}
+            <tr>
+                <td>
+                    <span class="bold">{{ domainHeader }}</span>
+                </td>
+                <td>&nbsp;</td>
+            </tr>
+
+            {{# domainBody }}
+            <tr>
+                <td class="competenceHeader">
+                    {{ header }}
+                </td>
+                <td>
+                    <table class="barEvaluation textCenter">
+                        <tr>
+                            {{# competenceNotes }}
+                            <td style="width: {{ width }}%;">
+                                <div class="subDiv {{ color }}">{{ number }}</div>
+                            </td>
+                            {{/ competenceNotes }}
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            {{/ domainBody }}
+            {{/ body }}
+        </table>
+    </div>
+    {{/ body }}
 </div>
-{{/ header }}
-{{# body }}
-<div class="body">
-    <table>
-
-        {{# header}}
-        <tr>
-            <td class="textCenter">
-                {{ left }}
-            </td>
-            <td class="textCenter">
-                {{ right }}
-            </td>
-        </tr>
-        {{/ header}}
-
-        {{# body }}
-        <tr>
-            <td>
-                <span class="bold">{{ domainHeader }}</span>
-            </td>
-            <td>&nbsp;</td>
-        </tr>
-
-        {{# domainBody }}
-        <tr>
-            <td class="competenceHeader">
-                {{ header }}
-            </td>
-            <td>
-                <table class="barEvaluation textCenter">
-                    <tr>
-                        {{# competenceNotes }}
-                        <td style="width: {{ width }}%;">
-                            <div class="subDiv {{ color }}">{{ number }}</div>
-                        </td>
-                        {{/ competenceNotes }}
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        {{/ domainBody }}
-        {{/ body }}
-    </table>
-</div>
-{{/ body }}
+{{/eleves}}
 </body>
 </html>

@@ -17,7 +17,7 @@
   ~
   -->
 <div class="cell ng-scope twelve vertical-spacing">
-    <label>
+    <label class="cell six">
         <div class="cell cell-check expandable-content two-mobile">
             <label class="checkbox">
                 <input type="checkbox" ng-model="selected.grey" class="ng-valid ng-dirty">
@@ -26,11 +26,13 @@
         </div>
         <i18n>evaluation.suivieleve.filtre.competence</i18n>
     </label>
-    <button ng-click="openedLigthbox()"
-            style="position: absolute; right: 0; top: 0;"
-            tooltip="evaluations.export.releveComp">
-        <i class="download"></i>
-    </button>
+    <h2 class="cell six"><dropdown-buttons class="right-magnet">
+        <open class="opener"><i class="download"></i></open>
+        <options>
+            <bt ng-click="openedLigthbox(false)"><i18n>evaluation.suivi.export.button.eleve</i18n></bt>
+            <bt ng-click="openedLigthbox(true)"><i18n>evaluation.suivi.export.button.classe</i18n></bt>
+        </options>
+    </dropdown-buttons></h2>
 </div>
 
 

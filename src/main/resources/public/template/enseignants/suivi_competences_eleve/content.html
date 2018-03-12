@@ -60,6 +60,8 @@
                 <input type="checkbox" ng-model="selectAllMatieres" ng-change="selectUnselectMatieres(selectAllMatieres)"/>
             </label>
         </div>
+    </div>
+    <div class="row">
         <div class="twelve cell twelve-mobile">
             <div class="three cell horizontal-spacing vertical-spacing expandable-content"
                  ng-repeat="matiere in allMatieresSorted">
@@ -109,9 +111,9 @@
             <i18n>evaluations.export.cycle.not.found.err</i18n>
         </div>
         <button class="right-magnet"
-                ng-disabled = "allUnselect === true"
+                ng-disabled = "disabledExport()"
                 tooltip="evaluations.export.format.pdf"
-                ng-click="exportReleveComp(informations.eleve.id, releveComp.matiere.id, releveComp.periode.id_type, !releveComp.textMod)">
+                ng-click="exportReleveComp(informations.eleve.id, releveComp.periode.id_type, !releveComp.textMod)">
             <i18n>evaluations.export</i18n>
         </button>
     </div>

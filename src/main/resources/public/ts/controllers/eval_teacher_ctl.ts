@@ -417,6 +417,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             template.open('main', 'enseignants/suivi_competences_classe/container');
                             utils.safeApply($scope);
                         };
+                        if(!Utils.isChefEtab()){
+                            http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
+                                $scope.allMatieresSorted = _.sortBy(res, 'name');
+                                utils.safeApply($scope);
+                            });
+                        } else {
+                            $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+                        }
                         if (params.idClasse != undefined) {
                             let classe: Classe = evaluations.classes.findWhere({id: params.idClasse});
                             $scope.search.classe = classe;
@@ -3080,13 +3088,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.exportReleveComp = async (idEleve : String, idMatiere:String, idPeriode:Number, textMod:Boolean = false) => {
-            let url = "/competences/releveComp/print/" + idEleve + "/export?text=" + textMod;
+        $scope.exportReleveComp = async (idEleve : String, idPeriode:Number, textMod:Boolean = false) => {
+            let url = "/competences/releveComp/print/export?text=" + textMod;
+            url += "&idEleve=" + idEleve;
             for(var m = 0; m < $scope.selected.matieres.length; m++){
                 url += "&idMatiere=" + $scope.selected.matieres[m];
             }
             if(idPeriode) {
                 url += "&idPeriode=" + idPeriode;
+            }
+            if($scope.forClasse){
+                url += "&idClasse=" + $scope.search.classe.id;
             }
             await http().getJson(url + "&json=true")
                 .error((result) => {
@@ -3163,6 +3175,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.lightboxChampsObligatoire = false;
         }
 
+        $scope.disabledExport = function(){
+            return $scope.allUnselect || typeof($scope.releveComp.periode) === 'undefined'
+        }
+
         $scope.closeWarningMessages = function () {
             $scope.evalNotFound = false;
             $scope.periodeNotFound = false;
@@ -3175,11 +3191,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.exportRecapEvalObj.errExport = false;
         }
 
-        $scope.openedLigthbox = function(){
+        $scope.openedLigthbox = function(classe){
             $scope.opened.releveComp = true;
             $scope.releveComp.textMod = true;
             $scope.closeWarningMessages();
             $scope.selectUnselectMatieres(false);
+            classe ? $scope.forClasse = true : $scope.forClasse = false;
         }
     }
 ]);
