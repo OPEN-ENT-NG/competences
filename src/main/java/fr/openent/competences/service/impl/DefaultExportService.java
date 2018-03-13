@@ -294,7 +294,7 @@ public class DefaultExportService implements ExportService {
         final JsonArray competencesNotesArray = new JsonArray();
         String[] idMatieresTab = idMatieres.toArray(new String[0]);
 
-        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, devoirsArray,
+        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, idEleve, devoirsArray,
                 maitriseArray, competencesArray, domainesArray, competencesNotesArray, answered, handler);
 
         devoirService.listDevoirs(idGroupes, null,
@@ -455,7 +455,7 @@ public class DefaultExportService implements ExportService {
        return orderBy (collection, key, false);
     }
 
-    private Handler<Either<String, JsonArray>> getReleveCompFinalHandler(final Boolean text, final JsonArray devoirs,
+    private Handler<Either<String, JsonArray>> getReleveCompFinalHandler(final Boolean text, final String idEleve, final JsonArray devoirs,
                                                                          final JsonArray maitrises, final JsonArray competences,
                                                                          final JsonArray domaines, final JsonArray competencesNotes,
                                                                          final AtomicBoolean answered,
@@ -514,7 +514,7 @@ public class DefaultExportService implements ExportService {
 
                                 responseHandler.handle(new Either.Right<String, JsonObject>(
                                         formatJsonObjectExportReleveComp(
-                                                text,
+                                                text, idEleve,
                                                 new ArrayList<>(extractData(devoirs, "id").keySet()),
                                                 extractData(orderBy(addMaitriseNE(maitrises), "ordre", true), "ordre"),
                                                 extractData(competences, "id"),
@@ -543,7 +543,7 @@ public class DefaultExportService implements ExportService {
         return maitrises;
     }
 
-    private JsonObject formatJsonObjectExportReleveComp(Boolean text, List<String> devoirs,
+    private JsonObject formatJsonObjectExportReleveComp(Boolean text, String idEleve, List<String> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
                                                         Map<String, JsonObject> domaines,
@@ -551,6 +551,7 @@ public class DefaultExportService implements ExportService {
 
         JsonObject result = new JsonObject();
         result.putBoolean("text", text);
+        result.putString("idEleve", idEleve);
 
         JsonObject header = new JsonObject();
         JsonObject body = new JsonObject();
