@@ -1988,6 +1988,9 @@ body.evaluations {
       }
     }
   }
+  .clear-none{
+    clear: none !important;
+  }
 
   .content-suivi-eleve {
     margin: 0 auto;
@@ -2118,7 +2121,7 @@ body.evaluations {
 
       .content-bilan-fin-cycle {
         .domaine-display {
-          padding: 23px 0;
+          padding: 10px 0;
           font-weight: bold;
         }
 

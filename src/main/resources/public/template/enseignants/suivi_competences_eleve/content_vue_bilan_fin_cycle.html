@@ -21,7 +21,7 @@
     </div>
     <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)"
          class="domaine-line">
-        <div class="cell four twelve-mobile domaine-display">
+        <div class="cell four twelve-mobile domaine-display text-overflow" tooltip="[[domaine.codification]] - [[domaine.libelle]]">
             [[domaine.codification]] - [[domaine.libelle]]
             <div ng-if="(isChefEtab() || evaluations.structure.moyenneVisible) && domaine.moyenne !== -1"
                  class="domaine-maitrise">

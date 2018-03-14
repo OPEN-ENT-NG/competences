@@ -18,8 +18,10 @@
   -->
 
 <article class="titre-widget ten centered">
-    <h2><i18n>viescolaire.eleve.recherche</i18n></h2>
-    <autocomplete options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
+    <div class="row twelve">
+        <h2 class="cell two"><i18n>viescolaire.eleve.recherche</i18n></h2>
+        <autocomplete class="ten cell clear-none" options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
+    </div>
 </article>
 <article class="ten card twelve-mobile centered" ng-if="suiviCompetence === undefined">
     <i18n>evaluation.suivi.eleve.empty</i18n>
