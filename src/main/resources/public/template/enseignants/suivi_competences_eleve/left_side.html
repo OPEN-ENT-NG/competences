@@ -27,7 +27,9 @@
     </section>
     <section>
         <label class="select" >
-            <select ng-model="search.classe" ng-change="syncPeriode(search.classe.id); search.periode = '*'; synchronizeStudents(search.classe.id);selectSuivi(route.current.$$route.originalPath);" ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
+            <select ng-model="search.classe"
+                    ng-change="syncPeriode(search.classe.id); search.periode = '*'; synchronizeStudents(search.classe.id);selectSuivi(route.current.$$route.originalPath);"
+                    ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
                 <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
             </select>
         </label>

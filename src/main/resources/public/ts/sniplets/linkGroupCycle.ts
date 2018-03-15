@@ -11,6 +11,7 @@ export const linkGroupCycle = {
             this.idStructure = this.source.idStructure;
             this.groupLibelle = [];
             this.search = {name:"", type:{all: true}, id_cycle: undefined, hasChange: false, classeAll: false};
+            this.libelle = Classe.libelle;
             _.forEach(_.values(this.libelle),  (lib) => {
                 this.search.type[this.groupLibelle.length] = true;
                 this.groupLibelle.push({name: lib, type : this.groupLibelle.length, isSelected: true});
@@ -119,19 +120,9 @@ export const linkGroupCycle = {
                     utils.safeApply(this);
                 }).bind(this);
         },
-        libelle: {
-            CLASSE: 'Classe',
-            GROUPE: "Groupe d'enseignement"
-        },
-        castClasses: (classes) => {
+       castClasses: (classes) => {
             return _.map(classes, (classe) => {
-                let libelleClasse;
-                if (classe.type_groupe_libelle = classe.type_groupe === 0) {
-                    libelleClasse = linkGroupCycle.controller.libelle.CLASSE;
-                } else {
-                    libelleClasse = linkGroupCycle.controller.libelle.GROUPE;
-                }
-                classe.type_groupe_libelle = libelleClasse;
+                classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
                 classe = new Classe(classe);
                 return classe;
             });

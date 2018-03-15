@@ -298,19 +298,10 @@ export class Structure extends Model {
             }
         });
         this.collection(ReleveNote);
-        const libelle = {
-            CLASSE: 'Classe',
-            GROUPE: "Groupe d'enseignement"
-        };
+
         const castClasses = (classes) => {
             return _.map(classes, (classe) => {
-                let libelleClasse;
-                if (classe.type_groupe_libelle = classe.type_groupe === 0) {
-                    libelleClasse = libelle.CLASSE;
-                } else {
-                    libelleClasse = libelle.GROUPE;
-                }
-                classe.type_groupe_libelle = libelleClasse;
+                classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
                 if (!classe.hasOwnProperty("remplacement")) classe.remplacement = false;
                 classe = new Classe(classe);
                 return classe;
@@ -425,19 +416,9 @@ export class Structure extends Model {
     syncClasses(idEtab): Promise<any> {
         return new Promise((resolve, reject) => {
             var that = this;
-            const libelle = {
-                CLASSE: "Classe",
-                GROUPE: "Groupe d'enseignement"
-            };
             http().getJson(this.api.getClasses).done((res) => {
                 _.map(res, (classe) => {
-                    let libelleClasse;
-                    if (classe.type_groupe === 0) {
-                        libelleClasse = libelle.CLASSE;
-                    } else {
-                        libelleClasse = libelle.GROUPE;
-                    }
-                    classe.type_groupe_libelle = libelleClasse;
+                    classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
                     return classe;
                 });
 

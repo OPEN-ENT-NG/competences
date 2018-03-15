@@ -234,8 +234,12 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 JsonObject body = message.body();
 
                 if ("ok".equals(body.getString("status"))) {
-                    String idEtablissement = ((JsonObject) body.getArray("results").get(0)).getString("idStructure");
 
+                    JsonArray results =  body.getArray("results");
+                    String idEtablissement = null;
+                    if (results.size() > 0 ){
+                        idEtablissement = ((JsonObject)results.get(0)).getString("idStructure");
+                    }
                     getCompetencesByLevel(idEtablissement, filter, idClasse, handler);
                 } else {
                     log.error(body.getString("message"));

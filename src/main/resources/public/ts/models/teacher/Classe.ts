@@ -1,6 +1,7 @@
-import { Model, Collection, http } from 'entcore';
+import {Model, Collection, http, idiom as lang, _} from 'entcore';
 import { Eleve, Periode, SuiviCompetenceClasse, Utils } from './index';
 import * as utils from '../../utils/teacher';
+declare let bundle:any;
 
 export class Classe extends Model {
     eleves : Collection<Eleve>;
@@ -14,6 +15,18 @@ export class Classe extends Model {
     remplacement: boolean;
     id_cycle: any;
     selected : boolean;
+
+    public static  libelle = {
+        CLASSE:'Classe',
+        GROUPE: "Groupe d'enseignement",
+        GROUPE_MANUEL: "Groupe manuel"
+    };
+
+    public static type = {
+        CLASSE: 0,
+        GROUPE: 1,
+        GROUPE_MANUEL: 2
+    };
 
     get api () {
         return {
@@ -33,9 +46,10 @@ export class Classe extends Model {
                     this.mapEleves = {};
                     let url;
                     if(Utils.isChefEtab()){
-                        url = this.type_groupe === 1 ? this.api.syncGroupe : this.api.syncClasseChefEtab;
+                        url = this.type_groupe !== Classe.type.CLASSE ?
+                            this.api.syncGroupe : this.api.syncClasseChefEtab;
                     }else {
-                        url = this.type_groupe === 1 ? this.api.syncGroupe : this.api.syncClasse;
+                        url = this.type_groupe !== Classe.type.CLASSE ? this.api.syncGroupe : this.api.syncClasse;
                     }
                     http().getJson(url).done((data) => {
                         // On tri les élèves par leur lastName en ignorant les accents
@@ -66,4 +80,19 @@ export class Classe extends Model {
             }
         });
     }
+
+    public static get_type_groupe_libelle = (classe) => {
+        let libelleClasse;
+
+            if ( classe.type_groupe === Classe.type.CLASSE) {
+                libelleClasse = Classe.libelle.CLASSE;
+            } else if ( classe.type_groupe === Classe.type.GROUPE) {
+                libelleClasse = Classe.libelle.GROUPE;
+            }else if ( classe.type_groupe === Classe.type.GROUPE_MANUEL) {
+                libelleClasse = Classe.libelle.GROUPE_MANUEL;
+            }
+            return libelleClasse;
+
+    };
+
 }

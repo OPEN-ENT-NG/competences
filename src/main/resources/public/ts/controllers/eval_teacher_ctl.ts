@@ -82,7 +82,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (periode.id === null ) {
                 result = lang.translate("viescolaire.utils.annee");
             }
-            else if (!periode.hasOwnProperty('id_classe')){
+            else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))){
                 result = periode ?
                     lang.translate("viescolaire.periode." + periode.type) + " " + periode.ordre
                     : lang.translate("viescolaire.utils.periodeError");

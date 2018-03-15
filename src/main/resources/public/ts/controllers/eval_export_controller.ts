@@ -2,11 +2,12 @@
  * Created by agnes.lapeyronnie on 15/09/2017.
  */
 import{ ng, _ } from "entcore";
-import { LSU } from '../models/teacher';
+import {Classe, LSU} from '../models/teacher';
 export let exportControleur = ng.controller('ExportController',['$scope',
     function($scope) {
 
-      $scope.lsu = new LSU($scope.structure.id, $scope.evaluations.classes.where({type_groupe : 0}), $scope.structure.responsables);
+      $scope.lsu = new LSU($scope.structure.id, $scope.evaluations.classes.where({type_groupe : Classe.type.CLASSE}),
+          $scope.structure.responsables);
 
       //Vue export du fichier xml
 
