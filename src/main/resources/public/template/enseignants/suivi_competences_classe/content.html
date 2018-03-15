@@ -16,8 +16,15 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<article class="ten card twelve-mobile centered" ng-if="informations.classe === undefined || informations.classe === '' || search.classe === ''|| search.classe === '*'">
-    <i18n>evaluation.suivi.classe.empty</i18n>
+<div ng-if="search.classe.id_cycle !== null">
+    <article class="ten card twelve-mobile centered"
+             ng-if="informations.classe === undefined || informations.classe === '' || search.classe === ''|| search.classe === '*'">
+        <i18n>evaluation.suivi.classe.empty</i18n>
+    </article>
+</div>
+<article class="ten card twelve-mobile centered"
+         ng-if="search.classe.id_cycle === null">
+    <i18n>evaluation.suivi.no.cycle</i18n>
 </article>
 <lightbox show="opened.recapEval" on-close="opened.recapEval = false; exportRecapEvalObj.errExport = false;">
     <h2><i18n>evaluations.export.format.pdf</i18n>&nbsp;:</h2>
@@ -121,41 +128,44 @@
         </button>
     </div>
 </lightbox>
-<div class="content-suivi-eleve twelve-mobile ten card" ng-if="informations.classe !== '' && informations.classe !== undefined && search.classe !== ''">
-    <div class="twelve suivi-eleve-ctl">
-        <h2 class="align-center"><i class="previous cell" ng-click="incrementClasse(-1)"></i>
-            [[informations.classe.name]]
-            <i class="next right-magnet" ng-click="incrementClasse(1)"></i></h2>
-        <div align="right">
-            <ul class="selectable-filter-list" ng-if="opened.detailCompetenceSuivi">
-                <li ng-repeat="color in niveauCompetences" ng-click="selected.colors[color.ordre]= ! selected.colors[color.ordre];">
-                    <!-- <span class="rounded"  ng-class="{selected : selected.colors[color.ordre]}"
-                          style='background-color:[[color.couleur]]'>
-                         <span>[[color.lettre]]</span>
-                         -->
+<div ng-if="search.classe.id_cycle !== null">
+    <div class="content-suivi-eleve twelve-mobile ten card"
+         ng-if="informations.classe !== '' && informations.classe !== undefined && search.classe !== ''">
+        <div class="twelve suivi-eleve-ctl">
+            <h2 class="align-center"><i class="previous cell" ng-click="incrementClasse(-1)"></i>
+                [[informations.classe.name]]
+                <i class="next right-magnet" ng-click="incrementClasse(1)"></i></h2>
+            <div align="right">
+                <ul class="selectable-filter-list" ng-if="opened.detailCompetenceSuivi">
+                    <li ng-repeat="color in niveauCompetences" ng-click="selected.colors[color.ordre]= ! selected.colors[color.ordre];">
+                        <!-- <span class="rounded"  ng-class="{selected : selected.colors[color.ordre]}"
+                              style='background-color:[[color.couleur]]'>
+                             <span>[[color.lettre]]</span>
+                             -->
                         <c-skills-bubble text="color.lettre" color="color.couleur" select-cond="selected.colors[color.ordre]">
                         </c-skills-bubble>
-                    </span>
-                </li>
-                <li><span class="rounded grey" ng-class="{selected : selected.colors[0]}"
-                          ng-click="selected.colors[0] = !selected.colors[0]"></span></li>
-            </ul>
-        </div>
-    </div>
-    <div class="suivi-eleve-slider" >
-        <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
-            <container template="suivi-competence-content"></container>
-        </div>
-        <div class="detail-competence inline-block six">
-            <div class="twelve">
-                <a ng-click="backToSuivi()" ng-show="opened.detailCompetenceSuivi">
-                    <i class="icon-back"></i>
-                </a>
+                        </span>
+                    </li>
+                    <li><span class="rounded grey" ng-class="{selected : selected.colors[0]}"
+                              ng-click="selected.colors[0] = !selected.colors[0]"></span></li>
+                </ul>
             </div>
-            <h2 class="ellipsis ten">
-                [[detailCompetence.nom]]
-            </h2>
-            <container template="suivi-competence-detail"></container>
+        </div>
+        <div class="suivi-eleve-slider" >
+            <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
+                <container template="suivi-competence-content"></container>
+            </div>
+            <div class="detail-competence inline-block six">
+                <div class="twelve">
+                    <a ng-click="backToSuivi()" ng-show="opened.detailCompetenceSuivi">
+                        <i class="icon-back"></i>
+                    </a>
+                </div>
+                <h2 class="ellipsis ten">
+                    [[detailCompetence.nom]]
+                </h2>
+                <container template="suivi-competence-detail"></container>
+            </div>
         </div>
     </div>
 </div>

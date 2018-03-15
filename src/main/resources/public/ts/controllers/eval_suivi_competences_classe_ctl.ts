@@ -17,13 +17,22 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          * Créer une suivi de compétence
          */
         $scope.selectSuivi = function () {
+            if ($scope.search.classe.id_cycle === null) {
+                return ;
+            }
             $scope.Display = {EvaluatedCompetences: true};
             $scope.informations.classe = $scope.search.classe;
             if ($scope.informations.classe !== null && $scope.search.classe !== '' && $scope.search.classe !== '*') {
                 $scope.suiviCompetence = new SuiviCompetenceClasse($scope.search.classe, $scope.search.periode);
                 let niveauCompetence = _.findWhere(evaluations.structure.cycles, {
                     id_cycle: $scope.search.classe.id_cycle
-                }).niveauCompetencesArray;
+                })
+                if (niveauCompetence!== undefined){
+                    niveauCompetence = niveauCompetence.niveauCompetencesArray;
+                }
+                else{
+                    niveauCompetence = evaluations.structure.cycles[0].niveauCompetencesArray;
+                }
                 $scope.niveauCompetences = [];
                 $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
                 $scope.mapLettres = {"-1": " "};
@@ -84,7 +93,13 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     $scope.search.classe = $scope.classes.findWhere({id: $route.current.params.idClasse});
                     let niveauCompetence =  _.findWhere(evaluations.structure.cycles, {
                         id_cycle: $scope.search.classe.id_cycle
-                    }).niveauCompetencesArray;
+                    });
+                    if (niveauCompetence!== undefined){
+                        niveauCompetence = niveauCompetence.niveauCompetencesArray;
+                    }
+                    else{
+                        niveauCompetence = evaluations.structure.cycles[0].niveauCompetencesArray;
+                    }
                     $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
                     $scope.mapLettres = {"-1": " "};
                     _.forEach(niveauCompetence, function (niv) {

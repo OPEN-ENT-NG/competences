@@ -421,7 +421,7 @@ public class DefaultUtilsService  implements UtilsService {
 
     @Override
     public void linkGroupesCycles(final String[] idClasses, final Number id_cycle, final Number[] typeGroupes,
-                                 final Handler<Either<String, JsonArray>> handler) {
+                                  final Handler<Either<String, JsonArray>> handler) {
         if (idClasses.length > 0 ) {
             checkDataOnClasses(idClasses, new Handler<Either<String, JsonArray>>() {
                 @Override
@@ -459,7 +459,8 @@ public class DefaultUtilsService  implements UtilsService {
                             if (i != (idClasses.length - 1)) {
                                 queryLink.append(",");
                             } else {
-                                queryLink.append(" ON CONFLICT (id_cycle, id_groupe) DO UPDATE SET id_cycle = ? ");
+                                queryLink.append(" ON CONFLICT ON CONSTRAINT unique_id_groupe ")
+                                        .append(" DO UPDATE SET id_cycle = ? ");
                                 values.addNumber(id_cycle);
                             }
                         }

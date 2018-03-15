@@ -79,13 +79,15 @@
      ng-if="informations.eleve !== '' && informations.eleve !== undefined && route.current.$$route.originalPath === '/competences/eleve'">
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
-<div ng-if="(isChefEtab() && evaluations.structure.moyenneVisible===1)
+<div ng-if="search.classe.id_cycle !== null && structure.cycle !== undefined ">
+    <div ng-if="(isChefEtab() && evaluations.structure.moyenneVisible===1)
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_classe/content_vue_suivi_classe')
             || evaluations.structure.moyenneVisible===2"
-     class="cell card twelve criterion notes-help">
-    <div class="legend"
-         ng-include="'/competences/public/template/enseignants/informations/display_competences_legende.html'">
+         class="cell card twelve criterion notes-help">
+        <div class="legend"
+             ng-include="'/competences/public/template/enseignants/informations/display_competences_legende.html'">
+        </div>
     </div>
 </div>
 <div ng-if="false"

@@ -327,6 +327,9 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         $scope.selectSuivi = async function () {
             $scope.selected.grey = true;
+            if ($scope.search.classe.id_cycle === null) {
+                return ;
+            }
             if($scope.search.classe.eleves.empty) {
                 await $scope.search.classe.eleves.sync();
             }
@@ -342,7 +345,13 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     $scope.search.periode, $scope.search.classe,$scope.evaluations.structure);
                 let niveauCompetence =  _.findWhere(evaluations.structure.cycles, {
                     id_cycle: $scope.search.classe.id_cycle
-                }).niveauCompetencesArray;
+                });
+                if (niveauCompetence!== undefined){
+                    niveauCompetence = niveauCompetence.niveauCompetencesArray;
+                }
+                else{
+                    niveauCompetence = evaluations.structure.cycles[0].niveauCompetencesArray;
+                }
                 $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
                 $scope.mapLettres = {"-1": " "};
                 _.forEach(niveauCompetence, function (niv) {

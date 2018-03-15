@@ -23,9 +23,16 @@
         <autocomplete class="ten cell clear-none" options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
     </div>
 </article>
-<article class="ten card twelve-mobile centered" ng-if="suiviCompetence === undefined">
+<article class="ten card twelve-mobile centered"
+         ng-if="suiviCompetence === undefined && search.classe.id_cycle !== null">
     <i18n>evaluation.suivi.eleve.empty</i18n>
 </article>
+<article class="ten card twelve-mobile centered"
+         ng-if="search.classe.id_cycle === null">
+    <i18n>evaluation.suivi.no.cycle</i18n>
+</article>
+
+
 <lightbox show="opened.releveComp" on-close="opened.releveComp = false; exportRelCompObj.errExport = false;"
           ng-if="informations.eleve !== '' && informations.eleve !== undefined && suiviCompetence !== undefined">
     <h2>
@@ -120,56 +127,58 @@
         </button>
     </div>
     <!--<div class="row">-->
-        <!--<img ng-src="competences/public/template/enseignants/suivi_competences_eleve/0.png" alt=""/>-->
+    <!--<img ng-src="competences/public/template/enseignants/suivi_competences_eleve/0.png" alt=""/>-->
     <!--</div>-->
 </lightbox>
-<div class="content-suivi-eleve twelve-mobile ten card"
-     ng-if="informations.eleve !== '' && informations.eleve !== undefined && suiviCompetence !== undefined">
+<div  ng-if="search.classe.id_cycle !== null">
+    <div class="content-suivi-eleve twelve-mobile ten card"
+         ng-if="informations.eleve !== '' && informations.eleve !== undefined && suiviCompetence !== undefined">
 
-    <div class="twelve suivi-eleve-ctl" sticky offset="64">
-        <h2 class="align-center">
-            <i class="previous cell" ng-click="incrementEleve(-1)"></i>
-            [[informations.eleve.lastName]] [[informations.eleve.firstName]]
-            <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
-        </h2>
-        <div ng-show="!opened.detailCompetenceSuivi"
-             ng-include="'/competences/public/template/enseignants/suivi_competences_eleve/content_buttons.html'"></div>
-
-        <div ng-show="opened.detailCompetenceSuivi" class="twelve">
-            <div>
-                <a class="button twelve-mobile"  ng-disabled="search.periode.id == undefined || detailCompetence.masque" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
-                <a class="button twelve-mobile" ng-disabled="search.periode.id == undefined || detailCompetence.masque" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
-            </div>
-            <div class="right-magnet">
-                <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
-                    <i class="icon-back"></i>
-                </a>
-                <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau') }"
-                   ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau')"
-                   tooltip="evaluations.suivi.eleve.vue.liste"></i>
-                <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph') }"
-                   ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph')"
-                   tooltip="evaluations.suivi.eleve.vue.graph"></i>
-            </div>
-        </div>
-
-    </div>
-    <div class="suivi-eleve-slider">
-        <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
-            <container template="suivi-competence-content"></container>
-        </div>
-        <div class="detail-competence inline-block six " ng-show="opened.detailCompetenceSuivi">
-            <div ng-show="messages.successEvalLibre" class="info">
-                <i18n>evaluations.evaluation.libre.add.success</i18n>
-            </div>
-            <lightbox show="opened.lightboxEvalLibre" on-close="opened.lightboxEvalLibre=false">
-                <container template="lightboxContainerEvalLibre"></container>
-            </lightbox>
-            <h2 class="ellipsis ten align-center">
-                [[detailCompetence.nom]]
+        <div class="twelve suivi-eleve-ctl" sticky offset="64">
+            <h2 class="align-center">
+                <i class="previous cell" ng-click="incrementEleve(-1)"></i>
+                [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+                <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
             </h2>
+            <div ng-show="!opened.detailCompetenceSuivi"
+                 ng-include="'/competences/public/template/enseignants/suivi_competences_eleve/content_buttons.html'"></div>
 
-            <container template="suivi-competence-detail"></container>
+            <div ng-show="opened.detailCompetenceSuivi" class="twelve">
+                <div>
+                    <a class="button twelve-mobile"  ng-disabled="search.periode.id == undefined || detailCompetence.masque" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
+                    <a class="button twelve-mobile" ng-disabled="search.periode.id == undefined || detailCompetence.masque" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
+                </div>
+                <div class="right-magnet">
+                    <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
+                        <i class="icon-back"></i>
+                    </a>
+                    <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau') }"
+                       ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau')"
+                       tooltip="evaluations.suivi.eleve.vue.liste"></i>
+                    <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph') }"
+                       ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph')"
+                       tooltip="evaluations.suivi.eleve.vue.graph"></i>
+                </div>
+            </div>
+
+        </div>
+        <div class="suivi-eleve-slider">
+            <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
+                <container template="suivi-competence-content"></container>
+            </div>
+            <div class="detail-competence inline-block six " ng-show="opened.detailCompetenceSuivi">
+                <div ng-show="messages.successEvalLibre" class="info">
+                    <i18n>evaluations.evaluation.libre.add.success</i18n>
+                </div>
+                <lightbox show="opened.lightboxEvalLibre" on-close="opened.lightboxEvalLibre=false">
+                    <container template="lightboxContainerEvalLibre"></container>
+                </lightbox>
+                <h2 class="ellipsis ten align-center">
+                    [[detailCompetence.nom]]
+                </h2>
+
+                <container template="suivi-competence-detail"></container>
+            </div>
         </div>
     </div>
 </div>

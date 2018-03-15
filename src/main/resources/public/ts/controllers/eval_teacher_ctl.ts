@@ -1518,6 +1518,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.loadEnseignementsByClasse = function () {
             let classe_Id = $scope.devoir.id_groupe;
             let newIdCycle = $scope.getClasseData(classe_Id, 'id_cycle');
+            if (newIdCycle === null) {
+                $scope.oldCompetencesDevoir = _.extend(evaluations.competencesDevoir);
+                evaluations.competencesDevoir = [];
+                $scope.cleanItems = true;
+                utils.safeApply($scope);
+                return ;
+            }
             let currentIdCycle = null;
             for (let i = 0; i < $scope.enseignements.all.length && currentIdCycle === null; i++) {
                 if ($scope.enseignements.all[i].data.competences_1 !== undefined &&
@@ -1535,6 +1542,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     evaluations.competencesDevoir = [];
                     utils.safeApply($scope);
                 });
+            }
+            else if ($scope.cleanItems && $scope.oldCompetencesDevoir !== undefined ) {
+                evaluations.competencesDevoir = $scope.oldCompetencesDevoir;
+                $scope.cleanItems = false;
             }
         };
 
@@ -1583,7 +1594,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             if ($scope.devoir.id_groupe === undefined) {
-                if ($scope.search.classe !== null && $scope.search.classe !== undefined && $scope.search.classe.id !== '*' && $scope.search.matiere !== '*') {
+                if ($scope.search.classe !== null && $scope.search.classe !== undefined
+                    && $scope.search.classe.id !== '*' && $scope.search.matiere !== '*') {
                     $scope.devoir.id_groupe = $scope.search.classe.id;
                     $scope.devoir.id_matiere = $scope.search.matiere.id;
                     $scope.setClasseMatieres();
@@ -1595,19 +1607,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.setClasseMatieres();
                 }
             }
-
-            $scope.structure.enseignements.sync($scope.devoir.id_groupe).then(() => {
-                _.extend($scope.devoir.enseignements, $scope.enseignements);
-                $scope.initFilter(true);
-                $scope.evaluations.competencesDevoir = [];
-                for (let i = 0; i < $scope.devoir.competences.all.length; i++) {
-                    $scope.evaluations.competencesDevoir.push($scope.devoir.competences.all[i]);
-                }
-                if ($scope.devoir.hasOwnProperty('id')) {
-                    $scope.updateFilter();
-                }
-            });
-
+            let selectedClasse = _.findWhere($scope.classes.all, {id: $scope.devoir.id_groupe});
+            if (selectedClasse !== undefined && selectedClasse.id_cycle !== null) {
+                $scope.structure.enseignements.sync($scope.devoir.id_groupe).then(() => {
+                    _.extend($scope.devoir.enseignements, $scope.enseignements);
+                    $scope.initFilter(true);
+                    $scope.evaluations.competencesDevoir = [];
+                    for (let i = 0; i < $scope.devoir.competences.all.length; i++) {
+                        $scope.evaluations.competencesDevoir.push($scope.devoir.competences.all[i]);
+                    }
+                    if ($scope.devoir.hasOwnProperty('id')) {
+                        $scope.updateFilter();
+                    }
+                });
+            }
             if ($scope.devoir.dateDevoir === undefined
                 && $scope.devoir.date !== undefined) {
                 $scope.devoir.dateDevoir = new Date($scope.devoir.date);

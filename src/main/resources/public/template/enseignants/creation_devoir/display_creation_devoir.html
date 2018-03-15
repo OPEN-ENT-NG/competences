@@ -286,77 +286,82 @@
                     </div>
                 </pane>
                 <pane template="'competences/public/template/enseignants/creation_devoir/competenceTabHeader.html'">
-                    <h3><i18n>evaluations.test.competences</i18n> : </h3>
+                    <div ng-if="getClasseData(devoir.id_groupe, 'id_cycle') !== null">
+                        <h3><i18n>evaluations.test.competences</i18n> : </h3>
 
-                    <!-- Recherche de competences -->
-                    <div class="twelve cell twelve-mobile">
-                        <input type="text" ng-model="search.keyword" placeholder="rechercher une compétence" style="width: 99%;font-size: 1em;font-style: italic;">
-                    </div>
+                        <!-- Recherche de competences -->
+                        <div class="twelve cell twelve-mobile">
+                            <input type="text" ng-model="search.keyword" placeholder="rechercher une compétence" style="width: 99%;font-size: 1em;font-style: italic;">
+                        </div>
 
-                    <!-- Filtre sur les enseignements -->
-                    <div class="three cell twelve-mobile">
+                        <!-- Filtre sur les enseignements -->
+                        <div class="three cell twelve-mobile">
 
-                        <!--<div class="row angle-container twelve-mobile">-->
-                        <!--<button ng-click="deselectAllEnseignements()" style="height: 25px" class="instantButtons deselect right-magnet" tooltip="viescolaire.utils.deselectAll"></button>-->
-                        <!--<button ng-click="selectAllEnseignements()" style="height: 25px" class="instantButtons select right-magnet" tooltip="viescolaire.utils.select.all"></button>-->
-                        <!--</div>-->
+                            <!--<div class="row angle-container twelve-mobile">-->
+                            <!--<button ng-click="deselectAllEnseignements()" style="height: 25px" class="instantButtons deselect right-magnet" tooltip="viescolaire.utils.deselectAll"></button>-->
+                            <!--<button ng-click="selectAllEnseignements()" style="height: 25px" class="instantButtons select right-magnet" tooltip="viescolaire.utils.select.all"></button>-->
+                            <!--</div>-->
 
-                        <label class="chip multiselect right-magnet margin-left all" ng-class="{ selected: bSelectAllEnseignements }">
-                            <span><i18n>viescolaire.utils.all.none</i18n></span>
-                            <input type="checkbox" ng-model="bSelectAllEnseignements" ng-change="selectUnselectEnseignements()" />
-                        </label>
+                            <label class="chip multiselect right-magnet margin-left all" ng-class="{ selected: bSelectAllEnseignements }">
+                                <span><i18n>viescolaire.utils.all.none</i18n></span>
+                                <input type="checkbox" ng-model="bSelectAllEnseignements" ng-change="selectUnselectEnseignements()" />
+                            </label>
 
-                        <ul class="selectable-list twelve-mobile">
-                            <li ng-repeat="enseignement in enseignements.all |filter:enseignementsWithCompetences"
-                                ng-class="{selected : enseignementsFilter[enseignement.id].isSelected}"
-                                ng-click="enseignementsFilter[enseignement.id].isSelected = !enseignementsFilter[enseignement.id].isSelected">
-                                [[enseignement.nom]]
-                            </li>
-                        </ul>
-                    </div>
+                            <ul class="selectable-list twelve-mobile">
+                                <li ng-repeat="enseignement in enseignements.all |filter:enseignementsWithCompetences"
+                                    ng-class="{selected : enseignementsFilter[enseignement.id].isSelected}"
+                                    ng-click="enseignementsFilter[enseignement.id].isSelected = !enseignementsFilter[enseignement.id].isSelected">
+                                    [[enseignement.nom]]
+                                </li>
+                            </ul>
+                        </div>
 
-                    <!-- Competences filtrees / recherchees -->
+                        <!-- Competences filtrees / recherchees -->
 
-                    <div class="nine cell twelve-mobile">
-                        <div class="filter-domaine">
-                            <div class="row drop-down-block" ng-class="{slided: displayFilterDomaine}">
-                                <div class="drop-down-label" ng-click="displayFilterDomaine = !displayFilterDomaine">
-                                    <div class="twelve cell">
-                                        <i class="arrow"></i>
-                                        <label>
-                                            <i18n>evaluations.filtre.domaines</i18n>
-                                        </label>
+                        <div class="nine cell twelve-mobile">
+                            <div class="filter-domaine">
+                                <div class="row drop-down-block" ng-class="{slided: displayFilterDomaine}">
+                                    <div class="drop-down-label" ng-click="displayFilterDomaine = !displayFilterDomaine">
+                                        <div class="twelve cell">
+                                            <i class="arrow"></i>
+                                            <label>
+                                                <i18n>evaluations.filtre.domaines</i18n>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
+                                <div ng-hide="!displayFilterDomaine">
+                                    <label class="chip multiselect margin-left">
+                                        <span><i18n>viescolaire.utils.all.none</i18n></span>
+                                        <input type="checkbox"
+                                               ng-model="bSelectAllDomaines"
+                                               ng-change="showHideDomaines()"
+                                               ng-class="{ selected: bSelectAllDomaines }"/>
+                                    </label>
+                                    <label class="chip margin-left checkbox-domaine"
+                                           ng-repeat="domaine in domaines" ng-class="{ selected: showCompetencesDomaine[domaine.id] }">
+                                        <span>[[domaine.code_domaine]]</span>
+                                        <input type="checkbox" ng-click="checkDomainesSelected(domaine.id);"/>
+                                    </label>
+                                </div>
                             </div>
-                            <div ng-hide="!displayFilterDomaine">
-                                <label class="chip multiselect margin-left">
-                                    <span><i18n>viescolaire.utils.all.none</i18n></span>
-                                    <input type="checkbox"
-                                           ng-model="bSelectAllDomaines"
-                                           ng-change="showHideDomaines()"
-                                           ng-class="{ selected: bSelectAllDomaines }"/>
-                                </label>
-                                <label class="chip margin-left checkbox-domaine"
-                                       ng-repeat="domaine in domaines" ng-class="{ selected: showCompetencesDomaine[domaine.id] }">
-                                    <span>[[domaine.code_domaine]]</span>
-                                    <input type="checkbox" ng-click="checkDomainesSelected(domaine.id);"/>
-                                </label>
-                            </div>
+                            <c-skills-list devoir="devoir" function-filter="enseignementsFilterFunction"
+                                           function-filter-competences-by-domaines="competencesByDomainesFilterFunction"
+                                           function-filter-hidden="hideHiddenCompetence"
+                                           function-search="enseignementsSearchFunction"
+                                           data="devoir.enseignements"
+                                           enseignements-filter="enseignementsFilter"
+                                           competences-filter="competencesFilter"
+                                           search="search"
+                                           devoir-competences="evaluations.competencesDevoir">
+
+                            </c-skills-list>
                         </div>
-                        <c-skills-list devoir="devoir" function-filter="enseignementsFilterFunction"
-                                       function-filter-competences-by-domaines="competencesByDomainesFilterFunction"
-                                       function-filter-hidden="hideHiddenCompetence"
-                                       function-search="enseignementsSearchFunction"
-                                       data="devoir.enseignements"
-                                       enseignements-filter="enseignementsFilter"
-                                       competences-filter="competencesFilter"
-                                       search="search"
-                                       devoir-competences="evaluations.competencesDevoir">
-
-                        </c-skills-list>
                     </div>
-
+                    <div ng-if="getClasseData(devoir.id_groupe, 'id_cycle') === null"
+                         class="twelve cell addDevoirTable">
+                        <i18n>evaluation.creation.no.cycle</i18n>
+                    </div>
                 </pane>
             </tabs>
 
@@ -370,7 +375,7 @@
     </div>
 
     <input class="button-add-devoir zero-mobile button-fixed-top-right" type="button" ng-click="lightboxChampsApparition()"
-    i18n-value="viescolaire.utils.save">
+           i18n-value="viescolaire.utils.save">
 
 
     <!-- PARTIE RECAPITULATIF -->

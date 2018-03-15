@@ -128,6 +128,8 @@
   "evaluation.suivi.eleve.empty": "Aucun suivi de compétences élève généré. Vous pouvez en générer un en sélectionnant les critères.",
   "evaluation.bilan.eleve.empty": "Aucun bilan de compétences élève généré. Vous pouvez en générer un en sélectionnant les critères.",
   "evaluation.suivi.classe.empty": "Aucun suivi de compétences classe généré. Vous pouvez en générer un en sélectionnant les critères.",
+  "evaluation.suivi.no.cycle":"Votre classe ou groupe n'est rattaché(e) à aucun cycle, veuillez contacter un administrateur de votre établissement.",
+  "evaluation.creation.no.cycle":"Les compétences sont rattachées à un cycle. Votre classe ou groupe sélectionné(e) n'est rattaché(e) à aucun cycle. Veuillez contacter un administrateur de votre établissement.",
   "evaluation.list.empty": "Aucune évaluation n'a été créée.",
   "evaluation.student.list.empty": "Aucune évaluation ne correspond à vos critères.",
   "evaluations.suivi.classe.title":"Suivi classe",
