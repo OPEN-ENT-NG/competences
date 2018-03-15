@@ -12,11 +12,11 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
-import org.vertx.java.core.eventbus.EventBus;
 
 import java.util.*;
 
@@ -462,7 +462,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
     @Override
-    public void setVisibility(String structureId, UserInfos user, Boolean visible,
+    public void setVisibility(String structureId, UserInfos user, Integer visible,
                               Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder().append("INSERT INTO ")
                 .append( Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc (id_etablissement, visible) ")
@@ -470,7 +470,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 .append(" ( ? , ? )" )
                 .append(" ON CONFLICT (id_etablissement) DO UPDATE SET visible = ?");
         JsonArray values = new JsonArray();
-        values.addString(structureId).addBoolean(visible).addBoolean(visible);
+        values.addString(structureId).addNumber(visible).addNumber(visible);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
@@ -481,7 +481,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 .append(" WHERE id_etablissement = ? " )
                 .append(" UNION ALL " )
                 .append(" SELECT ? , ")
-                .append(" false ")
+                .append(" 1 ")
                 .append(" WHERE NOT EXISTS (SELECT id_etablissement, visible ")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc")
                 .append(" WHERE id_etablissement = ? );    ");

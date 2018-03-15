@@ -23,7 +23,9 @@
          class="domaine-line">
         <div class="cell four twelve-mobile domaine-display text-overflow" tooltip="[[domaine.codification]] - [[domaine.libelle]]">
             [[domaine.codification]] - [[domaine.libelle]]
-            <div ng-if="(isChefEtab() || evaluations.structure.moyenneVisible) && domaine.moyenne !== -1"
+            <div ng-if="( (isChefEtab() && evaluations.structure.moyenneVisible===1)
+                            || evaluations.structure.moyenneVisible===2 )
+                            && domaine.moyenne !== -1"
                  class="domaine-maitrise">
                 <label>
                     <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">

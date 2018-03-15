@@ -15,17 +15,21 @@ export const averageBFC = {
         },
         initSource: function () {
         },
-        save: function () {
-            this.visible = ! this.visible;
-            http().putJson(`/competences/bfc/moyennes/visible/structures/${this.idStructure}/${this.visible}`)
+        save: function (visibility:number) {
+            // visibility values
+            // 0 : caché pour tout le monde
+            // 1 : caché pour les enseignants
+            // 2 : visible pour tous
+
+            http().putJson(`/competences/bfc/moyennes/visible/structures/${this.idStructure}/${visibility}`)
                 .done(function () {
+                    this.visible = visibility;
                     this.$apply('visible');
                     console.log('visibility set');
                 }.bind(this))
                 .error(function () {
-                    this.visible = ! this.visible;
-                    this.$apply('visible');
+                    this.$apply('error during seting visiblility');
                 }.bind(this));
         }
     }
-};
+}

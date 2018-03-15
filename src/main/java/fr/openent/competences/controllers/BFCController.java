@@ -325,16 +325,20 @@ public class BFCController extends ControllerHelper {
 
 
     @Put("/bfc/moyennes/visible/structures/:structureId/:visible")
-    @ApiDoc("Active la visibilité pour les enseignants d'un établissement donné de la moyenne calculée sur le BFC")
+    @ApiDoc("Défini la visibilité pour un établissement donné de la moyenne calculée sur le BFC")
     @SecuredAction(value="competences.set.visibility.bfc.average", type = ActionType.WORKFLOW)
     public void setVisibility(final HttpServerRequest request) {
+        // visibility values
+        // 0 : caché pour tout le monde
+        // 1 : caché pour les enseignants
+        // 2 : visible pour tous
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
 
                 if(null != user  && request.params().contains("structureId")) {
                     final String structureId = request.params().get("structureId");
-                    final Boolean visible = Boolean.valueOf(request.params().get("visible"));
+                    final Integer visible = Integer.valueOf(request.params().get("visible"));
                     if(user.getStructures().contains(structureId)) {
                         Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                         bfcService.setVisibility(structureId, user, visible, handler);
@@ -351,9 +355,13 @@ public class BFCController extends ControllerHelper {
 
 
     @Get("/bfc/moyennes/visible/structures/:structureId")
-    @ApiDoc("Active la visibilité pour les enseignants d'un établissement donné de la moyenne calculée sur le BFC")
+    @ApiDoc("Recupere la visibilité un établissement donné de la moyenne calculée sur le BFC")
     @SecuredAction(value="", type=ActionType.AUTHENTICATED)
     public void getVisibility(final HttpServerRequest request) {
+        // visibility values
+        // 0 : caché pour tout le monde
+        // 1 : caché pour les enseignants
+        // 2 : visible pour tous
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {

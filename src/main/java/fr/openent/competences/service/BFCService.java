@@ -74,18 +74,20 @@ public interface BFCService extends CrudService {
 
     /**
      * Active la visibilité des moyennes sur l'écran de BFC
-     * @param structureId
-     * @param user
+     * @param structureId id établissement neo
+     * @param user utilisateur connecté
+     * @param visible 0 : caché pour tout le monde, 1 : caché pour les enseignants, 2 : visible pour tous
      * @param handler
      */
-    public void setVisibility(String structureId, UserInfos user, Boolean visible,
+    public void setVisibility(String structureId, UserInfos user, Integer visible,
                               Handler<Either<String, JsonArray>> handler);
 
 
     /**
-     *  Récupère la valeur de l'état de la visibilité (active/inactive/absente) des moyennes sur l'écran de BFC.
-     * @param structureId
-     * @param user
+     *  Récupère la valeur de l'état de la visibilité des moyennes sur l'écran de BFC.
+     *  0 : caché pour tout le monde, 1 : caché pour les enseignants, 2 : visible pour tous
+     * @param structureId id établissement neo
+     * @param user utilisateur connecté
      * @param handler
      */
     public void getVisibility(String structureId, UserInfos user, Handler<Either<String, JsonArray>> handler);
