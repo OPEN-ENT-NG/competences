@@ -411,6 +411,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.exportRecapEvalObj = {
                                 errExport: false
                             };
+                            $scope.printSuiviClasse = "printRecapEval";
+                            $scope.suiviClasse = {
+                                textMod: true
+                            };
+                            $scope.disabledExportSuiviClasse = false;
                             $scope.sortType = 'title'; // set the default sort type
                             $scope.sortReverse = false;  // set the default sort order
                             $scope.usePerso = evaluations.structure.usePerso;
@@ -3115,31 +3120,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             await http().getJson(url + "&json=true")
                 .error((result) => {
-                    switch (result.responseText){
-                        case "{\"error\":\"getExportReleveComp : No exams on given period and/or material.\"}" :
-                            $scope.evalNotFound = true;
-                            break;
-                        case "{\"error\":\"devoirs not found\"}" :
-                            $scope.periodeNotFound = true;
-                            break;
-                        case "{\"error\":\"matieres not found\"}" :
-                            $scope.classeNotFound = true;
-                            break;
-                        case "{\"error\":\"domaines not found\"}" :
-                            $scope.etabNotFound = true;
-                            break;
-                        case "{\"error\":\"bfc not found\"}" :
-                            $scope.bfcNotFound = true;
-                            break;
-                        case "{\"error\":\"eleves not found\"}" :
-                            $scope.elevesNotFound = true;
-                            break;
-                        case "{\"error\":\"getExportReleveComp : Given groups belong to different cycle.\"}" :
-                            $scope.cycleNotFound = true;
-                            break;
-                        default :
-                            $scope.exportRecapEvalObj.errExport = true;
-                    }
+                    $scope.errorResult(result);
                     utils.safeApply($scope);
                 })
                 .done(() => {
@@ -3153,6 +3134,55 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
+        $scope.errorResult = function(result){
+            switch (result.responseText){
+                case "{\"error\":\"getExportReleveComp : No exams on given period and/or material.\"}" :
+                    $scope.evalNotFound = true;
+                    break;
+                case "{\"error\":\"devoirs not found\"}" :
+                    $scope.periodeNotFound = true;
+                    break;
+                case "{\"error\":\"matieres not found\"}" :
+                    $scope.classeNotFound = true;
+                    break;
+                case "{\"error\":\"domaines not found\"}" :
+                    $scope.etabNotFound = true;
+                    break;
+                case "{\"error\":\"bfc not found\"}" :
+                    $scope.bfcNotFound = true;
+                    break;
+                case "{\"error\":\"eleves not found\"}" :
+                    $scope.elevesNotFound = true;
+                    break;
+                case "{\"error\":\"getExportReleveComp : Given groups belong to different cycle.\"}" :
+                    $scope.cycleNotFound = true;
+                    break;
+                case "{\"error\":\"eval not found\"}" :
+                    $scope.evalNotFound = true;
+                    break;
+                case "{\"error\":\"periode not found\"}" :
+                    $scope.periodeNotFound = true;
+                    break;
+                case "{\"error\":\"classe not found\"}" :
+                    $scope.classeNotFound = true;
+                    break;
+                case "{\"error\":\"etab not found\"}" :
+                    $scope.etabNotFound = true;
+                    break;
+                case "{\"error\":\"bfc not found\"}" :
+                    $scope.bfcNotFound = true;
+                    break;
+                case "{\"error\":\"eleves not found\"}" :
+                    $scope.elevesNotFound = true;
+                    break;
+                case "{\"error\":\"different cycle\"}" :
+                    $scope.cycleNotFound = true;
+                    break;
+                default :
+                    $scope.exportRecapEvalObj.errExport = true;
+            }
+        }
+
         $scope.selectMatiere = function (id) {
             $scope.closeWarningMessages();
             if (!$scope.selected.matieres.includes(id)) {
@@ -3160,10 +3190,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else {
                 $scope.selected.matieres.splice(_.indexOf($scope.selected.matieres, id), 1);
             }
-            if($scope.selected.matieres.length == 0)
+            if($scope.selected.matieres.length == 0){
                 $scope.allUnselect = true;
-            else
+                $scope.disabledExportSuiviClasse = true;
+            } else {
                 $scope.allUnselect = false;
+                $scope.disabledExportSuiviClasse = false;
+            }
         };
 
         $scope.selectUnselectMatieres = function (selectAllMatieres) {
@@ -3175,12 +3208,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.allMatieresSorted[m].select = true;
                 }
                 $scope.allUnselect = false;
+                $scope.disabledExportSuiviClasse = false;
             } else {
                 $scope.selected.matieres = [];
                 for(var m = 0; m < $scope.allMatieresSorted.length; m++){
                     $scope.allMatieresSorted[m].select = false;
                 }
                 $scope.allUnselect = true;
+                $scope.disabledExportSuiviClasse = true;
             }
         };
 
@@ -3191,6 +3226,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.disabledExport = function(){
             return $scope.allUnselect || typeof($scope.releveComp.periode) === 'undefined'
         }
+
 
         $scope.closeWarningMessages = function () {
             $scope.evalNotFound = false;
@@ -3206,10 +3242,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.openedLigthbox = function(classe){
             $scope.opened.releveComp = true;
+            $scope.releveComp.periode = $scope.search.periode;
             $scope.releveComp.textMod = true;
             $scope.closeWarningMessages();
             $scope.selectUnselectMatieres(false);
             classe ? $scope.forClasse = true : $scope.forClasse = false;
+        }
+
+        $scope.openedRecapEval = function (){
+            $scope.opened.recapEval = true;
+            $scope.suiviClasse.periode = $scope.search.periode;
+            $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
+            $scope.closeWarningMessages();
+            utils.safeApply($scope);
+        };
+
+        $scope.changePrintSuiviClasse = function(option){
+            $scope.printSuiviClasse = option;
+            if(option === "printReleveComp")
+                $scope.disabledExportSuiviClasse = $scope.allUnselect || typeof($scope.suiviClasse.periode) === 'undefined';
+            if(option === "printRecapEval")
+                $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
         }
     }
 ]);

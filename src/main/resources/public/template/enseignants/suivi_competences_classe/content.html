@@ -31,28 +31,28 @@
 
     <div class="checkbox-grid">
         <label>
-            <input type="radio" ng-change="" ng-model="printSuiviClasse" value="printRecapEval">
+            <input type="radio" ng-change="changePrintSuiviClasse('printRecapEval')" ng-model="printSuiviClasse" value="printRecapEval">
             <span><i18n>evaluations.recapEval</i18n></span>
         </label>
         <label>
-            <input type="radio" ng-change=""  ng-model="printSuiviClasse" value="printReleveComp">
+            <input type="radio" ng-change="changePrintSuiviClasse('printReleveComp')"  ng-model="printSuiviClasse" value="printReleveComp">
             <span><i18n>evaluations.releveComp.classe</i18n></span>
         </label>
     </div>
-    <div ng-if="printSuiviClasse === 'printReleveComp'">
-        <div class="row">
-            <div class="twelve cell twelve-mobile">
-                <br/><label><i18n class="titre-libelle">viescolaire.utils.periode</i18n></label><br/>
-                <label class=" six select">
-                    <select ng-model="releveComp.periode"
-                            ng-init="releveComp.periode=search.periode"
-                            ng-change="exportRelCompObj.errExport = false; closeWarningMessages();"
-                            ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
-                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
-                    </select>
-                </label><br/>
-            </div>
+    <div class="row">
+        <div class="twelve cell twelve-mobile">
+            <br/><label><i18n class="titre-libelle">viescolaire.utils.periode</i18n></label><br/>
+            <label class=" six select">
+                <select ng-model="suiviClasse.periode"
+                        ng-init="suiviClasse.periode = search.periode"
+                        ng-change="exportRelCompObj.errExport = false; closeWarningMessages();"
+                        ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
+                    <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
+                </select>
+            </label><br/>
         </div>
+    </div>
+    <div ng-if="printSuiviClasse === 'printReleveComp'">
         <div class="row">
             <div class="twelve cell twelve-mobile">
                 <label><i18n class="titre-libelle">viescolaire.utils.subjects</i18n></label><br/>
@@ -116,14 +116,15 @@
             <div class="three cell horizontal-spacing vertical-spacing expandable-content">
                 <label class="checkbox">
                     <input type="checkbox"
-                           ng-model="textMod">
+                           ng-model="suiviClasse.textMod">
                     <span><i18n>evaluation.devoir.cartouche.couleur</i18n></span>
                 </label>
             </div>
         </div>
         <button class="right-magnet"
+                ng-disabled = "disabledExportSuiviClasse"
                 tooltip="evaluations.export.format.pdf"
-                ng-click="exportRecapEval(textMod, printSuiviClasse)">
+                ng-click="exportRecapEval(suiviClasse.textMod, printSuiviClasse, suiviClasse.periode.id_type)">
             <i18n>evaluations.export</i18n>
         </button>
     </div>
