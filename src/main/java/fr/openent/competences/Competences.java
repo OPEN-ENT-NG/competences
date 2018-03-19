@@ -64,16 +64,18 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_COMPETENCE_CREATE = "eval_createCompetence";
     public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
 
-
+    // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
-
     public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
-
     public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
 
+    // Constantes
     public static final Integer MAX_NBR_COMPETENCE = 12;
-
     public static final String VIESCO_BUS_ADDRESS = "viescolaire";
+    public static final Number BFC_AVERAGE_VISIBILITY_NONE = 0;
+    public static final Number BFC_AVERAGE_VISIBILITY_FOR_ADMIN_ONLY = 1;
+    public static final Number BFC_AVERAGE_VISIBILITY_FOR_ALL = 2;
+
 
     @Override
 	public void start() {

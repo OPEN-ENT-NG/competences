@@ -378,7 +378,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                      for(var m = 0; m < $scope.selected.matieres.length; m++){
                          url += "&idMatiere=" + $scope.selected.matieres[m];
                      }
-                     if($scope.search.periode) {
+                     if($scope.search.periode.id_type) {
                          url += "&idPeriode=" + $scope.search.periode.id_type;
                      }
                      url += "&idClasse=" + $scope.search.classe.id;
