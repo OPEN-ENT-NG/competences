@@ -103,14 +103,14 @@ public class ExportPDFController extends ControllerHelper {
      * formant le relevé de notes de l'élève.
      *
      * @param request
-     * @param user l'utilisateur connecté.
-     * @param matieres la liste des matières de l'élève.
+     * @param user        l'utilisateur connecté.
+     * @param matieres    la liste des matières de l'élève.
      * @param classe
      * @param idUsers
      * @param devoirsJson la liste des devoirs et notes de l'élève.
      * @param periodeJson la periode
-     * @param userJson l'élève
-     * @param etabJson l'établissement
+     * @param userJson    l'élève
+     * @param etabJson    l'établissement
      */
     public void getEnseignantsMatieres(final HttpServerRequest request, final UserInfos user, final JsonArray matieres,
                                        final String classe, JsonArray idUsers, final JsonArray devoirsJson,
@@ -128,22 +128,22 @@ public class ExportPDFController extends ControllerHelper {
                 if ("ok".equals(body.getString("status"))) {
                     JsonArray r = body.getArray("results");
 
-                    for(int index = 0; index < matieres.size(); index++) {
+                    for (int index = 0; index < matieres.size(); index++) {
                         JsonObject matiereDevoir = matieres.get(index);
                         matieresArray.add(matiereDevoir.getObject("data").getObject("data"));
                     }
 
-                    for(int i = 0 ; i < devoirsJson.size(); i++){
+                    for (int i = 0; i < devoirsJson.size(); i++) {
                         JsonObject devoir = devoirsJson.get(i);
                         // Récupération de l'enseignant du devoir
                         JsonObject enseignantDevoir = null;
-                        for(int j = 0; j < r.size(); j++) {
+                        for (int j = 0; j < r.size(); j++) {
                             enseignantDevoir = r.get(j);
-                            if(enseignantDevoir.getString("id").equals(devoir.getString("owner"))){
+                            if (enseignantDevoir.getString("id").equals(devoir.getString("owner"))) {
                                 break;
                             }
                         }
-                        if(enseignantDevoir != null) {
+                        if (enseignantDevoir != null) {
                             // Récupération de la matière
                             for (int k = 0; k < matieresArray.size(); k++) {
                                 JsonObject matiereDevoir = matieresArray.get(k);
@@ -151,7 +151,7 @@ public class ExportPDFController extends ControllerHelper {
 
                                 if (matiereDevoir.getString("id").equals(devoir.getString("id_matiere"))) {
                                     String firstNameEnsiegnant = enseignantDevoir.getString("firstName");
-                                    String displayName = firstNameEnsiegnant.substring(0,1) + ".";
+                                    String displayName = firstNameEnsiegnant.substring(0, 1) + ".";
                                     displayName = displayName + enseignantDevoir.getString("name");
 
                                     if (matiereDevoir.getArray("displayNameEnseignant") == null) {
@@ -169,7 +169,6 @@ public class ExportPDFController extends ControllerHelper {
                     }
 
 
-
                     final JsonObject templateProps = new JsonObject();
 
                     templateProps.putArray("matieres", matieresArray);
@@ -180,16 +179,16 @@ public class ExportPDFController extends ControllerHelper {
                     String templateName = "releve-eleve.pdf.xhtml";
 
                     String prefixPdfName = "releve-eleve";
-                    prefixPdfName+= "-" + userJson.getObject("u").getObject("data").getString("displayName");
-                    prefixPdfName+= "-" + userJson.getObject("c").getObject("data").getString("name");
+                    prefixPdfName += "-" + userJson.getObject("u").getObject("data").getString("displayName");
+                    prefixPdfName += "-" + userJson.getObject("c").getObject("data").getString("name");
 
                     String etablissementName = etabJson.getString("name");
                     etablissementName = etablissementName.trim().replaceAll(" ", "-");
-                    prefixPdfName+= "-" + etablissementName;
+                    prefixPdfName += "-" + etablissementName;
 
                     genererPdf(request, templateProps, templateName, prefixPdfName);
 
-                }else{
+                } else {
                     leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                 }
             }
@@ -199,7 +198,7 @@ public class ExportPDFController extends ControllerHelper {
     /**
      * Récupère les devoirs de la matière et les positionnent sur celle ci.
      *
-     * @param devoirsJson la liste de tous les devoirs de l'élève.
+     * @param devoirsJson  la liste de tous les devoirs de l'élève.
      * @param matiereInter la matière dont on cherche les devoirs.
      */
     private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiereInter) {
@@ -216,14 +215,14 @@ public class ExportPDFController extends ControllerHelper {
             devoirJson.putBoolean("hasCoeff", !Double.valueOf(devoirJson.getString("coefficient")).equals(new Double(1)));
 
             // ajout du devoir sur la matiere, si son identifiant de matière correspond bien
-            if(matiereInter.getString("id").equals(devoirJson.getString("id_matiere"))) {
+            if (matiereInter.getString("id").equals(devoirJson.getString("id_matiere"))) {
                 devoirsMatiereJson.add(devoirJson);
                 Double note = Double.valueOf(devoirJson.getString("note"));
                 Double diviseur = Double.valueOf(devoirJson.getInteger("diviseur"));
                 Boolean ramenerSur = devoirJson.getBoolean("ramener_sur");
                 Double coefficient = Double.valueOf(devoirJson.getString("coefficient"));
 
-                NoteDevoir noteDevoir = new NoteDevoir(note,diviseur,ramenerSur,coefficient);
+                NoteDevoir noteDevoir = new NoteDevoir(note, diviseur, ramenerSur, coefficient);
                 listeNoteDevoirs.add(noteDevoir);
             }
         }
@@ -232,7 +231,7 @@ public class ExportPDFController extends ControllerHelper {
         boolean hasDevoirs = !listeNoteDevoirs.isEmpty();
         matiereInter.putBoolean("hasDevoirs", hasDevoirs);
 
-        if(hasDevoirs) {
+        if (hasDevoirs) {
             // calcul de la moyenne de l'eleve pour la matiere
             JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, false, 20);// TODO recuper le diviseur de la matiere
             // ajout sur l'objet json
@@ -242,21 +241,20 @@ public class ExportPDFController extends ControllerHelper {
 
     /**
      * Genere le releve d'un eleve sous forme de PDF
-     *
      */
     @Get("/releve/pdf")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getReleveEleve(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
-                if(user != null){
+                if (user != null) {
 
                     // parametres de l'url
                     final MultiMap params = request.params();
 
                     final Long idPeriode;
-                    if(params.get("idPeriode")!= null) {
+                    if (params.get("idPeriode") != null) {
                         try {
                             idPeriode = Long.parseLong(params.get("idPeriode"));
                         } catch (NumberFormatException e) {
@@ -264,8 +262,7 @@ public class ExportPDFController extends ControllerHelper {
                             badRequest(request, e.getMessage());
                             return;
                         }
-                    }
-                    else{
+                    } else {
                         idPeriode = null;
                     }
 
@@ -277,11 +274,11 @@ public class ExportPDFController extends ControllerHelper {
                     // le parent connecte essaie bien d'acceder au releve d'un de ses eleves
 
                     // récupération de l'élève
-                    utilsService.getInfoEleve(idUser, new Handler<Either<String,JsonObject>>() {
+                    utilsService.getInfoEleve(idUser, new Handler<Either<String, JsonObject>>() {
 
                         @Override
                         public void handle(Either<String, JsonObject> eventUser) {
-                            if(eventUser.isRight()) {
+                            if (eventUser.isRight()) {
                                 final JsonObject userJSON = eventUser.right().getValue();
 
                                 final String classeEleve = userJSON.getObject("u").getObject("data").getArray("classes").get(0);
@@ -290,13 +287,13 @@ public class ExportPDFController extends ControllerHelper {
                                 devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode, new Handler<Either<String, JsonArray>>() {
                                     @Override
                                     public void handle(final Either<String, JsonArray> eventListDevoirs) {
-                                        if(eventListDevoirs.isRight()){
+                                        if (eventListDevoirs.isRight()) {
 
                                             // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
                                             final JsonArray devoirsJSON = eventListDevoirs.right().getValue();
                                             final JsonArray idMatieres = new JsonArray();
                                             final JsonArray idEnseignants = new JsonArray();
-                                            for (int i=0; i < devoirsJSON.size(); i++){
+                                            for (int i = 0; i < devoirsJSON.size(); i++) {
                                                 JsonObject devoir = devoirsJSON.get(i);
                                                 idMatieres.add(devoir.getValue("id_matiere"));
                                                 idEnseignants.add(devoir.getValue("owner"));
@@ -319,23 +316,23 @@ public class ExportPDFController extends ControllerHelper {
                                                         JsonObject f = new JsonObject();
                                                         final JsonArray matieres = r;
 
-                                                        for(int i = 0; i < r.size(); i++){
+                                                        for (int i = 0; i < r.size(); i++) {
                                                             JsonObject o = r.get(i);
-                                                            key = classeEleve+"$"+o.getString("externalId");
+                                                            key = classeEleve + "$" + o.getString("externalId");
                                                             classesFieldOfStudy.add(key);
                                                         }
 
 
                                                         // recuperation etablissement
-                                                        utilsService.getStructure(idEtablissement, new Handler<Either<String,JsonObject>>() {
+                                                        utilsService.getStructure(idEtablissement, new Handler<Either<String, JsonObject>>() {
 
                                                             @Override
                                                             public void handle(Either<String, JsonObject> eventStructure) {
-                                                                if(eventStructure.isRight()) {
+                                                                if (eventStructure.isRight()) {
                                                                     final JsonObject etabJSON = eventStructure.right().getValue().getObject("s").getObject("data");
-                                                                    final JsonObject periodeJSON= new JsonObject();
+                                                                    final JsonObject periodeJSON = new JsonObject();
 
-                                                                    if(null != params.get("idTypePeriode")
+                                                                    if (null != params.get("idTypePeriode")
                                                                             && null != params.get("ordrePeriode")) {
                                                                         final Long idTypePeriode =
                                                                                 Long.parseLong(params.get("idTypePeriode"));
@@ -351,7 +348,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         I18n.acceptLanguage(request));
                                                                         libellePeriode += (" " + ordrePeriode);
                                                                         periodeJSON.putString("libelle", libellePeriode);
-                                                                    }else {
+                                                                    } else {
                                                                         // Construction de la période année
                                                                         periodeJSON.putString("libelle", "Ann\u00E9e");
                                                                     }
@@ -364,14 +361,13 @@ public class ExportPDFController extends ControllerHelper {
                                                         }); // fin getPeriode
 
 
-
-                                                    }else{
+                                                    } else {
                                                         leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                                     }
                                                 }
                                             });
 
-                                        }else{
+                                        } else {
                                             leftToResponse(request, eventListDevoirs.left());
                                         }
 
@@ -380,7 +376,7 @@ public class ExportPDFController extends ControllerHelper {
                             }
                         }
                     }); // fin récupération élève
-                }else{
+                } else {
                     unauthorized(request);
                 }
             }
@@ -393,17 +389,16 @@ public class ExportPDFController extends ControllerHelper {
      * Les Eleves sont pret lorsque la fonction <code>Eleve.isReady()</code> renvoit true. Dans le cas
      * contraire, la fonction s'arrete en retournant null.
      *
-     * @param classe  La liste des Eleves de la classe.
-     * @return        Un JsonArray contenant les JsonObject de tous les Eleves de la classe; null si un
-     *                Eleve n'est pas pret.
-     *
+     * @param classe La liste des Eleves de la classe.
+     * @return Un JsonArray contenant les JsonObject de tous les Eleves de la classe; null si un
+     * Eleve n'est pas pret.
      * @see Eleve
      */
     private JsonArray formatBFC(List<Eleve> classe) {
         JsonArray result = new JsonArray();
 
-        for(Eleve eleve : classe) {
-            if(!eleve.isReady()) {
+        for (Eleve eleve : classe) {
+            if (!eleve.isReady()) {
                 return null;
             }
             result.addObject(eleve.toJson());
@@ -417,10 +412,10 @@ public class ExportPDFController extends ControllerHelper {
      * renseignees dans <code>collection</code>, assemble tous JsonObject au sein d'un JsonArray qui sera fournit
      * au handler.
      *
-     * @param key         Identifiant de la classe a ajoute dans <code>collection</code>.
-     * @param value       JsonObject de la classe a ajoute dans <code>collection</code>.
-     * @param collection  Map des JsonObject de toutes les classes, indexant par leur identifiant.
-     * @param handler     Handler manipulant le JsonArray lorsque celui-ci est assemble.
+     * @param key        Identifiant de la classe a ajoute dans <code>collection</code>.
+     * @param value      JsonObject de la classe a ajoute dans <code>collection</code>.
+     * @param collection Map des JsonObject de toutes les classes, indexant par leur identifiant.
+     * @param handler    Handler manipulant le JsonArray lorsque celui-ci est assemble.
      */
     private void collectBFCEleve(String key, JsonObject value, Map<String, JsonObject> collection, Handler<Either<String, JsonArray>> handler) {
         if (!collection.values().contains(null)) {
@@ -434,7 +429,7 @@ public class ExportPDFController extends ControllerHelper {
         // leur JsonObject.
         if (!collection.values().contains(null)) {
             JsonArray result = new JsonArray();
-            for(JsonObject classe : collection.values()) {
+            for (JsonObject classe : collection.values()) {
                 result.addObject(classe);
             }
             handler.handle(new Either.Right<String, JsonArray>(result));
@@ -448,12 +443,11 @@ public class ExportPDFController extends ControllerHelper {
      * Eleve de la classe, puis appelle {@link #collectBFCEleve(String, JsonObject, Map, Handler) collectBFCEleve} avec son propre
      * handler afin de renseigner une reponse si la classe est prete a etre exporter.
      *
-     * @param classes      L'ensemble des Eleves, rassembles par classe et indexant en fonction de l'identifiant de la
-     *                     classe
-     * @param idStructure  L'identifiant de la structure. Necessaire afin de recuperer l'echelle de conversion.0
-     * @param idPeriode    L'identifiant de la periode pour laquelle on souhaite recuperer le BFC.
-     * @param handler      Handler contenant le BFC final.
-     *
+     * @param classes     L'ensemble des Eleves, rassembles par classe et indexant en fonction de l'identifiant de la
+     *                    classe
+     * @param idStructure L'identifiant de la structure. Necessaire afin de recuperer l'echelle de conversion.0
+     * @param idPeriode   L'identifiant de la periode pour laquelle on souhaite recuperer le BFC.
+     * @param handler     Handler contenant le BFC final.
      * @see Eleve
      */
     private void getBFCParClasse(final Map<String, List<Eleve>> classes, final String idStructure, Long idPeriode, final Handler<Either<String, JsonArray>> handler) {
@@ -464,7 +458,7 @@ public class ExportPDFController extends ControllerHelper {
 
         // La map result avec les identifiants des classes, contenus dans "classes", afin de s'assurer qu'aucune ne
         // manque.
-        for(String s : classes.keySet()) {
+        for (String s : classes.keySet()) {
             result.put(s, null);
         }
 
@@ -476,15 +470,15 @@ public class ExportPDFController extends ControllerHelper {
             final List<String> idEleves = new ArrayList<>();
 
             // La liste des identifiants des Eleves de la classe est necessaire pour "buildBFC"
-            for(Eleve e : classe.getValue()) {
+            for (Eleve e : classe.getValue()) {
                 idEleves.add(e.getIdEleve());
             }
 
             competenceNoteService.getConversionNoteCompetence(idStructure, classe.getKey(), new Handler<Either<String, JsonArray>>() {
                 @Override
                 public void handle(Either<String, JsonArray> event) {
-                    if(event.isRight()) {
-                        if(event.right().getValue().size() == 0) {
+                    if (event.isRight()) {
+                        if (event.right().getValue().size() == 0) {
                             collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation de l'échelle de conversion pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucune echelle de conversion pour cette classe."), result, handler);
                             log.error("getBFC : getConversionNoteCompetence (" + idStructure + ", " + classe.getKey() + ") : aucune echelle de conversion pour cette classe.");
                         }
@@ -492,7 +486,7 @@ public class ExportPDFController extends ControllerHelper {
                             JsonObject _o = event.right().getValue().get(i);
                             libelleEchelle.put(_o.getInteger("ordre"), _o.getString("libelle"));
                         }
-                        for(Eleve e : classe.getValue()) {
+                        for (Eleve e : classe.getValue()) {
                             e.setLibelleNiveau(libelleEchelle);
                         }
                         JsonArray classeResult = formatBFC(classe.getValue());
@@ -510,7 +504,7 @@ public class ExportPDFController extends ControllerHelper {
                 @Override
                 public void handle(Either<String, JsonArray> event) {
                     if (event.isRight()) {
-                        if(event.right().getValue().size() == 0) {
+                        if (event.right().getValue().size() == 0) {
                             collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des domaines pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucun domaine racine pour cette classe."), result, handler);
                             log.error("getBFC : getDomainesRacines (" + classe.getKey() + ") : aucun domaine racine pour cette classe.");
                         }
@@ -537,14 +531,14 @@ public class ExportPDFController extends ControllerHelper {
                 }
             });
 
-            bfcService.buildBFC(false, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode,null, new Handler<Either<String, JsonObject>>(){
+            bfcService.buildBFC(false, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, null, new Handler<Either<String, JsonObject>>() {
                 @Override
-                public void handle(final Either<String, JsonObject> event){
+                public void handle(final Either<String, JsonObject> event) {
                     if (event.isRight()) {
                         JsonArray resultats = event.right().getValue().getArray(idEleves.get(0));
-                        Map<Long, Integer> resultEleves  = new HashMap<>();
-                        for (Object resultat : resultats){
-                            resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), (Integer)((JsonObject) resultat).getNumber("niveau"));
+                        Map<Long, Integer> resultEleves = new HashMap<>();
+                        for (Object resultat : resultats) {
+                            resultEleves.put((Long) ((JsonObject) resultat).getNumber("idDomaine"), (Integer) ((JsonObject) resultat).getNumber("niveau"));
                         }
                         resultatsEleves.put(idEleves.get(0), resultEleves);
                         for (Eleve e : classe.getValue()) {
@@ -567,8 +561,8 @@ public class ExportPDFController extends ControllerHelper {
      * Recupere l'identifiant de la structure a laquelle appartiennent les classes dont l'identifiant est passe en
      * parametre.
      *
-     * @param idClasses  Tableau contenant l'identifiant des classes dont on souhaite connaitre la structure.
-     * @param handler    Handler contenant l'identifiant de la structure.
+     * @param idClasses Tableau contenant l'identifiant des classes dont on souhaite connaitre la structure.
+     * @param handler   Handler contenant l'identifiant de la structure.
      */
     private void getStructClasses(String[] idClasses, final Handler<Either<String, String>> handler) {
         JsonObject action = new JsonObject()
@@ -582,16 +576,16 @@ public class ExportPDFController extends ControllerHelper {
 
                 if ("ok".equals(body.getString("status"))) {
                     JsonArray queryResult = body.getArray("results");
-                    if(queryResult.size() == 0) {
+                    if (queryResult.size() == 0) {
                         handler.handle(new Either.Left<String, String>("Aucune classe n'a ete trouvee."));
                         log.error("getStructClasses : No classes found with these ids");
-                    } else if(queryResult.size() > 1) {
+                    } else if (queryResult.size() > 1) {
                         // Il est impossible de demander un BFC pour des classes n'appartenant pas au meme etablissement.
                         handler.handle(new Either.Left<String, String>("Les classes n'appartiennent pas au meme etablissement."));
                         log.error("getStructClasses : provided classes are not from the same structure.");
                     } else {
                         JsonObject structure = queryResult.get(0);
-                        handler.handle(new Either.Right<String,  String>(structure.getString("idStructure")));
+                        handler.handle(new Either.Right<String, String>(structure.getString("idStructure")));
                     }
                 } else {
                     handler.handle(new Either.Left<String, String>(body.getString("message")));
@@ -604,8 +598,8 @@ public class ExportPDFController extends ControllerHelper {
     /**
      * Recupere l'identifiant de l'ensemble des classes de la structure dont l'identifiant est passe en parametre.
      *
-     * @param idStructure  Identifiant de la structure dont on souhaite recuperer les classes.
-     * @param handler      Handler contenant la liste des identifiants des classes recuperees.
+     * @param idStructure Identifiant de la structure dont on souhaite recuperer les classes.
+     * @param handler     Handler contenant la liste des identifiants des classes recuperees.
      */
     private void getClassesStruct(final String idStructure, final Handler<Either<String, List<String>>> handler) {
         JsonObject action = new JsonObject()
@@ -636,8 +630,8 @@ public class ExportPDFController extends ControllerHelper {
     /**
      * Recupere l'identifiant de l'ensemble des eleves de la classe dont l'identifiant est passe en parametre.
      *
-     * @param idClasses  Identifiant de la classe dont on souhaite recuperer les eleves.
-     * @param handler    Handler contenant la liste des identifiants des eleves recuperees.
+     * @param idClasses Identifiant de la classe dont on souhaite recuperer les eleves.
+     * @param handler   Handler contenant la liste des identifiants des eleves recuperees.
      */
     private void getElevesClasses(String[] idClasses, final Handler<Either<String, Map<String, List<String>>>> handler) {
         JsonObject action = new JsonObject()
@@ -654,7 +648,7 @@ public class ExportPDFController extends ControllerHelper {
                     JsonArray queryResult = body.getArray("results");
                     for (int i = 0; i < queryResult.size(); i++) {
                         JsonObject eleve = queryResult.get(i);
-                        if(!result.containsKey(eleve.getString("idClasse"))) {
+                        if (!result.containsKey(eleve.getString("idClasse"))) {
                             result.put(eleve.getString("idClasse"), new ArrayList<String>());
                         }
                         result.get(eleve.getString("idClasse")).add(eleve.getString("idEleve"));
@@ -672,10 +666,9 @@ public class ExportPDFController extends ControllerHelper {
      * Recupere les informations relatives a chaque eleve dont l'identifiant est passe en parametre, et cree un objet
      * Eleve correspondant a cet eleve.
      *
-     * @param idEleves  Tableau contenant les identifiants des eleves dont on souhaite recuperer les informations.
-     * @param handler   Handler contenant la liste des objets Eleve ainsi construit,
-     *                  ou un erreur potentiellement survenue.
-     *
+     * @param idEleves Tableau contenant les identifiants des eleves dont on souhaite recuperer les informations.
+     * @param handler  Handler contenant la liste des objets Eleve ainsi construit,
+     *                 ou un erreur potentiellement survenue.
      * @see Eleve
      */
     private void getInfoEleve(String[] idEleves, final Handler<Either<String, List<Eleve>>> handler) {
@@ -706,12 +699,12 @@ public class ExportPDFController extends ControllerHelper {
                     utilsService.getCycle(new ArrayList<>(classes), new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> event) {
-                            if(event.isRight()) {
+                            if (event.isRight()) {
                                 JsonArray queryResult = event.right().getValue();
                                 for (int i = 0; i < queryResult.size(); i++) {
                                     JsonObject cycle = queryResult.get(i);
-                                    for(Eleve eleve : result) {
-                                        if(Objects.equals(eleve.getIdClasse(), cycle.getString("id_groupe"))) {
+                                    for (Eleve eleve : result) {
+                                        if (Objects.equals(eleve.getIdClasse(), cycle.getString("id_groupe"))) {
                                             eleve.setCycle(cycle.getString("libelle"));
                                         }
                                     }
@@ -736,10 +729,10 @@ public class ExportPDFController extends ControllerHelper {
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul l'identifiant de la
      * structure est fourni.
      *
-     * @param idStructure  Identifiant de la structure dont on souhaite generer le BFC.
-     * @param handler      Handler contenant les listes des eleves, indexees par classes.
+     * @param idStructure Identifiant de la structure dont on souhaite generer le BFC.
+     * @param handler     Handler contenant les listes des eleves, indexees par classes.
      */
-    private void getParamStruct(final String idStructure,  final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
+    private void getParamStruct(final String idStructure, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
 
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
         population.put(idStructure, new LinkedHashMap<String, List<Eleve>>());
@@ -758,11 +751,11 @@ public class ExportPDFController extends ControllerHelper {
                                     getInfoEleve(classe.getValue().toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
                                         @Override
                                         public void handle(Either<String, List<Eleve>> event) {
-                                            if(event.isRight()) {
+                                            if (event.isRight()) {
                                                 population.get(idStructure).put(classe.getKey(), event.right().getValue());
                                                 // Si population.get(idStructure).values() contient une valeur null,
                                                 // cela signifie qu'une classe n'a pas encore recupere sa liste d'eleves
-                                                if(!population.get(idStructure).values().contains(null)) {
+                                                if (!population.get(idStructure).values().contains(null)) {
                                                     handler.handle(new Either.Right<String, Map<String, Map<String, List<Eleve>>>>(population));
                                                 }
                                             } else {
@@ -790,8 +783,8 @@ public class ExportPDFController extends ControllerHelper {
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul des identifiants de classes
      * sont fournis.
      *
-     * @param idClasses  Identifiants des classes dont on souhaite generer le BFC.
-     * @param handler    Handler contenant les listes des eleves, indexees par classes.
+     * @param idClasses Identifiants des classes dont on souhaite generer le BFC.
+     * @param handler   Handler contenant les listes des eleves, indexees par classes.
      */
     private void getParamClasses(final List<String> idClasses, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
@@ -799,7 +792,7 @@ public class ExportPDFController extends ControllerHelper {
         getStructClasses(idClasses.toArray(new String[0]), new Handler<Either<String, String>>() {
             @Override
             public void handle(Either<String, String> event) {
-                if(event.isRight()) {
+                if (event.isRight()) {
                     final String idStructure = event.right().getValue();
                     population.put(idStructure, new LinkedHashMap<String, List<Eleve>>());
 
@@ -844,8 +837,8 @@ public class ExportPDFController extends ControllerHelper {
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul des identifiants d'eleves
      * sont fournis.
      *
-     * @param idEleves  Identifiants des eleves dont on souhaite generer le BFC.
-     * @param handler   Handler contenant les listes des eleves, indexees par classes.
+     * @param idEleves Identifiants des eleves dont on souhaite generer le BFC.
+     * @param handler  Handler contenant les listes des eleves, indexees par classes.
      */
     private void getParamEleves(final List<String> idEleves, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
@@ -853,10 +846,10 @@ public class ExportPDFController extends ControllerHelper {
         getInfoEleve(idEleves.toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
             @Override
             public void handle(Either<String, List<Eleve>> event) {
-                if(event.isRight()) {
+                if (event.isRight()) {
                     final Map<String, List<Eleve>> classes = new LinkedHashMap<>();
-                    for(Eleve e : event.right().getValue()) {
-                        if(!classes.containsKey(e.getIdClasse())) {
+                    for (Eleve e : event.right().getValue()) {
+                        if (!classes.containsKey(e.getIdClasse())) {
                             classes.put(e.getIdClasse(), new ArrayList<Eleve>());
                         }
                         classes.get(e.getIdClasse()).add(e);
@@ -864,7 +857,7 @@ public class ExportPDFController extends ControllerHelper {
                     getStructClasses(classes.keySet().toArray(new String[0]), new Handler<Either<String, String>>() {
                         @Override
                         public void handle(Either<String, String> event) {
-                            if(event.isRight()) {
+                            if (event.isRight()) {
                                 population.put(event.right().getValue(), classes);
                                 handler.handle(new Either.Right<String, Map<String, Map<String, List<Eleve>>>>(population));
                             } else {
@@ -889,10 +882,10 @@ public class ExportPDFController extends ControllerHelper {
      * Appelle {@link #getParamClasses(List, Handler)} si seuls les identifiants de classes sont fournis.
      * Appelle {@link #getParamEleves(List, Handler)} si seuls les identifiants d'eleves sont fournis.
      *
-     * @param idStructure  Identifiant de la structure dont on souhaite generer le BFC.
-     * @param idClasses    Identifiants des classes dont on souhaite generer le BFC.
-     * @param idEleves     Identifiants des eleves dont on souhaite generer le BFC.
-     * @param handler      Handler contenant les listes des eleves, indexees par classes.
+     * @param idStructure Identifiant de la structure dont on souhaite generer le BFC.
+     * @param idClasses   Identifiants des classes dont on souhaite generer le BFC.
+     * @param idEleves    Identifiants des eleves dont on souhaite generer le BFC.
+     * @param handler     Handler contenant les listes des eleves, indexees par classes.
      */
     private void getParamBFC(final String idStructure, final List<String> idClasses, final List<String> idEleves, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
 
@@ -900,7 +893,7 @@ public class ExportPDFController extends ControllerHelper {
             getParamStruct(idStructure, new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                 @Override
                 public void handle(Either<String, Map<String, Map<String, List<Eleve>>>> event) {
-                    if(event.isRight()) {
+                    if (event.isRight()) {
                         handler.handle(new Either.Right<String, Map<String, Map<String, List<Eleve>>>>(event.right().getValue()));
                     } else {
                         handler.handle(new Either.Left<String, Map<String, Map<String, List<Eleve>>>>(event.left().getValue()));
@@ -947,7 +940,7 @@ public class ExportPDFController extends ControllerHelper {
      * @param request
      */
     @Get("/BFC/pdf")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getBFCEleve(final HttpServerRequest request) {
 
         final String idStructure = request.params().get("idStructure");
@@ -956,25 +949,25 @@ public class ExportPDFController extends ControllerHelper {
         final Long idPeriode = (request.params().get("idPeriode") != null) ? Long.valueOf(request.params().get("idPeriode")) : null;
 
         // Ou exclusif sur la presence des parametres, de facon a s'assurer qu'un seul soit renseigne.
-        if(idStructure != null ^ !idClasses.isEmpty() ^ !idEleves.isEmpty()) {
+        if (idStructure != null ^ !idClasses.isEmpty() ^ !idEleves.isEmpty()) {
 
             getParamBFC(idStructure, idClasses, idEleves, new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                 @Override
                 public void handle(Either<String, Map<String, Map<String, List<Eleve>>>> event) {
-                    if(event.isRight()) {
+                    if (event.isRight()) {
                         final String idStructureGot = event.right().getValue().entrySet().iterator().next().getKey();
                         final Map<String, List<Eleve>> classes = event.right().getValue().entrySet().iterator().next().getValue();
 
                         getBFCParClasse(classes, idStructureGot, idPeriode, new Handler<Either<String, JsonArray>>() {
                             @Override
                             public void handle(Either<String, JsonArray> event) {
-                                if(event.isRight()) {
+                                if (event.isRight()) {
                                     final JsonObject result = new JsonObject().putArray("classes", event.right().getValue());
-                                    if(idStructure != null) {
+                                    if (idStructure != null) {
                                         utilsService.getNameEntity(new String[]{idStructureGot}, new Handler<Either<String, JsonArray>>() {
                                             @Override
                                             public void handle(Either<String, JsonArray> event) {
-                                                if(event.isRight()) {
+                                                if (event.isRight()) {
                                                     final String structureName = ((JsonObject) event.right().getValue().get(0)).getString("name").replace(" ", "_");
                                                     generateBFCExport(result, idPeriode, structureName, request);
                                                 } else {
@@ -1036,7 +1029,7 @@ public class ExportPDFController extends ControllerHelper {
         }
     }
 
-    private void generateBFCExport (final JsonObject result, Long idPeriode, final String fileNamePrefix, final HttpServerRequest request) {
+    private void generateBFCExport(final JsonObject result, Long idPeriode, final String fileNamePrefix, final HttpServerRequest request) {
         if (idPeriode != null) {
             JsonObject jsonRequest = new JsonObject()
                     .putObject("headers", new JsonObject().putString("Accept-Language",
@@ -1069,16 +1062,17 @@ public class ExportPDFController extends ControllerHelper {
 
     /**
      * Generation d'un PDF à partir d'un template xhtml
+     *
      * @param request
      * @param templateProps objet JSON contenant l'ensemble des valeurs à remplir dans le template
-     * @param templateName nom du template
+     * @param templateName  nom du template
      * @param prefixPdfName prefixe du nom du pdf (qui sera complété de la date de génération)
      */
     private void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
                             final String prefixPdfName) {
 
         final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
-        if(templateProps.containsField("image") && templateProps.getBoolean("image")) {
+        if (templateProps.containsField("image") && templateProps.getBoolean("image")) {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation Image du template " + templateName);
         } else {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation PDF du template " + templateName);
@@ -1114,7 +1108,7 @@ public class ExportPDFController extends ControllerHelper {
                         String processedTemplate = ((StringWriter) writer).getBuffer().toString();
                         if (processedTemplate == null) {
                             badRequest(request, "Error while processing.");
-                            if(templateProps != null) {
+                            if (templateProps != null) {
                                 log.error("processing error : \ntemplateProps : " + templateProps.toString()
                                         + "\ntemplateName : " + templateName);
                             }
@@ -1142,7 +1136,7 @@ public class ExportPDFController extends ControllerHelper {
                                 }
                                 byte[] pdf = pdfResponse.getBinary("content");
 
-                                if(templateProps.containsField("image") && templateProps.getBoolean("image")){
+                                if (templateProps.containsField("image") && templateProps.getBoolean("image")) {
                                     File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
                                     OutputStream outStream = null;
                                     try {
@@ -1159,7 +1153,7 @@ public class ExportPDFController extends ControllerHelper {
                                     try {
                                         String sourceDir = pdfFile.getAbsolutePath();
                                         File sourceFile = new File(sourceDir);
-                                        while(!sourceFile.exists()){
+                                        while (!sourceFile.exists()) {
                                             System.err.println(sourceFile.getName() + " File does not exist");
                                         }
                                         if (sourceFile.exists()) {
@@ -1169,7 +1163,7 @@ public class ExportPDFController extends ControllerHelper {
                                             File imageFile = null;
                                             for (PDPage page : list) {
                                                 BufferedImage image = page.convertToImage();
-                                                int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences"))*50;
+                                                int height = 150 + Integer.parseInt(templateProps.getString("nbrCompetences")) * 50;
                                                 BufferedImage SubImage = image.getSubimage(0, 0, 1684, height);
                                                 imageFile = new File(prefixPdfName + "_" + dateDebut + ".jpg");
                                                 ImageIO.write(SubImage, "jpg", imageFile);
@@ -1177,14 +1171,14 @@ public class ExportPDFController extends ControllerHelper {
                                             document.close();
                                             FileInputStream fis = new FileInputStream(imageFile);
                                             ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                            byte[] buf = new byte[(int)imageFile.length()];
-                                            for (int readNum; (readNum = fis.read(buf)) != -1;) {
+                                            byte[] buf = new byte[(int) imageFile.length()];
+                                            for (int readNum; (readNum = fis.read(buf)) != -1; ) {
                                                 bos.write(buf, 0, readNum);
                                             }
                                             byte[] bytes = bos.toByteArray();
 
                                             request.response().putHeader("Content-Type", "image/jpg");
-                                            request.response().putHeader("Content-Disposition","attachment; filename="+prefixPdfName+"_"+dateDebut+".jpg");
+                                            request.response().putHeader("Content-Disposition", "attachment; filename=" + prefixPdfName + "_" + dateDebut + ".jpg");
                                             request.response().end(new Buffer(bytes));
                                             outStream.close();
                                             bos.close();
@@ -1200,7 +1194,7 @@ public class ExportPDFController extends ControllerHelper {
                                 } else {
                                     request.response().putHeader("Content-Type", "application/pdf");
                                     request.response().putHeader("Content-Disposition",
-                                            "attachment; filename="+prefixPdfName+"_"+dateDebut+".pdf");
+                                            "attachment; filename=" + prefixPdfName + "_" + dateDebut + ".pdf");
                                     request.response().end(new Buffer(pdf));
                                     log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation PDF du template " + templateName);
                                 }
@@ -1215,15 +1209,15 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     @Get("/devoirs/print/:idDevoir/formsaisie")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
-    public void getFormsaisi(final HttpServerRequest request){
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getFormsaisi(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
-                if(user != null) {
+                if (user != null) {
                     MultiMap params = request.params();
                     final Long idDevoir;
-                    if (params.get("idDevoir") != null ) {
+                    if (params.get("idDevoir") != null) {
                         try {
                             idDevoir = Long.parseLong(params.get("idDevoir"));
                         } catch (NumberFormatException e) {
@@ -1237,13 +1231,13 @@ public class ExportPDFController extends ControllerHelper {
                         devoirService.getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
                             @Override
                             public void handle(final Either<String, JsonObject> devoirInfo) {
-                                if(devoirInfo.isRight()){
+                                if (devoirInfo.isRight()) {
 
                                     final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
                                     result.putString("devoirName", devoirInfos.getString("name"));
                                     result.putString("devoirCoefficient", devoirInfos.getString("coefficient"));
                                     result.putNumber("devoirDiviseur", devoirInfos.getLong("diviseur"));
-                                    result.putBoolean("evaluation",devoirInfos.getBoolean("is_evaluated"));
+                                    result.putBoolean("evaluation", devoirInfos.getBoolean("is_evaluated"));
 
                                     JsonObject jsonRequest = new JsonObject()
                                             .putObject("headers", new JsonObject().putString("Accept-Language",
@@ -1295,69 +1289,69 @@ public class ExportPDFController extends ControllerHelper {
                                                                             JsonObject body = message.body();
                                                                             if ("ok".equals(body.getString("status"))) {
                                                                                 result.putString("classeName", body.getObject("result").getObject("c").getObject("data").getString("name"));
-                                                                                if(devoirInfos.getBoolean("is_evaluated") == true){
-                                                                                    Integer nbrColone = (devoirInfos.getInteger("nbrcompetence") + 1 );
-                                                                                    result.putString("nbrCompetences",nbrColone.toString());
-                                                                                }else{
-                                                                                    result.putString("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString());
+                                                                                if (devoirInfos.getBoolean("is_evaluated") == true) {
+                                                                                    Integer nbrColone = (devoirInfos.getInteger("nbrcompetence") + 1);
+                                                                                    result.putString("nbrCompetences", nbrColone.toString());
+                                                                                } else {
+                                                                                    result.putString("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
                                                                                 }
 
-                                                                                if(devoirInfos.getInteger("nbrcompetence") > 0) {
+                                                                                if (devoirInfos.getInteger("nbrcompetence") > 0) {
                                                                                     competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
                                                                                         @Override
                                                                                         public void handle(Either<String, JsonArray> CompetencesObject) {
-                                                                                            if(CompetencesObject.isRight()){
-                                                                                                JsonArray  CompetencesOld = CompetencesObject.right().getValue();
-                                                                                                JsonArray  CompetencesNew = new JsonArray();
-                                                                                                Integer size =0;
+                                                                                            if (CompetencesObject.isRight()) {
+                                                                                                JsonArray CompetencesOld = CompetencesObject.right().getValue();
+                                                                                                JsonArray CompetencesNew = new JsonArray();
+                                                                                                Integer size = 0;
                                                                                                 Double ligne = new Double(0);
                                                                                                 Integer lenght = 103; // le nombre de caractére max dans une ligne
                                                                                                 Double height = new Double(2.2); // la hauteur d'une ligne
-                                                                                                for (int i=0 ; i < CompetencesOld.size() ; i++) {
+                                                                                                for (int i = 0; i < CompetencesOld.size(); i++) {
                                                                                                     JsonObject Comp = CompetencesOld.get(i);
-                                                                                                    size = Comp.getString("nom").length() +10; // +10 pour "[ Cx ]"
-                                                                                                    ligne += (Integer) size / lenght ;
-                                                                                                    if(size%lenght > 0 ){
+                                                                                                    size = Comp.getString("nom").length() + 10; // +10 pour "[ Cx ]"
+                                                                                                    ligne += (Integer) size / lenght;
+                                                                                                    if (size % lenght > 0) {
                                                                                                         ligne++;
                                                                                                     }
-                                                                                                    Comp.putNumber("i", i+1);
+                                                                                                    Comp.putNumber("i", i + 1);
                                                                                                     CompetencesNew.addObject(Comp);
                                                                                                 }
 
                                                                                                 ligne = (ligne * height) + 6; // + 6 la hauteur de la 1 ligne du tableau
-                                                                                                if( ligne < 25){ // 25 est la hauteure minimal
-                                                                                                    ligne = Double.parseDouble("25") ;
+                                                                                                if (ligne < 25) { // 25 est la hauteure minimal
+                                                                                                    ligne = Double.parseDouble("25");
                                                                                                 }
-                                                                                                result.putString("ligne", ligne.toString()+"%");
-                                                                                                if(CompetencesNew.size() > 0){
-                                                                                                    result.putBoolean("hasCompetences",true);
-                                                                                                }else{
-                                                                                                    result.putBoolean("hasCompetences",false);
+                                                                                                result.putString("ligne", ligne.toString() + "%");
+                                                                                                if (CompetencesNew.size() > 0) {
+                                                                                                    result.putBoolean("hasCompetences", true);
+                                                                                                } else {
+                                                                                                    result.putBoolean("hasCompetences", false);
                                                                                                 }
-                                                                                                result.putArray("competences",CompetencesNew);
-                                                                                                genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie");
-                                                                                            }else{
+                                                                                                result.putArray("competences", CompetencesNew);
+                                                                                                genererPdf(request, result, "Devoir.saisie.xhtml", "Formulaire_saisie");
+                                                                                            } else {
                                                                                                 log.error("Error :can not get competences devoir ");
                                                                                                 badRequest(request, "Error :can not get competences devoir ");
                                                                                             }
                                                                                         }
                                                                                     });
-                                                                                }else{
-                                                                                    genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie");
+                                                                                } else {
+                                                                                    genererPdf(request, result, "Devoir.saisie.xhtml", "Formulaire_saisie");
                                                                                 }
-                                                                            }else{
+                                                                            } else {
                                                                                 log.error("Error :can not get classe informations ");
                                                                                 badRequest(request, "Error :can not get  classe informations");
                                                                             }
                                                                         }
                                                                     });
-                                                                }else{
+                                                                } else {
                                                                     log.error("Error :can not get classe info ");
                                                                     badRequest(request, "Error :can not get  classe info  ");
                                                                 }
                                                             }
                                                         });
-                                                    }else{
+                                                    } else {
                                                         log.error("Error :can not get students ");
                                                         badRequest(request, "Error :can not get students  ");
                                                     }
@@ -1365,33 +1359,34 @@ public class ExportPDFController extends ControllerHelper {
                                             });
                                         }
                                     });
-                                }else{
+                                } else {
                                     log.error("Error :can not get informations from postgres tables ");
                                     badRequest(request, "Error :can not get informations from postgres tables ");
                                 }
                             }
                         });
-                    } else{
+                    } else {
                         log.error("Error : idDevoir must be a long object");
-                        badRequest(request,"Error : idDevoir must be a long object");
+                        badRequest(request, "Error : idDevoir must be a long object");
                     }
-                }else{
+                } else {
                     unauthorized(request);
                 }
 
-            }});
+            }
+        });
     }
 
     @Get("/devoirs/print/:idDevoir/cartouche")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getCartouche(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
-                if(user != null){
+                if (user != null) {
                     MultiMap params = request.params();
                     final Long idDevoir;
-                    if(params.get("idDevoir")!= null ) {
+                    if (params.get("idDevoir") != null) {
                         try {
                             idDevoir = Long.parseLong(params.get("idDevoir"));
                         } catch (NumberFormatException e) {
@@ -1409,23 +1404,23 @@ public class ExportPDFController extends ControllerHelper {
                             badRequest(request, e.getMessage());
                             return;
                         }
-                        if(nbrCartouche > 0 ){
+                        if (nbrCartouche > 0) {
                             JsonArray nbr = new JsonArray();
-                            for(int j=0; j<nbrCartouche;j++){
+                            for (int j = 0; j < nbrCartouche; j++) {
                                 nbr.add(j);
                             }
                             result.putArray("number", nbr);
-                        }else{
+                        } else {
                             result.putArray("number", new JsonArray().add("cartouche"));
                         }
 
                         final String byEleve = params.get("eleve");
                         final String color = params.get("color");
-                        if(byEleve != null && color !=null ){
+                        if (byEleve != null && color != null) {
                             devoirService.getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
                                 @Override
                                 public void handle(Either<String, JsonObject> devoirInfo) {
-                                    if(devoirInfo.isRight()){
+                                    if (devoirInfo.isRight()) {
                                         final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
                                         SimpleDateFormat dateBfFormat = new SimpleDateFormat("yyyy-MM-dd");
                                         SimpleDateFormat dateAftFormat = new SimpleDateFormat("dd-MM-yyyy");
@@ -1433,36 +1428,36 @@ public class ExportPDFController extends ControllerHelper {
                                         ArrayList<String> classeList = new ArrayList<String>();
 
                                         result.putString("devoirName", devoirInfos.getString("name"));
-                                        if(color.equals("true")){
+                                        if (color.equals("true")) {
                                             result.putBoolean("byColor", true);
-                                        }else{
+                                        } else {
                                             result.putBoolean("byColor", false);
                                         }
                                         try {
-                                            reformattedStr = dateAftFormat.format(dateBfFormat.parse( devoirInfos.getString("created")));
+                                            reformattedStr = dateAftFormat.format(dateBfFormat.parse(devoirInfos.getString("created")));
                                         } catch (ParseException e) {
                                             e.printStackTrace();
                                         }
-                                        if(reformattedStr != "") {
+                                        if (reformattedStr != "") {
                                             result.putString("devoirDate", reformattedStr);
-                                        }else {
-                                            result.putString("devoirDate",  devoirInfos.getString("created"));
+                                        } else {
+                                            result.putString("devoirDate", devoirInfos.getString("created"));
                                         }
 //                                        result.putBoolean("evaluation", devoirInfos.getBoolean("is_evaluated"));
                                         result.putBoolean("evaluation", true);
                                         //début
                                         classeList.add(devoirInfos.getString("id_groupe"));
-                                        utilsService.getCycle(classeList , new Handler<Either<String, JsonArray>>() {
+                                        utilsService.getCycle(classeList, new Handler<Either<String, JsonArray>>() {
                                             @Override
                                             public void handle(Either<String, JsonArray> cycle) {
-                                                if(cycle.isRight()){
+                                                if (cycle.isRight()) {
                                                     JsonObject cycleobj = cycle.right().getValue().get(0);
                                                     niveauDeMaitriseService.getNiveauDeMaitriseofCycle(cycleobj.getLong("id_cycle"), new Handler<Either<String, JsonArray>>() {
                                                         @Override
                                                         public void handle(Either<String, JsonArray> nivMaitrise) {
-                                                            if(nivMaitrise.isRight()){
+                                                            if (nivMaitrise.isRight()) {
                                                                 result.putArray("niveaux", nivMaitrise.right().getValue());
-                                                                if(byEleve.equals("true")){
+                                                                if (byEleve.equals("true")) {
                                                                     result.putBoolean("byEleves", true);
                                                                     JsonObject action = new JsonObject()
                                                                             .putString("action", "classe.getEleveClasse")
@@ -1475,103 +1470,102 @@ public class ExportPDFController extends ControllerHelper {
 
                                                                             if ("ok".equals(body.getString("status"))) {
                                                                                 result.putArray("eleves", body.getArray("results"));
-                                                                                if(devoirInfos.getInteger("nbrcompetence") > 0) {
+                                                                                if (devoirInfos.getInteger("nbrcompetence") > 0) {
                                                                                     competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
                                                                                         @Override
                                                                                         public void handle(Either<String, JsonArray> CompetencesObject) {
-                                                                                            if(CompetencesObject.isRight()){
-                                                                                                JsonArray  CompetencesOld = CompetencesObject.right().getValue();
-                                                                                                JsonArray  CompetencesNew = new JsonArray();
-                                                                                                for (int i=0 ; i < CompetencesOld.size() ; i++) {
+                                                                                            if (CompetencesObject.isRight()) {
+                                                                                                JsonArray CompetencesOld = CompetencesObject.right().getValue();
+                                                                                                JsonArray CompetencesNew = new JsonArray();
+                                                                                                for (int i = 0; i < CompetencesOld.size(); i++) {
                                                                                                     JsonObject Comp = CompetencesOld.get(i);
-                                                                                                    Comp.putNumber("i", i+1);
-                                                                                                    if(i==0){
-                                                                                                        Comp.putBoolean("first",true);
-                                                                                                    }else{
-                                                                                                        Comp.putBoolean("first",false);
+                                                                                                    Comp.putNumber("i", i + 1);
+                                                                                                    if (i == 0) {
+                                                                                                        Comp.putBoolean("first", true);
+                                                                                                    } else {
+                                                                                                        Comp.putBoolean("first", false);
                                                                                                     }
                                                                                                     CompetencesNew.addObject(Comp);
                                                                                                 }
-                                                                                                if(CompetencesNew.size() > 0){
-                                                                                                    result.putBoolean("hasCompetences",true);
-                                                                                                }else{
-                                                                                                    result.putBoolean("hasCompetences",false);
+                                                                                                if (CompetencesNew.size() > 0) {
+                                                                                                    result.putBoolean("hasCompetences", true);
+                                                                                                } else {
+                                                                                                    result.putBoolean("hasCompetences", false);
                                                                                                 }
-                                                                                                result.putString("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString());
-                                                                                                result.putArray("competences",CompetencesNew);
-                                                                                                genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
-                                                                                            }else{
+                                                                                                result.putString("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
+                                                                                                result.putArray("competences", CompetencesNew);
+                                                                                                genererPdf(request, result, "cartouche.pdf.xhtml", "Cartouche");
+                                                                                            } else {
                                                                                                 log.error("Error :can not get competences devoir ");
                                                                                                 badRequest(request, "Error :can not get competences devoir ");
                                                                                             }
                                                                                         }
                                                                                     });
-                                                                                }else{
-                                                                                    genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
+                                                                                } else {
+                                                                                    genererPdf(request, result, "cartouche.pdf.xhtml", "Cartouche");
                                                                                 }
-                                                                            }else{
+                                                                            } else {
                                                                                 log.error("Error :can not get students ");
                                                                                 badRequest(request, "Error :can not get students  ");
                                                                             }
                                                                         }
                                                                     });
-                                                                }else{
+                                                                } else {
                                                                     result.putBoolean("byEleves", false);
-                                                                    if(devoirInfos.getInteger("nbrcompetence") > 0) {
+                                                                    if (devoirInfos.getInteger("nbrcompetence") > 0) {
                                                                         competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
                                                                             @Override
                                                                             public void handle(Either<String, JsonArray> CompetencesObject) {
-                                                                                if(CompetencesObject.isRight()){
-                                                                                    JsonArray  CompetencesOld = CompetencesObject.right().getValue();
-                                                                                    JsonArray  CompetencesNew = new JsonArray();
-                                                                                    for (int i=0 ; i < CompetencesOld.size() ; i++) {
+                                                                                if (CompetencesObject.isRight()) {
+                                                                                    JsonArray CompetencesOld = CompetencesObject.right().getValue();
+                                                                                    JsonArray CompetencesNew = new JsonArray();
+                                                                                    for (int i = 0; i < CompetencesOld.size(); i++) {
                                                                                         JsonObject Comp = CompetencesOld.get(i);
-                                                                                        Comp.putNumber("i", i+1);
-                                                                                        if(i==0){
-                                                                                            Comp.putBoolean("first",true);
-                                                                                        }else{
-                                                                                            Comp.putBoolean("first",false);
+                                                                                        Comp.putNumber("i", i + 1);
+                                                                                        if (i == 0) {
+                                                                                            Comp.putBoolean("first", true);
+                                                                                        } else {
+                                                                                            Comp.putBoolean("first", false);
                                                                                         }
 
                                                                                         CompetencesNew.addObject(Comp);
                                                                                     }
-                                                                                    if(CompetencesNew.size() > 0){
-                                                                                        result.putBoolean("hasCompetences",true);
-                                                                                    }else{
-                                                                                        result.putBoolean("hasCompetences",false);
+                                                                                    if (CompetencesNew.size() > 0) {
+                                                                                        result.putBoolean("hasCompetences", true);
+                                                                                    } else {
+                                                                                        result.putBoolean("hasCompetences", false);
                                                                                     }
-                                                                                    result.putString("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString() );
-                                                                                    result.putArray("competences",CompetencesNew);
+                                                                                    result.putString("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
+                                                                                    result.putArray("competences", CompetencesNew);
                                                                                     result.putBoolean("image", Boolean.parseBoolean(request.params().get("image")));
-                                                                                    genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
-                                                                                }else{
+                                                                                    genererPdf(request, result, "cartouche.pdf.xhtml", "Cartouche");
+                                                                                } else {
                                                                                     log.error("Error :can not get competences devoir ");
                                                                                     badRequest(request, "Error :can not get competences devoir ");
                                                                                 }
                                                                             }
                                                                         });
-                                                                    }else{
-                                                                        genererPdf(request, result , "cartouche.pdf.xhtml", "Cartouche");
+                                                                    } else {
+                                                                        genererPdf(request, result, "cartouche.pdf.xhtml", "Cartouche");
                                                                     }
                                                                 }
-                                                            }else{
+                                                            } else {
                                                                 log.error("Error :can not get levels ");
                                                                 badRequest(request, "Error :can not get levels  ");
                                                             }
                                                         }
                                                     });
 
-                                                }else{
+                                                } else {
                                                     log.error("Error :can not get cycle ");
                                                     badRequest(request, "Error :can not get cycle  ");
                                                 }
 
 
-
                                             }
                                         });
 
-                                    }else{
+                                    } else {
                                         log.error("Error :can not get informations from postgres tables ");
                                         badRequest(request, "Error :can not get informations from postgres tables ");
                                     }
@@ -1579,12 +1573,11 @@ public class ExportPDFController extends ControllerHelper {
                                 }
                             });
                         }
-                    }
-                    else{
+                    } else {
                         log.error("Error : idDevoir must be a long object");
-                        badRequest(request,"Error : idDevoir must be a long object");
+                        badRequest(request, "Error : idDevoir must be a long object");
                     }
-                }else{
+                } else {
                     unauthorized(request);
                 }
             }
@@ -1593,7 +1586,7 @@ public class ExportPDFController extends ControllerHelper {
 
     @Get("/devoirs/print/:idDevoir/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getExportDevoir (final HttpServerRequest request) {
+    public void getExportDevoir(final HttpServerRequest request) {
         Long idDevoir = 0L;
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
@@ -1614,11 +1607,11 @@ public class ExportPDFController extends ControllerHelper {
                     String idGroupe = devoir.getString("id_groupe");
                     String idEtablissement = devoir.getString("id_etablissement");
 
-                    exportService.getExportEval(text, devoir, idGroupe, idEtablissement, request, new Handler<Either<String, JsonObject>>(){
+                    exportService.getExportEval(text, devoir, idGroupe, idEtablissement, request, new Handler<Either<String, JsonObject>>() {
 
                         @Override
                         public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                            if(stringJsonObjectEither.isRight()) {
+                            if (stringJsonObjectEither.isRight()) {
                                 try {
                                     JsonObject result = stringJsonObjectEither.right().getValue();
                                     if (json) {
@@ -1627,7 +1620,7 @@ public class ExportPDFController extends ControllerHelper {
                                         String fileName = result.getObject("devoir").getString("classe") + "_" + result.getObject("devoir").getString("nom").replace(' ', '_');
                                         genererPdf(request, result, "evaluation.pdf.xhtml", fileName);
                                     }
-                                } catch (Error err){
+                                } catch (Error err) {
                                     leftToResponse(request, new Either.Left<>("An error occured while rendering pdf export : " + err.getMessage()));
                                 }
                             } else {
@@ -1704,7 +1697,7 @@ public class ExportPDFController extends ControllerHelper {
                     JsonObject action = new JsonObject()
                             .putString("action", "periode.getLibellePeriode")
                             .putObject("request", jsonRequest);
-                    if(!"undefined".equals(finalIdPeriode)) {
+                    if (!"undefined".equals(finalIdPeriode)) {
                         action.putNumber("idType", finalIdPeriode);
                     }
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
@@ -1826,7 +1819,7 @@ public class ExportPDFController extends ControllerHelper {
         Long idPeriode = null;
 
         try {
-            if(request.params().contains("idPeriode")) {
+            if (request.params().contains("idPeriode")) {
                 idPeriode = Long.parseLong(request.params().get("idPeriode"));
             }
         } catch (NumberFormatException err) {
@@ -1856,28 +1849,27 @@ public class ExportPDFController extends ControllerHelper {
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
                                 if ("ok".equals(body.getString("status"))) {
-                                    final String idEtablissement = ((JsonObject)body.getArray("results").get(0)).getString("idStructure");
+                                    final String idEtablissement = ((JsonObject) body.getArray("results").get(0)).getString("idStructure");
                                     UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
                                         @Override
                                         public void handle(final UserInfos user) {
-                                            final boolean isChefEtab = (user!= null)?("Personnel".equals(user.getType()) && user.getFunctions().containsKey("DIR")):true;
-                                            if((user != null) || isChefEtab ) {
+                                            final boolean isChefEtab = (user != null) ? ("Personnel".equals(user.getType()) && user.getFunctions().containsKey("DIR")) : true;
+                                            if ((user != null) || isChefEtab) {
                                                 bfcService.getVisibility(idEtablissement, user, new Handler<Either<String, JsonArray>>() {
                                                     @Override
                                                     public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                                                        if(stringJsonArrayEither.isRight() || isChefEtab){
+                                                        if (stringJsonArrayEither.isRight() || isChefEtab) {
                                                             boolean moy = false;
                                                             Number state = null;
-                                                            if(stringJsonArrayEither.isRight()){
+                                                            if (stringJsonArrayEither.isRight()) {
                                                                 JsonArray result = stringJsonArrayEither.right().getValue();
-                                                                JsonObject obj = (JsonObject)result.get(0);
+                                                                JsonObject obj = (JsonObject) result.get(0);
                                                                 state = (obj).getNumber("visible");
                                                             }
-                                                            if( state!= null
+                                                            if (state != null
                                                                     && Competences.BFC_AVERAGE_VISIBILITY_NONE.equals(state)) {
                                                                 moy = false;
-                                                            }
-                                                            else if(state != null && isChefEtab &&
+                                                            } else if (state != null && isChefEtab &&
                                                                     Competences.BFC_AVERAGE_VISIBILITY_FOR_ADMIN_ONLY
                                                                             .equals(state)) {
                                                                 moy = true;
@@ -1917,28 +1909,28 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         final String[] idEleves = new String[eleves.size()];
                                                                                         final String[] nameEleves = new String[eleves.size()];
                                                                                         for (int i = 0; i < eleves.size(); i++) {
-                                                                                            idEleves[i] = ((JsonObject)eleves.get(i)).getString("id");
-                                                                                            nameEleves[i] = ((JsonObject)eleves.get(i)).getString("lastName") + " " + ((JsonObject)eleves.get(i)).getString("firstName");
+                                                                                            idEleves[i] = ((JsonObject) eleves.get(i)).getString("id");
+                                                                                            nameEleves[i] = ((JsonObject) eleves.get(i)).getString("lastName") + " " + ((JsonObject) eleves.get(i)).getString("firstName");
                                                                                         }
                                                                                         boolean recapEval = true;
-                                                                                        bfcService.buildBFC(recapEval, idEleves, idClasse, idEtablissement, finalIdPeriode, idCycle, new Handler<Either<String, JsonObject>>(){
+                                                                                        bfcService.buildBFC(recapEval, idEleves, idClasse, idEtablissement, finalIdPeriode, idCycle, new Handler<Either<String, JsonObject>>() {
                                                                                             @Override
-                                                                                            public void handle (Either<String, JsonObject> stringMapEither){
-                                                                                                if(stringMapEither.isRight()){
+                                                                                            public void handle(Either<String, JsonObject> stringMapEither) {
+                                                                                                if (stringMapEither.isRight()) {
                                                                                                     final JsonArray eleves = new JsonArray();
                                                                                                     JsonObject bfc = stringMapEither.right().getValue();
-                                                                                                    if(bfc.size() > 0){
+                                                                                                    if (bfc.size() > 0) {
                                                                                                         final int[] idDomaines = new int[bfc.getArray("domainesRacine").size()];
-                                                                                                        for(int l = 0; l <  bfc.getArray("domainesRacine").size(); l++){
+                                                                                                        for (int l = 0; l < bfc.getArray("domainesRacine").size(); l++) {
                                                                                                             Long idDomaine = bfc.getArray("domainesRacine").get(l);
                                                                                                             idDomaines[l] = idDomaine.intValue();
                                                                                                         }
 
-                                                                                                        for (int i = 0; i < idEleves.length; i++){
+                                                                                                        for (int i = 0; i < idEleves.length; i++) {
                                                                                                             JsonObject eleve = new JsonObject();
                                                                                                             JsonArray notesEleve = new JsonArray();
                                                                                                             List domainesEvalues = new ArrayList();
-                                                                                                            if(bfc.containsField(idEleves[i])) {
+                                                                                                            if (bfc.containsField(idEleves[i])) {
                                                                                                                 for (Object resultNote : bfc.getArray(idEleves[i])) {
                                                                                                                     for (Object niveau : legende) {
                                                                                                                         JsonObject note = new JsonObject();
@@ -1965,10 +1957,10 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                             eleves.add(eleve);
                                                                                                         }
 
-                                                                                                        domaineService.getDomainesLibCod(idDomaines, new Handler<Either<String, JsonArray>>(){
+                                                                                                        domaineService.getDomainesLibCod(idDomaines, new Handler<Either<String, JsonArray>>() {
                                                                                                             @Override
-                                                                                                            public void handle(Either<String, JsonArray> stringJsonArrayEither){
-                                                                                                                if(stringJsonArrayEither.isRight()){
+                                                                                                            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
+                                                                                                                if (stringJsonArrayEither.isRight()) {
                                                                                                                     JsonArray domaines = stringJsonArrayEither.right().getValue();
                                                                                                                     result.putArray("domaines", isDomaineParent(sortJsonArrayById(domaines)));
                                                                                                                     result.putArray("eleves", eleves);
@@ -2050,7 +2042,7 @@ public class ExportPDFController extends ControllerHelper {
                                                         }
                                                     }
                                                 });
-                                            } else{
+                                            } else {
                                                 badRequest(request);
                                             }
                                         }
@@ -2070,7 +2062,7 @@ public class ExportPDFController extends ControllerHelper {
 
     private Handler<Either<String, JsonObject>> getReleveCompetences(final HttpServerRequest request, final Map<String, String> elevesMap, final List<String> nomGroupes,
                                                                      final String matieres, final String libellePeriode, final Boolean json,
-                                                                     final AtomicBoolean answered, final JsonArray result){
+                                                                     final AtomicBoolean answered, final JsonArray result) {
 
         final AtomicInteger elevesDone = new AtomicInteger();
 
@@ -2081,8 +2073,8 @@ public class ExportPDFController extends ControllerHelper {
                     if (stringJsonArrayEither.isRight()) {
                         try {
                             final JsonObject headerEleve = new JsonObject();
-                            if(elevesMap.containsKey(stringJsonArrayEither.right().getValue().getString("idEleve"))){
-                                stringJsonArrayEither.right().getValue().putString("nom",  elevesMap.get(stringJsonArrayEither.right().getValue().getString("idEleve")));
+                            if (elevesMap.containsKey(stringJsonArrayEither.right().getValue().getString("idEleve"))) {
+                                stringJsonArrayEither.right().getValue().putString("nom", elevesMap.get(stringJsonArrayEither.right().getValue().getString("idEleve")));
                                 headerEleve.putString("nom", elevesMap.get(stringJsonArrayEither.right().getValue().getString("idEleve")));
                             }
                             result.add(stringJsonArrayEither.right().getValue());
@@ -2090,8 +2082,8 @@ public class ExportPDFController extends ControllerHelper {
                             headerEleve.putString("matiere", matieres);
                             headerEleve.putString("periode", libellePeriode);
 
-                            ((JsonObject)result.get(elevesDone.get())).getObject("header").putObject("left", headerEleve);
-                            if(elevesDone.addAndGet(1) == elevesMap.size()) {
+                            ((JsonObject) result.get(elevesDone.get())).getObject("header").putObject("left", headerEleve);
+                            if (elevesDone.addAndGet(1) == elevesMap.size()) {
                                 answered.set(true);
                                 JsonObject resultFinal = new JsonObject();
                                 resultFinal.putArray("eleves", sortJsonArrayByName(result));
@@ -2116,23 +2108,23 @@ public class ExportPDFController extends ControllerHelper {
         };
     }
 
-    private JsonArray sortJsonArrayById(JsonArray jsonArray){
+    private JsonArray sortJsonArrayById(JsonArray jsonArray) {
         List<JsonObject> jsonValues = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++) {
             JsonObject p = jsonArray.get(i);
             jsonValues.add(p);
         }
-        Collections.sort( jsonValues, new Comparator<JsonObject>() {
+        Collections.sort(jsonValues, new Comparator<JsonObject>() {
             private static final String KEY_NAME = "id";
+
             @Override
             public int compare(JsonObject a, JsonObject b) {
                 Long valA = 0L;
                 Long valB = 0L;
                 try {
-                    valA =  (Long) a.getNumber(KEY_NAME);
+                    valA = (Long) a.getNumber(KEY_NAME);
                     valB = (Long) b.getNumber(KEY_NAME);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     //do something
                 }
                 return valA.compareTo(valB);
@@ -2146,14 +2138,15 @@ public class ExportPDFController extends ControllerHelper {
         return sortedJsonArray;
     }
 
-    private JsonArray sortJsonArrayByName(JsonArray jsonArray){
+    private JsonArray sortJsonArrayByName(JsonArray jsonArray) {
         List<JsonObject> jsonValues = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++) {
             JsonObject p = jsonArray.get(i);
             jsonValues.add(p);
         }
-        Collections.sort( jsonValues, new Comparator<JsonObject>() {
+        Collections.sort(jsonValues, new Comparator<JsonObject>() {
             private static final String KEY_NAME = "nom";
+
             @Override
             public int compare(JsonObject a, JsonObject b) {
                 String valA = "";
@@ -2161,8 +2154,7 @@ public class ExportPDFController extends ControllerHelper {
                 try {
                     valA = a.getString(KEY_NAME);
                     valB = b.getString(KEY_NAME);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     //do something
                 }
                 return valA.compareTo(valB);
@@ -2176,11 +2168,11 @@ public class ExportPDFController extends ControllerHelper {
         return sortedJsonArray;
     }
 
-    private JsonArray isDomaineParent(JsonArray domaines){
+    private JsonArray isDomaineParent(JsonArray domaines) {
         JsonArray newDomaines = new JsonArray();
-        for( int k = 0; k < domaines.size(); k++) {
+        for (int k = 0; k < domaines.size(); k++) {
             JsonObject domaine = domaines.get(k);
-            if("0".equals(domaine.getNumber("id_parent").toString()) || k == 0){
+            if ("0".equals(domaine.getNumber("id_parent").toString()) || k == 0) {
                 domaine.putBoolean("isDomaineParent", true);
 //                if(!"0".equals(domaine.getNumber("id_parent").toString()))
 //                    domaine.putString("nomDomaine", "Domaine D" + domaine.getNumber("id_parent").toString());
@@ -2195,7 +2187,7 @@ public class ExportPDFController extends ControllerHelper {
         return newDomaines;
     }
 
-    private void addMaitriseNE(List domainesEvalues, JsonArray notesEleve, int[] idDomaines, boolean text){
+    private void addMaitriseNE(List domainesEvalues, JsonArray notesEleve, int[] idDomaines, boolean text) {
         for (int idDomaine : idDomaines) {
             if (!domainesEvalues.contains(idDomaine)) {
                 JsonObject note = new JsonObject();
