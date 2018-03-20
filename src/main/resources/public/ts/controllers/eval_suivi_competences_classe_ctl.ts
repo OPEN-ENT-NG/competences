@@ -324,6 +324,13 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
+         $scope.changeContent = async function () {
+             let content = $scope.template.containers['suivi-competence-content'].split('.html?hash=')[0].split('template/')[1];
+             await $scope.selectSuivi($scope.route.current.$$route.originalPath);
+             $scope.template.open('suivi-competence-content', content);
+             utils.safeApply($scope);
+         };
+
          $scope.exportRecapEval = (textMod, printSuiviClasse, idPeriode) =>{
              switch (printSuiviClasse) {
                  case 'printRecapEval' : {
