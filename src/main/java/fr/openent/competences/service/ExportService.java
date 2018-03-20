@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ExportService {
 
-    public void getExportEval(final Boolean text, JsonObject devoir, String idGroupe, String idEtablissement, HttpServerRequest request,
+    public void getExportEval(final Boolean text, Boolean only_evaluation, JsonObject devoir, String idGroupe, String idEtablissement, HttpServerRequest request,
                               Handler<Either<String, JsonObject>> handler);
 
     public void getExportReleveComp(final Boolean text, final String idEleve, String[] idGroupes, final String idEtablissement, final List<String> idMatieres,

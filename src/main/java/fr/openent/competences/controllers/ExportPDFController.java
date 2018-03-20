@@ -1289,57 +1289,57 @@ public class ExportPDFController extends ControllerHelper {
                                                                             JsonObject body = message.body();
                                                                             if ("ok".equals(body.getString("status"))) {
                                                                                 result.putString("classeName", body.getObject("result").getObject("c").getObject("data").getString("name"));
-                                                                                if (devoirInfos.getBoolean("is_evaluated") == true) {
-                                                                                    Integer nbrColone = (devoirInfos.getInteger("nbrcompetence") + 1);
-                                                                                    result.putString("nbrCompetences", nbrColone.toString());
-                                                                                } else {
-                                                                                    result.putString("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
+                                                                                if(devoirInfos.getBoolean("is_evaluated") == true){
+                                                                                    Integer nbrColone = (devoirInfos.getInteger("nbrcompetence") + 1 );
+                                                                                    result.putString("nbrCompetences",nbrColone.toString());
+                                                                                }else{
+                                                                                    result.putString("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString());
                                                                                 }
 
-                                                                                if (devoirInfos.getInteger("nbrcompetence") > 0) {
+                                                                                if(devoirInfos.getInteger("nbrcompetence") > 0) {
                                                                                     competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
                                                                                         @Override
                                                                                         public void handle(Either<String, JsonArray> CompetencesObject) {
-                                                                                            if (CompetencesObject.isRight()) {
-                                                                                                JsonArray CompetencesOld = CompetencesObject.right().getValue();
-                                                                                                JsonArray CompetencesNew = new JsonArray();
-                                                                                                Integer size = 0;
+                                                                                            if(CompetencesObject.isRight()){
+                                                                                                JsonArray  CompetencesOld = CompetencesObject.right().getValue();
+                                                                                                final JsonArray  CompetencesNew = new JsonArray();
+                                                                                                Integer size =0;
                                                                                                 Double ligne = new Double(0);
                                                                                                 Integer lenght = 103; // le nombre de caractére max dans une ligne
                                                                                                 Double height = new Double(2.2); // la hauteur d'une ligne
-                                                                                                for (int i = 0; i < CompetencesOld.size(); i++) {
+                                                                                                for (int i=0 ; i < CompetencesOld.size() ; i++) {
                                                                                                     JsonObject Comp = CompetencesOld.get(i);
-                                                                                                    size = Comp.getString("nom").length() + 10; // +10 pour "[ Cx ]"
-                                                                                                    ligne += (Integer) size / lenght;
-                                                                                                    if (size % lenght > 0) {
+                                                                                                    size = Comp.getString("nom").length() +10; // +10 pour "[ Cx ]"
+                                                                                                    ligne += (Integer) size / lenght ;
+                                                                                                    if(size%lenght > 0 ){
                                                                                                         ligne++;
                                                                                                     }
-                                                                                                    Comp.putNumber("i", i + 1);
+                                                                                                    Comp.putNumber("i", i+1);
                                                                                                     CompetencesNew.addObject(Comp);
                                                                                                 }
 
                                                                                                 ligne = (ligne * height) + 6; // + 6 la hauteur de la 1 ligne du tableau
-                                                                                                if (ligne < 25) { // 25 est la hauteure minimal
-                                                                                                    ligne = Double.parseDouble("25");
+                                                                                                if( ligne < 25){ // 25 est la hauteure minimal
+                                                                                                    ligne = Double.parseDouble("25") ;
                                                                                                 }
-                                                                                                result.putString("ligne", ligne.toString() + "%");
-                                                                                                if (CompetencesNew.size() > 0) {
-                                                                                                    result.putBoolean("hasCompetences", true);
-                                                                                                } else {
-                                                                                                    result.putBoolean("hasCompetences", false);
+                                                                                                result.putString("ligne", ligne.toString()+"%");
+                                                                                                if(CompetencesNew.size() > 0){
+                                                                                                    result.putBoolean("hasCompetences",true);
+                                                                                                }else{
+                                                                                                    result.putBoolean("hasCompetences",false);
                                                                                                 }
-                                                                                                result.putArray("competences", CompetencesNew);
-                                                                                                genererPdf(request, result, "Devoir.saisie.xhtml", "Formulaire_saisie");
-                                                                                            } else {
+                                                                                                result.putArray("competences",CompetencesNew);
+                                                                                                genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie");
+                                                                                            }else{
                                                                                                 log.error("Error :can not get competences devoir ");
                                                                                                 badRequest(request, "Error :can not get competences devoir ");
                                                                                             }
                                                                                         }
                                                                                     });
-                                                                                } else {
-                                                                                    genererPdf(request, result, "Devoir.saisie.xhtml", "Formulaire_saisie");
+                                                                                }else{
+                                                                                    genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie");
                                                                                 }
-                                                                            } else {
+                                                                            }else{
                                                                                 log.error("Error :can not get classe informations ");
                                                                                 badRequest(request, "Error :can not get  classe informations");
                                                                             }
@@ -1604,16 +1604,18 @@ public class ExportPDFController extends ControllerHelper {
             public void handle(Either<String, JsonObject> stringJsonObjectEither) {
                 if (stringJsonObjectEither.isRight()) {
                     JsonObject devoir = stringJsonObjectEither.right().getValue();
+                    final Boolean only_evaluation = devoir.getNumber("nbrcompetence").equals(0L);
                     String idGroupe = devoir.getString("id_groupe");
                     String idEtablissement = devoir.getString("id_etablissement");
 
-                    exportService.getExportEval(text, devoir, idGroupe, idEtablissement, request, new Handler<Either<String, JsonObject>>() {
+                    exportService.getExportEval(text, only_evaluation, devoir, idGroupe, idEtablissement, request, new Handler<Either<String, JsonObject>>() {
 
                         @Override
                         public void handle(Either<String, JsonObject> stringJsonObjectEither) {
                             if (stringJsonObjectEither.isRight()) {
                                 try {
                                     JsonObject result = stringJsonObjectEither.right().getValue();
+                                    result.putBoolean("notOnlyEvaluation", !only_evaluation);
                                     if (json) {
                                         Renders.renderJson(request, result);
                                     } else {
@@ -1711,19 +1713,19 @@ public class ExportPDFController extends ControllerHelper {
 
                                 if (finalIdClasse == null) {
                                     JsonObject action = new JsonObject()
-                                            .putString("action", "eleve.getInfoEleve")
-                                            .putArray("idEleves", new JsonArray(new String[]{finalIdEleve}));
+                                                        .putString("action", "eleve.getInfoEleve")
+                                                        .putArray("idEleves", new JsonArray(new String[]{finalIdEleve}));
 
-                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-                                        @Override
-                                        public void handle(Message<JsonObject> message) {
-                                            JsonObject body = message.body();
+                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                    @Override
+                                                    public void handle(Message<JsonObject> message) {
+                                                        JsonObject body = message.body();
 
-                                            if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
-                                                JsonObject eleve = body.getArray("results").get(0);
-                                                final String nomClasse = eleve.getString("classeName");
-                                                final String idClasse = eleve.getString("idClasse");
-                                                final String idEtablissement = eleve.getString("idEtablissement");
+                                                        if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
+                                                            JsonObject eleve = body.getArray("results").get(0);
+                                                            final String nomClasse = eleve.getString("classeName");
+                                                            final String idClasse = eleve.getString("idClasse");
+                                                            final String idEtablissement = eleve.getString("idEtablissement");
                                                 final String[] idEleves = new String[1];
                                                 idEleves[0] = finalIdEleve;
                                                 idGroupes.add(idClasse);

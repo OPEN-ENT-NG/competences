@@ -107,6 +107,7 @@
                 <span class="bold">Note sur : </span>{{ sur }}<br/>
                 {{/ devoir }}
             </td>
+            {{#notOnlyEvaluation}}
             <td>
                 {{# maitrise }}
                 <span class="maitrise">
@@ -120,7 +121,9 @@
                     </span><br/>
                 {{/ maitrise }}
             </td>
+            {{/notOnlyEvaluation}}
         </tr>
+        {{#notOnlyEvaluation}}
         <tr>
             <td colspan="2">
                 {{# competence }}
@@ -128,6 +131,7 @@
                 {{/ competence }}
             </td>
         </tr>
+        {{/notOnlyEvaluation}}
     </table>
 </div>
 <div class="body">
