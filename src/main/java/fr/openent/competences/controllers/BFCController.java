@@ -20,8 +20,6 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.awt.*;
-
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
@@ -34,14 +32,15 @@ public class BFCController extends ControllerHelper {
     private final BFCService bfcService;
     private final BfcSyntheseService syntheseService;
     private final EnseignementComplementService enseignementComplement;
+    private final LanguesCultureRegionaleService languesCultureRegionaleService;
     private final NiveauEnseignementComplementService niveauEnseignementComplement;
-    private final EventBus eb;
 
     public BFCController(EventBus eb) {
         this.eb = eb;
         bfcService = new DefaultBFCService(eb);
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         enseignementComplement = new DefaultEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENT_COMPLEMENT);
+        languesCultureRegionaleService = new DefaultLanguesCultureRegionaleService(Competences.COMPETENCES_SCHEMA, Competences.LANGUES_CULTURE_REGIONALE);
         niveauEnseignementComplement = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
     }
 
@@ -264,6 +263,24 @@ public class BFCController extends ControllerHelper {
             }
         });
     }
+
+    @Get("/langues/culture/regionale/list")
+    @ApiDoc("Récupère la liste des enseignements ")
+    @SecuredAction(value="",type = ActionType.AUTHENTICATED)
+    public void getLanguesCultureRegionale(final  HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos userInfos) {
+                if(userInfos!=null){
+                    Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
+                    languesCultureRegionaleService.getLanguesCultureRegionaleService(handler);
+                }else{
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
     @Post("/CreateNiveauEnsCpl")
     @ApiDoc("crée l'enseignement de complement pour un élève")
     @SecuredAction(value="",type=ActionType.AUTHENTICATED)

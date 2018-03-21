@@ -364,19 +364,25 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 $scope.suiviCompetence.niveauEnsCpls = new NiveauEnseignementCpls($scope.search.eleve.id);
                 $scope.suiviCompetence.ensCpls.sync().then(()=>{
                     $scope.suiviCompetence.eleveEnsCpl.sync().then(()=>{
-                        if($scope.suiviCompetence.eleveEnsCpl.id ){
-                                $scope.suiviCompetence.ensCplSelected=_.findWhere($scope.suiviCompetence.ensCpls.all,{id:$scope.suiviCompetence.eleveEnsCpl.id_enscpl});
-                                $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere($scope.suiviCompetence.niveauEnsCpls.all,{niveau : $scope.suiviCompetence.eleveEnsCpl.niveau});
+                        $scope.suiviCompetence.langues.sync().then(()=> {
+                            if ($scope.suiviCompetence.eleveEnsCpl.id) {
+                                $scope.suiviCompetence.ensCplSelected = _.findWhere($scope.suiviCompetence.ensCpls.all, {id: $scope.suiviCompetence.eleveEnsCpl.id_enscpl});
+                                $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere($scope.suiviCompetence.niveauEnsCpls.all, {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau});
+                                if ($scope.suiviCompetence.eleveEnsCpl.id_langue !== undefined) {
+                                    $scope.suiviCompetence.langueSelected = _.findWhere($scope.suiviCompetence.langues.all, {id: $scope.suiviCompetence.eleveEnsCpl.id_langue});
+                                }
                                 utils.safeApply($scope);
-                        }else{
-                            $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.eleveEnsCpl;
-                            utils.safeApply($scope);
-                        }
+                            } else {
+                                $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.eleveEnsCpl;
+                                utils.safeApply($scope);
+                            }
+                        });
                     });
                 });
 
                 $scope.loadEns = ()=>{
                     $scope.inactif = false;
+                    $scope.suiviCompetence.langueSelected = undefined;
                     //si id=1 on est sur ensCpl Aucun
                     if($scope.suiviCompetence.ensCplSelected.id === 1) {
                         // on met à jour le niveau à 0
@@ -384,13 +390,33 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     } else {
                         //sinon on positionne sur le 1er niveau par défaut
                         $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.niveauEnsCpls.all[0];
+
+                        // si l'enseignement sélectionné est avec le code LCR, alors, on affiche la liste déroulante
+                        // de choix de la langue de culture régionale et on positionne sur la 1ère langue par défaut
+                        if($scope.suiviCompetence.ensCplSelected.code === 'LCR') {
+                            $scope.suiviCompetence.langueSelected =$scope.suiviCompetence.langues.all[0];
+                        }
+
                     }
                 };
                 $scope.loadNiveau = ()=>{
                     if($scope.suiviCompetence.ensCplSelected !== undefined) {
                         $scope.inactif = false;
                     }
-                }
+                };
+
+                $scope.changeLangue = ()=>{
+
+                    $scope.inactif = false;
+
+                    // dans le cadre d'un modification, le bouton enregistrer apparait si les données en front sont les même
+                    // que ce qu'il y a en base de données
+                    if ($scope.suiviCompetence.eleveEnsCpl.id) {
+                        $scope.inactif = $scope.suiviCompetence.eleveEnsCpl.id_enscpl ===  $scope.suiviCompetence.eleveEnsCpl.id &&
+                        $scope.suiviCompetence.eleveEnsCpl.id_langue === $scope.suiviCompetence.langueSelected.id &&
+                        $scope.suiviCompetence.eleveEnsCpl.niveau === $scope.suiviCompetence.niveauEnsCplSelected.id;
+                    }
+                };
 
                 $scope.suiviCompetence.sync().then(() => {
                     // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
@@ -483,7 +509,14 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         };
 
         $scope.saveNiveauEnsCpl= ()=> {
-            $scope.suiviCompetence.eleveEnsCpl.setAttributsEleveEnsCpl($scope.suiviCompetence.ensCplSelected.id,$scope.suiviCompetence.niveauEnsCplSelected.niveau).save();
+            let id_langue;
+            if($scope.suiviCompetence.langueSelected !== undefined) {
+                id_langue = $scope.suiviCompetence.langueSelected.id;
+            }
+
+            $scope.suiviCompetence.eleveEnsCpl.setAttributsEleveEnsCpl($scope.suiviCompetence.ensCplSelected.id,
+                                                                        $scope.suiviCompetence.niveauEnsCplSelected.niveau,
+                                                                        id_langue).save();
             $scope.inactif = true;
         };
 

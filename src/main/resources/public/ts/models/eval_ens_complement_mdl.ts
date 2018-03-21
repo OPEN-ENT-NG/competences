@@ -7,11 +7,11 @@ import{Mix} from "entcore-toolkit";
 export class EnsCpl extends Model  {
     id : number;
     libelle : string;
+    code : string;
 
     constructor(){
         super();
     }
-
 }
 
 
@@ -54,6 +54,7 @@ export class EleveEnseignementCpl extends Model implements IModel{
     id : number;
     id_eleve : string;
     id_enscpl : number;
+    id_langue : number;
     niveau : number;
     libelle : string;
 
@@ -62,9 +63,10 @@ export class EleveEnseignementCpl extends Model implements IModel{
         this.id_eleve = id_eleve;
         this.niveau = 0;
     }
-     setAttributsEleveEnsCpl (id_enscpl : number,niveau : number)  {
+     setAttributsEleveEnsCpl (id_enscpl : number,niveau : number, id_langue : number)  {
             this.id_enscpl = id_enscpl;
             this.niveau = niveau;
+            this.id_langue = id_langue;
             return this;
     }
 
@@ -79,6 +81,7 @@ export class EleveEnseignementCpl extends Model implements IModel{
         return{
             id_eleve : this.id_eleve,
             id_enscpl : this.id_enscpl,
+            id_langue : this.id_langue,
             niveau : this.niveau
         }
     }

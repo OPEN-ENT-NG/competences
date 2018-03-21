@@ -12,6 +12,7 @@ import {
     Structure,
     Utils
 } from './index';
+import {LanguesCultRegs, LangueCultReg} from "../eval_langue_culture_regionale_mdl";
 
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
@@ -23,6 +24,8 @@ export class SuiviCompetence extends Model {
     bfcSynthese: BfcSynthese;
     ensCpls: EnsCpls;
     ensCplSelected: EnsCpl;
+    langues : LanguesCultRegs;
+    langueSelected : LangueCultReg;
     eleveEnsCpl: EleveEnseignementCpl;
 
     static get api() {
@@ -41,6 +44,7 @@ export class SuiviCompetence extends Model {
         this.bfcSynthese = new BfcSynthese(eleve.id);
         this.bfcSynthese.syncBfcSynthese();
         this.ensCpls = new EnsCpls();
+        this.langues = new LanguesCultRegs();
         this.eleveEnsCpl = new EleveEnseignementCpl(eleve.id);
 
         let that = this;

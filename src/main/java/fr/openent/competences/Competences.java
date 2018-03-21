@@ -39,6 +39,7 @@ public class Competences extends BaseServer {
     public static final String REL_DEVOIRS_GROUPES = "rel_devoirs_groupes";
     public static final String COMPETENCES_DEVOIRS = "competences_devoirs";
     public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
+    public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
     public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
 
 

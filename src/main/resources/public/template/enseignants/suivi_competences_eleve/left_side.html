@@ -90,8 +90,7 @@
         </div>
     </div>
 </div>
-<div ng-if="false"
-        ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')&& search.classe.id_cycle === 1"
+<div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')&& search.classe.id_cycle === 1"
      class="cell card twelve criterion">
     <div class="header">
         <h2><i18n>viescolaire.utils.enseignementComplement</i18n></h2>
@@ -101,6 +100,13 @@
         <label class="select" >
             <select  ng-model="suiviCompetence.ensCplSelected" ng-change="loadEns()" ng-options ="ensCpl as ensCpl.libelle for ensCpl in suiviCompetence.ensCpls.all">
                 <option class="header-opt" value="" disabled ><i18n>[[translate('viescolaire.utils.enseignements')]]</i18n></option>
+            </select>
+        </label>
+    </section>
+    <section>
+        <label class="select" ng-show="suiviCompetence.ensCplSelected.code === 'LCR' ">
+            <select  ng-model="suiviCompetence.langueSelected" ng-change="changeLangue()" ng-options ="langue as langue.libelle for langue in suiviCompetence.langues.all">
+                <option class="header-opt" value="" disabled ><i18n>[[translate('viescolaire.utils.langues.culture.regionale.choix')]]</i18n></option>
             </select>
         </label>
     </section>
