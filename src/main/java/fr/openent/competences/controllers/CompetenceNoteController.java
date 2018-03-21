@@ -204,7 +204,7 @@ public class CompetenceNoteController extends ControllerHelper {
                 try {
                     idPeriode = Long.parseLong(request.params().get("idPeriode"));
                 } catch (NumberFormatException e) {
-                    log.error("Error : idPeriode must be a long object", e);
+                    log.error("Error : idPeriode must be a long object ", e);
                     badRequest(request, e.getMessage());
                     return;
                 }
@@ -234,7 +234,8 @@ public class CompetenceNoteController extends ControllerHelper {
         }
     }
     @Get("/competence/notes/classe/:idClasse/:typeClasse")
-    @ApiDoc("Retourne les compétences notes pour une classee. Filtre possible sur la période avec l'ajout du paramètre idPeriode")
+    @ApiDoc("Retourne les compétences notes pour une classee. " +
+            "Filtre possible sur la période avec l'ajout du paramètre idPeriode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessSuiviCompetenceFilter.class)
     public void getCompetenceNoteClasse (final HttpServerRequest request) {
@@ -247,7 +248,7 @@ public class CompetenceNoteController extends ControllerHelper {
                 try {
                     idPeriode = Long.parseLong(request.params().get("idPeriode"));
                 } catch (NumberFormatException e) {
-                    log.error("Error : idPeriode must be a long object", e);
+                    log.error(" Error : idPeriode must be a long object ", e);
                     badRequest(request, e.getMessage());
                     return;
                 }
@@ -270,8 +271,8 @@ public class CompetenceNoteController extends ControllerHelper {
                 });
             }
 
-            // Récupération des compétences notes d'un groupe d'enseignement
-            if(typeClasse == 1){
+            // Récupération des compétences notes d'un groupe d'enseignement ou d'un groupe manuel
+            if(typeClasse == 1 || typeClasse == 2 ){
                 JsonObject action = new JsonObject()
                         .putString("action", "groupe.listUsersByGroupeEnseignementId")
                         .putString("groupEnseignementId", idClasse)
@@ -279,7 +280,8 @@ public class CompetenceNoteController extends ControllerHelper {
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> res) {
-                        Either<String, JsonArray> eventEleves = new Either.Right<>(res.body().getArray("results"));
+                        Either<String, JsonArray> eventEleves = new Either.Right<>(res.body()
+                                .getArray("results"));
                         callCompetencesNotesService(eventEleves, idPeriode, request);
                     }
                 });
@@ -291,7 +293,8 @@ public class CompetenceNoteController extends ControllerHelper {
     }
 
     @Get("/competence/notes/domaines/classe/:idClasse/:typeClasse")
-    @ApiDoc("Retourne les compétences notes pour une classee et un Domaine. Filtre possible sur la période avec l'ajout du paramètre idPeriode")
+    @ApiDoc("Retourne les compétences notes pour une classee et un Domaine. " +
+            "Filtre possible sur la période avec l'ajout du paramètre idPeriode")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessSuiviCompetenceFilter.class)
     public void getCompetenceNoteDomaineClasse (final HttpServerRequest request) {
@@ -328,8 +331,8 @@ public class CompetenceNoteController extends ControllerHelper {
                 });
             }
 
-            // Récupération des compétences notes d'un groupe d'enseignement
-            if(typeClasse == 1){
+            // Récupération des compétences notes d'un groupe d'enseignement ou d'un groupe manuel
+            if(typeClasse == 1 || typeClasse == 2){
                 JsonObject action = new JsonObject()
                         .putString("action", "group.listUsersByGroupeEnseignementId")
                         .putString("groupEnseignementId", idClasse)
@@ -337,7 +340,8 @@ public class CompetenceNoteController extends ControllerHelper {
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> res) {
-                        Either<String, JsonArray> eventEleves = new Either.Right<>(res.body().getArray("results"));
+                        Either<String, JsonArray> eventEleves = new Either.Right<>(res.body()
+                                .getArray("results"));
                         callCompetencesNotesDomaineService(eventEleves, idPeriode, idDomaines, request);
                     }
                 });

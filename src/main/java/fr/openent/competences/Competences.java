@@ -78,6 +78,7 @@ public class Competences extends BaseServer {
     public static final Number BFC_AVERAGE_VISIBILITY_FOR_ALL = 2;
 
 
+
     @Override
 	public void start() {
         super.start();

@@ -1608,7 +1608,8 @@ public class ExportPDFController extends ControllerHelper {
                     String idGroupe = devoir.getString("id_groupe");
                     String idEtablissement = devoir.getString("id_etablissement");
 
-                    exportService.getExportEval(text, only_evaluation, devoir, idGroupe, idEtablissement, request, new Handler<Either<String, JsonObject>>() {
+                    exportService.getExportEval(text, only_evaluation, devoir, idGroupe, idEtablissement,
+                            request, new Handler<Either<String, JsonObject>>() {
 
                         @Override
                         public void handle(Either<String, JsonObject> stringJsonObjectEither) {
@@ -1675,7 +1676,8 @@ public class ExportPDFController extends ControllerHelper {
         final String finalIdEleve = idEleve;
 
         final List<String> idGroupes = new ArrayList<>();
-        final List<String> nomGroupes = new ArrayList<>();
+        final Map<String, String> nomGroupes = new LinkedHashMap<>();
+        final List<String> idEtablissement = new ArrayList<>();
 
         JsonObject action = new JsonObject()
                 .putString("action", "matiere.getMatieres")
@@ -1729,10 +1731,9 @@ public class ExportPDFController extends ControllerHelper {
                                                 final String[] idEleves = new String[1];
                                                 idEleves[0] = finalIdEleve;
                                                 idGroupes.add(idClasse);
-                                                nomGroupes.add(nomClasse);
+                                                nomGroupes.put(eleve.getString("id"), nomClasse);
                                                 final Map<String, String> elevesMap = new LinkedHashMap<>();
                                                 elevesMap.put(finalIdEleve, eleve.getString("lastName") + " " + eleve.getString("firstName"));
-
                                                 final AtomicBoolean answered = new AtomicBoolean();
                                                 JsonArray resultFinal = new JsonArray();
                                                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
@@ -1766,26 +1767,41 @@ public class ExportPDFController extends ControllerHelper {
 
                                                 JsonObject action = new JsonObject()
                                                         .putString("action", "eleve.getInfoEleve")
-                                                        .putArray("idEleves", new JsonArray(new String[]{idEleves[0]}));
+                                                        .putArray("idEleves", new JsonArray(idEleves));
                                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                                                     @Override
                                                     public void handle(Message<JsonObject> message) {
                                                         JsonObject body = message.body();
-
-                                                        if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
-                                                            JsonObject eleve = body.getArray("results").get(0);
-                                                            final String nomClasse = eleve.getString("classeName");
-                                                            final String idClasse = eleve.getString("idClasse");
-                                                            final String idEtablissement = eleve.getString("idEtablissement");
-                                                            idGroupes.add(idClasse);
-                                                            nomGroupes.add(nomClasse);
+                                                        JsonArray result = body.getArray("results");
+                                                        if ("ok".equals(body.getString("status"))
+                                                                && result.size() > 0) {
+                                                            for (int i = 0; i< result.size(); i++ ) {
+                                                                JsonObject eleve = body.getArray("results")
+                                                                        .get(i);
+                                                                final String nomClasse =
+                                                                        eleve.getString("classeName");
+                                                                final String idClasse =
+                                                                        eleve.getString("idClasse");
+                                                                idEtablissement.add(
+                                                                        eleve.getString("idEtablissement"));
+                                                                idGroupes.add(idClasse);
+                                                                nomGroupes.put(((JsonObject)eleves.get(i)).
+                                                                        getString("id"),nomClasse);
+                                                            }
 
                                                             final AtomicBoolean answered = new AtomicBoolean();
                                                             JsonArray resultFinal = new JsonArray();
-                                                            final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
+                                                            final Handler<Either<String, JsonObject>> finalHandler
+                                                                    = getReleveCompetences(request, elevesMap,
+                                                                    nomGroupes, matieres,
                                                                     libellePeriode, json, answered, resultFinal);
                                                             for (int i = 0; i < eleves.size(); i++) {
-                                                                exportService.getExportReleveComp(text, idEleves[i], idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres,
+                                                                String [] _idGroupes = new String[1];
+                                                                _idGroupes[0] = idGroupes.get(i);
+
+                                                                exportService.getExportReleveComp(text, idEleves[i],
+                                                                        _idGroupes , idEtablissement.get(i),
+                                                                        listIdMatieres,
                                                                         finalIdPeriode, finalHandler);
                                                             }
                                                         } else {
@@ -2062,11 +2078,16 @@ public class ExportPDFController extends ControllerHelper {
         });
     }
 
-    private Handler<Either<String, JsonObject>> getReleveCompetences(final HttpServerRequest request, final Map<String, String> elevesMap, final List<String> nomGroupes,
-                                                                     final String matieres, final String libellePeriode, final Boolean json,
-                                                                     final AtomicBoolean answered, final JsonArray result) {
+    private Handler<Either<String, JsonObject>> getReleveCompetences(final HttpServerRequest request,
+                                                                     final Map<String, String> elevesMap,
+                                                                     final Map<String, String> nomGroupes,
+                                                                     final String matieres,
+                                                                     final String libellePeriode, final Boolean json,
+                                                                     final AtomicBoolean answered,
+                                                                     final JsonArray result) {
 
         final AtomicInteger elevesDone = new AtomicInteger();
+        final AtomicInteger elevesAdd = new AtomicInteger();
 
         return new Handler<Either<String, JsonObject>>() {
             @Override
@@ -2074,32 +2095,55 @@ public class ExportPDFController extends ControllerHelper {
                 if (!answered.get()) {
                     if (stringJsonArrayEither.isRight()) {
                         try {
-                            final JsonObject headerEleve = new JsonObject();
-                            if (elevesMap.containsKey(stringJsonArrayEither.right().getValue().getString("idEleve"))) {
-                                stringJsonArrayEither.right().getValue().putString("nom", elevesMap.get(stringJsonArrayEither.right().getValue().getString("idEleve")));
-                                headerEleve.putString("nom", elevesMap.get(stringJsonArrayEither.right().getValue().getString("idEleve")));
+                            JsonObject res = stringJsonArrayEither.right().getValue();
+                            Boolean noDevoir =  res.getBoolean("noDevoir");
+                            if (!noDevoir) {
+                                final JsonObject headerEleve = new JsonObject();
+                                final String idEleve = stringJsonArrayEither.right().getValue()
+                                        .getString("idEleve");
+                                result.add(stringJsonArrayEither.right().getValue());
+                                if (elevesMap.containsKey(idEleve)) {
+                                    stringJsonArrayEither.right().getValue()
+                                            .putString("nom", elevesMap.get(idEleve));
+                                    headerEleve.putString("nom", elevesMap.get(idEleve));
+                                }
+                                headerEleve.putString("classe", nomGroupes.get(idEleve));
+                                headerEleve.putString("matiere", matieres);
+                                headerEleve.putString("periode", libellePeriode);
+                                JsonObject header = ((JsonObject) result.get(elevesAdd.get())).getObject("header");
+                                if (header != null) {
+                                    header.putObject("left", headerEleve);
+                                }
+                                elevesAdd.addAndGet(1);
                             }
-                            result.add(stringJsonArrayEither.right().getValue());
-                            headerEleve.putString("classe", nomGroupes.toString().substring(1, nomGroupes.toString().length() - 1));
-                            headerEleve.putString("matiere", matieres);
-                            headerEleve.putString("periode", libellePeriode);
 
-                            ((JsonObject) result.get(elevesDone.get())).getObject("header").putObject("left", headerEleve);
                             if (elevesDone.addAndGet(1) == elevesMap.size()) {
                                 answered.set(true);
                                 JsonObject resultFinal = new JsonObject();
                                 resultFinal.putArray("eleves", sortJsonArrayByName(result));
-                                if (json) {
+                                if ( 0 == result.size()){
+                                    leftToResponse(request,
+                                            new Either.Left<>("getExportReleveComp : No exams " +
+                                                    "on given period and/or material."));
+                                }
+                                else if (json) {
                                     Renders.renderJson(request, result);
                                 } else {
-                                    String fileName = elevesDone.get() == 1 ? elevesMap.get(stringJsonArrayEither.right().getValue().getString("idEleve")).replace(' ', '_') + "_export_competences"
-                                            : nomGroupes.toString().substring(1, nomGroupes.toString().length() - 1).replace(' ', '_') + "_export_competences";
-                                    genererPdf(request, resultFinal, "releve-competences.pdf.xhtml", fileName);
+                                    final String idEleve = stringJsonArrayEither.right().getValue()
+                                            .getString("idEleve");
+                                    final String _nomGroupe = nomGroupes.get(idEleve);
+                                    String fileName = elevesDone.get() == 1 ? elevesMap.get(idEleve)
+                                            .replace(' ', '_') + "_export_competences"
+                                            : _nomGroupe.replace(' ', '_') + "_export_competences";
+                                    genererPdf(request, resultFinal,
+                                            "releve-competences.pdf.xhtml", fileName);
                                 }
 
                             }
                         } catch (Error err) {
-                            leftToResponse(request, new Either.Left<>("An error occured while rendering pdf export : " + err.getMessage()));
+                            leftToResponse(request,
+                                    new Either.Left<>("An error occured while rendering pdf export : "
+                                            + err.getMessage()));
                         }
                     }
                 } else {
@@ -2144,7 +2188,10 @@ public class ExportPDFController extends ControllerHelper {
         List<JsonObject> jsonValues = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++) {
             JsonObject p = jsonArray.get(i);
-            jsonValues.add(p);
+            if (!p.getBoolean("noDevoir")) {
+                jsonValues.add(p);
+            }
+
         }
         Collections.sort(jsonValues, new Comparator<JsonObject>() {
             private static final String KEY_NAME = "nom";
@@ -2165,6 +2212,7 @@ public class ExportPDFController extends ControllerHelper {
 
         JsonArray sortedJsonArray = new JsonArray();
         for (JsonObject o : jsonValues) {
+
             sortedJsonArray.add(o);
         }
         return sortedJsonArray;
