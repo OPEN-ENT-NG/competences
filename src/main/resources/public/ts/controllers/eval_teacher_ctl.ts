@@ -1080,7 +1080,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && name.trim() !== ''
                 && $scope.devoir.id_periode !== undefined
                 && $scope.devoir.coefficient !== undefined
-                && $scope.devoir.coefficient > 0
+                && $scope.devoir.coefficient >= 0
                 && $scope.devoir.diviseur !== undefined
                 && $scope.devoir.diviseur > 0
                 && $scope.devoir.id_type !== undefined
@@ -1092,7 +1092,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             );
         };
 
-
+        $scope.initCoef = function () {
+            if($scope.devoir.is_evaluated){
+                let evalFormative = _.findWhere(evaluations.types.all, {nom : "Formative"});
+                $scope.devoir.id_type === evalFormative.id.toString() ? $scope.devoir.coefficient = 0 : $scope.devoir.coefficient = 1;
+            }
+        };
 
         /**
          * Retourne la valeur de la clé i18n
