@@ -365,6 +365,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.releveComp = {
                             textMod: true
                         };
+                        $scope.showRechercheBar = true;
                         if(!Utils.isChefEtab()){
                             http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'name');
@@ -452,6 +453,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         route(routesActions);
 
+        $scope.showRechercheBarFunction = function (display){
+            $scope.showRechercheBar = display;
+        }
         $scope.updateOrder = function () {
             let res = [];
             for (let i = 0; i< $scope.evaluations.competencesDevoir.length; i++){

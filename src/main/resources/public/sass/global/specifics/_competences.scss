@@ -2121,8 +2121,12 @@ body.evaluations {
 
       .content-bilan-fin-cycle {
         .domaine-display {
-          padding: 10px 0;
+          padding: 2px 0 !important;
           font-weight: bold;
+        }
+
+        .domaine-display-marginTop {
+          margin-top: 20px !important;
         }
 
         .domaine-line{
