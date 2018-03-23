@@ -1731,7 +1731,7 @@ public class ExportPDFController extends ControllerHelper {
                                                 final String[] idEleves = new String[1];
                                                 idEleves[0] = finalIdEleve;
                                                 idGroupes.add(idClasse);
-                                                nomGroupes.put(eleve.getString("id"), nomClasse);
+                                                nomGroupes.put(eleve.getString("idEleve"), nomClasse);
                                                 final Map<String, String> elevesMap = new LinkedHashMap<>();
                                                 elevesMap.put(finalIdEleve, eleve.getString("lastName") + " " + eleve.getString("firstName"));
                                                 final AtomicBoolean answered = new AtomicBoolean();
