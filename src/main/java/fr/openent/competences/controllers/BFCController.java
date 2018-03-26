@@ -288,16 +288,16 @@ public class BFCController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos userInfos) {
-                if(userInfos!=null && userInfos.getFunctions().containsKey("ENS")){
+//                if(userInfos!=null && userInfos.getFunctions().containsKey("ENS")){
                     RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject data) {
                             niveauEnseignementComplement.createEnsCplByELeve(data,userInfos,notEmptyResponseHandler(request));
                         }
                     });
-                }else{
-                    Renders.unauthorized(request);
-                }
+//                }else{
+//                    Renders.unauthorized(request);
+//                }
             }
         });
     }
@@ -309,7 +309,7 @@ public class BFCController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos userInfos) {
-                if(userInfos!=null && userInfos.getFunctions().containsKey("ENS")){
+//                if(userInfos!=null && userInfos.getFunctions().containsKey("ENS")){
                     RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject data) {
@@ -318,9 +318,9 @@ public class BFCController extends ControllerHelper {
                             niveauEnseignementComplement.updateEnsCpl(id,data,defaultResponseHandler(request));
                         }
                     });
-                }else{
-                    Renders.unauthorized(request);
-                }
+//                }else{
+//                    Renders.unauthorized(request);
+//                }
             }
         });
     }
