@@ -183,6 +183,8 @@ public class DefaultUtilsService  implements UtilsService {
             if (!noteDevoir.getRamenerSur()) {
                 sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
                 sumCJDJ += (currNote * currCoefficient);
+            } else if(currCoefficient.doubleValue() == 0) {
+                continue;
             } else {
                 sumNIMCIParD += ((currNote * diviseurM * currCoefficient) / currDiviseur);
                 sumCI += currCoefficient;
@@ -206,7 +208,12 @@ public class DefaultUtilsService  implements UtilsService {
 
         DecimalFormat df = new DecimalFormat("##.##", symbols);
         try {
-            moyenne = Double.valueOf(df.format(moyenne));
+            if(moyenne.isNaN()) {
+                moyenne = null;
+            } else {
+                moyenne = Double.valueOf(df.format(moyenne));
+            }
+
         } catch (NumberFormatException e) {
             log.error("Moyenne : " + String.valueOf(moyenne), e);
         }
