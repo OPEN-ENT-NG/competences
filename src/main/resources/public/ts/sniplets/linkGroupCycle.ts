@@ -10,7 +10,13 @@ export const linkGroupCycle = {
         init: function () {
             this.idStructure = this.source.idStructure;
             this.groupLibelle = [];
-            this.search = {name:"", type:{all: true}, id_cycle: undefined, hasChange: false, classeAll: false};
+            this.search = {
+                name : "",
+                type :{ all : true},
+                id_cycle : undefined,
+                hasChange : false,
+                classeAll : false
+            };
             this.libelle = Classe.libelle;
             _.forEach(_.values(this.libelle),  (lib) => {
                 this.search.type[this.groupLibelle.length] = true;
@@ -20,7 +26,7 @@ export const linkGroupCycle = {
             this.$parent.filterLinkSearch = this.filterLinkSearch;
             this.selectedClasses = [];
             this.opened.lightboxLinkGroupCycle = false;
-            this.selectedRadio = {id_cycle:undefined};
+            this.selectedRadio = {id_cycle: undefined};
             this.dataOnClasses = [];
             linkGroupCycle.that = this;
             this.getClasses();
@@ -44,7 +50,7 @@ export const linkGroupCycle = {
                 }), 'id'),
                 id_cycle: parseInt(linkGroupCycle.that.selectedRadio.id_cycle),
             };
-            if(jsonToSave.idClasses.length > 0 && !isNaN(jsonToSave.id_cycle)) {
+            if (jsonToSave.idClasses.length > 0 && !isNaN(jsonToSave.id_cycle)) {
                 http().postJson(`competences/link/check/data/classes`, jsonToSave)
                     .done((res) => {
                         if (res.length > 0) {
@@ -75,7 +81,7 @@ export const linkGroupCycle = {
             }
             else {
 
-                if (isNaN(jsonToSave.id_cycle)){
+                if (isNaN(jsonToSave.id_cycle)) {
                     notify.error("evaluation.link.no.cycle");
                 }
                 else {
@@ -129,7 +135,7 @@ export const linkGroupCycle = {
         },
         getClasseCycle: (id_cycle) => {
             let _cycle = _.findWhere(linkGroupCycle.that.cycles, {id_cycle: parseInt(id_cycle)});
-            return (_cycle !== undefined)?  _cycle.libelle : '';
+            return (_cycle !== undefined) ?  _cycle.libelle : '';
         },
         selectedClasse: (classe) => {
             classe.selected = ! classe.selected;
@@ -157,20 +163,20 @@ export const linkGroupCycle = {
         filterLinkSearch: function(searchParams){
             return (classe) => {
                 let result = true;
-                if(classe !== undefined) {
+                if (classe !== undefined) {
                     result = searchParams.type[classe.type_groupe];
                 }
-                if(result && searchParams.id_cycle !== undefined && classe !== undefined) {
+                if (result && searchParams.id_cycle !== undefined && classe !== undefined) {
                     result = (classe.id_cycle === searchParams.id_cycle);
                 }
 
                 if (result && searchParams.name && searchParams.name !== '*' && classe !== undefined
-                    && searchParams.name != '') {
-                    let regexp = new RegExp('^'+searchParams.name.toUpperCase());
+                    && searchParams.name !== '') {
+                    let regexp = new RegExp('^' + searchParams.name.toUpperCase());
                     result =  regexp.test(classe.name.toUpperCase());
                 }
                 return result;
-            }
+            };
         },
         checkSelectedClasses: function (classes) {
             linkGroupCycle.that.selectedClasses = _.filter(classes, function (classe){

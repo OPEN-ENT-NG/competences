@@ -47,7 +47,11 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -75,7 +79,7 @@ public class DevoirController extends ControllerHelper {
     @Get("/devoirs")
     @ApiDoc("Récupère les devoirs d'un utilisateurs")
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
-    public void view(final HttpServerRequest request){
+    public void getDevoirs(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
@@ -87,11 +91,10 @@ public class DevoirController extends ControllerHelper {
                     }
                     else{
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
+                        String idEtablissement = request.params().get("idEtablissement");
                         if (request.params().size() == 2) {
-                            String idEtablissement = request.params().get("idEtablissement");
                             devoirsService.listDevoirs(user,idEtablissement, handler);
                         } else {
-                            String idEtablissement = request.params().get("idEtablissement");
                             String idClasse = request.params().get("idClasse");
                             String idMatiere = request.params().get("idMatiere");
 
@@ -99,16 +102,18 @@ public class DevoirController extends ControllerHelper {
                             final String _RELATIVE = "Relative";
                             Long idPeriode = null;
                             if (request.params().get("idPeriode") != null) {
-                               idPeriode = testLongFormatParameter("idPeriode", request);
+                                idPeriode = testLongFormatParameter("idPeriode", request);
                             }
 
                             if( _STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType())){
                                 String idEleve = request.params().get("idEleve");
-                                devoirsService.listDevoirs(idEleve,idEtablissement, idClasse, null, idPeriode, handler);
+                                devoirsService.listDevoirs(idEleve,idEtablissement, idClasse, null,
+                                        idPeriode, handler);
 
                             } else if (idEtablissement != "undefined" && idClasse != "undefined"
                                     && idMatiere != "undefined" && request.params().get("idPeriode") != "undefined") {
-                                devoirsService.listDevoirs(null,idEtablissement, idClasse, idMatiere, idPeriode, handler);
+                                devoirsService.listDevoirs(null,idEtablissement, idClasse, idMatiere,
+                                        idPeriode, handler);
                             } else {
                                 Renders.badRequest(request, "Invalid parameters");
                             }
@@ -129,7 +134,7 @@ public class DevoirController extends ControllerHelper {
     @Post("/devoir")
     @ApiDoc("Créer un devoir")
     @SecuredAction("competences.create.evaluation")
-    public void create(final HttpServerRequest request) {
+    public void createDevoir(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
@@ -154,7 +159,8 @@ public class DevoirController extends ControllerHelper {
                                             if (event.isRight()) {
                                                 final JsonObject devoirWithId = event.right().getValue();
                                                 // recuperation des professeurs que l'utilisateur connecté remplacent
-                                                utilsService.getTitulaires(user.getUserId(), devoir.getString("id_etablissement"), new Handler<Either<String, JsonArray>>() {
+                                                utilsService.getTitulaires(user.getUserId(),
+                                                        devoir.getString("id_etablissement"), new Handler<Either<String, JsonArray>>() {
                                                     @Override
                                                     public void handle(Either<String, JsonArray> event) {
                                                         if (event.isRight()) {
@@ -164,13 +170,19 @@ public class DevoirController extends ControllerHelper {
 
                                                             if(values.size() > 0) {
 
-                                                                // TODO potentielement il peut y avoir plusieurs titulaires pour un remplaçant sur le même établissement
-                                                                String userIdTitulaire = ((JsonObject)values.get(0)).getString("id_titulaire");
+                                                                // TODO potentielement il peut y avoir plusieurs
+                                                                // titulaires pour un remplaçant sur le même établissement
+                                                                String userIdTitulaire = ((JsonObject)values.get(0))
+                                                                        .getString("id_titulaire");
                                                                 List<String> actions = new ArrayList<String>();
                                                                 actions.add(Competences.DEVOIR_ACTION_UPDATE);
 
-                                                                // TODO ne partager le devoir seulement si le titulaire enseigne sur la classe du remplaçant
-                                                                shareService.userShare(user.getUserId(), userIdTitulaire, devoirWithId.getLong("id").toString(), actions, new Handler<Either<String, JsonObject>>() {
+                                                                // TODO ne partager le devoir seulement si le titulaire
+                                                                // enseigne sur la classe du remplaçant
+                                                                shareService.userShare(user.getUserId(),
+                                                                        userIdTitulaire,
+                                                                        devoirWithId.getLong("id").toString(),
+                                                                        actions, new Handler<Either<String, JsonObject>>() {
                                                                     @Override
                                                                     public void handle(Either<String, JsonObject> event) {
                                                                         if (event.isRight()) {
@@ -307,55 +319,114 @@ public class DevoirController extends ControllerHelper {
                 Competences.SCHEMA_DEVOIRS_UPDATE, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject devoir) {
-                List<String> idDevoirsList = request.params().getAll("idDevoir");
+                final List<String> idDevoirsList = request.params().getAll("idDevoir");
                 final HashMap<Long, Integer> nbCompetencesByDevoir = new HashMap<>();
-                Long[] idDevoirsArray = new Long[idDevoirsList.size()];
+                final String idGroupe = devoir.getString("id_groupe");
+                final String idEtablissement = devoir.getString("id_etablissement");
 
-                for (int i = 0; i < idDevoirsList.size(); i++) {
-                    idDevoirsArray[i] = Long.valueOf(idDevoirsList.get(i));
-                }
-                // On recherche le Nonbre de compétences sur le devoir à mettre à jour
-                devoirsService.getNbCompetencesDevoirs(idDevoirsArray, new Handler<Either<String, JsonArray>>() {
+                JsonObject jsonRequest = new JsonObject()
+                        .putObject("headers", new JsonObject()
+                                .putString("Accept-Language",
+                                        request.headers().get("Accept-Language")))
+                        .putString("Host", getHost(request));
+                JsonObject action = new JsonObject()
+                        .putString("action", "periode.getPeriodes")
+                        .putString("idEtablissement", idEtablissement)
+                        .putArray("idGroupes", new JsonArray().addString(idGroupe))
+                        .putObject("request", jsonRequest);
+
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                     @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            if (event.right().getValue() != null) {
-                                JsonArray resultNbCompetencesDevoirs = event.right().getValue();
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        JsonArray periodes = body.getArray("result");
+                        boolean isUpdatable = true;
 
-                                for (int i = 0; i < resultNbCompetencesDevoirs.size(); i++) {
-                                    JsonObject o = resultNbCompetencesDevoirs.get(i);
-
-                                    if (o != null) {
-                                        nbCompetencesByDevoir.put(o.getLong("id"),
-                                                o.getInteger("nb_competences"));
+                        if ("ok".equals(body.getString("status"))) {
+                            // On vérifie que la date de fin de saisie n'est pas dépassée
+                            final Number idPeriode =  devoir.getNumber("id_periode");
+                            JsonObject periode = null;
+                            for(int i =0; i< periodes.size(); i++) {
+                                if(idPeriode.intValue()
+                                        == ((JsonObject)periodes.get(i)).getNumber("id_type").intValue()) {
+                                    periode = (JsonObject)periodes.get(i);
+                                    break;
+                                }
+                            }
+                            if (periode != null) {
+                                String dateFinSaisieStr = periode.getString("date_fin_saisie")
+                                        .split("T")[0];
+                                DateFormat formatter = new SimpleDateFormat("yy-MM-dd");
+                                try {
+                                    Date dateFinSaisie = formatter.parse(dateFinSaisieStr);
+                                    Date dateActuelle = new Date();
+                                    if(dateActuelle.after(dateFinSaisie)){
+                                        isUpdatable = false;
                                     }
-                                }
-
-                                // On limite le nbre de compétence d' un devoir
-                                if ((devoir.containsField("competencesAdd")
-                                        && devoir.containsField("competencesRem"))
-
-                                        && ((nbCompetencesByDevoir.get(Long.valueOf(request.params().get("idDevoir")))
-                                        + devoir.getArray("competencesAdd").size()
-                                        - devoir.getArray("competencesRem").size())
-                                        <= Competences.MAX_NBR_COMPETENCE)) {
-                                    devoirsService.updateDevoir(request.params().get("idDevoir"),
-                                            devoir, arrayResponseHandler(request));
-
-                                }
-                                else{
-                                    leftToResponse(request, event.left());
+                                } catch (ParseException e) {
+                                    e.printStackTrace();
                                 }
                             }
                             else {
-                                leftToResponse(request, event.left());
+                                isUpdatable = false;
                             }
-                        }
-                        else {
-                            leftToResponse(request, event.left());
+
+
+                            if (!isUpdatable) {
+                                leftToResponse(request, new Either.Left<String, String>("END OF SAISIE"));
+                            }
+                            else {
+                                Long[] idDevoirsArray = new Long[idDevoirsList.size()];
+
+                                for (int i = 0; i < idDevoirsList.size(); i++) {
+                                    idDevoirsArray[i] = Long.valueOf(idDevoirsList.get(i));
+                                }
+                                // On recherche le Nombre de compétences sur le devoir à mettre à jour
+                                devoirsService.getNbCompetencesDevoirs(idDevoirsArray, new Handler<Either<String, JsonArray>>() {
+                                    @Override
+                                    public void handle(Either<String, JsonArray> event) {
+                                        if (event.isRight()) {
+                                            if (event.right().getValue() != null) {
+                                                JsonArray resultNbCompetencesDevoirs = event.right().getValue();
+
+                                                for (int i = 0; i < resultNbCompetencesDevoirs.size(); i++) {
+                                                    JsonObject o = resultNbCompetencesDevoirs.get(i);
+
+                                                    if (o != null) {
+                                                        nbCompetencesByDevoir.put(o.getLong("id"),
+                                                                o.getInteger("nb_competences"));
+                                                    }
+                                                }
+
+                                                // On limite le nbre de compétence d' un devoir
+                                                if ((devoir.containsField("competencesAdd")
+                                                        && devoir.containsField("competencesRem"))
+
+                                                        && ((nbCompetencesByDevoir.get(Long.valueOf(request
+                                                        .params().get("idDevoir")))
+                                                        + devoir.getArray("competencesAdd").size()
+                                                        - devoir.getArray("competencesRem").size())
+                                                        <= Competences.MAX_NBR_COMPETENCE)) {
+                                                    devoirsService.updateDevoir(request.params()
+                                                                    .get("idDevoir"),
+                                                            devoir, arrayResponseHandler(request));
+
+                                                } else {
+                                                    leftToResponse(request, event.left());
+                                                }
+                                            } else {
+                                                leftToResponse(request, event.left());
+                                            }
+                                        } else {
+                                            leftToResponse(request, event.left());
+                                        }
+                                    }
+                                });
+                            }
                         }
                     }
                 });
+
             }
         });
     }

@@ -30,7 +30,7 @@ public class AccessAnnotationFilter implements ResourcesProvider {
                     handler.handle(false);
                     return;
                 }
-                new FilterDevoirUtils().validateAccessDevoir(idDevoir, user,false, new Handler<Boolean>() {
+                new FilterDevoirUtils().validateAccessDevoir(idDevoir, user, new Handler<Boolean>() {
                     @Override
                     public void handle(Boolean isValid) {
                         resourceRequest.resume();

@@ -93,6 +93,6 @@ export class Classe extends Model {
             }
             return libelleClasse;
 
-    };
+    }
 
 }

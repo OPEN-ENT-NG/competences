@@ -26,8 +26,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 $scope.suiviCompetence = new SuiviCompetenceClasse($scope.search.classe, $scope.search.periode);
                 let niveauCompetence = _.findWhere(evaluations.structure.cycles, {
                     id_cycle: $scope.search.classe.id_cycle
-                })
-                if (niveauCompetence!== undefined){
+                });
+                if (niveauCompetence !== undefined){
                     niveauCompetence = niveauCompetence.niveauCompetencesArray;
                 }
                 else{

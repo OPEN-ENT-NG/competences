@@ -459,7 +459,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.updateOrder = function () {
             let res = [];
             for (let i = 0; i< $scope.evaluations.competencesDevoir.length; i++){
-                let _c = _.findWhere($scope.evaluations.competencesDevoir, {index:i})
+                let _c = _.findWhere($scope.evaluations.competencesDevoir, {index:i});
                 if(_c !==  undefined) {
                     res.push(_c);
                 }
