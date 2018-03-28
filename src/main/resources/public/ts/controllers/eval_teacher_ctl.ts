@@ -1825,7 +1825,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let maCompetence = _.findWhere(evaluations.competencesDevoir,
                         {id_competence: $scope.allCompetences.all[i].id_competence});
 
-                    if (maCompetence === undefined) {
+                    if (maCompetence === undefined ) {
                         $scope.competencesSupp.push($scope.allCompetences.all[i]);
                     }
                 }
@@ -1842,7 +1842,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 id: String($scope.competencesSupp[i].id_competence),
                                 typeeval: 'TypeEvalSkill'
                             });
-                            if (competence !== undefined) {
+                            if (competence !== undefined
+                                && _.findWhere($scope.evaluations.competencesDevoir,
+                                    {id: $scope.competencesSupp[i].id_competence})  === undefined ) {
                                 $scope.evaluatedCompetencesSupp.push($scope.competencesSupp[i]);
                             }
                         }
