@@ -56,17 +56,23 @@
         </div>
         <div class="ten cell padding-left">
             </br>
-            <div class="row">
-                <label class="chip margin-left" ng-class="{multiselect: search.classeAll}">
-                    <span><i18n>viescolaire.utils.all.none</i18n></span>
-                    <input type="checkbox"
-                           ng-init="bSelectAllClasse = search.classeAll"
-                           ng-model="bSelectAllClasse"
-                           ng-change="selectAllClasses(filteredItems);"/>
-                </label>
+            <div class="row " ng-hide="filteredItems.length === 0">
+                <div class="twelve cell header-class">
+                    <div class="cell">
+                        <label class="check-box" ng-class="{multiselect: search.classeAll}">
+                            <input type="checkbox"
+                                   ng-init="bSelectAllClasse = search.classeAll"
+                                   ng-model="bSelectAllClasse"
+                                   ng-change="selectAllClasses(filteredItems);"/>
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="cell">
+                        <i18n>evaluation.link.group.classes</i18n>
+                    </div>
+                </div>
             </div>
-            </br>
-            <div class="row"
+            <div class="row list-classes"
                  ng-repeat="classe in (filteredItems = (classesGroupes.all | filter:filterLinkSearch(search) | orderBy:['type_groupe','name']))">
                 <div class="row" ng-click="classe.displayed = !classe.displayed">
                     <div class="cell">
