@@ -416,7 +416,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.suiviClasse = {
                                 textMod: true
                             };
-                            $scope.disabledExportSuiviClasse = false;
+                            if(_.findIndex($scope.allMatieresSorted,{select: true}) === -1){
+                                $scope.disabledExportSuiviClasse = true;
+                            } else {
+                                $scope.disabledExportSuiviClasse = false;
+                            }
                             $scope.sortType = 'title'; // set the default sort type
                             $scope.sortReverse = false;  // set the default sort order
                             $scope.usePerso = evaluations.structure.usePerso;
@@ -452,6 +456,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             };
 
         route(routesActions);
+
+
+        $scope.disabledExportSuiviClasseButton = function (){
+            if(_.findIndex($scope.allMatieresSorted,{select: true}) === -1){
+                return true;
+            } else {
+                return false;
+            }
+        }
 
         $scope.showRechercheBarFunction = function (display){
             $scope.showRechercheBar = display;
@@ -3233,7 +3246,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         }
 
         $scope.disabledExport = function(){
-            return $scope.allUnselect || typeof($scope.releveComp.periode) === 'undefined'
+            return (_.findIndex($scope.allMatieresSorted,{select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined'
         }
 
 
