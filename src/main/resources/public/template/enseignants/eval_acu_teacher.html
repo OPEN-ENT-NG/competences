@@ -8,7 +8,7 @@
             <li ><a href="#/competences/eleve"><i18n>evaluations.suivi.eleve.title</i18n></a></li>
             <li ><a href="#/competences/classe"><i18n>evaluations.suivi.classe.title</i18n></a></li>
             <li ng-if="isChefEtab()"><a href="#/remplacements/list"><i18n>evaluations.remplacants.title</i18n></a></li>
-            <li workflow="competences.lsun.export"><a href="#/export"><i18n>evaluations.exportLSU</i18n></a></li>
+            <li workflow="competences.exportLSU"><a href="#/export"><i18n>evaluations.exportLSU</i18n></a></li>
         </ul>
     </nav>
     <!--  Content (main zone) Enseignant -->
@@ -67,7 +67,7 @@
                             </div>
                         </div>
                         <div class="content-box-accueil--table--content" style="max-height: 220px;">
-                            <div  ng-repeat="devoir in devoirs.all | filter:filterValidClasse() | customSearchFilters:search | orderBy:'date':true" class="row">
+                            <div  ng-repeat="devoir in devoirs.all track by $index| filter:filterValidClasse() | customSearchFilters:search | orderBy:'date':true" class="row">
                                 <a ng-href="#/devoir/[[devoir.id]]" >
                                     <div class="four cell">
                                         [[getDateFormated(devoir.date)]]
@@ -108,7 +108,7 @@
                             </div>
                         </div>
                         <div class="content-box-accueil--table--content">
-                            <div ng-repeat="devoir in currentDevoirsNotDone | orderBy:'date':true |filter:FilterGroupEmpty" class="row">
+                            <div ng-repeat="devoir in currentDevoirsNotDone track by $index | orderBy:'date':true |filter:FilterGroupEmpty" class="row">
                                 <a ng-href="#/devoir/[[devoir.id]]" >
                                     <div class="four cell">
                                         [[getDateFormated(devoir.date)]]

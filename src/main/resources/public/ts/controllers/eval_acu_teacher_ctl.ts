@@ -5,38 +5,9 @@ import * as utils from '../utils/teacher';
 export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', [
     '$scope', 'route', 'model', '$rootScope',
     function ($scope, route, model, $rootScope) {
-        // // Méthode d'initialisation ou de réinitialisation du Controler : notamment lors du changement d'établissement
-        // $scope.initPeriodesList = (Index?: number,annee?:boolean) => {
-        //     $scope.periodesList = {
-        //         "type": "select",
-        //         "name": "Service",
-        //         "value":  $scope.periodeParDefault(),
-        //         "values": []
-        //     };
-        //     if(Index || Index==0) {
-        //         _.map($scope.classes.all[Index].periode, function (per) {
-        //             $scope.periodesList.values.push(per);
-        //         });
-        //     }
-        //     if(annee !== false) {
-        //         $scope.periodesList.values.push({libelle: $scope.translate('viescolaire.utils.annee'), id: undefined});
-        //     }
-        //
-        // };
         $scope.initControler = function () {
-            // $scope.initPeriodesList();
+
             $scope.evaluations = evaluations;
-            // $scope.search = {
-            //     matiere: '*',
-            //     periode: '*',
-            //     enseignant: '*',
-            //     classe: '*',
-            //     sousmatiere: '*',
-            //     type: '*',
-            //     idEleve: '*',
-            //     name: ''
-            // };
-            // $scope.displayPeriode = false;
             $scope.chartOptions = {
                 classes: {},
                 options: {
@@ -119,7 +90,8 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 $scope.getDevoirsNotDone().then((devoirs) => {
                     $scope.devoirsNotDone = devoirs;
                     $scope.devoirsClasses = _.filter(evaluations.structure.classes.all, (classe) => {
-                        return _.contains(_.uniq(_.pluck($scope.devoirsNotDone, 'id_groupe')), classe.id) && classe.remplacement !== true;
+                        return _.contains(_.uniq(_.pluck($scope.devoirsNotDone, 'id_groupe')), classe.id)
+                            && classe.remplacement !== true;
                     });
                     if ($scope.devoirsClasses.length > 0 ) {
                         $scope.chartOptions.selectedClasse = _.first(_.sortBy($scope.devoirsClasses, 'name')).id;
@@ -136,52 +108,6 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
         }else {
             console.log("Aucun établissement actif pour l'utilisateur");
         }
-        // $scope.FilterPeriode = (Maperiode) => {
-        //     if($scope.search.classe !== '' && $scope.search.classe !== '*' && typeof($scope.search.classe) == "object") {
-        //         if(Maperiode.id_classe == $scope.search.classe.id ) {
-        //             return Maperiode ;
-        //         }
-        //     }else {
-        //         return ;
-        //     }
-        // };
-        // $scope.displayPeriode = false;
-        // $scope.periodeDisplay = (classe,annee) => {
-        //     if(typeof(classe) == 'object'&& classe !== null) {
-        //         if(classe.type_groupe == 0) {
-        //             let indexClasse = _.indexOf($scope.classes.all,classe);
-        //             if(!('periode' in classe && classe.periode !== null && classe.periode !== undefined)) {
-        //                 $scope.classes.all[indexClasse].periode = _.where($scope.evaluations.structure.periodes.all, {id_classe: $scope.classes.all[indexClasse].id});
-        //             }
-        //             $scope.initPeriodesList(indexClasse,annee);
-        //             $scope.displayPeriode = true ;
-        //             utils.safeApply($scope);
-        //         }else{
-        //             let indexClasse = _.indexOf($scope.classes.all,classe);
-        //             if('periode' in classe && classe.periode !== null && classe.periode !== undefined) {
-        //                 $scope.initPeriodesList(indexClasse,annee);
-        //                 $scope.displayPeriode = true ;
-        //                 utils.safeApply($scope);
-        //             }else{
-        //                 $scope.classes.all[indexClasse].getGroupePeriode().then((res)=>{
-        //                     if (! (res == undefined)) {
-        //                         $scope.initPeriodesList(indexClasse,annee);
-        //                         $scope.displayPeriode = true ;
-        //                         utils.safeApply($scope);
-        //                     }else{
-        //                         $scope.initPeriodesList();
-        //                         $scope.displayPeriode = false ;
-        //                         utils.safeApply($scope);
-        //                     }
-        //                 })
-        //             }
-        //         }
-        //     }else {
-        //         $scope.displayPeriode = false ;
-        //         utils.safeApply($scope);
-        //     }
-        //
-        // };
 
         $scope.loadChart = function (idClasse) {
             let idDevoirs = _.pluck(_.where($scope.devoirsNotDone, {id_groupe: idClasse}), 'id');

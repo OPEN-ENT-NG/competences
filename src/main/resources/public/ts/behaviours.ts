@@ -6,7 +6,7 @@ import {linkGroupCycle} from "./sniplets/linkGroupCycle";
 Behaviours.register('competences', {
     rights: {
         workflow: {
-            'export-lsun': 'fr.openent.evaluations.controller.LSUController|getXML',
+            exportLSU: 'fr.openent.competences.controllers.LSUController|getXML',
             setVisibilityAverageBfc: 'fr.openent.competences.controllers.BFCController|setVisibility',
             paramCompetences: 'fr.openent.competences.controllers.CompetenceController|createCompetence',
             linkGroupCycle: 'fr.openent.competences.controllers.UtilsController|updateLinkGroupesCycles'
