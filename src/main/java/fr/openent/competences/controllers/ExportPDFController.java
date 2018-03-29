@@ -85,6 +85,7 @@ public class ExportPDFController extends ControllerHelper {
     private CompetencesService competencesService;
     private NiveauDeMaitriseService niveauDeMaitriseService;
     private ExportService exportService;
+    private NiveauEnseignementComplementService niveauEnseignementComplementService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
         devoirService = new DefaultDevoirService();
@@ -95,6 +96,7 @@ public class ExportPDFController extends ControllerHelper {
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         exportService = new DefaultExportService(eb);
+        niveauEnseignementComplementService = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
     }
 
     /**
@@ -554,6 +556,8 @@ public class ExportPDFController extends ControllerHelper {
                     }
                 }
             });
+
+
         }
     }
 

@@ -1,9 +1,9 @@
 /**
  * Created by agnes.lapeyronnie on 28/11/2017.
  */
-import { model, IModel, Model, notify, _ }from 'entcore';
-import http from 'axios';
-import{Mix} from "entcore-toolkit";
+import {IModel, Model, notify, _} from "entcore";
+import http from "axios";
+import {Mix} from "entcore-toolkit";
 export class EnsCpl extends Model  {
     id : number;
     libelle : string;
@@ -35,18 +35,26 @@ export class EnsCpls extends Model implements IModel{
 }
 
 
-export class NiveauEnseignementCpls extends Model {
-    all : EleveEnseignementCpl[];
+export class NiveauEnseignementCpl extends Model  {
+    libelle : string;
+    niveau : number;
 
-    constructor(id_eleve : string,){
+    constructor(niveau : number){
+        super();
+        this.niveau = niveau
+    }
+}
+
+export class NiveauEnseignementCpls extends Model {
+    all : NiveauEnseignementCpl[];
+
+    constructor(){
         super();
         this.all=[];
-        this.all[0] = new EleveEnseignementCpl(id_eleve);
+        this.all[0] = new NiveauEnseignementCpl(1);
         this.all[0].libelle = "Objectif atteint";
-        this.all[0].niveau = 1;
-        this.all[1] = new EleveEnseignementCpl(id_eleve);
+        this.all[1] = new NiveauEnseignementCpl(2);
         this.all[1].libelle ="Objectif dépassé";
-        this.all[1].niveau = 2;
     }
 }
 
@@ -57,16 +65,19 @@ export class EleveEnseignementCpl extends Model implements IModel{
     id_langue : number;
     niveau : number;
     libelle : string;
+    niveau_lcr : number;
+    libelle_lcr : string;
 
     constructor(id_eleve : string){
         super();
         this.id_eleve = id_eleve;
         this.niveau = 0;
     }
-     setAttributsEleveEnsCpl (id_enscpl : number,niveau : number, id_langue : number)  {
+     setAttributsEleveEnsCpl (id_enscpl : number,niveau : number,niveau_lcr : number, id_langue : number)  {
             this.id_enscpl = id_enscpl;
             this.niveau = niveau;
             this.id_langue = id_langue;
+            this.niveau_lcr = niveau_lcr;
             return this;
     }
 
@@ -82,7 +93,8 @@ export class EleveEnseignementCpl extends Model implements IModel{
             id_eleve : this.id_eleve,
             id_enscpl : this.id_enscpl,
             id_langue : this.id_langue,
-            niveau : this.niveau
+            niveau : this.niveau,
+            niveau_lcr : this.niveau_lcr
         }
     }
 
@@ -114,7 +126,7 @@ export class EleveEnseignementCpl extends Model implements IModel{
     async sync(){
         let { data } = await  http.get(this.api.get);
         if(data.hasOwnProperty('id')) {
-            let nivEnsCpls = new NiveauEnseignementCpls(data.id_eleve);
+            let nivEnsCpls = new NiveauEnseignementCpls();
             if (data.niveau != 0) {
                 data.libelle = _.findWhere(nivEnsCpls.all, {niveau: data.niveau}).libelle;
             }

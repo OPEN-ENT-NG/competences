@@ -29,11 +29,12 @@ public class DefaultNiveauEnseignementComplementService extends SqlCrudService i
     @Override
     public void updateEnsCpl(Integer id, JsonObject data, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new JsonArray();
-        String query = "UPDATE "+ Competences.COMPETENCES_SCHEMA+".eleve_enseignement_complement SET id_enscpl = ?, niveau = ?, id_langue = ?"
+        String query = "UPDATE "+ Competences.COMPETENCES_SCHEMA+".eleve_enseignement_complement SET id_enscpl = ?, niveau = ?, id_langue = ?, niveau_lcr = ?"
              +" WHERE id = ?";
         values.addNumber(data.getNumber("id_enscpl"));
         values.addNumber(data.getNumber("niveau"));
         values.addNumber(data.getNumber("id_langue"));
+        values.addNumber(data.getNumber("niveau_lcr"));
         values.addNumber(id);
         Sql.getInstance().prepared(query,values, SqlResult.validUniqueResultHandler(handler));
     }

@@ -1,20 +1,12 @@
 /**
  * Created by ledunoiss on 27/10/2016.
  */
-
-import { ng, template, model, moment } from 'entcore';
-import {
-    SuiviCompetence,
-    Devoir,
-    CompetenceNote,
-    evaluations,
-    Structure,
-    Classe,
-    Eleve
-} from '../models/teacher';
-import * as utils from '../utils/teacher';
-import { NiveauEnseignementCpls } from "../models/eval_ens_complement_mdl";
-import { Defaultcolors } from "../models/eval_niveau_comp";
+import {ng, template, model, moment} from "entcore";
+import {SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve} from "../models/teacher";
+import * as utils from "../utils/teacher";
+import {NiveauEnseignementCpls, NiveauEnseignementCpl} from "../models/eval_ens_complement_mdl";
+import {Defaultcolors} from "../models/eval_niveau_comp";
+import {NiveauLangueCultReg, NiveauLangueCultRegs} from "../models/eval_langue_culture_regionale_mdl";
 
 declare let _:any;
 declare let Chart:any;
@@ -360,16 +352,22 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 });
 
                //Enseignement de complement cycle 4
-                $scope.inactif = true;
-                $scope.suiviCompetence.niveauEnsCpls = new NiveauEnseignementCpls($scope.search.eleve.id);
+                $scope.suiviCompetence.niveauEnsCpls = new NiveauEnseignementCpls();
+                $scope.suiviCompetence.niveauLangueCultRegs = new NiveauLangueCultRegs();
                 $scope.suiviCompetence.ensCpls.sync().then(()=>{
                     $scope.suiviCompetence.eleveEnsCpl.sync().then(()=>{
                         $scope.suiviCompetence.langues.sync().then(()=> {
                             if ($scope.suiviCompetence.eleveEnsCpl.id) {
                                 $scope.suiviCompetence.ensCplSelected = _.findWhere($scope.suiviCompetence.ensCpls.all, {id: $scope.suiviCompetence.eleveEnsCpl.id_enscpl});
                                 $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere($scope.suiviCompetence.niveauEnsCpls.all, {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau});
+
+                                // si il y a une langue régionale de precisée, on la sélectionne
                                 if ($scope.suiviCompetence.eleveEnsCpl.id_langue !== undefined) {
                                     $scope.suiviCompetence.langueSelected = _.findWhere($scope.suiviCompetence.langues.all, {id: $scope.suiviCompetence.eleveEnsCpl.id_langue});
+                                    // sélection du niveau si renseigné
+                                    if ($scope.suiviCompetence.eleveEnsCpl.niveau_lcr !== undefined) {
+                                        $scope.suiviCompetence.niveauLangueCultRegSelected = _.findWhere($scope.suiviCompetence.niveauLangueCultRegs.all, {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau_lcr});
+                                    }
                                 }
                                 utils.safeApply($scope);
                             } else {
@@ -380,13 +378,15 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     });
                 });
 
-                $scope.loadEns = ()=>{
-                    $scope.inactif = false;
+                $scope.onChangeEns = ()=>{
+                    // réinit des listes déroulantes concernant les langues régionales
                     $scope.suiviCompetence.langueSelected = undefined;
+                    $scope.suiviCompetence.niveauLangueCultRegSelected = undefined;
+
                     //si id=1 on est sur ensCpl Aucun
                     if($scope.suiviCompetence.ensCplSelected.id === 1) {
                         // on met à jour le niveau à 0
-                        $scope.suiviCompetence.niveauEnsCplSelected.niveau = 0;
+                        $scope.suiviCompetence.niveauEnsCplSelected = new NiveauEnseignementCpl(0);
                     } else {
                         //sinon on positionne sur le 1er niveau par défaut
                         $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.niveauEnsCpls.all[0];
@@ -399,22 +399,34 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
                     }
                 };
-                $scope.loadNiveau = ()=>{
-                    if($scope.suiviCompetence.ensCplSelected !== undefined) {
-                        $scope.inactif = false;
+
+                $scope.showSaveButton =()=> {
+                    let id_langue;
+                    if($scope.suiviCompetence.langueSelected !== undefined) {
+                        id_langue = $scope.suiviCompetence.langueSelected.id;
                     }
+
+                    let visible = $scope.suiviCompetence.ensCplSelected !== undefined &&
+                                  $scope.suiviCompetence.ensCplSelected.id !== undefined && // ense complement
+                                  $scope.suiviCompetence.niveauEnsCplSelected.niveau !== undefined && // avec un niveau
+                                  ($scope.suiviCompetence.langueSelected == undefined || // et pas de langue regionale
+                                      ($scope.suiviCompetence.langueSelected !== undefined && // ou un langue avec le code AUC mais sans niveau
+                                            $scope.suiviCompetence.langueSelected.code === 'AUC')  ||
+                                      ($scope.suiviCompetence.langueSelected !== undefined && // ou une langue avec un niveau
+                                            $scope.suiviCompetence.niveauLangueCultRegSelected.niveau !== undefined)
+                                  );
+
+                    return visible;
                 };
 
-                $scope.changeLangue = ()=>{
 
-                    $scope.inactif = false;
-
-                    // dans le cadre d'un modification, le bouton enregistrer apparait si les données en front sont les même
-                    // que ce qu'il y a en base de données
-                    if ($scope.suiviCompetence.eleveEnsCpl.id) {
-                        $scope.inactif = $scope.suiviCompetence.eleveEnsCpl.id_enscpl ===  $scope.suiviCompetence.eleveEnsCpl.id &&
-                        $scope.suiviCompetence.eleveEnsCpl.id_langue === $scope.suiviCompetence.langueSelected.id &&
-                        $scope.suiviCompetence.eleveEnsCpl.niveau === $scope.suiviCompetence.niveauEnsCplSelected.id;
+                $scope.oncChangeLangue = ()=>{
+                    if ($scope.suiviCompetence.langueSelected.code === 'AUC') {
+                        // suppression du niveau
+                        $scope.suiviCompetence.niveauLangueCultRegSelected = new NiveauLangueCultReg(0);
+                    } else {
+                        // sélection du 1er niveau par defaut
+                        $scope.suiviCompetence.niveauLangueCultRegSelected = $scope.suiviCompetence.niveauLangueCultRegs.all[0];
                     }
                 };
 
@@ -512,12 +524,20 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             let id_langue;
             if($scope.suiviCompetence.langueSelected !== undefined) {
                 id_langue = $scope.suiviCompetence.langueSelected.id;
+
+                // si la langue culturelle choisie est aucun, on remet le niveau à 0 par pécaution
+                if($scope.suiviCompetence.langueSelected.code == 'AUC') {
+                    $scope.suiviCompetence.niveauLangueCultRegSelected = new NiveauLangueCultReg(0);
+                }
+            } else {
+                // si pas de langue culturelle choisie on remet le niveau à 0 par pécaution
+                $scope.suiviCompetence.niveauLangueCultRegSelected = new NiveauLangueCultReg(0);
             }
 
             $scope.suiviCompetence.eleveEnsCpl.setAttributsEleveEnsCpl($scope.suiviCompetence.ensCplSelected.id,
                                                                         $scope.suiviCompetence.niveauEnsCplSelected.niveau,
+                                                                        $scope.suiviCompetence.niveauLangueCultRegSelected.niveau,
                                                                         id_langue).save();
-            $scope.inactif = true;
         };
 
         $scope.successCreateSynthese = false;
