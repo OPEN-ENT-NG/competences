@@ -360,6 +360,7 @@ public class DevoirController extends ControllerHelper {
                                 try {
                                     Date dateFinSaisie = formatter.parse(dateFinSaisieStr);
                                     Date dateActuelle = new Date();
+                                    dateActuelle.setTime(0);
                                     if(dateActuelle.after(dateFinSaisie)){
                                         isUpdatable = false;
                                     }
