@@ -352,8 +352,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                  }
                  case 'printReleveComp' : {
                      let url = "/competences/releveComp/print/export?text=" + !textMod;
-                     for(var m = 0; m < $scope.selected.matieres.length; m++){
-                         url += "&idMatiere=" + $scope.selected.matieres[m];
+                     for(var m = 0; m < $scope.allMatieresSorted.length; m++){
+                         if($scope.allMatieresSorted[m].select){
+                             url += "&idMatiere=" + $scope.allMatieresSorted[m].id;
+                         }
                      }
                      if(idPeriode) {
                          url += "&idPeriode=" + idPeriode;
