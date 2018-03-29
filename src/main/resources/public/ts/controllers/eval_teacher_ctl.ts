@@ -584,7 +584,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             }else if (classe && classe.periodes) {
                 $scope.getCurrentPeriode(classe).then(function (res) {
-                    $scope.search.periode = res;
+                    $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all,{id:res.id_type});
                     if ( ($location.path() === '/devoir/create') ||
                         ($scope.devoir !== undefined
                             && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {

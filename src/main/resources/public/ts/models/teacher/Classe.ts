@@ -5,7 +5,7 @@ declare let bundle:any;
 
 export class Classe extends Model {
     eleves : Collection<Eleve>;
-    id : number;
+    id : string;
     name : string;
     type_groupe : number;
     periodes : Collection<Periode>;

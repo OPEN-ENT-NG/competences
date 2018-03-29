@@ -8,14 +8,14 @@ export let customClassFilters = ng.filter('customClassFilters', function(){
         let tempTable = [];
         let result = classes;
 
-        if (searchParams.periode !== undefined && searchParams.periode !== '*' && searchParams.periode !== null &&
+        /*if (searchParams.periode !== undefined && searchParams.periode !== '*' && searchParams.periode !== null &&
             searchParams.periode.id !== null) {
             if(searchParams.periode.id_type === undefined) {
                 searchParams.periode.id_type = searchParams.periode.id;
             }
             tempTable = _.where(output, {id_periode : parseInt(searchParams.periode.id_type )});
             output = tempTable;
-        }
+        }*/
         result =_.filter(classes, function (classe) { return _.findWhere(output, {id_groupe: classe.id});
         });
         return result;
