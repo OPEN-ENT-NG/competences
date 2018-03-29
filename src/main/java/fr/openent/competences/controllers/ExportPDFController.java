@@ -237,7 +237,9 @@ public class ExportPDFController extends ControllerHelper {
             // calcul de la moyenne de l'eleve pour la matiere
             JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, false, 20);// TODO recuper le diviseur de la matiere
             // ajout sur l'objet json
-            matiereInter.putString("moyenne", moyenneMatiere.getNumber("moyenne").toString());
+            if( moyenneMatiere.getNumber("moyenne") != null){
+                matiereInter.putString("moyenne", moyenneMatiere.getNumber("moyenne").toString());
+            }
         }
     }
 
