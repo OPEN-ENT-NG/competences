@@ -62,7 +62,7 @@ export let listController = ng.controller('ListController', [
                 eleve: evaluations.eleve,
                 periode: evaluations.periode,
                 classe : null,
-                matiere: null,
+                matiere: $scope.initDefaultMatiere(),
                 enseignant: null,
                 sousmatiere: null,
                 type: null,
@@ -138,5 +138,6 @@ export let listController = ng.controller('ListController', [
                 utils.safeApply($scope);
             }
         };
+
     }
 ]);

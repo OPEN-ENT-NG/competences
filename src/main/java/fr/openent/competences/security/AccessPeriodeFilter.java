@@ -44,7 +44,7 @@ public class AccessPeriodeFilter implements ResourcesProvider {
             case "Teacher" : {
                 resourceRequest.pause();
                 MultiMap params = resourceRequest.params();
-                FilterUserUtils userUtils = new FilterUserUtils(user);
+                FilterUserUtils userUtils = new FilterUserUtils(user,null);
 
                 if (!userUtils.validateUser(params.get("idUser")) &&
                         !userUtils.validateStructure(params.get("idEtablissement"))) {

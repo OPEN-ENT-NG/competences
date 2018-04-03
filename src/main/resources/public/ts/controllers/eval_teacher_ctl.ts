@@ -3288,6 +3288,80 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.disabledExportSuiviClasse = $scope.allUnselect || typeof($scope.suiviClasse.periode) === 'undefined';
             if(option === "printRecapEval")
                 $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
+        };
+
+        $scope.initDefaultMatiere = function () {
+            if($scope.matieres.all.length === 1) {
+                $scope.search.matiere = $scope.matieres.all[0];
+            }
+        };
+
+        $scope.initMoyenneFinale = function (eleve) {
+            if (eleve.moyenneFinale === undefined || eleve.moyenneFinale === null ){
+                eleve.moyenneFinale = eleve.moyenne;
+            }
+
+        };
+
+        $scope.disabledSaisieMoyenne = function () {
+            if ($scope.search.periode.id === null) {
+                return true;
+            }
+            else {
+                if ($scope.isChefEtab()){
+                    return false;
+                }
+                else {
+                    let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
+                        {id_type: $scope.search.periode.id});
+                    if (selectedPeriode !== undefined) {
+                     return ! moment(selectedPeriode.date_fin_saisie).isAfter(moment(new Date));
+                    }
+                    else {
+                        return true;
+                    }
+                }
+            }
         }
+        $scope.saveMoyenneFinaleEleve = function (eleve) {
+            if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
+
+                let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
+                if ((reg.test(eleve.moyenneFinale) && parseInt(eleve.moyenneFinale) < 20)
+                    || eleve.moyenneFinale === ""  ) {
+                    eleve.oldMoyenneFinale = eleve.moyenneFinale;
+                    $scope.releveNote.saveMoyenneFinaleEleve(eleve);
+                }
+                else{
+                    notify.error(lang.translate("error.average.outbound"));
+                    eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                }
+                utils.safeApply($scope);
+            }
+        };
+        $scope.savePositionnementEleve = function (eleve) {
+
+                if (parseInt(eleve.positionnement) <= $scope.structure.cycle.niveauCompetencesArray.length) {
+                    eleve.oldPositionnement = eleve.positionnement;
+                    $scope.releveNote.savePositionnementEleve(eleve);
+                }
+                else{
+                    notify.error(lang.translate("error.positionnement.outbound") +
+                        $scope.structure.cycle.niveauCompetencesArray.length);
+                    eleve.positionnement = eleve.oldPositionnement;
+                }
+                utils.safeApply($scope);
+        };
+
+        $scope.toogleDevoirNote = function () {
+            $scope.toogle = !$scope.toogle;
+            utils.safeApply($scope);
+            $('html, body')
+            // on arrête toutes les animations en cours
+                .stop()
+            $(".colDevoir").animate({
+                width: "toggle"
+            }, 'slow');
+        };
     }
 ]);

@@ -227,4 +227,62 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         query.append("ORDER BY date ASC ;");
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
+
+    @Override
+    public void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
+                                    String colonne,   Handler<Either<String, JsonArray>> handler){
+        JsonArray values = new JsonArray();
+
+        StringBuilder query = new StringBuilder()
+                .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"."+ colonne )
+                .append("moyenne".equals(colonne)? "_finale": " ")
+                .append(" WHERE id_periode = ? AND id_eleve=?  AND id_classe=? AND id_matiere=? ");
+
+        values.addNumber(idPeriode).addString(idEleve).addString(idClasse).addString(idMatiere);
+
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
+
+
+    @Override
+    public void getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, String idClasse,
+                                 String colonne, Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new JsonArray();
+
+
+        query.append("SELECT id_periode, id_eleve,"+  colonne + ", id_classe, id_matiere ")
+                .append(" FROM ")
+                .append(Competences.COMPETENCES_SCHEMA +"."+  colonne + ("moyenne".equals(colonne)? "_finale": " "))
+                .append(" WHERE id_periode = ? AND  id_matiere = ? AND id_classe = ? ")
+                .append(" AND id_eleve IN " + Sql.listPrepared(idEleves.toArray()));
+
+        values.addNumber(idPeriode).addString(idMatiere).addString(idClasse);
+        for(int i=0; i < idEleves.size(); i++) {
+            values.addString(idEleves.get(i).toString());
+        }
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
+
+    @Override
+    public void setColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse, JsonObject field,
+                                 String colonne,Handler<Either<String, JsonArray>> handler){
+        JsonArray values = new JsonArray();
+
+        StringBuilder query = new StringBuilder()
+                .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +"."+ colonne )
+                .append("moyenne".equals(colonne)? "_finale": " ")
+                .append(" (id_periode, id_eleve," + colonne + ", id_classe, id_matiere) VALUES ")
+                .append(" (?, ?, ?, ?, ?) ")
+                .append(" ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) ")
+                .append(" DO UPDATE SET " + colonne + " = ? ");
+
+        values.addNumber(idPeriode).addString(idEleve);
+        if ("moyenne".equals(colonne) || "positionnement".equals(colonne)) {
+            values.addNumber(field.getNumber(colonne)).addString(idClasse).addString(idMatiere)
+            .addNumber(field.getNumber(colonne));
+        }
+
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
 }

@@ -26,7 +26,10 @@ export class ReleveNote extends  Model implements IModel{
 
     get api () {
         return {
-            get : '/competences/releve?idEtablissement='+this.structure.id+'&idClasse='+this.idClasse+'&idMatiere='+this.idMatiere
+            get : `/competences/releve?idEtablissement=${this.structure.id}&idClasse=${this.idClasse}&idMatiere=${
+                this.idMatiere}`,
+            getInfoPeriodique: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
+                this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}`
         }
     }
 
@@ -112,18 +115,71 @@ export class ReleveNote extends  Model implements IModel{
     });
 }
 
+    syncMoyenneFinale () : Promise<any> {
+        return new Promise( (resolve,reject) => {
+                if (this.idPeriode !== null) {
+                    http().getJson(this.api.getInfoPeriodique + '&colonne=moyenne')
+                        .done((res) => {
+                            console.log(res);
+                            _.forEach(this.classe.eleves.all, (eleve) => {
+                                let _eleve  = _.findWhere(res, {id_eleve: eleve.id});
+                                if (_eleve  !== undefined && _eleve .moyenne !== null) {
+                                        eleve.moyenneFinale = _eleve.moyenne;
+                                }
+                            });
+                            resolve();
+                        })
+                        .error((res) => {
+                            console.dir(res);
+                            reject();
+                        })
+                }
+                else {
+                    resolve();
+                }
+        });
+    }
+
+    syncPositionnement () : Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (this.idPeriode !== null) {
+                http().getJson(this.api.getInfoPeriodique + '&colonne=positionnement')
+                    .done((res) => {
+                        console.log(res);
+                        _.forEach(this.classe.eleves.all, (eleve) => {
+                            let _eleve = _.findWhere(res, {id_eleve: eleve.id});
+                            if (_eleve !== undefined && _eleve.positionnement !== null) {
+                                eleve.positionnement = _eleve.positionnement;
+                            }
+                        });
+                        resolve();
+                    })
+                    .error((res) => {
+                        console.dir(res);
+                        reject();
+                    })
+            }
+            else {
+                resolve();
+            }
+        });
+    }
     sync () : Promise<any> {
         return new Promise(async (resolve, reject) => {
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse()]);
             this.syncAppreciationClasse();
-            let _notes ,_devoirs, _eleves;
+            let _notes ,_devoirs, _eleves, _moyennesFinales;
             if(this._tmp) {
                 _notes = this._tmp.notes;
                 _devoirs = this._tmp.devoirs;
                 _eleves = this._tmp.eleves;
+                _moyennesFinales = this._tmp.moyennes;
             }
-
             _.each(this.classe.eleves.all, (eleve) => {
+                let _eleve  = _.findWhere(_moyennesFinales, {id_eleve: eleve.id});
+                if (_eleve  !== undefined && _eleve .moyenne !== null) {
+                    eleve.moyenneFinale = _eleve.moyenne;
+                }
                 var _evals = [];
                 let _t = _.where(_notes, {id_eleve: eleve.id});
                 _.each(this.devoirs.all, async (devoir) => {
@@ -180,6 +236,8 @@ export class ReleveNote extends  Model implements IModel{
                     e.moyenne = eleve.moyenne;
                 }
             });
+            // await Promise.all([this.syncMoyenneFinale()]);
+
             this.trigger('noteOK');
             resolve();
         });
@@ -223,6 +281,7 @@ export class ReleveNote extends  Model implements IModel{
                         });
                     });
                 }
+
             });
         });
     }
@@ -261,5 +320,31 @@ export class ReleveNote extends  Model implements IModel{
                 });
             }
         });
+    }
+    saveMoyenneFinaleEleve(eleve) : any {
+        let _data = {
+            moyenne: parseFloat(eleve.moyenneFinale),
+            delete: eleve.moyenneFinale === ""};
+
+            http().postJson(this.api.getInfoPeriodique + '&colonne=moyenne&idEleve=' + eleve.id, _data )
+                .done((res) => {
+                    console.dir('moyenne sauvé' + eleve.name);
+                })
+                .error((err) => {
+                    console.dir('error on save' + eleve.name);
+                });
+    }
+    savePositionnementEleve(eleve) : any {
+        let _data = {
+            positionnement: parseInt(eleve.positionnement),
+            delete: eleve.positionnement === ""};
+
+        http().postJson(this.api.getInfoPeriodique + '&colonne=positionnement&idEleve=' + eleve.id, _data )
+            .done((res) => {
+                console.dir('positionnement sauvé' + eleve.lastName);
+            })
+            .error((err) => {
+                console.dir('error on save positionnement' + eleve.lastName);
+            });
     }
 }

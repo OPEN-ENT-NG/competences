@@ -39,11 +39,12 @@ public class AccessReleveFilter implements ResourcesProvider {
 
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user, final Handler<Boolean> handler) {
-        FilterUserUtils userUtils = new FilterUserUtils(user);
+        FilterUserUtils userUtils = new FilterUserUtils(user,null);
         switch (user.getType()) {
             case "Teacher" : {
                 resourceRequest.pause();
                 MultiMap params = resourceRequest.params();
+                Long idPeriode;
 
                 //On check si tous les paramètres sont bien présents
                 if (!resourceRequest.params().contains("idEtablissement") &&
@@ -53,18 +54,16 @@ public class AccessReleveFilter implements ResourcesProvider {
                 }
 
                 //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
-                if (!userUtils.validateClasse(params.get("idClasse")) &&
+                else if (!userUtils.validateClasse(params.get("idClasse")) &&
                         !userUtils.validateStructure(params.get("idEtablissement"))) {
                     handler.handle(false);
                 }
 
-
-                Long idPeriode;
-                if (params.get("idPeriode") != null) {
+                else if (params.get("idPeriode") != null) {
                     try {
                         idPeriode = Long.parseLong(params.get("idPeriode"));
                     } catch (NumberFormatException e) {
-                        log.error("Error : idPeriode must be a long object", e);
+                        log.error(" Error : idPeriode must be a long object", e);
                         handler.handle(false);
                         return;
                     }

@@ -20,7 +20,8 @@
                 </select>
             </label>
             <label class="select five right-magnet twelve-mobile">
-                <select ng-model="search.matiere"
+                <select ng-init="initDefaultMatiere();"
+                        ng-model="search.matiere"
                         ng-options="matiere.name for matiere in matieres.all | unique:'name'">
                     <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                 </select>

@@ -40,7 +40,7 @@ public class AccessAppreciationClasseFilter implements ResourcesProvider {
 
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user, final Handler<Boolean> handler) {
-        FilterUserUtils userUtils = new FilterUserUtils(user);
+        FilterUserUtils userUtils = new FilterUserUtils(user, null);
 
         boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
         if(isAdmin) {

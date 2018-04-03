@@ -271,7 +271,20 @@ body.evaluations {
     .nav-releve {
       margin-top: -50px;
     }
-
+  .toogleDevoir{
+    align-content: right !important;
+    display: inline-block;
+    float: right;
+    margin-right: -5px;
+    margin-top:  10px;
+    }
+    .toogleIcon{
+      transform: rotate(90deg);
+      position: relative;
+    }
+    .toogleIcon:before{
+      color: $white !important;
+    }
     .tableReleves {
       overflow-x: auto;
       margin-left: 5px;

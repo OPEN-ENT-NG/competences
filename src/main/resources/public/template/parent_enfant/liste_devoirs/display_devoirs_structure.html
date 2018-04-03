@@ -57,6 +57,7 @@
                     <section >
                         <label class="select">
                             <select ng-model="search.matiere"
+                                    ng-init="initDefaultMatiere();"
                                     ng-options="matiere.name for matiere in matieres.all | unique:'name'">
                                 <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                             </select>
@@ -90,6 +91,7 @@
         <section  class="row custom-mobile-releve twelve-mobile">
             <label class="select">
                 <select ng-model="search.matiere"
+                        ng-init="initDefaultMatiere();"
                         ng-options="matiere.name for matiere in matieres.all | unique:'name'">
                     <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                 </select>

@@ -61,6 +61,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.matiere" ng-change="getReleve()"
+                                ng-init="initDefaultMatiere()"
                                 ng-options="matiere.name for matiere in matieres.all|unique:'name'">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
@@ -82,69 +83,89 @@
         <section class="ten twelve-mobile cell right">
 
             <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
-              <div class="tableReleves">
-                <div class="responsive-table">
-                    <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table>
-                        <thead>
+                <div class="tableReleves">
+                    <div class="responsive-table">
+                        <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table>
+                            <thead>
                             <tr>
-                                <th class="col1"><i18n>student</i18n></th>
+                                <th class="col1"><i18n>student</i18n>
+
+                                    <span data-ng-click="toogleDevoirNote();"
+                                          tooltip="[[toogle ? 'evaluations.releve.note.show' : 'evaluations.releve.note.hide']]"
+                                           class="toogleDevoir">
+                                        <i ng-class="{'angle-double-right': !toogle,'angle-double-left': toogle}"
+                                           class="toogleIcon"></i>
+                                    </span>
+                                </th>
                                 <th class="colDevoir" ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0, 'ellipsis' : true }"
                                     ng-repeat="devoir in releveNote.devoirs.all" ng-click="getDevoirInfo(devoir)"
                                     ng-dblclick="goTo('/devoir/'+devoir.id)" tooltip="[[devoir.name]]">
 
                                     [[devoir.name]]
                                 </th>
-                                <th class="colMoyenne"><i18n>average</i18n></th>
+                                <th class="colMoyenne"><i18n>average.auto</i18n></th>
+                                <th class="colMoyenne"><i18n>average.final</i18n></th>
                             </tr>
-                        </thead>
-                        <tbody>
-                        <tr ng-repeat="eleve in releveNote.classe.eleves.all">
-                            <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]" ng-click="getEleveInfo(eleve)">
-                                [[eleve.lastName]] [[eleve.firstName]]
-                            </td>
-                            <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir" ng-repeat="evaluation in eleve.evaluations.all" data-label="[[getLibelleDevoir(evaluation.id_devoir)]]">
-                                <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab() && !evaluation.is_annotation"
-                                       ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
-                                       class="input-note"
-                                       type="text"
-                                       ng-model="evaluation.valeur"
-                                       ng-disabled="true"
-                                       max="20" min="0" step="0.01">
-                                <input ng-if="evaluation.is_evaluated && (!evaluation.endSaisie || isChefEtab()) && !evaluation.is_annotation"
-                                       ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
-                                       class="input-note"
-                                       type="text"
-                                       ng-model="evaluation.valeur"
-                                       ng-blur="saveNoteDevoirEleve(evaluation, $event, eleve)"
-                                       ng-disabled="false"
-                                       max="20" min="0" step="0.01">
-                                <input ng-if="!evaluation.is_evaluated && !evaluation.is_annotation"
-                                       class="input-note"
-                                       type="text"
-                                       ng-disabled="true"
-                                       max="20" min="0" step="0.01">
-                                <input ng-if="evaluation.is_annotation"
-                                       class="input-note"
-                                       ng-model="evaluation.annotation_libelle_court"
-                                       type="text"
-                                       ng-disabled="true"
-                                       max="20" min="0" step="0.01">
-                            </td>
-                            <!--ng-init="initNoteReleve(evaluation)"-->
-                            <td  class="colMoyenne" data-label="Moyenne">
-                                <span style="font-weight: bold;">[[eleve.moyenne]]</span>
-                            </td>
-
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="eleve in releveNote.classe.eleves.all">
+                                <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]" ng-click="getEleveInfo(eleve)">
+                                    [[eleve.lastName]] [[eleve.firstName]]
+                                </td>
+                                <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir" ng-repeat="evaluation in eleve.evaluations.all" data-label="[[getLibelleDevoir(evaluation.id_devoir)]]">
+                                    <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab() && !evaluation.is_annotation"
+                                           ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
+                                           class="input-note"
+                                           type="text"
+                                           ng-model="evaluation.valeur"
+                                           ng-disabled="true"
+                                           max="20" min="0" step="0.01">
+                                    <input ng-if="evaluation.is_evaluated && (!evaluation.endSaisie || isChefEtab()) && !evaluation.is_annotation"
+                                           ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
+                                           class="input-note"
+                                           type="text"
+                                           ng-model="evaluation.valeur"
+                                           ng-blur="saveNoteDevoirEleve(evaluation, $event, eleve)"
+                                           ng-disabled="false"
+                                           max="20" min="0" step="0.01">
+                                    <input ng-if="!evaluation.is_evaluated && !evaluation.is_annotation"
+                                           class="input-note"
+                                           type="text"
+                                           ng-disabled="true"
+                                           max="20" min="0" step="0.01">
+                                    <input ng-if="evaluation.is_annotation"
+                                           class="input-note"
+                                           ng-model="evaluation.annotation_libelle_court"
+                                           type="text"
+                                           ng-disabled="true"
+                                           max="20" min="0" step="0.01">
+                                </td>
+                                <!--ng-init="initNoteReleve(evaluation)"-->
+                                <td  class="colMoyenne" data-label="[[translate('average.auto')]]">
+                                    <span style="font-weight: bold;">[[eleve.moyenne]]</span>
+                                </td>
+                                <td class="colMoyenne"
+                                    ng-init="initMoyenneFinale(eleve)"
+                                    data-label="[[translate('average.final')]]">
+                                    <input ng-focus="focusMe($event); getEleveInfo(eleve);"
+                                           class="input-note"
+                                           type="text"
+                                           ng-disabled="disabledSaisieMoyenne()"
+                                           ng-blur="saveMoyenneFinaleEleve(eleve)"
+                                           ng-model="eleve.moyenneFinale"
+                                           max="20" min="0" step="0.01">
+                                </td>
                             </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="responsive-table">
-                    <table id="tableReleveStats" class="tableReleve tableRelevePadding" c-naviga-table>
-                        <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="responsive-table">
+                        <table id="tableReleveStats" class="tableReleve tableRelevePadding" c-naviga-table>
+                            <tbody>
                             <tr class="moyenneClasse">
                                 <td class="col1 text-overflow"><i18n>viescolaire.classe.moyenne</i18n></td>
-                                <td class="colDevoir" ng-repeat="devoir in releveNote.devoirs.all" data-label="[[devoir.name]]">
+                                <td class="colDevoir" ng-repeat="devoir in releveNote.devoirs.all"
+                                    data-label="[[devoir.name]]">
                                     <div ng-if="devoir.is_evaluated" class="input-note input-moyenne">
                                         [[devoir.statistiques.moyenne]]
                                     </div>
@@ -154,6 +175,7 @@
                                            ng-disabled="true"
                                            max="20" min="0" step="0.01">
                                 </td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                             </tr>
                             <tr class="minClasse">
@@ -170,6 +192,7 @@
                                            max="20" min="0" step="0.01">
                                 </td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                             </tr>
                             <tr class="maxClasse">
                                 <td class="col1 text-overflow"><i18n>viescolaire.classe.note.max</i18n></td>
@@ -185,9 +208,10 @@
                                            max="20" min="0" step="0.01">
                                 </td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                             </tr>
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
 
                     <div ng-if="releveNote.idPeriode !== null && releveNote.idPeriode !== undefined">
                         <h2><i18n>evaluations.releve.appreciation.classe</i18n></h2>

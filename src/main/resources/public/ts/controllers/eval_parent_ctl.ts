@@ -673,6 +673,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $location.replace();
             utils.safeApply($scope);
         };
+        $scope.initDefaultMatiere = function () {
+            if($scope.matieres !== undefined && $scope.matieres.all !== undefined && $scope.matieres.all.length === 1) {
+                $scope.search.matiere = $scope.matieres.all[0];
+            }
+            return $scope.search.matiere;
+        };
 
     }
 ]);
