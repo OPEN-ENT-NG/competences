@@ -221,15 +221,9 @@ public class Eleve {
                 && this.enseignmentComplements.size() > 0){
             for(Map.Entry<String, Long> enseignementComplement : this.enseignmentComplements.entrySet()) {
                 JsonObject enseignmentComplementJson = new JsonObject();
-                //si l'élève n'a aucun enseignement de complément et que si dans le pdf on ne veut pas que cela n'apparaisse
-                //alors
-                //if(enseignementComplement.getValue()!=0) {
                 enseignmentComplementJson.putString("enseignementComplement", enseignementComplement.getKey());
-                //}
                 List<Object> objectifs = new ArrayList<Object>(Collections.nCopies(2, false));
-                if(enseignementComplement.getValue()!=0) {
-                    objectifs.set(enseignementComplement.getValue().intValue() - 1 , true);
-                }
+                objectifs.set(enseignementComplement.getValue().intValue() - 1 , true);
                 enseignmentComplementJson.putArray("objectifs", new JsonArray(objectifs));
                 enseignementComplements.addObject(enseignmentComplementJson);
             }

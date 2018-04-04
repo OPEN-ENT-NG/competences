@@ -553,7 +553,7 @@ public class ExportPDFController extends ControllerHelper {
                                             if (repSynthese.isRight()) {
                                                 Map<String, Map<String, Long>> niveauEnseignementComplementEleve = new HashMap<>();
                                                 Map<String, String> syntheseEleve = new HashMap<>();
-                                                // On récupère les enseignements de complément par élève
+
                                                 JsonArray niveauEnseignementComplementEleveResultArray = eventNCPL.right().getValue();
                                                 for (int i = 0; i < niveauEnseignementComplementEleveResultArray.size(); i++) {
                                                     JsonObject _o = niveauEnseignementComplementEleveResultArray.get(i);
@@ -564,7 +564,7 @@ public class ExportPDFController extends ControllerHelper {
                                                     }
                                                     niveauEnseignementComplementEleve.get(id_eleve).put(_o.getString("libelle"), _o.getLong("niveau"));
                                                 }
-                                                // On récupère les synthèses des bfcs par cycle par élève
+
                                                 JsonArray syntheseEleveResultArray = repSynthese.right().getValue();
                                                 for (int i = 0; i < syntheseEleveResultArray.size(); i++) {
                                                     JsonObject _o = syntheseEleveResultArray.get(i);
@@ -574,7 +574,8 @@ public class ExportPDFController extends ControllerHelper {
                                                         syntheseEleve.put(id_eleve, _o.getString("texte"));
                                                     }
                                                 }
-                                                // On récupère les résultats par domaine par élève
+
+
                                                 for (int i = 0; i <idEleves.size() ; i++) {
                                                     JsonArray resultats = event.right().getValue().getArray(idEleves.get(i));
                                                     Map<Long, Integer> resultEleves = new HashMap<>();
@@ -582,8 +583,6 @@ public class ExportPDFController extends ControllerHelper {
                                                         resultEleves.put((Long) ((JsonObject) resultat).getNumber("idDomaine"), (Integer) ((JsonObject) resultat).getNumber("niveau"));
                                                     }
                                                     resultatsEleves.put(idEleves.get(i), resultEleves);
-                                                }
-                                                // On modifie l'objet élève avec les informations récupérées précédemment
                                                     for (Eleve e : classe.getValue()) {
                                                         e.setNotes(resultatsEleves.get(e.getIdEleve()));
                                                         e.setEnseignmentComplements(niveauEnseignementComplementEleve.get(e.getIdEleve()));
@@ -593,6 +592,7 @@ public class ExportPDFController extends ControllerHelper {
                                                     if (classeResult != null) {
                                                         collectBFCEleve(classe.getKey(), new JsonObject().putArray("eleves", classeResult), result, handler);
                                                     }
+                                                }
                                             }else{
                                                 collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
                                                 log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.left().getValue());
