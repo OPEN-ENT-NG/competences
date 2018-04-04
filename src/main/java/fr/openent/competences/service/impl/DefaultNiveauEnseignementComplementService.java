@@ -29,21 +29,26 @@ public class DefaultNiveauEnseignementComplementService extends SqlCrudService i
     @Override
     public void updateEnsCpl(Integer id, JsonObject data, Handler<Either<String, JsonObject>> handler) {
         JsonArray values = new JsonArray();
-        String query = "UPDATE "+ Competences.COMPETENCES_SCHEMA+".eleve_enseignement_complement SET id_enscpl = ?, niveau = ?, id_langue = ?, niveau_lcr = ?"
+        String query = "UPDATE "+ Competences.COMPETENCES_SCHEMA+".eleve_enseignement_complement SET id_enscpl = ?, niveau = ?, id_langue = ?"
              +" WHERE id = ?";
         values.addNumber(data.getNumber("id_enscpl"));
         values.addNumber(data.getNumber("niveau"));
         values.addNumber(data.getNumber("id_langue"));
-        values.addNumber(data.getNumber("niveau_lcr"));
         values.addNumber(id);
         Sql.getInstance().prepared(query,values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
-    public void getNiveauEnsCplByEleve(String idEleve, Handler<Either<String, JsonObject>> handler) {
-
-        String query ="SELECT * FROM "+Competences.COMPETENCES_SCHEMA+".eleve_enseignement_complement WHERE id_eleve = ?";
-        Sql.getInstance().prepared(query,new JsonArray().addString(idEleve), SqlResult.validUniqueResultHandler(handler));
+    public void getNiveauEnsCplByEleve(String[] idsEleve, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values =  new JsonArray();
+        String query ="SELECT eleve_enseignement_complement.*, enseignement_complement.libelle " +
+                "FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
+                "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement ON enseignement_complement.id = eleve_enseignement_complement.id_enscpl " +
+                "WHERE id_eleve IN " + Sql.listPrepared(idsEleve) + " ";
+        for (String idEleve : idsEleve) {
+            values.addString(idEleve);
+        }
+        Sql.getInstance().prepared(query,values, SqlResult.validResultHandler(handler));
     }
 
     @Override

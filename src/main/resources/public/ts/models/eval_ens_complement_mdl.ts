@@ -125,12 +125,15 @@ export class EleveEnseignementCpl extends Model implements IModel{
 
     async sync(){
         let { data } = await  http.get(this.api.get);
-        if(data.hasOwnProperty('id')) {
-            let nivEnsCpls = new NiveauEnseignementCpls();
-            if (data.niveau != 0) {
-                data.libelle = _.findWhere(nivEnsCpls.all, {niveau: data.niveau}).libelle;
+        if(data !== undefined && data.length === 1) {
+            let enseignementComplementEleve = data[0] ;
+            if (enseignementComplementEleve.hasOwnProperty('id')) {
+                let nivEnsCpls = new NiveauEnseignementCpls();
+                if (enseignementComplementEleve.niveau != 0) {
+                    enseignementComplementEleve.libelle = _.findWhere(nivEnsCpls.all, {niveau: enseignementComplementEleve.niveau}).libelle;
+                }
+                this.updateData(enseignementComplementEleve);
             }
-            this.updateData(data);
         }
     }
    /* save () {

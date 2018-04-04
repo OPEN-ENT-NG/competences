@@ -333,8 +333,9 @@ public class BFCController extends ControllerHelper {
             @Override
             public void handle(UserInfos userInfos) {
                 if(userInfos!=null)  {
-                    final String id = request.params().get("idEleve");
-                    niveauEnseignementComplement.getNiveauEnsCplByEleve(id,defaultResponseHandler(request));
+                    final String[] idsEleve = request.params().getAll("idEleve").toArray(new String[0]);
+
+                    niveauEnseignementComplement.getNiveauEnsCplByEleve(idsEleve,arrayResponseHandler(request));
                 }
             }
         });

@@ -105,7 +105,7 @@
         .synthese {
             margin-top: 10px;
             background-color: #ffe0a7;
-            height: 150px;
+            padding: 10px;
         }
 
     </style>
@@ -146,7 +146,7 @@
         </tr>
         {{/domaines}}
     </table>
-
+    {{#hasEnseignementComplements}}
     <h1 color="green">Enseignement de complément</h1>
     <table>
         <tr>
@@ -154,15 +154,20 @@
             <td>Objectifs atteints</td>
             <td>Objectifs dépassés</td>
         </tr>
+        {{#enseignementComplements}}
         <tr>
-            <td class="blank_row"></td>
-            <td></td>
-            <td></td>
+            <td class="left-align">{{enseignementComplement}}</td>
+            {{#objectifs}}
+            <td>{{#.}}X{{/.}}</td>
+            {{/objectifs}}
         </tr>
+        {{/enseignementComplements}}
     </table>
-
+    {{/hasEnseignementComplements}}
+    {{#hasSynthese}}
     <h1 color="orange">Synthèse des acquis de l'élève en fin de cycle</h1>
-    <div class="synthese"></div>
+    <div class="synthese">{{syntheseBFC}}</div>
+    {{/hasSynthese}}
 
 </div>
 {{/eleves}}

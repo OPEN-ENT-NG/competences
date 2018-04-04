@@ -459,7 +459,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
         $scope.disabledExportSuiviClasseButton = function (){
-            if(_.findIndex($scope.allMatieresSorted,{select: true}) === -1){
+            if ($scope.printSuiviClasse === "printReleveComp" && _.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
                 return true;
             } else {
                 return false;

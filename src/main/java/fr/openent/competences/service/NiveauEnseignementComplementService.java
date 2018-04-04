@@ -19,7 +19,7 @@ public interface NiveauEnseignementComplementService extends CrudService {
    public void updateEnsCpl(Integer id, JsonObject data, Handler<Either<String, JsonObject>> handler);
 
 
-    public void getNiveauEnsCplByEleve(String idEleve, Handler<Either<String, JsonObject>> handler);
+    public void getNiveauEnsCplByEleve(String[] idsEleve, Handler<Either<String, JsonArray>> handler);
 
     public void listNiveauCplByEleves(String[] idsEleve, Handler<Either<String, JsonArray>> handler);
 }

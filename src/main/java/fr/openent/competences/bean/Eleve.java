@@ -24,7 +24,11 @@ public class Eleve {
 
     private String cycle;
 
+    private String syntheseCycle;
+
     private Map<Long, Map<String, String>> domainesRacines;
+
+    private Map<String, Long> enseignmentComplements;
 
     private Map<Long, Integer> notes;
 
@@ -53,6 +57,7 @@ public class Eleve {
         this.idClasse = idClasse;
         this.nomClasse = nomClasse;
         this.domainesRacines = new LinkedHashMap<>();
+        this.enseignmentComplements = new LinkedHashMap<>();
         this.notes = new HashMap<>();
         this.libelleNiveau = new HashMap<>();
         this.isNotesReady = false;
@@ -137,6 +142,39 @@ public class Eleve {
     }
 
     /**
+     * getter des enseignements de compléments : Libellé de l'enseignement et id de l'objectif
+     * @return enseignements de compléments
+     */
+    public Map<String, Long> getEnseignmentComplements() {
+        return enseignmentComplements;
+    }
+
+    /**
+     * setter des enseignements de compléments : Libellé de l'enseignement et id de l'objectif
+     * @param enseignmentComplements
+     */
+    public void setEnseignmentComplements(Map<String, Long> enseignmentComplements) {
+        this.enseignmentComplements = enseignmentComplements;
+    }
+
+    /**
+     * getter de la synthèse du BFC
+     * @return synthèse du BFC
+     */
+    public String getSyntheseCycle() {
+        return syntheseCycle;
+    }
+
+    /**
+     * setter de la synthèse du BFC
+     * @param syntheseCycle
+     */
+    public void setSyntheseCycle(String syntheseCycle) {
+        this.syntheseCycle = syntheseCycle;
+    }
+
+
+    /**
      * Retourne un booleen indiquant si l'Eleve possède bien toutes les donnees necessaires a l'export Json.
      *
      * @return  Un booleen indiquant que les notes, les domaines et les niveaux d'evaluation sont initialises.
@@ -178,6 +216,37 @@ public class Eleve {
             notes.putArray("notes", new JsonArray(evaluation));
             evaluations.addObject(notes);
         }
+        JsonArray enseignementComplements = new JsonArray();
+        if(this.enseignmentComplements != null
+                && this.enseignmentComplements.size() > 0){
+            for(Map.Entry<String, Long> enseignementComplement : this.enseignmentComplements.entrySet()) {
+                JsonObject enseignmentComplementJson = new JsonObject();
+                //si l'élève n'a aucun enseignement de complément et que si dans le pdf on ne veut pas que cela n'apparaisse
+                //alors
+                //if(enseignementComplement.getValue()!=0) {
+                enseignmentComplementJson.putString("enseignementComplement", enseignementComplement.getKey());
+                //}
+                List<Object> objectifs = new ArrayList<Object>(Collections.nCopies(2, false));
+                if(enseignementComplement.getValue()!=0) {
+                    objectifs.set(enseignementComplement.getValue().intValue() - 1 , true);
+                }
+                enseignmentComplementJson.putArray("objectifs", new JsonArray(objectifs));
+                enseignementComplements.addObject(enseignmentComplementJson);
+            }
+            result.putArray("enseignementComplements", enseignementComplements);
+            result.putBoolean("hasEnseignementComplements", true);
+        } else {
+            result.putBoolean("hasEnseignementComplements", false);
+        }
+
+        if(syntheseCycle != null
+                && !syntheseCycle.isEmpty()){
+            result.putString("syntheseBFC", syntheseCycle);
+            result.putBoolean("hasSynthese", true);
+        } else {
+            result.putBoolean("hasSynthese", false);
+        }
+
         result.putArray("domaines", evaluations);
 
         return result;

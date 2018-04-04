@@ -53,6 +53,14 @@ public interface BfcSyntheseService extends CrudService {
     public void getBfcSyntheseByIdsEleve(String[] idsEleve, Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
+     *
+     * @param idsEleve tableau des idsEleve pour un cycle donné
+     * @param idClasse classe des élèves sélectionnés
+     * @param handler
+     */
+    public void getBfcSyntheseByIdsEleveAndClasse(String[] idsEleve, String idClasse, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * return idCycle
      * @param IdEleve
      * @param handler

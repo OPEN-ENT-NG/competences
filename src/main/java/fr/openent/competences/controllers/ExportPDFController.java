@@ -85,6 +85,7 @@ public class ExportPDFController extends ControllerHelper {
     private CompetencesService competencesService;
     private NiveauDeMaitriseService niveauDeMaitriseService;
     private ExportService exportService;
+    private BfcSyntheseService bfcSynthseService;
     private NiveauEnseignementComplementService niveauEnseignementComplementService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
@@ -96,6 +97,7 @@ public class ExportPDFController extends ControllerHelper {
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         exportService = new DefaultExportService(eb);
+        bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         niveauEnseignementComplementService = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
     }
 
@@ -539,19 +541,71 @@ public class ExportPDFController extends ControllerHelper {
                 @Override
                 public void handle(final Either<String, JsonObject> event) {
                     if (event.isRight()) {
-                        JsonArray resultats = event.right().getValue().getArray(idEleves.get(0));
-                        Map<Long, Integer> resultEleves = new HashMap<>();
-                        for (Object resultat : resultats) {
-                            resultEleves.put((Long) ((JsonObject) resultat).getNumber("idDomaine"), (Integer) ((JsonObject) resultat).getNumber("niveau"));
-                        }
-                        resultatsEleves.put(idEleves.get(0), resultEleves);
-                        for (Eleve e : classe.getValue()) {
-                            e.setNotes(resultatsEleves.get(e.getIdEleve()));
-                        }
-                        JsonArray classeResult = formatBFC(classe.getValue());
-                        if (classeResult != null) {
-                            collectBFCEleve(classe.getKey(), new JsonObject().putArray("eleves", classeResult), result, handler);
-                        }
+
+                        niveauEnseignementComplementService.getNiveauEnsCplByEleve(idEleves.toArray(new String[0]), new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle (final Either <String, JsonArray> eventNCPL){
+                                if (event.isRight()) {
+
+                                    bfcSynthseService.getBfcSyntheseByIdsEleveAndClasse(idEleves.toArray(new String[0]), classe.getKey(), new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> repSynthese) {
+                                            if (repSynthese.isRight()) {
+                                                Map<String, Map<String, Long>> niveauEnseignementComplementEleve = new HashMap<>();
+                                                Map<String, String> syntheseEleve = new HashMap<>();
+                                                // On récupère les enseignements de complément par élève
+                                                JsonArray niveauEnseignementComplementEleveResultArray = eventNCPL.right().getValue();
+                                                for (int i = 0; i < niveauEnseignementComplementEleveResultArray.size(); i++) {
+                                                    JsonObject _o = niveauEnseignementComplementEleveResultArray.get(i);
+                                                    String id_eleve = _o.getString("id_eleve");
+
+                                                    if (!niveauEnseignementComplementEleve.containsKey(id_eleve)) {
+                                                        niveauEnseignementComplementEleve.put(id_eleve, new HashMap<String, Long>());
+                                                    }
+                                                    niveauEnseignementComplementEleve.get(id_eleve).put(_o.getString("libelle"), _o.getLong("niveau"));
+                                                }
+                                                // On récupère les synthèses des bfcs par cycle par élève
+                                                JsonArray syntheseEleveResultArray = repSynthese.right().getValue();
+                                                for (int i = 0; i < syntheseEleveResultArray.size(); i++) {
+                                                    JsonObject _o = syntheseEleveResultArray.get(i);
+                                                    String id_eleve = _o.getString("id_eleve");
+
+                                                    if (!syntheseEleve.containsKey(id_eleve)) {
+                                                        syntheseEleve.put(id_eleve, _o.getString("texte"));
+                                                    }
+                                                }
+                                                // On récupère les résultats par domaine par élève
+                                                for (int i = 0; i <idEleves.size() ; i++) {
+                                                    JsonArray resultats = event.right().getValue().getArray(idEleves.get(i));
+                                                    Map<Long, Integer> resultEleves = new HashMap<>();
+                                                    for (Object resultat : resultats) {
+                                                        resultEleves.put((Long) ((JsonObject) resultat).getNumber("idDomaine"), (Integer) ((JsonObject) resultat).getNumber("niveau"));
+                                                    }
+                                                    resultatsEleves.put(idEleves.get(i), resultEleves);
+                                                }
+                                                // On modifie l'objet élève avec les informations récupérées précédemment
+                                                    for (Eleve e : classe.getValue()) {
+                                                        e.setNotes(resultatsEleves.get(e.getIdEleve()));
+                                                        e.setEnseignmentComplements(niveauEnseignementComplementEleve.get(e.getIdEleve()));
+                                                        e.setSyntheseCycle(syntheseEleve.get(e.getIdEleve()));
+                                                    }
+                                                    JsonArray classeResult = formatBFC(classe.getValue());
+                                                    if (classeResult != null) {
+                                                        collectBFCEleve(classe.getKey(), new JsonObject().putArray("eleves", classeResult), result, handler);
+                                                    }
+                                            }else{
+                                                collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
+                                                log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.left().getValue());
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
+                                    log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.left().getValue());
+                                }
+                            }
+                        });
+
                     } else {
                         collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
                         log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.left().getValue());
