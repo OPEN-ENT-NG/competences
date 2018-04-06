@@ -205,6 +205,23 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
+    public void getDevoirCompetencesByEnseignement(Long devoirId, final Handler<Either<String, JsonArray>> handler) {
+
+        String query = "SELECT comp.id as id_competence," +
+                " comp.id AS id, compDevoir.id_devoir, COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_type as id_type," +
+                " comp.id_parent as id_parent, compDevoir.index as index, compEns.id_enseignement AS id_enseignement " +
+                " FROM " + COMPETENCES_TABLE + " AS comp" +
+                " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +
+                " INNER JOIN " + COMPETENCES_SCHEMA + ".rel_competences_enseignements AS compEns ON (comp.id = compEns.id_competence)" +
+                " LEFT JOIN " + COMPETENCES_SCHEMA + ".perso_competences AS compPerso ON comp.id = compPerso.id_competence" +
+                " WHERE compDevoir.id_devoir = ?" +
+                " ORDER BY (compDevoir.index ,compDevoir.id);";
+
+        Sql.getInstance().prepared(query, new JsonArray().addNumber(devoirId),
+                SqlResult.validResultHandler(handler));
+    }
+
+    @Override
     public void getLastCompetencesDevoir(String idEtablissement, String userId, Handler<Either<String, JsonArray>> handler) {
 
         String query = "WITH lastDevoir AS (SELECT * FROM " + DEVOIRS_TABLE + " AS devoirs" +

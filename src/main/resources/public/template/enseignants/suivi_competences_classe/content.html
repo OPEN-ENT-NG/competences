@@ -52,6 +52,23 @@
             </label><br/>
         </div>
     </div>
+    <div class="row" ng-if="printSuiviClasse === 'printReleveComp'">
+        <div class="twelve cell twelve-mobile">
+            <label><i18n class="titre-libelle">viescolaire.utils.export.choose</i18n></label>
+            <p class="inline-block">
+                <input type="radio" ng-model="exportByEnseignement" value="false">
+                <span>
+                    <i18n>viescolaire.utils.export.choose.domaine</i18n>
+                </span>
+            </p>
+            <p class="inline-block">
+                <input type="radio" ng-model="exportByEnseignement" value="true">
+                <span>
+                    <i18n>viescolaire.utils.export.choose.enseignement</i18n>
+                </span>
+            </p>
+        </div>
+    </div>
     <div ng-if="printSuiviClasse === 'printReleveComp'">
         <div class="row">
             <div class="twelve cell twelve-mobile">

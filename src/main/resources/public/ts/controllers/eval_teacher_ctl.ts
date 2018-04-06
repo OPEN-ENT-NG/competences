@@ -361,6 +361,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.cleanRoot();
                     let display = () => {
                         $scope.selected.matieres = [];
+                        $scope.exportByEnseignement = "false";
                         $scope.allUnselect = true;
                         $scope.releveComp = {
                             textMod: true
@@ -406,6 +407,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.cleanRoot();
                         let display = () => {
                             $scope.selected.matieres = [];
+                            $scope.exportByEnseignement = "false";
                             $scope.allUnselect = true;
                             $scope.allRefreshed = false;
                             $scope.opened.recapEval = false;
@@ -459,7 +461,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
         $scope.disabledExportSuiviClasseButton = function (){
-            if ($scope.printSuiviClasse === "printReleveComp" && _.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
+            if($scope.printSuiviClasse === "printReleveComp" && _.findIndex($scope.allMatieresSorted,{select: true}) === -1){
                 return true;
             } else {
                 return false;
@@ -3128,7 +3130,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.exportReleveComp = async (idEleve : String, idPeriode:Number, textMod:Boolean = false) => {
+        $scope.exportReleveComp = async (idEleve : String, idPeriode:Number, textMod:Boolean = false, exportByEnseignement:Boolean) => {
             let url = "/competences/releveComp/print/export?text=" + textMod;
             url += "&idEleve=" + idEleve;
             for(var m = 0; m < $scope.selected.matieres.length; m++){
@@ -3140,6 +3142,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if($scope.forClasse){
                 url += "&idClasse=" + $scope.search.classe.id;
             }
+            url += "&byEnseignement=" + exportByEnseignement;
             await http().getJson(url + "&json=true")
                 .error((result) => {
                     $scope.errorResult(result);

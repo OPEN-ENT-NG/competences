@@ -19,9 +19,12 @@
 
 package fr.openent.competences.service.impl;
 
+import fr.openent.competences.Competences;
 import fr.openent.competences.service.EnseignementService;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.json.JsonArray;
 
@@ -37,5 +40,17 @@ public class DefaultEnseignementService extends SqlCrudService implements Enseig
     @Override
     public void getEnseignements(Handler<Either<String, JsonArray>> handler) {
         super.list(handler);
+    }
+
+    @Override
+    public void getEnseignementsOrdered(Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new JsonArray();
+
+        query.append("SELECT * ")
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".enseignements ")
+                .append("ORDER BY nom ASC");
+
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 }

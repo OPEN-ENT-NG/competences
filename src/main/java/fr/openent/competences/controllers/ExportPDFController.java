@@ -1702,6 +1702,7 @@ public class ExportPDFController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportReleveComp(final HttpServerRequest request) {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
+        final Boolean byEnseignement = Boolean.parseBoolean(request.params().get("byEnseignement"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
 
@@ -1798,7 +1799,7 @@ public class ExportPDFController extends ControllerHelper {
                                                 JsonArray resultFinal = new JsonArray();
                                                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
                                                         libellePeriode, json, answered, resultFinal);
-                                                exportService.getExportReleveComp(text, idEleves[0], idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres,
+                                                exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres,
                                                         finalIdPeriode, finalHandler);
                                             } else {
                                                 leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
@@ -1859,7 +1860,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                 String [] _idGroupes = new String[1];
                                                                 _idGroupes[0] = idGroupes.get(i);
 
-                                                                exportService.getExportReleveComp(text, idEleves[i],
+                                                                exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
                                                                         _idGroupes , idEtablissement.get(i),
                                                                         listIdMatieres,
                                                                         finalIdPeriode, finalHandler);

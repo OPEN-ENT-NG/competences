@@ -13,7 +13,7 @@ public interface ExportService {
     public void getExportEval(final Boolean text, Boolean only_evaluation, JsonObject devoir, String idGroupe, String idEtablissement, HttpServerRequest request,
                               Handler<Either<String, JsonObject>> handler);
 
-    public void getExportReleveComp(final Boolean text, final String idEleve, String[] idGroupes, final String idEtablissement, final List<String> idMatieres,
+    public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve, String[] idGroupes, final String idEtablissement, final List<String> idMatieres,
                                     Long idPeriodeType, final Handler<Either<String, JsonObject>> handler);
 
     public void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement, final Handler<Either<String, JsonArray>> handler);

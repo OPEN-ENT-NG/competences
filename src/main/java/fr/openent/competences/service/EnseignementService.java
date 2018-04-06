@@ -33,4 +33,10 @@ public interface EnseignementService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     public void getEnseignements(Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupération de tous les enseignements ordonnés par nom
+     * @param handler handler portant le résultat de la requête
+     */
+    public void getEnseignementsOrdered(Handler<Either<String, JsonArray>> handler);
 }
