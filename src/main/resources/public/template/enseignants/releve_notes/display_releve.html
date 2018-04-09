@@ -188,6 +188,27 @@
                             </tr>
                         </tbody>
                     </table>
+
+                    <div ng-if="releveNote.idPeriode !== null && releveNote.idPeriode !== undefined">
+                        <h2><i18n>evaluations.releve.appreciation.classe</i18n></h2>
+                        <ng-form name="appreciationClassForm">
+                            <textarea placeholder="[[translate('evaluations.releve.appreciation.classe.placeholder')]]"
+                                      row="4" type="text"
+                                      ng-model="releveNote.appreciationClasse.appreciation"
+                                      class="twelve"
+                                      ng-maxlength="300"
+                                      maxlength="300"
+                                      ng-blur="releveNote.appreciationClasse.save()"
+                                      ng-disabled="releveNote.appreciationClasse.endSaisie && !isChefEtab()"
+                                      name="appreciationClasse"
+                            >
+                            </textarea>
+                            <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
+                                <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
+                            </div>
+                        </ng-form>
+                    </div>
+
                 </div>
               </div>
             </content>

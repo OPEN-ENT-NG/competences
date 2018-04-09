@@ -23,6 +23,7 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 /**
@@ -54,4 +55,22 @@ public interface AppreciationService extends CrudService {
      */
     public void deleteAppreciation(Long idAppreciation, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
+    /**
+     * Créer ou mettre à jour une appreciation d'une classe pour une période et matière donnée
+     * @param appreciation appréciation saisie
+     * @param id_classe id classe neo
+     * @param id_periode id periode
+     * @param id_matiere id matiere neo
+     * @param handler handler portant le résultat de la requête
+     */
+    public void createOrUpdateAppreciationClasse(String appreciation, String id_classe, Integer id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Récupérer une appreciation d'une classe pour une période et matière donnée
+     * @param id_classe id classe neo
+     * @param id_periode id periode
+     * @param id_matiere id matiere neo
+     * @param handler handler portant le résultat de la requête
+     */
+    public void getAppreciationClasse(String id_classe, int id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler);
 }

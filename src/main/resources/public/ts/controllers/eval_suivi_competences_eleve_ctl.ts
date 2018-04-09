@@ -7,6 +7,7 @@ import * as utils from "../utils/teacher";
 import {NiveauEnseignementCpls, NiveauEnseignementCpl} from "../models/eval_ens_complement_mdl";
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {NiveauLangueCultReg, NiveauLangueCultRegs} from "../models/eval_langue_culture_regionale_mdl";
+import {Utils} from "../models/teacher/Utils";
 
 declare let _:any;
 declare let Chart:any;
@@ -239,7 +240,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
         $scope.initFilterMine = () => {
             $scope.suiviFilter = {
-                mine: (!$scope.isChefEtab()).toString()
+                mine: (!Utils.isChefEtab()).toString()
             };
         };
 

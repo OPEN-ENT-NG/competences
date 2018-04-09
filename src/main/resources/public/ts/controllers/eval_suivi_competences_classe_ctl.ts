@@ -6,6 +6,7 @@ import { ng, template, model, http } from 'entcore';
 import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import { Defaultcolors } from "../models/eval_niveau_comp";
+import {Utils} from "../models/teacher/Utils";
 
 declare let _:any;
 
@@ -118,7 +119,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         $scope.initFilterMine = () => {
             $scope.suiviFilter = {
-                mine: (!$scope.isChefEtab()).toString()
+                mine: (!Utils.isChefEtab()).toString()
             };
         };
         $scope.initFilterMine();

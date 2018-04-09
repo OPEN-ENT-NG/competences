@@ -35,6 +35,8 @@ declare let Chart: any;
 export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
     function ($scope, route, $location, $filter, $sce, $compile, $timeout, $route) {
+
+        model.me.workflow.load(['viescolaire', 'edt']);
         route({
             accueil : async function (params) {
                 await $scope.init();

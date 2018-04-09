@@ -1,4 +1,5 @@
 export * from './Annotation';
+export * from './AppreciationClasse';
 export * from './BilanFinCycle';
 export * from './Classe';
 export * from './Competence';

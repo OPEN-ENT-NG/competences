@@ -4,10 +4,7 @@ import { BilanFinDeCycle, CompetenceNote } from './index';
 
 export class Utils {
     static isChefEtab () {
-        return  model.me.type === 'PERSEDUCNAT' &&
-            model.me.functions !== undefined &&
-            model.me.functions.DIR !== undefined &&
-            model.me.functions.DIR.code === 'DIR';
+        return model.me.hasWorkflow("fr.openent.DisplayController|view");
     }
 
     static canUpdateBFCSynthese () {

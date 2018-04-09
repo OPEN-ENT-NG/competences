@@ -1,13 +1,11 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.security.*;
+import fr.openent.competences.security.AccessAppreciationFilter;
+import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.service.AppreciationService;
 import fr.openent.competences.service.impl.DefaultAppreciationService;
-import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Delete;
-import fr.wseduc.rs.Post;
-import fr.wseduc.rs.Put;
+import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
@@ -131,6 +129,63 @@ public class AppreciationController extends ControllerHelper {
         });
     }
 
+
+    /**
+     * Créer/metttre à jour une appreciation avec les données passées en POST
+     * @param request
+     */
+    @Post("/appreciation/classe")
+    @ApiDoc("Créer ou mettre à jour une appreciation d'une classe pour une période et matière donnée")
+    //@SecuredAction(value="competences.appreciation.classe", type = ActionType.WORKFLOW)
+//    @SecuredAction(value = "", type= ActionType.RESOURCE)
+//    @ResourceFilter(AccessAppreciationClasseFilter.class)
+    public void createOrUpdateAppreciationClasse (final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if(user != null){
+                    String validator = pathPrefix + Competences.SCHEMA_APPRECIATIONS_CLASSE;
+                    RequestUtils.bodyToJson(request, validator,
+                            new Handler<JsonObject>() {
+                                @Override
+                                public void handle(JsonObject appreciation) {
+                                    appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
+                                            appreciation.getString("id_classe"),
+                                            appreciation.getInteger("id_periode"),
+                                            appreciation.getString("id_matiere")
+                                            , defaultResponseHandler(request));
+                                }
+                            });
+                }else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+    /**
+     * Récupère les annotations de l'établissement
+     * @param request
+     */
+    @Get("/appreciation/classe")
+    @ApiDoc("Récupère l'appreciation d'une classe pour une période et matière donnée")
+//    @SecuredAction(value = "", type= ActionType.RESOURCE)
+//    @ResourceFilter(AccessAppreciationClasseFilter.class)
+    public void getAppreciationClasse(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    appreciationService.getAppreciationClasse(request.params().get("id_classe"),
+                            Integer.parseInt(request.params().get("id_periode")),
+                            request.params().get("id_matiere"), defaultResponseHandler(request));
+                } else {
+                    badRequest(request);
+                }
+            }
+        });
+    }
 
 
 }

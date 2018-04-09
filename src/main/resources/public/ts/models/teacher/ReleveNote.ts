@@ -1,5 +1,6 @@
 import { Model, IModel, _, moment, Collection, http } from 'entcore';
 import {
+    AppreciationClasse,
     Periode,
     Matiere,
     Evaluation,
@@ -20,6 +21,7 @@ export class ReleveNote extends  Model implements IModel{
     idMatiere: string;
     idPeriode: number;
     idEtablissement: string;
+    appreciationClasse : AppreciationClasse;
     _tmp : any;
 
     get api () {
@@ -35,7 +37,8 @@ export class ReleveNote extends  Model implements IModel{
             classe : false,
             devoirs : false,
             evaluations : false,
-            releve : false
+            releve : false,
+            appreciationClasse : false
         };
         this.structure = evaluations.structure;
         this.matiere = _.findWhere(evaluations.structure.matieres.all, {id : this.idMatiere});
@@ -97,15 +100,29 @@ export class ReleveNote extends  Model implements IModel{
         });
     }
 
+    syncAppreciationClasse() {
+        return new Promise((resolve, reject) => {
+
+            let periode = _.findWhere(this.classe.periodes.all, {id_type : this.idPeriode});
+            let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
+
+            this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode, endSaisie);
+            this.appreciationClasse.sync();
+            resolve();
+    });
+}
+
     sync () : Promise<any> {
         return new Promise(async (resolve, reject) => {
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse()]);
+            this.syncAppreciationClasse();
             let _notes ,_devoirs, _eleves;
             if(this._tmp) {
                 _notes = this._tmp.notes;
                 _devoirs = this._tmp.devoirs;
                 _eleves = this._tmp.eleves;
             }
+
             _.each(this.classe.eleves.all, (eleve) => {
                 var _evals = [];
                 let _t = _.where(_notes, {id_eleve: eleve.id});

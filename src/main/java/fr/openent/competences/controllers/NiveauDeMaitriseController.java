@@ -55,7 +55,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
 
     @Get("/maitrise/level/:idEtablissement")
     @ApiDoc("Recupere tous les niveaux de maitrise d'un établissement")
-    @ResourceFilter(AccessAuthorozed.class)
+    @ResourceFilter(AdministratorRight.class)
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getMaitriseLevel(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
@@ -103,7 +103,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
     @Post("/maitrise/level")
     @ApiDoc("Créer un niveau de maitrise ")
     @SecuredAction(value = "", type= ActionType.RESOURCE)
-    @ResourceFilter(AccessMaitriseFilter.class)
+    @ResourceFilter(AdministratorRight.class)
     public void create(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -160,7 +160,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
     @Put("/maitrise/level/:idNiveau")
     @ApiDoc("Modifie un niveau de maitrise")
     @SecuredAction(value = "", type= ActionType.RESOURCE)
-    @ResourceFilter(AccessMaitriseFilter.class)
+    @ResourceFilter(AdministratorRight.class)
     public void update(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -187,7 +187,7 @@ public class NiveauDeMaitriseController extends ControllerHelper {
     @Delete("/maitrise/level/:idEtablissement")
     @ApiDoc("Supprimer tous les niveaux de maitrise d'un étbalissement donné")
     @SecuredAction(value = "", type= ActionType.RESOURCE)
-    @ResourceFilter(AccessMaitriseFilter.class)
+    @ResourceFilter(AdministratorRight.class)
     public void delete(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "appreciation": {
+      "type": "string"
+    },
+    "id_classe": {
+      "type": "string"
+    },
+    "id_periode": {
+      "type": "integer"
+    },
+    "id_matiere": {
+      "type" : "string"
+    }
+  },
+  "required": [
+    "appreciation",
+    "id_classe",
+    "id_periode",
+    "id_matiere"
+  ]
+}

@@ -22,6 +22,9 @@ declare let location: any;
 export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
     function ($scope, route, $rootScope, $location, $filter, $sce, $compile, $timeout, $route) {
+
+        model.me.workflow.load(['viescolaire', 'edt']);
+
         // $scope.initPeriodesList = (Index?: number,annee?:boolean) => {
         //     $scope.periodesList = {
         //         "type": "select",
@@ -224,7 +227,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         utils.safeApply($scope);
                     };
 
-                    if ($scope.isChefEtab()) {
+                    if (Utils.isChefEtab()) {
                         $scope.modificationDevoir = false;
                         if (!$scope.structure.synchronized.classes) {
                             $scope.structure.classes.sync();
@@ -519,10 +522,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.isChefEtab = () => {
-            return model.me.type === 'PERSEDUCNAT' &&
-                model.me.functions !== undefined &&
-                model.me.functions.DIR !== undefined &&
-                model.me.functions.DIR.code === 'DIR';
+            return Utils.isChefEtab();
         };
 
         $scope.canUpdateBFCSynthese = () => {
@@ -880,7 +880,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.confirmSuppretion =  function () {
             if ($scope.selected.devoirs.list.length > 0) {
                 $scope.devoirsUncancelable = [];
-                if (!$scope.isChefEtab()) {
+                if (!Utils.isChefEtab()) {
                     _.map($scope.selected.devoirs.list, async function (devoir) {
                         let isEndSaisieDevoir = await $scope.checkEndSaisieSeul(devoir);
                         if (isEndSaisieDevoir) {
@@ -2906,7 +2906,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             let date_fin_saisie = _.findWhere(classe.periodes.all, {id_type: devoir.id_periode}).date_fin_saisie;
 
-            return !(moment(date_fin_saisie).isAfter(moment(), "days") || $scope.isChefEtab());
+            return !(moment(date_fin_saisie).isAfter(moment(), "days") || Utils.isChefEtab());
         };
 
         /**

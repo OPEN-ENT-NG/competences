@@ -46,6 +46,9 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
     public static final String SCHEMA_APPRECIATIONS_UPDATE = "eval_updateAppreciation";
+
+    public static final String SCHEMA_APPRECIATIONS_CLASSE = "eval_createOrUpdateAppreciationClasse";
+
     public static final String SCHEMA_BFC_CREATE = "eval_createBFC";
     public static final String SCHEMA_BFC_UPDATE = "eval_updateBFC";
     public static final String SCHEMA_BFCSYNTHESE_CREATE = "eval_createBfcSynthese";
