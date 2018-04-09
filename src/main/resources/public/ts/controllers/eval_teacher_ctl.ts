@@ -410,7 +410,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.cleanRoot();
                         let display = () => {
                             $scope.selected.matieres = [];
-                            $scope.exportByEnseignement = "false";
                             $scope.allUnselect = true;
                             $scope.allRefreshed = false;
                             $scope.opened.recapEval = false;
@@ -419,7 +418,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             };
                             $scope.printSuiviClasse = "printRecapEval";
                             $scope.suiviClasse = {
-                                textMod: true
+                                textMod: true,
+                                exportByEnseignement: 'false'
                             };
                             if(_.findIndex($scope.allMatieresSorted,{select: true}) === -1){
                                 $scope.disabledExportSuiviClasse = true;

@@ -208,7 +208,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void getDevoirCompetencesByEnseignement(Long devoirId, final Handler<Either<String, JsonArray>> handler) {
 
         String query = "SELECT comp.id as id_competence," +
-                " comp.id AS id, compDevoir.id_devoir, COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_type as id_type," +
+                " compDevoir.id AS id, compDevoir.id_devoir, COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_type as id_type," +
                 " comp.id_parent as id_parent, compDevoir.index as index, compEns.id_enseignement AS id_enseignement " +
                 " FROM " + COMPETENCES_TABLE + " AS comp" +
                 " INNER JOIN " + COMPETENCES_DEVOIRS_TABLE + " AS compDevoir ON (comp.id = compDevoir.id_competence )" +

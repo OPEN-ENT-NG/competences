@@ -56,13 +56,13 @@
         <div class="twelve cell twelve-mobile">
             <label><i18n class="titre-libelle">viescolaire.utils.export.choose</i18n></label>
             <p class="inline-block">
-                <input type="radio" ng-model="exportByEnseignement" value="false">
+                <input type="radio" ng-model="suiviClasse.exportByEnseignement" value="false">
                 <span>
                     <i18n>viescolaire.utils.export.choose.domaine</i18n>
                 </span>
             </p>
             <p class="inline-block">
-                <input type="radio" ng-model="exportByEnseignement" value="true">
+                <input type="radio" ng-model="suiviClasse.exportByEnseignement" value="true">
                 <span>
                     <i18n>viescolaire.utils.export.choose.enseignement</i18n>
                 </span>
@@ -141,7 +141,7 @@
         <button class="right-magnet"
                 ng-disabled = "disabledExportSuiviClasseButton()"
                 tooltip="evaluations.export.format.pdf"
-                ng-click="exportRecapEval(suiviClasse.textMod, printSuiviClasse, suiviClasse.periode.id_type)">
+                ng-click="exportRecapEval(suiviClasse.textMod, printSuiviClasse, suiviClasse.periode.id_type,suiviClasse.exportByEnseignement)">
             <i18n>evaluations.export</i18n>
         </button>
     </div>

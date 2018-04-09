@@ -332,7 +332,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
              utils.safeApply($scope);
          };
 
-         $scope.exportRecapEval = (textMod, printSuiviClasse, idPeriode) =>{
+         $scope.exportRecapEval = (textMod, printSuiviClasse, idPeriode,exportByEnseignement) =>{
              switch (printSuiviClasse) {
                  case 'printRecapEval' : {
                      let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
@@ -362,6 +362,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                          url += "&idPeriode=" + idPeriode;
                      }
                      url += "&idClasse=" + $scope.search.classe.id;
+                     url += "&byEnseignement=" + exportByEnseignement;
                      http().getJson(url + "&json=true")
                          .error((result) => {
                              $scope.errorResult(result);
