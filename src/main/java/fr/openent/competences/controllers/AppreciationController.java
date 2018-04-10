@@ -6,6 +6,8 @@ import fr.openent.competences.security.AccessAppreciationFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.security.CreateOrUpdateAppreciationClasseFilter;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.AppreciationService;
 import fr.openent.competences.service.impl.DefaultAppreciationService;
 import fr.wseduc.rs.*;
@@ -167,7 +169,7 @@ public class AppreciationController extends ControllerHelper {
                                     filterPeriodeUtils.validateEndSaisie(request, idClasse, idPeriode, new Handler<Boolean>() {
                                         @Override
                                         public void handle(Boolean isUpdatable) {
-                                            if(isUpdatable) {
+                                            if(isUpdatable || new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
                                                 appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
                                                         idClasse,
                                                         idPeriode,

@@ -36,7 +36,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
     function ($scope, route, $location, $filter, $sce, $compile, $timeout, $route) {
 
-        model.me.workflow.load(['viescolaire', 'edt']);
+        model.me.workflow.load(['viescolaire']);
         route({
             accueil : async function (params) {
                 await $scope.init();

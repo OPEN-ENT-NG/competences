@@ -31,9 +31,6 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 
-/**
- * Created by ledunoiss on 20/10/2016.
- */
 public class AccessAppreciationClasseFilter implements ResourcesProvider {
 
     protected static final Logger log = LoggerFactory.getLogger(AccessAppreciationClasseFilter.class);

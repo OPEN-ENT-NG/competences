@@ -43,19 +43,9 @@ public class CreateOrUpdateAppreciationClasseFilter implements ResourcesProvider
     protected static final Logger log = LoggerFactory.getLogger(CreateOrUpdateAppreciationClasseFilter.class);
 
     @Override
-    public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user, final Handler<Boolean> handler) {
+    public void authorize(final HttpServerRequest resourceRequest, Binding binding, final UserInfos user, final Handler<Boolean> handler) {
        final FilterUserUtils userUtils = new FilterUserUtils(user, null);
 
-        boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
-        if(isAdmin) {
-            handler.handle(true);
-        }
-
-        if (user.getType().equals("Teacher")) {
-//            resourceRequest.pause();
-//            final MultiMap params = resourceRequest.params();
-
-            
             RequestUtils.bodyToJson(resourceRequest, "/competences" + Competences.SCHEMA_APPRECIATIONS_CLASSE,
                     new Handler<JsonObject>() {
                         @Override
@@ -63,31 +53,43 @@ public class CreateOrUpdateAppreciationClasseFilter implements ResourcesProvider
                             Integer idPeriode = appreciation.getInteger("id_periode");
                             String idMatiere = appreciation.getString("id_matiere");
                             String idClasse = appreciation.getString("id_classe");
+                            String appreciationStr = appreciation.getString("appreciation");
 
-                            //On check que la classe passé en paramètre soit bien ceux de l'utilisateur
-                            if (!userUtils.validateClasse(idClasse)) {
+                            if(appreciationStr != null && appreciationStr.length() > 300) {
+                                log.error("appreciation must be < 300 carac");
                                 handler.handle(false);
                                 return;
                             }
 
-                            // check de la date de fin de saisie côté controleur
 
-                            //TODO checker la matiere
+                            boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
+                            if(isAdmin) {
+                                handler.handle(true);
+                                return;
+                            }
+
+                            // controles supplémentaires dans les cas des enseignants
+                            if (user.getType().equals("Teacher")) {
+                                //On check que la classe passé en paramètre soit bien ceux de l'utilisateur
+                                if (!userUtils.validateClasse(idClasse)) {
+                                    handler.handle(false);
+                                    return;
+                                }
 
 
+                                // check de la date de fin de saisie côté controleur
 
-                            handler.handle(true);
+                                //TODO checker la matiere
+
+
+                                handler.handle(true);
+                            } else {
+                                log.error("unauthorized for this profile");
+                                handler.handle(false);
+                                return;
+                            }
 
                         }
                     });
-
-
-
-
-
-        }
-        else {
-            handler.handle(false);
-        }
     }
 }

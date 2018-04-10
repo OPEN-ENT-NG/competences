@@ -23,7 +23,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
     function ($scope, route, $rootScope, $location, $filter, $sce, $compile, $timeout, $route) {
 
-        model.me.workflow.load(['viescolaire', 'edt']);
+        model.me.workflow.load(['viescolaire']);
 
         // $scope.initPeriodesList = (Index?: number,annee?:boolean) => {
         //     $scope.periodesList = {
