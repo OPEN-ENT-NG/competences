@@ -19,28 +19,32 @@
 
 package fr.openent.competences.security;
 
+import fr.openent.competences.Competences;
+import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
+import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 
 /**
  * Created by ledunoiss on 20/10/2016.
  */
-public class AccessAppreciationClasseFilter implements ResourcesProvider {
+public class CreateOrUpdateAppreciationClasseFilter implements ResourcesProvider {
 
-    protected static final Logger log = LoggerFactory.getLogger(AccessAppreciationClasseFilter.class);
+    protected static final Logger log = LoggerFactory.getLogger(CreateOrUpdateAppreciationClasseFilter.class);
 
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user, final Handler<Boolean> handler) {
-        FilterUserUtils userUtils = new FilterUserUtils(user);
+       final FilterUserUtils userUtils = new FilterUserUtils(user);
 
         boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
         if(isAdmin) {
@@ -48,39 +52,39 @@ public class AccessAppreciationClasseFilter implements ResourcesProvider {
         }
 
         if (user.getType().equals("Teacher")) {
-            resourceRequest.pause();
-            MultiMap params = resourceRequest.params();
+//            resourceRequest.pause();
+//            final MultiMap params = resourceRequest.params();
 
-            if (!(params.contains("id_classe") &&
-                    params.contains("id_periode") &&
-                    params.contains("id_matiere")) ) {
-                resourceRequest.resume();
-                handler.handle(false);
-                return;
-            }
+            
+            RequestUtils.bodyToJson(resourceRequest, "/competences" + Competences.SCHEMA_APPRECIATIONS_CLASSE,
+                    new Handler<JsonObject>() {
+                        @Override
+                        public void handle(JsonObject appreciation) {
+                            Integer idPeriode = appreciation.getInteger("id_periode");
+                            String idMatiere = appreciation.getString("id_matiere");
+                            String idClasse = appreciation.getString("id_classe");
 
-            //On check que la classe passée en paramètre soit bien ceux de l'utilisateur
-            if (!userUtils.validateClasse(params.get("id_classe"))) {
-                resourceRequest.resume();
-                handler.handle(false);
-                return;
-            }
+                            //On check que la classe passé en paramètre soit bien ceux de l'utilisateur
+                            if (!userUtils.validateClasse(idClasse)) {
+                                handler.handle(false);
+                                return;
+                            }
+
+                            // check de la date de fin de saisie côté controleur
+
+                            //TODO checker la matiere
 
 
-            Integer idPeriode;
-            if (params.get("id_periode") != null) {
-                try {
-                    idPeriode = Integer.parseInt(params.get("id_periode"));
-                } catch (NumberFormatException e) {
-                    log.error("Error : id_periode must be an Integer", e);
-                    resourceRequest.resume();
-                    handler.handle(false);
-                    return;
-                }
-            }
 
-            resourceRequest.resume();
-            handler.handle(true);
+                            handler.handle(true);
+
+                        }
+                    });
+
+
+
+
+
         }
         else {
             handler.handle(false);

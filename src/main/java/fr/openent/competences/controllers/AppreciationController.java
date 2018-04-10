@@ -1,8 +1,11 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.AccessAppreciationClasseFilter;
 import fr.openent.competences.security.AccessAppreciationFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
+import fr.openent.competences.security.CreateOrUpdateAppreciationClasseFilter;
+import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.service.AppreciationService;
 import fr.openent.competences.service.impl.DefaultAppreciationService;
 import fr.wseduc.rs.*;
@@ -15,8 +18,15 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.Message;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.notEmptyResponseHandler;
@@ -136,9 +146,8 @@ public class AppreciationController extends ControllerHelper {
      */
     @Post("/appreciation/classe")
     @ApiDoc("Créer ou mettre à jour une appreciation d'une classe pour une période et matière donnée")
-    //@SecuredAction(value="competences.appreciation.classe", type = ActionType.WORKFLOW)
-//    @SecuredAction(value = "", type= ActionType.RESOURCE)
-//    @ResourceFilter(AccessAppreciationClasseFilter.class)
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(CreateOrUpdateAppreciationClasseFilter.class)
     public void createOrUpdateAppreciationClasse (final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -148,12 +157,29 @@ public class AppreciationController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, validator,
                             new Handler<JsonObject>() {
                                 @Override
-                                public void handle(JsonObject appreciation) {
-                                    appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
-                                            appreciation.getString("id_classe"),
-                                            appreciation.getInteger("id_periode"),
-                                            appreciation.getString("id_matiere")
-                                            , defaultResponseHandler(request));
+                                public void handle(final JsonObject appreciation) {
+
+                                    final Integer idPeriode = appreciation.getInteger("id_periode");
+                                    final String idMatiere = appreciation.getString("id_matiere");
+                                    final String idClasse = appreciation.getString("id_classe");
+
+                                    FilterPeriodeUtils filterPeriodeUtils = new FilterPeriodeUtils(eb);
+                                    filterPeriodeUtils.validateEndSaisie(request, idClasse, idPeriode, new Handler<Boolean>() {
+                                        @Override
+                                        public void handle(Boolean isUpdatable) {
+                                            if(isUpdatable) {
+                                                appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
+                                                        idClasse,
+                                                        idPeriode,
+                                                        idMatiere
+                                                        , defaultResponseHandler(request));
+                                            } else {
+                                                Renders.unauthorized(request);
+                                            }
+                                        }
+                                    });
+
+
                                 }
                             });
                 }else {
@@ -170,8 +196,8 @@ public class AppreciationController extends ControllerHelper {
      */
     @Get("/appreciation/classe")
     @ApiDoc("Récupère l'appreciation d'une classe pour une période et matière donnée")
-//    @SecuredAction(value = "", type= ActionType.RESOURCE)
-//    @ResourceFilter(AccessAppreciationClasseFilter.class)
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessAppreciationClasseFilter.class)
     public void getAppreciationClasse(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
             @Override
