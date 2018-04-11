@@ -1,4 +1,8 @@
 body.evaluations {
+
+  .changedAverage {
+    color: $red;
+  }
   .overFlowAuto {
     overflow: auto;
   }
@@ -271,12 +275,12 @@ body.evaluations {
     .nav-releve {
       margin-top: -50px;
     }
-  .toogleDevoir{
-    align-content: right !important;
-    display: inline-block;
-    float: right;
-    margin-right: -5px;
-    margin-top:  10px;
+    .toogleDevoir{
+      align-content: right !important;
+      display: inline-block;
+      float: right;
+      margin-right: -5px;
+      margin-top:  10px;
     }
     .toogleIcon{
       transform: rotate(90deg);
@@ -479,6 +483,12 @@ body.evaluations {
             text-align: center;
           }
         }
+      }
+    }
+    .widthMax{
+      width: 66% !important;
+      input[type="text"]{
+        width: 100% !important;
       }
     }
   }

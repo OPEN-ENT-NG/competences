@@ -21,12 +21,16 @@ package fr.openent.competences.security;
 
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
+import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.MultiMap;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 
@@ -38,72 +42,83 @@ public class AccessReleveFilter implements ResourcesProvider {
     protected static final Logger log = LoggerFactory.getLogger(AccessReleveFilter.class);
 
     @Override
-    public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user, final Handler<Boolean> handler) {
+    public void authorize(final HttpServerRequest resourceRequest, Binding binding, final UserInfos user,
+                          final Handler<Boolean> handler) {
+
+        if ("GET".equals(resourceRequest.method())) {
+            String idClasse = resourceRequest.params().get("idClasse");
+            String idEtablissement = resourceRequest.params().get("idEtablissement");
+            String idMatiere = resourceRequest.params().get("idMatiere");
+            String idPeriodeString = resourceRequest.params().get("idPeriode");
+            Long idPeriode = null;
+            if (idPeriodeString != null) {
+                try {
+                    idPeriode = Long.parseLong(idPeriodeString);
+                } catch (NumberFormatException e) {
+                    log.error(" Error :idPeriode must be a long object ", e);
+                    resourceRequest.resume();
+                    handler.handle(false);
+                    return;
+                }
+            }
+            authorizeAccess(resourceRequest,idEtablissement,idClasse,idMatiere,idPeriode,user,handler);
+        }
+        else {
+            RequestUtils.bodyToJson(resourceRequest, new Handler<JsonObject>() {
+                @Override
+                public void handle(JsonObject resource) {
+                   String idClasse = resource.getString("idClasse");
+                    String idEtablissement = resource.getString("idEtablissement");
+                    String idMatiere = resource.getString("idMatiere");
+                    Long idPeriode = resource.getLong("idPeriode");
+                    authorizeAccess(resourceRequest,idEtablissement,idClasse,idMatiere, idPeriode,user,handler);
+                }
+            });
+        }
+    }
+
+    private  void authorizeAccess(final HttpServerRequest resourceRequest,
+                                  String idEtablissement, String idClasse, String idMatiere, Long idPeriode,
+                                  UserInfos user,final Handler<Boolean> handler) {
         FilterUserUtils userUtils = new FilterUserUtils(user,null);
-        switch (user.getType()) {
-            case "Teacher" : {
-                resourceRequest.pause();
-                MultiMap params = resourceRequest.params();
-                Long idPeriode;
 
-                //On check si tous les paramètres sont bien présents
-                if (!resourceRequest.params().contains("idEtablissement") &&
-                        !resourceRequest.params().contains("idClasse") &&
-                        !resourceRequest.params().contains("idMatiere")) {
-                    handler.handle(false);
-                }
+        boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
 
-                //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
-                else if (!userUtils.validateClasse(params.get("idClasse")) &&
-                        !userUtils.validateStructure(params.get("idEtablissement"))) {
-                    handler.handle(false);
-                }
+        if(isAdmin) {
+            resourceRequest.resume();
+            handler.handle(true);
+            return;
+        }
 
-                else if (params.get("idPeriode") != null) {
-                    try {
-                        idPeriode = Long.parseLong(params.get("idPeriode"));
-                    } catch (NumberFormatException e) {
-                        log.error(" Error : idPeriode must be a long object", e);
-                        handler.handle(false);
-                        return;
-                    }
+        else if (user.getType().equals("Teacher")) {
+            resourceRequest.pause();
 
-                    new FilterPeriodeUtils().validateStructure(params.get("idEtablissement"),
-                            idPeriode, new Handler<Boolean>() {
-                                @Override
-                                public void handle(Boolean isValid) {
-                                    resourceRequest.resume();
-                                    handler.handle(isValid);
-                                }
-                            });
-                }
-                else {
-                    new FilterPeriodeUtils().validateStructure(params.get("idEtablissement"),
-                            null, new Handler<Boolean>() {
-                                @Override
-                                public void handle(Boolean isValid) {
-                                    resourceRequest.resume();
-                                    handler.handle(isValid);
-                                }
-                            });
-                }
-            }
-            break;
-            case "Personnel" : {
-                resourceRequest.pause();
-
-               if(user.getFunctions().containsKey("DIR")){
-
-                   handler.handle(true);
-                   resourceRequest.resume();
-               }else{
-                   handler.handle(false);
-               }
-            }
-            break;
-            default: {
+            //On check si tous les paramètres sont bien présents
+            if (null == idClasse || null == idMatiere || null == idEtablissement) {
+                resourceRequest.resume();
                 handler.handle(false);
             }
+            //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
+           else if (!userUtils.validateClasse(idClasse) &&
+                    !userUtils.validateStructure(idEtablissement)) {
+                resourceRequest.resume();
+                handler.handle(false);
+            }
+
+            else {
+                new FilterPeriodeUtils().validateStructure(idEtablissement,
+                        idPeriode, new Handler<Boolean>() {
+                            @Override
+                            public void handle(Boolean isValid) {
+                                resourceRequest.resume();
+                                handler.handle(isValid);
+                            }
+                        });
+            }
+        }
+        else {
+            resourceRequest.resume();
+            handler.handle(false);
         }
     }
 

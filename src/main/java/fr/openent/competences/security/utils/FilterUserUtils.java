@@ -81,22 +81,28 @@ public class FilterUserUtils{
                             JsonObject body = message.body();
                             JsonArray listIdsMatieres = body.getArray("results");
                             JsonArray listReswithIdMatieres;
-                            if (listIdsMatieres.get(0) instanceof String) {
-                                listReswithIdMatieres = null;
-                            } else {
-                                listReswithIdMatieres = ((JsonObject) listIdsMatieres.get(0))
-                                        .getArray("res");
+                            if (null != listIdsMatieres) {
+                                if (listIdsMatieres.get(0) instanceof String) {
+                                    listReswithIdMatieres = null;
+                                } else {
+                                    listReswithIdMatieres = ((JsonObject) listIdsMatieres.get(0))
+                                            .getArray("res");
+                                }
+                                if (!(listIdsMatieres != null &&
+                                        (listIdsMatieres.contains(idMatiere)
+                                                || (listReswithIdMatieres != null
+                                                && listReswithIdMatieres.contains(idMatiere))))) {
+                                    handler.handle(false);
+                                } else {
+                                    handler.handle(true);
+                                }
                             }
-                            if (!(listIdsMatieres != null &&
-                                    (listIdsMatieres.contains(idMatiere)
-                                            || (listReswithIdMatieres != null
-                                            && listReswithIdMatieres.contains(idMatiere))))) {
+                            else {
                                 handler.handle(false);
-                            } else {
-                                handler.handle(true);
                             }
                         }
                     });
+
                 }
             }
         });

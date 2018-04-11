@@ -22,14 +22,17 @@ export class ReleveNote extends  Model implements IModel{
     idPeriode: number;
     idEtablissement: string;
     appreciationClasse : AppreciationClasse;
+    hasEvaluatedDevoirs : boolean;
+    toogle : boolean;
     _tmp : any;
 
     get api () {
         return {
             get : `/competences/releve?idEtablissement=${this.structure.id}&idClasse=${this.idClasse}&idMatiere=${
                 this.idMatiere}`,
-            getInfoPeriodique: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
-                this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}`
+            GET_INFO_PERIODIQUE: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
+                this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}`,
+            POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`
         }
     }
 
@@ -65,6 +68,15 @@ export class ReleveNote extends  Model implements IModel{
                 }
             }
         });
+    }
+
+    toJson() {
+        return {
+            idMatiere: this.idMatiere,
+            idClasse: this.idClasse,
+            idEtablissement: this.idEtablissement,
+            idPeriode: this.idPeriode
+        };
     }
 
     syncClasse () : Promise<any> {
@@ -112,38 +124,38 @@ export class ReleveNote extends  Model implements IModel{
             this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode, endSaisie, this.structure.id);
             this.appreciationClasse.sync();
             resolve();
-    });
-}
+        });
+    }
 
     syncMoyenneFinale () : Promise<any> {
         return new Promise( (resolve,reject) => {
-                if (this.idPeriode !== null) {
-                    http().getJson(this.api.getInfoPeriodique + '&colonne=moyenne')
-                        .done((res) => {
-                            console.log(res);
-                            _.forEach(this.classe.eleves.all, (eleve) => {
-                                let _eleve  = _.findWhere(res, {id_eleve: eleve.id});
-                                if (_eleve  !== undefined && _eleve .moyenne !== null) {
-                                        eleve.moyenneFinale = _eleve.moyenne;
-                                }
-                            });
-                            resolve();
-                        })
-                        .error((res) => {
-                            console.dir(res);
-                            reject();
-                        })
-                }
-                else {
-                    resolve();
-                }
+            if (this.idPeriode !== null) {
+                http().getJson(this.api.GET_INFO_PERIODIQUE + '&colonne=moyenne')
+                    .done((res) => {
+                        console.log(res);
+                        _.forEach(this.classe.eleves.all, (eleve) => {
+                            let _eleve  = _.findWhere(res, {id_eleve: eleve.id});
+                            if (_eleve  !== undefined && _eleve .moyenne !== null) {
+                                eleve.moyenneFinale = _eleve.moyenne;
+                            }
+                        });
+                        resolve();
+                    })
+                    .error((res) => {
+                        console.dir(res);
+                        reject();
+                    })
+            }
+            else {
+                resolve();
+            }
         });
     }
 
     syncPositionnement () : Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.idPeriode !== null) {
-                http().getJson(this.api.getInfoPeriodique + '&colonne=positionnement')
+                http().getJson(this.api.GET_INFO_PERIODIQUE + '&colonne=positionnement')
                     .done((res) => {
                         console.log(res);
                         _.forEach(this.classe.eleves.all, (eleve) => {
@@ -168,17 +180,34 @@ export class ReleveNote extends  Model implements IModel{
         return new Promise(async (resolve, reject) => {
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse()]);
             this.syncAppreciationClasse();
-            let _notes ,_devoirs, _eleves, _moyennesFinales;
+            let _notes ,_devoirs, _eleves, _moyennesFinales, _appreciations;
             if(this._tmp) {
                 _notes = this._tmp.notes;
                 _devoirs = this._tmp.devoirs;
                 _eleves = this._tmp.eleves;
                 _moyennesFinales = this._tmp.moyennes;
+                _appreciations = this._tmp.appreciations;
             }
+            this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated : true});
+            this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined)? false:true;
+
             _.each(this.classe.eleves.all, (eleve) => {
+                // load moyenne finale
                 let _eleve  = _.findWhere(_moyennesFinales, {id_eleve: eleve.id});
                 if (_eleve  !== undefined && _eleve .moyenne !== null) {
-                    eleve.moyenneFinale = _eleve.moyenne;
+                    if(this.hasEvaluatedDevoirs) {
+                        eleve.moyenneFinale = _eleve.moyenne;
+                    }
+                    else {
+                        eleve.moyenneFinale = "";
+                        this.saveAppreciationMatierePeriodeEleve(eleve);
+                    }
+
+                }
+                // load moyenne appreciation
+                let _eleve_appreciation  = _.findWhere(_appreciations, {id_eleve: eleve.id});
+                if (_eleve_appreciation  !== undefined && _eleve_appreciation !== null) {
+                    eleve.appreciation_matiere_periode = _eleve_appreciation.appreciation_matiere_periode;
                 }
                 var _evals = [];
                 let _t = _.where(_notes, {id_eleve: eleve.id});
@@ -230,12 +259,21 @@ export class ReleveNote extends  Model implements IModel{
                     }
                 }
             });
-            _.each(_eleves, (eleve) => {
-                let e = _.findWhere(this.classe.eleves.all, {id: eleve.id});
-                if (e) {
-                    e.moyenne = eleve.moyenne;
-                }
-            });
+
+            if(this.hasEvaluatedDevoirs) {
+                _.each(_eleves, (eleve) => {
+                    let e = _.findWhere(this.classe.eleves.all, {id: eleve.id});
+                    if (e) {
+                        e.moyenne = eleve.moyenne;
+                    }
+                });
+            }
+            else {
+                _.each(this.classe.eleves.all, (eleve) => {
+                    // TODO check NN with annotation
+                    eleve.moyenne = 'NN';
+                })
+            }
             // await Promise.all([this.syncMoyenneFinale()]);
 
             this.trigger('noteOK');
@@ -322,29 +360,49 @@ export class ReleveNote extends  Model implements IModel{
         });
     }
     saveMoyenneFinaleEleve(eleve) : any {
-        let _data = {
+        let _data = _.extend(this.toJson(), {
+            idEleve: eleve.id,
+            colonne: 'moyenne',
             moyenne: parseFloat(eleve.moyenneFinale),
-            delete: eleve.moyenneFinale === ""};
+            delete: eleve.moyenneFinale === ""});
 
-            http().postJson(this.api.getInfoPeriodique + '&colonne=moyenne&idEleve=' + eleve.id, _data )
-                .done((res) => {
-                    console.dir('moyenne sauvé' + eleve.name);
-                })
-                .error((err) => {
-                    console.dir('error on save' + eleve.name);
-                });
+        http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data )
+            .done((res) => {
+                console.dir('moyenne sauvé' + eleve.name);
+            })
+            .error((err) => {
+                console.dir('error on save' + eleve.name);
+            });
     }
     savePositionnementEleve(eleve) : any {
-        let _data = {
+        let _data = _.extend(this.toJson(), {
+            idEleve: eleve.id,
+            colonne: 'positionnement',
             positionnement: parseInt(eleve.positionnement),
-            delete: eleve.positionnement === ""};
+            delete: eleve.positionnement === ""});
 
-        http().postJson(this.api.getInfoPeriodique + '&colonne=positionnement&idEleve=' + eleve.id, _data )
+        http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data )
             .done((res) => {
                 console.dir('positionnement sauvé' + eleve.lastName);
             })
             .error((err) => {
                 console.dir('error on save positionnement' + eleve.lastName);
+            });
+    }
+
+    saveAppreciationMatierePeriodeEleve(eleve) : any {
+        let _data = _.extend(this.toJson(), {
+            idEleve: eleve.id,
+            appreciation_matiere_periode: eleve.appreciation_matiere_periode,
+            colonne: 'appreciation_matiere_periode',
+            delete: eleve.appreciation_matiere_periode === ""});
+
+        http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE , _data)
+            .done((res) => {
+                console.dir('appreciation_matiere_periode sauvé' + eleve.lastName);
+            })
+            .error((err) => {
+                console.dir('error on save appreciation_matiere_periode' + eleve.lastName);
             });
     }
 }

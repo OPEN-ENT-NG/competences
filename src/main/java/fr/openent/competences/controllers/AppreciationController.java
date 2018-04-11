@@ -176,7 +176,7 @@ public class AppreciationController extends ControllerHelper {
                                                 , defaultResponseHandler(request));
                                     } else {
                                         // sinon on vérifier la date de fin de saisie et la présence de la matière sur l'utilisateur
-                                        FilterPeriodeUtils filterPeriodeUtils = new FilterPeriodeUtils(eb);
+                                        FilterPeriodeUtils filterPeriodeUtils = new FilterPeriodeUtils(eb,user);
                                         filterPeriodeUtils.validateEndSaisie(request, idClasse, idPeriode, new Handler<Boolean>() {
                                             @Override
                                             public void handle(Boolean isUpdatable) {

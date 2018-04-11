@@ -25,6 +25,7 @@ import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
 import fr.openent.competences.security.AccessReleveFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
+import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
@@ -70,6 +71,7 @@ public class NoteController extends ControllerHelper {
 
     /**
      * Recupère les notes d'un devoir donné
+     *
      * @param request
      */
     @Get("/devoir/:idDevoir/notes")
@@ -102,6 +104,7 @@ public class NoteController extends ControllerHelper {
 
     /**
      * Créer une note avec les données passées en POST
+     *
      * @param request
      */
     @Post("/note")
@@ -129,6 +132,7 @@ public class NoteController extends ControllerHelper {
 
     /**
      * Modifie une note avec les données passées en PUT
+     *
      * @param request
      */
     @Put("/note")
@@ -153,8 +157,10 @@ public class NoteController extends ControllerHelper {
             }
         });
     }
+
     /**
      * Supprime la note passé en paramètre
+     *
      * @param request
      */
     @Delete("/note")
@@ -205,6 +211,7 @@ public class NoteController extends ControllerHelper {
 
     /**
      * Récupère les notes pour le relevé de notes
+     *
      * @param request
      */
 //    /:idEleve/:idEtablissement/:idClasse/:idMatiere/:idPeriode
@@ -280,7 +287,7 @@ public class NoteController extends ControllerHelper {
 
                                     result.putArray("notes", listNotes);
                                     if (null != idPeriodeString) {
-                                        addMoyenneFinal(request, result);
+                                        addMoyenneFinalAndAppreciation(request, result);
                                     } else {
                                         Renders.renderJson(request, result);
                                     }
@@ -294,8 +301,7 @@ public class NoteController extends ControllerHelper {
                         Long idPeriode = null;
                         if (!hasAccessToMatiere) {
                             unauthorized(request);
-                        }
-                        else {
+                        } else {
                             if (idPeriodeString != null) {
                                 try {
                                     idPeriode = Long.parseLong(idPeriodeString);
@@ -377,7 +383,7 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-    void addMoyenneFinal(final HttpServerRequest request, final JsonObject res) {
+    void addMoyenneFinalAndAppreciation(final HttpServerRequest request, final JsonObject res) {
         final String idClasse = request.params().get("idClasse");
         final String idMatiere = request.params().get("idMatiere");
         final String table = request.params().get("colonne");
@@ -400,7 +406,7 @@ public class NoteController extends ControllerHelper {
                         JsonObject eleve = queryResult.get(i);
                         idEleves.addString(eleve.getString("idEleve"));
                     }
-                    String idPeriodeString = request.params().get("idPeriode");
+                    final String idPeriodeString = request.params().get("idPeriode");
                     Long idPeriode = null;
                     if (idPeriodeString != null) {
                         try {
@@ -421,8 +427,11 @@ public class NoteController extends ControllerHelper {
                                 @Override
                                 public void handle(Either<String, JsonArray> event) {
                                     if (event.isRight()) {
-                                        Renders.renderJson(request, res.putArray("moyennes",
-                                                event.right().getValue()));
+                                        res.putArray("moyennes",
+                                                event.right().getValue());
+                                        addAppreciationsEleve(request, idEleves, idPeriodeString, idMatiere,
+                                                idClasse, res);
+
                                     } else {
                                         JsonObject error = new JsonObject()
                                                 .putString("error", event.left().getValue());
@@ -439,6 +448,33 @@ public class NoteController extends ControllerHelper {
             }
         });
     }
+
+
+    private void addAppreciationsEleve(final HttpServerRequest request, JsonArray idEleves, String idPeriodeString,
+                                       String idMatiere, String idClasse, final JsonObject res) {
+        Long idPeriode = Long.parseLong(idPeriodeString);
+        notesService.getColonneReleve(
+                idEleves,
+                idPeriode,
+                idMatiere,
+                idClasse,
+                "appreciation_matiere_periode",
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isRight()) {
+                            Renders.renderJson(request, res.putArray("appreciations",
+                                    event.right().getValue()));
+                        } else {
+                            JsonObject error = new JsonObject()
+                                    .putString("error", event.left().getValue());
+                            Renders.renderJson(request, error, 400);
+                        }
+                    }
+                });
+    }
+
+
     @Get("/releve/periodique")
     @ApiDoc("Récupère les moyennes finales pour le relevé périodique")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -500,53 +536,70 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void setColonneRelevePeriode(final HttpServerRequest request) {
-        final String idClasse = request.params().get("idClasse");
-        final String idMatiere = request.params().get("idMatiere");
-        final String idEleve = request.params().get("idEleve");
-        final String table = request.params().get("colonne");
-
-
-        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
-            public void handle(JsonObject resource) {
-                String idPeriodeString = request.params().get("idPeriode");
-                Long idPeriode = null;
-                if (idPeriodeString != null) {
-                    try {
-                        idPeriode = Long.parseLong(idPeriodeString);
-                    } catch (NumberFormatException e) {
-                        log.error("Error :idPeriode must be a long object ", e);
-                        badRequest(request, e.getMessage());
-                        return;
+            public void handle(final UserInfos user) {
+
+                RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(final JsonObject resource) {
+                        final String idClasse = resource.getString("idClasse");
+                        final String idMatiere = resource.getString("idMatiere");
+                        final String idEleve = resource.getString("idEleve");
+                        final String table = resource.getString("colonne");
+                        final Long idPeriode = resource.getLong("idPeriode");
+                        final String idEtablissement = resource.getString("idEtablissement");
+
+                        // Vérification de l'accès à la matière
+                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                                new Handler<Boolean>() {
+                                    @Override
+                                    public void handle(final Boolean hasAccessToMatiere) {
+                                        if (hasAccessToMatiere) {
+                                            // Vérification de la date de fin de saisie
+                                            new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
+                                                    idClasse, idPeriode.intValue(),
+                                                    new Handler<Boolean>() {
+                                                        @Override
+                                                        public void handle(Boolean isUpdatable) {
+                                                            //verif date fin de saisie
+                                                            if (isUpdatable) {
+
+                                                                if (resource.getBoolean("delete")) {
+                                                                    notesService.deleteColonneReleve(
+                                                                            idEleve,
+                                                                            idPeriode,
+                                                                            idMatiere,
+                                                                            idClasse,
+                                                                            table,
+                                                                            arrayResponseHandler(request));
+                                                                } else {
+                                                                    notesService.setColonneReleve(
+                                                                            idEleve,
+                                                                            idPeriode,
+                                                                            idMatiere,
+                                                                            idClasse,
+                                                                            resource,
+                                                                            table,
+                                                                            arrayResponseHandler(request));
+                                                                }
+                                                            } else {
+                                                                log.error("Not access to API because of end of saisie");
+                                                                unauthorized(request);
+                                                            }
+                                                        }
+                                                    });
+                                        } else {
+                                            log.error("Not access to Matiere");
+                                            unauthorized(request);
+                                        }
+                                    }
+                                });
                     }
-                }
-                if (resource.getBoolean("delete")){
-                    notesService.deleteColonneReleve(
-                            idEleve,
-                            idPeriode,
-                            idMatiere,
-                            idClasse,
-                            table,
-                            arrayResponseHandler(request));
-                }
-                else {
-                    notesService.setColonneReleve(
-                            idEleve,
-                            idPeriode,
-                            idMatiere,
-                            idClasse,
-                            resource,
-                            table,
-                            arrayResponseHandler(request));
-                }
+                });
+
             }
         });
-
-    }
-    void hasAccessMatiere(final HttpServerRequest request) {
-        final String idClasse = request.params().get("idClasse");
-
-
     }
 
 }

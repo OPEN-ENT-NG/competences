@@ -282,6 +282,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.addNumber(field.getNumber(colonne)).addString(idClasse).addString(idMatiere)
             .addNumber(field.getNumber(colonne));
         }
+        else if ("appreciation_matiere_periode".equals(colonne)) {
+            values.addString(field.getString(colonne)).addString(idClasse).addString(idMatiere)
+                    .addString(field.getString(colonne));
+        }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }

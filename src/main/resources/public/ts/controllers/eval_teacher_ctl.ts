@@ -488,6 +488,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
         $scope.lightboxChampsObligatoire = false;
         $scope.MAX_NBR_COMPETENCE = 12;
+        $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
         $scope.exportRecapEvalObj = {
             errExport: false
         };
@@ -3315,7 +3316,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
                         {id_type: $scope.search.periode.id});
                     if (selectedPeriode !== undefined) {
-                     return ! moment(selectedPeriode.date_fin_saisie).isAfter(moment(new Date));
+                     return moment().isAfter(moment(selectedPeriode.date_fin_saisie), "days");
                     }
                     else {
                         return true;
@@ -3353,8 +3354,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
         };
 
+        $scope.saveAppreciationMatierePeriodeEleve = function (eleve) {
+            if (eleve.appreciation_matiere_periode !== undefined) {
+                if (eleve.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
+                    $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve);
+                }
+                else {
+                    notify.error(lang.translate("error.char.outbound") +
+                        $scope.MAX_CHAR_APPRECIATION_LENGTH);
+                }
+            }
+            utils.safeApply($scope);
+        };
+
         $scope.toogleDevoirNote = function () {
-            $scope.toogle = !$scope.toogle;
+            $scope.releveNote.toogle = !$scope.releveNote.toogle;
             utils.safeApply($scope);
             $('html, body')
             // on arrête toutes les animations en cours
