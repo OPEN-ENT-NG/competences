@@ -77,10 +77,7 @@ public class CreateOrUpdateAppreciationClasseFilter implements ResourcesProvider
                                 }
 
 
-                                // check de la date de fin de saisie côté controleur
-
-                                //TODO checker la matiere
-
+                                // check de la date de fin de saisie et l'accès à la matière côté controleur
 
                                 handler.handle(true);
                             } else {

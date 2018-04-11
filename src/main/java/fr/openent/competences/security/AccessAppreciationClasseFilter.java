@@ -42,6 +42,7 @@ public class AccessAppreciationClasseFilter implements ResourcesProvider {
         boolean isAdmin = new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
         if(isAdmin) {
             handler.handle(true);
+            return;
         }
 
         if (user.getType().equals("Teacher")) {

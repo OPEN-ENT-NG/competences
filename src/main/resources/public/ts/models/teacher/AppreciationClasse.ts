@@ -8,13 +8,15 @@ export class AppreciationClasse  {
     id_periode: number;
     id_matiere: string;
     endSaisie: boolean;
+    idEtablissement: string;
 
-    constructor(idClasse:string, idMatiere:string, idPeriode:number, endSaisie:boolean) {
+    constructor(idClasse:string, idMatiere:string, idPeriode:number, endSaisie:boolean, idEtablissement:string) {
         // super();
         this.id_classe = idClasse;
         this.id_matiere = idMatiere;
         this.id_periode = idPeriode;
         this.endSaisie = endSaisie;
+        this.idEtablissement = idEtablissement;
     }
 
     async sync() {
@@ -34,7 +36,8 @@ export class AppreciationClasse  {
             appreciation: this.appreciation,
             id_classe: this.id_classe,
             id_periode: this.id_periode,
-            id_matiere: this.id_matiere
+            id_matiere: this.id_matiere,
+            idEtablissement: this.idEtablissement
         }
     }
 

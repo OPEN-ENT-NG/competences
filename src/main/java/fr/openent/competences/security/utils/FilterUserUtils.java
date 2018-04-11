@@ -56,15 +56,12 @@ public class FilterUserUtils{
         return user.getClasses().contains(idClasse);
     }
 
-    public void validateMatiere (final HttpServerRequest request, final Handler<Boolean> handler) {
+    public void validateMatiere (final HttpServerRequest request, final String idEtablissement, final String idMatiere, final Handler<Boolean> handler) {
 
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 
             @Override
             public void handle(UserInfos user) {
-                final String idEtablissement = request.params().get("idEtablissement");
-                final String idMatiere = request.params().get("idMatiere");
-
 
                 JsonObject action = new JsonObject()
                         .putString("action", "matiere.getMatieresForUser")

@@ -224,7 +224,7 @@ public class NoteController extends ControllerHelper {
                 final String idPeriodeString = request.params().get("idPeriode");
 
 
-                new FilterUserUtils(user, eb).validateMatiere(request, new Handler<Boolean>() {
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, new Handler<Boolean>() {
                     @Override
                     public void handle(final Boolean hasAccessToMatiere) {
 

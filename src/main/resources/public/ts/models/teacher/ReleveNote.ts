@@ -109,7 +109,7 @@ export class ReleveNote extends  Model implements IModel{
             let periode = _.findWhere(this.classe.periodes.all, {id_type : this.idPeriode});
             let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
 
-            this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode, endSaisie);
+            this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode, endSaisie, this.structure.id);
             this.appreciationClasse.sync();
             resolve();
     });

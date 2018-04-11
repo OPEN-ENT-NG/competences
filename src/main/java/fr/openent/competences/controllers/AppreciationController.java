@@ -6,6 +6,7 @@ import fr.openent.competences.security.AccessAppreciationFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.security.CreateOrUpdateAppreciationClasseFilter;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
+import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.AppreciationService;
@@ -164,28 +165,50 @@ public class AppreciationController extends ControllerHelper {
                                     final Integer idPeriode = appreciation.getInteger("id_periode");
                                     final String idMatiere = appreciation.getString("id_matiere");
                                     final String idClasse = appreciation.getString("id_classe");
+                                    final String idEtablissement = appreciation.getString("idEtablissement");
 
-                                    FilterPeriodeUtils filterPeriodeUtils = new FilterPeriodeUtils(eb);
-                                    filterPeriodeUtils.validateEndSaisie(request, idClasse, idPeriode, new Handler<Boolean>() {
-                                        @Override
-                                        public void handle(Boolean isUpdatable) {
-                                            if(isUpdatable || new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
-                                                appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
-                                                        idClasse,
-                                                        idPeriode,
-                                                        idMatiere
-                                                        , defaultResponseHandler(request));
-                                            } else {
-                                                Renders.unauthorized(request);
+                                    // si chef etab on ne fait pas plus de controles (date fin de saisie, matiere)
+                                    if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
+                                        appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
+                                                idClasse,
+                                                idPeriode,
+                                                idMatiere
+                                                , defaultResponseHandler(request));
+                                    } else {
+                                        // sinon on vérifier la date de fin de saisie et la présence de la matière sur l'utilisateur
+                                        FilterPeriodeUtils filterPeriodeUtils = new FilterPeriodeUtils(eb);
+                                        filterPeriodeUtils.validateEndSaisie(request, idClasse, idPeriode, new Handler<Boolean>() {
+                                            @Override
+                                            public void handle(Boolean isUpdatable) {
+                                                //verif date fin de saisie
+                                                if(isUpdatable) {
+                                                    new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, new Handler<Boolean>() {
+                                                        @Override
+                                                        public void handle(final Boolean hasAccessToMatiere) {
+                                                            // verif possesion matière
+                                                            if(hasAccessToMatiere) {
+                                                                appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
+                                                                        idClasse,
+                                                                        idPeriode,
+                                                                        idMatiere
+                                                                        , defaultResponseHandler(request));
+                                                            } else {
+                                                                log.error("hasAccessToMatiere = " + hasAccessToMatiere);
+                                                                Renders.unauthorized(request);
+                                                            }
+                                                        }
+                                                    });
+                                                } else {
+                                                    log.error("Date de fin de saisie dépassée : isUpdatable = " + isUpdatable);
+                                                    Renders.unauthorized(request);
+                                                }
                                             }
-                                        }
-                                    });
-
-
+                                        });
+                                    }
                                 }
                             });
                 }else {
-                    log.debug("User not found in session.");
+                    log.error("User not found in session.");
                     Renders.unauthorized(request);
                 }
             }
