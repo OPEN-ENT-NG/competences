@@ -9,6 +9,7 @@ import {
     Structure,
     evaluations
 } from './index';
+import {getNN} from "../../utils/functions/utilsNN";
 
 export class ReleveNote extends  Model implements IModel{
     synchronized : any;
@@ -23,8 +24,9 @@ export class ReleveNote extends  Model implements IModel{
     idEtablissement: string;
     appreciationClasse : AppreciationClasse;
     hasEvaluatedDevoirs : boolean;
-    toogle : boolean;
+    toogle : boolean = false;
     _tmp : any;
+    isNN: boolean = false;
 
     get api () {
         return {
@@ -269,9 +271,9 @@ export class ReleveNote extends  Model implements IModel{
                 });
             }
             else {
+                this.isNN = true;
                 _.each(this.classe.eleves.all, (eleve) => {
-                    // TODO check NN with annotation
-                    eleve.moyenne = 'NN';
+                    eleve.moyenne = getNN();
                 })
             }
             // await Promise.all([this.syncMoyenneFinale()]);

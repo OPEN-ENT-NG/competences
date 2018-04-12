@@ -2102,6 +2102,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         evaluations.releveNotes.push(releve);
                         $scope.releveNote = releve;
                     }
+                    if(releve.isNN) {
+                        $scope.toogleDevoirNote();
+                    }
                     utils.safeApply($scope);
                 });
 
@@ -3305,7 +3308,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.disabledSaisieMoyenne = function () {
-            if ($scope.search.periode.id === null) {
+            if ($scope.search.periode.id === null || $scope.releveNote.isNN) {
                 return true;
             }
             else {
