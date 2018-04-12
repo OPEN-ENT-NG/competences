@@ -13,6 +13,7 @@ import {getNN} from "../../utils/functions/utilsNN";
 
 export class ReleveNote extends  Model implements IModel{
     synchronized : any;
+    elementProgramme : any;
     periode : Periode;
     matiere : Matiere;
     classe : Classe;
@@ -34,7 +35,8 @@ export class ReleveNote extends  Model implements IModel{
                 this.idMatiere}`,
             GET_INFO_PERIODIQUE: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
                 this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}`,
-            POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`
+            POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
+            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`
         }
     }
 
@@ -189,6 +191,7 @@ export class ReleveNote extends  Model implements IModel{
                 _eleves = this._tmp.eleves;
                 _moyennesFinales = this._tmp.moyennes;
                 _appreciations = this._tmp.appreciations;
+                this.elementProgramme = this._tmp.elementProgramme;
             }
             this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated : true});
             this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined)? false:true;
@@ -376,6 +379,27 @@ export class ReleveNote extends  Model implements IModel{
                 console.dir('error on save' + eleve.name);
             });
     }
+
+    saveElementProgramme(texte) :  Promise<any> {
+        return new Promise((resolve, reject) => {
+            var that = this;
+            let _data = _.extend(this.toJson(), {
+                texte: texte
+            });
+
+            http().postJson(this.api.POST_DATA_ELEMENT_PROGRAMME, _data )
+                .done((res) => {
+                    if (resolve && typeof(resolve) === 'function') {
+                        resolve();
+                    }
+                })
+                .error((err) => {
+
+                });
+        });
+    }
+
+
     savePositionnementEleve(eleve) : any {
         let _data = _.extend(this.toJson(), {
             idEleve: eleve.id,

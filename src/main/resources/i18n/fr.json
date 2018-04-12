@@ -181,6 +181,7 @@
   "evaluations.test.percent":"Avancement",
   "evaluations.test.edit":"Modifier l' évaluation",
   "evaluations.test.new":"Nouvelle évaluation",
+  "evaluations.test.new":"Nouvelle évaluation",
   "evaluations.test.mine" : "Mes évaluations",
   "evaluations.test.list":"Liste des évaluations",
   "evaluations.test.title":"Titre de l'évaluation",
@@ -311,6 +312,7 @@
   "viescolaire.utils.date":"Date",
   "viescolaire.utils.name":"Nom",
   "viescolaire.utils.criterion":"Vos critères",
+  "viescolaire.utils.elements.programme":"Eléments du programme",
   "viescolaire.utils.teacher" : "Enseignant",
   "viescolaire.utils.legend" : "Légende",
   "viescolaire.utils.legend.conversion" : "Légende conversion",
@@ -356,5 +358,9 @@
 
   "add.annotation":"Ajouter une annotation. Sélectionner 'Evaluer' pour enlever l'annotation.",
   "keyboard.button":"Raccourci clavier" ,
-  "no.annotation":"Evaluer"
+  "no.annotation":"Evaluer",
+  "evaluations.add":"Ajouter",
+  "evaluations.add.element.programme.title": "Saisie des élements du programme travaillé",
+  "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",
+  "evaluations.add.element.programme.enseignants": "Enseignant(s) : "
 }

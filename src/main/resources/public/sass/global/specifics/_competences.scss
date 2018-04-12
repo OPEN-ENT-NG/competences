@@ -850,6 +850,9 @@ body.evaluations {
     &.opened{
       height: 205px;
     }
+    &.openedProgramme{
+      height: auto;
+    }
   }
   .criteres, .statistiques-devoir, .detail-devoir, .student-info, .devoir-info{
     position: relative;

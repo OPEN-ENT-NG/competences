@@ -78,8 +78,53 @@
                     <container template="leftSide-userInfo"></container>
                 </div>
             </div>
-        </aside>
 
+            <div  class="criteres card criterion" ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined " ng-class="{openedProgramme : opened.elementProgramme === true}">
+                <span class="plus-input" ng-click="openElementProgramme()"></span>
+                <div class="header" ng-click="openElementProgramme();">
+                    <h2><i18n>viescolaire.utils.elements.programme</i18n></h2>
+                </div>
+                <section ng-if="releveNote.elementProgramme !== undefined && releveNote.elementProgramme.texte !== undefined ">
+                        [[releveNote.elementProgramme.texte]]
+                </section>
+                <BR/>
+                <div class="right-magnet">
+                    <a class="button noMarginLeft" ng-click="opened.editElementProgramme = true;"><i18n>evaluations.add</i18n></a>
+                </div>
+            </div>
+        </aside>
+        <lightbox show="opened.editElementProgramme" on-close="getReleve(); opened.editElementProgramme = false;">
+            <h2>
+                <i18n>evaluations.add.element.programme.title</i18n>
+            </h2>
+            <div class="row">
+                <div class="twelve cell twelve-mobile">
+                    <label><i18n class="titre-libelle">evaluations.add.element.programme.rappel.matiere</i18n></label>
+                    <label>
+                        [[search.matiere.name]]
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="twelve cell twelve-mobile">
+                    <label><i18n class="titre-libelle">evaluations.add.element.programme.enseignants</i18n></label>
+                    <label>
+                        [[getEnseignantsFromDevoirs()]]
+                    </label>
+                </div>
+            </div>
+
+            <textarea row="4" type="text"
+                      ng-model="releveNote.elementProgramme.texte"
+                      class="twelve"
+                      ng-maxlength="300"
+                      maxlength="300"
+            >
+            </textarea>
+            <div class="row right-magnet">
+                <a class="button noMarginLeft" ng-click="saveElementProgramme(releveNote.elementProgramme.texte); opened.editElementProgramme = false;"><i18n>viescolaire.utils.save</i18n></a>
+            </div>
+        </lightbox>
         <section class="ten twelve-mobile cell right">
 
             <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">

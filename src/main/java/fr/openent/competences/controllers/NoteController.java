@@ -27,8 +27,10 @@ import fr.openent.competences.security.AccessReleveFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
+import fr.openent.competences.service.ElementProgramme;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultElementProgramme;
 import fr.openent.competences.service.impl.DefaultNoteService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -62,11 +64,13 @@ public class NoteController extends ControllerHelper {
      */
     private final NoteService notesService;
     private final UtilsService utilsService;
+    private final ElementProgramme elementProgramme;
 
     public NoteController(EventBus eb) {
         this.eb = eb;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
         utilsService = new DefaultUtilsService();
+        elementProgramme = new DefaultElementProgramme();
     }
 
     /**
@@ -387,66 +391,75 @@ public class NoteController extends ControllerHelper {
         final String idClasse = request.params().get("idClasse");
         final String idMatiere = request.params().get("idMatiere");
         final String table = request.params().get("colonne");
+        final String idPeriodeString = request.params().get("idPeriode");
 
-        JsonObject action = new JsonObject()
+        final JsonObject action = new JsonObject()
                 .putString("action", "classe.getElevesClasses")
                 .putArray("idClasses", new JsonArray().addString(idClasse));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        if (idPeriodeString != null) {
+            try {
+                final long idPeriode = Long.parseLong(idPeriodeString);
+                elementProgramme.getElementProgramme(idPeriode,idMatiere,idClasse,new Handler<Either<String, JsonObject>>() {
+                    @Override
+                    public void handle(Either<String, JsonObject> stringJsonObjectEither) {
+                        if (stringJsonObjectEither.isRight()) {
 
-                if ("ok".equals(body.getString("status"))) {
-                    Map<String, List<String>> result = new LinkedHashMap<>();
-                    final JsonArray idEleves = new JsonArray();
-                    JsonArray queryResult = body.getArray("results");
+                            res.putObject("elementProgramme",stringJsonObjectEither.right().getValue());
 
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject eleve = queryResult.get(i);
-                        idEleves.addString(eleve.getString("idEleve"));
-                    }
-                    final String idPeriodeString = request.params().get("idPeriode");
-                    Long idPeriode = null;
-                    if (idPeriodeString != null) {
-                        try {
-                            idPeriode = Long.parseLong(idPeriodeString);
-                        } catch (NumberFormatException e) {
-                            log.error("Error : idPeriode  must be a long object ", e);
-                            badRequest(request, e.getMessage());
-                            return;
-                        }
-                    }
-                    notesService.getColonneReleve(
-                            idEleves,
-                            idPeriode,
-                            idMatiere,
-                            idClasse,
-                            "moyenne",
-                            new Handler<Either<String, JsonArray>>() {
+                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
                                 @Override
-                                public void handle(Either<String, JsonArray> event) {
-                                    if (event.isRight()) {
-                                        res.putArray("moyennes",
-                                                event.right().getValue());
-                                        addAppreciationsEleve(request, idEleves, idPeriodeString, idMatiere,
-                                                idClasse, res);
+                                public void handle(Message<JsonObject> message) {
+                                    JsonObject body = message.body();
 
+                                    if ("ok".equals(body.getString("status"))) {
+                                        Map<String, List<String>> result = new LinkedHashMap<>();
+                                        final JsonArray idEleves = new JsonArray();
+                                        JsonArray queryResult = body.getArray("results");
+
+                                        for (int i = 0; i < queryResult.size(); i++) {
+                                            JsonObject eleve = queryResult.get(i);
+                                            idEleves.addString(eleve.getString("idEleve"));
+                                        }
+                                        notesService.getColonneReleve(
+                                                idEleves,
+                                                idPeriode,
+                                                idMatiere,
+                                                idClasse,
+                                                "moyenne",
+                                                new Handler<Either<String, JsonArray>>() {
+                                                    @Override
+                                                    public void handle(Either<String, JsonArray> event) {
+                                                        if (event.isRight()) {
+                                                            res.putArray("moyennes",
+                                                                    event.right().getValue());
+                                                            addAppreciationsEleve(request, idEleves, idPeriodeString, idMatiere,
+                                                                    idClasse, res);
+
+                                                        } else {
+                                                            JsonObject error = new JsonObject()
+                                                                    .putString("error", event.left().getValue());
+                                                            Renders.renderJson(request, error, 400);
+                                                        }
+                                                    }
+                                                });
                                     } else {
-                                        JsonObject error = new JsonObject()
-                                                .putString("error", event.left().getValue());
+                                        log.error("getRelevePeriodique " + table + body.getString("message"));
+                                        JsonObject error = (new JsonObject()).putString("error",
+                                                "failed get Moyenne Finale");
                                         Renders.renderJson(request, error, 400);
                                     }
                                 }
                             });
-                } else {
-                    log.error("getRelevePeriodique " + table + body.getString("message"));
-                    JsonObject error = (new JsonObject()).putString("error",
-                            "failed get Moyenne Finale");
-                    Renders.renderJson(request, error, 400);
-                }
+                        }
+                    }
+                });
+            } catch (NumberFormatException e) {
+                log.error("Error : idPeriode  must be a long object ", e);
+                badRequest(request, e.getMessage());
+                return;
             }
-        });
+        }
     }
 
 
@@ -530,6 +543,48 @@ public class NoteController extends ControllerHelper {
         });
     }
 
+
+    @Post("/releve/element/programme")
+    @ApiDoc("Ajoute ou modifie un élément du programme")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void setElementProgramme(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(final JsonObject resource) {
+                        final String idClasse = resource.getString("idClasse");
+                        final String idMatiere = resource.getString("idMatiere");
+                        final Long idPeriode = resource.getLong("idPeriode");
+                        final String texte = resource.getString("texte");
+                        final String idEtablissement = resource.getString("idEtablissement");
+                        // Vérification de l'accès à la matière
+                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                                new Handler<Boolean>() {
+                                    @Override
+                                    public void handle(final Boolean hasAccessToMatiere) {
+                                        if (hasAccessToMatiere) {
+                                            elementProgramme.setElementProgramme(
+                                                    user.getUserId(),
+                                                    idPeriode,
+                                                    idMatiere,
+                                                    idClasse,
+                                                    texte,
+                                                    arrayResponseHandler(request));
+                                        } else {
+                                            log.error("Not access to Matiere");
+                                            unauthorized(request);
+                                        }
+                                    }
+                                });
+                    }
+                });
+
+            }
+        });
+    }
 
     @Post("/releve/periodique")
     @ApiDoc("Récupère les moyennes finales pour le relevé périodique")

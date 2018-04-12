@@ -496,6 +496,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             devoir: -1,
             note: -1,
             criteres: true,
+            elementProgramme: true,
+            editElementProgramme : false,
             details: true,
             statistiques: true,
             studentInfo: true,
@@ -3369,6 +3371,42 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             utils.safeApply($scope);
         };
+
+        $scope.openElementProgramme = function openElementProgramme() {
+            $scope.opened.elementProgramme = !$scope.opened.elementProgramme;
+        }
+
+        $scope.saveElementProgramme = function (texte) {
+            if (texte !== undefined) {
+                if (texte.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
+                    $scope.releveNote.saveElementProgramme(texte).then(() => {
+                       $scope.getReleve();
+                    });
+                }
+                else {
+                    notify.error(lang.translate("error.char.outbound") +
+                        $scope.MAX_CHAR_APPRECIATION_LENGTH);
+                }
+            }
+            utils.safeApply($scope);
+        };
+
+        $scope.getEnseignantsFromDevoirs = function getEnseignantsFromDevoirs() {
+            let listEnseignants = "";
+            if($scope.releveNote !== undefined
+                && $scope.releveNote.devoirs !== undefined
+                && $scope.releveNote.devoirs.all !== undefined
+                && $scope.releveNote.devoirs.all.length > 0 ){
+                for (let i = 0; i< $scope.releveNote.devoirs.all.length; i++) {
+                    let teacher = $scope.releveNote.devoirs.all[i].teacher;
+                    if (!utils.containsIgnoreCase(listEnseignants, teacher)){
+                        listEnseignants += $scope.releveNote.devoirs.all[i].teacher + " "
+                    }
+
+                }
+                return listEnseignants;
+            }
+        }
 
         $scope.toogleDevoirNote = function () {
             $scope.releveNote.toogle = !$scope.releveNote.toogle;
