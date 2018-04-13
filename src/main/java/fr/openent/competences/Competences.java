@@ -116,6 +116,7 @@ public class Competences extends BaseServer {
 		addController(new NiveauDeMaitriseController());
 		addController(new NoteController(eb));
 		addController(new RemplacementController());
+        addController(new ElementProgrammeController());
 		addController(new UtilsController());
 
 		addController(new EventBusController());

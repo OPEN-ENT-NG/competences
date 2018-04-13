@@ -852,6 +852,9 @@ body.evaluations {
     }
     &.openedProgramme{
       height: auto;
+      .plus-input::after {
+        content: "\e841";
+      }
     }
   }
   .criteres, .statistiques-devoir, .detail-devoir, .student-info, .devoir-info{

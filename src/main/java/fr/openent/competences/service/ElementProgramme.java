@@ -26,4 +26,19 @@ public interface ElementProgramme {
      * @param handler
      */
     public void getElementProgramme(Long idPeriode, String idMatiere, String idClasse, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * @param handler
+     */
+    public void getDomainesEnseignement(Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * @param handler
+     */
+    public void getSousDomainesEnseignement(Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * @param handler
+     */
+    public void getPropositions(Handler<Either<String, JsonArray>> handler);
 }

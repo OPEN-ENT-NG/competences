@@ -10,6 +10,7 @@ import {
     evaluations
 } from './index';
 import {getNN} from "../../utils/functions/utilsNN";
+import * as utils from "../../utils/teacher";
 
 export class ReleveNote extends  Model implements IModel{
     synchronized : any;
@@ -19,6 +20,7 @@ export class ReleveNote extends  Model implements IModel{
     classe : Classe;
     devoirs : Collection<Devoir>;
     structure : Structure;
+    ennseignantsNames;
     idClasse: string;
     idMatiere: string;
     idPeriode: number;
@@ -36,7 +38,10 @@ export class ReleveNote extends  Model implements IModel{
             GET_INFO_PERIODIQUE: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
                 this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}`,
             POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
-            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`
+            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`,
+            GET_ELEMENT_PROGRAMME_DOMAINES: `/competences/element/programme/domaines`,
+            GET_ELEMENT_PROGRAMME_SOUS_DOMAINES: `/competences/element/programme/sous/domaines`,
+            GET_ELEMENT_PROGRAMME_PROPOSITIONS: `/competences/element/programme/propositions`
         }
     }
 
@@ -68,6 +73,14 @@ export class ReleveNote extends  Model implements IModel{
                     }
                     if (_devoirs.length > 0) {
                         this.devoirs.load(_devoirs);
+                        this.ennseignantsNames = "";
+
+                        for (let i = 0; i< this.devoirs.all.length; i++) {
+                            let teacher = this.devoirs.all[i].teacher;
+                            if (!utils.containsIgnoreCase(this.ennseignantsNames, teacher)){
+                                this.ennseignantsNames += teacher + " "
+                            }
+                        }
                     }
                 }
             }
@@ -180,6 +193,55 @@ export class ReleveNote extends  Model implements IModel{
             }
         });
     }
+
+    syncDomainesEnseignement () : Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (evaluations.domainesEnseignements === undefined || evaluations.domainesEnseignements.length ==0){
+                http().getJson(this.api.GET_ELEMENT_PROGRAMME_DOMAINES)
+                    .done((res) => {
+                        evaluations.domainesEnseignements = res;
+                        resolve();
+                    })
+                    .error((res) => {
+                        console.dir(res);
+                        reject();
+                    })
+            } else {
+                resolve();
+            }
+        });
+    }
+
+    syncSousDomainesEnseignement () : Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (evaluations.sousDomainesEnseignements === undefined || evaluations.sousDomainesEnseignements.length ==0){
+                http().getJson(this.api.GET_ELEMENT_PROGRAMME_SOUS_DOMAINES)
+                    .done((res) => {
+                        evaluations.sousDomainesEnseignements = res;
+                        http().getJson(this.api.GET_ELEMENT_PROGRAMME_PROPOSITIONS)
+                            .done((propositions) => {
+                                _.forEach(evaluations.sousDomainesEnseignements, (sousDomaine) => {
+                                    let _propositions = _.where(propositions, {id_sous_domaine: sousDomaine.id});
+                                    if (_propositions !== undefined && _propositions.length > 0) {
+                                        sousDomaine.propositions = _propositions;
+                                    }
+                                });
+                            })
+                            .error((propositions) => {
+                                console.dir(propositions);
+                                reject();
+                            })
+                    })
+                    .error((res) => {
+                        console.dir(res);
+                        reject();
+                    })
+            } else {
+                resolve();
+            }
+        });
+    }
+
     sync () : Promise<any> {
         return new Promise(async (resolve, reject) => {
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse()]);

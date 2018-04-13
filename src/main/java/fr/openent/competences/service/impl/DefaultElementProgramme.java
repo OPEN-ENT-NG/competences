@@ -49,4 +49,26 @@ public class DefaultElementProgramme implements ElementProgramme {
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
+
+    @Override
+    public void getDomainesEnseignement(Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".domaine_enseignement ORDER BY libelle";
+        JsonArray values = new JsonArray();
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
+
+    @Override
+    public void getSousDomainesEnseignement(Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".sous_domaine_enseignement ORDER BY libelle";
+        JsonArray values = new JsonArray();
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
+
+    @Override
+    public void getPropositions(Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".proposition ORDER BY libelle";
+        JsonArray values = new JsonArray();
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
+
 }

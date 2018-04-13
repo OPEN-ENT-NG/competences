@@ -79,7 +79,7 @@
                 </div>
             </div>
 
-            <div  class="criteres card criterion" ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined " ng-class="{openedProgramme : opened.elementProgramme === true}">
+            <div  class="criteres card criterion" ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0" ng-class="{openedProgramme : opened.elementProgramme === true}">
                 <span class="plus-input" ng-click="openElementProgramme()"></span>
                 <div class="header" ng-click="openElementProgramme();">
                     <h2><i18n>viescolaire.utils.elements.programme</i18n></h2>
@@ -89,7 +89,7 @@
                 </section>
                 <BR/>
                 <div class="right-magnet">
-                    <a class="button noMarginLeft" ng-click="opened.editElementProgramme = true;"><i18n>evaluations.add</i18n></a>
+                    <a class="button noMarginLeft" ng-click="openEditElementProgramme()"><i18n>evaluations.add</i18n></a>
                 </div>
             </div>
         </aside>
@@ -109,7 +109,7 @@
                 <div class="twelve cell twelve-mobile">
                     <label><i18n class="titre-libelle">evaluations.add.element.programme.enseignants</i18n></label>
                     <label>
-                        [[getEnseignantsFromDevoirs()]]
+                        [[releveNote.ennseignantsNames]]
                     </label>
                 </div>
             </div>
@@ -121,6 +121,33 @@
                       maxlength="300"
             >
             </textarea>
+            <div class="row">
+                <div class="three cell">
+                    <label class="select">
+                        <select ng-model="aideSaisie.cycle" ng-options="cycle as cycle.libelle for cycle in structure.cycles " />
+                    </label>
+                </div>
+                <div class="one cell">
+                    &nbsp;
+                </div>
+                <div class="four cell">
+                    <label class="select">
+                        <select ng-model="aideSaisie.domaineEnseignement" ng-options="domaine as domaine.libelle for domaine in evaluations.domainesEnseignements | filter:{ id_cycle : aideSaisie.cycle.id_cycle }" />
+                    </label>
+                </div>
+            </div>
+            <div class="row">
+                <ul ng-if="aideSaisie.cycle !== undefined && aideSaisie.cycle !== null && aideSaisie.domaineEnseignement !== undefined && aideSaisie.domaineEnseignement !== null" class="padding-five">
+                    <li ng-repeat="sousDomaine in evaluations.sousDomainesEnseignements | filter:{ id_domaine : aideSaisie.domaineEnseignement.id }">
+                        <span>[[sousDomaine.libelle]]</span>
+                        <ul ng-if="aideSaisie.domaineEnseignement !== undefined" class="padding-five">
+                            <li ng-repeat="proposition in sousDomaine.propositions">
+                                <span ng-click="addProposition(proposition.libelle)">[[proposition.libelle]]</span>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
             <div class="row right-magnet">
                 <a class="button noMarginLeft" ng-click="saveElementProgramme(releveNote.elementProgramme.texte); opened.editElementProgramme = false;"><i18n>viescolaire.utils.save</i18n></a>
             </div>

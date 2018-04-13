@@ -30,6 +30,8 @@ export class Evaluations extends Model {
     competencesDevoir : any[];
     structures : Collection<Structure>;
     eleves : Collection<Eleve>;
+    domainesEnseignements : any[];
+    sousDomainesEnseignements : any[];
 
     constructor () {
         super();

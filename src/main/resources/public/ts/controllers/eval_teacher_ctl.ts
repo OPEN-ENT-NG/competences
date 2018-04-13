@@ -79,7 +79,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             inColor: false,
         };
 
-
         $scope.getI18nPeriode = (periode: any) => {
             let result;
             if (periode.id === null ) {
@@ -572,7 +571,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             chartClasse: false,
             classes: [],
             matieres: [],
+
         };
+
+        $scope.aideSaisie = {
+            cycle: null,
+            domaineEnseignement : null,
+            sousDomainesEnseignement: [],
+        }
 
         $scope.syncPeriode = (idClasse) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
@@ -3391,21 +3397,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.getEnseignantsFromDevoirs = function getEnseignantsFromDevoirs() {
-            let listEnseignants = "";
-            if($scope.releveNote !== undefined
-                && $scope.releveNote.devoirs !== undefined
-                && $scope.releveNote.devoirs.all !== undefined
-                && $scope.releveNote.devoirs.all.length > 0 ){
-                for (let i = 0; i< $scope.releveNote.devoirs.all.length; i++) {
-                    let teacher = $scope.releveNote.devoirs.all[i].teacher;
-                    if (!utils.containsIgnoreCase(listEnseignants, teacher)){
-                        listEnseignants += $scope.releveNote.devoirs.all[i].teacher + " "
-                    }
+        $scope.openEditElementProgramme  = function () {
+            $scope.releveNote.syncDomainesEnseignement().then(() => {
+                $scope.releveNote.syncSousDomainesEnseignement().then(() => {
+                    $scope.opened.editElementProgramme = true;
+                    //utils.safeApply($scope);
+                });
+            });
+        }
 
-                }
-                return listEnseignants;
-            }
+        $scope.addProposition  = function (libelleProposition) {
+            $scope.releveNote.elementProgramme.texte += libelleProposition;
         }
 
         $scope.toogleDevoirNote = function () {
