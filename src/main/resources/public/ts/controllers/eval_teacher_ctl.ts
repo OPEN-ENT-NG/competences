@@ -2557,7 +2557,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.informations.devoir.statistiques = {
                         percentDone: $scope.informations.devoir.percent
                     };
+
                 }
+                $scope.informations.devoir.competences.sync().then(async () => {
+                    await $scope.informations.devoir.eleves.sync();
+                    console.dir($scope.informations.devoir);
+                });
+
                 utils.safeApply($scope);
             }
         };

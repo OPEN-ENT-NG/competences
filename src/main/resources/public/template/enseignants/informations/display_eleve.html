@@ -17,7 +17,8 @@
   ~
   -->
 <div class="header">
-    <h2 tooltip="[[informations.eleve.lastName]] [[informations.eleve.firstName]]" class="head text-overflow" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</h2>
+    <h2 tooltip="[[informations.eleve.lastName]] [[informations.eleve.firstName]]" class="head text-overflow"
+        ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</h2>
 </div>
 <div ng-show="informations.eleve !== undefined">
     <div class="imgEleve">
@@ -27,4 +28,12 @@
     <p ng-if="informations.eleve.birthDate == 'undefined' || informations.eleve.birthDate== null" style="padding: 0 5px;">
         <i18n>viescolaire.utils.user.birthdate.undefined</i18n>
     </p>
+    <div class="five inline-block align-center" style="padding-left: 29%">
+        <proportion-suivi-competence
+                evaluations="informations.eleve.competencesNotes"
+                is-classe="false" filter="{mine: false}" user="me"
+                map-lettres="mapLettres"
+                map-couleurs="mapCouleurs"
+        ></proportion-suivi-competence>
+    </div>
 </div>

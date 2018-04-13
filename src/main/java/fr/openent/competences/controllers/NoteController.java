@@ -235,112 +235,137 @@ public class NoteController extends ControllerHelper {
                 final String idPeriodeString = request.params().get("idPeriode");
 
 
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, new Handler<Boolean>() {
-                    @Override
-                    public void handle(final Boolean hasAccessToMatiere) {
-
-                        Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                        new Handler<Boolean>() {
                             @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if (event.isRight()) {
-                                    JsonObject result = new JsonObject();
-                                    JsonArray listNotes = event.right().getValue();
-                                    JsonArray listMoyDevoirs = new JsonArray();
-                                    JsonArray listMoyEleves = new JsonArray();
-                                    HashMap<Long, ArrayList<NoteDevoir>> notesByDevoir = new HashMap<>();
-                                    HashMap<String, ArrayList<NoteDevoir>> notesByEleve = new HashMap<>();
+                            public void handle(final Boolean hasAccessToMatiere) {
 
-                                    for (int i = 0; i < listNotes.size(); i++) {
+                                Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
+                                    @Override
+                                    public void handle(Either<String, JsonArray> event) {
+                                        if (event.isRight()) {
+                                            final JsonObject result = new JsonObject();
+                                            JsonArray listNotes = event.right().getValue();
+                                            JsonArray listMoyDevoirs = new JsonArray();
+                                            JsonArray listMoyEleves = new JsonArray();
+                                            HashMap<Long, ArrayList<NoteDevoir>> notesByDevoir = new HashMap<>();
+                                            HashMap<String, ArrayList<NoteDevoir>> notesByEleve = new HashMap<>();
 
-                                        JsonObject note = listNotes.get(i);
+                                            for (int i = 0; i < listNotes.size(); i++) {
 
-                                        if (note.getString("valeur") == null ||
-                                                !note.getBoolean("is_evaluated")) {
-                                            continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
-                                            // elle n'est pas prise en compte dans le calcul de la moyenne
+                                                JsonObject note = listNotes.get(i);
+
+                                                if (note.getString("valeur") == null ||
+                                                        !note.getBoolean("is_evaluated")) {
+                                                    continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
+                                                    // elle n'est pas prise en compte dans le calcul de la moyenne
+                                                }
+
+                                                NoteDevoir noteDevoir = new NoteDevoir(
+                                                        Double.valueOf(note.getString("valeur")),
+                                                        Double.valueOf(note.getLong("diviseur")),
+                                                        note.getBoolean("ramener_sur"),
+                                                        Double.valueOf(note.getString("coefficient")));
+
+                                                Long idDevoir = note.getLong("id_devoir");
+                                                utilsService.addToMap(idDevoir, notesByDevoir, noteDevoir);
+
+                                                String idEleve = note.getString("id_eleve");
+                                                utilsService.addToMap(idEleve, notesByEleve, noteDevoir);
+                                            }
+
+                                            for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : notesByDevoir.entrySet()) {
+                                                JsonObject moyenne = utilsService.calculMoyenneParDiviseur(entry.getValue(),
+                                                        true);
+                                                moyenne.putValue("id", entry.getKey());
+                                                listMoyDevoirs.add(moyenne);
+                                            }
+                                            result.putArray("devoirs", listMoyDevoirs);
+
+                                            for (Map.Entry<String, ArrayList<NoteDevoir>> entry : notesByEleve
+                                                    .entrySet()) {
+                                                JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(),
+                                                        false, 20);
+                                                moyenne.putValue("id", entry.getKey());
+                                                listMoyEleves.add(moyenne);
+                                            }
+                                            result.putArray("eleves", listMoyEleves);
+
+                                            result.putArray("notes", listNotes);
+
+                                            notesService.getCompetencesNotesReleve(
+                                                    idEtablissement,
+                                                    idClasse,
+                                                    idMatiere,
+                                                    (null != idPeriodeString)? Long.parseLong(idPeriodeString): null,
+                                                    new Handler<Either<String, JsonArray>>() {
+                                                        @Override
+                                                        public void handle(Either<String, JsonArray> event) {
+                                                            if (event.isRight()) {
+                                                                JsonArray listCompNotes = event.right().getValue();
+                                                                result.putArray("competencesNotes",
+                                                                        listCompNotes);
+                                                                if (null != idPeriodeString) {
+                                                                    addMoyenneFinalAndAppreciation(request, result);
+                                                                } else {
+                                                                    Renders.renderJson(request, result);
+                                                                }
+                                                            } else {
+                                                                Renders.renderJson(request, new JsonObject()
+                                                                                .putString("error",
+                                                                                        (String) event.left()
+                                                                                                .getValue()),
+                                                                        400);
+                                                            }
+                                                        }
+                                                    });
+
+                                        } else {
+                                            JsonObject error = (new JsonObject()).putString("error",
+                                                    (String) event.left().getValue());
+                                            Renders.renderJson(request, error, 400);
                                         }
-
-                                        NoteDevoir noteDevoir = new NoteDevoir(
-                                                Double.valueOf(note.getString("valeur")),
-                                                Double.valueOf(note.getLong("diviseur")),
-                                                note.getBoolean("ramener_sur"),
-                                                Double.valueOf(note.getString("coefficient")));
-
-                                        Long idDevoir = note.getLong("id_devoir");
-                                        utilsService.addToMap(idDevoir, notesByDevoir, noteDevoir);
-
-                                        String idEleve = note.getString("id_eleve");
-                                        utilsService.addToMap(idEleve, notesByEleve, noteDevoir);
                                     }
-
-                                    for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : notesByDevoir.entrySet()) {
-                                        JsonObject moyenne = utilsService.calculMoyenneParDiviseur(entry.getValue(),
-                                                true);
-                                        moyenne.putValue("id", entry.getKey());
-                                        listMoyDevoirs.add(moyenne);
-                                    }
-                                    result.putArray("devoirs", listMoyDevoirs);
-
-                                    for (Map.Entry<String, ArrayList<NoteDevoir>> entry : notesByEleve.entrySet()) {
-                                        JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(),
-                                                false, 20);
-                                        moyenne.putValue("id", entry.getKey());
-                                        listMoyEleves.add(moyenne);
-                                    }
-                                    result.putArray("eleves", listMoyEleves);
-
-                                    result.putArray("notes", listNotes);
-                                    if (null != idPeriodeString) {
-                                        addMoyenneFinalAndAppreciation(request, result);
-                                    } else {
-                                        Renders.renderJson(request, result);
-                                    }
+                                };
+                                Long idPeriode = null;
+                                if (!hasAccessToMatiere) {
+                                    unauthorized(request);
                                 } else {
-                                    JsonObject error = (new JsonObject()).putString("error",
-                                            (String) event.left().getValue());
-                                    Renders.renderJson(request, error, 400);
+                                    if (idPeriodeString != null) {
+                                        try {
+                                            idPeriode = Long.parseLong(idPeriodeString);
+                                        } catch (NumberFormatException e) {
+                                            log.error("Error : idPeriode must be a long object", e);
+                                            badRequest(request, e.getMessage());
+                                            return;
+                                        }
+                                    }
+
+                                    if (idEleve != null) {
+
+                                        notesService.getNoteElevePeriode(idEleve,
+                                                idEtablissement,
+                                                idClasse,
+                                                idMatiere,
+                                                idPeriode,
+                                                handler);
+                                    } else if (idPeriode != null) {
+
+                                        notesService.getNotesReleve(idEtablissement,
+                                                idClasse,
+                                                idMatiere,
+                                                idPeriode,
+                                                handler);
+                                    } else {
+                                        notesService.getNotesReleve(idEtablissement,
+                                                idClasse,
+                                                idMatiere,
+                                                null,
+                                                handler);
+                                    }
                                 }
                             }
-                        };
-                        Long idPeriode = null;
-                        if (!hasAccessToMatiere) {
-                            unauthorized(request);
-                        } else {
-                            if (idPeriodeString != null) {
-                                try {
-                                    idPeriode = Long.parseLong(idPeriodeString);
-                                } catch (NumberFormatException e) {
-                                    log.error("Error : idPeriode must be a long object", e);
-                                    badRequest(request, e.getMessage());
-                                    return;
-                                }
-                            }
-
-                            if (idEleve != null) {
-
-                                notesService.getNoteElevePeriode(idEleve,
-                                        idEtablissement,
-                                        idClasse,
-                                        idMatiere,
-                                        idPeriode,
-                                        handler);
-                            } else if (idPeriode != null) {
-
-                                notesService.getNotesReleve(idEtablissement,
-                                        idClasse,
-                                        idMatiere,
-                                        idPeriode,
-                                        handler);
-                            } else {
-                                notesService.getNotesReleve(idEtablissement,
-                                        idClasse,
-                                        idMatiere,
-                                        null,
-                                        handler);
-                            }
-                        }
-                    }
-                });
+                        });
             }
         });
     }

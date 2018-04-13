@@ -87,7 +87,8 @@ public interface NoteService extends CrudService {
      * @param periodeId identifiant de la periode
      * @param handler handler portant le résultat de la requête
      */
-    void getNoteElevePeriode(String userId, String etablissementId, String classeId, String matiereId, Long periodeId, Handler<Either<String, JsonArray>> handler);
+    void getNoteElevePeriode(String userId, String etablissementId, String classeId, String matiereId, Long periodeId,
+                             Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupération des toutes les notes de tous les élèves pour un relevé de notes
@@ -96,7 +97,19 @@ public interface NoteService extends CrudService {
      * @param periodeId identifiant de la période
      * @param handler handler portant le résultat de la requête
      */
-    void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId, Handler<Either<String, JsonArray>> handler);
+    void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
+                        Handler<Either<String, JsonArray>> handler);
+
+
+    /**
+     * Récupération des toutes les Competences-notes de tous les élèves pour un relevé de notes
+     * @param etablissementId identifiant de l'établissement
+     * @param matiereId identifiant de la matière
+     * @param periodeId identifiant de la période
+     * @param handler handler portant le résultat de la requête
+     */
+    void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
+                                   Handler<Either<String, JsonArray>> handler);
 
     /**
      * Supprime la colonne d'un élève pour une période, une matiere et une classe

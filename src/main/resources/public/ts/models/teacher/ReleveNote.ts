@@ -246,32 +246,38 @@ export class ReleveNote extends  Model implements IModel{
         return new Promise(async (resolve, reject) => {
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse()]);
             this.syncAppreciationClasse();
-            let _notes ,_devoirs, _eleves, _moyennesFinales, _appreciations;
+            let _notes ,_devoirs, _eleves, _moyennesFinales, _appreciations, _competencesNotes;
             if(this._tmp) {
                 _notes = this._tmp.notes;
                 _devoirs = this._tmp.devoirs;
                 _eleves = this._tmp.eleves;
                 _moyennesFinales = this._tmp.moyennes;
                 _appreciations = this._tmp.appreciations;
+                _competencesNotes = this._tmp.competencesNotes;
                 this.elementProgramme = this._tmp.elementProgramme;
             }
             this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated : true});
             this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined)? false:true;
 
             _.each(this.classe.eleves.all, (eleve) => {
-                // load moyenne finale
+                // chargement des  competencesNotes de l'élève
+                let competencesNotesEleve =_.where(_competencesNotes, {id_eleve: eleve.id});
+                eleve.competencesNotes = (competencesNotesEleve !== undefined)? competencesNotesEleve : [];
+
+                // chargement de la  moyenne finale de l'élève
                 let _eleve  = _.findWhere(_moyennesFinales, {id_eleve: eleve.id});
                 if (_eleve  !== undefined && _eleve .moyenne !== null) {
                     if(this.hasEvaluatedDevoirs) {
                         eleve.moyenneFinale = _eleve.moyenne;
                     }
                     else {
+                        // suppression de la moyenne finale lorsqu'il n'y a pas de devoir avec l'évaluation numérique
                         eleve.moyenneFinale = "";
                         this.saveAppreciationMatierePeriodeEleve(eleve);
                     }
 
                 }
-                // load moyenne appreciation
+                // load appreciation
                 let _eleve_appreciation  = _.findWhere(_appreciations, {id_eleve: eleve.id});
                 if (_eleve_appreciation  !== undefined && _eleve_appreciation !== null) {
                     eleve.appreciation_matiere_periode = _eleve_appreciation.appreciation_matiere_periode;

@@ -228,6 +228,34 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
+
+    public void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
+                                          Long periodeId, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new JsonArray();
+
+
+        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, " +
+                " devoirs.ramener_sur, competences_notes.evaluation , competences_notes.id, " +
+                " competences_notes.id_eleve, devoirs.is_evaluated, null as annotation "+
+                " FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs " +
+                " left join "+ Competences.COMPETENCES_SCHEMA +".competences_notes on devoirs.id " +
+                " = competences_notes.id_devoir " +
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON " +
+                " (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ) " +
+                " WHERE devoirs.id_etablissement = ? " +
+                " AND devoirs.id_matiere = ? " );
+        values.addString(classeId).addString(etablissementId).addString(matiereId);
+        if(periodeId != null) {
+            query.append("AND devoirs.id_periode = ? ");
+            values.addNumber(periodeId);
+        }
+
+        query.append("ORDER BY date ASC ;");
+        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+    }
+
+
     @Override
     public void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                                     String colonne,   Handler<Either<String, JsonArray>> handler){
