@@ -17,7 +17,8 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
             user : '=',
             isClasse : '=',
             mapCouleurs : '=',
-            mapLettres : '='
+            mapLettres : '=',
+            majProportions : '=?'
         },
         templateUrl : "/"+appPrefix+"/public/template/directives/cProportionSuiviCompetence.html",
         controller : ['$scope', function ($scope) {
@@ -33,9 +34,12 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                 }
             }, true);
 
-            $scope.$watch('majProportions', function () {
-                $scope.calculProportion();
-            }, true);
+            $scope.$watch('majProportions', function(newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    $scope.calculProportion();
+                    utils.safeApply($scope);
+                }
+            });
             /**
              * Retourne la valeur d'une clé i18n passées en paramètres
              * @param key clé i18n

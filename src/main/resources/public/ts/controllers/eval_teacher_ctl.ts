@@ -2574,8 +2574,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param eleve élève
          */
         $scope.getEleveInfo = function (eleve) {
-            if (template.isEmpty('leftSide-userInfo')) template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
+            template.close('leftSide-userInfo');
+            utils.safeApply($scope);
+            template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
             $scope.informations.eleve = eleve;
+            delete $scope.informations.competencesNotes;
+            $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
             utils.safeApply($scope);
         };
 

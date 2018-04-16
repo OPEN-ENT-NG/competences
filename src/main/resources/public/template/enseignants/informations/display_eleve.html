@@ -28,12 +28,14 @@
     <p ng-if="informations.eleve.birthDate == 'undefined' || informations.eleve.birthDate== null" style="padding: 0 5px;">
         <i18n>viescolaire.utils.user.birthdate.undefined</i18n>
     </p>
-    <div class="five inline-block align-center" style="padding-left: 29%">
+    <div ng-if="informations.eleve.competencesNotes !== undefined"
+            class="five inline-block align-center" style="padding-left: 29%">
         <proportion-suivi-competence
-                evaluations="informations.eleve.competencesNotes"
-                is-classe="false" filter="{mine: false}" user="me"
+                evaluations="informations.competencesNotes"
+                is-classe="false" filter="{mine : false}" user="me"
                 map-lettres="mapLettres"
                 map-couleurs="mapCouleurs"
+                maj-proportions="informations.competencesNotes"
         ></proportion-suivi-competence>
     </div>
 </div>
