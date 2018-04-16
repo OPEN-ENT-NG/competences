@@ -3326,7 +3326,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.disabledSaisieMoyenne = function () {
-            if ($scope.search.periode.id === null || $scope.releveNote.isNN) {
+            if ($scope.search.periode.id === null || $scope.releveNote.isNN ||$scope.search.periode === "*") {
                 return true;
             }
             else {
