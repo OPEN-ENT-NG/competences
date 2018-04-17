@@ -5,6 +5,7 @@
   "average":"Moyenne",
   "average.auto": "Moyenne auto",
   "average.final": "Moyenne finale",
+  "history": "Historique",
 
   "competences.title": "Competences",
   "competences.notify.saved": "La donnée a été sauvegardée",
@@ -18,6 +19,7 @@
   "competences.read": "Lecture",
   "competences.root": "Mes competencess",
   "competences.create": "Créer un Competences",
+  "competences.acquired": "Acquis scolaires",
 
   "custom": "Personnalisé",
 
@@ -361,6 +363,7 @@
   "keyboard.button":"Raccourci clavier" ,
   "no.annotation":"Evaluer",
   "evaluations.add":"Ajouter",
+  "evaluations.add.element.programme.summary": "Rappel des élements du programme travaillés",
   "evaluations.edit":"Modifier",
   "evaluations.add.element.programme.title": "Saisie des élements du programme travaillé",
   "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",

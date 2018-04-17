@@ -1,0 +1,27 @@
+<div class="responsive-table">
+
+    <table>
+        <thead>
+        <tr>
+            <th><i18n>viescolaire.utils.periode</i18n></th>
+            <th><i18n>average</i18n>&nbsp;<i18n>student</i18n></th>
+            <th><i18n>average</i18n>&nbsp;<i18n>viescolaire.utils.classe</i18n></th>
+            <th><i18n>evaluations.releve.positionnement</i18n></th>
+            <th><i18n>viescolaire.utils.appreciation</i18n></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="historique in informations.eleve.historiques">
+            <td data-label="[[translate('viescolaire.utils.periode')]]"> [[historique.periode]] </td>
+            <td ng-class="{changedAverage: historique.moyenneFinale !== ''}"
+                data-label="[[translate('student')]]" >
+                [[(historique.moyenneFinale !== "")? historique.moyenneFinale : historique.moyenne]]
+            </td>
+            <td data-label="[[translate('viescolaire.utils.classe')]]" >[[historique.moyenneClasse]] </td>
+            <td data-label="[[translate('evaluations.releve.positionnement')]]" >[[historique.positionnement]]</td>
+            <td data-label="[[translate('viescolaire.utils.appreciation')]]" > [[historique.appreciation]] </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>

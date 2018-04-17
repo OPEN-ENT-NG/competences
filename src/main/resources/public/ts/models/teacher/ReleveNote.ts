@@ -30,6 +30,7 @@ export class ReleveNote extends  Model implements IModel{
     toogle : boolean = false;
     _tmp : any;
     isNN: boolean = false;
+    openedLightboxEleve : boolean = false;
 
     get api () {
         return {
@@ -72,7 +73,7 @@ export class ReleveNote extends  Model implements IModel{
                         _devoirs = _.where(_devoirs, { id_periode: this.idPeriode });
                     }
                     if (_devoirs.length > 0) {
-                        this.devoirs.load(_devoirs);
+                        this.devoirs.load(_devoirs,null,false);
                         this.ennseignantsNames = "";
 
                         for (let i = 0; i< this.devoirs.all.length; i++) {
@@ -283,13 +284,14 @@ export class ReleveNote extends  Model implements IModel{
                 if (_eleve_appreciation  !== undefined && _eleve_appreciation !== null) {
                     eleve.appreciation_matiere_periode = _eleve_appreciation.appreciation_matiere_periode;
                 }
-                var _evals = [];
+                let _evals = [];
                 let _t = _.where(_notes, {id_eleve: eleve.id});
                 _.each(this.devoirs.all, async (devoir) => {
                     let periode = _.findWhere(this.classe.periodes.all, {id_type : devoir.id_periode});
                     let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
+                    let _e;
                     if (_t && _t.length !== 0) {
-                        var _e = _.findWhere(_t, {id_devoir : devoir.id});
+                        _e = _.findWhere(_t, {id_devoir : devoir.id});
 
                         if (_e) {
                             _e.oldValeur = _e.valeur;
@@ -298,7 +300,8 @@ export class ReleveNote extends  Model implements IModel{
                                 && _e.annotation !== null
                                 && _e.annotation > 0 ) {
                                 _e.oldAnnotation = _e.annotation;
-                                _e.annotation_libelle_court = evaluations.structure.annotations.findWhere({id: _e.annotation}).libelle_court;
+                                _e.annotation_libelle_court = evaluations.structure.annotations.findWhere(
+                                    {id: _e.annotation}).libelle_court;
                                 _e.is_annotation = true;
                             }
                             _e.endSaisie = endSaisie;
@@ -317,7 +320,7 @@ export class ReleveNote extends  Model implements IModel{
                             is_evaluated : devoir.is_evaluated, endSaisie : endSaisie}));
                     }
                 });
-                eleve.evaluations.load(_evals);
+                eleve.evaluations.load(_evals,null,false);
 
             });
             _.each(_devoirs, (devoir) => {
@@ -348,91 +351,10 @@ export class ReleveNote extends  Model implements IModel{
                     eleve.moyenne = getNN();
                 })
             }
-            // await Promise.all([this.syncMoyenneFinale()]);
-
-            this.trigger('noteOK');
             resolve();
         });
     }
 
-    calculStatsDevoirs() : Promise<any> {
-
-        return new Promise((resolve, reject) => {
-            this.on('noteOK', function () {
-                var that = this;
-                var _datas = [];
-                _.each(that.devoirs.all, function (devoir) {
-                    var _o = {
-                        id: String(devoir.id),
-                        evaluations: []
-                    };
-                    _.each(that.classe.eleves.all, function (eleve) {
-                        var _e = eleve.evaluations.findWhere({id_devoir: devoir.id});
-
-                        if (_e !== undefined && _e.valeur !== "") _o.evaluations.push(_e.formatMoyenne());
-                    });
-                    if (_o.evaluations.length > 0) _datas.push(_o);
-                });
-                if (_datas.length > 0) {
-                    http().postJson('/competences/moyennes?stats=true', {data: _datas}).done(function (res) {
-                        _.each(res, function (devoir) {
-                            var nbEleves = that.classe.eleves.all.length;
-                            var nbN = _.findWhere(_datas, {id: devoir.id});
-                            var d = that.devoirs.findWhere({id: parseInt(devoir.id)});
-                            if (d !== undefined) {
-                                d.statistiques = devoir;
-                                if (nbN !== undefined) {
-                                    that.devoirs.getPercentDone(d).then(() => {
-                                        d.statistiques.percentDone = d.percent;
-                                    });
-                                    if (resolve && typeof(resolve) === 'function') {
-                                        resolve();
-                                    }
-                                }
-                            }
-                        });
-                    });
-                }
-
-            });
-        });
-    }
-
-    calculMoyennesEleves() : Promise<any> {
-        return new Promise((resolve, reject) => {
-            var that = this;
-            var _datas = [];
-            _.each(this.classe.eleves.all, function (eleve) {
-                var _t = eleve.evaluations.filter(function (evaluation) {
-                    return evaluation.valeur !== "" && evaluation.valeur !== null && evaluation.valeur !== undefined && evaluation.is_evaluated === true;
-                });
-                if (_t.length > 0) {
-                    var _evals = [];
-                    for (var i = 0; i < _t.length; i++) {
-                        _evals.push(_t[i].formatMoyenne());
-                    }
-                    var _o = {
-                        id: eleve.id,
-                        evaluations: _evals
-                    };
-                    _datas.push(_o);
-                }
-            });
-            if (_datas.length > 0) {
-                http().postJson('/competences/moyennes', {data: _datas}).done(function (res) {
-                    _.each(res, function (eleve) {
-                        var e = that.classe.eleves.findWhere({id: eleve.id});
-                        if (e !== undefined) {
-                            e.moyenne = eleve.moyenne;
-                            if (resolve && typeof(resolve) === 'function') {
-                                resolve();
-                            }
-                        }
-                    });
-                });
-            }
-        });
-    }
     saveMoyenneFinaleEleve(eleve) : any {
         let _data = _.extend(this.toJson(), {
             idEleve: eleve.id,

@@ -218,7 +218,6 @@ public class NoteController extends ControllerHelper {
      *
      * @param request
      */
-//    /:idEleve/:idEtablissement/:idClasse/:idMatiere/:idPeriode
     @Get("/releve")
     @ApiDoc("Récupère les notes, les moyennes finales pour le relevé de notes")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
@@ -412,10 +411,14 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-    void addMoyenneFinalAndAppreciation(final HttpServerRequest request, final JsonObject res) {
+    // méthode permettant de récupérer les éléments du programme, les moyennes finales et les appréciations pour:
+    // - une classe
+    // - une matière
+    // - une période
+    // le résultat de la récupération est greffé à la réponse de la request
+    private void addMoyenneFinalAndAppreciation(final HttpServerRequest request, final JsonObject res) {
         final String idClasse = request.params().get("idClasse");
         final String idMatiere = request.params().get("idMatiere");
-        final String table = request.params().get("colonne");
         final String idPeriodeString = request.params().get("idPeriode");
 
         final JsonObject action = new JsonObject()
@@ -458,18 +461,20 @@ public class NoteController extends ControllerHelper {
                                                         if (event.isRight()) {
                                                             res.putArray("moyennes",
                                                                     event.right().getValue());
-                                                            addAppreciationsEleve(request, idEleves, idPeriodeString, idMatiere,
+                                                            addAppreciationsElevesPeriodeMatiere(request, idEleves,
+                                                                    idPeriodeString, idMatiere,
                                                                     idClasse, res);
 
                                                         } else {
                                                             JsonObject error = new JsonObject()
-                                                                    .putString("error", event.left().getValue());
+                                                                    .putString("error",
+                                                                            event.left().getValue());
                                                             Renders.renderJson(request, error, 400);
                                                         }
                                                     }
                                                 });
                                     } else {
-                                        log.error("getRelevePeriodique " + table + body.getString("message"));
+                                        log.error("getRelevePeriodique " + body.getString("message"));
                                         JsonObject error = (new JsonObject()).putString("error",
                                                 "failed get Moyenne Finale");
                                         Renders.renderJson(request, error, 400);
@@ -487,8 +492,10 @@ public class NoteController extends ControllerHelper {
         }
     }
 
-
-    private void addAppreciationsEleve(final HttpServerRequest request, JsonArray idEleves, String idPeriodeString,
+    // Méthode permettant de récupérer les appréciation d'un ensemble d'élève et de greffer le résultat
+    // à la réponse de la request
+    private void addAppreciationsElevesPeriodeMatiere(final HttpServerRequest request, JsonArray idEleves,
+                                                      String idPeriodeString,
                                        String idMatiere, String idClasse, final JsonObject res) {
         Long idPeriode = Long.parseLong(idPeriodeString);
         notesService.getColonneReleve(
@@ -513,60 +520,6 @@ public class NoteController extends ControllerHelper {
     }
 
 
-    @Get("/releve/periodique")
-    @ApiDoc("Récupère les moyennes finales pour le relevé périodique")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
-    public void getColonneRelevePeriode(final HttpServerRequest request) {
-        final String idClasse = request.params().get("idClasse");
-        final String idMatiere = request.params().get("idMatiere");
-        final String table = request.params().get("colonne");
-
-        JsonObject action = new JsonObject()
-                .putString("action", "classe.getElevesClasses")
-                .putArray("idClasses", new JsonArray().addString(idClasse));
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    Map<String, List<String>> result = new LinkedHashMap<>();
-                    final JsonArray idEleves = new JsonArray();
-                    JsonArray queryResult = body.getArray("results");
-
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject eleve = queryResult.get(i);
-                        idEleves.addString(eleve.getString("idEleve"));
-                    }
-                    String idPeriodeString = request.params().get("idPeriode");
-                    Long idPeriode = null;
-                    if (idPeriodeString != null) {
-                        try {
-                            idPeriode = Long.parseLong(idPeriodeString);
-                        } catch (NumberFormatException e) {
-                            log.error("Error : idPeriode must be a long object ", e);
-                            badRequest(request, e.getMessage());
-                            return;
-                        }
-                    }
-                    notesService.getColonneReleve(
-                            idEleves,
-                            idPeriode,
-                            idMatiere,
-                            idClasse,
-                            table,
-                            arrayResponseHandler(request));
-                } else {
-                    log.error("getRelevePeriodique " + table + body.getString("message"));
-                    JsonObject error = (new JsonObject()).putString("error",
-                            "failed get Moyenne Finale");
-                    Renders.renderJson(request, error, 400);
-                }
-            }
-        });
-    }
 
 
     @Post("/releve/element/programme")
@@ -612,7 +565,8 @@ public class NoteController extends ControllerHelper {
     }
 
     @Post("/releve/periodique")
-    @ApiDoc("Récupère les moyennes finales pour le relevé périodique")
+    @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont:"
+            +" - moyenne finale, - appréciation, -positionnement ")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void setColonneRelevePeriode(final HttpServerRequest request) {
@@ -680,6 +634,192 @@ public class NoteController extends ControllerHelper {
 
             }
         });
+    }
+
+    @Get("/releve/informations/eleve/:idEleve")
+    @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void getInfosEleve(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+
+            @Override
+            public void handle(UserInfos user) {
+                final String idEtablissement = request.params().get("idEtablissement");
+                final String idClasse = request.params().get("idClasse");
+                final String idMatiere = request.params().get("idMatiere");
+                final String idEleve = request.params().get("idEleve");
+
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                        new Handler<Boolean>() {
+                            @Override
+                            public void handle(final Boolean hasAccessToMatiere) {
+
+                                Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
+                                    @Override
+                                    public void handle(Either<String, JsonArray> event) {
+                                        if (event.isRight()) {
+                                            final JsonObject result = new JsonObject();
+                                            JsonArray listNotes = event.right().getValue();
+                                            HashMap<Long,JsonArray> listMoyDevoirs = new HashMap<>();
+                                            HashMap<Long,JsonArray> listMoyDevoirsClasse = new HashMap<>();
+
+                                            HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
+                                                    notesByDevoirByPeriode = new HashMap<>();
+                                            HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
+                                                    notesByDevoirByPeriodeClasse = new HashMap<>();
+
+                                            notesByDevoirByPeriode.put(null,
+                                                    new HashMap<Long, ArrayList<NoteDevoir>>());
+                                            notesByDevoirByPeriodeClasse.put(null,
+                                                    new HashMap<Long, ArrayList<NoteDevoir>>());
+
+                                            for (int i = 0; i < listNotes.size(); i++) {
+
+                                                JsonObject note = listNotes.get(i);
+
+                                                if (note.getString("valeur") == null ||
+                                                        !note.getBoolean("is_evaluated")) {
+                                                    continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
+                                                    // elle n'est pas prise en compte dans le calcul de la moyenne
+                                                }
+                                                else {
+                                                    Long id_periode = note.getLong("id_periode");
+                                                    if(!notesByDevoirByPeriode.containsKey(id_periode)) {
+                                                        notesByDevoirByPeriode.put(id_periode,
+                                                                new HashMap<Long, ArrayList<NoteDevoir>>());
+                                                        notesByDevoirByPeriodeClasse.put(id_periode,
+                                                                new HashMap<Long, ArrayList<NoteDevoir>>());
+
+                                                    }
+                                                    NoteDevoir noteDevoir = new NoteDevoir(
+                                                            Double.valueOf(note.getString("valeur")),
+                                                            Double.valueOf(note.getLong("diviseur")),
+                                                            note.getBoolean("ramener_sur"),
+                                                            Double.valueOf(note.getString("coefficient")));
+                                                    if(note.getString("id_eleve").equals(idEleve)) {
+                                                        utilsService.addToMap(id_periode,
+                                                                notesByDevoirByPeriode.get(id_periode),
+                                                                noteDevoir);
+                                                        utilsService.addToMap(null,
+                                                                notesByDevoirByPeriode.get(null),
+                                                                noteDevoir);
+                                                    }
+                                                    utilsService.addToMap(id_periode,
+                                                            notesByDevoirByPeriodeClasse.get(id_periode),
+                                                            noteDevoir);
+                                                    utilsService.addToMap(null,
+                                                            notesByDevoirByPeriodeClasse.get(null),
+                                                            noteDevoir);
+                                                }
+                                            }
+                                            result.putArray("moyennes",new JsonArray());
+                                            result.putArray("moyennesClasse", new JsonArray());
+                                            // Calcul des moyennes par période pour L'élève
+                                            for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
+                                                    : notesByDevoirByPeriode.entrySet()) {
+                                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                                for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
+                                                        entryPeriode.getValue().entrySet()) {
+                                                    JsonObject moyenne = utilsService.calculMoyenne(
+                                                            entry.getValue(),
+                                                            false, 20);
+                                                    moyenne.putValue("id", entry.getKey());
+                                                    listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
+                                                }
+                                                if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
+                                                    result.getArray("moyennes").add(
+                                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                                }
+                                            }
+
+                                            // calcul des moyennes par période pour la classe
+                                            for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
+                                                    : notesByDevoirByPeriodeClasse.entrySet()) {
+                                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                                for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
+                                                        entryPeriode.getValue().entrySet()) {
+                                                    JsonObject moyenne = utilsService.calculMoyenne(
+                                                            entry.getValue(),
+                                                            false, 20);
+                                                    moyenne.putValue("id", entry.getKey());
+                                                    listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
+                                                }
+                                                if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
+                                                    result.getArray("moyennesClasse").add(
+                                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                                }
+                                            }
+                                            addMoyenneFinalAndAppreciationEleve(idEleve,idClasse,idMatiere,
+                                                    request,result);
+
+                                        } else {
+                                            JsonObject error = (new JsonObject()).putString("error",
+                                                    (String) event.left().getValue());
+                                            Renders.renderJson(request, error, 400);
+                                        }
+                                    }
+                                };
+                                if (!hasAccessToMatiere) {
+                                    unauthorized(request);
+                                } else {
+
+
+                                    notesService.getNoteElevePeriode(null,
+                                            idEtablissement,
+                                            idClasse,
+                                            idMatiere,
+                                            null, handler);
+                                }
+                            }
+                        });
+            }
+        });
+    }
+
+    private void addMoyenneFinalAndAppreciationEleve(final String idEleve, final String idClasse, final String idMatiere,
+                                                     final HttpServerRequest request,final  JsonObject result) {
+        notesService.getColonneReleve(
+                new JsonArray().add(idEleve),
+                null,
+                idMatiere,
+                idClasse,
+                "appreciation_matiere_periode",
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isRight()) {
+                            result.putArray("appreciations",
+                                    event.right().getValue());
+                            notesService.getColonneReleve(
+                                    new JsonArray().add(idEleve),
+                                    null,
+                                    idMatiere,
+                                    idClasse,
+                                    "moyenne",
+                                    new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> event) {
+                                            if (event.isRight()) {
+                                                Renders.renderJson(request, result
+                                                        .putArray("moyennes_finales",
+                                                                event.right().getValue()));
+                                            } else {
+                                                JsonObject error = new JsonObject()
+                                                        .putString("error",
+                                                                event.left().getValue());
+                                                Renders.renderJson(request, error, 400);
+                                            }
+                                        }
+                                    });
+                        } else {
+                            JsonObject error = new JsonObject()
+                                    .putString("error",
+                                            event.left().getValue());
+                            Renders.renderJson(request, error, 400);
+                        }
+                    }
+                });
     }
 
 }

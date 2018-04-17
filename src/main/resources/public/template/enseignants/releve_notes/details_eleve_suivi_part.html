@@ -1,0 +1,48 @@
+<!--  Evaluation numérique -->
+<fieldset>
+    <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:{is_evaluated:true}
+                        track by $index">
+        <div ng-if="evaluation.valeur !== ''"   class=" alignCenterVertically noteDevoir cell">
+            <div>
+                                    <span ng-if="evaluation.annotation === null"
+                                          class="bold fontXLarge">[[evaluation.valeur]]
+                                    </span>
+                <span ng-if="evaluation.annotation === null">
+                                        / [[evaluation.diviseur]]
+                                    </span>
+                <span ng-if="evaluation.annotation !== null"
+                      class="bold fontXLarge">[[evaluation.annotation.libelle_court]]
+                                    </span>
+                <span class="releve-coef"
+                      ng-show='evaluation.coefficient != null
+                                      && evaluation.coefficient != 1'>
+                                    (<i18n>viescolaire.utils.coef</i18n>. [[evaluation.coefficient]])
+                                </span>
+            </div>
+            <div class="gradetooltip"
+                 tooltip="[[getFormatedDate(evaluation.date)]]<br>[[evaluation.name]]<div>[[evaluation._sousmatiere_libelle]]</div>"></div>
+        </div>
+    </div>
+</fieldset>
+<br>
+<!-- Compétence évaluation -->
+<fieldset>
+    <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:hasCompetences
+                        track by $index">
+        <div    class="cell three">
+            <div>
+                <div ng-if="evaluation.competencesNotes.length > 0"
+                     class="eleven inline-block align-center" style="padding-left: 8%">
+                    <proportion-suivi-competence
+                            evaluations="evaluation.competencesNotes"
+                            is-classe="false" filter="{mine : false}" user="me"
+                            map-lettres="mapLettres"
+                            map-couleurs="mapCouleurs"
+                            maj-proportions="evaluation.competencesNotes"
+                            add-to-tool-tip="'<br>' + evaluation.name"
+                    ></proportion-suivi-competence>
+                </div>
+            </div>
+        </div>
+    </div>
+</fieldset>

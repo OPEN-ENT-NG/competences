@@ -1,0 +1,41 @@
+<section ng-if="evaluations.structures.all.length > 1">
+    <label><i18n class="bold">viescolaire.utils.school</i18n> : [[evaluations.structure.libelle]]
+    </label>
+</section>
+<section>
+    <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[search.matiere.name]]
+    </label>
+</section>
+<section>
+    <label><i18n class="bold">viescolaire.utils.class.groupe</i18n> : [[search.classe.name]]
+    </label>
+</section>
+<section>
+    <label><i18n class="bold">viescolaire.utils.periode</i18n> : [[getI18nPeriode(search.periode)]]
+    </label>
+</section>
+
+<div class="twelve-mobile twelve ">
+
+    <div class="twelve">
+        <h2 class="align-center">
+            <i class="previous cell" ng-click="incrementReleveEleve(-1)"></i>
+            [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+            <i class="next right-magnet" ng-click="incrementReleveEleve(1)"></i>
+        </h2>
+    </div>
+    <div class="twelve">
+        <fieldset>
+            <legend><i18n>competences.acquired</i18n></legend>
+            <div ng-include="'/competences/public/template/enseignants/releve_notes//details_eleve_acquis_scolaire_part.html'"></div>
+        </fieldset>
+        <fieldset>
+            <legend><i18n>evaluations.suivi.eleve.title</i18n></legend>
+            <div ng-include="'/competences/public/template/enseignants/releve_notes/details_eleve_suivi_part.html'"></div>
+        </fieldset>
+        <fieldset>
+            <legend><i18n>history</i18n></legend>
+            <div ng-include="'/competences/public/template/enseignants/releve_notes/details_eleve_history_part.html'"></div>
+        </fieldset>
+    </div>
+</div>

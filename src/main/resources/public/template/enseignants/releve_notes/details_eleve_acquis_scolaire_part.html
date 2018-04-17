@@ -1,0 +1,40 @@
+<div class="three cell">
+    <label><i18n class="bold">evaluations.add.element.programme.summary</i18n></label>
+    <span>[[releveNote.elementProgramme.texte]]</span>
+</div>
+<div class="five cell">
+                <textarea type="text"
+                          name="appreciation"
+                          class="eleven"
+                          name="appreciation"
+                          ng-disabled="disabledSaisieMoyenne()"
+                          ng-model="informations.eleve.appreciation_matiere_periode"
+                          ng-blur="saveAppreciationMatierePeriodeEleve(informations.eleve); updateHistorique(informations.eleve,'appreciation');"
+                          maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]">
+                </textarea>
+</div>
+<div class="four cell">
+    <section>
+        <label><i18n class="bold">average.auto</i18n> : </label>
+        <span>[[informations.eleve.moyenne]]</span>
+    </section>
+    <section>
+        <label class="cell"><i18n class="bold">average.final</i18n> : </label>
+        <input class="input-note two"
+               style="text-align: center"
+               ng-class="{changedAverage: informations.eleve.moyenne !== informations.eleve.moyenneFinale}"
+               type="text"
+               ng-disabled="disabledSaisieMoyenne()"
+               ng-blur="saveMoyenneFinaleEleve(informations.eleve); updateHistorique(informations.eleve,'moyenneFinale');"
+               ng-model="informations.eleve.moyenneFinale"
+               max="20" min="0" step="0.01">
+    </section>
+    <section>
+        <label class="cell"><i18n class="bold">viescolaire.classe.moyenne</i18n> : </label>
+        <label style="margin-left: 2px">[[informations.eleve.moyenneClasse]]</label>
+    </section>
+    <section>
+        <label class="cell"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
+        <!-- TODO  SET HTML POSITIONEMENT -->
+    </section>
+</div>

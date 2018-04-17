@@ -11,10 +11,13 @@ export class Eleve extends Model {
     suiviCompetences : Collection<SuiviCompetence>;
     displayName: string;
     idClasse: string;
+    idEtablissement :string;
+    details : any;
 
     get api() {
         return {
-            getMoyenne : '/competences/eleve/' + this.id + '/moyenne?'
+            GET_MOYENNE : `/competences/eleve/${this.id}/moyenne?`,
+            GET_DATA_FOR_DETAILS_RELEVE: `/competences/releve/informations/eleve/${this.id}`
         }
     }
 
@@ -38,7 +41,7 @@ export class Eleve extends Model {
                     idDevoirsURL += "devoirs=" + id + "&";
                 });
                 idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
-                http().getJson(this.api.getMoyenne + idDevoirsURL).done(function (res) {
+                http().getJson(this.api.GET_MOYENNE + idDevoirsURL).done(function (res) {
                     if (!res.error) {
                         this.moyenne = res.moyenne;
                     } else {
@@ -50,5 +53,18 @@ export class Eleve extends Model {
                 }
             }
         });
+    }
+
+    getDetails (idEtablissement, idClasse, idMatiere) : Promise<any> {
+        return new Promise( ((resolve, reject) => {
+            let uri = this.api.GET_DATA_FOR_DETAILS_RELEVE
+                + `?idEtablissement=${idEtablissement}&idClasse=${idClasse}&idMatiere=${idMatiere}`;
+            http().getJson(uri).done( (res) => {
+                if (!res.error) {
+                    this.details = res;
+                    resolve ();
+                }
+            });
+        }))
     }
 }
