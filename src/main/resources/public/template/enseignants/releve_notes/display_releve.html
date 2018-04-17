@@ -21,22 +21,32 @@
     <header>
         <!--<h1 style="float: left;">Relevé de notes</h1>-->
         <nav class="right-magnet nav-releve">
-            <a class="button noMarginLeft twelve-mobile" ng-show="!isChefEtab()" href="/competences#/devoir/create"><i18n>evaluations.test.new</i18n></a>
-            <a class="button noMarginLeft twelve-mobile" ng-show="isChefEtab()"  ng-click="displayInConstruction();"><i18n>evaluations.test.new</i18n></a>
-            <a class="button twelve-mobile" href="#/devoirs/list"><i18n>evaluations.test.list</i18n></a>
+            <a class="button noMarginLeft twelve-mobile" ng-show="!isChefEtab()" href="/competences#/devoir/create">
+                <i18n>evaluations.test.new</i18n>
+            </a>
+            <a class="button noMarginLeft twelve-mobile" ng-show="isChefEtab()" ng-click="displayInConstruction();">
+                <i18n>evaluations.test.new</i18n>
+            </a>
+            <a class="button twelve-mobile" href="#/devoirs/list">
+                <i18n>evaluations.test.list</i18n>
+            </a>
         </nav>
     </header>
 
     <div class="twelve cell">
         <aside class="two cell twelve-mobile left">
-            <div class="criteres card criterion"  ng-class="{opened : opened.criteres === true}">
+            <div class="criteres card criterion" ng-class="{opened : opened.criteres === true}">
                 <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
                 <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
-                    <h2><i18n>viescolaire.utils.criterion</i18n></h2>
+                    <h2>
+                        <i18n>viescolaire.utils.criterion</i18n>
+                    </h2>
                 </div>
                 <section ng-if="evaluations.structures.all.length > 1">
                     <label class="select">
-                        <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"  ng-change="changeEtablissement()"></select>
+                        <select ng-model="evaluations.structure"
+                                ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
+                                ng-change="changeEtablissement()"></select>
                     </label>
                 </section>
                 <section>
@@ -79,79 +89,28 @@
                 </div>
             </div>
 
-            <div  class="criteres card criterion" ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0" ng-class="{openedProgramme : opened.elementProgramme === true}">
+            <div class="criteres card criterion"
+                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0"
+                 ng-class="{openedProgramme : opened.elementProgramme === true}">
                 <span class="plus-input" ng-click="openElementProgramme()"></span>
                 <div class="header" ng-click="openElementProgramme();">
-                    <h2><i18n>viescolaire.utils.elements.programme</i18n></h2>
+                    <h2>
+                        <i18n>viescolaire.utils.elements.programme</i18n>
+                    </h2>
                 </div>
-                <section ng-if="releveNote.elementProgramme !== undefined && releveNote.elementProgramme.texte !== undefined ">
-                        [[releveNote.elementProgramme.texte]]
+                <section
+                        ng-if="releveNote.elementProgramme !== undefined && releveNote.elementProgramme.texte !== undefined ">
+                    [[elementProgrammeDisplay]]
                 </section>
                 <BR/>
                 <div class="right-magnet">
-                    <a class="button noMarginLeft" ng-click="openEditElementProgramme()"><i18n>evaluations.add</i18n></a>
+                    <a class="button noMarginLeft" ng-click="openEditElementProgramme()">
+                        <i18n ng-if='elementProgrammeDisplay === undefined || elementProgrammeDisplay === "" '>evaluations.add</i18n>
+                        <i18n ng-if='elementProgrammeDisplay !== undefined && elementProgrammeDisplay !== "" '>evaluations.edit</i18n>
+                    </a>
                 </div>
             </div>
         </aside>
-        <lightbox show="opened.editElementProgramme" on-close="getReleve(); opened.editElementProgramme = false;">
-            <h2>
-                <i18n>evaluations.add.element.programme.title</i18n>
-            </h2>
-            <div class="row">
-                <div class="twelve cell twelve-mobile">
-                    <label><i18n class="titre-libelle">evaluations.add.element.programme.rappel.matiere</i18n></label>
-                    <label>
-                        [[search.matiere.name]]
-                    </label>
-                </div>
-            </div>
-            <div class="row">
-                <div class="twelve cell twelve-mobile">
-                    <label><i18n class="titre-libelle">evaluations.add.element.programme.enseignants</i18n></label>
-                    <label>
-                        [[releveNote.ennseignantsNames]]
-                    </label>
-                </div>
-            </div>
-
-            <textarea row="4" type="text"
-                      ng-model="releveNote.elementProgramme.texte"
-                      class="twelve"
-                      ng-maxlength="300"
-                      maxlength="300"
-            >
-            </textarea>
-            <div class="row">
-                <div class="three cell">
-                    <label class="select">
-                        <select ng-model="aideSaisie.cycle" ng-options="cycle as cycle.libelle for cycle in structure.cycles " />
-                    </label>
-                </div>
-                <div class="one cell">
-                    &nbsp;
-                </div>
-                <div class="four cell">
-                    <label class="select">
-                        <select ng-model="aideSaisie.domaineEnseignement" ng-options="domaine as domaine.libelle for domaine in evaluations.domainesEnseignements | filter:{ id_cycle : aideSaisie.cycle.id_cycle }" />
-                    </label>
-                </div>
-            </div>
-            <div class="row">
-                <ul ng-if="aideSaisie.cycle !== undefined && aideSaisie.cycle !== null && aideSaisie.domaineEnseignement !== undefined && aideSaisie.domaineEnseignement !== null" class="padding-five">
-                    <li ng-repeat="sousDomaine in evaluations.sousDomainesEnseignements | filter:{ id_domaine : aideSaisie.domaineEnseignement.id }">
-                        <span>[[sousDomaine.libelle]]</span>
-                        <ul ng-if="aideSaisie.domaineEnseignement !== undefined" class="padding-five">
-                            <li ng-repeat="proposition in sousDomaine.propositions">
-                                <span ng-click="addProposition(proposition.libelle)">[[proposition.libelle]]</span>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-            <div class="row right-magnet">
-                <a class="button noMarginLeft" ng-click="saveElementProgramme(releveNote.elementProgramme.texte); opened.editElementProgramme = false;"><i18n>viescolaire.utils.save</i18n></a>
-            </div>
-        </lightbox>
         <section class="ten twelve-mobile cell right">
 
             <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
@@ -160,34 +119,45 @@
                         <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table>
                             <thead>
                             <tr>
-                                <th class="col1"><i18n>student</i18n>
+                                <th class="col1">
+                                    <i18n>student</i18n>
 
                                     <span data-ng-click="toogleDevoirNote();"
                                           tooltip="[[releveNote.toogle ? 'evaluations.releve.note.show' : 'evaluations.releve.note.hide']]"
-                                           class="toogleDevoir">
+                                          class="toogleDevoir">
                                         <i ng-class="{'angle-double-right': !releveNote.toogle,'angle-double-left': releveNote.toogle}"
                                            class="toogleIcon"></i>
                                     </span>
                                 </th>
-                                <th class="colDevoir" ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0, 'ellipsis' : true }"
+                                <th class="colDevoir"
+                                    ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0, 'ellipsis' : true }"
                                     ng-repeat="devoir in releveNote.devoirs.all" ng-click="getDevoirInfo(devoir)"
                                     ng-dblclick="goTo('/devoir/'+devoir.id)" tooltip="[[devoir.name]]">
 
                                     [[devoir.name]]
                                 </th>
-                                <th class="colMoyenne"><i18n>average.auto</i18n></th>
-                                <th class="colMoyenne"><i18n>average.final</i18n></th>
+                                <th class="colMoyenne">
+                                    <i18n>average.auto</i18n>
+                                </th>
+                                <th class="colMoyenne">
+                                    <i18n>average.final</i18n>
+                                </th>
                                 <th class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
-                                ><i18n>viescolaire.utils.appreciation</i18n></th>
+                                >
+                                    <i18n>viescolaire.utils.appreciation</i18n>
+                                </th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr ng-repeat="eleve in releveNote.classe.eleves.all">
-                                <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]" ng-click="getEleveInfo(eleve)">
+                                <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]"
+                                    ng-click="getEleveInfo(eleve)">
                                     [[eleve.lastName]] [[eleve.firstName]]
                                 </td>
-                                <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir" ng-repeat="evaluation in eleve.evaluations.all" data-label="[[getLibelleDevoir(evaluation.id_devoir)]]">
+                                <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir"
+                                    ng-repeat="evaluation in eleve.evaluations.all"
+                                    data-label="[[getLibelleDevoir(evaluation.id_devoir)]]">
                                     <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab() && !evaluation.is_annotation"
                                            ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
                                            class="input-note"
@@ -216,7 +186,7 @@
                                            max="20" min="0" step="0.01">
                                 </td>
                                 <!--ng-init="initNoteReleve(evaluation)"-->
-                                <td  class="colMoyenne" data-label="[[translate('average.auto')]]">
+                                <td class="colMoyenne" data-label="[[translate('average.auto')]]">
                                     <span style="font-weight: bold;">[[eleve.moyenne]]</span>
                                 </td>
                                 <td class="colMoyenne"
@@ -231,22 +201,22 @@
                                            ng-model="eleve.moyenneFinale"
                                            max="20" min="0" step="0.01">
                                 </td>
-                                <td  class="colMoyenne"
-                                     ng-class="{widthMax: releveNote.toogle}"
-                                     data-label="[[translate('viescolaire.utils.appreciation')]]">
+                                <td class="colMoyenne"
+                                    ng-class="{widthMax: releveNote.toogle}"
+                                    data-label="[[translate('viescolaire.utils.appreciation')]]">
                                     <form name="form"
                                           ng-class="{eleven: releveNote.toogle}"
                                           style="float: left">
-                                    <input type="text"
-                                           name="appreciation"
-                                           class="eleven input-appreciation"
-                                           name="appreciation"
-                                           ng-disabled="disabledSaisieMoyenne()"
-                                           ng-model="eleve.appreciation_matiere_periode"
-                                           ng-blur="saveAppreciationMatierePeriodeEleve(eleve)"
-                                           ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
-                                           maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]"
-                                           ng-focus="focusMe($event);getEleveInfo(eleve);">
+                                        <input type="text"
+                                               name="appreciation"
+                                               class="eleven input-appreciation"
+                                               name="appreciation"
+                                               ng-disabled="disabledSaisieMoyenne()"
+                                               ng-model="eleve.appreciation_matiere_periode"
+                                               ng-blur="saveAppreciationMatierePeriodeEleve(eleve)"
+                                               ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
+                                               maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]"
+                                               ng-focus="focusMe($event);getEleveInfo(eleve);">
                                     </form>
                                     <i class="pencil"
                                        tooltip="[[translate('viescolaire.utils.appreciation.edit')]]"
@@ -261,7 +231,9 @@
                         <table id="tableReleveStats" class="tableReleve tableRelevePadding" c-naviga-table>
                             <tbody>
                             <tr class="moyenneClasse">
-                                <td class="col1 text-overflow"><i18n>viescolaire.classe.moyenne</i18n></td>
+                                <td class="col1 text-overflow">
+                                    <i18n>viescolaire.classe.moyenne</i18n>
+                                </td>
                                 <td class="colDevoir" ng-repeat="devoir in releveNote.devoirs.all"
                                     data-label="[[devoir.name]]">
                                     <div ng-if="devoir.is_evaluated" class="input-note input-moyenne">
@@ -280,7 +252,9 @@
                                 ></th>
                             </tr>
                             <tr class="minClasse">
-                                <td class="col1 text-overflow"><i18n>viescolaire.classe.note.min</i18n></td>
+                                <td class="col1 text-overflow">
+                                    <i18n>viescolaire.classe.note.min</i18n>
+                                </td>
                                 <td class="colDevoir"
                                     ng-repeat="devoir in releveNote.devoirs.all" data-label="[[devoir.name]]">
                                     <div ng-if="devoir.is_evaluated" class="input-note input-moyenne">
@@ -296,11 +270,13 @@
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                                 <th class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
-                                > </th>
+                                ></th>
                             </tr>
                             <tr class="maxClasse">
-                                <td class="col1 text-overflow"><i18n>viescolaire.classe.note.max</i18n></td>
-                                <td class="colDevoir"  ng-repeat="devoir in releveNote.devoirs.all"
+                                <td class="col1 text-overflow">
+                                    <i18n>viescolaire.classe.note.max</i18n>
+                                </td>
+                                <td class="colDevoir" ng-repeat="devoir in releveNote.devoirs.all"
                                     data-label="[[devoir.name]]">
                                     <div ng-if="devoir.is_evaluated" class="input-note input-moyenne">
                                         [[devoir.statistiques.noteMax]]
@@ -315,14 +291,16 @@
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                                 <th class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
-                                > </th>
+                                ></th>
                             </tr>
                             </tbody>
                         </table>
 
-                    <div ng-if="releveNote.idPeriode !== null && releveNote.idPeriode !== undefined">
-                        <h2><i18n>evaluations.releve.appreciation.classe</i18n></h2>
-                        <ng-form name="appreciationClassForm">
+                        <div ng-if="releveNote.idPeriode !== null && releveNote.idPeriode !== undefined">
+                            <h2>
+                                <i18n>evaluations.releve.appreciation.classe</i18n>
+                            </h2>
+                            <ng-form name="appreciationClassForm">
                             <textarea placeholder="[[translate('evaluations.releve.appreciation.classe.placeholder')]]"
                                       row="4" type="text"
                                       ng-model="releveNote.appreciationClasse.appreciation"
@@ -334,17 +312,20 @@
                                       name="appreciationClasse"
                             >
                             </textarea>
-                            <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
-                                <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
-                            </div>
-                        </ng-form>
-                    </div>
+                                <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
+                                    <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
+                                </div>
+                            </ng-form>
+                        </div>
 
+                    </div>
                 </div>
-              </div>
             </content>
             <content ng-show="releveNote === undefined">
-                <article class="card tableReleves"><i18n>evaluations.no.summary</i18n>.</article>
+                <article class="card tableReleves">
+                    <i18n>evaluations.no.summary</i18n>
+                    .
+                </article>
             </content>
         </section>
 

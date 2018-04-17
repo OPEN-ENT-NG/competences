@@ -1,0 +1,80 @@
+<h2>
+    <i18n>evaluations.add.element.programme.title</i18n>
+</h2>
+<div class="row">
+    <div class="twelve cell twelve-mobile">
+        <label>
+            <i18n class="titre-libelle">evaluations.add.element.programme.rappel.matiere</i18n>
+        </label>
+        <label class="display-matiere-name">[[search.matiere.name]]</label>
+    </div>
+</div>
+<div class="row">
+    <div class="twelve cell twelve-mobile">
+        <label>
+            <i18n class="titre-libelle">evaluations.add.element.programme.enseignants</i18n>
+        </label>
+        <span class="display-ennseignant-name">[[releveNote.ennseignantsNames]]</span>
+    </div>
+</div>
+
+<textarea row="4" type="text"
+          ng-model="releveNote.elementProgramme.texte"
+          class="twelve"
+          ng-maxlength="300"
+          maxlength="300"
+>
+        </textarea>
+<div class="row">
+    <div class="three cell">
+        <label class="select">
+            <select ng-model="aideSaisie.cycle"
+                    ng-options="cycle as cycle.libelle for cycle in structure.cycles"
+                    ng-change="aideSaisie.domaineEnseignement = null">
+                <option disabled value="" class="header-opt">[[translate('viescolaire.utils.cycle')]]
+                </option>
+            </select>
+        </label>
+    </div>
+    <div class="one cell">
+        &nbsp;
+    </div>
+    <div class="four cell">
+        <label class="select" ng-class="{disabled : aideSaisie.cycle === null || aideSaisie.cycle === '*' || aideSaisie.cycle === ''}">
+            <select ng-model="aideSaisie.domaineEnseignement"
+                    ng-change="syncSousDomaines(aideSaisie.domaineEnseignement.id)"
+                    ng-disabled="aideSaisie.cycle === null || aideSaisie.cycle === '*' || aideSaisie.cycle === ''"
+                    ng-options="domaine as domaine.libelle for domaine in evaluations.domainesEnseignements | filter:{ id_cycle : aideSaisie.cycle.id_cycle }">
+                <option disabled value="" class="header-opt">[[translate('viescolaire.utils.domaines.enseignements')]]
+                </option>
+            </select>
+        </label>
+    </div>
+</div>
+<div class="row">
+    <ul ng-if="aideSaisie.cycle !== undefined && aideSaisie.cycle !== null && aideSaisie.domaineEnseignement !== undefined && aideSaisie.domaineEnseignement !== null"
+        class="skills-list-aideSaisie">
+        <li ng-repeat="sousDomaine in sousDomaines"
+            class="twelve skills-header skill-40 ng-scope" ng-class="{opened: sousDomaine.open}">
+                    <span ng-click="sousDomaine.open = !sousDomaine.open;" class="skills-text-overflow skills-teach"
+                          ng-class="{whiteSpaceNormal : sousDomaine.hovering}">
+                        <i class="skills-open-icon"></i>
+                        <span>[[sousDomaine.libelle]]</span>
+                    </span>
+            <ul ng-if="aideSaisie.domaineEnseignement !== undefined" class="skills-list">
+                <li ng-repeat="proposition in sousDomaine.propositions">
+                            <span ng-click="addProposition(proposition.libelle)" ng-mouseenter="showIt(proposition)"
+                                  ng-class="{whiteSpaceNormal : proposition.hovering}"
+                                  ng-mouseleave="hideIt(proposition)"
+                                  class="ten skills-list-proposition skills-text-overflow italic">[[proposition.libelle]]</span>
+                </li>
+            </ul>
+        </li>
+    </ul>
+</div>
+<div class="row right-magnet">
+    <a class="button noMarginLeft"
+       ng-click="saveElementProgramme(releveNote.elementProgramme.texte); $scope.opened.lightbox = false;">
+        <i18n>viescolaire.utils.save</i18n>
+    </a>
+</div>

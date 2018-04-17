@@ -328,6 +328,7 @@
   "viescolaire.utils.description":"Description",
   "viescolaire.utils.stats":"Statistiques",
   "viescolaire.utils.subjects":"Matières",
+  "viescolaire.utils.domaines.enseignements":"Domaines d'enseignement",
   "viescolaire.utils.coefficient":"Coefficient",
   "viescolaire.utils.coef" : "Coef",
   "ariane.competences.createDevoir":"Ajouter une évaluation",
@@ -360,6 +361,7 @@
   "keyboard.button":"Raccourci clavier" ,
   "no.annotation":"Evaluer",
   "evaluations.add":"Ajouter",
+  "evaluations.edit":"Modifier",
   "evaluations.add.element.programme.title": "Saisie des élements du programme travaillé",
   "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",
   "evaluations.add.element.programme.enseignants": "Enseignant(s) : "

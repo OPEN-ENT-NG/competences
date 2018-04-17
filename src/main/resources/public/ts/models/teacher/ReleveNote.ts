@@ -226,6 +226,7 @@ export class ReleveNote extends  Model implements IModel{
                                         sousDomaine.propositions = _propositions;
                                     }
                                 });
+                                resolve();
                             })
                             .error((propositions) => {
                                 console.dir(propositions);

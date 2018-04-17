@@ -2109,6 +2109,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         releve.synchronized.releve = true;
                         evaluations.releveNotes.push(releve);
                         $scope.releveNote = releve;
+                        $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
                     }
                     if(releve.isNN) {
                         $scope.toogleDevoirNote();
@@ -3388,6 +3389,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
+        $scope.syncSousDomaines = function(id) {
+            $scope.sousDomaines = _.where(evaluations.sousDomainesEnseignements, {
+                id_domaine: id
+            });
+        }
+
         $scope.openElementProgramme = function openElementProgramme() {
             $scope.opened.elementProgramme = !$scope.opened.elementProgramme;
         }
@@ -3398,6 +3405,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.releveNote.saveElementProgramme(texte).then(() => {
                        $scope.getReleve();
                     });
+                    $scope.opened.lightbox = false;
                 }
                 else {
                     notify.error(lang.translate("error.char.outbound") +
@@ -3410,13 +3418,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.openEditElementProgramme  = function () {
             $scope.releveNote.syncDomainesEnseignement().then(() => {
                 $scope.releveNote.syncSousDomainesEnseignement().then(() => {
-                    $scope.opened.editElementProgramme = true;
-                    //utils.safeApply($scope);
+                    $scope.aideSaisie.cycle = null;
+                    $scope.aideSaisie.domaineEnseignement = null;
+                    template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
+                    $scope.opened.lightbox = true;
+                    utils.safeApply($scope);
                 });
             });
+
+
         }
 
         $scope.addProposition  = function (libelleProposition) {
+            if($scope.releveNote.elementProgramme.texte !== "")
+                $scope.releveNote.elementProgramme.texte += " ";
             $scope.releveNote.elementProgramme.texte += libelleProposition;
         }
 

@@ -1329,12 +1329,25 @@ body.evaluations {
     ul{
       list-style-type: none;
       padding: 0;
-
     }
     li{
       position: relative;
     }
   }
+
+  .skills-list-aideSaisie{
+    list-style-type: none;
+    overflow-y: scroll;
+    height: 260px;
+    ul{
+      list-style-type: none;
+      overflow-y: hidden;
+    }
+    li{
+      position: relative;
+    }
+  }
+
   @media screen and (min-width: $tablette){
     .skills-list{
       ul{
@@ -1378,6 +1391,10 @@ body.evaluations {
       cursor: pointer;
       &.skills-teach{
         padding: 10px 35px 20px 20px;
+
+        > span{
+          margin-bottom: 5px;
+        }
       }
     }
     > .skills-text-overflow{
@@ -1404,6 +1421,12 @@ body.evaluations {
     margin: 10px 5px 0 45px;
     cursor: pointer;
     padding: 0 0 0 15px;
+  }
+
+  .skills-list-proposition{
+    margin: 10px 5px 0 5px;
+    cursor: pointer;
+    padding: 0 0 0 5px;
   }
   .skills-checkbox{
     left: 30px;
@@ -2755,6 +2778,15 @@ body.evaluations {
   }
   .export-competences {
     font-size: 12px;
+  }
+
+  .display-matiere-name {
+    font-size: 14px;
+    margin-left: 10px;
+  }
+  .display-ennseignant-name {
+    font-size: 14px;
+    margin-left: 20px !important;
   }
 
   .label-checkbox {
