@@ -217,8 +217,6 @@ public class DefaultUtilsService  implements UtilsService {
         } catch (NumberFormatException e) {
             log.error("Moyenne : " + String.valueOf(moyenne), e);
         }
-        if(moyenne.isNaN())
-            moyenne = 0.0;
         JsonObject r = new JsonObject().putNumber("moyenne", moyenne);
         if (statistiques) {
             r.putNumber("noteMax", noteMax).putNumber("noteMin", noteMin);
