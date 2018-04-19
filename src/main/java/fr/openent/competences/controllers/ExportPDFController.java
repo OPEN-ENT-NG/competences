@@ -87,6 +87,7 @@ public class ExportPDFController extends ControllerHelper {
     private ExportService exportService;
     private BfcSyntheseService bfcSynthseService;
     private NiveauEnseignementComplementService niveauEnseignementComplementService;
+    private DispenseDomaineEleveService dispenseDomaineEleveService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
         devoirService = new DefaultDevoirService();
@@ -99,6 +100,7 @@ public class ExportPDFController extends ControllerHelper {
         exportService = new DefaultExportService(eb);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         niveauEnseignementComplementService = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
+        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
     }
 
     /**
@@ -472,7 +474,7 @@ public class ExportPDFController extends ControllerHelper {
 
             final Map<Integer, String> libelleEchelle = new HashMap<>();
             final Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
-            final Map<Long, Map<String, String>> domainesRacines = new LinkedHashMap<>();
+
             final List<String> idEleves = new ArrayList<>();
 
             // La liste des identifiants des Eleves de la classe est necessaire pour "buildBFC"
@@ -514,18 +516,41 @@ public class ExportPDFController extends ControllerHelper {
                             collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des domaines pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucun domaine racine pour cette classe."), result, handler);
                             log.error("getBFC : getDomainesRacines (" + classe.getKey() + ") : aucun domaine racine pour cette classe.");
                         }
-                        JsonArray queryResult = event.right().getValue();
-                        for (int i = 0; i < queryResult.size(); i++) {
-                            JsonObject domaine = queryResult.get(i);
-                            Map<String, String> infoDomaine = new HashMap<>();
-                            infoDomaine.put("id", String.valueOf(domaine.getLong("id")));
-                            infoDomaine.put("codification", domaine.getString("codification"));
-                            infoDomaine.put("libelle", domaine.getString("libelle"));
-                            domainesRacines.put(Long.valueOf(infoDomaine.get("id")), infoDomaine);
-                        }
-                        for (Eleve e : classe.getValue()) {
-                            e.setDomainesRacines(domainesRacines);
-                        }
+                        final JsonArray queryResult = event.right().getValue();
+                        //On récupère les domaines dispensés pour tous les élèves de la classe
+                        dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idEleves, new Handler<Either<String, Map<String, Map<Long, Boolean>>>>() {
+                            @Override
+                            public void handle(Either<String, Map<String, Map<Long, Boolean>>> respMap) {
+                                if (respMap.isRight()) {
+                                    //Map<IdEleve,Map<idDomaine,dispense>>
+                                    Map<String, Map<Long, Boolean>> mapIdsElevesIdsDomainesDispenses = respMap.right().getValue();
+
+                                    for (final Eleve e : classe.getValue()) {
+                                        final Map<Long, Map<String, String>> domainesRacines = new LinkedHashMap<>();
+                                        for (int i = 0; i < queryResult.size(); i++) {
+                                            final JsonObject domaine = queryResult.get(i);
+                                            final Map<String, String> infoDomaine = new HashMap<>();
+                                            infoDomaine.put("id", String.valueOf(domaine.getLong("id")));
+                                            infoDomaine.put("codification", domaine.getString("codification"));
+                                            infoDomaine.put("libelle", domaine.getString("libelle"));
+                                            //On vérifie si l'id de l'élève en cours est ds la map des élève qui sont dispensés pour un domaine
+                                            if (mapIdsElevesIdsDomainesDispenses.containsKey(e.getIdEleve())) {
+                                                Map<Long, Boolean> idsDomainesDomaine = mapIdsElevesIdsDomainesDispenses.get(e.getIdEleve());
+                                                if (idsDomainesDomaine.containsKey(Long.valueOf(infoDomaine.get("id")))) {
+                                                    infoDomaine.put("dispense", String.valueOf(idsDomainesDomaine.get(Long.valueOf(infoDomaine.get("id")))));
+                                                }
+                                            }
+                                            domainesRacines.put(Long.valueOf(infoDomaine.get("id")), infoDomaine);
+                                        }
+                                        e.setDomainesRacines(domainesRacines);
+                                    }
+                                }else {
+                                    collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des domaines dispensés pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + respMap.left().getValue()), result, handler);
+                                    log.error("getBFC : mapOfDispenseDomaineByIdEleve (" + classe.getKey() + ") : " + respMap.left().getValue());
+                                }
+                            }
+                        });
+
                         JsonArray classeResult = formatBFC(classe.getValue());
                         if (classeResult != null) {
                             collectBFCEleve(classe.getKey(), new JsonObject().putArray("eleves", classeResult), result, handler);
@@ -536,6 +561,8 @@ public class ExportPDFController extends ControllerHelper {
                     }
                 }
             });
+
+
 
             bfcService.buildBFC(false, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, null, new Handler<Either<String, JsonObject>>() {
                 @Override
@@ -616,6 +643,7 @@ public class ExportPDFController extends ControllerHelper {
 
         }
     }
+
 
     /**
      * Recupere l'identifiant de la structure a laquelle appartiennent les classes dont l'identifiant est passe en

@@ -4,10 +4,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.service.*;
-import fr.openent.competences.service.impl.DefaultBFCService;
-import fr.openent.competences.service.impl.DefaultBfcSyntheseService;
-import fr.openent.competences.service.impl.DefaultNiveauEnseignementComplementService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
@@ -65,6 +62,7 @@ public class LSUController extends ControllerHelper {
     private NiveauEnseignementComplementService niveauEnsCpl;
     private JsonArray listErreursEleves;
     private EventBus eb;
+    private DispenseDomaineEleveService dispenseDomaineEleveService;
 
     public LSUController(EventBus eb) {
         this.eb = eb;
@@ -72,6 +70,7 @@ public class LSUController extends ControllerHelper {
         bfcService = new DefaultBFCService(eb);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         niveauEnsCpl = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA,Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
+        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
     }
 
     /**
@@ -644,61 +643,100 @@ public class LSUController extends ControllerHelper {
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
         log.info("DEBUT : method getBaliseBilansCycle : nombreEleve : "+eleves.getEleve().size());
         listErreursEleves = new JsonArray();
+        final Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
         getIdClassIdCycleValue(idsClass, new Handler<Either<String, List<Map>>>() {
-                    @Override
+            @Override
             public void handle(Either<String, List<Map>> repIdClassIdCycleValue) {
 
                 if (repIdClassIdCycleValue.isRight()) {
                     final List<Map> mapIdClassIdCycleValue = repIdClassIdCycleValue.right().getValue();
                     final Map mapIdClassIdCycle = mapIdClassIdCycleValue.get(0);//map<IdClass,IdCycle>
                     final Map mapIdCycleValue = mapIdClassIdCycleValue.get(1);//map<IdCycle,ValueCycle>
+                    //on parcourt les classes
+                    for (final Map.Entry<String, List<String>> listIdsEleve : mapIdClassIdsEleve.entrySet()) {
+                        //récupère un tableau de sting idEleve nécessaire pour la méthode buildBFC de bfcService
+                        final String[] idsEleve = listIdsEleve.getValue().toArray(new String[listIdsEleve.getValue().size()]);
+                        final String idClass = listIdsEleve.getKey();
+                        bfcService.buildBFC(false, idsEleve, idClass, idStructure, null, (Long) mapIdClassIdCycle.get(idClass), new Handler<Either<String, JsonObject>>() {
+                            @Override
+                            public void handle(final Either<String, JsonObject> repBuildBFC) {
+                                if (repBuildBFC.isRight()) {
+                                    // On récupère la map des domaine dispensé par élève
+                                    dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(listIdsEleve.getValue(), new Handler<Either<String, Map<String, Map<Long, Boolean>>>>() {
+                                        @Override
+                                        public void handle(Either<String, Map<String, Map<Long, Boolean>>> respDispenseDomaine) {
+                                            if(respDispenseDomaine.isRight()){
+                                                Map<String,Map<Long,Boolean>> mapIdEleveIdDomainedispense = respDispenseDomaine.right().getValue();
+                                                for (String idEleve : idsEleve){
+                                                    JsonArray resultats = repBuildBFC.right().getValue().getArray(idEleve);
+                                                    Map<Long, Integer> resultEleves  = new HashMap<>();
 
-                        for (Map.Entry<String, List<String>> stringListEntry : mapIdClassIdsEleve.entrySet()) {
-                            final String[] idsEleve = stringListEntry.getValue().toArray(new String[stringListEntry.getValue().size()]);
-                            final String idClass = stringListEntry.getKey();
-                            bfcService.buildBFC(false, idsEleve, idClass, idStructure, null, (Long) mapIdClassIdCycle.get(idClass), new Handler<Either<String, JsonObject>>() {
-                                @Override
-                                public void handle(Either<String, JsonObject> repBuildBFC) {
-                                    if (repBuildBFC.isRight()) {
-                                        Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
-                                        for (String idEleve : idsEleve){
-                                            JsonArray resultats = repBuildBFC.right().getValue().getArray(idEleve);
-                                            Map<Long, Integer> resultEleves  = new HashMap<>();
+                                                    // si pas de resultats, on passe a l'élève suivant
+                                                    if(resultats == null) {
+                                                        continue;
+                                                    }
 
-                                            // si pas de resultats, on passe a l'élève suivant
-                                            if(resultats == null) {
-                                                continue;
+                                                    //variables qui permettent de tester si pour un élève qui a une dispense sur un domaine a bien était eu son positionnement à zéro
+                                                    //cas de l'élève qui a une dispense sur un domaine mais aucune évaluation("niveau")
+                                                    Boolean eleveHasDispenseDomaine = false;
+                                                    Map<Long,Boolean> idsDomainesDispense = new HashMap<>();
+                                                    for (Object resultat : resultats){
+                                                        //si l'idEleve de l'élève en cours et l'iddomaine de result sont dans la mapIdEleveIdDomainedispense alors l'élève est dispensé pour ce domaine
+                                                        //et son niveau est zéro
+                                                        if(mapIdEleveIdDomainedispense.containsKey(idEleve)){
+                                                            eleveHasDispenseDomaine = mapIdEleveIdDomainedispense.containsKey(idEleve);
+                                                            idsDomainesDispense =mapIdEleveIdDomainedispense.get(idEleve);
+                                                            if(mapIdEleveIdDomainedispense.get(idEleve).containsKey((Long)((JsonObject) resultat).getNumber("idDomaine"))){
+                                                                if(idsDomainesDispense.get((Long)((JsonObject) resultat).getNumber("idDomaine"))){
+                                                                    resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), Competences.POSITIONNEMENT_ZERO);
+                                                                    idsDomainesDispense.remove((Long)((JsonObject) resultat).getNumber("idDomaine"));
+                                                                }else{
+                                                                    resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), (Integer)((JsonObject) resultat).getNumber("niveau"));
+                                                                }
+                                                            }else{
+                                                                resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), (Integer)((JsonObject) resultat).getNumber("niveau"));
+                                                            }
+                                                        } else{
+                                                           resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), (Integer)((JsonObject) resultat).getNumber("niveau"));
+                                                        }
+                                                    }
+                                                    //si l'élève a des domaines dispensés non évalués
+                                                    if(eleveHasDispenseDomaine && !(idsDomainesDispense.size() == 0)){
+                                                        for(Map.Entry<Long,Boolean> idDomaineDispense :idsDomainesDispense.entrySet() ){
+                                                            if(idDomaineDispense.getValue()) {
+                                                                resultEleves.put(idDomaineDispense.getKey(), Competences.POSITIONNEMENT_ZERO);
+                                                            }
+                                                        }
+
+                                                    }
+
+                                                    resultatsEleves.put(idEleve, resultEleves);
+                                                }
                                             }
 
-                                            for (Object resultat : resultats){
-                                                resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), (Integer)((JsonObject) resultat).getNumber("niveau"));
-                                            }
-                                            resultatsEleves.put(idEleve, resultEleves);
-                                        }
-
-                                        final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition = resultatsEleves;
-                                        getMapCodeDomaineById(idClass, new Handler<Either<String, Map<Long, String>>>() {
-                                            @Override
-                                            public void handle(Either<String, Map<Long, String>> repMapCodeDomaineId) {
-                                                if (repMapCodeDomaineId.isRight()) {
-                                                    final Map<Long, String> mapIdDomaineCodeDomaine = repMapCodeDomaineId.right().getValue();
-                                                    final Long idCycle = (Long) mapIdClassIdCycle.get(idClass);
-                                                    final Long  valueCycle = (Long) mapIdCycleValue.get(idCycle);
-                                                    if(idCycle!=null){
-                                                        bfcSynthseService.getBfcSyntheseByIdsEleve(idsEleve, idCycle, new Handler<Either<String, JsonArray>>() {
-                                                            @Override
-                                                            public void handle(Either<String, JsonArray> repSynthese) {
-                                                                if (repSynthese.isRight()) {
-                                                                    final JsonArray synthesesEleves = repSynthese.right().getValue();
+                                            final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition = resultatsEleves;
+                                            getMapCodeDomaineById(idClass, new Handler<Either<String, Map<Long, String>>>() {
+                                                @Override
+                                                public void handle(Either<String, Map<Long, String>> repMapCodeDomaineId) {
+                                                    if (repMapCodeDomaineId.isRight()) {
+                                                        final Map<Long, String> mapIdDomaineCodeDomaine = repMapCodeDomaineId.right().getValue();
+                                                        final Long idCycle = (Long) mapIdClassIdCycle.get(idClass);
+                                                        final Long  valueCycle = (Long) mapIdCycleValue.get(idCycle);
+                                                        if(idCycle!=null){
+                                                            bfcSynthseService.getBfcSyntheseByIdsEleve(idsEleve, idCycle, new Handler<Either<String, JsonArray>>() {
+                                                                @Override
+                                                                public void handle(Either<String, JsonArray> repSynthese) {
+                                                                    if (repSynthese.isRight()) {
+                                                                        final JsonArray synthesesEleves = repSynthese.right().getValue();
                                                                         niveauEnsCpl.listNiveauCplByEleves(idsEleve,new Handler<Either<String, JsonArray>>() {
                                                                             @Override
                                                                             public void handle(Either<String, JsonArray> repEleveEnsCpl) {
                                                                                 if (repEleveEnsCpl.isRight() ) {
                                                                                     if(valueCycle == 4){
-                                                                                    final JsonArray ensCplsEleves = repEleveEnsCpl.right().getValue();
-                                                                                    setBilanCycleElevesWithEnsCpl(mapIdDomaineCodeDomaine, idsEleve, nbEleveCompteur, eleves, ensCplsEleves, synthesesEleves,
-                                                                                            mapIdEleveIdDomainePosition, valueCycle, responsablesEtab, mapIdCycleValue, mapIdClassIdCycle,
-                                                                                            idClass, vCalcMillesimeValues, bilansCycle);
+                                                                                        final JsonArray ensCplsEleves = repEleveEnsCpl.right().getValue();
+                                                                                        setBilanCycleElevesWithEnsCpl(mapIdDomaineCodeDomaine, idsEleve, nbEleveCompteur, eleves, ensCplsEleves, synthesesEleves,
+                                                                                                mapIdEleveIdDomainePosition, valueCycle, responsablesEtab, mapIdCycleValue, mapIdClassIdCycle,
+                                                                                                idClass, vCalcMillesimeValues, bilansCycle);
                                                                                     //sinon on n'est pas dans le cycle 4 donc on n'a pas d'enseignement de complémént
                                                                                     }else {
                                                                                         setBilanCycleElevesWithoutEnsCpl(mapIdDomaineCodeDomaine, idsEleve, nbEleveCompteur, eleves, synthesesEleves,
@@ -725,38 +763,39 @@ public class LSUController extends ControllerHelper {
                                                                             }
                                                                         });
 
-                                                                }else{
-                                                                    handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansCycle XML requete synthese du BFC: "+repSynthese.left().getValue()));
-                                                                    log.error("getBaliseBilansCycle requete synthese du BFC: "+repSynthese.left().getValue());
+                                                                    }else{
+                                                                        handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansCycle XML requete synthese du BFC: "+repSynthese.left().getValue()));
+                                                                        log.error("getBaliseBilansCycle requete synthese du BFC: "+repSynthese.left().getValue());
+                                                                    }
                                                                 }
-                                                            }
-                                                        });
-                                                    }else{
-                                                        handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansCycle XML idCycle  :  " + idCycle));
-                                                        log.error("getBaliseBilansCycle idCycle :  " + idCycle);
+                                                            });
+                                                        }else{
+                                                            handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansCycle XML idCycle  :  " + idCycle));
+                                                            log.error("getBaliseBilansCycle idCycle :  " + idCycle);
+                                                        }
+                                                    } else {
+                                                        handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansCycle :  " + repMapCodeDomaineId.left().getValue()));
+                                                        log.error("getBaliseBilansCycle XML MapIdDomaineCodeDomaine :  " + repMapCodeDomaineId.left().getValue());
                                                     }
-                                                } else {
-                                                    handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansCycle :  " + repMapCodeDomaineId.left().getValue()));
-                                                    log.error("getBaliseBilansCycle XML MapIdDomaineCodeDomaine :  " + repMapCodeDomaineId.left().getValue());
+
                                                 }
-
-                                            }
-                                        });
-                                    } else {
-                                        handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansEleve : bfcService.buidBFC : " + repBuildBFC.left().getValue()));
-                                        log.error("getBaliseBilansCycle XML buildBFC map<idEleve,map<idDomaine,positionnement>> : " + repBuildBFC.left().getValue());
-                                    }
+                                            });
+                                        }
+                                    });
+                                } else {
+                                    handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansEleve : bfcService.buidBFC : " + repBuildBFC.left().getValue()));
+                                    log.error("getBaliseBilansCycle XML buildBFC map<idEleve,map<idDomaine,positionnement>> : " + repBuildBFC.left().getValue());
                                 }
-                            });
-                        }
 
-
+                            }
+                        });
+                    }
 
                 } else {
                     handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansEleve : list (map<idclasse,idCycle>,map<idCycle,cycle>) : " + repIdClassIdCycleValue.left().getValue()));
                     log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>,map<idCycle,cycle>) " + repIdClassIdCycleValue.left().getValue());
                 }
-                    }
+            }
 
         });
     }

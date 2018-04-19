@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id_domaine" : {
+      "type":"integer"
+    },
+    "id_eleve": {
+      "type": "string"
+    },
+    "dispense": {
+      "type": "boolean"
+    }
+  },
+  "requiered":[
+    "id_eleve",
+    "id_domaine",
+    "dispense"
+  ]
+}

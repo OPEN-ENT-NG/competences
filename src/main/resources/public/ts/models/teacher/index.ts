@@ -31,3 +31,4 @@ export * from '../eval_cycle';
 export * from '../eval_niveau_comp';
 export * from '../common/TypePeriode';
 export * from './model';
+export * from './DispenseDomaine';

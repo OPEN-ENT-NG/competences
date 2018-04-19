@@ -139,10 +139,15 @@
 
         {{#domaines}}
         <tr>
-            <td class="left-align">{{domaine}}</td>
+            <td class="left-align">{{domaine.libelle}}</td>
+            {{#domaine.dispense}}
+            <td colspan="4">Domaine dispensé</td>
+            {{/domaine.dispense}}
+            {{^domaine.dispense}}
             {{#notes}}
             <td>{{#.}}X{{/.}}</td>
             {{/notes}}
+            {{/domaine.dispense}}
         </tr>
         {{/domaines}}
     </table>

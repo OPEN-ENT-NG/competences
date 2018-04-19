@@ -136,13 +136,4 @@ export class EleveEnseignementCpl extends Model implements IModel{
             }
         }
     }
-   /* save () {
-        this.create().then((id) => {
-
-        }).catch((e) => {
-
-        });
-    }*/
-
-
-}
+  }

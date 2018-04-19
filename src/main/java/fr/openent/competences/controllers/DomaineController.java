@@ -20,19 +20,28 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.CreateDispenseDomaineEleveFilter;
 import fr.openent.competences.service.CompetencesService;
+import fr.openent.competences.service.DispenseDomaineEleveService;
 import fr.openent.competences.service.DomainesService;
 import fr.openent.competences.service.EnseignementService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
+import fr.openent.competences.service.impl.DefaultDispenseDomaineEleveService;
 import fr.openent.competences.service.impl.DefaultDomaineService;
 import fr.openent.competences.service.impl.DefaultEnseignementService;
 import fr.wseduc.rs.ApiDoc;
+import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.http.HttpServerRequest;
@@ -41,6 +50,7 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
@@ -57,11 +67,13 @@ public class DomaineController extends ControllerHelper {
     private final EnseignementService enseignementService;
     private final CompetencesService competencesService;
     private final DomainesService domainesService;
+    private final DispenseDomaineEleveService dispenseDomaineEleveService;
 
     public DomaineController(EventBus eb) {
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         competencesService = new DefaultCompetencesService(eb);
         domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
+        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
     }
 
     /**
@@ -74,10 +86,12 @@ public class DomaineController extends ControllerHelper {
     public void getArbreDomaines(final HttpServerRequest request){
         final JsonArray oArbreDomainesArray = new JsonArray();
         final String idClasse = request.params().get("idClasse");
+        final String idEleve = request.params().contains("idEleve")? request.params().get("idEleve") : null;
         final String idStructure = request.params().get("idStructure");
 
+
         // 1 - Chargement des domaines ordonnés selon l'arbre recursif
-        domainesService.getArbreDomaines(idClasse, new Handler<Either<String, JsonArray>>() {
+        domainesService.getArbreDomaines(idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 if (event.right().isRight()) {
@@ -194,6 +208,46 @@ public class DomaineController extends ControllerHelper {
 
         }
         return false;
+    }
+
+    @Delete("/domaine/dispense/eleve/:idDomaine/:idEleve")
+    @ApiDoc("Delete the domaine's exemption for a student")
+    @ResourceFilter(CreateDispenseDomaineEleveFilter.class)
+    public void deleteDispenseDomaineEleve(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if(user!=null) {
+                    try {
+                        String idEleve = request.params().get("idEleve");
+                        Integer idDomaine = Integer.parseInt(request.params().get("idDomaine"));
+                        dispenseDomaineEleveService.deleteDispenseDomaineEleve(idEleve, idDomaine, defaultResponseHandler(request));
+                    } catch (ClassCastException e) {
+                        log.error("An Error occured when casting domaine id");
+                    }
+                }else {
+                    log.error("User not found in session.");
+                    Renders.unauthorized(request);
+                    badRequest(request);
+                }
+            }
+        });
+
+
+    }
+    @Post("/domaine/dispense/eleve")
+    @ApiDoc("Create an exemption for a domain and a student")
+    @SecuredAction(value= "create.dispense.domaine.eleve",type= ActionType.WORKFLOW)
+    public void createDispenseDomaineEleve(final HttpServerRequest request){
+        RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE, new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject dispenseDomaineEleve) {
+                dispenseDomaineEleveService.createDispenseDomaineEleve(dispenseDomaineEleve,defaultResponseHandler(request));
+
+            }
+
+        });
+
     }
 
 }

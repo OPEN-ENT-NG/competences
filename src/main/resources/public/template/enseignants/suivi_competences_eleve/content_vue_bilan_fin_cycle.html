@@ -21,12 +21,21 @@
     </div>
     <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)"
          class="domaine-line">
-        <div class="cell four twelve-mobile domaine-display text-overflow" tooltip="[[domaine.codification]] - [[domaine.libelle]]">
+        <div class="cell four twelve-mobile domaine-display" >
+            <div  workflow="competences.createDispenseDomaineEleve" class="one cell">
+                <label class="checkbox">
+                    <input type="checkbox" ng-disabled="!domaine.dispensable" ng-model ="domaine.dispense_eleve"
+                           ng-change="!domaine.dispense_eleve" ng-click="saveDispenseEleve(domaine)">
+                    <span></span>
+                </label>
+            </div>
+            <div ng-class="{disabled: domaine.dispense_eleve}" class="eleven cell text-overflow" tooltip="[[domaine.codification]] - [[domaine.libelle]]">
             [[domaine.codification]] - [[domaine.libelle]]
+            </div>
             <div ng-if="( (isChefEtab() && evaluations.structure.moyenneVisible===1)
                             || evaluations.structure.moyenneVisible===2 )
-                            && domaine.moyenne !== -1"
-                 class="domaine-maitrise">
+                            && domaine.moyenne !== -1 && !domaine.dispense_elve "
+                 class="domaine-maitrise" ng-class = "{disabled : domaine.dispense_eleve}">
                 <label>
                     <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
                         <div ng-if = " ($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <  Conversion.valmax) || ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax)">
@@ -45,12 +54,11 @@
                 </label>
             </div>
         </div>
-        <div class="cell eight twelve-mobile">
+        <div class="cell eight twelve-mobile"   >
             <rzslider
                     rz-slider-model="domaine.slider.value"
                     rz-slider-options="domaine.slider.options"></rzslider>
         </div>
-
     </div>
 </script>
 

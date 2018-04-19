@@ -14,6 +14,7 @@ import {
 } from './index';
 import {LanguesCultRegs, LangueCultReg} from "../eval_langue_culture_regionale_mdl";
 
+
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
     domaines: Collection<Domaine>;
@@ -52,23 +53,25 @@ export class SuiviCompetence extends Model {
         this.collection(Domaine, {
             sync: function () {
                 return new Promise((resolve) => {
-                    let url = SuiviCompetence.api.getArbreDomaines + that.classe.id;
+                    let url = SuiviCompetence.api.getArbreDomaines + that.classe.id +'&idEleve='+ eleve.id;
                     http().getJson(url).done((resDomaines) => {
                         let url = SuiviCompetence.api.getCompetencesNotes + eleve.id;
                         if (periode !== null && periode !== undefined && periode !== '*') {
                             if (periode.id_type) url += '?idPeriode=' + periode.id_type;
                         }
+
                         http().getJson(url).done((resCompetencesNotes) => {
                             if (resDomaines) {
                                 for (let i = 0; i < resDomaines.length; i++) {
-                                    let domaine = new Domaine(resDomaines[i]);
+                                    let domaine = new Domaine(resDomaines[i], eleve.id);
                                     if ( that.bilanFinDeCycles !== undefined && that.bilanFinDeCycles.all.length > 0 ) {
                                         let tempBFC = _.findWhere(that.bilanFinDeCycles.all, {id_domaine : domaine.id});
                                         if (tempBFC !== undefined) {
                                             domaine.bfc = tempBFC;
                                         }
                                     }
-                                    domaine.id_eleve = eleve.id;
+
+                                    //domaine.id_eleve = eleve.id;
                                     domaine.id_chef_etablissement = model.me.userId;
                                     domaine.id_etablissement = structure.id;
                                     that.domaines.all.push(domaine);

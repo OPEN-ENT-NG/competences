@@ -10,6 +10,7 @@ Behaviours.register('competences', {
             setVisibilityAverageBfc: 'fr.openent.competences.controllers.BFCController|setVisibility',
             paramCompetences: 'fr.openent.competences.controllers.CompetenceController|createCompetence',
             linkGroupCycle: 'fr.openent.competences.controllers.UtilsController|updateLinkGroupesCycles',
+            createDispenseDomaineEleve: 'fr.openent.competences.controllers.DomaineController|createDispenseDomaineEleve',
             canUpdateBFCSynthese: 'fr.openent.competences.controllers.BFCController|updateSynthese'
         },
         resource: {}

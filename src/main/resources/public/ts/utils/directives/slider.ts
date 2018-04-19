@@ -771,8 +771,10 @@ export let rzslider = ng.directive('rzslider', ['$window', '$timeout', '$documen
                 setDisabledState: function () {
                     if (this.options.disabled) {
                         this.sliderElem.attr('disabled', 'disabled');
+                        this.sliderElem.addClass('disabled');
                     } else {
                         this.sliderElem.attr('disabled', null);
+                        this.sliderElem.removeClass('disabled');
                     }
                 },
 

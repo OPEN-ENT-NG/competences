@@ -205,7 +205,15 @@ public class Eleve {
         JsonArray evaluations = new JsonArray();
         for(Map.Entry<Long, Map<String, String>> domaine : this.domainesRacines.entrySet()) {
             JsonObject notes = new JsonObject();
-            notes.putString("domaine", domaine.getValue().get("libelle"));
+            //notes.putString("domaine", domaine.getValue().get("libelle"));
+            JsonObject domaineObj = new JsonObject();
+            domaineObj.putString("libelle", domaine.getValue().get("libelle"));
+            if(domaine.getValue().containsKey("dispense")){
+                domaineObj.putBoolean("dispense", Boolean.valueOf(domaine.getValue().get("dispense")));
+            }else{
+                domaineObj.putBoolean("dispense",false);
+            }
+            notes.putObject("domaine",domaineObj);
 
             // le tableau de l'evaluation est de meme longueur que celui des niveaux, et est remplit de booleen, tous a
             // false.

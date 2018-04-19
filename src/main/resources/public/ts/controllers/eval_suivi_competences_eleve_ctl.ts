@@ -1,13 +1,17 @@
 /**
  * Created by ledunoiss on 27/10/2016.
  */
-import {ng, template, model, moment} from "entcore";
-import {SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve} from "../models/teacher";
+import { ng, template, model, moment } from "entcore";
+import {
+    SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve,
+    Domaine
+} from "../models/teacher";
 import * as utils from "../utils/teacher";
-import {NiveauEnseignementCpls, NiveauEnseignementCpl} from "../models/eval_ens_complement_mdl";
-import {Defaultcolors} from "../models/eval_niveau_comp";
-import {NiveauLangueCultReg, NiveauLangueCultRegs} from "../models/eval_langue_culture_regionale_mdl";
-import {Utils} from "../models/teacher/Utils";
+import { NiveauEnseignementCpls, NiveauEnseignementCpl } from "../models/eval_ens_complement_mdl";
+import { Defaultcolors } from "../models/eval_niveau_comp";
+import { NiveauLangueCultReg, NiveauLangueCultRegs } from "../models/eval_langue_culture_regionale_mdl";
+import { Utils } from "../models/teacher/Utils";
+import { Mix } from "entcore-toolkit";
 
 declare let _:any;
 declare let Chart:any;
@@ -959,5 +963,12 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
         }
 
+        $scope.saveDispenseEleve = async(domaine:Domaine = new Domaine())=>{
+            $scope.domaine = new Domaine(domaine);
+            await $scope.domaine.saveDispenseEleve();
+            $scope.domaine.slider.options.disabled = ! $scope.domaine.slider.options.disabled;
+            $scope.domaine.slider.options.readOnly = ! $scope.domaine.slider.options.readOnly;
+            utils.safeApply($scope);
+        }
     }
 ]);

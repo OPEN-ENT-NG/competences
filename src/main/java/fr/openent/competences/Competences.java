@@ -10,6 +10,8 @@ import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.math.BigInteger;
+
 public class Competences extends BaseServer {
 
     public static String COMPETENCES_SCHEMA;
@@ -41,7 +43,7 @@ public class Competences extends BaseServer {
     public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
     public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
     public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
-
+    public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
 
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
@@ -67,6 +69,7 @@ public class Competences extends BaseServer {
     public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
     public static final String SCHEMA_COMPETENCE_CREATE = "eval_createCompetence";
     public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
+    public static final String SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE = "eval_createDispenseDomaineEleve";
 
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
@@ -80,7 +83,7 @@ public class Competences extends BaseServer {
     public static final Number BFC_AVERAGE_VISIBILITY_NONE = 0;
     public static final Number BFC_AVERAGE_VISIBILITY_FOR_ADMIN_ONLY = 1;
     public static final Number BFC_AVERAGE_VISIBILITY_FOR_ALL = 2;
-
+    public static final Integer POSITIONNEMENT_ZERO = 0;
 
 
     @Override

@@ -183,7 +183,6 @@
   "evaluations.test.percent":"Avancement",
   "evaluations.test.edit":"Modifier l' évaluation",
   "evaluations.test.new":"Nouvelle évaluation",
-  "evaluations.test.new":"Nouvelle évaluation",
   "evaluations.test.mine" : "Mes évaluations",
   "evaluations.test.list":"Liste des évaluations",
   "evaluations.test.title":"Titre de l'évaluation",
@@ -367,5 +366,7 @@
   "evaluations.edit":"Modifier",
   "evaluations.add.element.programme.title": "Saisie des élements du programme travaillé",
   "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",
-  "evaluations.add.element.programme.enseignants": "Enseignant(s) "
+  "evaluations.add.element.programme.enseignants": "Enseignant(s) ",
+  "evaluations.dispense.domaine.eleve.create.err":"Erreur lors de la sauvegarde de la dispense de l'élève pour un domaine",
+  "evaluations.dispense.domaine.eleve.delete.err":"erreur lors de la suppression de la dispense du domaine pour un élève"
 }

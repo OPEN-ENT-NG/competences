@@ -87,6 +87,14 @@ export class Utils {
             }
         };
 
+        if(poDomaine.dispense_eleve) {
+            poDomaine.slider.options.disabled = true;
+            poDomaine.slider.options.readOnly = true;
+        }else{
+            poDomaine.slider.options.disabled = false;
+            poDomaine.slider.options.readOnly = false;
+        }
+
         let moyenneTemp = undefined;
         // si Une valeur a été modifiée par le chef d'établissement alors on prend cette valeur
         if(poDomaine.bfc !== undefined && poDomaine.bfc.valeur !== undefined){

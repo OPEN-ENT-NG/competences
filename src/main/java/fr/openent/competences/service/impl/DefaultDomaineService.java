@@ -34,16 +34,16 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     }
 
     @Override
-    public void getArbreDomaines(String idClasse, Handler<Either<String, JsonArray>> handler) {
+    public void getArbreDomaines(String idClasse, String idEleve, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
 
         query.append("WITH RECURSIVE search_graph(niveau, id, id_parent, libelle, codification, ")
-                .append(" evaluated, pathinfo, id_cycle) AS ")
+                .append(" evaluated, pathinfo, id_cycle, dispensable) AS ")
                 .append(" ( ")
                 .append(" SELECT 1 as niveau, id, id_parent, libelle, codification, evaluated, array[id] as pathinfo ")
-                .append(" , id_cycle")
+                .append(" , id_cycle, dispensable")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines ")
                 .append(" WHERE id_parent = 0 ");
 
@@ -53,16 +53,31 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         }
         query.append("UNION ")
                 .append(" SELECT sg.niveau + 1  as niveau , dom.id, dom.id_parent, dom.libelle, ")
-                .append(" dom.codification, dom.evaluated, sg.pathinfo||dom.id, dom.id_cycle ")
+                .append(" dom.codification, dom.evaluated, sg.pathinfo||dom.id, dom.id_cycle, dom.dispensable ")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines dom , search_graph sg ")
                 .append(" WHERE dom.id_parent = sg.id ")
                 .append(") ")
-                .append(" SELECT niveau, id, id_parent, libelle, codification, evaluated, id_cycle, " )
-                .append(" libelle as nom, libelle as nomHtml FROM search_graph ")
-                .append(" ORDER BY pathinfo, id_cycle");
+                .append(" SELECT niveau, id, id_parent, libelle, codification, evaluated, id_cycle, dispensable, " )
+                .append(" libelle as nom, libelle as nomHtml " );
+        if(idEleve != null){
+            query.append(", dispense_domaine_eleve.dispense as dispense_eleve ");
+        }
+        query .append("FROM search_graph");
+        if(idEleve !=null){
+            query.append(" LEFT JOIN notes.dispense_domaine_eleve  ON search_graph.id = dispense_domaine_eleve.id_domaines ")
+                    .append("AND dispense_domaine_eleve.id_eleve = ?");
+        }
+        query.append(" GROUP BY niveau, id, id_parent, libelle, codification, evaluated, id_cycle, dispensable, nom, nomHtml, pathinfo");
+        if(idEleve !=null){
+            query.append(", dispense_eleve");
+        }
+        query.append(" ORDER BY pathinfo, id_cycle");
 
         if(null != idClasse) {
             params.addString(idClasse);
+        }
+        if(null != idEleve){
+            params.addString(idEleve);
         }
         Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
     }

@@ -84,7 +84,7 @@ public class Eleve {
         this.idNeo4j=idNeo4j;
         this.id_Class=idClass;
         this.level = level;
-        responsableList = new ArrayList<>();
+        this.responsableList = new ArrayList<>();
     }
     public String getId_Class() {
         return id_Class;
