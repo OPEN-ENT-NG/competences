@@ -29,16 +29,18 @@
             <li><span class="bold"><i18n>evaluations.test.date.publication</i18n></span>: [[getDateFormated(informations.devoir.datepublication)]]</li>
         </ul>
     </div>
-    <h2  ng-show="informations.devoir !== undefined " class="head" ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
-    <div  ng-show="informations.devoir !== undefined ">
-        <ul>
-            <li><span class="bold"><i18n>evaluation.classe.average</i18n></span>: <span style="color: #1785E6;font-weight: bold;">[[informations.devoir.statistiques.moyenne]]</span></li>
-            <li><span class="bold"><i18n>evaluations.grade.min</i18n></span>: <span style="color: #E61758;font-weight: bold;">[[informations.devoir.statistiques.noteMin]]</span></li>
-            <li><span class="bold"><i18n>evaluations.grade.max</i18n></span>: <span style="color: #48C593;font-weight: bold;">[[informations.devoir.statistiques.noteMax]]</span></li>
-            <li>
-                <p><progress-bar max="100" filled="informations.devoir.statistiques.percentDone" unit="%"></progress-bar></p>
-            </li>
-        </ul>
+    <div ng-if="informations.devoir.is_evaluated">
+        <h2  ng-show="informations.devoir !== undefined " class="head" ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
+        <div  ng-show="informations.devoir !== undefined ">
+            <ul>
+                <li><span class="bold"><i18n>evaluation.classe.average</i18n></span>: <span style="color: #1785E6;font-weight: bold;">[[informations.devoir.statistiques.moyenne]]</span></li>
+                <li><span class="bold"><i18n>evaluations.grade.min</i18n></span>: <span style="color: #E61758;font-weight: bold;">[[informations.devoir.statistiques.noteMin]]</span></li>
+                <li><span class="bold"><i18n>evaluations.grade.max</i18n></span>: <span style="color: #48C593;font-weight: bold;">[[informations.devoir.statistiques.noteMax]]</span></li>
+                <li>
+                    <p><progress-bar max="100" filled="informations.devoir.statistiques.percentDone" unit="%"></progress-bar></p>
+                </li>
+            </ul>
+        </div>
     </div>
     <div class="center">
         <a class="button twelve-mobile" href="/competences#/devoir/[[informations.devoir.id]]"><i18n>open.devoir</i18n></a>
