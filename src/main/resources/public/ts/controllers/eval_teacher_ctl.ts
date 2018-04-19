@@ -2068,6 +2068,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.releveNote !== undefined) {
                 delete $scope.releveNote;
             }
+            if ($scope.elementProgrammeDisplay !== undefined) {
+                delete $scope.elementProgrammeDisplay;
+            }
             if ($scope.selected.devoirs.list !== undefined) {
                 for (let i = 0; i < $scope.selected.devoirs.list.length; i++) {
                     $scope.selected.devoirs.list[i].selected = false;
