@@ -521,6 +521,12 @@
             <li ng-if="devoir.dateDevoir == undefined">
                 <span><i18n>evaluations.test.date</i18n></span>
             </li>
+            <li ng-if="errDateDevoir">
+                <span><i18n>devoir.errDateDevoir</i18n></span>
+            </li>
+            <li ng-if="errDatePubli">
+                <span><i18n>devoir.errDatePubli</i18n></span>
+            </li>
         </ul>
     </div>
     <div ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
