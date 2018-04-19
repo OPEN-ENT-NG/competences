@@ -17,6 +17,7 @@ import {
 } from './index';
 
 
+
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
     domaines: Collection<Domaine>;
