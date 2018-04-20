@@ -18,7 +18,7 @@
   -->
 <ul class="skills-color-column">
     <li ng-repeat="competenceHeader in devoir.competences.all">
-    <label class="checkbox">
+    <label class="checkbox label-checkbox">
         <input type="checkbox" ng-model="competenceHeader.selected" ng-click="check(selectedCompetences, competenceHeader)"
                tooltip="[[competenceHeader.nomAvecDomaine.length > 50 ? (competenceHeader.nomAvecDomaine | limitTo : 47)+ '...' : competenceHeader.nomAvecDomaine]]"
         >
