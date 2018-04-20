@@ -297,6 +297,7 @@ public class NoteController extends ControllerHelper {
                                                     idClasse,
                                                     idMatiere,
                                                     (null != idPeriodeString)? Long.parseLong(idPeriodeString): null,
+                                                    null,
                                                     new Handler<Either<String, JsonArray>>() {
                                                         @Override
                                                         public void handle(Either<String, JsonArray> event) {
@@ -496,7 +497,7 @@ public class NoteController extends ControllerHelper {
     // à la réponse de la request
     private void addAppreciationsElevesPeriodeMatiere(final HttpServerRequest request, JsonArray idEleves,
                                                       String idPeriodeString,
-                                       String idMatiere, String idClasse, final JsonObject res) {
+                                                      String idMatiere, String idClasse, final JsonObject res) {
         Long idPeriode = Long.parseLong(idPeriodeString);
         notesService.getColonneReleve(
                 idEleves,
@@ -750,8 +751,8 @@ public class NoteController extends ControllerHelper {
                                                             listMoyDevoirs.get(entryPeriode.getKey()).get(0));
                                                 }
                                             }
-                                            addMoyenneFinalAndAppreciationEleve(idEleve,idClasse,idMatiere,
-                                                    request,result);
+                                            addMoyenneFinalAndAppreciationPositionnementEleve(idEleve,idClasse,
+                                                    idMatiere, idEtablissement,request,result);
 
                                         } else {
                                             JsonObject error = (new JsonObject()).putString("error",
@@ -777,8 +778,10 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-    private void addMoyenneFinalAndAppreciationEleve(final String idEleve, final String idClasse, final String idMatiere,
-                                                     final HttpServerRequest request,final  JsonObject result) {
+    private void addMoyenneFinalAndAppreciationPositionnementEleve(final String idEleve, final String idClasse,
+                                                                   final String idMatiere, final String idEtablissement,
+                                                                   final HttpServerRequest request,
+                                                                   final  JsonObject result) {
         notesService.getColonneReleve(
                 new JsonArray().add(idEleve),
                 null,
@@ -801,9 +804,29 @@ public class NoteController extends ControllerHelper {
                                         @Override
                                         public void handle(Either<String, JsonArray> event) {
                                             if (event.isRight()) {
-                                                Renders.renderJson(request, result
-                                                        .putArray("moyennes_finales",
-                                                                event.right().getValue()));
+                                                result.putArray("moyennes_finales",event.right().getValue());
+                                                notesService.getColonneReleve(
+                                                        new JsonArray().add(idEleve),
+                                                        null,
+                                                        idMatiere,
+                                                        idClasse,
+                                                        "positionnement", new Handler<Either<String, JsonArray>>() {
+                                                            @Override
+                                                            public void handle(Either<String, JsonArray> event) {
+                                                                if (event.isRight()) {
+                                                                    result
+                                                                            .putArray("positionnements",
+                                                                                    event.right().getValue());
+                                                                    addPositionnementAutoEleve(idEleve, idClasse,
+                                                                            idMatiere, idEtablissement,request,result);
+                                                                } else {
+                                                                    JsonObject error = new JsonObject()
+                                                                            .putString("error",
+                                                                                    event.left().getValue());
+                                                                    Renders.renderJson(request, error, 400);
+                                                                }
+                                                            }
+                                                        });
                                             } else {
                                                 JsonObject error = new JsonObject()
                                                         .putString("error",
@@ -821,5 +844,90 @@ public class NoteController extends ControllerHelper {
                     }
                 });
     }
+    private void addPositionnementAutoEleve(final String idEleve, final String idClasse, final String idMatiere,
+                                            final String idEtablissement,
+                                            final HttpServerRequest request,final  JsonObject result) {
+        notesService.getCompetencesNotesReleve( idEtablissement,idClasse, idMatiere,null,idEleve,
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isRight()) {
+                            JsonArray listNotes = event.right().getValue();
+                            HashMap<Long,JsonArray> listMoyDevoirs = new HashMap<>();
 
+                            HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
+                                    notesByDevoirByPeriode = new HashMap<>();
+
+                            notesByDevoirByPeriode.put(null,
+                                    new HashMap<Long, ArrayList<NoteDevoir>>());
+
+
+                            for (int i = 0; i < listNotes.size(); i++) {
+
+
+                                JsonObject note = listNotes.get(i);
+                                Long id_periode = note.getLong("id_periode");
+                                if(!notesByDevoirByPeriode.containsKey(id_periode)) {
+                                    notesByDevoirByPeriode.put(id_periode,
+                                            new HashMap<Long, ArrayList<NoteDevoir>>());
+
+                                }
+
+                                if (note.getLong("evaluation") == null
+                                        || note.getLong("evaluation") < 0) {
+                                    continue; //Si pas de compétence Note
+                                }
+
+                                NoteDevoir noteDevoir = new NoteDevoir(
+                                        Double.valueOf(note.getLong("evaluation")),
+                                        1.0,
+                                        false,
+                                        1.0);
+
+
+
+                                utilsService.addToMap(id_periode,
+                                        notesByDevoirByPeriode.get(id_periode),
+                                        noteDevoir);
+                                // positionnement sur l'année
+                                utilsService.addToMap(null,
+                                        notesByDevoirByPeriode.get(null),
+                                        noteDevoir);
+                            }
+                            result.putArray("positionnements_auto",new JsonArray());
+                            // Calcul des moyennes des max de compétencesNotes par période pour L'élève
+                            for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
+                                    : notesByDevoirByPeriode.entrySet()) {
+                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
+                                        entryPeriode.getValue().entrySet()) {
+                                    JsonObject moyenne = utilsService.calculMoyenne(
+                                            entry.getValue(),
+                                            false, 1);
+                                    moyenne.putValue("id_periode", entry.getKey());
+                                    listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
+                                }
+                                if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
+                                    result.getArray("positionnements_auto").add(
+                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                }
+                                else {
+                                    result.getArray("positionnements_auto").add(new JsonObject()
+                                            .putNumber("moyenne", 0)
+                                            .putNumber("id_periode", entryPeriode.getKey()));
+                                }
+                            }
+                            Renders.renderJson(request, result);
+                        } else {
+                            JsonObject error = new JsonObject()
+                                    .putString("error",
+                                            event.left().getValue());
+                            Renders.renderJson(request, error, 400);
+                        }
+                    }
+                });
+    }
 }
+
+
+

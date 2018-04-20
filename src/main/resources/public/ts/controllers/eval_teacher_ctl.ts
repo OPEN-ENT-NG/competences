@@ -2100,7 +2100,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         releve.synchronized.releve = true;
                         evaluations.releveNotes.push(releve);
                         $scope.releveNote = releve;
-                        $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
+                        if ($scope.releveNote.elementProgramme !== undefined) {
+                            $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
+                        }
                     }
                     if(releve.isNN) {
                         $scope.toogleDevoirNote();
@@ -3313,7 +3315,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.disabledSaisieMoyenne = function () {
-            if ($scope.search.periode.id === null || $scope.search.periode === "*" || $scope.releveNote.isNN) {
+            if ($scope.search.periode.id === null || $scope.search.periode === "*"
+                || ($scope.releveNote !== undefined && $scope.releveNote.isNN) ) {
                 return true;
             }
             else {
@@ -3331,7 +3334,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             }
-        }
+        };
+
         $scope.saveMoyenneFinaleEleve = function (eleve) {
             if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
 
@@ -3348,18 +3352,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
             }
         };
-        $scope.savePositionnementEleve = function (eleve) {
-
-            if (parseInt(eleve.positionnement) <= $scope.structure.cycle.niveauCompetencesArray.length) {
-                eleve.oldPositionnement = eleve.positionnement;
-                $scope.releveNote.savePositionnementEleve(eleve);
+        $scope.savePositionnementEleve = function (eleve, positionnement) {
+            if ($scope.search.periode.id_type !== null) {
+                eleve.positionnement = parseInt(positionnement);
+                if (parseInt(eleve.positionnement) <= $scope.structure.cycle.niveauCompetencesArray.length) {
+                    eleve.oldPositionnement = eleve.positionnement;
+                    $scope.releveNote.savePositionnementEleve(eleve);
+                }
+                else {
+                    notify.error(lang.translate("error.positionnement.outbound") +
+                        $scope.structure.cycle.niveauCompetencesArray.length);
+                    eleve.positionnement = eleve.oldPositionnement;
+                }
+                utils.safeApply($scope);
             }
-            else{
-                notify.error(lang.translate("error.positionnement.outbound") +
-                    $scope.structure.cycle.niveauCompetencesArray.length);
-                eleve.positionnement = eleve.oldPositionnement;
-            }
-            utils.safeApply($scope);
         };
 
         $scope.saveAppreciationMatierePeriodeEleve = function (eleve) {
@@ -3423,14 +3429,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
         $scope.toogleDevoirNote = function () {
-            $scope.releveNote.toogle = !$scope.releveNote.toogle;
-            utils.safeApply($scope);
-            $('html, body')
-            // on arrête toutes les animations en cours
-                .stop()
-            $(".colDevoir").animate({
-                width: "toggle"
-            }, 'slow');
+            if ($scope.releveNote !== undefined) {
+                $scope.releveNote.toogle = !$scope.releveNote.toogle;
+                utils.safeApply($scope);
+                $('html, body')
+                // on arrête toutes les animations en cours
+                    .stop()
+                $(".colDevoir").animate({
+                    width: "toggle"
+                }, 'slow');
+            }
         };
 
 
@@ -3450,10 +3458,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     console.log(e);
                 }
                 _.forEach($scope.filteredPeriode, function (periode) {
+
                     // get moyenne auto eleve
                     let details_moyennes = _.findWhere($scope.informations.eleve.details.moyennes, {id:
                             (periode.id_type !== null)? parseInt(periode.id_type): null});
                     let moyenne = (details_moyennes !== undefined)? details_moyennes.moyenne: "";
+
                     // get moyenne classe
                     let details_moyennes_classe = _.findWhere($scope.informations.eleve.details.moyennesClasse, {id:
                             (periode.id_type !== null)? parseInt(periode.id_type): null});
@@ -3472,12 +3482,39 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let details_moyennes_finales =_.findWhere($scope.informations.eleve.details.moyennes_finales,
                         {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
                     let moyenneFinale = (details_moyennes_finales !== undefined) ? details_moyennes_finales.moyenne: "";
+
+                    // get positionnement Auto
+                    let details_pos_auto =_.findWhere(
+                        $scope.informations.eleve.details.positionnements_auto,
+                        {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
+
+                    // Déduction du positionnement par défaut en fonction de l'échelle de convertion
+                    // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
+                    // (Logique prise au calcul du niveau dans le BFC).
+                    let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
+                        details_pos_auto.moyenne + 1 ,
+                        $scope.releveNote.tableConversions.all)) : 0;
+                    let positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
+
+                    // get positionnement final
+                    let details_pos =_.findWhere(
+                        $scope.informations.eleve.details.positionnements,
+                        {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
+                    let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement: "";
+
+                    // initialisation du positionnement pour le détail élève
+                    if ($scope.releveNote.idPeriode === periode.id_type) {
+                        $scope.informations.eleve.positionnement =
+                            (positionnementFinal !== "")? positionnementFinal:(positionnement);
+                    }
+
                     $scope.informations.eleve.historiques.push({
                         periode : $scope.getI18nPeriode(periode),
                         moyenneClasse: moyenneClasse,
                         moyenne: moyenne,
                         moyenneFinale: moyenneFinale,
-                        positionnement: "",
+                        positionnement: positionnement,
+                        positionnementFinal: positionnementFinal,
                         appreciation: appreciation,
                         idPeriode: periode.id_type
                     });
@@ -3512,9 +3549,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (historique !== undefined){
                 switch (colonne) {
                     case 'appreciation' : historique.appreciation = eleve.appreciation_matiere_periode;
-                    break;
+                        break;
                     case 'moyenneFinale': historique.moyenneFinale = eleve.moyenneFinale;
-                    break;
+                        break;
+                    case 'positionnement': historique.positionnementFinal = eleve.positionnement;
+                        break;
                     default: break;
                 }
 

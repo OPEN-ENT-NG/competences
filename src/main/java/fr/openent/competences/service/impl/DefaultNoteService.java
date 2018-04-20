@@ -242,27 +242,43 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
 
     public void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
-                                          Long periodeId, Handler<Either<String, JsonArray>> handler) {
+                                          Long periodeId,  String eleveId, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new JsonArray();
 
 
-        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, " +
-                " devoirs.ramener_sur, competences_notes.evaluation , competences_notes.id, " +
-                " competences_notes.id_eleve, devoirs.is_evaluated, null as annotation "+
-                " FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs " +
-                " left join "+ Competences.COMPETENCES_SCHEMA +".competences_notes on devoirs.id " +
-                " = competences_notes.id_devoir " +
-                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON " +
+        query.append("SELECT ")
+                .append( (null != eleveId)? "DISTINCT": "")
+                .append(" devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, ")
+                .append(" devoirs.ramener_sur, competences_notes.evaluation ,")
+                .append( (null != eleveId)? "": " competences_notes.id, ")
+                .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, null as annotation ")
+                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ");
+
+        if (null != eleveId) {
+            query.append(" LEFT JOIN (SELECT id, id_devoir, id_competence, max(evaluation) as evaluation, id_eleve " )
+                    .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes ")
+                    .append(" WHERE id_eleve = ? ")
+                    .append(" GROUP BY (id, id_devoir, id_eleve) ) AS competences_notes  ON devoirs.id ")
+                    .append(" = competences_notes.id_devoir " );
+            values.addString(eleveId);
+        }
+        else {
+            query.append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes on devoirs.id " +
+                    " = competences_notes.id_devoir ");
+        }
+
+        query.append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON " +
                 " (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ) " +
                 " WHERE devoirs.id_etablissement = ? " +
-                " AND devoirs.id_matiere = ? " );
+                " AND devoirs.id_matiere = ? ");
+
+
         values.addString(classeId).addString(etablissementId).addString(matiereId);
         if(periodeId != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.addNumber(periodeId);
         }
-
         query.append("ORDER BY date ASC ;");
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }

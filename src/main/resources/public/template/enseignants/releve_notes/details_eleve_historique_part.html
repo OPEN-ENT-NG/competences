@@ -18,7 +18,10 @@
                 [[(historique.moyenneFinale !== "")? historique.moyenneFinale : historique.moyenne]]
             </td>
             <td data-label="[[translate('viescolaire.utils.classe')]]" >[[historique.moyenneClasse]] </td>
-            <td data-label="[[translate('evaluations.releve.positionnement')]]" >[[historique.positionnement]]</td>
+            <td data-label="[[translate('evaluations.releve.positionnement')]]"
+                ng-class="{changedAverage: historique.positionnementFinal !== ''}">
+                [[(historique.positionnementFinal !== "")? historique.positionnementFinal : historique.positionnement]]
+            </td>
             <td data-label="[[translate('viescolaire.utils.appreciation')]]" > [[historique.appreciation]] </td>
         </tr>
         </tbody>
