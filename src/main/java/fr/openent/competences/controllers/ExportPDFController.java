@@ -24,6 +24,7 @@ import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -1817,21 +1818,24 @@ public class ExportPDFController extends ControllerHelper {
                                                             final String nomClasse = eleve.getString("classeName");
                                                             final String idClasse = eleve.getString("idClasse");
                                                             final String idEtablissement = eleve.getString("idEtablissement");
-                                                final String[] idEleves = new String[1];
-                                                idEleves[0] = finalIdEleve;
-                                                idGroupes.add(idClasse);
-                                                nomGroupes.put(eleve.getString("idEleve"), nomClasse);
-                                                final Map<String, String> elevesMap = new LinkedHashMap<>();
-                                                elevesMap.put(finalIdEleve, eleve.getString("lastName") + " " + eleve.getString("firstName"));
-                                                final AtomicBoolean answered = new AtomicBoolean();
-                                                JsonArray resultFinal = new JsonArray();
-                                                final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
-                                                        libellePeriode, json, answered, resultFinal);
-                                                exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), idEtablissement, listIdMatieres,
-                                                        finalIdPeriode, finalHandler);
-                                            } else {
-                                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                            }
+                                                            JsonArray idFunctionalGroupes = eleve.getArray("idGroupes");
+                                                            String[] idFunctionalGroupesArr = UtilsConvert.jsonArrayToStringArr(idFunctionalGroupes);
+
+                                                            final String[] idEleves = new String[1];
+                                                            idEleves[0] = finalIdEleve;
+                                                            idGroupes.add(idClasse);
+                                                            nomGroupes.put(eleve.getString("idEleve"), nomClasse);
+                                                            final Map<String, String> elevesMap = new LinkedHashMap<>();
+                                                            elevesMap.put(finalIdEleve, eleve.getString("lastName") + " " + eleve.getString("firstName"));
+                                                            final AtomicBoolean answered = new AtomicBoolean();
+                                                            JsonArray resultFinal = new JsonArray();
+                                                            final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
+                                                                    libellePeriode, json, answered, resultFinal);
+                                                            exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), idFunctionalGroupesArr, idEtablissement, listIdMatieres,
+                                                                    finalIdPeriode, finalHandler);
+                                                        } else {
+                                                            leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
+                                                        }
                                         }
                                     });
                                 } else {
@@ -1874,6 +1878,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                 idEtablissement.add(
                                                                         eleve.getString("idEtablissement"));
                                                                 idGroupes.add(idClasse);
+
                                                                 nomGroupes.put(((JsonObject)eleves.get(i)).
                                                                         getString("id"),nomClasse);
                                                             }
@@ -1888,8 +1893,11 @@ public class ExportPDFController extends ControllerHelper {
                                                                 String [] _idGroupes = new String[1];
                                                                 _idGroupes[0] = idGroupes.get(i);
 
+                                                                JsonArray idFunctionalGroupes = ((JsonObject)result.get(i)).getArray("idGroupes");
+                                                                String[] idFunctionalGroupesArr = UtilsConvert.jsonArrayToStringArr(idFunctionalGroupes);
+
                                                                 exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
-                                                                        _idGroupes , idEtablissement.get(i),
+                                                                        _idGroupes , idFunctionalGroupesArr, idEtablissement.get(i),
                                                                         listIdMatieres,
                                                                         finalIdPeriode, finalHandler);
                                                             }

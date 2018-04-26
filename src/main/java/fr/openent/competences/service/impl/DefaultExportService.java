@@ -323,7 +323,7 @@ public class DefaultExportService implements ExportService {
     }
     @Override
     public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve, final String[] idGroupes,
-                                    final String idEtablissement, final List<String> idMatieres,
+                                    String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
                                     Long idPeriodeType, final Handler<Either<String, JsonObject>> handler) {
 
         final AtomicBoolean answered = new AtomicBoolean();
@@ -339,7 +339,13 @@ public class DefaultExportService implements ExportService {
         final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, idEleve, devoirsArray,
                 maitriseArray, competencesArray, domainesArray, competencesNotesArray,enseignementArray,  answered,byEnseignement, handler);
 
-        devoirService.listDevoirs(idGroupes, null,
+        //on recupere la liste des devoirs des classes mais aussi des groupes de l'eleve
+        final List<String> idClasseAndFunctionnalGroups = new ArrayList<>();
+        Collections.addAll(idClasseAndFunctionnalGroups, idGroupes);
+        Collections.addAll(idClasseAndFunctionnalGroups, idFunctionalGroupes);
+
+
+        devoirService.listDevoirs(idClasseAndFunctionnalGroups.toArray(new String[0]), null,
                 idPeriodeType != null ? new Long[]{idPeriodeType} : null,
                 idEtablissement != null ? new String[]{idEtablissement} : null,
                 idMatieres != null ? idMatieresTab : null, null,
