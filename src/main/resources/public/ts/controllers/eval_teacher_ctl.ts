@@ -3285,6 +3285,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             classe ? $scope.forClasse = true : $scope.forClasse = false;
         }
 
+        $scope.getFormatedDate = function(date) {
+            return moment(date).format("DD/MM/YYYY");
+        };
+
         $scope.openedRecapEval = function (){
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
@@ -3324,13 +3328,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return false;
                 }
                 else {
-                    let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
-                        {id_type: $scope.search.periode.id});
-                    if (selectedPeriode !== undefined) {
-                        return moment().isAfter(moment(selectedPeriode.date_fin_saisie), "days");
-                    }
-                    else {
+                    if($scope.releveNote.classe === undefined){
                         return true;
+                    } else {
+                        let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
+                            {id_type: $scope.search.periode.id});
+                        if (selectedPeriode !== undefined) {
+                            return moment().isAfter(moment(selectedPeriode.date_fin_saisie), "days");
+                        }
+                        else {
+                            return true;
+                        }
                     }
                 }
             }
@@ -3560,5 +3568,43 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             utils.safeApply($scope);
         };
+        $scope.hasCompetencesNotes = function (evaluations) {
+            let hasNotCompetencesNotes = _.where(evaluations.all, {nbcompetences: 0});
+            if(hasNotCompetencesNotes.length === evaluations.all.length){
+                return false;
+            } else {
+                return true;
+            }
+        };
+        $scope.hasDevoirsEvalues = function (evaluations) {
+            let hasDevoirsEvalues = _.where(evaluations.all, {is_evaluated: true});
+            if(hasDevoirsEvalues.length > 0 ){
+                for (var i = 0; i < hasDevoirsEvalues.length; i++) {
+                    if(hasDevoirsEvalues[i].valeur !== '') {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                return false;
+            }
+        };
+
+        $scope.isNotFirstEleve = function (evaluations) {
+            let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
+            if(index === 0){
+                return false;
+            } else {
+                return true;
+            }
+        }
+        $scope.isNotLastEleve = function (evaluations) {
+            let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
+            if(index === $scope.releveNote.classe.eleves.all.length -1){
+                return false;
+            } else {
+                return true;
+            }
+        }
     }
 ]);

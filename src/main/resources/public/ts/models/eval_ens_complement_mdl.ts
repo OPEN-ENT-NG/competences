@@ -132,7 +132,7 @@ export class EleveEnseignementCpl extends Model implements IModel{
                 if (enseignementComplementEleve.niveau != 0) {
                     enseignementComplementEleve.libelle = _.findWhere(nivEnsCpls.all, {niveau: enseignementComplementEleve.niveau}).libelle;
                 }
-                this.updateData(enseignementComplementEleve);
+                this.updateData(enseignementComplementEleve,false);
             }
         }
     }

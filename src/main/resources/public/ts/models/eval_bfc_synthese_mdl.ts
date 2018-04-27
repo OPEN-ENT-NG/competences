@@ -68,7 +68,7 @@ export class BfcSynthese extends Model {
             // var that = this;
             http().getJson(this.api.getBfcSynthese  + this.id_eleve ).done((data) => {
                 if(data != {}){
-                    this.updateData(data);
+                    this.updateData(data,false);
                 }
                 if (resolve && (typeof (resolve) === 'function')) {
                     resolve(data);

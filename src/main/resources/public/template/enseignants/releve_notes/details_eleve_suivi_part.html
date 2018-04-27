@@ -1,5 +1,5 @@
 <!--  Evaluation numérique -->
-<fieldset>
+<fieldset ng-if="hasDevoirsEvalues(informations.eleve.evaluations)">
     <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:{is_evaluated:true}
                         track by $index">
         <div ng-if="evaluation.valeur !== ''"   class=" alignCenterVertically noteDevoir cell">
@@ -13,26 +13,23 @@
                 <span ng-if="evaluation.annotation !== null"
                       class="bold fontXLarge">[[evaluation.annotation_libelle_court]]
                                     </span>
-                <span class="releve-coef"
-                      ng-show='evaluation.coefficient != null
-                                      && evaluation.coefficient != 1'>
-                                    (<i18n>viescolaire.utils.coef</i18n>. [[evaluation.coefficient]])
-                                </span>
             </div>
-            <div class="gradetooltip"
+            <div class="gradetooltip" ng-show='evaluation.coefficient != null && evaluation.coefficient != 1'
+                 tooltip="[[getFormatedDate(evaluation.date)]]<br>[[evaluation.name]]<div>[[evaluation._sousmatiere_libelle]]</div>(<i18n>viescolaire.utils.coef</i18n>. [[evaluation.coefficient]])"></div>
+            <div class="gradetooltip" ng-show='evaluation.coefficient == null || evaluation.coefficient == 1'
                  tooltip="[[getFormatedDate(evaluation.date)]]<br>[[evaluation.name]]<div>[[evaluation._sousmatiere_libelle]]</div>"></div>
         </div>
     </div>
 </fieldset>
 <br>
 <!-- Compétence évaluation -->
-<fieldset>
+<fieldset ng-if="hasCompetencesNotes(informations.eleve.evaluations)">
     <div ng-repeat="evaluation in informations.eleve.evaluations.all | filter:hasCompetences
                         track by $index">
-        <div    class="cell three">
+        <div  class="cell three">
             <div>
                 <div ng-if="evaluation.competencesNotes.length > 0"
-                     class="eleven inline-block align-center" style="padding-left: 8%">
+                     class="eleven inline-block align-center padding-proportion">
                     <proportion-suivi-competence
                             evaluations="evaluation.competencesNotes"
                             is-classe="false" filter="{mine : false}" user="me"
