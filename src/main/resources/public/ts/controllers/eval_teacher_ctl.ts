@@ -3591,6 +3591,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.isNotFirstEleve = function (evaluations) {
+            if($scope.releveNote === undefined){
+                return false;
+            }
             let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
             if(index === 0){
                 return false;
@@ -3599,6 +3602,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         }
         $scope.isNotLastEleve = function (evaluations) {
+            if($scope.releveNote === undefined){
+                return false;
+            }
             let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
             if(index === $scope.releveNote.classe.eleves.all.length -1){
                 return false;
