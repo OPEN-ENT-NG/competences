@@ -31,6 +31,7 @@ export class LanguesCultRegs extends Model implements IModel{
 }
 
 export class NiveauLangueCultReg extends Model  {
+    id : number;
     libelle : string;
     niveau : number;
 

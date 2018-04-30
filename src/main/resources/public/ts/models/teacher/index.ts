@@ -32,3 +32,7 @@ export * from '../eval_niveau_comp';
 export * from '../common/TypePeriode';
 export * from './model';
 export * from './DispenseDomaine';
+export * from '../eval_controles_continus_brevet';
+export * from '../eval_langue_culture_regionale_mdl';
+export * from '../eval_bfc_synthese_mdl';
+export * from '../eval_ens_complement_mdl';

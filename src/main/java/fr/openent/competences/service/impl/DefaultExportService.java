@@ -36,7 +36,6 @@ public class DefaultExportService implements ExportService {
     private NiveauDeMaitriseService niveauDeMaitriseService;
     private AnnotationService annotationsService;
     private BFCService bfcService;
-
     private EventBus eb;
 
     public DefaultExportService(EventBus eb) {

@@ -36,12 +36,15 @@ export class EnsCpls extends Model implements IModel{
 
 
 export class NiveauEnseignementCpl extends Model  {
+    id : number;
     libelle : string;
     niveau : number;
+    bareme_brevet : number;
 
-    constructor(niveau : number){
+
+    constructor(niveau: number){
         super();
-        this.niveau = niveau
+        this.niveau = niveau;
     }
 }
 
@@ -50,11 +53,11 @@ export class NiveauEnseignementCpls extends Model {
 
     constructor(){
         super();
-        this.all=[];
-        this.all[0] = new NiveauEnseignementCpl(1);
-        this.all[0].libelle = "Objectif atteint";
-        this.all[1] = new NiveauEnseignementCpl(2);
-        this.all[1].libelle ="Objectif dépassé";
+    }
+
+    async sync(){
+        let {data} = await http.get(`/competences/niveaux/enseignement/complement/list`);
+        this.all = Mix.castArrayAs(NiveauEnseignementCpl,data);
     }
 }
 
@@ -63,19 +66,21 @@ export class EleveEnseignementCpl extends Model implements IModel{
     id_eleve : string;
     id_enscpl : number;
     id_langue : number;
+    id_niveau : number;
     niveau : number;
     libelle : string;
     niveau_lcr : number;
     libelle_lcr : string;
+
 
     constructor(id_eleve : string){
         super();
         this.id_eleve = id_eleve;
         this.niveau = 0;
     }
-     setAttributsEleveEnsCpl (id_enscpl : number,niveau : number,niveau_lcr : number, id_langue : number)  {
+     setAttributsEleveEnsCpl (id_enscpl : number,id_niveau : number,niveau_lcr : number, id_langue : number)  {
             this.id_enscpl = id_enscpl;
-            this.niveau = niveau;
+            this.id_niveau = id_niveau;
             this.id_langue = id_langue;
             this.niveau_lcr = niveau_lcr;
             return this;
@@ -93,7 +98,8 @@ export class EleveEnseignementCpl extends Model implements IModel{
             id_eleve : this.id_eleve,
             id_enscpl : this.id_enscpl,
             id_langue : this.id_langue,
-            niveau : this.niveau,
+            id_niveau : this.id_niveau,
+            //niveau : this.niveau,
             niveau_lcr : this.niveau_lcr
         }
     }
@@ -125,15 +131,25 @@ export class EleveEnseignementCpl extends Model implements IModel{
 
     async sync(){
         let { data } = await  http.get(this.api.get);
-        if(data !== undefined && data.length === 1) {
+      Mix.extend(this,Mix.castAs(EleveEnseignementCpl,data));
+
+       /* if(data !== undefined && data.length === 1) {
             let enseignementComplementEleve = data[0] ;
             if (enseignementComplementEleve.hasOwnProperty('id')) {
                 let nivEnsCpls = new NiveauEnseignementCpls();
-                if (enseignementComplementEleve.niveau != 0) {
+               await  nivEnsCpls.sync();
+                if (enseignementComplementEleve.id_niveau != 0) {
                     enseignementComplementEleve.libelle = _.findWhere(nivEnsCpls.all, {niveau: enseignementComplementEleve.niveau}).libelle;
                 }
                 this.updateData(enseignementComplementEleve,false);
             }
-        }
+        }*/
+       /* if(data.hasOwnProperty('id')) {
+            let nivEnsCpls = new NiveauEnseignementCpls(data.id_eleve);
+            if (data.niveau != 0) {
+                data.libelle = _.findWhere(nivEnsCpls.all, {niveau: data.niveau}).libelle;
+            }
+            this.updateData(data);
+        }*/
     }
   }

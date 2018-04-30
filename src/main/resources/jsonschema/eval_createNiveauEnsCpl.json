@@ -9,13 +9,13 @@
     "id_enscpl":{
       "type":"number"
     },
-    "niveau": {
+    "id_niveau": {
       "type" : "number"
     }
   },
   "required" : [
     "id_eleve",
     "id_enscpl",
-    "niveau"
+    "id_niveau"
   ]
 }

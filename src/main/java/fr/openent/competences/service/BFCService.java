@@ -4,10 +4,12 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.user.UserInfos;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.eventbus.EventBus;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
-import java.util.Map;
+import java.util.List;
+
 
 /**
  * Created by vogelmt on 29/03/2017.
@@ -61,14 +63,14 @@ public interface BFCService extends CrudService {
     /**
      * retourne la date de creation du BFC, si null la date de modification sinon la date du jour
      * pour un idEleve
-     * @param idEleve
-     * @param handler
+     * @param idEleve id de l'élève
+     * @param handler handler portant le résultat
      */
     // public void getDateCreatedBFC(String idEleve, Handler<Either<String,JsonArray>> handler);
 
     /**
      * Récupère les valeurs de la table calc_millesime
-     * @param handler
+     * @param handler handler portant le résultat
      */
     public void getCalcMillesimeValues(Handler<Either<String, JsonArray>> handler);
 
@@ -77,7 +79,7 @@ public interface BFCService extends CrudService {
      * @param structureId id établissement neo
      * @param user utilisateur connecté
      * @param visible 0 : caché pour tout le monde, 1 : caché pour les enseignants, 2 : visible pour tous
-     * @param handler
+     * @param handler handler portant le résultat
      */
     public void setVisibility(String structureId, UserInfos user, Integer visible,
                               Handler<Either<String, JsonArray>> handler);
@@ -88,7 +90,21 @@ public interface BFCService extends CrudService {
      *  0 : caché pour tout le monde, 1 : caché pour les enseignants, 2 : visible pour tous
      * @param structureId id établissement neo
      * @param user utilisateur connecté
-     * @param handler
+     * @param handler handler portant le résultat
      */
     public void getVisibility(String structureId, UserInfos user, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * donne un JsonArray avec
+     * la moyenne du contrôle continu qui correspond à la somme des maîtrises obtenue pour chaque domaine Racine
+     * en tenant compte de la dispense d'un domaine ou non.
+     * idEleve
+     * et le totalMaxBaremeBrevet = nb de domaines non dispensé x MaxBaremeBrevet
+     * @param eb eventBus
+     * @param idsClasses des id des  classe
+     * @param idPeriode id de la période
+     * @param handler  handler portant le résultat
+     */
+
+    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses, final Long idPeriode, final Handler<Either<String, JsonArray>> handler);
 }

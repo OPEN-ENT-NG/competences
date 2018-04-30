@@ -45,7 +45,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 
@@ -59,7 +58,7 @@ public class LSUController extends ControllerHelper {
     private UtilsService utilsService;
     private BFCService bfcService;
     private BfcSyntheseService bfcSynthseService;
-    private NiveauEnseignementComplementService niveauEnsCpl;
+    private EleveEnseignementComplementService eleveEnsCpl;
     private JsonArray listErreursEleves;
     private EventBus eb;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
@@ -69,7 +68,7 @@ public class LSUController extends ControllerHelper {
         utilsService = new DefaultUtilsService();
         bfcService = new DefaultBFCService(eb);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
-        niveauEnsCpl = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA,Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
+        eleveEnsCpl = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA,Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
     }
 
@@ -676,7 +675,7 @@ public class LSUController extends ControllerHelper {
                                                         continue;
                                                     }
 
-                                                    //variables qui permettent de tester si pour un élève qui a une dispense sur un domaine a bien était eu son positionnement à zéro
+                                                    //variable qui permet de tester si pour un élève qui a une dispense sur un domaine a bien était eu son positionnement à zéro
                                                     //cas de l'élève qui a une dispense sur un domaine mais aucune évaluation("niveau")
                                                     Boolean eleveHasDispenseDomaine = false;
                                                     Map<Long,Boolean> idsDomainesDispense = new HashMap<>();
@@ -728,7 +727,7 @@ public class LSUController extends ControllerHelper {
                                                                 public void handle(Either<String, JsonArray> repSynthese) {
                                                                     if (repSynthese.isRight()) {
                                                                         final JsonArray synthesesEleves = repSynthese.right().getValue();
-                                                                        niveauEnsCpl.listNiveauCplByEleves(idsEleve,new Handler<Either<String, JsonArray>>() {
+                                                                        eleveEnsCpl.listNiveauCplByEleves(idsEleve,new Handler<Either<String, JsonArray>>() {
                                                                             @Override
                                                                             public void handle(Either<String, JsonArray> repEleveEnsCpl) {
                                                                                 if (repEleveEnsCpl.isRight() ) {

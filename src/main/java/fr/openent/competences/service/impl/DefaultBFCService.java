@@ -1,11 +1,9 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
-import fr.openent.competences.service.BFCService;
-import fr.openent.competences.service.CompetenceNoteService;
-import fr.openent.competences.service.CompetencesService;
-import fr.openent.competences.service.DomainesService;
+import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -32,6 +30,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private CompetenceNoteService competenceNoteService;
     private DomainesService domaineService;
     private CompetencesService competenceService;
+    private DispenseDomaineEleveService dispenseDomaineEleveService;
     private static final Logger log = LoggerFactory.getLogger(DefaultBFCService.class);
 
     public DefaultBFCService(EventBus eb) {
@@ -40,6 +39,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         competenceService = new DefaultCompetencesService(eb);
+        dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
     }
 
     /**
@@ -488,5 +488,171 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         JsonArray values = new JsonArray();
         values.addString(structureId).addString(structureId).addString(structureId);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
+
+    @Override
+    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,final Long idPeriode, final Handler<Either<String, JsonArray>> handler) {
+        // j'ai besoin de récupérer les idsEleve et idStructure à partir de l'idClass
+        final JsonArray moyControlesContinusEleves = new JsonArray();
+        getParamsMethodGetMoyenne(idsClasses, new Handler<Either<String, Map<String, Map<String, List<String>>>>>() {
+            @Override
+            public void handle(Either<String, Map<String, Map<String, List<String>>>> respParam) {
+
+                if(respParam.isRight()){
+
+                    Map<String,Map<String,List<String>>> mapStructureClassesEleves = respParam.right().getValue();
+                    final String idStructure = mapStructureClassesEleves.entrySet().iterator().next().getKey();
+                    final Map<String,List<String>> mapClassesEleves = mapStructureClassesEleves.entrySet().iterator().next().getValue();
+
+                    for (final Map.Entry<String, List<String>> classe : mapClassesEleves.entrySet()) {
+                       final  String[] idsEleves =  classe.getValue().toArray(new String[0]);
+                       final String idClasse = classe.getKey();
+                        //On récupère le nb de DomainesRacines
+                        domaineService.getDomainesRacines(idClasse, new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> responseDomainesRacines) {
+                                if(responseDomainesRacines.isRight()) {
+                                    final Integer nbDomainesRacines = responseDomainesRacines.right().getValue().size();
+
+                                    //On récupère la valeur max du barèmebrevet et map des ordres(=niveau ds le JsonObject du buildBFC)/bareme
+                                    competenceNoteService.getMaxBaremeMapOrderBaremeBrevet(idStructure, idClasse, new Handler<Either<String, Map<Integer, Map<Integer, Integer>>>>() {
+                                        @Override
+                                        public void handle(Either<String, Map<Integer, Map<Integer, Integer>>> respMaxMapOrdreBareme) {
+                                            if (respMaxMapOrdreBareme.isRight()) {
+                                                final Integer maxBareme = respMaxMapOrdreBareme.right().getValue().entrySet().iterator().next().getKey();
+                                                final Map<Integer, Integer> mapOrdreBaremeBrevet = respMaxMapOrdreBareme.right().getValue().entrySet().iterator().next().getValue();
+
+                                                //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
+                                                buildBFC(false, idsEleves, idClasse, idStructure, idPeriode, null, new Handler<Either<String, JsonObject>>() {
+                                                    @Override
+                                                    public void handle(Either<String, JsonObject> responseMaitriseEleves) {
+                                                        if (responseMaitriseEleves.isRight()) {
+                                                            final JsonObject resultsElevesByDomaine = responseMaitriseEleves.right().getValue();
+                                                            //On récupère les élèves qui sont dispensés pour un domaine racine
+                                                            dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(classe.getValue(), new Handler<Either<String, Map<String, Map<Long, Boolean>>>>() {
+                                                                @Override
+                                                                public void handle(Either<String, Map<String, Map<Long, Boolean>>> respDisepenseEleves) {
+
+                                                                    if (respDisepenseEleves.isRight()) {
+
+                                                                        Map<String, Map<Long, Boolean>> dispensesDomainesEleves = respDisepenseEleves.right().getValue();
+                                                                        for(String idEleve : classe.getValue()){
+                                                                            Integer sommeBareme = 0;
+                                                                            Integer moyBareme = 0;
+                                                                            Integer totalMaxBareme = 0;
+                                                                            //si l'élève est dans le json resultsElevesByDomaine alors il a au moins un niveau pour un domaine
+                                                                            if(resultsElevesByDomaine.containsField(idEleve)) {
+                                                                                JsonArray idDomainesNiveaux = resultsElevesByDomaine.getArray(idEleve);
+                                                                                //si l'élève n'a pas de dispense
+                                                                                if (!dispensesDomainesEleves.containsKey(idEleve)) {
+                                                                                    totalMaxBareme = nbDomainesRacines * maxBareme;
+                                                                                    for (int i = 0; i < idDomainesNiveaux.size(); i++) {
+                                                                                        JsonObject idDomaineNiveau = idDomainesNiveaux.get(i);
+                                                                                        sommeBareme += mapOrdreBaremeBrevet.get(idDomaineNiveau.getInteger("niveau"));
+                                                                                    }
+                                                                                    //si l'élève a une dispen
+                                                                                } else {
+                                                                                    Map<Long, Boolean> idDomaineDispense = dispensesDomainesEleves.get(idEleve);
+                                                                                    totalMaxBareme = (nbDomainesRacines - idDomaineDispense.size()) * maxBareme;
+                                                                                    for (int i = 0; i < idDomainesNiveaux.size(); i++) {
+                                                                                        JsonObject idDomaineNiveau = idDomainesNiveaux.get(i);
+                                                                                        //Si idDomaine en cours n'est pas dispensé alors on ajouter le niveau à la somme
+                                                                                        if (!idDomaineDispense.containsKey(idDomaineNiveau.getLong("idDomaine"))) {
+                                                                                            //on somme les niveaux en convertissant le niv(=ordre) en barème
+                                                                                            sommeBareme += mapOrdreBaremeBrevet.get(idDomaineNiveau.getInteger("niveau"));
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                                JsonObject moyControlesContinusByEleve = new JsonObject();
+                                                                                moyControlesContinusByEleve.putString("id_eleve", idEleve);
+                                                                                moyControlesContinusByEleve.putNumber("controlesContinus_brevet", sommeBareme);
+                                                                                moyControlesContinusByEleve.putNumber("totalMaxBaremeBrevet", totalMaxBareme);
+                                                                                moyControlesContinusEleves.addObject(moyControlesContinusByEleve);
+
+                                                                                //sinon l'élève n'a pas d'évaluation alors la moyenne sera = somme nulle,
+                                                                                // il faut seulement affecter le totalMaxBareme en fct des domaines dispensés ou non
+                                                                            }else {
+                                                                                if(!dispensesDomainesEleves.containsKey(idEleve)){
+                                                                                    totalMaxBareme = nbDomainesRacines * maxBareme;
+                                                                                }else{
+                                                                                    Map<Long, Boolean> idDomaineDispense = dispensesDomainesEleves.get(idEleve);
+                                                                                    totalMaxBareme = (nbDomainesRacines - idDomaineDispense.size()) * maxBareme;
+                                                                                }
+                                                                                JsonObject moyControlesContinusByEleve = new JsonObject();
+                                                                                moyControlesContinusByEleve.putString("id_eleve", idEleve);
+                                                                                moyControlesContinusByEleve.putNumber("controlesContinus_brevet", sommeBareme);
+                                                                                moyControlesContinusByEleve.putNumber("totalMaxBaremeBrevet", totalMaxBareme);
+                                                                                moyControlesContinusEleves.addObject(moyControlesContinusByEleve);
+                                                                            }
+                                                                        }
+                                                                        handler.handle(new Either.Right<String, JsonArray>(moyControlesContinusEleves));
+                                                                       // handler.handle(new Either.Right<String, JsonArray>(moyControlesContinusEleves));
+                                                                    } else {
+                                                                        handler.handle(new Either.Left<String, JsonArray>(respDisepenseEleves.left().getValue()));
+                                                                        log.error("getMoyenneControlesContinusBrevet : dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve " + respDisepenseEleves.left().getValue());
+                                                                    }
+                                                                }
+                                                            });
+                                                        } else {
+                                                            handler.handle(new Either.Left<String, JsonArray>(responseMaitriseEleves.left().getValue()));
+                                                            log.error("getMoyenneControlesContinusBrevet : buildBFC " + responseMaitriseEleves.left().getValue());
+                                                        }
+                                                    }
+                                                });
+                                            } else {
+                                                handler.handle(new Either.Left<String, JsonArray>(respMaxMapOrdreBareme.left().getValue()));
+                                                log.error("getMoyenneControlesContinusBrevet : competenceNoteService.getMaxBaremeMapOrderBaremeBrevet " + respMaxMapOrdreBareme.left().getValue());
+                                            }
+                                        }
+                                    });
+                                }else{
+                                    handler.handle(new Either.Left<String, JsonArray>(responseDomainesRacines.left().getValue()));
+                                    log.error("getMoyenneControlesContinusBrevet : getDomainesRacines " + responseDomainesRacines.left().getValue());
+                                }
+                            }
+                        });
+                    }
+                }else{
+                    handler.handle(new Either.Left<String,JsonArray>(respParam.left().getValue()));
+                    log.error("getMoyenneControlesContinusBrevet : getParamsMethodGetMoyenne " + respParam.left().getValue() );
+
+                }
+            }
+        });
+
+    }
+    //récupérer les paramètres nécessaire pour les méthodes
+    private void getParamsMethodGetMoyenne (final List<String> idsClasses, final Handler<Either<String, Map<String, Map<String, List<String>>>>> handler){
+        final Map<String, Map<String, List<String>>> paramsMethods = new HashMap<>();
+
+        Utils.getStructClasses(eb, idsClasses.toArray(new String[0]), new Handler<Either<String, String>>() {
+            @Override
+            public void handle(Either<String, String> repStructure) {
+                if (repStructure.isRight()) {
+                    final String idStructure = repStructure.right().getValue();
+                    paramsMethods.put(idStructure,new LinkedHashMap<String, List<String>>());
+
+                    Utils.getElevesClasses(eb, idsClasses.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
+                        @Override
+                        public void handle(Either<String, Map<String, List<String>>> repEleves) {
+                            if(repEleves.isRight()){
+                                for (final Map.Entry<String, List<String>> idclasse : repEleves.right().getValue().entrySet()) {
+                                    paramsMethods.get(idStructure).put(idclasse.getKey(),idclasse.getValue());
+                                }
+                                handler.handle(new Either.Right<String, Map<String, Map<String, List<String>>>>(paramsMethods));
+                            } else {
+                                handler.handle(new Either.Left<String, Map<String, Map<String, List<String>>>>(repEleves.left().getValue()));
+                                log.error("getParamClasses : getElevesClasses : " + repEleves.left().getValue());
+                            }
+                        }
+
+                    });
+                }else {
+                    handler.handle(new Either.Left<String, Map<String, Map<String, List<String>>>>(repStructure.left().getValue()));
+                    log.error("getParamClasses : getStructClasses : " + repStructure.left().getValue());
+                }
+            }
+        });
     }
 }

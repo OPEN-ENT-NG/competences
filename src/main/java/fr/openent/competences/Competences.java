@@ -43,6 +43,7 @@ public class Competences extends BaseServer {
     public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
     public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
     public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
+    public static final String NIVEAU_ENS_COMPLEMENT = "niveau_ens_complement";
     public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
 
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";

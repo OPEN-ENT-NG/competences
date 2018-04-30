@@ -85,7 +85,9 @@
              ng-init="parent = tree_item_renderer.html">
         </div>
     </div>
-    <div>
+    <div class= "twelve cell" >
+        <div class= "twelve cell "><span class= "right-magnet bareme-brevet" ng-model = "suiviCompetence.baremeBrevetEleve"><i18n>evaluation.bfc.controle.continu</i18n>
+            [[suiviCompetence.baremeBrevetEleve.controlesContinus_brevet]] / [[suiviCompetence.baremeBrevetEleve.totalMaxBaremeBrevet]]</span></div>
         <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
         <div ng-show="successCreateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successCreateSynthese</i18n></div>
         <div ng-show="successUpdateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateSynthese</i18n></div>

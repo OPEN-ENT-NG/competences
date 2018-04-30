@@ -27,6 +27,7 @@ import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -134,4 +135,21 @@ public interface CompetenceNoteService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     public void getMaxCompetenceNoteEleve(String[] idEleves, Long idPeriode, Long idCycle, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * utilise la méthode getConversionNoteCompetence pour associer ordre du niveau de compétence au barème du brevet
+     * @param idEtablissement id de la structure
+     * @param idClasse id de la classe
+     * @param handler retourne la réponse
+     */
+    public void getMaxBaremeMapOrderBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String,Map<Integer, Map<Integer,Integer>>>> handler);
+
+   /**
+     * retourne le barème max pour un cycle donné
+     * @param idEtablissement id de la structure
+     * @param idClasse id de la classe
+     * @param handler id de l'établissement
+     */
+  /*  public void getMaxBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String, JsonObject>> handler);
+    */
  }

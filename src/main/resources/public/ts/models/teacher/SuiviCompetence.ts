@@ -1,6 +1,4 @@
 import { Model, Collection, http, _, model } from 'entcore';
-import { EleveEnseignementCpl, EnsCpls, EnsCpl } from '../eval_ens_complement_mdl';
-import { BfcSynthese } from '../eval_bfc_synthese_mdl';
 import {
     CompetenceNote,
     Domaine,
@@ -10,10 +8,14 @@ import {
     TableConversion,
     Eleve,
     Structure,
-    Utils
+    Utils,
+    BaremeBrevetEleves,
+    LanguesCultRegs,
+    LangueCultReg,
+    BfcSynthese,
+    EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls
 } from './index';
-import {LanguesCultRegs, LangueCultReg} from "../eval_langue_culture_regionale_mdl";
-
+//import {LanguesCultRegs, LangueCultReg} from "../eval_langue_culture_regionale_mdl";
 
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
@@ -28,6 +30,8 @@ export class SuiviCompetence extends Model {
     langues : LanguesCultRegs;
     langueSelected : LangueCultReg;
     eleveEnsCpl: EleveEnseignementCpl;
+    niveauEnsCpls : NiveauEnseignementCpls;
+    baremeBrevetEleves : BaremeBrevetEleves;
 
     static get api() {
         return {
@@ -47,6 +51,10 @@ export class SuiviCompetence extends Model {
         this.ensCpls = new EnsCpls();
         this.langues = new LanguesCultRegs();
         this.eleveEnsCpl = new EleveEnseignementCpl(eleve.id);
+        this.niveauEnsCpls = new NiveauEnseignementCpls();
+        this.baremeBrevetEleves = new BaremeBrevetEleves();
+        this.baremeBrevetEleves.sync(classe.id,periode.id);
+
 
         let that = this;
         this.collection(TableConversion);
@@ -71,7 +79,6 @@ export class SuiviCompetence extends Model {
                                         }
                                     }
 
-                                    //domaine.id_eleve = eleve.id;
                                     domaine.id_chef_etablissement = model.me.userId;
                                     domaine.id_etablissement = structure.id;
                                     that.domaines.all.push(domaine);

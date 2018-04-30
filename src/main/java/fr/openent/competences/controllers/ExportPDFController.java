@@ -20,6 +20,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
@@ -87,7 +88,7 @@ public class ExportPDFController extends ControllerHelper {
     private NiveauDeMaitriseService niveauDeMaitriseService;
     private ExportService exportService;
     private BfcSyntheseService bfcSynthseService;
-    private NiveauEnseignementComplementService niveauEnseignementComplementService;
+    private EleveEnseignementComplementService eleveEnseignementComplementService;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
@@ -100,7 +101,7 @@ public class ExportPDFController extends ControllerHelper {
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         exportService = new DefaultExportService(eb);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
-        niveauEnseignementComplementService = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
+        eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
     }
 
@@ -570,7 +571,7 @@ public class ExportPDFController extends ControllerHelper {
                 public void handle(final Either<String, JsonObject> event) {
                     if (event.isRight()) {
 
-                        niveauEnseignementComplementService.getNiveauEnsCplByEleve(idEleves.toArray(new String[0]), new Handler<Either<String, JsonArray>>() {
+                        eleveEnseignementComplementService.listNiveauCplByEleves(idEleves.toArray(new String[0]), new Handler<Either<String, JsonArray>>() {
                             @Override
                             public void handle (final Either <String, JsonArray> eventNCPL){
                                 if (eventNCPL.isRight()) {
@@ -646,173 +647,6 @@ public class ExportPDFController extends ControllerHelper {
     }
 
 
-    /**
-     * Recupere l'identifiant de la structure a laquelle appartiennent les classes dont l'identifiant est passe en
-     * parametre.
-     *
-     * @param idClasses Tableau contenant l'identifiant des classes dont on souhaite connaitre la structure.
-     * @param handler   Handler contenant l'identifiant de la structure.
-     */
-    private void getStructClasses(String[] idClasses, final Handler<Either<String, String>> handler) {
-        JsonObject action = new JsonObject()
-                .putString("action", "classe.getEtabClasses")
-                .putArray("idClasses", new JsonArray(idClasses));
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray queryResult = body.getArray("results");
-                    if (queryResult.size() == 0) {
-                        handler.handle(new Either.Left<String, String>("Aucune classe n'a ete trouvee."));
-                        log.error("getStructClasses : No classes found with these ids");
-                    } else if (queryResult.size() > 1) {
-                        // Il est impossible de demander un BFC pour des classes n'appartenant pas au meme etablissement.
-                        handler.handle(new Either.Left<String, String>("Les classes n'appartiennent pas au meme etablissement."));
-                        log.error("getStructClasses : provided classes are not from the same structure.");
-                    } else {
-                        JsonObject structure = queryResult.get(0);
-                        handler.handle(new Either.Right<String, String>(structure.getString("idStructure")));
-                    }
-                } else {
-                    handler.handle(new Either.Left<String, String>(body.getString("message")));
-                    log.error("getStructClasses : " + body.getString("message"));
-                }
-            }
-        });
-    }
-
-    /**
-     * Recupere l'identifiant de l'ensemble des classes de la structure dont l'identifiant est passe en parametre.
-     *
-     * @param idStructure Identifiant de la structure dont on souhaite recuperer les classes.
-     * @param handler     Handler contenant la liste des identifiants des classes recuperees.
-     */
-    private void getClassesStruct(final String idStructure, final Handler<Either<String, List<String>>> handler) {
-        JsonObject action = new JsonObject()
-                .putString("action", "classe.getClasseEtablissement")
-                .putString("idEtablissement", idStructure);
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    List<String> result = new ArrayList<>();
-                    JsonArray queryResult = body.getArray("results");
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject classe = queryResult.get(i);
-                        result.add(classe.getString("idClasse"));
-                    }
-                    handler.handle(new Either.Right<String, List<String>>(result));
-                } else {
-                    handler.handle(new Either.Left<String, List<String>>(body.getString("message")));
-                    log.error("getClassesStruct : " + body.getString("message"));
-                }
-            }
-        });
-    }
-
-    /**
-     * Recupere l'identifiant de l'ensemble des eleves de la classe dont l'identifiant est passe en parametre.
-     *
-     * @param idClasses Identifiant de la classe dont on souhaite recuperer les eleves.
-     * @param handler   Handler contenant la liste des identifiants des eleves recuperees.
-     */
-    private void getElevesClasses(String[] idClasses, final Handler<Either<String, Map<String, List<String>>>> handler) {
-        JsonObject action = new JsonObject()
-                .putString("action", "classe.getElevesClasses")
-                .putArray("idClasses", new JsonArray(idClasses));
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    Map<String, List<String>> result = new LinkedHashMap<>();
-                    JsonArray queryResult = body.getArray("results");
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject eleve = queryResult.get(i);
-                        if (!result.containsKey(eleve.getString("idClasse"))) {
-                            result.put(eleve.getString("idClasse"), new ArrayList<String>());
-                        }
-                        result.get(eleve.getString("idClasse")).add(eleve.getString("idEleve"));
-                    }
-                    handler.handle(new Either.Right<String, Map<String, List<String>>>(result));
-                } else {
-                    handler.handle(new Either.Left<String, Map<String, List<String>>>(body.getString("message")));
-                    log.error("getElevesClasses : " + body.getString("message"));
-                }
-            }
-        });
-    }
-
-    /**
-     * Recupere les informations relatives a chaque eleve dont l'identifiant est passe en parametre, et cree un objet
-     * Eleve correspondant a cet eleve.
-     *
-     * @param idEleves Tableau contenant les identifiants des eleves dont on souhaite recuperer les informations.
-     * @param handler  Handler contenant la liste des objets Eleve ainsi construit,
-     *                 ou un erreur potentiellement survenue.
-     * @see Eleve
-     */
-    private void getInfoEleve(String[] idEleves, final Handler<Either<String, List<Eleve>>> handler) {
-        JsonObject action = new JsonObject()
-                .putString("action", "eleve.getInfoEleve")
-                .putArray("idEleves", new JsonArray(idEleves));
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    final Set<String> classes = new HashSet<>();
-                    final List<Eleve> result = new ArrayList<>();
-                    JsonArray queryResult = body.getArray("results");
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject eleveBase = queryResult.get(i);
-                        Eleve eleveObj = new Eleve(eleveBase.getString("idEleve"),
-                                eleveBase.getString("lastName"),
-                                eleveBase.getString("firstName"),
-                                eleveBase.getString("idClasse"),
-                                eleveBase.getString("classeName"));
-                        classes.add(eleveObj.getIdClasse());
-                        result.add(eleveObj);
-                    }
-
-                    utilsService.getCycle(new ArrayList<>(classes), new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isRight()) {
-                                JsonArray queryResult = event.right().getValue();
-                                for (int i = 0; i < queryResult.size(); i++) {
-                                    JsonObject cycle = queryResult.get(i);
-                                    for (Eleve eleve : result) {
-                                        if (Objects.equals(eleve.getIdClasse(), cycle.getString("id_groupe"))) {
-                                            eleve.setCycle(cycle.getString("libelle"));
-                                        }
-                                    }
-                                }
-                                handler.handle(new Either.Right<String, List<Eleve>>(result));
-                            } else {
-                                handler.handle(new Either.Left<String, List<Eleve>>(event.left().getValue()));
-                                log.error("getInfoEleve : getCycle : " + event.left().getValue());
-                            }
-                        }
-                    });
-
-                } else {
-                    handler.handle(new Either.Left<String, List<Eleve>>(body.getString("message")));
-                    log.error("getInfoEleve : getInfoEleve : " + body.getString("message"));
-                }
-            }
-        });
-    }
 
     /**
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul l'identifiant de la
@@ -826,18 +660,18 @@ public class ExportPDFController extends ControllerHelper {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
         population.put(idStructure, new LinkedHashMap<String, List<Eleve>>());
 
-        getClassesStruct(idStructure, new Handler<Either<String, List<String>>>() {
+        Utils.getClassesStruct(eb,idStructure, new Handler<Either<String, List<String>>>() {
             @Override
             public void handle(Either<String, List<String>> event) {
                 if (event.isRight()) {
                     final List<String> classes = event.right().getValue();
-                    getElevesClasses(classes.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
+                    Utils.getElevesClasses(eb, classes.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
                         @Override
                         public void handle(Either<String, Map<String, List<String>>> event) {
                             if (event.isRight()) {
                                 for (final Map.Entry<String, List<String>> classe : event.right().getValue().entrySet()) {
                                     population.get(idStructure).put(classe.getKey(), null);
-                                    getInfoEleve(classe.getValue().toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
+                                    Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
                                         @Override
                                         public void handle(Either<String, List<Eleve>> event) {
                                             if (event.isRight()) {
@@ -878,20 +712,20 @@ public class ExportPDFController extends ControllerHelper {
     private void getParamClasses(final List<String> idClasses, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
 
-        getStructClasses(idClasses.toArray(new String[0]), new Handler<Either<String, String>>() {
+        Utils.getStructClasses(eb, idClasses.toArray(new String[0]), new Handler<Either<String, String>>() {
             @Override
             public void handle(Either<String, String> event) {
                 if (event.isRight()) {
                     final String idStructure = event.right().getValue();
                     population.put(idStructure, new LinkedHashMap<String, List<Eleve>>());
 
-                    getElevesClasses(idClasses.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
+                    Utils.getElevesClasses(eb, idClasses.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
                         @Override
                         public void handle(Either<String, Map<String, List<String>>> event) {
                             if (event.isRight()) {
                                 for (final Map.Entry<String, List<String>> classe : event.right().getValue().entrySet()) {
                                     population.get(idStructure).put(classe.getKey(), null);
-                                    getInfoEleve(classe.getValue().toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
+                                    Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
                                         @Override
                                         public void handle(Either<String, List<Eleve>> event) {
                                             if (event.isRight()) {
@@ -932,7 +766,7 @@ public class ExportPDFController extends ControllerHelper {
     private void getParamEleves(final List<String> idEleves, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
 
-        getInfoEleve(idEleves.toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
+        Utils.getInfoEleve(eb, idEleves.toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
             @Override
             public void handle(Either<String, List<Eleve>> event) {
                 if (event.isRight()) {
@@ -943,7 +777,7 @@ public class ExportPDFController extends ControllerHelper {
                         }
                         classes.get(e.getIdClasse()).add(e);
                     }
-                    getStructClasses(classes.keySet().toArray(new String[0]), new Handler<Either<String, String>>() {
+                    Utils.getStructClasses(eb, classes.keySet().toArray(new String[0]), new Handler<Either<String, String>>() {
                         @Override
                         public void handle(Either<String, String> event) {
                             if (event.isRight()) {

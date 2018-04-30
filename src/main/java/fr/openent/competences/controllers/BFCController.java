@@ -2,6 +2,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessBFCFilter;
+import fr.openent.competences.security.AccessControleContinuFilter;
 import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
@@ -21,6 +22,8 @@ import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
 
+import java.util.List;
+
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
@@ -34,7 +37,8 @@ public class BFCController extends ControllerHelper {
     private final BfcSyntheseService syntheseService;
     private final EnseignementComplementService enseignementComplement;
     private final LanguesCultureRegionaleService languesCultureRegionaleService;
-    private final NiveauEnseignementComplementService niveauEnseignementComplement;
+    private final EleveEnseignementComplementService eleveEnseignementComplement;
+    private final NiveauEnsComplementService niveauEnsComplementService;
 
     public BFCController(EventBus eb) {
         this.eb = eb;
@@ -42,7 +46,8 @@ public class BFCController extends ControllerHelper {
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         enseignementComplement = new DefaultEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENT_COMPLEMENT);
         languesCultureRegionaleService = new DefaultLanguesCultureRegionaleService(Competences.COMPETENCES_SCHEMA, Competences.LANGUES_CULTURE_REGIONALE);
-        niveauEnseignementComplement = new DefaultNiveauEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
+        eleveEnseignementComplement = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
+        niveauEnsComplementService = new DefaultNiveauEnsComplement(Competences.COMPETENCES_SCHEMA,Competences.NIVEAU_ENS_COMPLEMENT);
     }
 
 
@@ -281,6 +286,25 @@ public class BFCController extends ControllerHelper {
         });
     }
 
+    @Get("/niveaux/enseignement/complement/list")
+    @ApiDoc("Récupère la liste des enseignements ")
+    @SecuredAction(value="",type = ActionType.AUTHENTICATED)
+    public void getNiveauxEnsComplement(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos userInfos) {
+                if(userInfos != null){
+                    niveauEnsComplementService.getNiveauEnsComplement(arrayResponseHandler(request));
+
+                }else{
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+
+
     @Post("/CreateNiveauEnsCpl")
     @ApiDoc("crée l'enseignement de complement pour un élève")
     @SecuredAction(value="",type=ActionType.AUTHENTICATED)
@@ -292,7 +316,7 @@ public class BFCController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject data) {
-                            niveauEnseignementComplement.createEnsCplByELeve(data,userInfos,notEmptyResponseHandler(request));
+                            eleveEnseignementComplement.createEnsCplByELeve(data,userInfos,notEmptyResponseHandler(request));
                         }
                     });
 //                }else{
@@ -315,7 +339,7 @@ public class BFCController extends ControllerHelper {
                         public void handle(JsonObject data) {
                             final Integer id = Integer.parseInt(request.params().get("id"));
 
-                            niveauEnseignementComplement.updateEnsCpl(id,data,defaultResponseHandler(request));
+                            eleveEnseignementComplement.updateEnsCpl(id,data,defaultResponseHandler(request));
                         }
                     });
 //                }else{
@@ -333,9 +357,9 @@ public class BFCController extends ControllerHelper {
             @Override
             public void handle(UserInfos userInfos) {
                 if(userInfos!=null)  {
-                    final String[] idsEleve = request.params().getAll("idEleve").toArray(new String[0]);
+                    final String idEleve = request.params().get("idEleve");
 
-                    niveauEnseignementComplement.getNiveauEnsCplByEleve(idsEleve,arrayResponseHandler(request));
+                    eleveEnseignementComplement.getNiveauEnsCplByEleve(idEleve,defaultResponseHandler(request));
                 }
             }
         });
@@ -392,6 +416,40 @@ public class BFCController extends ControllerHelper {
                 }
             }
         });
+    }
+
+    @Get("/bfc/bareme/brevet/eleves")
+    @ApiDoc("Récupère la moyenne des contrôles continus(obtenue à partir des niveaux du bfc) en fct de la dispense des domaines")
+    @SecuredAction(value="",type= ActionType.RESOURCE)
+    @ResourceFilter(AccessControleContinuFilter.class)
+    public void getMaxBaremeMoyBaremeBrevet(final HttpServerRequest request){
+        final List<String> idsClasses = request.params().getAll("idClasse");
+        final Long idPeriode = Long.valueOf(request.params().get("idPeriode"));
+        final String idEleve = request.params().contains("idEleve")? request.params().get("idEleve") : null;
+        if(idEleve!= null ){
+            bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idPeriode, new Handler<Either<String, JsonArray>>() {
+                @Override
+                public void handle(Either<String, JsonArray> resultsEleves) {
+                    if(resultsEleves.isRight()){
+                        JsonArray resultatsEleves = resultsEleves.right().getValue();
+                        JsonObject resultEleve = new JsonObject();
+                        for(int i = 0; i < resultatsEleves.size(); i++){
+                            JsonObject result = resultatsEleves.get(i);
+                            if(result.getString("id_eleve").equals(idEleve)){
+                                resultEleve.putString("id_eleve",idEleve);
+                                resultEleve.putNumber("controlesContinus_brevet",result.getInteger("controlesContinus_brevet"));
+                                resultEleve.putNumber("totalMaxBaremeBrevet",result.getInteger("totalMaxBaremeBrevet"));
+                                Renders.renderJson(request,resultEleve);
+                            }
+                        }
+                    }
+
+                }
+            });
+
+        }else {
+            bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idPeriode, arrayResponseHandler(request));
+        }
     }
 
 }

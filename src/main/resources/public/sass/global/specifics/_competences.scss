@@ -2422,6 +2422,21 @@ body.evaluations {
     }
   }
 
+  //Enseignement de complément et bfc barème brevet
+
+  .bareme-brevet{
+    font-size: 1.2em;
+    font-weight: bold;
+    line-height: 2.3em;
+    margin-right: 0.5em;
+  }
+
+  .objectifs-enscpl {
+     option[value="2"] {
+      visibility: hidden;
+    }
+  }
+
   label.select-evaluation {
     margin: 0!important;
   }

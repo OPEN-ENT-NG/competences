@@ -33,7 +33,9 @@ import org.vertx.java.core.json.JsonObject;
 import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -253,7 +255,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void getConversionNoteCompetence(String idEtablissement, String idClasse, Handler<Either<String,JsonArray>> handler){
         JsonArray values = new JsonArray();
         StringBuilder query = new StringBuilder()
-                .append("SELECT valmin, valmax, libelle, ordre, couleur ")
+                .append("SELECT valmin, valmax, libelle, ordre, couleur, bareme_brevet ")
                 .append("FROM notes.niveau_competences AS niv ")
                 .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
                 .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
@@ -297,4 +299,46 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
+
+
+    @Override
+    public void getMaxBaremeMapOrderBaremeBrevet(String idEtablissement, String idClasse,final Handler<Either<String,Map<Integer, Map<Integer, Integer>>>> handler) {
+        getConversionNoteCompetence(idEtablissement, idClasse, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> repNivCompetence) {
+                if(repNivCompetence.isRight()){
+                    JsonArray niveauxCompetences = repNivCompetence.right().getValue();
+                    Map<Integer,Integer> mapOrdreBareme = new HashMap<>();
+                    Integer maxBaremeBrevet = 0;
+                    for(int i=0; i< niveauxCompetences.size(); i++ ){
+                        JsonObject nivCompetence = niveauxCompetences.get(i);
+                        mapOrdreBareme.put(nivCompetence.getInteger("ordre"),nivCompetence.getInteger("bareme_brevet"));
+                        if(maxBaremeBrevet < nivCompetence.getInteger("bareme_brevet"))
+                        maxBaremeBrevet = nivCompetence.getInteger("bareme_brevet");
+                    }
+                    Map<Integer,Map<Integer,Integer>> mapMaxBaremeMapOrdreBareme = new HashMap<>();
+                    mapMaxBaremeMapOrdreBareme.put(maxBaremeBrevet,mapOrdreBareme);
+                    handler.handle(new Either.Right<String,Map<Integer, Map<Integer, Integer>>>(mapMaxBaremeMapOrdreBareme));
+                }else{
+                    handler.handle(new Either.Left<String,Map<Integer, Map<Integer, Integer>>>("erreur lors de la récupération des niveaux de compétence"));
+                    log.error("getMapOrderBaremeBrevet: getConversionNoteCompetence : " + repNivCompetence.left().getValue());
+                }
+            }
+        });
+    }
+/*
+    @Override
+    public void getMaxBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String, JsonObject>> handler) {
+
+        JsonArray params = new JsonArray();
+       String query = "SELECT MAX (bareme_brevet) FROM(SELECT * FROM notes.niveau_competences " +
+               "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau " +
+               "INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle " +
+                "AND cc.id_groupe = ? " +
+                "AND echelle.id_structure = ? ) as maxbareme";
+        params.addString(idClasse);
+        params.addString(idEtablissement);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+
+    }*/
 }
