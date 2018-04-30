@@ -3351,13 +3351,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if ((reg.test(eleve.moyenneFinale) && parseInt(eleve.moyenneFinale) < 20)
                     || eleve.moyenneFinale === ""  ) {
                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
-                    $scope.releveNote.saveMoyenneFinaleEleve(eleve);
+                    $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
+                        $scope.updateHistorique(eleve,'moyenneFinale');
+                    });
                 }
                 else{
                     notify.error(lang.translate("error.average.outbound"));
                     eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                    utils.safeApply($scope);
                 }
-                utils.safeApply($scope);
             }
         };
         $scope.savePositionnementEleve = function (eleve, positionnement) {
@@ -3365,14 +3367,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 eleve.positionnement = parseInt(positionnement);
                 if (parseInt(eleve.positionnement) <= $scope.structure.cycle.niveauCompetencesArray.length) {
                     eleve.oldPositionnement = eleve.positionnement;
-                    $scope.releveNote.savePositionnementEleve(eleve);
+                    $scope.releveNote.savePositionnementEleve(eleve).then(() => {
+                        $scope.updateHistorique(eleve,'positionnement');
+                    });
                 }
                 else {
                     notify.error(lang.translate("error.positionnement.outbound") +
                         $scope.structure.cycle.niveauCompetencesArray.length);
                     eleve.positionnement = eleve.oldPositionnement;
+                    utils.safeApply($scope);
                 }
-                utils.safeApply($scope);
+
             }
         };
 
