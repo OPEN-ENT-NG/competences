@@ -15,7 +15,7 @@ export class BaremeBrevetEleve {
 
 }
 
-    export class BaremeBrevetEleves {
+export class BaremeBrevetEleves {
     all: BaremeBrevetEleve[];
 
     constructor()   {
