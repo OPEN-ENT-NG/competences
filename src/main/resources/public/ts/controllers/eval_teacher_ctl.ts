@@ -3328,7 +3328,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return false;
                 }
                 else {
-                    if($scope.releveNote.classe === undefined){
+                    if($scope.releveNote === undefined || $scope.releveNote.classe === undefined){
                         return true;
                     } else {
                         let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
@@ -3569,17 +3569,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
         $scope.hasCompetencesNotes = function (evaluations) {
-            let hasNotCompetencesNotes = _.where(evaluations.all, {nbcompetences: 0});
-            if(hasNotCompetencesNotes.length === evaluations.all.length){
-                return false;
-            } else {
-                return true;
+            for (let i = 0; i < evaluations.all.length; i++) {
+                let evaluation = evaluations.all[i]
+                if(evaluation.nbcompetences > 0 && evaluation.competencesNotes.length > 0 ) {
+                    return true;
+                }
             }
+            return false;
+
         };
         $scope.hasDevoirsEvalues = function (evaluations) {
             let hasDevoirsEvalues = _.where(evaluations.all, {is_evaluated: true});
             if(hasDevoirsEvalues.length > 0 ){
-                for (var i = 0; i < hasDevoirsEvalues.length; i++) {
+                for (let i = 0; i < hasDevoirsEvalues.length; i++) {
                     if(hasDevoirsEvalues[i].valeur !== '') {
                         return true;
                     }
