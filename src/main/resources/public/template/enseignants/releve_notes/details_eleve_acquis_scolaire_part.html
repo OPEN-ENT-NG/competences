@@ -33,25 +33,41 @@
         <label style="margin-left: 2px">[[informations.eleve.moyenneClasse]]</label>
     </section>
     <section>
-        <label class="cell twelve"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
-        <ul class="selectable-list twelve">
+        <label class="cell twelve" tooltip="evaluations.positionnement.calculee : [[informations.eleve.positionnementCalcule]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
+        <ul class="selectable-list twelve" ng-if="!disabledSaisieMoyenne()">
 
-        <li class="cell"
-            style="margin: 0"
-            ng-class="{ selected:  $index === informations.eleve.positionnement}"
-            data-ng-click="savePositionnementEleve(informations.eleve, $index);
-            updateHistorique(informations.eleve,'positionnement');"
-            ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
-            <label ng-bind-html="$index"></label>
-        </li>
-        <li class="cell"
-            style="margin: 0"
-            ng-class="{ selected:  structure.cycle.niveauCompetencesArray.length === informations.eleve.positionnement}"
-            data-ng-click="savePositionnementEleve(informations.eleve,structure.cycle.niveauCompetencesArray.length);
-            updateHistorique(informations.eleve,'positionnement');"
-        >
-            <label ng-bind-html="structure.cycle.niveauCompetencesArray.length"></label>
-        </li>
+            <li class="cell"
+                style="margin: 0"
+                ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                data-ng-click="savePositionnementEleve(informations.eleve, $index);
+                updateHistorique(informations.eleve,'positionnement');"
+                ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
+                <label ng-bind-html="$index"></label>
+            </li>
+            <li class="cell"
+                style="margin: 0"
+                ng-class="{ selected:  structure.cycle.niveauCompetencesArray.length === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                data-ng-click="savePositionnementEleve(informations.eleve,structure.cycle.niveauCompetencesArray.length);
+                updateHistorique(informations.eleve,'positionnement');"
+            >
+                <label ng-bind-html="structure.cycle.niveauCompetencesArray.length"></label>
+            </li>
+
+        </ul>
+        <ul class="selectable-list twelve" ng-if="disabledSaisieMoyenne()">
+
+            <li class="cell"
+                style="margin: 0"
+                ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
+                <label ng-bind-html="$index"></label>
+            </li>
+            <li class="cell"
+                style="margin: 0"
+                ng-class="{ selected:  structure.cycle.niveauCompetencesArray.length === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+            >
+                <label ng-bind-html="structure.cycle.niveauCompetencesArray.length"></label>
+            </li>
 
         </ul>
     </section>

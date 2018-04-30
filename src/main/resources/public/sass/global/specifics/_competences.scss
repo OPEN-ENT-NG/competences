@@ -2794,5 +2794,9 @@ body.evaluations {
     padding-left: 5%;
     padding-top: 3%;
   }
+
+  .selectable-list li.positionnementcalculee {
+    border: 1px solid $cyan !important;
+  }
 }
 

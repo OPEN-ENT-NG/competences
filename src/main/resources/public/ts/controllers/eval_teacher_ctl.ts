@@ -3465,6 +3465,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 } catch (e) {
                     console.log(e);
                 }
+
+                let moyennneAnnee = 0;
+                let nbMoyenneAnnee = 0;
+                // Pour vérifier que si la moyenne finale de l'année a été modifiée
+                let isMoyenneFinaleAnnee = false;
+
+                let positionnementAnnee = 0;
+                let nbPositionnementAnnee = 0;
+                // Pour vérifier que si le Positionnement final de l'année a été modifié
+                let isPositionnementFinaleAnnee = false;
+
+                let historiqueAnnee;
+                $scope.informations.eleve.historiques = [];
                 _.forEach($scope.filteredPeriode, function (periode) {
 
                     // get moyenne auto eleve
@@ -3503,30 +3516,93 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         details_pos_auto.moyenne + 1 ,
                         $scope.releveNote.tableConversions.all)) : 0;
                     let positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
-
+                    $scope.informations.eleve.positionnementCalcule = positionnement;
                     // get positionnement final
                     let details_pos =_.findWhere(
                         $scope.informations.eleve.details.positionnements,
                         {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
                     let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement: "";
-
                     // initialisation du positionnement pour le détail élève
                     if ($scope.releveNote.idPeriode === periode.id_type) {
                         $scope.informations.eleve.positionnement =
                             (positionnementFinal !== "")? positionnementFinal:(positionnement);
                     }
 
-                    $scope.informations.eleve.historiques.push({
-                        periode : $scope.getI18nPeriode(periode),
-                        moyenneClasse: moyenneClasse,
-                        moyenne: moyenne,
-                        moyenneFinale: moyenneFinale,
-                        positionnement: positionnement,
-                        positionnementFinal: positionnementFinal,
-                        appreciation: appreciation,
-                        idPeriode: periode.id_type
-                    });
+                    // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
+                    if(periode.id_type !== null &&
+                        (details_moyennes_finales !== undefined || details_moyennes !== undefined)){
+                            nbMoyenneAnnee ++;
+                            if (details_moyennes_finales !== undefined) {
+                                isMoyenneFinaleAnnee = true;
+                                moyennneAnnee += parseInt(moyenneFinale);
+                            } else {
+                                moyennneAnnee += moyenne;
+                            }
+                    }
+                    // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
+                    if(periode.id_type !== null &&
+                        ((positionnement !== undefined && positionnement > 0) || (details_pos !== undefined && details_pos > 0))){
+                        nbPositionnementAnnee ++;
+                        if (details_pos !== undefined) {
+                            isPositionnementFinaleAnnee = true;
+                            positionnementAnnee += details_pos.positionnement;
+                        } else {
+                            positionnementAnnee += positionnement;
+                        }
+                    }
+
+                    if (periode.id_type !== null) {
+                        $scope.informations.eleve.historiques.push({
+                            periode : $scope.getI18nPeriode(periode),
+                            moyenneClasse: moyenneClasse,
+                            moyenne: moyenne,
+                            moyenneFinale: moyenneFinale,
+                            positionnement: positionnement,
+                            positionnementFinal: positionnementFinal,
+                            appreciation: appreciation,
+                            idPeriode: periode.id_type
+                        });
+                    } else {
+                        historiqueAnnee = {
+                            periode : $scope.getI18nPeriode(periode),
+                            moyenneClasse: moyenneClasse,
+                            appreciation: appreciation,
+                            idPeriode: periode.id_type
+                        }
+                    }
+
                 });
+
+                // On calcule la moyenne à l'année
+                let moyenneFinaleAnnee;
+                if(nbMoyenneAnnee !== 0){
+                    moyenneFinaleAnnee = moyennneAnnee/nbMoyenneAnnee;
+                } else {
+                    moyenneFinaleAnnee = "";
+                }
+
+                // On calcule le positionnement à l'année
+                let positionnementFinaleAnnee = 0 ;
+                if(nbPositionnementAnnee !== 0){
+                    positionnementFinaleAnnee = Math.round(positionnementAnnee/nbPositionnementAnnee);
+                }
+
+                if(isMoyenneFinaleAnnee){
+                    historiqueAnnee.moyenneFinale = moyenneFinaleAnnee;
+                }else{
+                    historiqueAnnee.moyenne = moyenneFinaleAnnee;
+                    historiqueAnnee.moyenneFinale = "";
+                }
+
+                if(isPositionnementFinaleAnnee){
+                    historiqueAnnee.positionnementFinal = positionnementFinaleAnnee;
+                } else {
+                    historiqueAnnee.positionnement = positionnementFinaleAnnee;
+                    historiqueAnnee.positionnementFinal = "";
+                }
+
+                $scope.informations.eleve.historiques.push(historiqueAnnee);
+
                 $scope.informations.eleve.evaluations.extended = true;
                 utils.safeApply($scope);
             }
@@ -3566,17 +3642,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
 
             }
+            $scope.informations.eleve.evaluations.extended = false;
+            $scope.initDataLightBoxEleve();
             utils.safeApply($scope);
         };
         $scope.hasCompetencesNotes = function (evaluations) {
-            for (let i = 0; i < evaluations.all.length; i++) {
-                let evaluation = evaluations.all[i]
-                if(evaluation.nbcompetences > 0 && evaluation.competencesNotes.length > 0 ) {
-                    return true;
+            if(evaluations.all === undefined){
+                return false;
+            } else {
+                for (let i = 0; i < evaluations.all.length; i++) {
+                    let evaluation = evaluations.all[i];
+                    if(evaluation.nbcompetences > 0 && evaluation.competencesNotes.length > 0 ) {
+                        return true;
+                    }
                 }
+                return false;
             }
-            return false;
-
         };
         $scope.hasDevoirsEvalues = function (evaluations) {
             let hasDevoirsEvalues = _.where(evaluations.all, {is_evaluated: true});

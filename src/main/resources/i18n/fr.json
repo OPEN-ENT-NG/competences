@@ -368,5 +368,6 @@
   "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",
   "evaluations.add.element.programme.enseignants": "Enseignant(s) ",
   "evaluations.dispense.domaine.eleve.create.err":"Erreur lors de la sauvegarde de la dispense de l'élève pour un domaine",
-  "evaluations.dispense.domaine.eleve.delete.err":"erreur lors de la suppression de la dispense du domaine pour un élève"
+  "evaluations.dispense.domaine.eleve.delete.err":"erreur lors de la suppression de la dispense du domaine pour un élève",
+  "evaluations.positionnement.calculee":"Positionnement calculé"
 }
