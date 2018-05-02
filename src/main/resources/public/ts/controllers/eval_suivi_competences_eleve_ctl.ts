@@ -4,15 +4,16 @@
 import {ng, template, model, moment} from "entcore";
 import {
     SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve,
-    Domaine, BaremeBrevetEleves
+    Domaine,
 } from "../models/teacher";
 import * as utils from "../utils/teacher";
-import {NiveauEnseignementCpls, NiveauEnseignementCpl} from "../models/eval_ens_complement_mdl";
+
 import {Defaultcolors} from "../models/eval_niveau_comp";
-import {NiveauLangueCultReg, NiveauLangueCultRegs} from "../models/eval_langue_culture_regionale_mdl";
+import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../models/teacher/index";
 import {Utils} from "../models/teacher/Utils";
 import {Mix} from "entcore-toolkit";
-import {BaremeBrevetEleve} from "../models/eval_controles_continus_brevet";
+
+
 
 declare let _: any;
 declare let Chart: any;
@@ -452,7 +453,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
                         $scope.suiviCompetence.domaines.all = [];
                         $scope.suiviCompetence.domaines.sync().then(() => {
-                            $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id});
+                            $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
+                            $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve,_.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id}));
                             $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                             if ($scope.opened.detailCompetenceSuivi) {
                                 if ($scope.detailCompetence !== undefined) {

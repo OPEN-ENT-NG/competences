@@ -13,9 +13,9 @@ import {
     LanguesCultRegs,
     LangueCultReg,
     BfcSynthese,
-    EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls
+    EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls,
 } from './index';
-//import {LanguesCultRegs, LangueCultReg} from "../eval_langue_culture_regionale_mdl";
+
 
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
@@ -54,11 +54,6 @@ export class SuiviCompetence extends Model {
         this.niveauEnsCpls = new NiveauEnseignementCpls();
         this.baremeBrevetEleves = new BaremeBrevetEleves();
         this.baremeBrevetEleves.sync(classe.id);
-       /* async () => {
-            await this.baremeBrevetEleves.sync(classe.id,periode.id);
-        }*/
-
-
 
         let that = this;
         this.collection(TableConversion);

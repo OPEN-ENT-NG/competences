@@ -99,7 +99,6 @@ export class EleveEnseignementCpl extends Model implements IModel{
             id_enscpl : this.id_enscpl,
             id_langue : this.id_langue,
             id_niveau : this.id_niveau,
-            //niveau : this.niveau,
             niveau_lcr : this.niveau_lcr
         }
     }
