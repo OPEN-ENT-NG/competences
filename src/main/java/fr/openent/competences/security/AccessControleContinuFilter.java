@@ -31,7 +31,7 @@ public class AccessControleContinuFilter implements ResourcesProvider{
         if(user.getType().equals("Teacher")){
             resourceRequest.pause();
             MultiMap params = resourceRequest.params();
-            if(!(params.contains("idClasse") && params.contains("idPeriode"))){
+            if(!(params.contains("idClasse") )){
                 resourceRequest.resume();
                 handler.handle(false);
                 return;
@@ -42,18 +42,6 @@ public class AccessControleContinuFilter implements ResourcesProvider{
                 handler.handle(false);
                 return;
             }
-            Long idPeriode;
-            if(params.get("idPeriode")!= null){
-                try{
-                    idPeriode = Long.valueOf(params.get("idPeriode"));
-                }catch(NumberFormatException e){
-                    log.error("Error : idPeriode must be a Long ",e);
-                    resourceRequest.resume();
-                    handler.handle(false);
-                    return;
-                }
-            }
-
             resourceRequest.resume();
             handler.handle(true);
         }else{

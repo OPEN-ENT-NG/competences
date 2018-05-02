@@ -361,7 +361,6 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 $scope.suiviCompetence.niveauLangueCultRegs = new NiveauLangueCultRegs();
                 $scope.suiviCompetence.ensCpls.sync().then(() => {
                     $scope.suiviCompetence.niveauEnsCpls.sync().then(() => {
-                       // $scope.objectifs = _.difference($scope.suiviCompetence.niveauEnsCpls.all, _.where($scope.suiviCompetence.niveauEnsCpls.all, {niveau: 0}));
                         $scope.suiviCompetence.eleveEnsCpl.sync().then(() => {
                             $scope.suiviCompetence.langues.sync().then(() => {
                                 $scope.showButtonSave = true;
@@ -996,7 +995,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             await $scope.domaine.saveDispenseEleve();
             $scope.domaine.slider.options.disabled = !$scope.domaine.slider.options.disabled;
             $scope.domaine.slider.options.readOnly = !$scope.domaine.slider.options.readOnly;
-            await $scope.suiviCompetence.baremeBrevetEleve.sync($scope.suiviCompetence.classe.id,$scope.suiviCompetence.periode.id);
+            await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id);
+           $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id});
             utils.safeApply($scope);
         }
     }

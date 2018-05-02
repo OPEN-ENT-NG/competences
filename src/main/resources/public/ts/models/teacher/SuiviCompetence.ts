@@ -42,7 +42,7 @@ export class SuiviCompetence extends Model {
         };
     }
     that = this;
-    constructor (eleve: Eleve, periode: any, classe: Classe, structure: Structure) {
+     constructor (eleve: Eleve, periode: any, classe: Classe, structure: Structure) {
         super();
         this.periode = periode;
         this.classe = classe;
@@ -53,7 +53,11 @@ export class SuiviCompetence extends Model {
         this.eleveEnsCpl = new EleveEnseignementCpl(eleve.id);
         this.niveauEnsCpls = new NiveauEnseignementCpls();
         this.baremeBrevetEleves = new BaremeBrevetEleves();
-        this.baremeBrevetEleves.sync(classe.id,periode.id);
+        this.baremeBrevetEleves.sync(classe.id);
+       /* async () => {
+            await this.baremeBrevetEleves.sync(classe.id,periode.id);
+        }*/
+
 
 
         let that = this;

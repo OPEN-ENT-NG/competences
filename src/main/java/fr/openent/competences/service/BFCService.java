@@ -102,9 +102,8 @@ public interface BFCService extends CrudService {
      * et le totalMaxBaremeBrevet = nb de domaines non dispensé x MaxBaremeBrevet
      * @param eb eventBus
      * @param idsClasses des id des  classe
-     * @param idPeriode id de la période
      * @param handler  handler portant le résultat
      */
 
-    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses, final Long idPeriode, final Handler<Either<String, JsonArray>> handler);
+    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses, final Handler<Either<String, JsonArray>> handler);
 }

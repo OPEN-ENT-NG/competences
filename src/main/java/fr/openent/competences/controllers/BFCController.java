@@ -423,33 +423,14 @@ public class BFCController extends ControllerHelper {
     @SecuredAction(value="",type= ActionType.RESOURCE)
     @ResourceFilter(AccessControleContinuFilter.class)
     public void getMaxBaremeMoyBaremeBrevet(final HttpServerRequest request){
-        final List<String> idsClasses = request.params().getAll("idClasse");
-        final Long idPeriode = Long.valueOf(request.params().get("idPeriode"));
-        final String idEleve = request.params().contains("idEleve")? request.params().get("idEleve") : null;
-        if(idEleve!= null ){
-            bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idPeriode, new Handler<Either<String, JsonArray>>() {
-                @Override
-                public void handle(Either<String, JsonArray> resultsEleves) {
-                    if(resultsEleves.isRight()){
-                        JsonArray resultatsEleves = resultsEleves.right().getValue();
-                        JsonObject resultEleve = new JsonObject();
-                        for(int i = 0; i < resultatsEleves.size(); i++){
-                            JsonObject result = resultatsEleves.get(i);
-                            if(result.getString("id_eleve").equals(idEleve)){
-                                resultEleve.putString("id_eleve",idEleve);
-                                resultEleve.putNumber("controlesContinus_brevet",result.getInteger("controlesContinus_brevet"));
-                                resultEleve.putNumber("totalMaxBaremeBrevet",result.getInteger("totalMaxBaremeBrevet"));
-                                Renders.renderJson(request,resultEleve);
-                            }
-                        }
-                    }
+        final List<String> idsClasses = request.params().contains("idClasse")?request.params().getAll("idClasse"):null;
+            if(idsClasses != null) {
+                bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, arrayResponseHandler(request));
+            }else{
+                log.debug("eleves bareme brevet  not found");
+                Renders.badRequest(request);
+            }
 
-                }
-            });
-
-        }else {
-            bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idPeriode, arrayResponseHandler(request));
-        }
     }
 
 }
