@@ -9,7 +9,8 @@ Behaviours.register('competences', {
             exportLSU: 'fr.openent.competences.controllers.LSUController|getXML',
             setVisibilityAverageBfc: 'fr.openent.competences.controllers.BFCController|setVisibility',
             paramCompetences: 'fr.openent.competences.controllers.CompetenceController|createCompetence',
-            linkGroupCycle: 'fr.openent.competences.controllers.UtilsController|updateLinkGroupesCycles'
+            linkGroupCycle: 'fr.openent.competences.controllers.UtilsController|updateLinkGroupesCycles',
+            canUpdateBFCSynthese: 'fr.openent.competences.controllers.BFCController|updateSynthese'
         },
         resource: {}
     },

@@ -2,6 +2,7 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessBFCFilter;
+import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.*;
@@ -159,7 +160,7 @@ public class BFCController extends ControllerHelper {
     @Post("/BfcSynthese")
     @ApiDoc("Créer une Synthese du BFC")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessBFCFilter.class)
+    @ResourceFilter(CanUpdateBFCSyntheseRight.class)
     public void createSynthese(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -222,8 +223,7 @@ public class BFCController extends ControllerHelper {
 
     @Put("/BfcSynthese")
     @ApiDoc("Met à jour la synthèse du bilan de compétence pour un élève")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessBFCFilter.class)
+    @SecuredAction(value = Competences.CAN_UPDATE_BFC_SYNTHESE_RIGHT, type = ActionType.WORKFLOW)
     public void updateSynthese(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

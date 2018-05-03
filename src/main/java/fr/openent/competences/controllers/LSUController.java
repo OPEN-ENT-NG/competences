@@ -736,17 +736,19 @@ public class LSUController extends ControllerHelper {
     private int getMillesimeClass(int increment) {
         int millesimeClass; Calendar today = Calendar.getInstance();
 
-        Calendar endJuly = Calendar.getInstance();
-        endJuly.set(Calendar.DAY_OF_MONTH, 31);
-        endJuly.set(Calendar.MONTH, 7);
+        Calendar janvier = Calendar.getInstance();
+        janvier.set(Calendar.DAY_OF_MONTH, 1);
+        janvier.set(Calendar.MONTH, 1);
 
-        Calendar endDecember = Calendar.getInstance();
-        endDecember.set(Calendar.DAY_OF_MONTH, 31);
-        endDecember.set(Calendar.MONTH, 12);
+        Calendar juillet = Calendar.getInstance();
+        juillet.set(Calendar.DAY_OF_MONTH, 31);
+        juillet.set(Calendar.MONTH, 12);
+
         millesimeClass = today.get(Calendar.YEAR) + increment;
-        // Si on est entre le 31 juillet et le 31 décembre on ajoute une année au millésime
-        if(today.before(endDecember) && today.after(endJuly)){
-            millesimeClass ++ ;
+        // Si on est entre le 01 janvier et le 31 juillet on enleve une année au millésime
+        // ex: si anne scolaire 2018/2019 le millesime est 2018 (+l'increment correspondant à la classe de l'eleve)
+        if(today.after(janvier) && today.before(juillet)){
+            millesimeClass--;
         }
         return millesimeClass;
     }

@@ -1,4 +1,4 @@
-import { model, idiom as lang, _ } from 'entcore';
+import {model, idiom as lang, _, Behaviours} from 'entcore';
 import * as utils from '../../utils/teacher';
 import { BilanFinDeCycle, CompetenceNote } from './index';
 
@@ -8,6 +8,10 @@ export class Utils {
             model.me.functions !== undefined &&
             model.me.functions.DIR !== undefined &&
             model.me.functions.DIR.code === 'DIR';
+    }
+
+    static canUpdateBFCSynthese () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateBFCSynthese);
     }
 
     /**

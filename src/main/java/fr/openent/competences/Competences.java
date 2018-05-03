@@ -68,6 +68,7 @@ public class Competences extends BaseServer {
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
     public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
+    public static final String CAN_UPDATE_BFC_SYNTHESE_RIGHT = "competences.canUpdateBFCSynthese";
     public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
 
     // Constantes

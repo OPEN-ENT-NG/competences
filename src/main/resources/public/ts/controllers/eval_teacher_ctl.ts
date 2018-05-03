@@ -523,6 +523,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 model.me.functions.DIR.code === 'DIR';
         };
 
+        $scope.canUpdateBFCSynthese = () => {
+            return Utils.canUpdateBFCSynthese();
+        };
+
         $scope.evaluations = evaluations;
         $scope.competencesSearchKeyWord = "";
         $scope.devoirs = evaluations.devoirs;

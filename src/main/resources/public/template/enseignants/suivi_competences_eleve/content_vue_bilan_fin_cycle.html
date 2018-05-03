@@ -81,7 +81,9 @@
         <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
         <div ng-show="successCreateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successCreateSynthese</i18n></div>
         <div ng-show="successUpdateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateSynthese</i18n></div>
-        <textarea ng-disabled="!isChefEtab()" row="4" type="text" placeholder="Saissez la synthèse de l'élève" ng-model="suiviCompetence.bfcSynthese.texte"></textarea>
-        <button  ng-if="isChefEtab()" ng-click="saveSynthese()" ng-disabled="suiviCompetence.synthese.texte.length === 0"><i18n>evaluation.bilan.fin.cycle.save.synthese</i18n></button>
+        <textarea ng-disabled="!canUpdateBFCSynthese()" row="4" type="text" placeholder="Saissez la synthèse de l'élève" ng-model="suiviCompetence.bfcSynthese.texte"></textarea>
+        <button  workflow="competences.canUpdateBFCSynthese" ng-click="saveSynthese()" ng-disabled="suiviCompetence.synthese.texte.length === 0">
+            <i18n>evaluation.bilan.fin.cycle.save.synthese</i18n>
+        </button>
     </div>
 </div>
