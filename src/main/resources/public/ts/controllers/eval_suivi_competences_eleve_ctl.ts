@@ -451,9 +451,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 $scope.suiviCompetence.sync().then(() => {
                     // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
                     //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
-                    let idPeriode = ($scope.suiviCompetence.periode.id !== null)?
-                        _.findWhere($scope.search.classe.periodes.all,{id_type : $scope.suiviCompetence.periode.id_type}).id : null;
-                   $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idPeriode).then(() => {
+                    let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
+                   $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode).then(() => {
                         $scope.suiviCompetence.bilanFinDeCycles.all = [];
                         $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
                             $scope.suiviCompetence.domaines.all = [];
@@ -487,6 +486,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     if ($scope.displayFromClass) delete $scope.displayFromClass;
                     utils.safeApply($scope);
                 });
+
 
             }
 
@@ -1003,9 +1003,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             $scope.domaine.slider.options.disabled = !$scope.domaine.slider.options.disabled;
             $scope.domaine.slider.options.readOnly = !$scope.domaine.slider.options.readOnly;
             //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
-           let idPeriode = ($scope.suiviCompetence.periode.id !== null)?
-               _.findWhere($scope.search.classe.periodes.all,{id_type : $scope.suiviCompetence.periode.id_type}).id : null;
-            await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,idPeriode);
+           let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
+            await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode);
            $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id});
             utils.safeApply($scope);
         }
