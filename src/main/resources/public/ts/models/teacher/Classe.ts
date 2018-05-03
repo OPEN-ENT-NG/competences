@@ -1,5 +1,5 @@
 import {Model, Collection, http, idiom as lang, _} from 'entcore';
-import { Eleve, Periode, SuiviCompetenceClasse, Utils } from './index';
+import { Eleve, Periode, SuiviCompetenceClasse, Utils, BaremeBrevetEleves } from './index';
 import * as utils from '../../utils/teacher';
 declare let bundle:any;
 
@@ -15,6 +15,7 @@ export class Classe extends Model {
     remplacement: boolean;
     id_cycle: any;
     selected : boolean;
+    baremeBrevetEleves : BaremeBrevetEleves;
 
     public static  libelle = {
         CLASSE:'Classe',

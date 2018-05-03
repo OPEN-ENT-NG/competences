@@ -338,6 +338,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 delete $scope.suiviCompetence;
                 return;
             }
+
+
             $scope.informations.eleve = $scope.search.eleve;
             if ($scope.informations.eleve !== null && $scope.search.eleve !== "" && $scope.informations.eleve !== undefined) {
                 $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve,
@@ -448,32 +450,35 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
                 $scope.suiviCompetence.sync().then(() => {
                     // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
-
-                    $scope.suiviCompetence.bilanFinDeCycles.all = [];
-                    $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
-                        $scope.suiviCompetence.domaines.all = [];
-                        $scope.suiviCompetence.domaines.sync().then(() => {
-                            $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
-                            $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve,_.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id}));
-                            $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
-                            if ($scope.opened.detailCompetenceSuivi) {
-                                if ($scope.detailCompetence !== undefined) {
-                                    $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
-                                    if ($scope.detailCompetence) {
-                                        let detail = $scope.template.containers['suivi-competence-detail'];
-                                        if (detail !== undefined) {
-                                            detail = detail.split('.html?hash=')[0].split('template/')[1];
+                    //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
+                    let idPeriode = ($scope.suiviCompetence.periode.id !== null)?
+                        _.findWhere($scope.search.classe.periodes.all,{id_type : $scope.suiviCompetence.periode.id_type}).id : null;
+                   $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idPeriode).then(() => {
+                        $scope.suiviCompetence.bilanFinDeCycles.all = [];
+                        $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
+                            $scope.suiviCompetence.domaines.all = [];
+                            $scope.suiviCompetence.domaines.sync().then(() => {
+                                $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
+                                $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve, _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id}));
+                                $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                                if ($scope.opened.detailCompetenceSuivi) {
+                                    if ($scope.detailCompetence !== undefined) {
+                                        $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
+                                        if ($scope.detailCompetence) {
+                                            let detail = $scope.template.containers['suivi-competence-detail'];
+                                            if (detail !== undefined) {
+                                                detail = detail.split('.html?hash=')[0].split('template/')[1];
+                                            }
+                                            $scope.openDetailCompetence($scope.detailCompetence, detail);
+                                        } else {
+                                            $scope.backToSuivi();
                                         }
-                                        $scope.openDetailCompetence($scope.detailCompetence, detail);
-                                    } else {
-                                        $scope.backToSuivi();
-                                    }
-                                } else $scope.backToSuivi();
-                            }
-
+                                    } else $scope.backToSuivi();
+                                }
+                            });
                         });
 
-                    });
+                   });
                     $scope.initSliderBFC();
                     $scope.informations.eleve.suiviCompetences.push($scope.suiviCompetence);
                     $scope.template.close('suivi-competence-content');
@@ -997,7 +1002,10 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             await $scope.domaine.saveDispenseEleve();
             $scope.domaine.slider.options.disabled = !$scope.domaine.slider.options.disabled;
             $scope.domaine.slider.options.readOnly = !$scope.domaine.slider.options.readOnly;
-            await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id);
+            //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
+           let idPeriode = ($scope.suiviCompetence.periode.id !== null)?
+               _.findWhere($scope.search.classe.periodes.all,{id_type : $scope.suiviCompetence.periode.id_type}).id : null;
+            await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,idPeriode);
            $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id});
             utils.safeApply($scope);
         }

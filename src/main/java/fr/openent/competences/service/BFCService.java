@@ -105,5 +105,5 @@ public interface BFCService extends CrudService {
      * @param handler  handler portant le résultat
      */
 
-    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses, final Handler<Either<String, JsonArray>> handler);
+    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,Long idPeriode, final Handler<Either<String, JsonArray>> handler);
 }

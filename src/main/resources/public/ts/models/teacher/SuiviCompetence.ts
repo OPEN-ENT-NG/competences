@@ -53,7 +53,6 @@ export class SuiviCompetence extends Model {
         this.eleveEnsCpl = new EleveEnseignementCpl(eleve.id);
         this.niveauEnsCpls = new NiveauEnseignementCpls();
         this.baremeBrevetEleves = new BaremeBrevetEleves();
-        this.baremeBrevetEleves.sync(classe.id);
 
         let that = this;
         this.collection(TableConversion);

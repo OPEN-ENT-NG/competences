@@ -492,7 +492,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
 
     @Override
-    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses, final Handler<Either<String, JsonArray>> handler) {
+    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,final Long idPeriode, final Handler<Either<String, JsonArray>> handler) {
         // j'ai besoin de récupérer les idsEleve et idStructure à partir de l'idClass
         final JsonArray moyControlesContinusEleves = new JsonArray();
         getParamsMethodGetMoyenne(idsClasses, new Handler<Either<String, Map<String, Map<String, List<String>>>>>() {
@@ -524,7 +524,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                 final Map<Integer, Integer> mapOrdreBaremeBrevet = respMaxMapOrdreBareme.right().getValue().entrySet().iterator().next().getValue();
 
                                                 //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
-                                                buildBFC(false, idsEleves, idClasse, idStructure, null, null, new Handler<Either<String, JsonObject>>() {
+                                                buildBFC(false, idsEleves, idClasse, idStructure, idPeriode, null, new Handler<Either<String, JsonObject>>() {
                                                     @Override
                                                     public void handle(Either<String, JsonObject> responseMaitriseEleves) {
                                                         if (responseMaitriseEleves.isRight()) {
@@ -539,7 +539,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                                         Map<String, Map<Long, Boolean>> dispensesDomainesEleves = respDisepenseEleves.right().getValue();
                                                                         for(String idEleve : classe.getValue()){
                                                                             Integer sommeBareme = 0;
-                                                                            Integer moyBareme = 0;
                                                                             Integer totalMaxBareme = 0;
                                                                             //si l'élève est dans le json resultsElevesByDomaine alors il a au moins un niveau pour un domaine
                                                                             if(resultsElevesByDomaine.containsField(idEleve)) {
@@ -587,7 +586,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                                             }
                                                                         }
                                                                         handler.handle(new Either.Right<String, JsonArray>(moyControlesContinusEleves));
-                                                                       // handler.handle(new Either.Right<String, JsonArray>(moyControlesContinusEleves));
                                                                     } else {
                                                                         handler.handle(new Either.Left<String, JsonArray>(respDisepenseEleves.left().getValue()));
                                                                         log.error("getMoyenneControlesContinusBrevet : dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve " + respDisepenseEleves.left().getValue());
