@@ -538,10 +538,17 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                                                                         $scope.suiviCompetence.niveauEnsCplSelected.niveau,
                                                                         $scope.suiviCompetence.niveauLangueCultRegSelected.niveau,
                                                                         id_langue).save();
+            $scope.successUpdateEnseignement = true;
+            utils.safeApply($scope);
+            $timeout(()=> {
+                $scope.successUpdateEnseignement = false;
+                utils.safeApply($scope);
+            },3000);
         };
 
         $scope.successCreateSynthese = false;
         $scope.successUpdateSynthese = false;
+        $scope.successUpdateEnseignement = false;
 
         $scope.saveSynthese=()=> {
             $scope.suiviCompetence.bfcSynthese.saveBfcSynthese().then((res)=> {

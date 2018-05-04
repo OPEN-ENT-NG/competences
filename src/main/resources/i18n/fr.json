@@ -120,6 +120,7 @@
   "evaluation.bilan.fin.cycle.save.synthese":"Enregistrer la synthèse",
   "evaluation.bilan.fin.cycle.successCreateSynthese":"La synthèse a été enregistrée.",
   "evaluation.bilan.fin.cycle.successUpdateSynthese":"La synthèse de l'élève a été modifiée.",
+  "evaluation.bilan.fin.cycle.successUpdateEnseignement":"Enseignement sauvegardé.",
   "evaluations.suivi.eleve.title":"Suivi élève",
   "evaluations.exportLSU":"Export LSU",
   "evaluations.suivi.eleve.vue.liste":"Vue liste",

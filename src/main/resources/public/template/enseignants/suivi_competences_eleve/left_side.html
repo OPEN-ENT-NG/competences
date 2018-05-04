@@ -95,7 +95,7 @@
     <div class="header">
         <h2><i18n>viescolaire.utils.enseignementComplement</i18n></h2>
     </div>
-
+    <div ng-show="successUpdateEnseignement" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateEnseignement</i18n></div>
     <section>
         <label class="select" >
             <select  ng-model="suiviCompetence.ensCplSelected" ng-change="onChangeEns()" ng-options ="ensCpl as ensCpl.libelle for ensCpl in suiviCompetence.ensCpls.all">
