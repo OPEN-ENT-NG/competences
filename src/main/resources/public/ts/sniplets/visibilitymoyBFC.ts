@@ -1,12 +1,15 @@
 import { http } from 'entcore';
 
-export const averageBFC = {
+export const visibilitymoyBFC = {
     title: 'Moyenne BFC',
-    description: 'Active la visibilité de la moyenne calculée sur le BFC',
+    description: 'Active la visibilité de la moyenne calculée sur le BFC ',
     controller: {
         init: function () {
             this.idStructure = this.source.idStructure;
-            http().get(`/competences/bfc/moyennes/visible/structures/${this.idStructure}`)
+            //id_visibility = 1 si moyBFC
+           this.idVisibility = 1;
+
+            http().get(`/competences/bfc/visibility/structures/${this.idStructure}/${this.idVisibility}`)
                 .done(function (res) {
                     this.visible = res[0].visible;
                     console.log('load sniplet averageBFC');
@@ -21,14 +24,13 @@ export const averageBFC = {
             // 1 : caché pour les enseignants
             // 2 : visible pour tous
 
-            http().putJson(`/competences/bfc/moyennes/visible/structures/${this.idStructure}/${visibility}`)
+            http().putJson(`/competences/bfc/visibility/structures/${this.idStructure}/${this.idVisibility}/${visibility}`)
                 .done(function () {
                     this.visible = visibility;
                     this.$apply('visible');
                     console.log('visibility set');
                 }.bind(this))
                 .error(function () {
-                    this.$apply('error during seting visiblility');
                 }.bind(this));
         }
     }

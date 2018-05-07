@@ -77,11 +77,12 @@ public interface BFCService extends CrudService {
     /**
      * Active la visibilité des moyennes sur l'écran de BFC
      * @param structureId id établissement neo
+     * @param idVisibility   id de la visibilité 1--> des moyBFC ou 2-> du baremeDNB
      * @param user utilisateur connecté
      * @param visible 0 : caché pour tout le monde, 1 : caché pour les enseignants, 2 : visible pour tous
      * @param handler handler portant le résultat
      */
-    public void setVisibility(String structureId, UserInfos user, Integer visible,
+    public void setVisibility(String structureId, Integer idVisibility,UserInfos user, Integer visible,
                               Handler<Either<String, JsonArray>> handler);
 
 
@@ -89,10 +90,11 @@ public interface BFCService extends CrudService {
      *  Récupère la valeur de l'état de la visibilité des moyennes sur l'écran de BFC.
      *  0 : caché pour tout le monde, 1 : caché pour les enseignants, 2 : visible pour tous
      * @param structureId id établissement neo
+     * @param idVisibility   id de la visibilité 1--> des moyBFC ou 2-> du baremeDNB
      * @param user utilisateur connecté
      * @param handler handler portant le résultat
      */
-    public void getVisibility(String structureId, UserInfos user, Handler<Either<String, JsonArray>> handler);
+    public void getVisibility(String structureId, Integer idVisibility, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
     /**
      * donne un JsonArray avec
@@ -102,6 +104,7 @@ public interface BFCService extends CrudService {
      * et le totalMaxBaremeBrevet = nb de domaines non dispensé x MaxBaremeBrevet
      * @param eb eventBus
      * @param idsClasses des id des  classe
+     * @param idPeriode identifiant de la période sélectionnée
      * @param handler  handler portant le résultat
      */
 

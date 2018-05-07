@@ -462,31 +462,40 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
     @Override
-    public void setVisibility(String structureId, UserInfos user, Integer visible,
+    public void setVisibility(String structureId, Integer idVisibility, UserInfos user, Integer visible,
                               Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder().append("INSERT INTO ")
-                .append( Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc (id_etablissement, visible) ")
+                .append( Competences.COMPETENCES_SCHEMA + ".visibility (id_etablissement, visible, id_visibility) ")
                 .append(" VALUES " )
-                .append(" ( ? , ? )" )
-                .append(" ON CONFLICT (id_etablissement) DO UPDATE SET visible = ?");
+                .append(" ( ? , ?, ? )" )
+                .append(" ON CONFLICT (id_etablissement, id_visibility) DO UPDATE SET visible = ?");
         JsonArray values = new JsonArray();
-        values.addString(structureId).addNumber(visible).addNumber(visible);
+        values.addString(structureId).addNumber(visible).addNumber(idVisibility).addNumber(visible);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
     @Override
-    public void getVisibility(String structureId, UserInfos user, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder().append(" SELECT id_etablissement, visible ")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc ")
-                .append(" WHERE id_etablissement = ? " )
-                .append(" UNION ALL " )
-                .append(" SELECT ? , ")
-                .append(" 1 ")
-                .append(" WHERE NOT EXISTS (SELECT id_etablissement, visible ")
-                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibilite_moyenne_bfc")
-                .append(" WHERE id_etablissement = ? );    ");
+    public void getVisibility(String structureId,Integer idVisibility, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+
         JsonArray values = new JsonArray();
-        values.addString(structureId).addString(structureId).addString(structureId);
+
+        StringBuilder query = new StringBuilder().append(" SELECT id_etablissement, visible, id_visibility ")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibility ")
+                .append(" WHERE id_etablissement = ? " )
+                .append("AND id_visibility = ?");
+        values.addString(structureId).addNumber(idVisibility);
+
+        query.append(" UNION ALL " )
+                .append(" SELECT ? , ")
+                .append(" 1 , ?");
+        values.addString(structureId).addNumber(idVisibility);
+
+        query.append(" WHERE NOT EXISTS (SELECT id_etablissement, visible, id_visibility ")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibility")
+                .append(" WHERE id_etablissement = ? AND id_visibility = ? );  ");
+
+        values.addString(structureId).addNumber(idVisibility);
+
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 

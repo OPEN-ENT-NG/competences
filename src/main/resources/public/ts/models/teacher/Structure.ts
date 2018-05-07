@@ -43,8 +43,8 @@ export class Structure extends Model {
     usePerso: any;
     private syncRemplacement: () => any;
     responsables: Collection<Responsable>;
-    moyenneVisible: boolean;
-
+    moyenneVisible: boolean|number;
+    baremeDNBvisible: number;
 
     get api() {
         return {
@@ -103,9 +103,13 @@ export class Structure extends Model {
             this.synchronized.enseignants = false;
         }
         let that: Structure = this;
-        http().get(`/competences/bfc/moyennes/visible/structures/${that.id}`)
+        http().get(`/competences/bfc/visibility/structures/${that.id}/1`)
             .done(function (res) {
                 that.moyenneVisible = res[0].visible;
+            }.bind(this));
+        http().get(`/competences/bfc/visibility/structures/${that.id}/2`)
+            .done(function (res) {
+                that.baremeDNBvisible = res[0].visible;
             }.bind(this));
 
         this.collection(NiveauCompetence, {

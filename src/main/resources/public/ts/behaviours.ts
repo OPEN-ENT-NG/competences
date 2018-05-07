@@ -1,7 +1,8 @@
 import {Behaviours, http} from 'entcore';
-import { averageBFC } from './sniplets/averageBFC';
+import {visibilitymoyBFC} from './sniplets/visibilitymoyBFC';
 import { itemsCompetences } from './sniplets/itemsCompetences';
 import {linkGroupCycle} from "./sniplets/linkGroupCycle";
+import {visibilityDNB} from "./sniplets/visibilityDNB";
 
 Behaviours.register('competences', {
     rights: {
@@ -17,7 +18,8 @@ Behaviours.register('competences', {
     },
     loadResources: async function(callback) {},
     sniplets: {
-        averageBFC: averageBFC,
+        visibilitymoyBFC: visibilitymoyBFC,
+        visibilityDNB: visibilityDNB,
         itemsCompetences: itemsCompetences,
         linkGroupCycle: linkGroupCycle
     }

@@ -1804,7 +1804,8 @@ public class ExportPDFController extends ControllerHelper {
                                         public void handle(final UserInfos user) {
                                             final boolean isChefEtab = (user != null) ? ("Personnel".equals(user.getType()) && user.getFunctions().containsKey("DIR")) : true;
                                             if ((user != null) || isChefEtab) {
-                                                bfcService.getVisibility(idEtablissement, user, new Handler<Either<String, JsonArray>>() {
+                                                //idVisibility = 1 pour la visibilité de la moyBFC
+                                                bfcService.getVisibility(idEtablissement,1, user, new Handler<Either<String, JsonArray>>() {
                                                     @Override
                                                     public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                                                         if (stringJsonArrayEither.isRight() || isChefEtab) {

@@ -366,7 +366,7 @@ public class BFCController extends ControllerHelper {
     }
 
 
-    @Put("/bfc/moyennes/visible/structures/:structureId/:visible")
+    @Put("/bfc/visibility/structures/:structureId/:idVisibility/:visible")
     @ApiDoc("Défini la visibilité pour un établissement donné de la moyenne calculée sur le BFC")
     @SecuredAction(value="competences.set.visibility.bfc.average", type = ActionType.WORKFLOW)
     public void setVisibility(final HttpServerRequest request) {
@@ -381,9 +381,10 @@ public class BFCController extends ControllerHelper {
                 if(null != user  && request.params().contains("structureId")) {
                     final String structureId = request.params().get("structureId");
                     final Integer visible = Integer.valueOf(request.params().get("visible"));
+                    final Integer idVisibility = Integer.valueOf(request.params().get("idVisibility"));
                     if(user.getStructures().contains(structureId)) {
                         Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                        bfcService.setVisibility(structureId, user, visible, handler);
+                        bfcService.setVisibility(structureId, idVisibility,user, visible, handler);
                     }
                     else {
                         unauthorized(request);
@@ -396,7 +397,7 @@ public class BFCController extends ControllerHelper {
     }
 
 
-    @Get("/bfc/moyennes/visible/structures/:structureId")
+    @Get("/bfc/visibility/structures/:structureId/:idVisibility")
     @ApiDoc("Recupere la visibilité un établissement donné de la moyenne calculée sur le BFC")
     @SecuredAction(value="", type=ActionType.AUTHENTICATED)
     public void getVisibility(final HttpServerRequest request) {
@@ -404,13 +405,17 @@ public class BFCController extends ControllerHelper {
         // 0 : caché pour tout le monde
         // 1 : caché pour les enseignants
         // 2 : visible pour tous
+        //idVisibility = 1 moyBFC
+        //idVisibility = 2 baremeDNB
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
                 if(user != null && request.params().contains("structureId")) {
                     final String structureId = request.params().get("structureId");
+                    final Integer idVisibility = (request.params().contains("idVisibility"))?
+                            Integer.valueOf(request.params().get("idVisibility")): null;
                     Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                    bfcService.getVisibility(structureId, user,handler);
+                    bfcService.getVisibility(structureId, idVisibility, user,handler);
                 }else{
                     badRequest(request);
                 }

@@ -13,14 +13,6 @@ export class BaremeBrevetEleve {
 
     }
 
-   /* async sync(id_classe: string, id_periode: number){
-        try{
-            let { data } = await http.get(`/competences/bfc/bareme/brevet/eleves?idClasse=${id_classe}&idPeriode=${id_periode}&idEleve=${this.id_eleve}`);
-           Mix.extend(this, Mix.castAs(BaremeBrevetEleve,data));
-        }catch (e){
-            notify.error("evaluation.bfc.controle.continu.eleve.err");
-        }
-    }*/
 }
 
     export class BaremeBrevetEleves {

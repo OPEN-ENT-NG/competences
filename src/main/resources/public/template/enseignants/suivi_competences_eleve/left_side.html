@@ -129,7 +129,8 @@
     </section>
     <div>
         <button ng-disabled = "!showSaveButton() || showButtonSave" type ="button" ng-click="saveNiveauEnsCpl()" ><i18n>viescolaire.utils.save</i18n></button>
-        <span class = "right-magnet bareme-brevet"
+        <span class = "right-magnet bareme-brevet" ng-if=" ((isChefEtab() && evaluations.structure.moyenneVisible===1)
+             || evaluations.structure.baremeDNBvisible===2) "
               ng-show ="suiviCompetence.niveauEnsCplSelected.niveau !== 0 && suiviCompetence !== undefined && suiviCompetence.niveauEnsCplSelected !== undefined ">
              + [[suiviCompetence.niveauEnsCplSelected.bareme_brevet]]</span>
     </div>
