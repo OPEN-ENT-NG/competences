@@ -351,6 +351,7 @@
   "viescolaire.periode.3":"Trimestre",
   "viescolaire.utils.appreciation.add" : "Ajouter une appréciation",
   "viescolaire.utils.appreciation.edit" : "Modifier l'appréciation",
+  "viescolaire.utils.appreciation.view" : "Visualiser l'appréciation",
 
   "error.note.outbound":"La note doit être comprise entre 0 et ",
   "error.average.outbound":"La moyenne doit être comprise entre 0 et 20",

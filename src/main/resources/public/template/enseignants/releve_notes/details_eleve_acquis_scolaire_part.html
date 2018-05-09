@@ -33,7 +33,7 @@
         <label style="margin-left: 2px">[[informations.eleve.moyenneClasse]]</label>
     </section>
     <section>
-        <label class="cell twelve" tooltip="evaluations.positionnement.calculee : [[informations.eleve.positionnementCalcule]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
+        <label class="cell twelve" tooltip="[[getLibellePositionnement(informations.eleve.positionnementCalcule)]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
         <ul class="selectable-list twelve" ng-if="!disabledSaisieMoyenne()">
 
             <li class="cell"

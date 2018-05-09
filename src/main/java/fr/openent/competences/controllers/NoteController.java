@@ -20,6 +20,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
@@ -754,6 +755,166 @@ public class NoteController extends ControllerHelper {
                                             addMoyenneFinalAndAppreciationPositionnementEleve(idEleve,idClasse,
                                                     idMatiere, idEtablissement,request,result);
 
+                                        } else {
+                                            JsonObject error = (new JsonObject()).putString("error",
+                                                    (String) event.left().getValue());
+                                            Renders.renderJson(request, error, 400);
+                                        }
+                                    }
+                                };
+                                if (!hasAccessToMatiere) {
+                                    unauthorized(request);
+                                } else {
+
+
+                                    notesService.getNoteElevePeriode(null,
+                                            idEtablissement,
+                                            idClasse,
+                                            idMatiere,
+                                            null, handler);
+                                }
+                            }
+                        });
+            }
+        });
+    }
+
+
+
+    @Get("/releve/annee/classe")
+    @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void getReleveAnne(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+
+            @Override
+            public void handle(UserInfos user) {
+                final String idEtablissement = request.params().get("idEtablissement");
+                final List<String> classes = request.params().getAll("idClasse");
+                final String idClasse = classes.toArray(new String[0])[0];
+                final String idMatiere = request.params().get("idMatiere");
+
+                final JsonObject action = new JsonObject()
+                        .putString("action", "classe.getElevesClasses")
+                        .putArray("idClasses", new JsonArray().addString(idClasse));
+
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                        new Handler<Boolean>() {
+                            @Override
+                            public void handle(final Boolean hasAccessToMatiere) {
+
+                                Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
+                                    @Override
+                                    public void handle(Either<String, JsonArray> event) {
+                                        if (event.isRight()) {
+                                            final JsonObject result = new JsonObject();
+                                            final JsonArray listNotes = event.right().getValue();
+
+                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                @Override
+                                                public void handle(Message<JsonObject> message) {
+                                                    JsonObject body = message.body();
+
+                                                    if ("ok".equals(body.getString("status"))) {
+                                                        final JsonObject result = new JsonObject();
+                                                        final JsonArray idEleves = new JsonArray();
+                                                        JsonArray queryResult = body.getArray("results");
+                                                        result.putArray("moyennes",new JsonArray());
+
+                                                        for (int i = 0; i < queryResult.size(); i++) {
+
+                                                            HashMap<Long,JsonArray> listMoyDevoirs = new HashMap<>();
+                                                            HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
+                                                                    notesByDevoirByPeriode = new HashMap<>();
+
+                                                            notesByDevoirByPeriode.put(null,
+                                                                    new HashMap<Long, ArrayList<NoteDevoir>>());
+
+                                                            JsonObject eleve = queryResult.get(i);
+                                                            String idEleve = eleve.getString("idEleve");
+                                                            idEleves.addString(idEleve);
+
+
+                                                            for (int j = 0; j < listNotes.size(); j++) {
+
+                                                                JsonObject note = listNotes.get(j);
+
+                                                                if (note.getString("valeur") == null ||
+                                                                        !note.getBoolean("is_evaluated")) {
+                                                                    continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
+                                                                    // elle n'est pas prise en compte dans le calcul de la moyenne
+                                                                }
+                                                                else {
+                                                                    Long id_periode = note.getLong("id_periode");
+                                                                    if(!notesByDevoirByPeriode.containsKey(id_periode)) {
+                                                                        notesByDevoirByPeriode.put(id_periode,
+                                                                                new HashMap<Long, ArrayList<NoteDevoir>>());
+
+                                                                    }
+                                                                    NoteDevoir noteDevoir = new NoteDevoir(
+                                                                            Double.valueOf(note.getString("valeur")),
+                                                                            Double.valueOf(note.getLong("diviseur")),
+                                                                            note.getBoolean("ramener_sur"),
+                                                                            Double.valueOf(note.getString("coefficient")));
+                                                                    if(note.getString("id_eleve").equals(idEleve)) {
+                                                                        utilsService.addToMap(id_periode,
+                                                                                notesByDevoirByPeriode.get(id_periode),
+                                                                                noteDevoir);
+                                                                        utilsService.addToMap(null,
+                                                                                notesByDevoirByPeriode.get(null),
+                                                                                noteDevoir);
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            // Calcul des moyennes par période pour L'élève
+                                                            for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
+                                                                    : notesByDevoirByPeriode.entrySet()) {
+                                                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                                                for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
+                                                                        entryPeriode.getValue().entrySet()) {
+                                                                    JsonObject moyenne = utilsService.calculMoyenne(
+                                                                            entry.getValue(),
+                                                                            false, 20);
+                                                                    moyenne.putValue("id_periode", entry.getKey());
+                                                                    moyenne.putValue("id_eleve", idEleve);
+                                                                    listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
+                                                                }
+                                                                if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
+                                                                    result.getArray("moyennes").add(
+                                                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                                                }
+                                                            }
+                                                        }
+
+
+
+                                                        // On récupère les moyennes finales
+                                                        notesService.getColonneReleve(
+                                                                idEleves,
+                                                                null,
+                                                                idMatiere,
+                                                                idClasse,
+                                                                "moyenne",
+                                                                new Handler<Either<String, JsonArray>>() {
+                                                                    @Override
+                                                                    public void handle(Either<String, JsonArray> event) {
+                                                                        if (event.isRight()) {
+                                                                            result.putArray("moyennes_finales",event.right().getValue());
+                                                                            Renders.renderJson(request, result);
+                                                                        } else {
+                                                                            JsonObject error = new JsonObject()
+                                                                                    .putString("error",
+                                                                                            event.left().getValue());
+                                                                            Renders.renderJson(request, error, 400);
+                                                                        }
+                                                                    }
+                                                                });
+                                                    }
+
+                                                }
+                                            });
                                         } else {
                                             JsonObject error = (new JsonObject()).putString("error",
                                                     (String) event.left().getValue());

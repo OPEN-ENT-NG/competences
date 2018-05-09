@@ -25,9 +25,9 @@
         </h2>
     </div>
     <div class="twelve">
-        <fieldset>
+        <fieldset ng-if="releveNote.idPeriode !== null">
             <legend><i18n>competences.acquired</i18n></legend>
-            <div ng-include="'/competences/public/template/enseignants/releve_notes//details_eleve_acquis_scolaire_part.html'"></div>
+            <div ng-include="'/competences/public/template/enseignants/releve_notes/details_eleve_acquis_scolaire_part.html'"></div>
         </fieldset>
         <fieldset>
             <legend><i18n>evaluations.suivi.eleve.title</i18n></legend>

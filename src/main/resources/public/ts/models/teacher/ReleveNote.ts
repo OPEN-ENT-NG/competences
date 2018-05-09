@@ -37,6 +37,8 @@ export class ReleveNote extends  Model implements IModel {
         return {
             get: `/competences/releve?idEtablissement=${this.structure.id}&idClasse=${this.idClasse}&idMatiere=${
                 this.idMatiere}`,
+            GET_MOYENNE_ANNEE: `/competences/releve/annee/classe?idEtablissement=${this.structure.id}&idClasse=${this.idClasse}&idMatiere=${
+                this.idMatiere}`,
             GET_INFO_PERIODIQUE: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
                 this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}`,
             POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
@@ -138,13 +140,76 @@ export class ReleveNote extends  Model implements IModel {
 
     syncAppreciationClasse() {
         return new Promise((resolve, reject) => {
+            if (this.idPeriode != null){
+                let periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
 
-            let periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
-            let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
+                let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
 
-            this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode, endSaisie, this.structure.id);
-            this.appreciationClasse.sync();
+                this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode, endSaisie, this.structure.id);
+                this.appreciationClasse.sync();
+            }
             resolve();
+        });
+    }
+
+    syncMoyenneAnnee(): Promise<any> {
+        return new Promise(async(resolve, reject) => {
+            if (this.idPeriode === null) {
+                http().getJson(this.api.GET_MOYENNE_ANNEE)
+                    .done((res) => {
+
+                        _.forEach(this.classe.eleves.all, (eleve) => {
+                            let moyennes = _.where(res.moyennes, {id_eleve: eleve.id});
+                            if (moyennes !== undefined && moyennes !== null) {
+                                eleve.moyennes = moyennes;
+                            }
+                            let moyennesFinales = _.where(res.moyennes_finales, {id_eleve: eleve.id});
+                            if (moyennesFinales !== undefined && moyennesFinales !== null
+                                && moyennesFinales.length > 0) {
+
+
+                                let nbMoyenneAnnee = 0 ;
+                                let moyennesFinalesNumber = 0 ;
+                                let moyennesFinalesAnnee = [] ;
+                                // Si une moyenne a été modifiée on recalcule la moyenne à l'année
+                                _.forEach(moyennesFinales, (moyenneFinale) => {
+                                    moyennesFinalesAnnee.push(moyenneFinale);
+                                });
+                                _.forEach(moyennes, (moyenne) => {
+                                    if (moyenne.id_periode !== null){
+                                        let _moyenne =  _.findWhere(moyennesFinalesAnnee, {id_periode: moyenne.id_periode});
+                                        if(_moyenne === undefined){
+                                            moyennesFinalesAnnee.push(moyenne);
+                                        }
+                                    }
+                                });
+                                _.forEach(moyennesFinalesAnnee, (moyenneFinaleAnnee) => {
+                                    nbMoyenneAnnee ++ ;
+                                    moyennesFinalesNumber += parseInt(moyenneFinaleAnnee.moyenne);
+                                });
+
+                                let _moyenneFinaleAnnee = {
+                                    id_eleve : eleve.id,
+                                    id_periode : null,
+                                    moyenne : moyennesFinalesNumber / nbMoyenneAnnee
+                                }
+
+                                moyennesFinales.push(_moyenneFinaleAnnee);
+
+                                eleve.moyennesFinales = moyennesFinales;
+                            }
+
+                        });
+                        resolve();
+                    })
+                    .error((res) => {
+                        console.dir(res);
+                        reject();
+                    })
+            }
+            else {
+                resolve();
+            }
         });
     }
 
@@ -250,7 +315,7 @@ export class ReleveNote extends  Model implements IModel {
     sync(): Promise<any> {
         return new Promise(async (resolve, reject) => {
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse(),
-                this.getConversionTable()]);
+                this.getConversionTable(),this.syncMoyenneAnnee()]);
             this.syncAppreciationClasse();
             let _notes, _devoirs, _eleves, _moyennesFinales, _appreciations, _competencesNotes;
             if (this._tmp) {

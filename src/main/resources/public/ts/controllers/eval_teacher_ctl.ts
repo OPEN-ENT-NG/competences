@@ -2237,8 +2237,43 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.mapIdLibelleDevoir !== undefined) return $scope.mapIdLibelleDevoir[parseInt(id)];
         };
 
+        /**
+         * Récupère la moyenne finale d'un élève ou la moyenne calculée pour une période donnée
+         * @param idPeriode
+         * @param moyennes
+         * @param moyennesFinales
+         * @returns {string}
+         */
+        $scope.getMoyenne = function (idPeriode,moyennes, moyennesFinales) {
+            let _moyenneFinale = _.findWhere(moyennesFinales, {id_periode: idPeriode});
+            if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined) {
+                return _moyenneFinale.moyenne;
+            }
+            let _moyenne = _.findWhere(moyennes, {id_periode: idPeriode});
+            if (_moyenne !== undefined && _moyenne !== null && _moyenne.moyenne !== undefined) {
+                return _moyenne.moyenne;
+            }
+            return "";
+        };
 
         /**
+         * Détermine si la moyenne finale d'un élève pour une période donnée a été définie
+         * @param idPeriode
+         * @param moyennesFinales
+         * @returns {string}
+         */
+        $scope.hasMoyenneFinale = function (idPeriode, moyennesFinales) {
+            let _moyenneFinale = _.findWhere(moyennesFinales, {id_periode: idPeriode});
+            if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined && _moyenneFinale.moyenne > -1) {
+                return true;
+            }
+            return false;
+        };
+
+        $scope.getLibellePositionnement = function (positionnementCalcule) {
+            return lang.translate("evaluations.positionnement.calculee") + " : " + positionnementCalcule;
+        };
+            /**
          * Séquence d'enregistrement d'une annotation
          * @param evaluation évaluation à enregistrer
          * @param $event evenement déclenchant
@@ -3452,7 +3487,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
         $scope.toogleDevoirNote = function () {
-            if ($scope.releveNote !== undefined) {
+            if ($scope.releveNote !== undefined && $scope.releveNote.idPeriode !== null) {
                 $scope.releveNote.toogle = !$scope.releveNote.toogle;
                 utils.safeApply($scope);
                 $('html, body')
@@ -3461,6 +3496,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $(".colDevoir").animate({
                     width: "toggle"
                 }, 'slow');
+            } else {
+                $scope.releveNote.toogle = false;
             }
         };
 

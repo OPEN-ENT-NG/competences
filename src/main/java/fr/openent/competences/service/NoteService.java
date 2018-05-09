@@ -124,7 +124,7 @@ public interface NoteService extends CrudService {
     void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                              String colonne,   Handler<Either<String, JsonArray>> handler);
 
-    void getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, String idClasse,
+    void  getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, String idClasse,
                           String colonne, Handler<Either<String, JsonArray>> handler);
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe

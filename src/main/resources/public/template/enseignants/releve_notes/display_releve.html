@@ -79,7 +79,7 @@
                 </section>
 
             </div>
-            <div class="marginFive">
+            <div class="marginFive" ng-if="search.periode.id !== null && search.periode.id !== undefined">
                 <container class="left card tailleMax" template="leftSide-devoirInfo"></container>
 
                 <div ng-if="!template.isEmpty('leftSide-userInfo')" class="fiche student-info card left tailleMax"
@@ -116,7 +116,7 @@
             <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
                 <div class="tableReleves">
                     <div class="responsive-table">
-                        <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table>
+                        <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table ng-if="search.periode.id !== null && search.periode.id !== undefined">
                             <thead>
                             <tr>
                                 <th class="col1">
@@ -157,7 +157,7 @@
                                 </td>
                                 <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir"
                                     ng-repeat="evaluation in eleve.evaluations.all"
-                                    data-label="[[getLibelleDevoir(evaluation.id_devoir)]]">
+                                    data-label="[[getLibelleDevoir(evaluation.id_devoir)]]" >
                                     <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab() && !evaluation.is_annotation"
                                            ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
                                            class="input-note"
@@ -226,8 +226,41 @@
                             </tr>
                             </tbody>
                         </table>
+                        <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table ng-if="search.periode.id === null ">
+                            <thead>
+                            <tr>
+                                <th class="col1">
+                                    <i18n>student</i18n>
+                                </th>
+                                <th class="colMoyenne" ng-repeat="periode in (filteredPeriode = (structure.typePeriodes.all | customPeriodeFilters:devoirs.all:search | orderBy:'-type'))">
+                                   [[getI18nPeriode(periode)]]
+                                </th>
+                                <th class="colMoyenne">
+                                    &nbsp;
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="eleve in releveNote.classe.eleves.all">
+                                <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]"
+                                    ng-click="getEleveInfo(eleve)">
+                                    [[eleve.lastName]] [[eleve.firstName]]
+                                </td>
+                                <td class="colMoyenne" ng-repeat="periode in (filteredPeriode = (structure.typePeriodes.all | customPeriodeFilters:devoirs.all:search | orderBy:'-type'))"
+                                    ng-class="{changedAverage: hasMoyenneFinale(periode.id, eleve.moyennesFinales)}">
+                                    [[getMoyenne(periode.id,eleve.moyennes, eleve.moyennesFinales)]]
+                                </td>
+                                <td class="colMoyenne">
+                                    <i class="pencil"
+                                       tooltip="[[translate('viescolaire.utils.appreciation.view')]]"
+                                       ng-click="openedLigthboxEleve(eleve, filteredPeriode);">
+                                    </i>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="responsive-table">
+                    <div class="responsive-table" ng-if="search.periode.id !== null && search.periode.id !== undefined">
                         <table id="tableReleveStats" class="tableReleve tableRelevePadding" c-naviga-table>
                             <tbody>
                             <tr class="moyenneClasse">
@@ -296,7 +329,7 @@
                             </tbody>
                         </table>
 
-                        <div ng-if="releveNote.idPeriode !== null && releveNote.idPeriode !== undefined">
+                        <div>
                             <h2>
                                 <i18n>evaluations.releve.appreciation.classe</i18n>
                             </h2>
@@ -321,7 +354,7 @@
                     </div>
                 </div>
             </content>
-            <content ng-show="releveNote === undefined">
+            <content ng-show="search.periode.id !== null && releveNote === undefined">
                 <article class="card tableReleves">
                     <i18n>evaluations.no.summary</i18n>
                     .
