@@ -3469,7 +3469,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.openEditElementProgramme = function () {
 
-
             $scope.releveNote.syncDomainesEnseignement().then(() => {
                 $scope.releveNote.syncSousDomainesEnseignement().then(() => {
                     $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
@@ -3484,7 +3483,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         }
         $scope.addProposition = function (libelleProposition) {
-            if($scope.releveNote.elementProgramme.texte === undefined){
+            if ($scope.releveNote.elementProgramme.texte === undefined){
                 $scope.releveNote.elementProgramme.texte = "";
             }
             if ($scope.releveNote.elementProgramme.texte !== "")
