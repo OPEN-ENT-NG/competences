@@ -1,4 +1,4 @@
-import { model, notify, idiom as lang, ng, template, moment, _, angular, http } from 'entcore';
+import {model, notify, idiom as lang, ng, template, moment, _, angular, http} from 'entcore';
 import {
     Devoir,
     Evaluation,
@@ -52,11 +52,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.selectCycleForView = function (location) {
             let idCycle;
-            if(location === 'saisieNote') {
+            if (location === 'saisieNote') {
                 idCycle = $scope.classes.findWhere({id: $scope.currentDevoir.id_groupe}).id_cycle;
             }
 
-            if(!idCycle && $scope.search.classe !== undefined && $scope.search.classe !== null
+            if (!idCycle && $scope.search.classe !== undefined && $scope.search.classe !== null
                 && $scope.search.classe !== '*') {
                 idCycle = $scope.search.classe.id_cycle;
             }
@@ -74,17 +74,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.printOption = {
             display: false,
             fileType: "formSaisie",
-            cartoucheNmb : 1,
+            cartoucheNmb: 1,
             byEleve: false,
             inColor: false,
         };
 
         $scope.getI18nPeriode = (periode: any) => {
             let result;
-            if (periode.id === null ) {
+            if (periode.id === null) {
                 result = lang.translate("viescolaire.utils.annee");
             }
-            else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))){
+            else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))) {
                 result = periode ?
                     lang.translate("viescolaire.periode." + periode.type) + " " + periode.ordre
                     : lang.translate("viescolaire.utils.periodeError");
@@ -200,7 +200,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
-                    let openTemplates = async() => {
+                    _.map($scope.devoirs.all,(devoir)=> {
+                        devoir.nameClass = $scope.getClasseData(devoir.id_groupe,'name');
+                    });
+
+                    let openTemplates = async () => {
                         $scope.search.enseignant = "*";
                         //rajout de la periode Annee
                         //await $scope.periodes.sync();
@@ -295,11 +299,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
                         utils.safeApply($scope);
 
-                        angular.element(document).bind('mousewheel', function() {
+                        angular.element(document).bind('mousewheel', function () {
                             // On Calque la position de la partie centrale sur le menu de gauche
                             let element = $('#left-side-notes');
                             let mirorElement = $('#liste-notes-devoir-header');
-                            utils.mirorOnScroll(element,mirorElement);
+                            utils.mirorOnScroll(element, mirorElement);
                         });
 
                     };
@@ -327,7 +331,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if (!template.isEmpty('leftSide-devoirInfo')) template.close('leftSide-devoirInfo');
                     if ($scope.releveNote !== undefined &&
                         (($scope.search.matiere === undefined
-                            || $scope.search.matiere === null )
+                            || $scope.search.matiere === null)
                             || $scope.search.matiere.id !== $scope.releveNote.idMatiere
                             || $scope.search.classe.id !== $scope.releveNote.idClasse
                             || $scope.search.periode.id_type !== $scope.releveNote.idPeriode)) {
@@ -356,7 +360,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             textMod: true
                         };
                         $scope.showRechercheBar = true;
-                        if(!Utils.isChefEtab()){
+                        if (!Utils.isChefEtab()) {
                             http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'name');
                                 utils.safeApply($scope);
@@ -407,7 +411,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             textMod: true,
                             exportByEnseignement: 'false'
                         };
-                        if(_.findIndex($scope.allMatieresSorted,{select: true}) === -1){
+                        if (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
                             $scope.disabledExportSuiviClasse = true;
                         } else {
                             $scope.disabledExportSuiviClasse = false;
@@ -418,7 +422,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         template.open('main', 'enseignants/suivi_competences_classe/container');
                         utils.safeApply($scope);
                     };
-                    if(!Utils.isChefEtab()){
+                    if (!Utils.isChefEtab()) {
                         http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
                             $scope.allMatieresSorted = _.sortBy(res, 'name');
                             utils.safeApply($scope);
@@ -437,10 +441,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         display();
                     }
                 }
-            },export : function () {
-                template.open('main','export/lsun');
+            }, export: function () {
+                template.open('main', 'export/lsun');
                 utils.safeApply($scope);
-            },disabled: () => {
+            }, disabled: () => {
                 template.open('main', 'disabled_structure');
                 utils.safeApply($scope);
             }
@@ -449,26 +453,26 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         route(routesActions);
 
 
-        $scope.disabledExportSuiviClasseButton = function (){
-            if($scope.printSuiviClasse === "printReleveComp" && _.findIndex($scope.allMatieresSorted,{select: true}) === -1){
+        $scope.disabledExportSuiviClasseButton = function () {
+            if ($scope.printSuiviClasse === "printReleveComp" && _.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
                 return true;
             } else {
                 return false;
             }
         }
 
-        $scope.showRechercheBarFunction = function (display){
+        $scope.showRechercheBarFunction = function (display) {
             $scope.showRechercheBar = display;
         }
         $scope.updateOrder = function () {
             let res = [];
-            for (let i = 0; i< $scope.evaluations.competencesDevoir.length; i++){
-                let _c = _.findWhere($scope.evaluations.competencesDevoir, {index:i});
-                if(_c !==  undefined) {
+            for (let i = 0; i < $scope.evaluations.competencesDevoir.length; i++) {
+                let _c = _.findWhere($scope.evaluations.competencesDevoir, {index: i});
+                if (_c !== undefined) {
                     res.push(_c);
                 }
             }
-            if(res.length === evaluations.competencesDevoir.length) {
+            if (res.length === evaluations.competencesDevoir.length) {
                 evaluations.competencesDevoir = res;
             }
         };
@@ -483,7 +487,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             note: -1,
             criteres: true,
             elementProgramme: true,
-            editElementProgramme : false,
+            editElementProgramme: false,
             details: true,
             statistiques: true,
             studentInfo: true,
@@ -563,7 +567,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.aideSaisie = {
             cycle: null,
-            domaineEnseignement : null,
+            domaineEnseignement: null,
             sousDomainesEnseignement: [],
         }
 
@@ -575,7 +579,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.search.periode = res;
                         if ($location.path() === '/devoir/create' ||
                             ($scope.devoir !== undefined
-                                && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))){
+                                && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
                             $scope.devoir.id_periode = res.id_type;
                             $scope.controleDate($scope.devoir);
                             utils.safeApply($scope);
@@ -584,10 +588,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     });
                 });
 
-            }else if (classe && classe.periodes) {
+            } else if (classe && classe.periodes) {
                 $scope.getCurrentPeriode(classe).then(function (res) {
-                    $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all,{id:res.id_type});
-                    if ( ($location.path() === '/devoir/create') ||
+                    $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type});
+                    if (($location.path() === '/devoir/create') ||
                         ($scope.devoir !== undefined
                             && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
                         $scope.devoir.id_periode = res.id_type;
@@ -607,7 +611,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return classe.periodes.all;
                 });
             }
-            return (classe !== undefined)? classe.periodes.all : [];
+            return (classe !== undefined) ? classe.periodes.all : [];
         };
 
         $scope.synchronizeStudents = (idClasse): boolean => {
@@ -663,11 +667,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
             };
 
-            let initFieldOfDevoir = async  () => {
+            let initFieldOfDevoir = async () => {
                 if (evaluations.structure.classes.empty()) {
                     await evaluations.structure.classes.sync();
                 }
-                if($location.path() === '/devoir/create') {
+                if ($location.path() === '/devoir/create') {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", evaluations.structure.classes.all).id;
                     $scope.devoir.id_matiere = $scope.searchOrFirst("matiere", evaluations.structure.matieres.all).id;
                     $scope.devoir.id_type = $scope.searchOrFirst("type", evaluations.structure.types.all).id;
@@ -695,7 +699,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.structure = evaluations.structure;
             if (!evaluations.structure.isSynchronized) {
                 $scope.opened.displayStructureLoader = true;
-                evaluations.structure.sync().then( async () => {
+                evaluations.structure.sync().then(async () => {
                     await  init();
                     await initFieldOfDevoir();
                 });
@@ -873,7 +877,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         };
 
-        $scope.confirmSuppretion =  function () {
+        $scope.confirmSuppretion = function () {
             if ($scope.selected.devoirs.list.length > 0) {
                 $scope.devoirsUncancelable = [];
                 if (!Utils.isChefEtab()) {
@@ -954,7 +958,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.conditionAffichageText = function (NumText) {
             if (NumText === 1) {
-                if (($scope.selected.devoirs.listwithEvaluatedSkills.length + $scope.selected.devoirs.listwithEvaluatedMarks.length ) > 16 && $scope.selected.devoirs.listwithEvaluatedSkills.length !== 0 && $scope.selected.devoirs.listwithEvaluatedMarks.length !== 0) {
+                if (($scope.selected.devoirs.listwithEvaluatedSkills.length + $scope.selected.devoirs.listwithEvaluatedMarks.length) > 16 && $scope.selected.devoirs.listwithEvaluatedSkills.length !== 0 && $scope.selected.devoirs.listwithEvaluatedMarks.length !== 0) {
                     return true;
                 } else {
                     return false;
@@ -1112,8 +1116,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.initCoef = function () {
-            if($scope.devoir.is_evaluated){
-                let evalFormative = _.findWhere(evaluations.types.all, {nom : "Formative"});
+            if ($scope.devoir.is_evaluated) {
+                let evalFormative = _.findWhere(evaluations.types.all, {nom: "Formative"});
                 $scope.devoir.id_type === evalFormative.id.toString() ? $scope.devoir.coefficient = 0 : $scope.devoir.coefficient = 1;
             }
         };
@@ -1353,9 +1357,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.hideHiddenCompetence = (competence) => {
-            if(!_.isEmpty(competence.competences.all)) {
+            if (!_.isEmpty(competence.competences.all)) {
                 return _.some(competence.competences.all, {masque: false});
-            } else if(_.findWhere($scope.devoir.competences.all, {id_competence : competence.id})) {
+            } else if (_.findWhere($scope.devoir.competences.all, {id_competence: competence.id})) {
                 return true;
             } else {
                 return !competence.masque;
@@ -1552,7 +1556,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 evaluations.competencesDevoir = [];
                 $scope.cleanItems = true;
                 utils.safeApply($scope);
-                return ;
+                return;
             }
             let currentIdCycle = null;
             for (let i = 0; i < $scope.enseignements.all.length && currentIdCycle === null; i++) {
@@ -1572,7 +1576,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     utils.safeApply($scope);
                 });
             }
-            else if ($scope.cleanItems && $scope.oldCompetencesDevoir !== undefined ) {
+            else if ($scope.cleanItems && $scope.oldCompetencesDevoir !== undefined) {
                 evaluations.competencesDevoir = $scope.oldCompetencesDevoir;
                 $scope.cleanItems = false;
             }
@@ -1582,7 +1586,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Séquence de création d'un devoir
          */
 //TODO Déplacer cette séquence dans la séquence du router
-        $scope.createDevoir = async() => {
+        $scope.createDevoir = async () => {
             if ($location.path() === "/devoir/create") {
                 $scope.devoir = $scope.initDevoir();
                 $scope.devoir.id_groupe = $scope.searchOrFirst("classe", $scope.structure.classes.all).id;
@@ -1672,7 +1676,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 // ie on doit ajouter/supprimer toutes les sous competences dans le recap
         $scope.$on('checkConnaissances', function (event, parentItem) {
             parentItem.competences.each(function (e) {
-                if(e.masque && _.findWhere($scope.devoir.competences.all,{id: e.id}) === undefined ) {
+                if (e.masque && _.findWhere($scope.devoir.competences.all, {id: e.id}) === undefined) {
                     return;
                 } else if ($scope.competencesFilter[parentItem.id + "_" + parentItem.id_enseignement].isSelected === true) {
                     // check si on a pas deja ajoute pour eviter les doublons
@@ -1827,7 +1831,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let maCompetence = _.findWhere(evaluations.competencesDevoir,
                         {id_competence: $scope.allCompetences.all[i].id_competence});
 
-                    if (maCompetence === undefined ) {
+                    if (maCompetence === undefined) {
                         $scope.competencesSupp.push($scope.allCompetences.all[i]);
                     }
                 }
@@ -1846,7 +1850,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             });
                             if (competence !== undefined
                                 && _.findWhere($scope.evaluations.competencesDevoir,
-                                    {id: $scope.competencesSupp[i].id_competence})  === undefined ) {
+                                    {id: $scope.competencesSupp[i].id_competence}) === undefined) {
                                 $scope.evaluatedCompetencesSupp.push($scope.competencesSupp[i]);
                             }
                         }
@@ -1902,7 +1906,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         }, function (newValue, oldValue) {
             if (newValue) {
                 if ($scope.firstConfirmSuppSkill === true && $scope.secondConfirmSuppSkill === true && $scope.evaluatedDisabel === false) {
-                    if ($scope.oldIs_Evaluated === true && $scope.devoir.is_evaluated === false && ( _.findWhere($scope.devoir.evaluationDevoirs.all, {typeeval: 'TypeEvalNum'}) !== undefined )) {
+                    if ($scope.oldIs_Evaluated === true && $scope.devoir.is_evaluated === false && (_.findWhere($scope.devoir.evaluationDevoirs.all, {typeeval: 'TypeEvalNum'}) !== undefined)) {
                         $scope.opened.lightboxs.updateDevoir.evaluatedSkillDisabel = true;
                     } else
                         $scope.evaluatedDisabel = true;
@@ -1929,7 +1933,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.competences = [];
 
                     for (let i = 0; i < evaluations.competencesDevoir.length; i++) {
-                        $scope.devoir.competences.push(evaluations.competencesDevoir[i].id);
+
+                            $scope.devoir.competences.push(evaluations.competencesDevoir[i].id);
+
                     }
                 }
             }
@@ -1948,23 +1954,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 === evaluations.competencesDevoir[i].id) {
                                 // si l'index de la compétence a changé, on doit
                                 // mettre à jour la compétence.
-                                $scope.devoir.competencesUpdate.push({id : evaluations.competencesDevoir[i].id,
-                                    id_competence : evaluations.competencesDevoir[i].id,
-                                    index : evaluations.competencesDevoir[i].index});
+                                $scope.devoir.competencesUpdate.push({
+                                    id: evaluations.competencesDevoir[i].id,
+                                    id_competence: evaluations.competencesDevoir[i].id,
+                                    index: evaluations.competencesDevoir[i].index
+                                });
                                 toAdd = false;
                                 break;
                             }
                         }
                         if (toAdd) {
-                            $scope.devoir.competencesAdd.push({id : evaluations.competencesDevoir[i].id,
-                                id_competence : evaluations.competencesDevoir[i].id,
-                                index : evaluations.competencesDevoir[i].index});
+                            $scope.devoir.competencesAdd.push({
+                                id: evaluations.competencesDevoir[i].id,
+                                id_competence: evaluations.competencesDevoir[i].id,
+                                index: evaluations.competencesDevoir[i].index
+                            });
                         }
                     }
                     //Remplissage des competences a supprimer
 
                     for (let j = 0; j < $scope.competencesSupp.length; j++) {
-                        if(_.findWhere($scope.devoir.competencesUpdate,
+                        if (_.findWhere($scope.devoir.competencesUpdate,
                                 {id: $scope.competencesSupp[j].id_competence}) === undefined) {
                             $scope.devoir.competencesRem.push($scope.competencesSupp[j].id_competence);
                         }
@@ -2104,7 +2114,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
                         }
                     }
-                    if(releve.isNN) {
+                    if (releve.isNN) {
                         $scope.toogleDevoirNote();
                     }
                     utils.safeApply($scope);
@@ -2875,7 +2885,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Controle que la date de publication du devoir n'est pas inférieur à la date du devoir.
          *          et que la date du devoir est comprise dans la période
          */
-        $scope.controleDate = async(devoir) => {
+        $scope.controleDate = async (devoir) => {
             $scope.endSaisie = null;
             $scope.errDateDevoir = null;
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
@@ -2883,7 +2893,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await classe.periodes.sync();
             }
             let current_periode = _.findWhere(classe.periodes.all, {id_type: parseInt(devoir.id_periode)});
-            if(current_periode !== undefined){
+            if (current_periode !== undefined) {
                 let start_datePeriode = current_periode.timestamp_dt;
                 let end_datePeriode = current_periode.timestamp_fn;
                 let date_saisie = current_periode.date_fin_saisie;
@@ -2909,7 +2919,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Cherche si la période de fin de saisie est dépassée pour un devoir donné
          * @param devoir
          */
-        $scope.checkEndSaisie = async(devoir) => {
+        $scope.checkEndSaisie = async (devoir) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
             if (classe.periodes.empty()) {
                 await classe.periodes.sync();
@@ -2925,7 +2935,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * On ne vérifie pas si l'utilisateur est chef d'établissement
          * @param devoir
          */
-        $scope.checkEndSaisieSeul = async(devoir) => {
+        $scope.checkEndSaisieSeul = async (devoir) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
             if (classe.periodes.empty()) {
                 await classe.periodes.sync();
@@ -2940,14 +2950,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return {libelle: $scope.translate('viescolaire.utils.annee'), id: undefined}
         };
 
-        $scope.getCurrentPeriode = async(classe) => {
+        $scope.getCurrentPeriode = async (classe) => {
 
             if (classe.periodes.empty()) {
                 await classe.periodes.sync();
             }
 
             let currentPeriode = _.find(classe.periodes.all, (periode) => {
-                return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days','[]');
+                return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
             });
             return currentPeriode != null ? currentPeriode : -1;
         };
@@ -3134,23 +3144,23 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.evaluation.exportDevoirLB = false;
                 $scope.textModExport = false;
                 $scope.exportDevoirObj.errExport = false;
-                $scope.printOption.display=false;
+                $scope.printOption.display = false;
                 utils.safeApply($scope);
                 location.replace(url);
             });
             utils.safeApply($scope);
         };
 
-        $scope.exportReleveComp = async (idEleve : String, idPeriode:Number, textMod:Boolean = false, exportByEnseignement:Boolean) => {
+        $scope.exportReleveComp = async (idEleve: String, idPeriode: Number, textMod: Boolean = false, exportByEnseignement: Boolean) => {
             let url = "/competences/releveComp/print/export?text=" + textMod;
             url += "&idEleve=" + idEleve;
-            for(var m = 0; m < $scope.selected.matieres.length; m++){
+            for (var m = 0; m < $scope.selected.matieres.length; m++) {
                 url += "&idMatiere=" + $scope.selected.matieres[m];
             }
-            if(idPeriode) {
+            if (idPeriode) {
                 url += "&idPeriode=" + idPeriode;
             }
-            if($scope.forClasse){
+            if ($scope.forClasse) {
                 url += "&idClasse=" + $scope.search.classe.id;
             }
             url += "&byEnseignement=" + exportByEnseignement;
@@ -3170,8 +3180,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.errorResult = function(result){
-            switch (result.responseText){
+        $scope.errorResult = function (result) {
+            switch (result.responseText) {
                 case "{\"error\":\"getExportReleveComp : No exams on given period and/or material.\"}" :
                     $scope.evalNotFound = true;
                     break;
@@ -3226,7 +3236,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else {
                 $scope.selected.matieres.splice(_.indexOf($scope.selected.matieres, id), 1);
             }
-            if($scope.selected.matieres.length == 0){
+            if ($scope.selected.matieres.length == 0) {
                 $scope.allUnselect = true;
                 $scope.disabledExportSuiviClasse = true;
             } else {
@@ -3237,9 +3247,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.selectUnselectMatieres = function (selectAllMatieres) {
             $scope.closeWarningMessages();
-            if(selectAllMatieres){
-                for(var m = 0; m < $scope.allMatieresSorted.length; m++){
-                    if(!$scope.selected.matieres.includes($scope.allMatieresSorted[m].id))
+            if (selectAllMatieres) {
+                for (var m = 0; m < $scope.allMatieresSorted.length; m++) {
+                    if (!$scope.selected.matieres.includes($scope.allMatieresSorted[m].id))
                         $scope.selected.matieres.push($scope.allMatieresSorted[m].id);
                     $scope.allMatieresSorted[m].select = true;
                 }
@@ -3247,7 +3257,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.disabledExportSuiviClasse = false;
             } else {
                 $scope.selected.matieres = [];
-                for(var m = 0; m < $scope.allMatieresSorted.length; m++){
+                for (var m = 0; m < $scope.allMatieresSorted.length; m++) {
                     $scope.allMatieresSorted[m].select = false;
                 }
                 $scope.allUnselect = true;
@@ -3255,12 +3265,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.closeLightboxChampsObligatoire = function(){
+        $scope.closeLightboxChampsObligatoire = function () {
             $scope.lightboxChampsObligatoire = false;
         }
 
-        $scope.disabledExport = function(){
-            return (_.findIndex($scope.allMatieresSorted,{select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined'
+        $scope.disabledExport = function () {
+            return (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined'
         }
 
 
@@ -3276,7 +3286,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.exportRecapEvalObj.errExport = false;
         }
 
-        $scope.openedLigthbox = function(classe){
+        $scope.openedLigthbox = function (classe) {
             $scope.opened.releveComp = true;
             $scope.releveComp.periode = $scope.search.periode;
             $scope.releveComp.textMod = true;
@@ -3285,11 +3295,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             classe ? $scope.forClasse = true : $scope.forClasse = false;
         }
 
-        $scope.getFormatedDate = function(date) {
+        $scope.getFormatedDate = function (date) {
             return moment(date).format("DD/MM/YYYY");
         };
 
-        $scope.openedRecapEval = function (){
+        $scope.openedRecapEval = function () {
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
             $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
@@ -3297,22 +3307,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.changePrintSuiviClasse = function(option){
+        $scope.changePrintSuiviClasse = function (option) {
             $scope.printSuiviClasse = option;
-            if(option === "printReleveComp")
+            if (option === "printReleveComp")
                 $scope.disabledExportSuiviClasse = $scope.allUnselect || typeof($scope.suiviClasse.periode) === 'undefined';
-            if(option === "printRecapEval")
+            if (option === "printRecapEval")
                 $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
         };
 
         $scope.initDefaultMatiere = function () {
-            if($scope.matieres.all.length === 1) {
+            if ($scope.matieres.all.length === 1) {
                 $scope.search.matiere = $scope.matieres.all[0];
             }
         };
 
         $scope.initMoyenneFinale = function (eleve) {
-            if (eleve.moyenneFinale === undefined || eleve.moyenneFinale === null ){
+            if (eleve.moyenneFinale === undefined || eleve.moyenneFinale === null) {
                 eleve.moyenneFinale = eleve.moyenne;
             }
 
@@ -3320,15 +3330,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.disabledSaisieMoyenne = function () {
             if ($scope.search.periode.id === null || $scope.search.periode === "*"
-                || ($scope.releveNote !== undefined && $scope.releveNote.isNN) ) {
+                || ($scope.releveNote !== undefined && $scope.releveNote.isNN)) {
                 return true;
             }
             else {
-                if ($scope.isChefEtab()){
+                if ($scope.isChefEtab()) {
                     return false;
                 }
                 else {
-                    if($scope.releveNote === undefined || $scope.releveNote.classe === undefined){
+                    if ($scope.releveNote === undefined || $scope.releveNote.classe === undefined) {
                         return true;
                     } else {
                         let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
@@ -3349,13 +3359,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if ((reg.test(eleve.moyenneFinale) && parseInt(eleve.moyenneFinale) < 20)
-                    || eleve.moyenneFinale === ""  ) {
+                    || eleve.moyenneFinale === "") {
                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
                     $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
-                        $scope.updateHistorique(eleve,'moyenneFinale');
+                        $scope.updateHistorique(eleve, 'moyenneFinale');
                     });
                 }
-                else{
+                else {
                     notify.error(lang.translate("error.average.outbound"));
                     eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     utils.safeApply($scope);
@@ -3368,7 +3378,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (parseInt(eleve.positionnement) <= $scope.structure.cycle.niveauCompetencesArray.length) {
                     eleve.oldPositionnement = eleve.positionnement;
                     $scope.releveNote.savePositionnementEleve(eleve).then(() => {
-                        $scope.updateHistorique(eleve,'positionnement');
+                        $scope.updateHistorique(eleve, 'positionnement');
                     });
                 }
                 else {
@@ -3394,7 +3404,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.syncSousDomaines = function(id) {
+        $scope.syncSousDomaines = function (id) {
             $scope.sousDomaines = _.where(evaluations.sousDomainesEnseignements, {
                 id_domaine: id
             });
@@ -3420,7 +3430,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.openEditElementProgramme  = function () {
+        $scope.openEditElementProgramme = function () {
             $scope.releveNote.syncDomainesEnseignement().then(() => {
                 $scope.releveNote.syncSousDomainesEnseignement().then(() => {
                     $scope.aideSaisie.cycle = null;
@@ -3434,8 +3444,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         }
 
-        $scope.addProposition  = function (libelleProposition) {
-            if($scope.releveNote.elementProgramme.texte !== "")
+        $scope.addProposition = function (libelleProposition) {
+            if ($scope.releveNote.elementProgramme.texte !== "")
                 $scope.releveNote.elementProgramme.texte += " ";
             $scope.releveNote.elementProgramme.texte += libelleProposition;
         }
@@ -3459,8 +3469,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.informations.eleve.evaluations.extended !== true) {
                 _.forEach($scope.informations.eleve.evaluations.all, (evaluation) => {
                     _.extend(evaluation, $scope.releveNote.devoirs.findWhere({id: evaluation.id_devoir}));
-                    _.extend(evaluation, {competencesNotes:
-                            _.where($scope.informations.eleve.competencesNotes, {id_devoir: evaluation.id_devoir})});
+                    _.extend(evaluation, {
+                        competencesNotes:
+                            _.where($scope.informations.eleve.competencesNotes, {id_devoir: evaluation.id_devoir})
+                    });
                 });
                 $scope.informations.eleve.historiques = [];
                 try {
@@ -3486,68 +3498,72 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 _.forEach($scope.filteredPeriode, function (periode) {
 
                     // get moyenne auto eleve
-                    let details_moyennes = _.findWhere($scope.informations.eleve.details.moyennes, {id:
-                            (periode.id_type !== null)? parseInt(periode.id_type): null});
-                    let moyenne = (details_moyennes !== undefined)? details_moyennes.moyenne: "";
+                    let details_moyennes = _.findWhere($scope.informations.eleve.details.moyennes, {
+                        id:
+                            (periode.id_type !== null) ? parseInt(periode.id_type) : null
+                    });
+                    let moyenne = (details_moyennes !== undefined) ? details_moyennes.moyenne : "";
 
                     // get moyenne classe
-                    let details_moyennes_classe = _.findWhere($scope.informations.eleve.details.moyennesClasse, {id:
-                            (periode.id_type !== null)? parseInt(periode.id_type): null});
-                    let moyenneClasse = (details_moyennes_classe !== undefined)? details_moyennes_classe.moyenne: "";
+                    let details_moyennes_classe = _.findWhere($scope.informations.eleve.details.moyennesClasse, {
+                        id:
+                            (periode.id_type !== null) ? parseInt(periode.id_type) : null
+                    });
+                    let moyenneClasse = (details_moyennes_classe !== undefined) ? details_moyennes_classe.moyenne : "";
                     if ($scope.releveNote.idPeriode === periode.id_type) {
                         $scope.informations.eleve.moyenneClasse = moyenneClasse;
                     }
 
                     // get appreciation
-                    let details_appreciations =_.findWhere($scope.informations.eleve.details.appreciations,
-                        {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
-                    let appreciation = (details_appreciations !== undefined)?
-                        details_appreciations.appreciation_matiere_periode: "";
+                    let details_appreciations = _.findWhere($scope.informations.eleve.details.appreciations,
+                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
+                    let appreciation = (details_appreciations !== undefined) ?
+                        details_appreciations.appreciation_matiere_periode : "";
 
                     // get moyenne finale
-                    let details_moyennes_finales =_.findWhere($scope.informations.eleve.details.moyennes_finales,
-                        {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
-                    let moyenneFinale = (details_moyennes_finales !== undefined) ? details_moyennes_finales.moyenne: "";
+                    let details_moyennes_finales = _.findWhere($scope.informations.eleve.details.moyennes_finales,
+                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
+                    let moyenneFinale = (details_moyennes_finales !== undefined) ? details_moyennes_finales.moyenne : "";
 
                     // get positionnement Auto
-                    let details_pos_auto =_.findWhere(
+                    let details_pos_auto = _.findWhere(
                         $scope.informations.eleve.details.positionnements_auto,
-                        {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
+                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
 
                     // Déduction du positionnement par défaut en fonction de l'échelle de convertion
                     // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
                     // (Logique prise au calcul du niveau dans le BFC).
                     let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
-                        details_pos_auto.moyenne + 1 ,
+                        details_pos_auto.moyenne + 1,
                         $scope.releveNote.tableConversions.all)) : 0;
                     let positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
                     $scope.informations.eleve.positionnementCalcule = positionnement;
                     // get positionnement final
-                    let details_pos =_.findWhere(
+                    let details_pos = _.findWhere(
                         $scope.informations.eleve.details.positionnements,
-                        {id_periode:(periode.id_type !== null)? parseInt(periode.id_type): null});
-                    let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement: "";
+                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
+                    let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement : "";
                     // initialisation du positionnement pour le détail élève
                     if ($scope.releveNote.idPeriode === periode.id_type) {
                         $scope.informations.eleve.positionnement =
-                            (positionnementFinal !== "")? positionnementFinal:(positionnement);
+                            (positionnementFinal !== "") ? positionnementFinal : (positionnement);
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
-                    if(periode.id_type !== null &&
-                        (details_moyennes_finales !== undefined || details_moyennes !== undefined)){
-                            nbMoyenneAnnee ++;
-                            if (details_moyennes_finales !== undefined) {
-                                isMoyenneFinaleAnnee = true;
-                                moyennneAnnee += parseInt(moyenneFinale);
-                            } else {
-                                moyennneAnnee += moyenne;
-                            }
+                    if (periode.id_type !== null &&
+                        (details_moyennes_finales !== undefined || details_moyennes !== undefined)) {
+                        nbMoyenneAnnee++;
+                        if (details_moyennes_finales !== undefined) {
+                            isMoyenneFinaleAnnee = true;
+                            moyennneAnnee += parseInt(moyenneFinale);
+                        } else {
+                            moyennneAnnee += moyenne;
+                        }
                     }
                     // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
-                    if(periode.id_type !== null &&
-                        ((positionnement !== undefined && positionnement > 0) || (details_pos !== undefined && details_pos > 0))){
-                        nbPositionnementAnnee ++;
+                    if (periode.id_type !== null &&
+                        ((positionnement !== undefined && positionnement > 0) || (details_pos !== undefined && details_pos > 0))) {
+                        nbPositionnementAnnee++;
                         if (details_pos !== undefined) {
                             isPositionnementFinaleAnnee = true;
                             positionnementAnnee += details_pos.positionnement;
@@ -3558,7 +3574,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     if (periode.id_type !== null) {
                         $scope.informations.eleve.historiques.push({
-                            periode : $scope.getI18nPeriode(periode),
+                            periode: $scope.getI18nPeriode(periode),
                             moyenneClasse: moyenneClasse,
                             moyenne: moyenne,
                             moyenneFinale: moyenneFinale,
@@ -3569,7 +3585,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         });
                     } else {
                         historiqueAnnee = {
-                            periode : $scope.getI18nPeriode(periode),
+                            periode: $scope.getI18nPeriode(periode),
                             moyenneClasse: moyenneClasse,
                             appreciation: appreciation,
                             idPeriode: periode.id_type
@@ -3580,26 +3596,26 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 // On calcule la moyenne à l'année
                 let moyenneFinaleAnnee;
-                if(nbMoyenneAnnee !== 0){
-                    moyenneFinaleAnnee = moyennneAnnee/nbMoyenneAnnee;
+                if (nbMoyenneAnnee !== 0) {
+                    moyenneFinaleAnnee = moyennneAnnee / nbMoyenneAnnee;
                 } else {
                     moyenneFinaleAnnee = "";
                 }
 
                 // On calcule le positionnement à l'année
-                let positionnementFinaleAnnee = 0 ;
-                if(nbPositionnementAnnee !== 0){
-                    positionnementFinaleAnnee = Math.round(positionnementAnnee/nbPositionnementAnnee);
+                let positionnementFinaleAnnee = 0;
+                if (nbPositionnementAnnee !== 0) {
+                    positionnementFinaleAnnee = Math.round(positionnementAnnee / nbPositionnementAnnee);
                 }
 
-                if(isMoyenneFinaleAnnee){
+                if (isMoyenneFinaleAnnee) {
                     historiqueAnnee.moyenneFinale = moyenneFinaleAnnee;
-                }else{
+                } else {
                     historiqueAnnee.moyenne = moyenneFinaleAnnee;
                     historiqueAnnee.moyenneFinale = "";
                 }
 
-                if(isPositionnementFinaleAnnee){
+                if (isPositionnementFinaleAnnee) {
                     historiqueAnnee.positionnementFinal = positionnementFinaleAnnee;
                 } else {
                     historiqueAnnee.positionnement = positionnementFinaleAnnee;
@@ -3633,17 +3649,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return devoir.nbcompetences > 0;
         };
 
-        $scope.updateHistorique = function (eleve, colonne : string) {
-            let historique =_.findWhere(eleve.historiques, {idPeriode: $scope.releveNote.idPeriode});
-            if (historique !== undefined){
+        $scope.updateHistorique = function (eleve, colonne: string) {
+            let historique = _.findWhere(eleve.historiques, {idPeriode: $scope.releveNote.idPeriode});
+            if (historique !== undefined) {
                 switch (colonne) {
-                    case 'appreciation' : historique.appreciation = eleve.appreciation_matiere_periode;
+                    case 'appreciation' :
+                        historique.appreciation = eleve.appreciation_matiere_periode;
                         break;
-                    case 'moyenneFinale': historique.moyenneFinale = eleve.moyenneFinale;
+                    case 'moyenneFinale':
+                        historique.moyenneFinale = eleve.moyenneFinale;
                         break;
-                    case 'positionnement': historique.positionnementFinal = eleve.positionnement;
+                    case 'positionnement':
+                        historique.positionnementFinal = eleve.positionnement;
                         break;
-                    default: break;
+                    default:
+                        break;
                 }
 
             }
@@ -3652,12 +3672,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
         $scope.hasCompetencesNotes = function (evaluations) {
-            if(evaluations.all === undefined){
+            if (evaluations.all === undefined) {
                 return false;
             } else {
                 for (let i = 0; i < evaluations.all.length; i++) {
                     let evaluation = evaluations.all[i];
-                    if(evaluation.nbcompetences > 0 && evaluation.competencesNotes.length > 0 ) {
+                    if (evaluation.nbcompetences > 0 && evaluation.competencesNotes.length > 0) {
                         return true;
                     }
                 }
@@ -3666,9 +3686,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
         $scope.hasDevoirsEvalues = function (evaluations) {
             let hasDevoirsEvalues = _.where(evaluations.all, {is_evaluated: true});
-            if(hasDevoirsEvalues.length > 0 ){
+            if (hasDevoirsEvalues.length > 0) {
                 for (let i = 0; i < hasDevoirsEvalues.length; i++) {
-                    if(hasDevoirsEvalues[i].valeur !== '') {
+                    if (hasDevoirsEvalues[i].valeur !== '') {
                         return true;
                     }
                 }
@@ -3679,22 +3699,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.isNotFirstEleve = function (evaluations) {
-            if($scope.releveNote === undefined){
+            if ($scope.releveNote === undefined) {
                 return false;
             }
             let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
-            if(index === 0){
+            if (index === 0) {
                 return false;
             } else {
                 return true;
             }
         }
         $scope.isNotLastEleve = function (evaluations) {
-            if($scope.releveNote === undefined){
+            if ($scope.releveNote === undefined) {
                 return false;
             }
             let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
-            if(index === $scope.releveNote.classe.eleves.all.length -1){
+            if (index === $scope.releveNote.classe.eleves.all.length - 1) {
                 return false;
             } else {
                 return true;

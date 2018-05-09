@@ -47,7 +47,7 @@ export class Devoir extends Model implements IModel{
     percent: any;
     teacher: string;
     evaluationDevoirs : Collection<EvaluationDevoir> ;
-
+    nameClass: number | string;
     get api () {
         return {
             create : '/competences/devoir',
