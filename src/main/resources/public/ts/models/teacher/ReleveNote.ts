@@ -160,44 +160,51 @@ export class ReleveNote extends  Model implements IModel {
 
                         _.forEach(this.classe.eleves.all, (eleve) => {
                             let moyennes = _.where(res.moyennes, {id_eleve: eleve.id});
-                            if (moyennes !== undefined && moyennes !== null) {
-                                eleve.moyennes = moyennes;
-                            }
+
                             let moyennesFinales = _.where(res.moyennes_finales, {id_eleve: eleve.id});
-                            if (moyennesFinales !== undefined && moyennesFinales !== null
-                                && moyennesFinales.length > 0) {
 
 
-                                let nbMoyenneAnnee = 0 ;
-                                let moyennesFinalesNumber = 0 ;
-                                let moyennesFinalesAnnee = [] ;
-                                // Si une moyenne a été modifiée on recalcule la moyenne à l'année
-                                _.forEach(moyennesFinales, (moyenneFinale) => {
-                                    moyennesFinalesAnnee.push(moyenneFinale);
-                                });
-                                _.forEach(moyennes, (moyenne) => {
-                                    if (moyenne.id_periode !== null){
-                                        let _moyenne =  _.findWhere(moyennesFinalesAnnee, {id_periode: moyenne.id_periode});
-                                        if(_moyenne === undefined){
-                                            moyennesFinalesAnnee.push(moyenne);
-                                        }
+                            let nbMoyenneAnnee = 0 ;
+                            let moyennesFinalesNumber = 0 ;
+                            let moyennesFinalesAnnee = [] ;
+                            // Si une moyenne a été modifiée on recalcule la moyenne à l'année
+                            _.forEach(moyennesFinales, (moyenneFinale) => {
+                                moyennesFinalesAnnee.push(moyenneFinale);
+                            });
+                            _.forEach(moyennes, (moyenne) => {
+                                if (moyenne.id_periode !== null){
+                                    let _moyenne =  _.findWhere(moyennesFinalesAnnee, {id_periode: moyenne.id_periode});
+                                    if(_moyenne === undefined){
+                                        moyennesFinalesAnnee.push(moyenne);
                                     }
-                                });
-                                _.forEach(moyennesFinalesAnnee, (moyenneFinaleAnnee) => {
-                                    nbMoyenneAnnee ++ ;
-                                    moyennesFinalesNumber += parseInt(moyenneFinaleAnnee.moyenne);
-                                });
-
+                                }
+                            });
+                            _.forEach(moyennesFinalesAnnee, (moyenneFinaleAnnee) => {
+                                nbMoyenneAnnee ++ ;
+                                moyennesFinalesNumber += parseFloat(moyenneFinaleAnnee.moyenne);
+                            });
+                            if(nbMoyenneAnnee > 0){
                                 let _moyenneFinaleAnnee = {
                                     id_eleve : eleve.id,
                                     id_periode : null,
-                                    moyenne : moyennesFinalesNumber / nbMoyenneAnnee
+                                    moyenne : (moyennesFinalesNumber / nbMoyenneAnnee).toFixed(2)
                                 }
-
-                                moyennesFinales.push(_moyenneFinaleAnnee);
-
-                                eleve.moyennesFinales = moyennesFinales;
+                                if (moyennesFinales !== undefined && moyennesFinales !== null
+                                    && moyennesFinales.length > 0) {
+                                    moyennesFinales.push(_moyenneFinaleAnnee);
+                                } else {
+                                    moyennes = _.without(moyennes, _.findWhere(moyennes, {id_periode: null}));
+                                    moyennes.push(_moyenneFinaleAnnee);
+                                }
                             }
+
+                            if (moyennes !== undefined && moyennes !== null) {
+
+                                eleve.moyennes = moyennes;
+                            }
+                            eleve.moyennesFinales = moyennesFinales;
+
+
 
                         });
                         resolve();

@@ -3634,7 +3634,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 // On calcule la moyenne à l'année
                 let moyenneFinaleAnnee;
                 if (nbMoyenneAnnee !== 0) {
-                    moyenneFinaleAnnee = moyennneAnnee / nbMoyenneAnnee;
+                    moyenneFinaleAnnee = (moyennneAnnee / nbMoyenneAnnee).toFixed(2);
                 } else {
                     moyenneFinaleAnnee = "";
                 }
