@@ -354,7 +354,7 @@ public class LSUController extends ControllerHelper {
             nbEleveCompteur.incrementAndGet();//compteur
             Eleve eleve = eleves.getEleveById(idEleve);
             if (eleve != null) {
-                //on récupère le JsonObject synthèse
+                //on récupère le JsonObject de l'enseignement de complément et de la synthèse
                 JsonObject ensCplEleve = getJsonObject(ensCplsEleves,idEleve);
                 JsonObject syntheseEleve = getJsonObject(synthesesEleves, idEleve);
                 JsonObject erreursEleve = new JsonObject();
@@ -368,20 +368,24 @@ public class LSUController extends ControllerHelper {
                                 && !mapIdDomainePosition.containsKey(idDomaineCPD_ETR));
                         if (syntheseEleve.size() > 0 && (mapIdDomainePosition.size() == mapIdDomaineCodeDomaine.size() || bmapSansIdDomaineCPDETR)) {
 
-                            if ( !ensCplEleve.containsField("id_eleve")) {
-                                //supprimer l'élève de la liste
-                                eleves.getEleve().remove(eleve);
-                                //ajouter l'élève dans liste des erreurs
-                                erreursEleve.putString("idEleve", idEleve).putString("prenom", eleve.getPrenom()).putString("nom", eleve.getNom()).putString("classe", eleve.getCodeDivision());
-                                JsonArray erreurs = new JsonArray();
-                                erreurs.add(new JsonObject().putString("ensCpl", "L'enseignement de complement n'est pas renseigne"));
-                                erreursEleve.putArray("typeErreur", erreurs);
-                                listErreursEleves.add(erreursEleve);
-                                continue;
-                            }
-                            //  alors on peut ajouter le bilanCycle à l'élève avec la synthèse, les ensCpl et les codesDomaines et positionnement au socle
+
                             final BilanCycle bilanCycle = objectFactory.createBilanCycle();
                             BilanCycle.Socle socle = objectFactory.createBilanCycleSocle();
+                            if ( !ensCplEleve.containsField("id_eleve")) {
+                                //si l'élève n'a pas d'enseignement de complément par défault on met le code AUC et niv 0
+                                EnseignementComplement enseignementComplement = new EnseignementComplement("AUC", 0);
+                                bilanCycle.setEnseignementComplement(enseignementComplement);
+                                //supprimer l'élève de la liste
+                                // eleves.getEleve().remove(eleve);
+                                // ajouter l'élève dans liste des erreurs
+                                // erreursEleve.putString("idEleve", idEleve).putString("prenom", eleve.getPrenom()).putString("nom", eleve.getNom()).putString("classe", eleve.getCodeDivision());
+                                // JsonArray erreurs = new JsonArray();
+                                // erreurs.add(new JsonObject().putString("ensCpl", "L'enseignement de complement n'est pas renseigne"));
+                                // erreursEleve.putArray("typeErreur", erreurs);
+                                // listErreursEleves.add(erreursEleve);
+                                // continue;
+                            }
+                            // alors on peut ajouter le bilanCycle à l'élève avec la synthèse, les ensCpl et les codesDomaines et positionnement au socle
                             //Ajouter les CodesDomaines et positionnement
                             //on teste si la map<Iddomaine,positionnement> contient idDomaine correspondant à CPD_ETR
                             // alors on ajoute domaineSocleCycle manuellement avec le positionnement à zéro
@@ -415,7 +419,7 @@ public class LSUController extends ControllerHelper {
                             //on ajoute les différents attributs de la balise BilanCycle de l'élève
                             ResponsableEtab responsableEtabRef = responsablesEtab.get(0);
                             //on ajoute les responsables de l'élève (attribut de clui-ci) aux responsables et au bilanCycle
-                            if(eleve.getResponsableList() != null) {
+                            if(eleve.getResponsableList() != null && eleve.getResponsableList().size()> 0) {
                                 BilanCycle.Responsables responsablesEleve = objectFactory.createBilanCycleResponsables();
                                 responsablesEleve.getResponsable().addAll(eleve.getResponsableList());
                                 bilanCycle.setResponsables(responsablesEleve);
@@ -538,7 +542,7 @@ public class LSUController extends ControllerHelper {
                         //on ajoute les différents attributs de la balise BilanCycle de l'élève
                         ResponsableEtab responsableEtabRef = responsablesEtab.get(0);
                         //on ajoute les responsables de l'élève (attribut de clui-ci) aux responsables du bilanCycle
-                        if(eleve.getResponsableList() != null) {
+                        if(eleve.getResponsableList() != null && eleve.getResponsableList().size()> 0) {
                             BilanCycle.Responsables responsablesEleve = objectFactory.createBilanCycleResponsables();
                             responsablesEleve.getResponsable().addAll(eleve.getResponsableList());
                             bilanCycle.setResponsables(responsablesEleve);
@@ -667,6 +671,7 @@ public class LSUController extends ControllerHelper {
                                                                                     setBilanCycleElevesWithEnsCpl(mapIdDomaineCodeDomaine, idsEleve, nbEleveCompteur, eleves, ensCplsEleves, synthesesEleves,
                                                                                             mapIdEleveIdDomainePosition, valueCycle, responsablesEtab, mapIdCycleValue, mapIdClassIdCycle,
                                                                                             idClass, vCalcMillesimeValues, bilansCycle);
+                                                                                    //sinon on n'est pas dans le cycle 4 donc on n'a pas d'enseignement de complémént
                                                                                     }else {
                                                                                         setBilanCycleElevesWithoutEnsCpl(mapIdDomaineCodeDomaine, idsEleve, nbEleveCompteur, eleves, synthesesEleves,
                                                                                                 mapIdEleveIdDomainePosition, valueCycle, responsablesEtab, mapIdCycleValue, mapIdClassIdCycle,
@@ -827,7 +832,7 @@ public class LSUController extends ControllerHelper {
         final List<String> idsClasse = request.params().getAll("idClasse");
         final List<String> idsResponsable = request.params().getAll("idResponsable");
 
-        lsunBilans.setSchemaVersion("2.0");
+        lsunBilans.setSchemaVersion("3.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if(!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             getBaliseEntete(lsunBilans, idStructure, new Handler<String>() {
