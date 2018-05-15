@@ -795,7 +795,7 @@ public class LSUController extends ControllerHelper {
                         Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
                         validator.validate(xmlFile);
                     } catch (SAXException | IOException e) {
-                        e.printStackTrace();
+                        log.error("Validation : Export LSU en erreur",e);
                         badRequest(request);
                         return;
                     }
