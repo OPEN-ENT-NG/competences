@@ -170,14 +170,20 @@ public class LSUController extends ControllerHelper {
                         for (int i = 0; i < jsonElevesRelatives.size(); i++) {
                             JsonObject o = jsonElevesRelatives.get(i);
                             if (!eleves.containIdEleve(o.getString("idNeo4j"))) {
+                                String[] externalIdClass = o.getString("externalIdClass").split("\\$");
+                                String className = externalIdClass[(externalIdClass.length - 1)];
                                 eleve = objectFactory.createEleve(o.getString("externalId"), o.getString("attachmentId"), o.getString("firstName"),
-                                        o.getString("lastName"),o.getString("nameClass"),o.getString("idNeo4j"),o.getString("idClass"),o.getString("level"));
+                                        o.getString("lastName"),className,o.getString("idNeo4j"),o.getString("idClass"),o.getString("level"));
                                 eleves.add(eleve);
                             } else {
                                 eleve = eleves.getEleveById(o.getString("idNeo4j"));
                             }
                             if(o.getString("address")!= null && o.getString("zipCode")!=null && o.getString("city")!= null){
-                                adresse = objectFactory.createAdresse(o.getString("address"), o.getString("zipCode"), o.getString("city"));
+                                String adress = o.getString("address");
+                                if(adress.length() > 50){
+                                    adress = o.getString("address").substring(0,50);
+                                }
+                                adresse = objectFactory.createAdresse(adress, o.getString("zipCode"), o.getString("city"));
                             }
                             if (o.getString("externalIdRelative")!= null && o.getString("lastNameRelative") !=null &&
                                     o.getString("firstNameRelative")!= null && o.getArray("relative").size() > 0 && adresse != null) {
