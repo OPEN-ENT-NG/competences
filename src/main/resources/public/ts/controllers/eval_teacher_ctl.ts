@@ -3466,8 +3466,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.openEditElementProgramme = function () {
+
+
             $scope.releveNote.syncDomainesEnseignement().then(() => {
                 $scope.releveNote.syncSousDomainesEnseignement().then(() => {
+                    $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
                     $scope.aideSaisie.cycle = null;
                     $scope.aideSaisie.domaineEnseignement = null;
                     template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
@@ -3480,6 +3483,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         }
 
         $scope.addProposition = function (libelleProposition) {
+            if($scope.releveNote.elementProgramme.texte === undefined){
+                $scope.releveNote.elementProgramme.texte = "";
+            }
             if ($scope.releveNote.elementProgramme.texte !== "")
                 $scope.releveNote.elementProgramme.texte += " ";
             $scope.releveNote.elementProgramme.texte += libelleProposition;

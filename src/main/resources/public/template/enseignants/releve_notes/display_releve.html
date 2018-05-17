@@ -90,7 +90,7 @@
             </div>
 
             <div class="criteres card criterion"
-                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0"
+                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0 && releveNote !== undefined"
                  ng-class="{openedProgramme : opened.elementProgramme === true}">
                 <span class="plus-input" ng-click="openElementProgramme()"></span>
                 <div class="header" ng-click="openElementProgramme();">
