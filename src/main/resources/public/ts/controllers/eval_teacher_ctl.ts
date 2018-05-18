@@ -3481,7 +3481,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
         }
-
         $scope.addProposition = function (libelleProposition) {
             if($scope.releveNote.elementProgramme.texte === undefined){
                 $scope.releveNote.elementProgramme.texte = "";
