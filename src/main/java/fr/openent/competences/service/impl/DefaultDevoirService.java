@@ -303,6 +303,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         o.removeField("created");
         o.removeField("modified");
         o.removeField("id");
+        // le pourcentage d'avancement n'est pas conservé lors de la duplication d'un devoir
+        o.putValue("percent", 0);
         try {
             o.putNumber("coefficient", Long.parseLong(o.getString("coefficient")));
         } catch (ClassCastException e) {
