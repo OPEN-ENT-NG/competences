@@ -3426,10 +3426,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.saveAppreciationMatierePeriodeEleve = function (eleve) {
+        $scope.saveAppreciationMatierePeriodeEleve = (eleve) => {
             if (eleve.appreciation_matiere_periode !== undefined) {
                 if (eleve.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
-                    $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve);
+                    $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {
+                        $scope.updateHistorique(eleve,'appreciation');
+                    });
                 }
                 else {
                     notify.error(lang.translate("error.char.outbound") +
@@ -3671,7 +3673,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.openedLigthboxEleve = function (eleve, filteredPeriode) {
+        $scope.openedLigthboxEleve = (eleve, filteredPeriode)=> {
             $scope.getEleveInfo(eleve);
             $scope.filteredPeriode = filteredPeriode;
             $scope.opened.lightbox = true;
