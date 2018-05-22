@@ -57,6 +57,36 @@ public class Utils {
         });
     }
 
+
+    public static void getIdElevesClassesGroupes(EventBus eb, final String  idGroupe, final int indiceBoucle, final Handler<Either<String, List<String>>> handler) {
+        JsonObject action = new JsonObject()
+                .putString("action", "classe.getEleveClasse")
+                .putString("idClasse", idGroupe);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                List<String> idEleves = new ArrayList<String>();
+                if ("ok".equals(body.getString("status"))) {
+                    JsonArray queryResult = body.getArray("results");
+                    if(queryResult != null) {
+                        for (int i =0; i< queryResult.size(); i++) {
+                            idEleves.add(((JsonObject)queryResult.get(i)).getString("id"));
+                        }
+                    }
+                    handler.handle(new Either.Right<String, List<String>>(idEleves));
+
+                } else {
+                    handler.handle(new Either.Left<String, List<String>>(body.getString("message")));
+                    log.error("Error :can not get students of groupe : " + idGroupe);
+                }
+            }
+        });
+
+    }
+
+
     /**
      * Recupere l'identifiant de l'ensemble des eleves de la classe dont l'identifiant est passe en parametre.
      *

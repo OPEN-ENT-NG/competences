@@ -35,6 +35,7 @@ import org.vertx.java.core.logging.Logger;
 import org.vertx.java.core.logging.impl.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -792,7 +793,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getNbNotesDevoirs(UserInfos user, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
+    public void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
         // Si l'utilisateur est null c'est qu'on essait de mettre à jour le taux de completude des devoirs
@@ -806,8 +807,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(Competences.VSCO_SCHEMA+".personnes_supp) " )
                 .append("AND rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append("AND devoirs.id = ? ");
+
+        // filtre sur les élèves de la classe à l'instant T
+        if(idEleves != null && idEleves.size() > 0) {
+            query.append(" AND "+ Competences.NOTES_TABLE + ".id_eleve IN ").append(Sql.listPrepared(idEleves.toArray()));
+        }
+
         if(!isChefEtab) {
-            query.append("AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
+            query.append(" AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
                     .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
                     .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
                     .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
@@ -826,6 +833,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         //Ajout des id désirés
         values.addNumber(idDevoir);
+
+        // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
+        if(idEleves != null && idEleves.size() > 0) {
+            for (String idEleve: idEleves) {
+                values.add(idEleve);
+            }
+        }
+
         if(!isChefEtab) {
             // Ajout des params pour les devoirs dont on est le propriétaire
             values.add(user.getUserId());
@@ -844,7 +859,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getNbAnnotationsDevoirs(UserInfos user, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
+    public void getNbAnnotationsDevoirs(UserInfos user, List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
         // Si l'utilisateur est null c'est qu'on essait de mettre à jour le taux de completude des devoirs
@@ -873,6 +888,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE + "')")
                     .append(") ");
         }
+
+        // filtre sur les élèves de la classe à l'instant T
+        if(idEleves != null && idEleves.size() > 0) {
+            query.append(" AND rel_annotations_devoirs.id_eleve IN ").append(Sql.listPrepared(idEleves.toArray()));
+        }
+
         query.append("GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
 
         JsonArray values =  new JsonArray();
@@ -891,6 +912,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
             // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
             values.add(user.getUserId());
+        }
+
+        // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
+        if(idEleves != null && idEleves.size() > 0) {
+            for (String idEleve: idEleves) {
+                values.add(idEleve);
+            }
         }
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
@@ -1031,7 +1059,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
-    public void getNbCompetencesDevoirsByEleve(Long idDevoir, Handler<Either<String, JsonArray>> handler) {
+    public void getNbCompetencesDevoirsByEleve(List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
         query.append("SELECT count(competences_notes.id_competence) AS nb_competences, id_eleve, id_devoir as id" )
@@ -1039,11 +1067,25 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" WHERE id_devoir = ?  AND "+ Competences.COMPETENCES_NOTES_TABLE + ".evaluation >= 0 ")
                 .append(" AND "+ Competences.COMPETENCES_NOTES_TABLE + ".id_eleve")
                 .append(" NOT IN (SELECT personnes_supp.id_user FROM ")
-                .append(Competences.VSCO_SCHEMA+".personnes_supp) " )
-                .append(" GROUP BY (id_eleve, id_devoir)");
+                .append(Competences.VSCO_SCHEMA+".personnes_supp) " );
+
+        // filtre sur les élèves de la classe à l'instant T
+        if(idEleves != null && idEleves.size() > 0) {
+            query.append(" AND "+ Competences.COMPETENCES_NOTES_TABLE + ".id_eleve IN ").append(Sql.listPrepared(idEleves.toArray()));
+        }
+
+
+        query.append(" GROUP BY (id_eleve, id_devoir)");
 
         JsonArray values =  new JsonArray();
         values.addNumber(idDevoir);
+
+        // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
+        if(idEleves != null && idEleves.size() > 0) {
+            for (String idEleve: idEleves) {
+                values.add(idEleve);
+            }
+        }
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
