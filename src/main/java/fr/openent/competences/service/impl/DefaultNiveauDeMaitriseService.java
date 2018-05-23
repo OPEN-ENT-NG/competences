@@ -27,10 +27,10 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.sql.SqlStatementsBuilder;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
@@ -52,7 +52,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
      */
     public void getNiveauDeMaitrise(String idEtablissement, Long idCycle, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT t1.libelle, t1.ordre, t1.couleur AS default, t1.id_cycle, t1.id AS id_niveau,")
                 .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle  AS cycle")
@@ -64,11 +64,11 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
                 .append(" WHERE id_etablissement = ? ) AS niv")
                 .append(" ON (niv.id_niveau = t1.id) " );
 
-        values.addString(idEtablissement);
+        values.add(idEtablissement);
 
         if(idCycle != null) {
             query.append(" WHERE t1.id_cycle = ?");
-            values.addNumber(idCycle);
+            values.add(idCycle);
         }
 
         query.append(" ORDER BY ordre");
@@ -78,7 +78,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
     public void getNiveauDeMaitriseofCycle(Long Cycle, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT niv1.libelle, niv1.ordre, niv1.couleur couleurDefault, niv1.id_cycle  ")
                 .append( " FROM notes.niveau_competences niv1 ")
@@ -86,14 +86,14 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
                       .append(  "  order By (ordre);" );
 
 
-        values.addNumber(Cycle);
+        values.add(Cycle);
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
     public void getPersoNiveauMaitrise(String idUser,Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA +"."+Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE)
                 .append(" WHERE id_user = ? ");
@@ -133,7 +133,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
                 if (event.isRight()) {
                     final Long niveauCompetenceId = event.right().getValue().getLong("id");
-                    maitrise.putNumber("id", niveauCompetenceId);
+                    maitrise.put("id", niveauCompetenceId);
                    doCreate(handler,niveauCompetenceId,maitrise,resourceTable);
                 }
                 else {
@@ -151,9 +151,9 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
             @Override
             public void handle(Message<JsonObject> event) {
                 JsonObject result = event.body();
-                if (result.containsField("status") && "ok".equals(result.getString("status"))) {
-                    handler.handle(new Either.Right<String, JsonArray>(new JsonArray()
-                            .add(new JsonObject().putNumber("id", returning))));
+                if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+                    handler.handle(new Either.Right<String, JsonArray>(new fr.wseduc.webutils.collections.JsonArray()
+                            .add(new JsonObject().put("id", returning))));
                 } else {
                     handler.handle(new Either.Left<String, JsonArray>(result.getString("status")));
                 }
@@ -169,7 +169,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
     @Override
     public void delete(String idEtablissement, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String query = "DELETE FROM " + resourceTable + " WHERE id_etablissement = ?";
-        sql.prepared(query, new JsonArray().add(idEtablissement), validRowsResultHandler(handler));
+        sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement), validRowsResultHandler(handler));
     }
 
     public void deleteUserFromPerso(String idUser,Handler<Either<String, JsonObject>> handler ) {
@@ -177,6 +177,6 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
                 Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
 
         String query = "DELETE FROM " + table + " WHERE id_user = ?";
-        sql.prepared(query, new JsonArray().add(idUser), validRowsResultHandler(handler));
+        sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(idUser), validRowsResultHandler(handler));
     }
 }

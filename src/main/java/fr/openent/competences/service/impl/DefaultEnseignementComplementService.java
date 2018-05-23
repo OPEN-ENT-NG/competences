@@ -6,8 +6,8 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 
 /**
  * Created by agnes.lapeyronnie on 28/11/2017.

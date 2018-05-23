@@ -37,12 +37,13 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import org.entcore.directory.services.ClassService;
 import org.entcore.directory.services.impl.DefaultClassService;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -259,7 +260,7 @@ public class CompetenceNoteController extends ControllerHelper {
             // On va récupérer les élèves de la classe
             List<String> vArrayProfils = new ArrayList<String>();
             vArrayProfils.add(mProfileStudent);
-            JsonArray types = new JsonArray(vArrayProfils.toArray());
+            JsonArray types = new fr.wseduc.webutils.collections.JsonArray(vArrayProfils);
 
             // Récupération des compétences notes d'une classe
             if(typeClasse == 0) {
@@ -274,17 +275,17 @@ public class CompetenceNoteController extends ControllerHelper {
             // Récupération des compétences notes d'un groupe d'enseignement ou d'un groupe manuel
             if(typeClasse == 1 || typeClasse == 2 ){
                 JsonObject action = new JsonObject()
-                        .putString("action", "groupe.listUsersByGroupeEnseignementId")
-                        .putString("groupEnseignementId", idClasse)
-                        .putString("profile", mProfileStudent);
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                        .put("action", "groupe.listUsersByGroupeEnseignementId")
+                        .put("groupEnseignementId", idClasse)
+                        .put("profile", mProfileStudent);
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> res) {
                         Either<String, JsonArray> eventEleves = new Either.Right<>(res.body()
-                                .getArray("results"));
+                                .getJsonArray("results"));
                         callCompetencesNotesService(eventEleves, idPeriode, request);
                     }
-                });
+                }));
             }
 
         } else {
@@ -319,7 +320,7 @@ public class CompetenceNoteController extends ControllerHelper {
             // On va récupérer les élèves de la classe
             List<String> vArrayProfils = new ArrayList<String>();
             vArrayProfils.add(mProfileStudent);
-            JsonArray types = new JsonArray(vArrayProfils.toArray());
+            JsonArray types = new fr.wseduc.webutils.collections.JsonArray(vArrayProfils);
 
             // Récupération des compétences notes d'une classe
             if(typeClasse == 0) {
@@ -334,17 +335,17 @@ public class CompetenceNoteController extends ControllerHelper {
             // Récupération des compétences notes d'un groupe d'enseignement ou d'un groupe manuel
             if(typeClasse == 1 || typeClasse == 2){
                 JsonObject action = new JsonObject()
-                        .putString("action", "group.listUsersByGroupeEnseignementId")
-                        .putString("groupEnseignementId", idClasse)
-                        .putString("profile", mProfileStudent);
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                        .put("action", "group.listUsersByGroupeEnseignementId")
+                        .put("groupEnseignementId", idClasse)
+                        .put("profile", mProfileStudent);
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> res) {
                         Either<String, JsonArray> eventEleves = new Either.Right<>(res.body()
-                                .getArray("results"));
+                                .getJsonArray("results"));
                         callCompetencesNotesDomaineService(eventEleves, idPeriode, idDomaines, request);
                     }
-                });
+                }));
             }
 
         } else {
@@ -419,7 +420,7 @@ public class CompetenceNoteController extends ControllerHelper {
                 UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
                     @Override
                     public void handle(UserInfos user) {
-                        competencesNotesService.createCompetencesNotesDevoir(resource.getArray("data"), user, arrayResponseHandler(request));
+                        competencesNotesService.createCompetencesNotesDevoir(resource.getJsonArray("data"), user, arrayResponseHandler(request));
                     }
                 });
             }
@@ -434,7 +435,7 @@ public class CompetenceNoteController extends ControllerHelper {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
             public void handle(JsonObject resource) {
-                competencesNotesService.updateCompetencesNotesDevoir(resource.getArray("data"), arrayResponseHandler(request));
+                competencesNotesService.updateCompetencesNotesDevoir(resource.getJsonArray("data"), arrayResponseHandler(request));
             }
         });
     }
@@ -452,10 +453,10 @@ public class CompetenceNoteController extends ControllerHelper {
             return;
         }
 
-        JsonArray oIdsJsonArray = new JsonArray();
+        JsonArray oIdsJsonArray = new fr.wseduc.webutils.collections.JsonArray();
         try {
             for (int i = 0; i < ids.size(); i++) {
-                oIdsJsonArray.addNumber(Long.parseLong(ids.get(i)));
+                oIdsJsonArray.add(Long.parseLong(ids.get(i)));
             }
         } catch(NumberFormatException e) {
             log.error("Error : id must be a long object", e);

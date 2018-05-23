@@ -25,9 +25,9 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -49,7 +49,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void listNotesParDevoir(Long devoirId, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         //tables
         String table_appreciation = Competences.COMPETENCES_SCHEMA + "." +Competences.APPRECIATIONS_TABLE;
         String table_note         = Competences.COMPETENCES_SCHEMA + "." +Competences.NOTES_TABLE;
@@ -118,7 +118,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void getNotesParElevesParDevoirs(String[] idEleves, Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         boolean eleves = idEleves.length != 0;
         boolean devoirs = idDevoirs.length != 0;
 
@@ -131,7 +131,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if(eleves) {
                 query.append("notes.id_eleve IN " + Sql.listPrepared(idEleves));
                 for(String s : idEleves) {
-                    values.addString(s);
+                    values.add(s);
                 }
             }
             if(eleves && devoirs) {
@@ -140,7 +140,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if(devoirs) {
                 query.append("notes.id_devoir IN " + Sql.listPrepared(idDevoirs));
                 for(Long l : idDevoirs) {
-                    values.addNumber(l);
+                    values.add(l);
                 }
             }
         }
@@ -161,7 +161,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void getWidgetNotes(String userId, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT notes.valeur, devoirs.id, devoirs.date, devoirs.id_matiere, devoirs.diviseur, devoirs.libelle, devoirs.name ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".notes, "+ Competences.COMPETENCES_SCHEMA +".devoirs ")
@@ -170,7 +170,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append("AND devoirs.date_publication <= current_date ")
                 .append("ORDER BY notes.id DESC ")
                 .append("LIMIT 5;");
-        values.addString(userId);
+        values.add(userId);
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
@@ -178,7 +178,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void getNoteElevePeriode(String userId, String etablissementId, String classeId, String matiereId,
                                     Long periodeId, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, ")
                 .append(" devoirs.ramener_sur, devoirs.is_evaluated, devoirs.id_periode, ")
@@ -195,12 +195,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(" ORDER BY devoirs.date ASC, devoirs.id ASC;");
 
         if(null != userId) {
-            values.addString(userId);
+            values.add(userId);
         }
 
-        values.addString(classeId).addString(etablissementId).addString(matiereId);
+        values.add(classeId).add(etablissementId).add(matiereId);
         if(null != periodeId) {
-            values.addNumber(periodeId);
+            values.add(periodeId);
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
@@ -209,7 +209,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
 
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve, devoirs.is_evaluated, null as annotation " +
@@ -218,10 +218,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 "INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ) " +
                 "WHERE devoirs.id_etablissement = ? " +
                 "AND devoirs.id_matiere = ? " );
-        values.addString(classeId).addString(etablissementId).addString(matiereId);
+        values.add(classeId).add(etablissementId).add(matiereId);
         if(periodeId != null) {
             query.append("AND devoirs.id_periode = ? ");
-            values.addNumber(periodeId);
+            values.add(periodeId);
         }
         query.append(" UNION ");
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, rel_annotations_devoirs.id_eleve, devoirs.is_evaluated, rel_annotations_devoirs.id_annotation as annotation " +
@@ -230,10 +230,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 "INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ) " +
                 "WHERE devoirs.id_etablissement = ? " +
                 "AND devoirs.id_matiere = ? " );
-        values.addString(classeId).addString(etablissementId).addString(matiereId);
+        values.add(classeId).add(etablissementId).add(matiereId);
         if(periodeId != null) {
             query.append("AND devoirs.id_periode = ? ");
-            values.addNumber(periodeId);
+            values.add(periodeId);
         }
 
         query.append("ORDER BY date ASC ;");
@@ -244,7 +244,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
                                           Long periodeId,  String eleveId, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
 
         query.append("SELECT ")
@@ -261,7 +261,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     .append(" WHERE id_eleve = ? ")
                     .append(" GROUP BY (id, id_devoir, id_eleve) ) AS competences_notes  ON devoirs.id ")
                     .append(" = competences_notes.id_devoir " );
-            values.addString(eleveId);
+            values.add(eleveId);
         }
         else {
             query.append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes on devoirs.id " +
@@ -274,10 +274,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 " AND devoirs.id_matiere = ? ");
 
 
-        values.addString(classeId).addString(etablissementId).addString(matiereId);
+        values.add(classeId).add(etablissementId).add(matiereId);
         if(periodeId != null) {
             query.append("AND devoirs.id_periode = ? ");
-            values.addNumber(periodeId);
+            values.add(periodeId);
         }
         query.append("ORDER BY date ASC ;");
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
@@ -287,14 +287,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                                     String colonne,   Handler<Either<String, JsonArray>> handler){
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
                 .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +"."+ colonne )
                 .append("moyenne".equals(colonne)? "_finale": " ")
                 .append(" WHERE id_periode = ? AND id_eleve=?  AND id_classe=? AND id_matiere=? ");
 
-        values.addNumber(idPeriode).addString(idEleve).addString(idClasse).addString(idMatiere);
+        values.add(idPeriode).add(idEleve).add(idClasse).add(idMatiere);
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
@@ -304,7 +304,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, String idClasse,
                                  String colonne, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
 
         query.append("SELECT id_periode, id_eleve,"+  colonne + ", id_classe, id_matiere ")
@@ -312,15 +312,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(Competences.COMPETENCES_SCHEMA +"."+  colonne + ("moyenne".equals(colonne)? "_finale": " "))
                 .append(" WHERE   id_matiere = ? ")
                 .append(" AND id_classe = ? ")
-                .append(" AND id_eleve IN " + Sql.listPrepared(idEleves.toArray()))
+                .append(" AND id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()))
                 .append( (null != idPeriode)? " AND id_periode = ? ": "" );
 
-        values.addString(idMatiere).addString(idClasse);
+        values.add(idMatiere).add(idClasse);
         for(int i=0; i < idEleves.size(); i++) {
-            values.addString(idEleves.get(i).toString());
+            values.add(idEleves.getString(i).toString());
         }
         if(null != idPeriode) {
-            values.addNumber(idPeriode);
+            values.add(idPeriode);
         }
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
@@ -328,7 +328,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void setColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse, JsonObject field,
                                  String colonne,Handler<Either<String, JsonArray>> handler){
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
                 .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +"."+ colonne )
@@ -338,14 +338,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(" ON CONFLICT (id_periode, id_eleve, id_classe, id_matiere) ")
                 .append(" DO UPDATE SET " + colonne + " = ? ");
 
-        values.addNumber(idPeriode).addString(idEleve);
+        values.add(idPeriode).add(idEleve);
         if ("moyenne".equals(colonne) || "positionnement".equals(colonne)) {
-            values.addNumber(field.getNumber(colonne)).addString(idClasse).addString(idMatiere)
-                    .addNumber(field.getNumber(colonne));
+            values.add(field.getLong(colonne)).add(idClasse).add(idMatiere)
+                    .add(field.getLong(colonne));
         }
         else if ("appreciation_matiere_periode".equals(colonne)) {
-            values.addString(field.getString(colonne)).addString(idClasse).addString(idMatiere)
-                    .addString(field.getString(colonne));
+            values.add(field.getString(colonne)).add(idClasse).add(idMatiere)
+                    .add(field.getString(colonne));
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));

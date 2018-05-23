@@ -5,8 +5,8 @@ import fr.wseduc.security.SecuredAction;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.HttpServerRequest;
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 
 
 public class CompetencesController extends ControllerHelper {

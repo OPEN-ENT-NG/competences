@@ -9,12 +9,12 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
 
@@ -59,10 +59,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param handler handler portant le resultat de la requête
      */
     public void updateBFC(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler){
-        data.removeField("id");
+        data.remove("id");
         StringBuilder sb = new StringBuilder();
-        JsonArray values = new JsonArray();
-        for (String attr : data.getFieldNames()) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        for (String attr : data.fieldNames()) {
             sb.append(attr).append(" = ?, ");
             values.add(data.getValue(attr));
         }
@@ -71,7 +71,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         " SET " + sb.toString() + "modified = NOW() " +
                         "WHERE id_domaine = ?  AND id_eleve = ? ";
 
-        values.addNumber((Number)data.getValue("id_domaine"))
+        values.add((Number)data.getValue("id_domaine"))
                 .add(data.getValue("id_eleve"));
         sql.prepared(query, values,validRowsResultHandler(handler));
     }
@@ -84,7 +84,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      */
     public void deleteBFC(long idBFC, String idEleve, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String query = "DELETE FROM " + resourceTable + " WHERE id_domaine = ? AND id_eleve = ?";
-        sql.prepared(query, new JsonArray().addNumber(idBFC).addString(idEleve), validRowsResultHandler(handler));
+        sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(idBFC).add(idEleve), validRowsResultHandler(handler));
     }
 
     /**
@@ -95,7 +95,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      */
     @Override
     public void getBFCsByEleve(String[] idEleves, String idEtablissement, Long idCycle, Handler<Either<String,JsonArray>> handler) {
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT * ")
                 .append("FROM notes.bilan_fin_cycle ")
@@ -104,14 +104,14 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 .append(" AND bilan_fin_cycle.id_etablissement = ? AND valeur >= 0 ");
 
         for(String s : idEleves) {
-            values.addString(s);
+            values.add(s);
         }
 
-        values.addString(idEtablissement);
+        values.add(idEtablissement);
 
         if(idCycle != null) {
             query.append("AND domaines.id_cycle = ? ");
-            values.addNumber(idCycle);
+            values.add(idCycle);
         }
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
@@ -142,7 +142,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     JsonArray domainesResultArray = event.right().getValue();
 
                     for (int i = 0; i < domainesResultArray.size(); i++) {
-                        JsonObject _o = domainesResultArray.get(i);
+                        JsonObject _o = domainesResultArray.getJsonObject(i);
                         Domaine _d = new Domaine(_o.getLong("id"), _o.getBoolean("evaluated"));
                         if (domaines.containsKey(_o.getLong("id_parent"))) {
                             Domaine parent = domaines.get(_o.getLong("id_parent"));
@@ -164,7 +164,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                     JsonArray competencesResultArray = event.right().getValue();
 
                                     for (int i = 0; i < competencesResultArray.size(); i++) {
-                                        JsonObject _o = competencesResultArray.get(i);
+                                        JsonObject _o = competencesResultArray.getJsonObject(i);
 
                                         domaines.get(_o.getLong("id_domaine")).addCompetence(_o.getLong("id_competence"));
                                     }
@@ -205,7 +205,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     JsonArray notesResultArray = event.right().getValue();
                     for (int i = 0; i < notesResultArray.size(); i++) {
-                        JsonObject _o = notesResultArray.get(i);
+                        JsonObject _o = notesResultArray.getJsonObject(i);
                         String id_eleve = _o.getString("id_eleve");
                         if(_o.getLong("evaluation") < 0) {
                             continue;
@@ -246,9 +246,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     JsonArray conversion = event.right().getValue();
 
                     for (int i = 0; i < conversion.size(); i++) {
-                        JsonObject _o = conversion.get(i);
-                        bornes.add(_o.getNumber("valmin").doubleValue());
-                        bornes.add(_o.getNumber("valmax").doubleValue());
+                        JsonObject _o = conversion.getJsonObject(i);
+                        bornes.add(_o.getDouble("valmin").doubleValue());
+                        bornes.add(_o.getDouble("valmax").doubleValue());
                     }
                     handler.handle(new Either.Right<String, SortedSet<Double>>(bornes));
                 } else {
@@ -295,21 +295,21 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 continue;
             }
 
-            JsonArray resultEleve = new JsonArray();
+            JsonArray resultEleve = new fr.wseduc.webutils.collections.JsonArray();
 
             for (Domaine d : domainesRacine) {
                 JsonObject note = new JsonObject();
                 if (bfcEleves.containsKey(eleve) && bfcEleves.get(eleve).containsKey(d.getId()) &&
                         bfcEleves.get(eleve).get(d.getId()) >= bornes.first() && bfcEleves.get(eleve).get(d.getId()) <= bornes.last()) {
-                        note.putNumber("idDomaine",d.getId());
-                        note.putNumber("niveau", bfcEleves.get(eleve).get(d.getId()));
+                        note.put("idDomaine",d.getId());
+                        note.put("niveau", bfcEleves.get(eleve).get(d.getId()));
                     if(recapEval){
                         if(notesCompetencesEleves.get("empty") != null){
-                            note.putNumber("moyenne", bfcEleves.get(eleve).get(d.getId()));
+                            note.put("moyenne", bfcEleves.get(eleve).get(d.getId()));
                         } else {
                             Double moy = calculMoyenne(d, notesCompetencesEleves, eleve);
                             if (moy != null)
-                                note.putNumber("moyenne",Math.round(moy * 100.0) / 100.0);
+                                note.put("moyenne",Math.round(moy * 100.0) / 100.0);
                         }
                     }
                 } else if (notesCompetencesEleves.containsKey(eleve)) {
@@ -321,10 +321,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                             simplifiedMoy++;
                         }
                         if(simplifiedMoy >= bornes.first() && simplifiedMoy <= bornes.last()) {
-                            note.putNumber("idDomaine",d.getId());
-                            note.putNumber("niveau", simplifiedMoy);
+                            note.put("idDomaine",d.getId());
+                            note.put("niveau", simplifiedMoy);
                             if(recapEval)
-                                note.putNumber("moyenne", Math.round(moy * 100.0) / 100.0);
+                                note.put("moyenne", Math.round(moy * 100.0) / 100.0);
                         }
                     }
                 }
@@ -333,15 +333,15 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 }
             }
             if(resultEleve.size() > 0) {
-                result.putArray(eleve, resultEleve);
+                result.put(eleve, resultEleve);
             }
         }
         if(recapEval){
-            JsonArray domainesR = new JsonArray();
+            JsonArray domainesR = new fr.wseduc.webutils.collections.JsonArray();
             for (Domaine d : domainesRacine) {
                 domainesR.add(d.getId());
             }
-            result.putArray("domainesRacine", domainesR);
+            result.put("domainesRacine", domainesR);
         }
 
         handler.handle(new Either.Right<String, JsonObject>(result));
@@ -397,7 +397,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     JsonArray bfcResultArray = event.right().getValue();
 
                     for (int i = 0; i < bfcResultArray.size(); i++) {
-                        JsonObject _o = bfcResultArray.get(i);
+                        JsonObject _o = bfcResultArray.getJsonObject(i);
                         if (_o.getInteger("valeur") < 0) {
                             continue;
                         }
@@ -456,7 +456,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
     @Override
     public void getCalcMillesimeValues (Handler<Either<String,JsonArray>> handler){
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT * " +
                 "FROM notes.calc_millesime";
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
@@ -469,32 +469,32 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 .append(" VALUES " )
                 .append(" ( ? , ?, ? )" )
                 .append(" ON CONFLICT (id_etablissement, id_visibility) DO UPDATE SET visible = ?");
-        JsonArray values = new JsonArray();
-        values.addString(structureId).addNumber(visible).addNumber(idVisibility).addNumber(visible);
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(structureId).add(visible).add(idVisibility).add(visible);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void getVisibility(String structureId,Integer idVisibility, UserInfos user, Handler<Either<String, JsonArray>> handler) {
 
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder().append(" SELECT id_etablissement, visible, id_visibility ")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibility ")
                 .append(" WHERE id_etablissement = ? " )
                 .append("AND id_visibility = ?");
-        values.addString(structureId).addNumber(idVisibility);
+        values.add(structureId).add(idVisibility);
 
         query.append(" UNION ALL " )
                 .append(" SELECT ? , ")
                 .append(" 1 , ?");
-        values.addString(structureId).addNumber(idVisibility);
+        values.add(structureId).add(idVisibility);
 
         query.append(" WHERE NOT EXISTS (SELECT id_etablissement, visible, id_visibility ")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".visibility")
                 .append(" WHERE id_etablissement = ? AND id_visibility = ? );  ");
 
-        values.addString(structureId).addNumber(idVisibility);
+        values.add(structureId).add(idVisibility);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
@@ -503,7 +503,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     @Override
     public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,final Long idPeriode, final Handler<Either<String, JsonArray>> handler) {
         // j'ai besoin de récupérer les idsEleve et idStructure à partir de l'idClass
-        final JsonArray moyControlesContinusEleves = new JsonArray();
+        final JsonArray moyControlesContinusEleves = new fr.wseduc.webutils.collections.JsonArray();
         getParamsMethodGetMoyenne(idsClasses, new Handler<Either<String, Map<String, Map<String, List<String>>>>>() {
             @Override
             public void handle(Either<String, Map<String, Map<String, List<String>>>> respParam) {
@@ -550,13 +550,13 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                                             Integer sommeBareme = 0;
                                                                             Integer totalMaxBareme = 0;
                                                                             //si l'élève est dans le json resultsElevesByDomaine alors il a au moins un niveau pour un domaine
-                                                                            if(resultsElevesByDomaine.containsField(idEleve)) {
-                                                                                JsonArray idDomainesNiveaux = resultsElevesByDomaine.getArray(idEleve);
+                                                                            if(resultsElevesByDomaine.containsKey(idEleve)) {
+                                                                                JsonArray idDomainesNiveaux = resultsElevesByDomaine.getJsonArray(idEleve);
                                                                                 //si l'élève n'a pas de dispense
                                                                                 if (!dispensesDomainesEleves.containsKey(idEleve)) {
                                                                                     totalMaxBareme = nbDomainesRacines * maxBareme;
                                                                                     for (int i = 0; i < idDomainesNiveaux.size(); i++) {
-                                                                                        JsonObject idDomaineNiveau = idDomainesNiveaux.get(i);
+                                                                                        JsonObject idDomaineNiveau = idDomainesNiveaux.getJsonObject(i);
                                                                                         sommeBareme += mapOrdreBaremeBrevet.get(idDomaineNiveau.getInteger("niveau"));
                                                                                     }
                                                                                     //si l'élève a une dispen
@@ -564,7 +564,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                                                     Map<Long, Boolean> idDomaineDispense = dispensesDomainesEleves.get(idEleve);
                                                                                     totalMaxBareme = (nbDomainesRacines - idDomaineDispense.size()) * maxBareme;
                                                                                     for (int i = 0; i < idDomainesNiveaux.size(); i++) {
-                                                                                        JsonObject idDomaineNiveau = idDomainesNiveaux.get(i);
+                                                                                        JsonObject idDomaineNiveau = idDomainesNiveaux.getJsonObject(i);
                                                                                         //Si idDomaine en cours n'est pas dispensé alors on ajouter le niveau à la somme
                                                                                         if (!idDomaineDispense.containsKey(idDomaineNiveau.getLong("idDomaine"))) {
                                                                                             //on somme les niveaux en convertissant le niv(=ordre) en barème
@@ -573,10 +573,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                                                     }
                                                                                 }
                                                                                 JsonObject moyControlesContinusByEleve = new JsonObject();
-                                                                                moyControlesContinusByEleve.putString("id_eleve", idEleve);
-                                                                                moyControlesContinusByEleve.putNumber("controlesContinus_brevet", sommeBareme);
-                                                                                moyControlesContinusByEleve.putNumber("totalMaxBaremeBrevet", totalMaxBareme);
-                                                                                moyControlesContinusEleves.addObject(moyControlesContinusByEleve);
+                                                                                moyControlesContinusByEleve.put("id_eleve", idEleve);
+                                                                                moyControlesContinusByEleve.put("controlesContinus_brevet", sommeBareme);
+                                                                                moyControlesContinusByEleve.put("totalMaxBaremeBrevet", totalMaxBareme);
+                                                                                moyControlesContinusEleves.add(moyControlesContinusByEleve);
 
                                                                                 //sinon l'élève n'a pas d'évaluation alors la moyenne sera = somme nulle,
                                                                                 // il faut seulement affecter le totalMaxBareme en fct des domaines dispensés ou non
@@ -588,10 +588,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                                                     totalMaxBareme = (nbDomainesRacines - idDomaineDispense.size()) * maxBareme;
                                                                                 }
                                                                                 JsonObject moyControlesContinusByEleve = new JsonObject();
-                                                                                moyControlesContinusByEleve.putString("id_eleve", idEleve);
-                                                                                moyControlesContinusByEleve.putNumber("controlesContinus_brevet", sommeBareme);
-                                                                                moyControlesContinusByEleve.putNumber("totalMaxBaremeBrevet", totalMaxBareme);
-                                                                                moyControlesContinusEleves.addObject(moyControlesContinusByEleve);
+                                                                                moyControlesContinusByEleve.put("id_eleve", idEleve);
+                                                                                moyControlesContinusByEleve.put("controlesContinus_brevet", sommeBareme);
+                                                                                moyControlesContinusByEleve.put("totalMaxBaremeBrevet", totalMaxBareme);
+                                                                                moyControlesContinusEleves.add(moyControlesContinusByEleve);
                                                                             }
                                                                         }
                                                                         handler.handle(new Either.Right<String, JsonArray>(moyControlesContinusEleves));

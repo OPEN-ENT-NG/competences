@@ -38,11 +38,11 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -70,7 +70,7 @@ public class CompetenceController extends ControllerHelper {
         Integer id = competence.getInteger("id");
         JsonObject o;
         for(int i = 0 ; i < values.size(); i++){
-            o = values.get(i);
+            o = values.getJsonObject(i);
             if(o.getInteger("id_parent") == id){
                 return true;
             }
@@ -85,13 +85,13 @@ public class CompetenceController extends ControllerHelper {
      * @return Liste des enfants de la compétence
      */
     public JsonArray findChildren(JsonObject competence, JsonArray values){
-        JsonArray children = new JsonArray();
+        JsonArray children = new fr.wseduc.webutils.collections.JsonArray();
         Integer id = competence.getInteger("id");
         JsonObject o;
         for(int i = 0; i < values.size(); i++){
-            o = values.get(i);
+            o = values.getJsonObject(i);
             if(o.getInteger("id_parent") == id){
-                children.addObject(o);
+                children.add(o);
             }
         }
         return children;
@@ -103,16 +103,16 @@ public class CompetenceController extends ControllerHelper {
      * @return Liste des compétences ordonnées
      */
     public JsonArray orderCompetences(JsonArray values){
-        JsonArray resultat = new JsonArray();
+        JsonArray resultat = new fr.wseduc.webutils.collections.JsonArray();
         JsonObject o;
         for(int i = 0; i < values.size(); i++){
-            o = values.get(i);
-            o.putBoolean("selected", false);
+            o = values.getJsonObject(i);
+            o.put("selected", false);
             if(isParent(o, values)){
-                o.putArray("children", findChildren(o, values));
+                o.put("children", findChildren(o, values));
             }
             if(o.getInteger("id_parent") == 0){
-                resultat.addObject(o);
+                resultat.add(o);
             }
         }
         return resultat;
@@ -219,18 +219,18 @@ public class CompetenceController extends ControllerHelper {
         RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_UPDATE, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject competence) {
-                Number idComp = competence.getNumber("id");
-                competence.removeField("id");
+                Number idComp = competence.getLong("id");
+                competence.remove("id");
                 String idEtablissement = competence.getString("id_etablissement");
-                competence.removeField("id_etablissement");
-                Number idEns = competence.getNumber("id_enseignement");
-                competence.removeField("id_enseignement");
+                competence.remove("id_etablissement");
+                Number idEns = competence.getLong("id_enseignement");
+                competence.remove("id_enseignement");
 
-                if(competence.getFieldNames().size() == 0) {
+                if(competence.fieldNames().size() == 0) {
                     leftToResponse(request, new Either.Left<>("Nothing to update"));
                 } else {
-                    String fieldToUpdate = competence.getFieldNames().iterator().next();
-                    Object valueToUpdate = competence.getField(fieldToUpdate);
+                    String fieldToUpdate = competence.fieldNames().iterator().next();
+                    Object valueToUpdate = competence.getValue(fieldToUpdate);
                     if ((idComp != null && idEtablissement != null && valueToUpdate != null)
                             || "index".equals(fieldToUpdate) ) {
                         competencesService.update(idComp, idEtablissement, fieldToUpdate, valueToUpdate,

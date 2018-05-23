@@ -24,12 +24,13 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 /**
  * Created by ledunoiss on 20/10/2016.
@@ -64,29 +65,29 @@ public class FilterUserUtils{
             public void handle(UserInfos user) {
 
                 JsonObject action = new JsonObject()
-                        .putString("action", "matiere.getMatieresForUser")
-                        .putString("userType", user.getType())
-                        .putString("idUser", user.getUserId())
-                        .putString("idStructure", idEtablissement)
-                        .putBoolean("onlyId", true);
+                        .put("action", "matiere.getMatieresForUser")
+                        .put("userType", user.getType())
+                        .put("idUser", user.getUserId())
+                        .put("idStructure", idEtablissement)
+                        .put("onlyId", true);
 
                 if(null == eb) {
                     handler.handle(false);
                 }
                 else {
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                         @Override
                         public void handle(Message<JsonObject> message) {
 
                             JsonObject body = message.body();
-                            JsonArray listIdsMatieres = body.getArray("results");
+                            JsonArray listIdsMatieres = body.getJsonArray("results");
                             JsonArray listReswithIdMatieres;
                             if (null != listIdsMatieres) {
-                                if (listIdsMatieres.get(0) instanceof String) {
+                                if (listIdsMatieres.getValue(0) instanceof String) {
                                     listReswithIdMatieres = null;
                                 } else {
-                                    listReswithIdMatieres = ((JsonObject) listIdsMatieres.get(0))
-                                            .getArray("res");
+                                    listReswithIdMatieres = ((JsonObject) listIdsMatieres.getJsonObject(0))
+                                            .getJsonArray("res");
                                 }
                                 if (!(listIdsMatieres != null &&
                                         (listIdsMatieres.contains(idMatiere)
@@ -101,7 +102,7 @@ public class FilterUserUtils{
                                 handler.handle(false);
                             }
                         }
-                    });
+                    }));
 
                 }
             }

@@ -27,12 +27,12 @@ import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.MultiMap;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  * Created by ledunoiss on 20/10/2016.
@@ -45,7 +45,7 @@ public class AccessReleveFilter implements ResourcesProvider {
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, final UserInfos user,
                           final Handler<Boolean> handler) {
 
-        if ("GET".equals(resourceRequest.method())) {
+        if ("GET".equals(resourceRequest.method().toString())) {
             String idClasse = resourceRequest.params().get("idClasse");
             String idEtablissement = resourceRequest.params().get("idEtablissement");
             String idMatiere = resourceRequest.params().get("idMatiere");

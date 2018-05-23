@@ -44,13 +44,13 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import java.util.*;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
@@ -246,14 +246,14 @@ public class NoteController extends ControllerHelper {
                                         if (event.isRight()) {
                                             final JsonObject result = new JsonObject();
                                             JsonArray listNotes = event.right().getValue();
-                                            JsonArray listMoyDevoirs = new JsonArray();
-                                            JsonArray listMoyEleves = new JsonArray();
+                                            JsonArray listMoyDevoirs = new fr.wseduc.webutils.collections.JsonArray();
+                                            JsonArray listMoyEleves = new fr.wseduc.webutils.collections.JsonArray();
                                             HashMap<Long, ArrayList<NoteDevoir>> notesByDevoir = new HashMap<>();
                                             HashMap<String, ArrayList<NoteDevoir>> notesByEleve = new HashMap<>();
 
                                             for (int i = 0; i < listNotes.size(); i++) {
 
-                                                JsonObject note = listNotes.get(i);
+                                                JsonObject note = listNotes.getJsonObject(i);
 
                                                 if (note.getString("valeur") == null ||
                                                         !note.getBoolean("is_evaluated")) {
@@ -277,21 +277,21 @@ public class NoteController extends ControllerHelper {
                                             for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : notesByDevoir.entrySet()) {
                                                 JsonObject moyenne = utilsService.calculMoyenneParDiviseur(entry.getValue(),
                                                         true);
-                                                moyenne.putValue("id", entry.getKey());
+                                                moyenne.put("id", entry.getKey());
                                                 listMoyDevoirs.add(moyenne);
                                             }
-                                            result.putArray("devoirs", listMoyDevoirs);
+                                            result.put("devoirs", listMoyDevoirs);
 
                                             for (Map.Entry<String, ArrayList<NoteDevoir>> entry : notesByEleve
                                                     .entrySet()) {
                                                 JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(),
                                                         false, 20);
-                                                moyenne.putValue("id", entry.getKey());
+                                                moyenne.put("id", entry.getKey());
                                                 listMoyEleves.add(moyenne);
                                             }
-                                            result.putArray("eleves", listMoyEleves);
+                                            result.put("eleves", listMoyEleves);
 
-                                            result.putArray("notes", listNotes);
+                                            result.put("notes", listNotes);
 
                                             notesService.getCompetencesNotesReleve(
                                                     idEtablissement,
@@ -304,7 +304,7 @@ public class NoteController extends ControllerHelper {
                                                         public void handle(Either<String, JsonArray> event) {
                                                             if (event.isRight()) {
                                                                 JsonArray listCompNotes = event.right().getValue();
-                                                                result.putArray("competencesNotes",
+                                                                result.put("competencesNotes",
                                                                         listCompNotes);
                                                                 if (null != idPeriodeString) {
                                                                     addMoyenneFinalAndAppreciation(request, result);
@@ -313,7 +313,7 @@ public class NoteController extends ControllerHelper {
                                                                 }
                                                             } else {
                                                                 Renders.renderJson(request, new JsonObject()
-                                                                                .putString("error",
+                                                                                .put("error",
                                                                                         (String) event.left()
                                                                                                 .getValue()),
                                                                         400);
@@ -322,7 +322,7 @@ public class NoteController extends ControllerHelper {
                                                     });
 
                                         } else {
-                                            JsonObject error = (new JsonObject()).putString("error",
+                                            JsonObject error = (new JsonObject()).put("error",
                                                     (String) event.left().getValue());
                                             Renders.renderJson(request, error, 400);
                                         }
@@ -396,15 +396,15 @@ public class NoteController extends ControllerHelper {
                                 List<NoteDevoir> notes = new ArrayList<>();
 
                                 for (int i = 0; i < notesEleve.size(); i++) {
-                                    JsonObject note = notesEleve.get(i);
+                                    JsonObject note = notesEleve.getJsonObject(i);
                                     notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur")),
-                                            Double.parseDouble(note.getNumber("diviseur").toString()),
+                                            Double.parseDouble(note.getInteger("diviseur").toString()),
                                             note.getBoolean("ramener_sur"),
                                             Double.parseDouble(note.getString("coefficient"))));
                                 }
                                 Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20));
                             } else {
-                                renderError(request, new JsonObject().putString("error", event.left().getValue()));
+                                renderError(request, new JsonObject().put("error", event.left().getValue()));
                             }
                         }
                     });
@@ -424,8 +424,8 @@ public class NoteController extends ControllerHelper {
         final String idPeriodeString = request.params().get("idPeriode");
 
         final JsonObject action = new JsonObject()
-                .putString("action", "classe.getElevesClasses")
-                .putArray("idClasses", new JsonArray().addString(idClasse));
+                .put("action", "classe.getElevesClasses")
+                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
         if (idPeriodeString != null) {
             try {
@@ -435,21 +435,21 @@ public class NoteController extends ControllerHelper {
                     public void handle(Either<String, JsonObject> stringJsonObjectEither) {
                         if (stringJsonObjectEither.isRight()) {
 
-                            res.putObject("elementProgramme",stringJsonObjectEither.right().getValue());
+                            res.put("elementProgramme",stringJsonObjectEither.right().getValue());
 
-                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                 @Override
                                 public void handle(Message<JsonObject> message) {
                                     JsonObject body = message.body();
 
                                     if ("ok".equals(body.getString("status"))) {
                                         Map<String, List<String>> result = new LinkedHashMap<>();
-                                        final JsonArray idEleves = new JsonArray();
-                                        JsonArray queryResult = body.getArray("results");
+                                        final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
+                                        JsonArray queryResult = body.getJsonArray("results");
 
                                         for (int i = 0; i < queryResult.size(); i++) {
-                                            JsonObject eleve = queryResult.get(i);
-                                            idEleves.addString(eleve.getString("idEleve"));
+                                            JsonObject eleve = queryResult.getJsonObject(i);
+                                            idEleves.add(eleve.getString("idEleve"));
                                         }
                                         notesService.getColonneReleve(
                                                 idEleves,
@@ -461,7 +461,7 @@ public class NoteController extends ControllerHelper {
                                                     @Override
                                                     public void handle(Either<String, JsonArray> event) {
                                                         if (event.isRight()) {
-                                                            res.putArray("moyennes",
+                                                            res.put("moyennes",
                                                                     event.right().getValue());
                                                             addAppreciationsElevesPeriodeMatiere(request, idEleves,
                                                                     idPeriodeString, idMatiere,
@@ -469,7 +469,7 @@ public class NoteController extends ControllerHelper {
 
                                                         } else {
                                                             JsonObject error = new JsonObject()
-                                                                    .putString("error",
+                                                                    .put("error",
                                                                             event.left().getValue());
                                                             Renders.renderJson(request, error, 400);
                                                         }
@@ -477,12 +477,12 @@ public class NoteController extends ControllerHelper {
                                                 });
                                     } else {
                                         log.error("getRelevePeriodique " + body.getString("message"));
-                                        JsonObject error = (new JsonObject()).putString("error",
+                                        JsonObject error = (new JsonObject()).put("error",
                                                 "failed get Moyenne Finale");
                                         Renders.renderJson(request, error, 400);
                                     }
                                 }
-                            });
+                            }));
                         }
                     }
                 });
@@ -510,11 +510,11 @@ public class NoteController extends ControllerHelper {
                     @Override
                     public void handle(Either<String, JsonArray> event) {
                         if (event.isRight()) {
-                            Renders.renderJson(request, res.putArray("appreciations",
+                            Renders.renderJson(request, res.put("appreciations",
                                     event.right().getValue()));
                         } else {
                             JsonObject error = new JsonObject()
-                                    .putString("error", event.left().getValue());
+                                    .put("error", event.left().getValue());
                             Renders.renderJson(request, error, 400);
                         }
                     }
@@ -678,7 +678,7 @@ public class NoteController extends ControllerHelper {
 
                                             for (int i = 0; i < listNotes.size(); i++) {
 
-                                                JsonObject note = listNotes.get(i);
+                                                JsonObject note = listNotes.getJsonObject(i);
 
                                                 if (note.getString("valeur") == null ||
                                                         !note.getBoolean("is_evaluated")) {
@@ -715,48 +715,48 @@ public class NoteController extends ControllerHelper {
                                                             noteDevoir);
                                                 }
                                             }
-                                            result.putArray("moyennes",new JsonArray());
-                                            result.putArray("moyennesClasse", new JsonArray());
+                                            result.put("moyennes",new fr.wseduc.webutils.collections.JsonArray());
+                                            result.put("moyennesClasse", new fr.wseduc.webutils.collections.JsonArray());
                                             // Calcul des moyennes par période pour L'élève
                                             for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
                                                     : notesByDevoirByPeriode.entrySet()) {
-                                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                                listMoyDevoirs.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
                                                 for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
                                                         entryPeriode.getValue().entrySet()) {
                                                     JsonObject moyenne = utilsService.calculMoyenne(
                                                             entry.getValue(),
                                                             false, 20);
-                                                    moyenne.putValue("id", entry.getKey());
+                                                    moyenne.put("id", entry.getKey());
                                                     listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
                                                 }
                                                 if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
-                                                    result.getArray("moyennes").add(
-                                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                                    result.getJsonArray("moyennes").add(
+                                                            listMoyDevoirs.get(entryPeriode.getKey()).getJsonObject(0));
                                                 }
                                             }
 
                                             // calcul des moyennes par période pour la classe
                                             for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
                                                     : notesByDevoirByPeriodeClasse.entrySet()) {
-                                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                                listMoyDevoirs.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
                                                 for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
                                                         entryPeriode.getValue().entrySet()) {
                                                     JsonObject moyenne = utilsService.calculMoyenne(
                                                             entry.getValue(),
                                                             false, 20);
-                                                    moyenne.putValue("id", entry.getKey());
+                                                    moyenne.put("id", entry.getKey());
                                                     listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
                                                 }
                                                 if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
-                                                    result.getArray("moyennesClasse").add(
-                                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                                    result.getJsonArray("moyennesClasse").add(
+                                                            listMoyDevoirs.get(entryPeriode.getKey()).getJsonObject(0));
                                                 }
                                             }
                                             addMoyenneFinalAndAppreciationPositionnementEleve(idEleve,idClasse,
                                                     idMatiere, idEtablissement,request,result);
 
                                         } else {
-                                            JsonObject error = (new JsonObject()).putString("error",
+                                            JsonObject error = (new JsonObject()).put("error",
                                                     (String) event.left().getValue());
                                             Renders.renderJson(request, error, 400);
                                         }
@@ -796,8 +796,8 @@ public class NoteController extends ControllerHelper {
                 final String idMatiere = request.params().get("idMatiere");
 
                 final JsonObject action = new JsonObject()
-                        .putString("action", "classe.getElevesClasses")
-                        .putArray("idClasses", new JsonArray().addString(idClasse));
+                        .put("action", "classe.getElevesClasses")
+                        .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
                 new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
                         new Handler<Boolean>() {
@@ -811,16 +811,16 @@ public class NoteController extends ControllerHelper {
                                             final JsonObject result = new JsonObject();
                                             final JsonArray listNotes = event.right().getValue();
 
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
                                                 public void handle(Message<JsonObject> message) {
                                                     JsonObject body = message.body();
 
                                                     if ("ok".equals(body.getString("status"))) {
                                                         final JsonObject result = new JsonObject();
-                                                        final JsonArray idEleves = new JsonArray();
-                                                        JsonArray queryResult = body.getArray("results");
-                                                        result.putArray("moyennes",new JsonArray());
+                                                        final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
+                                                        JsonArray queryResult = body.getJsonArray("results");
+                                                        result.put("moyennes",new fr.wseduc.webutils.collections.JsonArray());
 
                                                         for (int i = 0; i < queryResult.size(); i++) {
 
@@ -831,14 +831,14 @@ public class NoteController extends ControllerHelper {
                                                             notesByDevoirByPeriode.put(null,
                                                                     new HashMap<Long, ArrayList<NoteDevoir>>());
 
-                                                            JsonObject eleve = queryResult.get(i);
+                                                            JsonObject eleve = queryResult.getJsonObject(i);
                                                             String idEleve = eleve.getString("idEleve");
-                                                            idEleves.addString(idEleve);
+                                                            idEleves.add(idEleve);
 
 
                                                             for (int j = 0; j < listNotes.size(); j++) {
 
-                                                                JsonObject note = listNotes.get(j);
+                                                                JsonObject note = listNotes.getJsonObject(j);
 
                                                                 if (note.getString("valeur") == null ||
                                                                         !note.getBoolean("is_evaluated")) {
@@ -871,19 +871,19 @@ public class NoteController extends ControllerHelper {
                                                             // Calcul des moyennes par période pour L'élève
                                                             for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
                                                                     : notesByDevoirByPeriode.entrySet()) {
-                                                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                                                listMoyDevoirs.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
                                                                 for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
                                                                         entryPeriode.getValue().entrySet()) {
                                                                     JsonObject moyenne = utilsService.calculMoyenne(
                                                                             entry.getValue(),
                                                                             false, 20);
-                                                                    moyenne.putValue("id_periode", entry.getKey());
-                                                                    moyenne.putValue("id_eleve", idEleve);
+                                                                    moyenne.put("id_periode", entry.getKey());
+                                                                    moyenne.put("id_eleve", idEleve);
                                                                     listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
                                                                 }
                                                                 if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
-                                                                    result.getArray("moyennes").add(
-                                                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                                                    result.getJsonArray("moyennes").add(
+                                                                            listMoyDevoirs.get(entryPeriode.getKey()).getJsonObject(0));
                                                                 }
                                                             }
                                                         }
@@ -901,11 +901,11 @@ public class NoteController extends ControllerHelper {
                                                                     @Override
                                                                     public void handle(Either<String, JsonArray> event) {
                                                                         if (event.isRight()) {
-                                                                            result.putArray("moyennes_finales",event.right().getValue());
+                                                                            result.put("moyennes_finales",event.right().getValue());
                                                                             Renders.renderJson(request, result);
                                                                         } else {
                                                                             JsonObject error = new JsonObject()
-                                                                                    .putString("error",
+                                                                                    .put("error",
                                                                                             event.left().getValue());
                                                                             Renders.renderJson(request, error, 400);
                                                                         }
@@ -914,9 +914,9 @@ public class NoteController extends ControllerHelper {
                                                     }
 
                                                 }
-                                            });
+                                            }));
                                         } else {
-                                            JsonObject error = (new JsonObject()).putString("error",
+                                            JsonObject error = (new JsonObject()).put("error",
                                                     (String) event.left().getValue());
                                             Renders.renderJson(request, error, 400);
                                         }
@@ -944,7 +944,7 @@ public class NoteController extends ControllerHelper {
                                                                    final HttpServerRequest request,
                                                                    final  JsonObject result) {
         notesService.getColonneReleve(
-                new JsonArray().add(idEleve),
+                new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
                 null,
                 idMatiere,
                 idClasse,
@@ -953,10 +953,10 @@ public class NoteController extends ControllerHelper {
                     @Override
                     public void handle(Either<String, JsonArray> event) {
                         if (event.isRight()) {
-                            result.putArray("appreciations",
+                            result.put("appreciations",
                                     event.right().getValue());
                             notesService.getColonneReleve(
-                                    new JsonArray().add(idEleve),
+                                    new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
                                     null,
                                     idMatiere,
                                     idClasse,
@@ -965,9 +965,9 @@ public class NoteController extends ControllerHelper {
                                         @Override
                                         public void handle(Either<String, JsonArray> event) {
                                             if (event.isRight()) {
-                                                result.putArray("moyennes_finales",event.right().getValue());
+                                                result.put("moyennes_finales",event.right().getValue());
                                                 notesService.getColonneReleve(
-                                                        new JsonArray().add(idEleve),
+                                                        new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
                                                         null,
                                                         idMatiere,
                                                         idClasse,
@@ -976,13 +976,13 @@ public class NoteController extends ControllerHelper {
                                                             public void handle(Either<String, JsonArray> event) {
                                                                 if (event.isRight()) {
                                                                     result
-                                                                            .putArray("positionnements",
+                                                                            .put("positionnements",
                                                                                     event.right().getValue());
                                                                     addPositionnementAutoEleve(idEleve, idClasse,
                                                                             idMatiere, idEtablissement,request,result);
                                                                 } else {
                                                                     JsonObject error = new JsonObject()
-                                                                            .putString("error",
+                                                                            .put("error",
                                                                                     event.left().getValue());
                                                                     Renders.renderJson(request, error, 400);
                                                                 }
@@ -990,7 +990,7 @@ public class NoteController extends ControllerHelper {
                                                         });
                                             } else {
                                                 JsonObject error = new JsonObject()
-                                                        .putString("error",
+                                                        .put("error",
                                                                 event.left().getValue());
                                                 Renders.renderJson(request, error, 400);
                                             }
@@ -998,7 +998,7 @@ public class NoteController extends ControllerHelper {
                                     });
                         } else {
                             JsonObject error = new JsonObject()
-                                    .putString("error",
+                                    .put("error",
                                             event.left().getValue());
                             Renders.renderJson(request, error, 400);
                         }
@@ -1026,7 +1026,7 @@ public class NoteController extends ControllerHelper {
                             for (int i = 0; i < listNotes.size(); i++) {
 
 
-                                JsonObject note = listNotes.get(i);
+                                JsonObject note = listNotes.getJsonObject(i);
                                 Long id_periode = note.getLong("id_periode");
                                 if(!notesByDevoirByPeriode.containsKey(id_periode)) {
                                     notesByDevoirByPeriode.put(id_periode,
@@ -1055,33 +1055,33 @@ public class NoteController extends ControllerHelper {
                                         notesByDevoirByPeriode.get(null),
                                         noteDevoir);
                             }
-                            result.putArray("positionnements_auto",new JsonArray());
+                            result.put("positionnements_auto",new fr.wseduc.webutils.collections.JsonArray());
                             // Calcul des moyennes des max de compétencesNotes par période pour L'élève
                             for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
                                     : notesByDevoirByPeriode.entrySet()) {
-                                listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
+                                listMoyDevoirs.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
                                 for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
                                         entryPeriode.getValue().entrySet()) {
                                     JsonObject moyenne = utilsService.calculMoyenne(
                                             entry.getValue(),
                                             false, 1);
-                                    moyenne.putValue("id_periode", entry.getKey());
+                                    moyenne.put("id_periode", entry.getKey());
                                     listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
                                 }
                                 if (listMoyDevoirs.get(entryPeriode.getKey()).size() > 0) {
-                                    result.getArray("positionnements_auto").add(
-                                            listMoyDevoirs.get(entryPeriode.getKey()).get(0));
+                                    result.getJsonArray("positionnements_auto").add(
+                                            listMoyDevoirs.get(entryPeriode.getKey()).getJsonObject(0));
                                 }
                                 else {
-                                    result.getArray("positionnements_auto").add(new JsonObject()
-                                            .putNumber("moyenne", 0)
-                                            .putNumber("id_periode", entryPeriode.getKey()));
+                                    result.getJsonArray("positionnements_auto").add(new JsonObject()
+                                            .put("moyenne", 0)
+                                            .put("id_periode", entryPeriode.getKey()));
                                 }
                             }
                             Renders.renderJson(request, result);
                         } else {
                             JsonObject error = new JsonObject()
-                                    .putString("error",
+                                    .put("error",
                                             event.left().getValue());
                             Renders.renderJson(request, error, 400);
                         }

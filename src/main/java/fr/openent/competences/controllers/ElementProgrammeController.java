@@ -9,7 +9,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
-import org.vertx.java.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerRequest;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 

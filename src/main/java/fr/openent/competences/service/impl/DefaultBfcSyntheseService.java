@@ -8,14 +8,14 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
-
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 /**
  * Created by agnes.lapeyronnie on 03/11/2017.
@@ -52,35 +52,35 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
         StringBuilder query = new StringBuilder()
                 .append("SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".bfc_synthese WHERE id_eleve = ? AND id_cycle = ? ;");
 
-        Sql.getInstance().prepared(query.toString(),new JsonArray().addString(idEleve).addNumber(idCycle), SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(),new fr.wseduc.webutils.collections.JsonArray().add(idEleve).add(idCycle), SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public void getBfcSyntheseByIdsEleve(final String[] idsEleve, final Long idCycle,final Handler<Either<String, JsonArray>> handler) {
-        JsonArray valuesCount = new JsonArray();
+        JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
         String queryCount = "SELECT count(*) FROM "+ Competences.COMPETENCES_SCHEMA +".bfc_synthese WHERE id_eleve IN "+ Sql.listPrepared(idsEleve)+"  AND id_Cycle = ? ";
 
         for(String idEleve:idsEleve){
-            valuesCount.addString(idEleve);
+            valuesCount.add(idEleve);
         }
-        valuesCount.addNumber(idCycle);
+        valuesCount.add(idCycle);
         Sql.getInstance().prepared(queryCount, valuesCount, new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> sqlResultCount) {
                 Long nbSyntheseBFC = SqlResult.countResult(sqlResultCount);
                 if (nbSyntheseBFC > 0) {
-                    JsonArray values = new JsonArray();
+                    JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
                     String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".bfc_synthese WHERE id_eleve IN "+ Sql.listPrepared(idsEleve)+"  AND id_Cycle = ? ";
 
                     for(String s:idsEleve){
-                        values.addString(s);
+                        values.add(s);
                     }
-                    values.addNumber(idCycle);
+                    values.add(idCycle);
 
                     Sql.getInstance().prepared(query,values, SqlResult.validResultHandler(handler));
 
                 }else{
-                    handler.handle(new Either.Right<String,JsonArray>(new JsonArray()));
+                    handler.handle(new Either.Right<String,JsonArray>(new fr.wseduc.webutils.collections.JsonArray()));
                 }
             }
         });
@@ -88,8 +88,8 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
 
     @Override
     public void getBfcSyntheseByIdsEleveAndClasse(final String[] idsEleve, final String idClasse,final Handler<Either<String, JsonArray>> handler) {
-        JsonArray valuesCount = new JsonArray();
-        JsonArray values = new JsonArray();
+        JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT bfc_synthese.*, rel_groupe_cycle.id_groupe " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".bfc_synthese " +
                 "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ON rel_groupe_cycle.id_cycle = bfc_synthese.id_cycle " +
@@ -97,9 +97,9 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
                 "AND rel_groupe_cycle.id_groupe = ? ";
 
         for(String s:idsEleve){
-            values.addString(s);
+            values.add(s);
         }
-        values.addString(idClasse);
+        values.add(idClasse);
 
         Sql.getInstance().prepared(query,values, SqlResult.validResultHandler(handler));
     }
@@ -109,16 +109,16 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
     @Override
     public void getIdCycleWithIdEleve(String idEleve,final Handler<Either<String,Integer>> handler) {
         JsonObject action = new JsonObject()
-                .putString("action", "classe.getClasseByEleve")
-                .putString("idEleve", idEleve);
+                .put("action", "classe.getClasseByEleve")
+                .put("idEleve", idEleve);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
                 if ("ok".equals(body.getString("status"))) {
-                    utilsService.getCycle(body.getObject("result").getObject("c").getObject("data").getString("id"), new Handler<Either<String, JsonObject>>() {
+                    utilsService.getCycle(body.getJsonObject("result").getJsonObject("c").getJsonObject("data").getString("id"), new Handler<Either<String, JsonObject>>() {
                         @Override
                         public void handle(Either<String, JsonObject> idCycleObject) {
                             if (idCycleObject.isRight()) {
@@ -135,7 +135,7 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
                     handler.handle(new Either.Left<String,Integer>("idClass not found : " + body.getString("message")));
                 }
             }
-        });
+        }));
     }
 
 }

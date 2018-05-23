@@ -25,8 +25,8 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 
 public class DefaultDomaineService extends SqlCrudService implements DomainesService {
     public DefaultDomaineService(String schema, String table) {
@@ -36,7 +36,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     @Override
     public void getArbreDomaines(String idClasse, String idEleve, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
 
         query.append("WITH RECURSIVE search_graph(niveau, id, id_parent, libelle, codification, ")
@@ -74,10 +74,10 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         query.append(" ORDER BY pathinfo, id_cycle");
 
         if(null != idClasse) {
-            params.addString(idClasse);
+            params.add(idClasse);
         }
         if(null != idEleve){
-            params.addString(idEleve);
+            params.add(idEleve);
         }
         Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
     }
@@ -85,7 +85,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     @Override
     public void getDomainesLibCod(int[] idDomaines, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
 
         query.append("SELECT id, id_parent, libelle, codification ");
@@ -112,7 +112,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     @Override
     public void getDomainesRacines(String idClasse, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         //On extrait d'abord les domaines evalués et dont le cycle correspond à celui de la classe
         query.append("WITH evaluated_domaines AS ")
@@ -120,7 +120,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
                 .append("FROM notes.domaines ")
                 .append("LEFT JOIN notes.rel_groupe_cycle ON notes.domaines.id_cycle = notes.rel_groupe_cycle.id_cycle")
                 .append(" WHERE domaines.evaluated = TRUE AND rel_groupe_cycle.id_groupe = ?) ");
-        params.addString(idClasse);
+        params.add(idClasse);
 
         //Puis on sélectionne les domaines dont le parent n'existe pas dans la requête précente,
         // c'est-à-dire un domaine racine (id_parent = 0) ou dont le domaine parent n'est pas évalué

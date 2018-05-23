@@ -6,9 +6,9 @@ import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.share.impl.SqlShareService;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.math.BigInteger;
 
@@ -88,14 +88,14 @@ public class Competences extends BaseServer {
 
 
     @Override
-	public void start() {
+	public void start() throws Exception {
         super.start();
 
-        COMPETENCES_SCHEMA = container.config().getString("db-schema");
-        VSCO_SCHEMA = container.config().getString("vsco-schema");
-        LSUN_CONFIG = container.config().getObject("lsun");
+        COMPETENCES_SCHEMA = config.getString("db-schema");
+        VSCO_SCHEMA = config.getString("vsco-schema");
+        LSUN_CONFIG = config.getJsonObject("lsun");
 
-        EmailFactory emailFactory = new EmailFactory(vertx, container, container.config());
+        EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender notification = emailFactory.getSender();
 
         final EventBus eb = getEventBus(vertx);
@@ -109,7 +109,7 @@ public class Competences extends BaseServer {
 
         // devoir controller
         DevoirController devoirController = new DevoirController(eb);
-        SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE, new JsonArray().addString("*"), new JsonArray().add("*"), true);
+        SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE, new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
         devoirController.setCrudService(devoirSqlCrudService);
         devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions, null));
         addController(devoirController);

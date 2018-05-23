@@ -1,7 +1,7 @@
 package fr.openent.competences.bean;
 
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.util.*;
 
@@ -194,26 +194,26 @@ public class Eleve {
     public JsonObject toJson() {
         JsonObject result = new JsonObject();
 
-        result.putString("lastName", this.lastName);
-        result.putString("firstName", this.firstName);
-        result.putString("nomClasse", this.nomClasse);
-        result.putString("cycle", this.cycle);
+        result.put("lastName", this.lastName);
+        result.put("firstName", this.firstName);
+        result.put("nomClasse", this.nomClasse);
+        result.put("cycle", this.cycle);
 
         List<Object> listNiveaux = new ArrayList<Object>(this.libelleNiveau.values());
-        result.putArray("niveau", new JsonArray(listNiveaux));
+        result.put("niveau", new fr.wseduc.webutils.collections.JsonArray(listNiveaux));
 
-        JsonArray evaluations = new JsonArray();
+        JsonArray evaluations = new fr.wseduc.webutils.collections.JsonArray();
         for(Map.Entry<Long, Map<String, String>> domaine : this.domainesRacines.entrySet()) {
             JsonObject notes = new JsonObject();
-            //notes.putString("domaine", domaine.getValue().get("libelle"));
+            //notes.put("domaine", domaine.getValue().get("libelle"));
             JsonObject domaineObj = new JsonObject();
-            domaineObj.putString("libelle", domaine.getValue().get("libelle"));
+            domaineObj.put("libelle", domaine.getValue().get("libelle"));
             if(domaine.getValue().containsKey("dispense")){
-                domaineObj.putBoolean("dispense", Boolean.valueOf(domaine.getValue().get("dispense")));
+                domaineObj.put("dispense", Boolean.valueOf(domaine.getValue().get("dispense")));
             }else{
-                domaineObj.putBoolean("dispense",false);
+                domaineObj.put("dispense",false);
             }
-            notes.putObject("domaine",domaineObj);
+            notes.put("domaine",domaineObj);
 
             // le tableau de l'evaluation est de meme longueur que celui des niveaux, et est remplit de booleen, tous a
             // false.
@@ -221,10 +221,10 @@ public class Eleve {
             if (this.notes.containsKey(domaine.getKey())) {
                 evaluation.set(this.notes.get(domaine.getKey()) - 1, true);
             }
-            notes.putArray("notes", new JsonArray(evaluation));
-            evaluations.addObject(notes);
+            notes.put("notes", new fr.wseduc.webutils.collections.JsonArray(evaluation));
+            evaluations.add(notes);
         }
-        JsonArray enseignementComplements = new JsonArray();
+        JsonArray enseignementComplements = new fr.wseduc.webutils.collections.JsonArray();
         if(this.enseignmentComplements != null
                 && this.enseignmentComplements.size() > 0){
             for(Map.Entry<String, Long> enseignementComplement : this.enseignmentComplements.entrySet()) {
@@ -232,30 +232,30 @@ public class Eleve {
                 //si l'élève n'a aucun enseignement de complément et que si dans le pdf on ne veut pas que cela n'apparaisse
                 //alors
                 //if(enseignementComplement.getValue()!=0) {
-                    enseignmentComplementJson.putString("enseignementComplement", enseignementComplement.getKey());
+                    enseignmentComplementJson.put("enseignementComplement", enseignementComplement.getKey());
                 //}
                 List<Object> objectifs = new ArrayList<Object>(Collections.nCopies(2, false));
                 if(enseignementComplement.getValue()!=0) {
                     objectifs.set(enseignementComplement.getValue().intValue() - 1, true);
                 }
-                enseignmentComplementJson.putArray("objectifs", new JsonArray(objectifs));
-                enseignementComplements.addObject(enseignmentComplementJson);
+                enseignmentComplementJson.put("objectifs", new fr.wseduc.webutils.collections.JsonArray(objectifs));
+                enseignementComplements.add(enseignmentComplementJson);
             }
-            result.putArray("enseignementComplements", enseignementComplements);
-            result.putBoolean("hasEnseignementComplements", true);
+            result.put("enseignementComplements", enseignementComplements);
+            result.put("hasEnseignementComplements", true);
         } else {
-            result.putBoolean("hasEnseignementComplements", false);
+            result.put("hasEnseignementComplements", false);
         }
 
         if(syntheseCycle != null
                 && !syntheseCycle.isEmpty()){
-            result.putString("syntheseBFC", syntheseCycle);
-            result.putBoolean("hasSynthese", true);
+            result.put("syntheseBFC", syntheseCycle);
+            result.put("hasSynthese", true);
         } else {
-            result.putBoolean("hasSynthese", false);
+            result.put("hasSynthese", false);
         }
 
-        result.putArray("domaines", evaluations);
+        result.put("domaines", evaluations);
 
         return result;
     }

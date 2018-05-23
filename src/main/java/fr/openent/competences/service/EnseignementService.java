@@ -21,8 +21,8 @@ package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.CrudService;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 
 /**
  * Created by ledunoiss on 05/08/2016.

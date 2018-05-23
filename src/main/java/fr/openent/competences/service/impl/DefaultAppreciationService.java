@@ -6,9 +6,9 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 /**
  * Created by anabah on 01/03/2017.
@@ -40,12 +40,12 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
                 .append(" VALUES " )
                 .append(" ( ?, ?, ?, ?)" )
                 .append(" ON CONFLICT (id_classe, id_periode, id_matiere) DO UPDATE SET appreciation = ?");
-        JsonArray values = new JsonArray();
-        values.addString(appreciation);
-        values.addString(id_classe);
-        values.addNumber(id_periode);
-        values.addString(id_matiere);
-        values.addString(appreciation);
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(appreciation);
+        values.add(id_classe);
+        values.add(id_periode);
+        values.add(id_matiere);
+        values.add(appreciation);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
@@ -53,7 +53,7 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
     @Override
     public void getAppreciationClasse(String id_classe, int id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".appreciation_classe ")
@@ -61,9 +61,9 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
                 .append("AND "+ Competences.COMPETENCES_SCHEMA +".appreciation_classe.id_periode = ? ")
                 .append("AND "+ Competences.COMPETENCES_SCHEMA +".appreciation_classe.id_matiere = ? ");
 
-        values.addString(id_classe);
-        values.addNumber(id_periode);
-        values.addString(id_matiere);
+        values.add(id_classe);
+        values.add(id_periode);
+        values.add(id_matiere);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }

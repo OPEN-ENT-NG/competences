@@ -29,9 +29,9 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.sql.SqlStatementsBuilder;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
     @Override
     public void listRemplacements(List<String> poListIdEtab, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         Object[] oListIdEtabArray = poListIdEtab.toArray();
 
         query.append("SELECT rel_professeurs_remplacants.*, users_titulaires.username AS libelle_titulaire, users_remplacants.username AS libelle_remplacant ")
@@ -58,7 +58,7 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
                 /*.append("AND current_date <= date_fin")*/; // TODO a décomenter
 
         for (Object idEab: oListIdEtabArray) {
-            values.addString(idEab.toString());
+            values.add(idEab.toString());
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
@@ -70,16 +70,16 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
 
         // Ajout du titulaire dans la table users s'il n'existe pas
         String userQueryTitulaire = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".merge_users(?,?)";
-        s.prepared(userQueryTitulaire, new JsonArray().add(poRemplacement.getString("id_titulaire")).add(poRemplacement.getString("libelle_titulaire")));
+        s.prepared(userQueryTitulaire, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_titulaire")).add(poRemplacement.getString("libelle_titulaire")));
 
         // Ajout du remplaçant dans la table users s'il n'existe pas
         String userQueryRemplacant = "SELECT "+ Competences.COMPETENCES_SCHEMA+ ".merge_users(?,?)";
-        s.prepared(userQueryRemplacant, new JsonArray().add(poRemplacement.getString("id_remplacant")).add(poRemplacement.getString("libelle_remplacant")));
+        s.prepared(userQueryRemplacant, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_remplacant")).add(poRemplacement.getString("libelle_remplacant")));
 
 
         // Ajout du remplacement
         String remplacementQuery = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA+ ".rel_professeurs_remplacants (id_titulaire, id_remplacant, date_debut, date_fin, id_etablissement) VALUES (?, ?, to_timestamp(?,'YYYY-MM-DD'), to_timestamp(?,'YYYY-MM-DD'), ?);";
-        s.prepared(remplacementQuery, new JsonArray().add(poRemplacement.getString("id_titulaire"))
+        s.prepared(remplacementQuery, new fr.wseduc.webutils.collections.JsonArray().add(poRemplacement.getString("id_titulaire"))
                                                         .add(poRemplacement.getString("id_remplacant"))
                                                         .add(poRemplacement.getString("date_debut"))
                                                         .add(poRemplacement.getString("date_fin"))
@@ -94,7 +94,7 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
     @Override
     public void deleteRemplacement(String id_titulaire, String id_remplacant, String date_debut, String date_fin, String id_etablissement, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_professeurs_remplacants ")
                 .append("WHERE id_titulaire = ? ")
@@ -103,21 +103,21 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
                 .append("AND date_fin = to_date(?,'YYYY-MM-DD') ")
                 .append("AND id_etablissement = ? ");
 
-        values.addString(id_titulaire);
-        values.addString(id_remplacant);
-        values.addString(date_debut);
-        values.addString(date_fin);
-        values.addString(id_etablissement);
+        values.add(id_titulaire);
+        values.add(id_remplacant);
+        values.add(date_debut);
+        values.add(date_fin);
+        values.add(id_etablissement);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
     }
 
     @Override
     public void getRemplacementClasse(JsonArray classes, UserInfos user, String idStructure, Handler<Either<String, JsonArray>> handler) {
-        JsonArray ids = new JsonArray();
+        JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < classes.size(); i++) {
-            JsonObject o = classes.get(i);
-            if (o.containsField("id_groupe")) ids.addString(o.getString("id_groupe"));
+            JsonObject o = classes.getJsonObject(i);
+            if (o.containsKey("id_groupe")) ids.add(o.getString("id_groupe"));
         }
         String query = "MATCH (c:Class) " +
                 "WHERE NOT (:User {id: {userId}})-[:IN]->(:ProfileGroup)-[:DEPENDS]->(c:Class) " +
@@ -132,8 +132,8 @@ public class DefaultRemplacementService extends SqlCrudService implements Rempla
                 "RETURN  c.id as id, c.name as name, true as remplacement, 1 as type_groupe";
 
         JsonObject params = new JsonObject()
-                .putArray("ids", ids)
-                .putString("userId", user.getUserId());
+                .put("ids", ids)
+                .put("userId", user.getUserId());
 
         Neo4j.getInstance().execute(query, params, Neo4jResult.validResultHandler(handler));
     }

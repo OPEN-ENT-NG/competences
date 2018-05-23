@@ -27,12 +27,12 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +92,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 if (event.isRight()) {
                     final Long devoirId = event.right().getValue().getLong("id");
                     // Limitation du nombre de compétences
-                    if( devoir.getArray("competences").size() > Competences.MAX_NBR_COMPETENCE) {
+                    if( devoir.getJsonArray("competences").size() > Competences.MAX_NBR_COMPETENCE) {
                         handler.handle(new Either.Left<String, JsonObject>(event.left().getValue()));
                     }
                     else {
@@ -104,8 +104,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             @Override
                             public void handle(Message<JsonObject> event) {
                                 JsonObject result = event.body();
-                                if (result.containsField("status") && "ok".equals(result.getString("status"))) {
-                                    handler.handle(new Either.Right<String, JsonObject>(new JsonObject().putNumber("id", devoirId)));
+                                if (result.containsKey("status") && "ok".equals(result.getString("status"))) {
+                                    handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("id", devoirId)));
                                 } else {
                                     handler.handle(new Either.Left<String, JsonObject>(result.getString("status")));
                                 }
@@ -135,37 +135,37 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" INNER Join notes.rel_devoirs_groupes  Gdevoir ON Gdevoir.id_devoir = devoir.id ")
                 .append(" WHERE devoir.id = ? ;");
 
-        JsonArray values =  new JsonArray();
-        values.addNumber(idDevoir).addNumber(idDevoir);
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
+        values.add(idDevoir).add(idDevoir);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public JsonArray createStatement(Long idDevoir, JsonObject devoir, UserInfos user) {
-        JsonArray statements = new JsonArray();
-        JsonArray competences = devoir.getArray("competences");
+        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray competences = devoir.getJsonArray("competences");
 
         //Merge_user dans la transaction
 
-        JsonArray paramsForMerge = new JsonArray();
+        JsonArray paramsForMerge = new fr.wseduc.webutils.collections.JsonArray();
         paramsForMerge.add(user.getUserId()).add(user.getUsername());
 
         StringBuilder queryForMerge = new StringBuilder()
                 .append("SELECT " + schema + "merge_users(?,?)" );
         statements.add(new JsonObject()
-                .putString("statement", queryForMerge.toString())
-                .putArray("values", paramsForMerge)
-                .putString("action", "prepared"));
+                .put("statement", queryForMerge.toString())
+                .put("values", paramsForMerge)
+                .put("action", "prepared"));
 
 
         //Ajout de la creation du devoir dans la pile de transaction
         StringBuilder queryParams = new StringBuilder();
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder valueParams = new StringBuilder();
         queryParams.append("( id ");
         valueParams.append("( ?");
-        params.addNumber(idDevoir);
-        for (String attr : devoir.getFieldNames()) {
+        params.add(idDevoir);
+        for (String attr : devoir.fieldNames()) {
             if(attr.contains("date") && !"competencesUpdate".equals(attr)){
                 queryParams.append(" , ").append(attr);
                 valueParams.append(" , to_date(?,'YYYY-MM-DD') ");
@@ -191,23 +191,23 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder()
                 .append("INSERT INTO " + resourceTable + queryParams.toString());
         statements.add(new JsonObject()
-                .putString("statement", query.toString())
-                .putArray("values", params)
-                .putString("action", "prepared"));
+                .put("statement", query.toString())
+                .put("values", params)
+                .put("action", "prepared"));
 
 
         //Ajout de chaque compétence dans la pile de transaction
-        if (devoir.containsField("competences") &&
-                devoir.getArray("competences").size() > 0) {
+        if (devoir.containsKey("competences") &&
+                devoir.getJsonArray("competences").size() > 0) {
 
-            JsonArray paramsComp = new JsonArray();
+            JsonArray paramsComp = new fr.wseduc.webutils.collections.JsonArray();
             StringBuilder queryComp = new StringBuilder()
                     .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA
                             +".competences_devoirs (id_devoir, id_competence, index) VALUES ");
             for(int i = 0; i < competences.size(); i++){
                 queryComp.append("(?, ?,").append(i).append(")");
-                paramsComp.addNumber(idDevoir);
-                paramsComp.addNumber((Number) competences.get(i));
+                paramsComp.add(idDevoir);
+                paramsComp.add((Number) competences.getLong(i));
                 if(i != competences.size()-1){
                     queryComp.append(",");
                 }else{
@@ -215,23 +215,23 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 }
             }
             statements.add(new JsonObject()
-                    .putString("statement", queryComp.toString())
-                    .putArray("values", paramsComp)
-                    .putString("action", "prepared"));
+                    .put("statement", queryComp.toString())
+                    .put("values", paramsComp)
+                    .put("action", "prepared"));
         }
 
         // ajoute de l'évaluation de la compéténce (cas évaluation libre)
-        if(devoir.containsField("competenceEvaluee")) {
-            final JsonObject oCompetenceNote = devoir.getObject("competenceEvaluee");
-            JsonArray paramsCompLibre = new JsonArray();
+        if(devoir.containsKey("competenceEvaluee")) {
+            final JsonObject oCompetenceNote = devoir.getJsonObject("competenceEvaluee");
+            JsonArray paramsCompLibre = new fr.wseduc.webutils.collections.JsonArray();
             StringBuilder valueParamsLibre = new StringBuilder();
-            oCompetenceNote.putString("owner", user.getUserId());
+            oCompetenceNote.put("owner", user.getUserId());
             StringBuilder queryCompLibre = new StringBuilder()
                     .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_notes ");
             queryCompLibre.append("( id_devoir ");
             valueParamsLibre.append("( ?");
-            paramsCompLibre.addNumber(idDevoir);
-            for (String attr : oCompetenceNote.getFieldNames()) {
+            paramsCompLibre.add(idDevoir);
+            for (String attr : oCompetenceNote.fieldNames()) {
                 if(attr.contains("date")){
                     queryCompLibre.append(" , ").append(attr);
                     valueParamsLibre.append(" , to_timestamp(?,'YYYY-MM-DD') ");
@@ -247,24 +247,24 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             valueParamsLibre.append(" ) ");
             queryCompLibre.append(" VALUES ").append(valueParamsLibre.toString());
             statements.add(new JsonObject()
-                    .putString("statement", queryCompLibre.toString())
-                    .putArray("values", paramsCompLibre)
-                    .putString("action", "prepared"));
+                    .put("statement", queryCompLibre.toString())
+                    .put("values", paramsCompLibre)
+                    .put("action", "prepared"));
 
         }
 
         // Ajoute une relation notes.rel_devoirs_groupes
         if(null != devoir.getLong(attributeTypeGroupe)
                 && devoir.getLong(attributeTypeGroupe)>-1){
-            JsonArray paramsAddRelDevoirsGroupes = new JsonArray();
+            JsonArray paramsAddRelDevoirsGroupes = new fr.wseduc.webutils.collections.JsonArray();
             String queryAddRelDevoirsGroupes = new String("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes(id_groupe, id_devoir,type_groupe) VALUES (?, ?, ?)");
             paramsAddRelDevoirsGroupes.add(devoir.getValue(attributeIdGroupe));
-            paramsAddRelDevoirsGroupes.addNumber(idDevoir);
-            paramsAddRelDevoirsGroupes.addNumber(devoir.getInteger(attributeTypeGroupe).intValue());
+            paramsAddRelDevoirsGroupes.add(idDevoir);
+            paramsAddRelDevoirsGroupes.add(devoir.getInteger(attributeTypeGroupe).intValue());
             statements.add(new JsonObject()
-                    .putString("statement", queryAddRelDevoirsGroupes)
-                    .putArray("values", paramsAddRelDevoirsGroupes)
-                    .putString("action", "prepared"));
+                    .put("statement", queryAddRelDevoirsGroupes)
+                    .put("values", paramsAddRelDevoirsGroupes)
+                    .put("action", "prepared"));
         }else{
             log.info("Attribut type_groupe non renseigné pour le devoir relation avec la classe inexistante : Evaluation Libre:  " + idDevoir);
         }
@@ -273,7 +273,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     @Override
     public void duplicateDevoir(Long idDevoir, final JsonObject devoir, final JsonArray classes, final UserInfos user, final Handler<Either<String, JsonArray>> handler) {
-        final JsonArray ids = new JsonArray();
+        final JsonArray ids = new fr.wseduc.webutils.collections.JsonArray();
         String queryNewDevoirId;
         final Integer[] counter = {0};
         final Integer[] errors = {0};
@@ -285,7 +285,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     counter[0]++;
                     if (event.isRight()) {
                         JsonObject o = event.right().getValue();
-                        ids.addNumber(o.getNumber("id"));
+                        ids.add(o.getLong("id"));
                         if (counter[0] == classes.size()) {
                             insertDuplication(ids, devoir, classes, user, errors[0], handler);
                         }
@@ -298,24 +298,24 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     private JsonObject formatDevoirForDuplication (JsonObject devoir) {
-        JsonObject o = new JsonObject(devoir.toMap());
-        o.removeField("owner");
-        o.removeField("created");
-        o.removeField("modified");
-        o.removeField("id");
+        JsonObject o = new JsonObject(devoir.getMap());
+        o.remove("owner");
+        o.remove("created");
+        o.remove("modified");
+        o.remove("id");
         // le pourcentage d'avancement n'est pas conservé lors de la duplication d'un devoir
-        o.putValue("percent", 0);
+        o.put("percent", 0);
         try {
-            o.putNumber("coefficient", Long.parseLong(o.getString("coefficient")));
+            o.put("coefficient", Long.parseLong(o.getString("coefficient")));
         } catch (ClassCastException e) {
             log.error("An error occured when casting devoir object to duplication format.");
             log.error(e);
         }
         if (o.getString("libelle") == null) {
-            o.removeField("libelle");
+            o.remove("libelle");
         }
         if (o.getString("id_sousmatiere") == null) {
-            o.removeField("id_sousmatiere");
+            o.remove("id_sousmatiere");
         }
         return o;
     }
@@ -323,17 +323,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user, Integer errors, Handler<Either<String, JsonArray>> handler) {
         if (errors == 0 && ids.size() == classes.size()) {
             JsonObject o, g;
-            JsonArray statements = new JsonArray();
+            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
             for (int i = 0; i < ids.size(); i++) {
                 try {
-                    g = classes.get(i);
+                    g = classes.getJsonObject(i);
                     o = formatDevoirForDuplication(devoir);
-                    o.putString("id_groupe", g.getString("id"));
-                    o.putNumber("type_groupe", g.getNumber("type_groupe"));
-                    o.putString("owner", user.getUserId());
-                    JsonArray tempStatements = this.createStatement(Long.parseLong(ids.get(i).toString()), o, user);
+                    o.put("id_groupe", g.getString("id"));
+                    o.put("type_groupe", g.getInteger("type_groupe"));
+                    o.put("owner", user.getUserId());
+                    JsonArray tempStatements = this.createStatement(ids.getLong(i), o, user);
                     for (int j = 0; j < tempStatements.size(); j++) {
-                        statements.add(tempStatements.get(j));
+                        statements.add(tempStatements.getValue(j));
                     }
                 } catch (ClassCastException e) {
                     log.error("Next id devoir must be a long Object.");
@@ -351,25 +351,25 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     protected static final Logger log = LoggerFactory.getLogger(DefaultDevoirService.class);
     @Override
     public void updateDevoir(String id, JsonObject devoir, Handler<Either<String, JsonArray>> handler) {
-        JsonArray statements = new JsonArray();
+        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         String old_id_groupe = "";
-        if(devoir.containsField("old_id_groupe")
+        if(devoir.containsKey("old_id_groupe")
                 && !devoir.getString("old_id_groupe").isEmpty()){
             old_id_groupe = devoir.getString("old_id_groupe");
-            devoir.removeField("old_id_groupe");
+            devoir.remove("old_id_groupe");
         }
-        if (devoir.containsField("competencesAdd") &&
-                devoir.getArray("competencesAdd").size() > 0) {
-            JsonArray competenceAdd = devoir.getArray("competencesAdd");
-            JsonArray params = new JsonArray();
+        if (devoir.containsKey("competencesAdd") &&
+                devoir.getJsonArray("competencesAdd").size() > 0) {
+            JsonArray competenceAdd = devoir.getJsonArray("competencesAdd");
+            JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
             StringBuilder query = new StringBuilder()
                     .append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs")
                     .append(" (id_devoir, id_competence, index) VALUES ");
             for(int i = 0; i < competenceAdd.size(); i++){
                 query.append("(?, ?, ?)");
-                params.addNumber(Integer.parseInt(id));
-                params.addNumber(((JsonObject)competenceAdd.get(i)).getNumber("id"));
-                params.addNumber(((JsonObject)competenceAdd.get(i)).getNumber("index"));
+                params.add(Integer.parseInt(id));
+                params.add(((JsonObject)competenceAdd.getJsonObject(i)).getLong("id"));
+                params.add(((JsonObject)competenceAdd.getJsonObject(i)).getLong("index"));
                 if(i != competenceAdd.size()-1){
                     query.append(",");
                 }else{
@@ -377,14 +377,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 }
             }
             statements.add(new JsonObject()
-                    .putString("statement", query.toString())
-                    .putArray("values", params)
-                    .putString("action", "prepared"));
+                    .put("statement", query.toString())
+                    .put("values", params)
+                    .put("action", "prepared"));
         }
-        if (devoir.containsField("competencesRem") &&
-                devoir.getArray("competencesRem").size() > 0) {
-            JsonArray competenceRem = devoir.getArray("competencesRem");
-            JsonArray params = new JsonArray();
+        if (devoir.containsKey("competencesRem") &&
+                devoir.getJsonArray("competencesRem").size() > 0) {
+            JsonArray competenceRem = devoir.getJsonArray("competencesRem");
+            JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
             StringBuilder query = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs WHERE ");
             StringBuilder queryDelNote = new StringBuilder()
@@ -392,8 +392,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             for(int i = 0; i < competenceRem.size(); i++){
                 query.append("(id_devoir = ? AND  id_competence = ?)");
                 queryDelNote.append("(id_devoir = ? AND  id_competence = ?)");
-                params.addNumber(Integer.parseInt(id));
-                params.addNumber((Number) competenceRem.get(i));
+                params.add(Integer.parseInt(id));
+                params.add((Number) competenceRem.getLong(i));
                 if(i != competenceRem.size()-1){
                     query.append(" OR ");
                     queryDelNote.append(" OR ");
@@ -403,20 +403,20 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 }
             }
             statements.add(new JsonObject()
-                    .putString("statement", query.toString())
-                    .putArray("values", params)
-                    .putString("action", "prepared"));
+                    .put("statement", query.toString())
+                    .put("values", params)
+                    .put("action", "prepared"));
             statements.add(new JsonObject()
-                    .putString("statement", queryDelNote.toString())
-                    .putArray("values", params)
-                    .putString("action", "prepared"));
+                    .put("statement", queryDelNote.toString())
+                    .put("values", params)
+                    .put("action", "prepared"));
 
         }
 
-        if (devoir.containsField("competencesUpdate") &&
-                devoir.getArray("competencesUpdate").size() > 0) {
-            JsonArray competencesUpdate = devoir.getArray("competencesUpdate");
-            JsonArray params = new JsonArray();
+        if (devoir.containsKey("competencesUpdate") &&
+                devoir.getJsonArray("competencesUpdate").size() > 0) {
+            JsonArray competencesUpdate = devoir.getJsonArray("competencesUpdate");
+            JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
             StringBuilder query = new StringBuilder()
                     .append("UPDATE " + Competences.COMPETENCES_SCHEMA +".competences_devoirs ")
                     .append(" SET index = CASE ");
@@ -424,28 +424,28 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
             for(int i = 0; i < competencesUpdate.size(); i++){
                 query.append(" WHEN id_competence = ? AND id_devoir = ? THEN ? ");
-                params.addNumber(((JsonObject)competencesUpdate.get(i)).getNumber("id"));
-                params.addNumber(Integer.parseInt(id));
-                params.addNumber(((JsonObject)competencesUpdate.get(i)).getNumber("index"));
+                params.add(((JsonObject)competencesUpdate.getJsonObject(i)).getLong("id"));
+                params.add(Integer.parseInt(id));
+                params.add(((JsonObject)competencesUpdate.getJsonObject(i)).getLong("index"));
             }
             query.append(" ELSE index END ")
                     .append(" WHERE id_devoir = ? ");
-            params.addNumber(Integer.parseInt(id));
+            params.add(Integer.parseInt(id));
 
             statements.add(new JsonObject()
-                    .putString("statement", query.toString())
-                    .putArray("values", params)
-                    .putString("action", "prepared"));
+                    .put("statement", query.toString())
+                    .put("values", params)
+                    .put("action", "prepared"));
         }
 
         StringBuilder queryParams = new StringBuilder();
-        JsonArray params = new JsonArray();
-        devoir.removeField("competencesRem");
-        devoir.removeField("competencesAdd");
-        devoir.removeField("competencesUpdate");
-        devoir.removeField("competences");
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        devoir.remove("competencesRem");
+        devoir.remove("competencesAdd");
+        devoir.remove("competencesUpdate");
+        devoir.remove("competences");
 
-        for (String attr : devoir.getFieldNames()) {
+        for (String attr : devoir.fieldNames()) {
             if(!(attr.equals(attributeTypeGroupe)
                     || attr.equals(attributeIdGroupe))) {
                 if (attr.contains("date")) {
@@ -466,13 +466,13 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             String queryUpdateRelDevoirGroupe ="UPDATE "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
                     "SET id_groupe = ? " +
                     "WHERE id_devoir = ? ";
-            JsonArray paramsUpdateRelDevoirGroupe = new JsonArray();
-            paramsUpdateRelDevoirGroupe.addString(devoir.getString(attributeIdGroupe));
-            paramsUpdateRelDevoirGroupe.addNumber(Integer.parseInt(id));
+            JsonArray paramsUpdateRelDevoirGroupe = new fr.wseduc.webutils.collections.JsonArray();
+            paramsUpdateRelDevoirGroupe.add(devoir.getString(attributeIdGroupe));
+            paramsUpdateRelDevoirGroupe.add(Integer.parseInt(id));
             statements.add(new JsonObject()
-                    .putString("statement", queryUpdateRelDevoirGroupe)
-                    .putArray("values", paramsUpdateRelDevoirGroupe)
-                    .putString("action", "prepared"));
+                    .put("statement", queryUpdateRelDevoirGroupe)
+                    .put("values", paramsUpdateRelDevoirGroupe)
+                    .put("action", "prepared"));
         }else{
             log.info("Attribut type_groupe non renseigné pour le devoir relation avec la classe inexistante : Evaluation Libre :  " + id);
         }
@@ -481,44 +481,44 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if(!old_id_groupe.isEmpty()
                 && !devoir.getString(attributeIdGroupe).equalsIgnoreCase(old_id_groupe)){
 
-            JsonArray paramsDelete = new JsonArray();
-            paramsDelete.addNumber(Integer.parseInt(id));
+            JsonArray paramsDelete = new fr.wseduc.webutils.collections.JsonArray();
+            paramsDelete.add(Integer.parseInt(id));
 
             StringBuilder queryDeleteNote = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".notes WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .putString("statement", queryDeleteNote.toString())
-                    .putArray("values", paramsDelete)
-                    .putString("action", "prepared"));
+                    .put("statement", queryDeleteNote.toString())
+                    .put("values", paramsDelete)
+                    .put("action", "prepared"));
 
             StringBuilder queryDeleteAnnotations = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .putString("statement", queryDeleteAnnotations.toString())
-                    .putArray("values", paramsDelete)
-                    .putString("action", "prepared"));
+                    .put("statement", queryDeleteAnnotations.toString())
+                    .put("values", paramsDelete)
+                    .put("action", "prepared"));
 
             StringBuilder queryDeleteAppreciations = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".appreciations WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .putString("statement", queryDeleteAppreciations.toString())
-                    .putArray("values", paramsDelete)
-                    .putString("action", "prepared"));
+                    .put("statement", queryDeleteAppreciations.toString())
+                    .put("values", paramsDelete)
+                    .put("action", "prepared"));
 
             StringBuilder queryDeleteCompetences = new StringBuilder()
                     .append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id_devoir = ? ");
             statements.add(new JsonObject()
-                    .putString("statement", queryDeleteCompetences.toString())
-                    .putArray("values", paramsDelete)
-                    .putString("action", "prepared"));
+                    .put("statement", queryDeleteCompetences.toString())
+                    .put("values", paramsDelete)
+                    .put("action", "prepared"));
         }
 
         StringBuilder query = new StringBuilder()
                 .append("UPDATE " + resourceTable +" SET " + queryParams.toString() + "modified = NOW() WHERE id = ? ");
         statements.add(new JsonObject()
-                .putString("statement", query.toString())
-                .putArray("values", params.addNumber(Integer.parseInt(id)))
-                .putString("action", "prepared"));
+                .put("statement", query.toString())
+                .put("values", params.add(Integer.parseInt(id)))
+                .put("action", "prepared"));
 
 
 
@@ -533,7 +533,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
      */
     public void listDevoirs(UserInfos user, String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, rel_devoirs_groupes.type_groupe , devoirs.is_evaluated,")
                 .append("devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, ")
@@ -568,12 +568,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
 
         // Ajout des params pour les devoirs dont on est le propriétaire sur l'établissement
-        values.addString(idEtablissement);
+        values.add(idEtablissement);
         values.add(user.getUserId());
 
         // Ajout des params pour la récupération des devoirs de mes tiulaires
         values.add(user.getUserId());
-        values.addString(idEtablissement);
+        values.add(idEtablissement);
 
         // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
         values.add(user.getUserId());
@@ -583,7 +583,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void listDevoirsEtab(UserInfos user, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query.append(" SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe , rel_devoirs_groupes.type_groupe , devoirs.is_evaluated, " )
                 .append("   devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, devoirs.percent, ")
                 .append("   devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur,  ")
@@ -625,19 +625,19 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 "FROM notes.devoirs_shares " +
                 "WHERE resource_id = devoirs.id " +
                 "AND action = '"+ Competences.DEVOIR_ACTION_UPDATE +"'))";
-        JsonArray params = new JsonArray()
-                .addString(structureId)
-                .addString(user.getUserId())
-                .addString(user.getUserId())
-                .addString(structureId)
-                .addString(user.getUserId());
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(structureId)
+                .add(user.getUserId())
+                .add(user.getUserId())
+                .add(structureId)
+                .add(user.getUserId());
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String matiere = idMatiere;
 
         query.append("SELECT devoirs.*, ")
@@ -672,12 +672,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         if(idClasse != null) {
-            values.addString(idClasse);
+            values.add(idClasse);
         }
-        values.addString(idEtablissement);
+        values.add(idEtablissement);
 
         if (matiere != null) {
-            values.addString(idMatiere);
+            values.add(idMatiere);
         }
         if (idEleve != null) {
             query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur ")
@@ -688,7 +688,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             query.append("ORDER BY devoirs.date ASC, devoirs.id ASC ");
         }
         if(idPeriode != null) {
-            values.addNumber(idPeriode);
+            values.add(idPeriode);
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
@@ -699,7 +699,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                             String[] idEtablissements, String[] idMatieres, Boolean hasCompetences,
                             Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         if(idGroupes == null) {
             idGroupes = new String[0];
@@ -735,35 +735,35 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if(idGroupes.length != 0) {
             query.append(" rel.id_groupe IN " + Sql.listPrepared(idGroupes) + " AND");
             for(String idGroupe : idGroupes) {
-                params.addString(idGroupe);
+                params.add(idGroupe);
             }
         }
 
         if (idDevoirs.length != 0) {
             query.append(" devoirs.id IN " + Sql.listPrepared(idDevoirs) + " AND");
             for (Long idDevoir : idDevoirs) {
-                params.addNumber(idDevoir);
+                params.add(idDevoir);
             }
         }
 
         if (idPeriodes.length != 0) {
             query.append(" devoirs.id_periode IN " + Sql.listPrepared(idPeriodes) + " AND");
             for (Long idPeriode : idPeriodes) {
-                params.addNumber(idPeriode);
+                params.add(idPeriode);
             }
         }
 
         if (idEtablissements.length != 0) {
             query.append(" devoirs.id_etablissement IN " + Sql.listPrepared(idEtablissements) + " AND");
             for (String idEtablissement : idEtablissements) {
-                params.addString(idEtablissement);
+                params.add(idEtablissement);
             }
         }
 
         if (idMatieres.length != 0) {
             query.append(" devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + " AND");
             for (String idMatiere : idMatieres) {
-                params.addString(idMatiere);
+                params.add(idMatiere);
             }
         }
         query.delete(query.length() - 3, query.length());
@@ -775,7 +775,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Deprecated // FIXME GERER LES DROITS ET PERMISSIONS COMME FAIT POUR LES ENSEIGNANTS
     public void listDevoirs(String idEtablissement, Long idPeriode, String idUser, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT devoirs.*,type_sousmatiere.libelle as _sousmatiere_libelle,sousmatiere.id as _sousmatiere_id " +
                 "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs " +
@@ -787,9 +787,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 "AND devoirs.date_publication <= current_date " +
                 "ORDER BY devoirs.date ASC;");
 
-        values.addString(idEtablissement);
-        values.addNumber(idPeriode);
-        values.addString(idUser);
+        values.add(idEtablissement);
+        values.add(idPeriode);
+        values.add(idUser);
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
@@ -831,10 +831,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
         query.append("GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
 
-        JsonArray values =  new JsonArray();
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
         //Ajout des id désirés
-        values.addNumber(idDevoir);
+        values.add(idDevoir);
 
         // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
         if(idEleves != null && idEleves.size() > 0) {
@@ -842,7 +842,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 values.add(idEleve);
             }
         }
-
         if(!isChefEtab) {
             // Ajout des params pour les devoirs dont on est le propriétaire
             values.add(user.getUserId());
@@ -898,10 +897,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
 
-        JsonArray values =  new JsonArray();
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
         //Ajout des id désirés
-        values.addNumber(idDevoir);
+        values.add(idDevoir);
         if(!isChefEtab) {
             // Ajout des params pour les devoirs dont on est le propriétaire
             values.add(user.getUserId());
@@ -929,7 +928,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void getevaluatedDevoir(Long idDevoir, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String TypeEvalNum = "TypeEvalNum";
         String TypeEvalSkill = "TypeEvalSkill";
         query.append("select count(n.id_eleve) NbrEval, n.id_eleve ID, n.valeur Evaluation, '"+TypeEvalNum+"' TypeEval " );
@@ -946,8 +945,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("Group BY(id_competence,evaluation) ");
         query.append("order by (TypeEval) ");
 
-        values.addNumber(idDevoir);
-        values.addNumber(idDevoir);
+        values.add(idDevoir);
+        values.add(idDevoir);
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
@@ -957,7 +956,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void getevaluatedDevoirs(Long[] idDevoir, Handler<Either<String, JsonArray>> handler){
 
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
 
 
@@ -990,11 +989,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
 
         for (int i=0; i<idDevoir.length ; i++){
-            values.addNumber(idDevoir[i]);
+            values.add(idDevoir[i]);
         }
 
         for (int i=0; i<idDevoir.length ; i++){
-            values.addNumber(idDevoir[i]);
+            values.add(idDevoir[i]);
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
@@ -1015,7 +1014,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                             for (int i = 0; i < listNotes.size(); i++) {
 
-                                JsonObject note = listNotes.get(i);
+                                JsonObject note = listNotes.getJsonObject(i);
 
                                 NoteDevoir noteDevoir = new NoteDevoir(
                                         Double.valueOf(note.getString("valeur")),
@@ -1052,10 +1051,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("where d.id IN "+ Sql.listPrepared(idDevoirs) + " ")
                 .append("GROUP by d.id ");
 
-        JsonArray values =  new JsonArray();
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
         //Ajout des id désirés
         for (Long idDevoir : idDevoirs) {
-            values.addNumber(idDevoir);
+            values.add(idDevoir);
         }
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
@@ -1079,8 +1078,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append(" GROUP BY (id_eleve, id_devoir)");
 
-        JsonArray values =  new JsonArray();
-        values.addNumber(idDevoir);
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
+        values.add(idDevoir);
 
         // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
         if(idEleves != null && idEleves.size() > 0) {
@@ -1098,9 +1097,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" SET percent = ? ")
                 .append(" WHERE id = ? ");
 
-        JsonArray values =  new JsonArray();
-        values.addNumber(percent);
-        values.addNumber(idDevoir);
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
+        values.add(percent);
+        values.add(idDevoir);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
 
@@ -1108,7 +1107,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     public void getDevoirsInfos(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values =  new JsonArray();
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id, is_evaluated, CASE WHEN nb_competences > 0 THEN TRUE ELSE FALSE END AS ")
                 .append("has_competences, id_groupe FROM notes.rel_devoirs_groupes,")
@@ -1121,7 +1120,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             query.append(" AND id IN " + Sql.listPrepared(idDevoirs) + " ");
             //Ajout des id désirés
             for (Long l : idDevoirs) {
-                values.addNumber(l);
+                values.add(l);
             }
         }
 
@@ -1131,12 +1130,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void switchVisibilityApprec(Long idDevoir, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA + ".devoirs ")
                 .append("SET apprec_visible = NOT apprec_visible WHERE id = ? ");
 
-        values.addNumber(idDevoir);
+        values.add(idDevoir);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }

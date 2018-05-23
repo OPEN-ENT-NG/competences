@@ -42,13 +42,13 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -84,7 +84,7 @@ public class DomaineController extends ControllerHelper {
     @ApiDoc("Recupère l'arbre des domaines pour un cycle donné.")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getArbreDomaines(final HttpServerRequest request){
-        final JsonArray oArbreDomainesArray = new JsonArray();
+        final JsonArray oArbreDomainesArray = new fr.wseduc.webutils.collections.JsonArray();
         final String idClasse = request.params().get("idClasse");
         final String idEleve = request.params().contains("idEleve")? request.params().get("idEleve") : null;
         final String idStructure = request.params().get("idStructure");
@@ -113,10 +113,10 @@ public class DomaineController extends ControllerHelper {
                                         // 3 - Positionnement des compétences sur les domaines
                                         for (int i = 0; i < oCompetencesItemArray.size(); i++) {
 
-                                            JsonObject oCompetenceItem = oCompetencesItemArray.get(i);
+                                            JsonObject oCompetenceItem = oCompetencesItemArray.getJsonObject(i);
 
                                             for (int j = 0; j < oDomainesArray.size(); j++) {
-                                                JsonObject oDomaine = oDomainesArray.get(j);
+                                                JsonObject oDomaine = oDomainesArray.getJsonObject(j);
 
                                                 if(oDomaine.getLong("id")
                                                         .equals(oCompetenceItem.getLong("id_domaine"))
@@ -124,12 +124,12 @@ public class DomaineController extends ControllerHelper {
                                                         .equals(oCompetenceItem.getLong("id_cycle"))) {
                                                     // initialisation de la liste des competences du
                                                     // domaine si cela n'a pas encore été fait
-                                                    if (oDomaine.getArray("competences") == null) {
-                                                        oDomaine.putArray("competences", new JsonArray());
+                                                    if (oDomaine.getJsonArray("competences") == null) {
+                                                        oDomaine.put("competences", new fr.wseduc.webutils.collections.JsonArray());
                                                     }
 
-                                                    oDomaine.getArray("competences")
-                                                            .addObject(oCompetenceItem);
+                                                    oDomaine.getJsonArray("competences")
+                                                            .add(oCompetenceItem);
                                                 }
 
                                             }
@@ -139,18 +139,18 @@ public class DomaineController extends ControllerHelper {
 
                                         // 4 - Construction de l'arbre des domaines à partir de la liste ordonnée
                                         for (int i = 0; i < oDomainesArray.size(); i++) {
-                                            JsonObject oDomaineAinserer = oDomainesArray.get(i);
+                                            JsonObject oDomaineAinserer = oDomainesArray.getJsonObject(i);
 
                                             // si c'est un domaine racine on l'ajoute à la suite dans notre arbe
                                             if(oDomaineAinserer.getInteger("niveau").intValue() == 1) {
-                                                oArbreDomainesArray.addObject(oDomaineAinserer);
+                                                oArbreDomainesArray.add(oDomaineAinserer);
                                             } else {
 
                                                 // sinon cela veut dire que le domaine en cours
                                                 // de parcous est un sous domaine du
                                                 // dernier domaine racine ajouté
                                                 JsonObject oDomaineRacine = oArbreDomainesArray
-                                                        .get(oArbreDomainesArray.size() - 1);
+                                                        .getJsonObject(oArbreDomainesArray.size() - 1);
                                                 ajouterDomaineSousArbre(oDomaineRacine, oDomaineAinserer);
                                             }
 
@@ -183,20 +183,20 @@ public class DomaineController extends ControllerHelper {
         if(poDomaineRacine.getLong("id").equals(poDomaineAinserer.getLong("id_parent"))) {
 
             // initialisation de la liste des sous-domaine si cela n'a pas encore été fait
-            if (poDomaineRacine.getArray("domaines") == null) {
-                poDomaineRacine.putArray("domaines", new JsonArray());
+            if (poDomaineRacine.getJsonArray("domaines") == null) {
+                poDomaineRacine.put("domaines", new fr.wseduc.webutils.collections.JsonArray());
             }
 
-            poDomaineRacine.getArray("domaines").addObject(poDomaineAinserer);
+            poDomaineRacine.getJsonArray("domaines").add(poDomaineAinserer);
             return true;
         } else {
             // sinon on doit rechercher dans les sous niveaux de l'arborescence
-            if (poDomaineRacine.getArray("domaines") == null) {
+            if (poDomaineRacine.getJsonArray("domaines") == null) {
                 log.error("Aucun point d'insertion trouve pour le domaine : "+ poDomaineAinserer.getString("id"));
                 return false;
             } else {
 
-                for (Object oSousDomaine : poDomaineRacine.getArray("domaines")) {
+                for (Object oSousDomaine : poDomaineRacine.getJsonArray("domaines")) {
                     boolean bIsInsere = ajouterDomaineSousArbre((JsonObject) oSousDomaine, poDomaineAinserer);
 
                     // Si insertion effectuee, on stop le traitement

@@ -29,18 +29,15 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -70,7 +67,7 @@ public class DefaultUtilsService  implements UtilsService {
         //TODO Methode à tester (pas utilisée pour le moment)
 
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT DISTINCT id_remplacant ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
@@ -96,7 +93,7 @@ public class DefaultUtilsService  implements UtilsService {
      */
     public void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT DISTINCT id_titulaire ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
@@ -115,7 +112,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void listTypesDevoirsParEtablissement(String idEtablissement, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT type.* ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".type ")
@@ -134,7 +131,7 @@ public class DefaultUtilsService  implements UtilsService {
                 .append("(n:`UserBook` {userid : {id}}) ")
                 .append("OPTIONAL MATCH (c:`Class`) WHERE c.externalId in u.classes ")
                 .append("RETURN u,n,c");
-        neo4j.execute(query.toString(), new JsonObject().putString("id", id), Neo4jResult.validUniqueResultHandler(result));
+        neo4j.execute(query.toString(), new JsonObject().put("id", id), Neo4jResult.validUniqueResultHandler(result));
     }
 
     @Override
@@ -146,7 +143,7 @@ public class DefaultUtilsService  implements UtilsService {
                 .append("WITH n.id as id, n.displayName as displayName, n.classes as externalIdClasse, s.id as idStructure,  ")
                 .append("n.firstName as firstName, n.lastName as lastName MATCH(c:Class)WHERE c.externalId IN externalIdClasse")
                 .append(" RETURN id, displayName, firstName, lastName, c.id as idClasse, idStructure");
-        neo4j.execute(query.toString(), new JsonObject().putString("id", id), Neo4jResult.validResultHandler(handler));
+        neo4j.execute(query.toString(), new JsonObject().put("id", id), Neo4jResult.validResultHandler(handler));
     }
 
     /**
@@ -219,9 +216,9 @@ public class DefaultUtilsService  implements UtilsService {
         }
         if(null == moyenne)
             moyenne = 0.0;
-        JsonObject r = new JsonObject().putNumber("moyenne", moyenne);
+        JsonObject r = new JsonObject().put("moyenne", moyenne);
         if (statistiques) {
-            r.putNumber("noteMax", noteMax).putNumber("noteMin", noteMin);
+            r.put("noteMax", noteMax).put("noteMin", noteMin);
         }
         return r;
     }
@@ -269,9 +266,9 @@ public class DefaultUtilsService  implements UtilsService {
         } catch (NumberFormatException e) {
             log.error("Moyenne : " + String.valueOf(moyenne), e);
         }
-        JsonObject r = new JsonObject().putNumber("moyenne", moyenne);
+        JsonObject r = new JsonObject().put("moyenne", moyenne);
         if (statistiques) {
-            r.putNumber("noteMax", noteMax).putNumber("noteMin", noteMin);
+            r.put("noteMax", noteMax).put("noteMin", noteMin);
         }
         return r;
     }
@@ -285,7 +282,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void getStructure(String id, Handler<Either<String, JsonObject>> handler) {
         String query = "match (s:`Structure`) where s.id = {id} return s";
-        neo4j.execute(query, new JsonObject().putString("id", id), Neo4jResult.validUniqueResultHandler(handler));
+        neo4j.execute(query, new JsonObject().put("id", id), Neo4jResult.validUniqueResultHandler(handler));
     }
 
 
@@ -303,24 +300,24 @@ public class DefaultUtilsService  implements UtilsService {
                         "OPTIONAL MATCH u-[rf:HAS_FUNCTION]->fg-[:CONTAINS_FUNCTION*0..1]->(f:Function) ";
         if (expectedProfiles != null && expectedProfiles.size() > 0) {
             filterProfile += "AND p.name IN {expectedProfiles} ";
-            params.putArray("expectedProfiles", expectedProfiles);
+            params.put("expectedProfiles", expectedProfiles);
         }
         if (classId != null && !classId.trim().isEmpty()) {
             filter = "(n:Class {id : {classId}})<-[:DEPENDS]-(g:ProfileGroup)<-[:IN]-";
-            params.putString("classId", classId);
+            params.put("classId", classId);
         } else if (structureId != null && !structureId.trim().isEmpty()) {
             filter = "(n:Structure {id : {structureId}})<-[:DEPENDS]-(g:ProfileGroup)<-[:IN]-";
-            params.putString("structureId", structureId);
+            params.put("structureId", structureId);
         } else if (groupId != null && !groupId.trim().isEmpty()) {
             filter = "(n:Group {id : {groupId}})<-[:IN]-";
-            params.putString("groupId", groupId);
+            params.put("groupId", groupId);
         }
         String condition = "";
         String functionMatch = "WITH u MATCH (s:Structure)<-[:DEPENDS]-(pg:ProfileGroup)-[:HAS_PROFILE]->(p:Profile), u-[:IN]->pg ";
 
         if (nameFilter != null && !nameFilter.trim().isEmpty()) {
             condition += "AND u.displayName =~ {regex}  ";
-            params.putString("regex", "(?i)^.*?" + Pattern.quote(nameFilter.trim()) + ".*?$");
+            params.put("regex", "(?i)^.*?" + Pattern.quote(nameFilter.trim()) + ".*?$");
         }
         if (filterActivated != null) {
             if ("inactive".equals(filterActivated)) {
@@ -352,7 +349,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public JsonArray saUnion(JsonArray recipient, JsonArray list) {
         for (int i = 0; i < list.size(); i++) {
-            recipient.add(list.get(i));
+            recipient.add(list.getJsonObject(i));
         }
         return recipient;
     }
@@ -380,7 +377,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void getCycle(List<String> idClasse, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_groupe, id_cycle, libelle, value_cycle ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle,  ")
@@ -389,7 +386,7 @@ public class DefaultUtilsService  implements UtilsService {
                 .append(" AND id_cycle = cycle.id");
 
         for (String id : idClasse) {
-            params.addString(id);
+            params.add(id);
         }
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
@@ -403,7 +400,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void getCycle(String idClasse, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT id_cycle ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle,  ")
@@ -411,7 +408,7 @@ public class DefaultUtilsService  implements UtilsService {
                 .append("WHERE id_groupe = ? ")
                 .append(" AND id_cycle = cycle.id");
 
-        params.addString(idClasse);
+        params.add(idClasse);
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler));
     }
@@ -423,7 +420,7 @@ public class DefaultUtilsService  implements UtilsService {
         JsonObject params = new JsonObject();
 
         query.append("MATCH (s) WHERE s.id IN {id} RETURN CASE WHEN s.name IS NULL THEN s.lastName ELSE s.name END AS name");
-        params.putArray("id", new JsonArray(name));
+        params.put("id", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(name)));
 
         neo4j.execute(query.toString(), params, Neo4jResult.validResultHandler(handler));
     }
@@ -438,45 +435,45 @@ public class DefaultUtilsService  implements UtilsService {
                     if (event.isRight()) {
                         final JsonArray listDevoir = event.right().getValue();
 
-                        JsonArray statements = new JsonArray();
+                        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
                         // SUPPRESSION DES DEVOIRS AVEC COMPETENCES AVANT LE CHANGEMENT
                         if (listDevoir.size() > 0 ) {
                             StringBuilder queryDeleteDevoir = new StringBuilder();
-                            JsonArray idDevoirs = new JsonArray();
+                            JsonArray idDevoirs = new fr.wseduc.webutils.collections.JsonArray();
                             queryDeleteDevoir.append("DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs")
-                                    .append(" WHERE id IN " + Sql.listPrepared(listDevoir.toArray()));
+                                    .append(" WHERE id IN " + Sql.listPrepared(listDevoir.getList().toArray()));
                             for(int i =0; i < listDevoir.size(); i++) {
-                                idDevoirs.addNumber(((JsonObject)listDevoir.get(i)).getNumber("id"));
+                                idDevoirs.add(((JsonObject)listDevoir.getJsonObject(i)).getLong("id"));
                             }
 
                             statements.add(new JsonObject()
-                                    .putString("statement", queryDeleteDevoir.toString())
-                                    .putArray("values", idDevoirs)
-                                    .putString("action", "prepared"));
+                                    .put("statement", queryDeleteDevoir.toString())
+                                    .put("values", idDevoirs)
+                                    .put("action", "prepared"));
                         }
 
                         // CREATION DU LIEN VERS LE NOUVEAU CYCLE
                         StringBuilder queryLink = new StringBuilder()
                                 .append("INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
                                 .append(" (id_cycle, id_groupe, type_groupe) VALUES ");
-                        JsonArray values = new JsonArray();
+                        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
                         for (int i = 0; i < idClasses.length; i++) {
                             queryLink.append(" (?, ?, ?) ");
-                            values.addNumber(id_cycle)
-                                    .addString(idClasses[i]).addNumber(typeGroupes[i]);
+                            values.add(id_cycle)
+                                    .add(idClasses[i]).add(typeGroupes[i]);
                             if (i != (idClasses.length - 1)) {
                                 queryLink.append(",");
                             } else {
                                 queryLink.append(" ON CONFLICT ON CONSTRAINT unique_id_groupe ")
                                         .append(" DO UPDATE SET id_cycle = ? ");
-                                values.addNumber(id_cycle);
+                                values.add(id_cycle);
                             }
                         }
                         statements.add(new JsonObject()
-                                .putString("statement", queryLink.toString())
-                                .putArray("values", values)
-                                .putString("action", "prepared"));
+                                .put("statement", queryLink.toString())
+                                .put("values", values)
+                                .put("action", "prepared"));
 
 
                         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
@@ -493,7 +490,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void checkDataOnClasses(String[] idClasses, final Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query.append(" SELECT devoirs.id, devoirs.name, id_groupe, COUNT(competences_devoirs.id) as nbcompetences ")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ")
                 .append(" LEFT JOIN notes.rel_devoirs_groupes ")
@@ -507,7 +504,7 @@ public class DefaultUtilsService  implements UtilsService {
 
 
         for (String id : idClasses) {
-            values.addString(id);
+            values.add(id);
         }
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));

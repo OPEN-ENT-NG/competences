@@ -16,11 +16,11 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
@@ -179,10 +179,10 @@ public class BFCController extends ControllerHelper {
                                 public void handle(Either<String, Integer> idCycle) {
                                     if (idCycle.isRight()) {
                                         JsonObject syntheseCycle = new JsonObject()
-                                                .putString("id_eleve", synthese.getString("id_eleve"))
-                                                .putString("owner", user.getUserId())
-                                                .putNumber("id_cycle", idCycle.right().getValue())
-                                                .putString("texte", synthese.getString("texte"));
+                                                .put("id_eleve", synthese.getString("id_eleve"))
+                                                .put("owner", user.getUserId())
+                                                .put("id_cycle", idCycle.right().getValue())
+                                                .put("texte", synthese.getString("texte"));
                                         syntheseService.createBfcSynthese(syntheseCycle, user, notEmptyResponseHandler(request));
                                     } else {
                                         log.debug("idCycle not found");

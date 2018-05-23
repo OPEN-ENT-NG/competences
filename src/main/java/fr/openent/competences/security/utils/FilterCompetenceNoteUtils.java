@@ -23,10 +23,10 @@ import fr.openent.competences.Competences;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 
@@ -44,7 +44,7 @@ public class FilterCompetenceNoteUtils {
                         "WHERE competences_notes.id = ? " +
                         "AND devoirs.owner = ?;");
 
-        JsonArray params = new JsonArray().addNumber(idNote).addString(owner);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idNote).add(owner);
 
         Sql.getInstance().prepared(query.toString(), params,
                 new Handler<Message<JsonObject>>() {
@@ -64,13 +64,13 @@ public class FilterCompetenceNoteUtils {
                 "WHERE competences_notes.id IN " + Sql.listPrepared(idNotes.toArray()) + " " +
                 "AND devoirs.owner = ?;");
 
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         for (int i = 0; i < idNotes.size(); i++) {
-            params.addNumber(idNotes.get(i));
+            params.add(idNotes.get(i));
         }
 
-        params.addString(owner);
+        params.add(owner);
 
         Sql.getInstance().prepared(query.toString(), params, new Handler<Message<JsonObject>>() {
             @Override
@@ -83,7 +83,7 @@ public class FilterCompetenceNoteUtils {
     }
 
     public void validateAccessCompetencesNotes(List<Long> idNotes, UserInfos user, final Handler<Boolean> handler) {
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
@@ -107,18 +107,18 @@ public class FilterCompetenceNoteUtils {
 
         // Ajout des params pour la partie de la requête où on vérifie si on est le propriétaire
         for (int i = 0; i < idNotes.size(); i++) {
-            params.addNumber(idNotes.get(i));
+            params.add(idNotes.get(i));
         }
-        params.addString(user.getUserId());
+        params.add(user.getUserId());
 
         // Ajout des params pour la partie de la requête où on vérifie si on a des titulaires propriétaire
         for (int i = 0; i < idNotes.size(); i++) {
-            params.addNumber(idNotes.get(i));
+            params.add(idNotes.get(i));
         }
-        params.addString(user.getUserId());
+        params.add(user.getUserId());
 
         // Ajout des params pour la partie de la requête où on vérifie si on a des droits de partage provenant d'un remplaçant
-        params.addString(user.getUserId());
+        params.add(user.getUserId());
 
 
 

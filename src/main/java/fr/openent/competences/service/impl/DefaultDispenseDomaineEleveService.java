@@ -6,11 +6,11 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,9 +29,9 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
     public void deleteDispenseDomaineEleve(String idEleve,Integer idDomaine, Handler<Either<String, JsonObject>> handler) {
         String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve " +
                 "WHERE id_eleve = ? AND id_domaines = ? ;";
-        JsonArray params = new JsonArray()
-                .addString(idEleve)
-                .addNumber(idDomaine);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(idEleve)
+                .add(idDomaine);
         sql.prepared(query, params,SqlResult.validUniqueResultHandler(handler));
     }
 
@@ -39,10 +39,10 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
     public void createDispenseDomaineEleve(final JsonObject dispenseDomaineEleve, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve ( id_eleve, id_domaines, dispense )"+
                 "VALUES(?,?,?)";
-        JsonArray params = new JsonArray()
-       .addString(dispenseDomaineEleve.getString("id_eleve"))
-       .addNumber(dispenseDomaineEleve.getInteger("id_domaine"))
-       .addBoolean(dispenseDomaineEleve.getBoolean("dispense"));
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+       .add(dispenseDomaineEleve.getString("id_eleve"))
+       .add(dispenseDomaineEleve.getInteger("id_domaine"))
+       .add(dispenseDomaineEleve.getBoolean("dispense"));
         sql.prepared(query,params, SqlResult.validUniqueResultHandler(handler));
     }
 
@@ -51,9 +51,9 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
         String query = "SELECT id_eleve, id_domaines, dispense FROM "+ Competences.COMPETENCES_SCHEMA +".dispense_domaine_eleve "+
                 "WHERE id_eleve IN " + Sql.listPrepared(idsEleves.toArray());
 
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         for(String idEleve : idsEleves){
-            params.addString(idEleve);
+            params.add(idEleve);
         }
       sql.prepared(query,params,SqlResult.validResultHandler(handler));
     }
@@ -72,7 +72,7 @@ public class DefaultDispenseDomaineEleveService extends SqlCrudService implement
                         mapIdEleveIdDomainedispense.put("empty",new HashMap<Long, Boolean>());
                     }
                     for(int i = 0; i < idsEleveIdsDomaineDispenses.size(); i++){
-                        JsonObject dispenseDomaine = idsEleveIdsDomaineDispenses.get(i);
+                        JsonObject dispenseDomaine = idsEleveIdsDomaineDispenses.getJsonObject(i);
                         if(!mapIdEleveIdDomainedispense.containsKey(dispenseDomaine.getString("id_eleve"))){
                             Map<Long,Boolean> dispenseIdDomaine = new HashMap<>();
                             dispenseIdDomaine.put(Long.valueOf(dispenseDomaine.getInteger("id_domaines")),dispenseDomaine.getBoolean("dispense"));

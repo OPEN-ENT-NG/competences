@@ -34,10 +34,10 @@ import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.util.Arrays;
 
@@ -108,7 +108,7 @@ public class UtilsController extends ControllerHelper {
                 if (user != null) {
                     final String structureId = request.params().get("structureId");
                     final String classId = request.params().get("classId");
-                    final JsonArray types = new JsonArray(request.params().getAll("profile").toArray());
+                    final JsonArray types = new fr.wseduc.webutils.collections.JsonArray(request.params().getAll("profile"));
                     final String groupId = request.params().get("groupId");
                     final String nameFilter = request.params().get("name");
                     final String filterActive = request.params().get("filterActive");
@@ -128,11 +128,9 @@ public class UtilsController extends ControllerHelper {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject ressource) {
-                Number id_cycle = ressource.getNumber("id_cycle");
-                final String[] idClasses = Arrays.asList(ressource.getArray("idClasses").toArray())
-                        .toArray(new String[0]);
-                final Number[] typesGroupes = Arrays.asList(ressource.getArray("typesGroupes").toArray())
-                        .toArray(new Number[0]);
+                Number id_cycle = ressource.getInteger("id_cycle");
+                final String[] idClasses = (String[]) ressource.getJsonArray("idClasses").getList().toArray(new String[0]);
+                final Number[] typesGroupes = (Number[]) ressource.getJsonArray("typesGroupes").getList().toArray(new Number[0]);
 
                 utilsService.linkGroupesCycles(idClasses, id_cycle, typesGroupes,
                         new Handler<Either<String, JsonArray>>() {
@@ -154,9 +152,8 @@ public class UtilsController extends ControllerHelper {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject ressource) {
-                Number id_cycle = ressource.getNumber("id_cycle");
-                final String[] idClasses = Arrays.asList(ressource.getArray("idClasses").toArray())
-                        .toArray(new String[0]);
+                Number id_cycle = ressource.getInteger("id_cycle");
+                final String[] idClasses = (String[]) ressource.getJsonArray("idClasses").getList().toArray(new String[0]);
 
                 utilsService.checkDataOnClasses(idClasses, new Handler<Either<String, JsonArray>>() {
                     @Override

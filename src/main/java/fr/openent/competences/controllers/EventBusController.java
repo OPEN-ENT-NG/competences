@@ -9,10 +9,10 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.controller.ControllerHelper;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,8 +33,8 @@ public class EventBusController extends ControllerHelper {
 
         if (action == null) {
             log.warn("[@BusAddress](competences) Invalid action.");
-            message.reply(new JsonObject().putString("status", "error")
-                    .putString("message", "invalid action."));
+            message.reply(new JsonObject().put("status", "error")
+                    .put("message", "invalid action."));
 
             return;
         }
@@ -57,28 +57,28 @@ public class EventBusController extends ControllerHelper {
     private void utilsBusService(String method, Message<JsonObject> message) {
         switch (method) {
             case "getCycle": {
-                List<String> ids = message.body().getArray("ids").toList();
-                utilsService.getCycle(ids, getArrayBusResultHandler(message));
+                List<String> ids = message.body().getJsonArray("ids").getList();
+                utilsService.getCycle(ids, getJsonArrayBusResultHandler(message));
             }
             break;
             case "calculMoyenne": {
                 List<NoteDevoir> listeNoteDevoirs = new ArrayList<>();
-                JsonArray notes = message.body().getArray("listeNoteDevoirs");
+                JsonArray notes = message.body().getJsonArray("listeNoteDevoirs");
                 for (int i = 0; i < notes.size(); i++) {
-                    JsonObject note = notes.get(i);
+                    JsonObject note = notes.getJsonObject(i);
                     listeNoteDevoirs.add(
-                            new NoteDevoir(Double.parseDouble(note.getNumber("valeur").toString()),
-                                    Double.parseDouble(note.getNumber("diviseur").toString()),
+                            new NoteDevoir(Double.parseDouble(note.getInteger("valeur").toString()),
+                                    Double.parseDouble(note.getInteger("diviseur").toString()),
                                     note.getBoolean("ramener_sur"),
-                                    Double.parseDouble(note.getNumber("coefficient").toString())));
+                                    Double.parseDouble(note.getInteger("coefficient").toString())));
                 }
 
                 message.reply(new JsonObject()
-                        .putString("status", "ok")
-                        .putObject("result",
+                        .put("status", "ok")
+                        .put("result",
                                 utilsService.calculMoyenne(listeNoteDevoirs,
                                         message.body().getBoolean("statistiques"),
-                                        (Integer) message.body().getNumber("diviseurM"))));
+                                        (Integer) message.body().getInteger("diviseurM"))));
             }
             break;
             default: {
@@ -90,12 +90,12 @@ public class EventBusController extends ControllerHelper {
     private void noteBusService(String method, Message<JsonObject> message) {
         switch (method) {
             case "getNotesParElevesParDevoirs": {
-                JsonArray idEleves = message.body().getArray("idEleves");
-                JsonArray idDevoirs = message.body().getArray("idDevoirs");
+                JsonArray idEleves = message.body().getJsonArray("idEleves");
+                JsonArray idDevoirs = message.body().getJsonArray("idDevoirs");
                 noteService.getNotesParElevesParDevoirs(
                         convertJsonArrayToStringArray(idEleves),
                         convertJsonArrayToLongArray(idDevoirs),
-                        getArrayBusResultHandler(message));
+                        getJsonArrayBusResultHandler(message));
             }
             break;
             default: {
@@ -104,14 +104,14 @@ public class EventBusController extends ControllerHelper {
         }
     }
 
-    private Handler<Either<String, JsonArray>> getArrayBusResultHandler(final Message<JsonObject> message) {
+    private Handler<Either<String, JsonArray>> getJsonArrayBusResultHandler(final Message<JsonObject> message) {
         return new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> result) {
                 if (result.isRight()) {
                     message.reply(new JsonObject()
-                            .putString("status", "ok")
-                            .putArray("results", result.right().getValue()));
+                            .put("status", "ok")
+                            .put("results", result.right().getValue()));
                 } else {
                     message.reply(getErrorReply(result.left().getValue()));
                 }
@@ -121,14 +121,14 @@ public class EventBusController extends ControllerHelper {
 
     private JsonObject getErrorReply(String message) {
         return new JsonObject()
-                .putString("status", "error")
-                .putString("message", message);
+                .put("status", "error")
+                .put("message", message);
     }
 
     private String[] convertJsonArrayToStringArray(JsonArray list) {
         String[] objects = new String[list.size()];
         for (int i = 0; i < list.size(); i++) {
-            objects[i] = list.get(i);
+            objects[i] = list.getString(i);
         }
 
         return objects;
@@ -137,7 +137,7 @@ public class EventBusController extends ControllerHelper {
     private Long[] convertJsonArrayToLongArray(JsonArray list) {
         Long[] objects = new Long[list.size()];
         for (int i = 0; i < list.size(); i++) {
-            objects[i] = list.get(i);
+            objects[i] = list.getLong(i);
         }
 
         return objects;

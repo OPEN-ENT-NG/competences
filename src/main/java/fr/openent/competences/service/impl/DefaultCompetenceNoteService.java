@@ -26,13 +26,14 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,13 +53,13 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void createCompetenceNote(final JsonObject competenceNote, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT id FROM " +  Competences.COMPETENCES_SCHEMA +".competences_notes " +
                 "WHERE id_competence = ? AND id_devoir = ? AND id_eleve = ?;";
-        JsonArray params = new JsonArray()
-                .addNumber(competenceNote.getNumber("id_competence"))
-                .addNumber(competenceNote.getNumber("id_devoir"))
-                .addString(competenceNote.getString("id_eleve"));
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(competenceNote.getInteger("id_competence"))
+                .add(competenceNote.getLong("id_devoir"))
+                .add(competenceNote.getString("id_eleve"));
         Sql.getInstance().prepared(query, params, new Handler<Message<JsonObject>>() {
             public void handle(Message<JsonObject> result) {
-                JsonArray values = result.body().getArray("results");
+                JsonArray values = result.body().getJsonArray("results");
                 if (values.size() == 0) {
                     add(competenceNote, user, handler);
                 } else {
@@ -76,11 +77,11 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         String query = "UPDATE notes.competences_notes SET evaluation = ? " +
                 "WHERE id_competence = ? AND id_devoir = ? AND id_eleve = ?;";
 
-        JsonArray params = new JsonArray()
-                .addNumber(competenceNote.getNumber("evaluation"))
-                .addNumber(competenceNote.getNumber("id_competence"))
-                .addNumber(competenceNote.getNumber("id_devoir"))
-                .addString(competenceNote.getString("id_eleve"));
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(competenceNote.getLong("evaluation"))
+                .add(competenceNote.getLong("id_competence"))
+                .add(competenceNote.getLong("id_devoir"))
+                .add(competenceNote.getString("id_eleve"));
 
         Sql.getInstance().prepared(query, params, SqlResult.validRowsResultHandler(handler));
     }
@@ -106,9 +107,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("AND competences_notes.id_devoir = ? AND competences_notes.id_eleve = ? ")
                 .append("ORDER BY competences_notes.id ASC;");
 
-        JsonArray params = new JsonArray();
-        params.addNumber(idDevoir);
-        params.addString(idEleve);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        params.add(idDevoir);
+        params.add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
@@ -121,17 +122,17 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 "WHERE competences_notes.id_devoir = ? " +
                 "AND competences.id = competences_notes.id_competence");
 
-        Sql.getInstance().prepared(query.toString(), new JsonArray().addNumber(idDevoir), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), new fr.wseduc.webutils.collections.JsonArray().add(idDevoir), SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void updateCompetencesNotesDevoir(JsonArray _datas, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < _datas.size(); i++) {
-            JsonObject o = _datas.get(i);
+            JsonObject o = _datas.getJsonObject(i);
             query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA +".competences_notes SET evaluation = ?, modified = now() WHERE id = ?;");
-            values.addNumber(o.getNumber("evaluation")).addNumber(o.getNumber("id"));
+            values.add(o.getLong("evaluation")).add(o.getInteger("id"));
         }
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
@@ -139,9 +140,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     @Override
     public void createCompetencesNotesDevoir(JsonArray _datas, UserInfos user, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < _datas.size(); i++) {
-            JsonObject o = _datas.get(i);
+            JsonObject o = _datas.getJsonObject(i);
             query.append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_notes (id_devoir, id_competence, evaluation, owner, id_eleve, created) VALUES (?, ?, ?, ?, ?, now());");
             values.add(o.getInteger("id_devoir")).add(o.getInteger("id_competence")).add(o.getInteger("evaluation"))
                     .add(user.getUserId()).add(o.getString("id_eleve"));
@@ -153,13 +154,13 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void dropCompetencesNotesDevoir(JsonArray oIdsJsonArray, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
-        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id IN " + Sql.listPrepared(oIdsJsonArray.toArray()) + ";");
+        query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id IN " + Sql.listPrepared(Arrays.asList(oIdsJsonArray)) + ";");
         Sql.getInstance().prepared(query.toString(), oIdsJsonArray, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new JsonArray().addString(idEleve);
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idEleve);
         StringBuilder query = new StringBuilder()
                 .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
                 .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
@@ -174,7 +175,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
-            values.addNumber(idPeriode);
+            values.add(idPeriode);
         }
         query.append("ORDER BY competences_notes.created ");
 
@@ -186,7 +187,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void getCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
             .append("SELECT competences_notes.id_eleve AS id_eleve, competences.id as id_competence, max(competences_notes.evaluation) as evaluation,rel_competences_domaines.id_domaine, competences_notes.owner ")
             .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
@@ -195,16 +196,16 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
         for (int i=0; i<idEleves.size()-1 ; i++){
             query.append("?,");
-            values.addString(idEleves.get(i));
+            values.add(idEleves.get(i));
         }
         query.append("?)) ");
-        values.addString(idEleves.get(idEleves.size()-1));
+        values.add(idEleves.get(idEleves.size()-1));
 
         query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ");
 
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
-            values.addNumber(idPeriode);
+            values.add(idPeriode);
         }
 
         query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ");
@@ -216,7 +217,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void getCompetencesNotesDomaineClasse(List<String> idEleves, Long idPeriode, List<String> idDomaines, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT competences_notes.id_eleve AS id_eleve, competences.id as id_competence, max(competences_notes.evaluation) as evaluation,rel_competences_domaines.id_domaine, competences_notes.owner ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
@@ -225,25 +226,25 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
         for (int i=0; i<idDomaines.size()-1 ; i++){
             query.append("?,");
-            values.addNumber(Integer.valueOf(idDomaines.get(i)));
+            values.add(Integer.valueOf(idDomaines.get(i)));
         }
         query.append("?)) ");
-        values.addNumber(Integer.valueOf(idDomaines.get(idDomaines.size()-1)));
+        values.add(Integer.valueOf(idDomaines.get(idDomaines.size()-1)));
 
          query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
 
         for (int i=0; i<idEleves.size()-1 ; i++){
             query.append("?,");
-            values.addString(idEleves.get(i));
+            values.add(idEleves.get(i));
         }
         query.append("?)) ");
-        values.addString(idEleves.get(idEleves.size()-1));
+        values.add(idEleves.get(idEleves.size()-1));
 
         query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ");
 
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
-            values.addNumber(idPeriode);
+            values.add(idPeriode);
         }
         query.append("GROUP BY competences.id, competences.id_cycle,rel_competences_domaines.id_domaine, competences_notes.id_eleve, competences_notes.owner ");
 
@@ -253,7 +254,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void getConversionNoteCompetence(String idEtablissement, String idClasse, Handler<Either<String,JsonArray>> handler){
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT valmin, valmax, libelle, ordre, couleur, bareme_brevet ")
                 .append("FROM notes.niveau_competences AS niv ")
@@ -262,14 +263,14 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("AND cc.id_groupe = ? ")
                 .append("AND echelle.id_structure = ? ")
                 .append("ORDER BY ordre DESC");
-        values.addString(idClasse);
-        values.addString(idEtablissement);
+        values.add(idClasse);
+        values.add(idEtablissement);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void getMaxCompetenceNoteEleve(String[] id_eleve, Long idPeriode,Long idCycle, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT competences_notes.id_eleve, rel_competences_domaines.id_domaine, competences.id as id_competence, max(competences_notes.evaluation) as evaluation ")
                 .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ")
@@ -281,18 +282,18 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("AND competences_notes.id_eleve IN ").append(Sql.listPrepared(id_eleve)).append(" AND evaluation >= 0 ");
 
         for(String s : id_eleve) {
-            values.addString(s);
+            values.add(s);
         }
 
 
         if(idCycle != null) {
             query.append("AND competences.id_cycle = ? ");
-            values.addNumber(idCycle);
+            values.add(idCycle);
         }
 
         if(idPeriode != null) {
             query.append("AND devoirs.id_periode = ?");
-            values.addNumber(idPeriode);
+            values.add(idPeriode);
         }
 
         query.append(" GROUP BY competences_notes.id_eleve, competences.id, competences.id_cycle,rel_competences_domaines.id_domaine");
@@ -311,7 +312,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     Map<Integer,Integer> mapOrdreBareme = new HashMap<>();
                     Integer maxBaremeBrevet = 0;
                     for(int i=0; i< niveauxCompetences.size(); i++ ){
-                        JsonObject nivCompetence = niveauxCompetences.get(i);
+                        JsonObject nivCompetence = niveauxCompetences.getJsonObject(i);
                         mapOrdreBareme.put(nivCompetence.getInteger("ordre"),nivCompetence.getInteger("bareme_brevet"));
                         if(maxBaremeBrevet < nivCompetence.getInteger("bareme_brevet"))
                         maxBaremeBrevet = nivCompetence.getInteger("bareme_brevet");
@@ -330,14 +331,14 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     @Override
     public void getMaxBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String, JsonObject>> handler) {
 
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
        String query = "SELECT MAX (bareme_brevet) FROM(SELECT * FROM notes.niveau_competences " +
                "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau " +
                "INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle " +
                 "AND cc.id_groupe = ? " +
                 "AND echelle.id_structure = ? ) as maxbareme";
-        params.addString(idClasse);
-        params.addString(idEtablissement);
+        params.add(idClasse);
+        params.add(idEtablissement);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
 
     }*/

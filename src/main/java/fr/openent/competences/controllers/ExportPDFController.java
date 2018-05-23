@@ -31,24 +31,25 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.Renders;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.AsyncResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.MultiMap;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -59,10 +60,10 @@ import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
@@ -126,28 +127,28 @@ public class ExportPDFController extends ControllerHelper {
                                        final JsonObject periodeJson, final JsonObject userJson, final JsonObject etabJson) {
 
         JsonObject action = new JsonObject()
-                .putString("action", "eleve.getUsers")
-                .putArray("idUsers", idUsers);
+                .put("action", "eleve.getUsers")
+                .put("idUsers", idUsers);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                JsonArray matieresArray = new JsonArray();
+                JsonArray matieresArray = new fr.wseduc.webutils.collections.JsonArray();
                 if ("ok".equals(body.getString("status"))) {
-                    JsonArray r = body.getArray("results");
+                    JsonArray r = body.getJsonArray("results");
 
                     for (int index = 0; index < matieres.size(); index++) {
-                        JsonObject matiereDevoir = matieres.get(index);
-                        matieresArray.add(matiereDevoir.getObject("data").getObject("data"));
+                        JsonObject matiereDevoir = matieres.getJsonObject(index);
+                        matieresArray.add(matiereDevoir.getJsonObject("data").getJsonObject("data"));
                     }
 
                     for (int i = 0; i < devoirsJson.size(); i++) {
-                        JsonObject devoir = devoirsJson.get(i);
+                        JsonObject devoir = devoirsJson.getJsonObject(i);
                         // Récupération de l'enseignant du devoir
                         JsonObject enseignantDevoir = null;
                         for (int j = 0; j < r.size(); j++) {
-                            enseignantDevoir = r.get(j);
+                            enseignantDevoir = r.getJsonObject(j);
                             if (enseignantDevoir.getString("id").equals(devoir.getString("owner"))) {
                                 break;
                             }
@@ -155,7 +156,7 @@ public class ExportPDFController extends ControllerHelper {
                         if (enseignantDevoir != null) {
                             // Récupération de la matière
                             for (int k = 0; k < matieresArray.size(); k++) {
-                                JsonObject matiereDevoir = matieresArray.get(k);
+                                JsonObject matiereDevoir = matieresArray.getJsonObject(k);
                                 getDevoirsByMatiere(devoirsJson, matiereDevoir);
 
                                 if (matiereDevoir.getString("id").equals(devoir.getString("id_matiere"))) {
@@ -163,13 +164,13 @@ public class ExportPDFController extends ControllerHelper {
                                     String displayName = firstNameEnsiegnant.substring(0, 1) + ".";
                                     displayName = displayName + enseignantDevoir.getString("name");
 
-                                    if (matiereDevoir.getArray("displayNameEnseignant") == null) {
-                                        matiereDevoir.putArray("displayNameEnseignant", new JsonArray().addString(displayName));
+                                    if (matiereDevoir.getJsonArray("displayNameEnseignant") == null) {
+                                        matiereDevoir.put("displayNameEnseignant", new fr.wseduc.webutils.collections.JsonArray().add(displayName));
                                     } else {
-                                        JsonArray _enseignantMatiere = matiereDevoir.getArray("displayNameEnseignant");
+                                        JsonArray _enseignantMatiere = matiereDevoir.getJsonArray("displayNameEnseignant");
                                         if (!_enseignantMatiere.contains(displayName)) {
-                                            _enseignantMatiere.addString(displayName);
-                                            matiereDevoir.putArray("displayNameEnseignant", _enseignantMatiere);
+                                            _enseignantMatiere.add(displayName);
+                                            matiereDevoir.put("displayNameEnseignant", _enseignantMatiere);
                                         }
                                     }
                                 }
@@ -180,16 +181,16 @@ public class ExportPDFController extends ControllerHelper {
 
                     final JsonObject templateProps = new JsonObject();
 
-                    templateProps.putArray("matieres", matieresArray);
-                    templateProps.putObject("periode", periodeJson);
-                    templateProps.putObject("user", userJson.getObject("u").getObject("data"));
-                    templateProps.putObject("classe", userJson.getObject("c").getObject("data"));
-                    templateProps.putObject("etablissement", etabJson);
+                    templateProps.put("matieres", matieresArray);
+                    templateProps.put("periode", periodeJson);
+                    templateProps.put("user", userJson.getJsonObject("u").getJsonObject("data"));
+                    templateProps.put("classe", userJson.getJsonObject("c").getJsonObject("data"));
+                    templateProps.put("etablissement", etabJson);
                     String templateName = "releve-eleve.pdf.xhtml";
 
                     String prefixPdfName = "releve-eleve";
-                    prefixPdfName += "-" + userJson.getObject("u").getObject("data").getString("displayName");
-                    prefixPdfName += "-" + userJson.getObject("c").getObject("data").getString("name");
+                    prefixPdfName += "-" + userJson.getJsonObject("u").getJsonObject("data").getString("displayName");
+                    prefixPdfName += "-" + userJson.getJsonObject("c").getJsonObject("data").getString("name");
 
                     String etablissementName = etabJson.getString("name");
                     etablissementName = etablissementName.trim().replaceAll(" ", "-");
@@ -201,7 +202,7 @@ public class ExportPDFController extends ControllerHelper {
                     leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                 }
             }
-        });
+        }));
     }
 
     /**
@@ -212,16 +213,16 @@ public class ExportPDFController extends ControllerHelper {
      */
     private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiereInter) {
 
-        JsonArray devoirsMatiereJson = new JsonArray();
+        JsonArray devoirsMatiereJson = new fr.wseduc.webutils.collections.JsonArray();
 
         List<NoteDevoir> listeNoteDevoirs = new ArrayList<NoteDevoir>();
 
         // parcours des devoirs
         for (int i = 0; i < devoirsJson.size(); i++) {
-            JsonObject devoirJson = devoirsJson.get(i);
+            JsonObject devoirJson = devoirsJson.getJsonObject(i);
 
             // boolean permettant de savoir s'il y a un coefficient différent de 1 sur la note
-            devoirJson.putBoolean("hasCoeff", !Double.valueOf(devoirJson.getString("coefficient")).equals(new Double(1)));
+            devoirJson.put("hasCoeff", !Double.valueOf(devoirJson.getString("coefficient")).equals(new Double(1)));
 
             // ajout du devoir sur la matiere, si son identifiant de matière correspond bien
             if (matiereInter.getString("id").equals(devoirJson.getString("id_matiere"))) {
@@ -235,17 +236,17 @@ public class ExportPDFController extends ControllerHelper {
                 listeNoteDevoirs.add(noteDevoir);
             }
         }
-        matiereInter.putArray("devoirs", devoirsMatiereJson);
+        matiereInter.put("devoirs", devoirsMatiereJson);
 
         boolean hasDevoirs = !listeNoteDevoirs.isEmpty();
-        matiereInter.putBoolean("hasDevoirs", hasDevoirs);
+        matiereInter.put("hasDevoirs", hasDevoirs);
 
         if (hasDevoirs) {
             // calcul de la moyenne de l'eleve pour la matiere
             JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, false, 20);// TODO recuper le diviseur de la matiere
             // ajout sur l'objet json
-            if( moyenneMatiere.getNumber("moyenne") != null){
-                matiereInter.putString("moyenne", moyenneMatiere.getNumber("moyenne").toString());
+            if( moyenneMatiere.getLong("moyenne") != null){
+                matiereInter.put("moyenne", moyenneMatiere.getLong("moyenne").toString());
             }
         }
     }
@@ -292,7 +293,7 @@ public class ExportPDFController extends ControllerHelper {
                             if (eventUser.isRight()) {
                                 final JsonObject userJSON = eventUser.right().getValue();
 
-                                final String classeEleve = userJSON.getObject("u").getObject("data").getArray("classes").get(0);
+                                final String classeEleve = userJSON.getJsonObject("u").getJsonObject("data").getJsonArray("classes").getString(0);
 
                                 // Récupération de la liste des devoirs de la personne avec ses notes associées
                                 devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode, new Handler<Either<String, JsonArray>>() {
@@ -302,33 +303,33 @@ public class ExportPDFController extends ControllerHelper {
 
                                             // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
                                             final JsonArray devoirsJSON = eventListDevoirs.right().getValue();
-                                            final JsonArray idMatieres = new JsonArray();
-                                            final JsonArray idEnseignants = new JsonArray();
+                                            final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
+                                            final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
                                             for (int i = 0; i < devoirsJSON.size(); i++) {
-                                                JsonObject devoir = devoirsJSON.get(i);
+                                                JsonObject devoir = devoirsJSON.getJsonObject(i);
                                                 idMatieres.add(devoir.getValue("id_matiere"));
                                                 idEnseignants.add(devoir.getValue("owner"));
                                             }
                                             // récupération de l'ensemble des matières de l'élève
 
                                             JsonObject action = new JsonObject()
-                                                    .putString("action", "matiere.getMatieres")
-                                                    .putArray("idMatieres", idMatieres);
+                                                    .put("action", "matiere.getMatieres")
+                                                    .put("idMatieres", idMatieres);
 
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
                                                 public void handle(Message<JsonObject> message) {
                                                     JsonObject body = message.body();
 
                                                     if ("ok".equals(body.getString("status"))) {
-                                                        JsonArray r = body.getArray("results");
+                                                        JsonArray r = body.getJsonArray("results");
                                                         final ArrayList<String> classesFieldOfStudy = new ArrayList<String>();
                                                         String key = new String();
                                                         JsonObject f = new JsonObject();
                                                         final JsonArray matieres = r;
 
                                                         for (int i = 0; i < r.size(); i++) {
-                                                            JsonObject o = r.get(i);
+                                                            JsonObject o = r.getJsonObject(i);
                                                             key = classeEleve + "$" + o.getString("externalId");
                                                             classesFieldOfStudy.add(key);
                                                         }
@@ -340,7 +341,7 @@ public class ExportPDFController extends ControllerHelper {
                                                             @Override
                                                             public void handle(Either<String, JsonObject> eventStructure) {
                                                                 if (eventStructure.isRight()) {
-                                                                    final JsonObject etabJSON = eventStructure.right().getValue().getObject("s").getObject("data");
+                                                                    final JsonObject etabJSON = eventStructure.right().getValue().getJsonObject("s").getJsonObject("data");
                                                                     final JsonObject periodeJSON = new JsonObject();
 
                                                                     if (null != params.get("idTypePeriode")
@@ -358,10 +359,10 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         getHost(request),
                                                                                         I18n.acceptLanguage(request));
                                                                         libellePeriode += (" " + ordrePeriode);
-                                                                        periodeJSON.putString("libelle", libellePeriode);
+                                                                        periodeJSON.put("libelle", libellePeriode);
                                                                     } else {
                                                                         // Construction de la période année
-                                                                        periodeJSON.putString("libelle", "Ann\u00E9e");
+                                                                        periodeJSON.put("libelle", "Ann\u00E9e");
                                                                     }
                                                                     getEnseignantsMatieres(request, user, matieres,
                                                                             classeEleve, idEnseignants, devoirsJSON,
@@ -376,7 +377,7 @@ public class ExportPDFController extends ControllerHelper {
                                                         leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                                     }
                                                 }
-                                            });
+                                            }));
 
                                         } else {
                                             leftToResponse(request, eventListDevoirs.left());
@@ -406,13 +407,13 @@ public class ExportPDFController extends ControllerHelper {
      * @see Eleve
      */
     private JsonArray formatBFC(List<Eleve> classe) {
-        JsonArray result = new JsonArray();
+        JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
 
         for (Eleve eleve : classe) {
             if (!eleve.isReady()) {
                 return null;
             }
-            result.addObject(eleve.toJson());
+            result.add(eleve.toJson());
         }
 
         return result;
@@ -439,9 +440,9 @@ public class ExportPDFController extends ControllerHelper {
         // Ainsi, s'il demeure un null dans la collection, c'est que toutes les classes ne possede pas encore
         // leur JsonObject.
         if (!collection.values().contains(null)) {
-            JsonArray result = new JsonArray();
+            JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
             for (JsonObject classe : collection.values()) {
-                result.addObject(classe);
+                result.add(classe);
             }
             handler.handle(new Either.Right<String, JsonArray>(result));
         }
@@ -490,11 +491,11 @@ public class ExportPDFController extends ControllerHelper {
                 public void handle(Either<String, JsonArray> event) {
                     if (event.isRight()) {
                         if (event.right().getValue().size() == 0) {
-                            collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation de l'échelle de conversion pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucune echelle de conversion pour cette classe."), result, handler);
+                            collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation de l'échelle de conversion pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucune echelle de conversion pour cette classe."), result, handler);
                             log.error("getBFC : getConversionNoteCompetence (" + idStructure + ", " + classe.getKey() + ") : aucune echelle de conversion pour cette classe.");
                         }
                         for (int i = 0; i < event.right().getValue().size(); i++) {
-                            JsonObject _o = event.right().getValue().get(i);
+                            JsonObject _o = event.right().getValue().getJsonObject(i);
                             libelleEchelle.put(_o.getInteger("ordre"), _o.getString("libelle"));
                         }
                         for (Eleve e : classe.getValue()) {
@@ -502,10 +503,10 @@ public class ExportPDFController extends ControllerHelper {
                         }
                         JsonArray classeResult = formatBFC(classe.getValue());
                         if (classeResult != null) { // classeResult est différent de null si tous les élèves de la classe ont tous les paramètres
-                            collectBFCEleve(classe.getKey(), new JsonObject().putArray("eleves", classeResult), result, handler);
+                            collectBFCEleve(classe.getKey(), new JsonObject().put("eleves", classeResult), result, handler);
                         }
                     } else {
-                        collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation de l'échelle de conversion pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
+                        collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation de l'échelle de conversion pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
                         log.error("getBFC : getConversionNoteCompetence (" + idStructure + ", " + classe.getKey() + ") : " + event.left().getValue());
                     }
                 }
@@ -516,7 +517,7 @@ public class ExportPDFController extends ControllerHelper {
                 public void handle(Either<String, JsonArray> event) {
                     if (event.isRight()) {
                         if (event.right().getValue().size() == 0) {
-                            collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des domaines pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucun domaine racine pour cette classe."), result, handler);
+                            collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des domaines pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucun domaine racine pour cette classe."), result, handler);
                             log.error("getBFC : getDomainesRacines (" + classe.getKey() + ") : aucun domaine racine pour cette classe.");
                         }
                         final JsonArray queryResult = event.right().getValue();
@@ -531,7 +532,7 @@ public class ExportPDFController extends ControllerHelper {
                                     for (final Eleve e : classe.getValue()) {
                                         final Map<Long, Map<String, String>> domainesRacines = new LinkedHashMap<>();
                                         for (int i = 0; i < queryResult.size(); i++) {
-                                            final JsonObject domaine = queryResult.get(i);
+                                            final JsonObject domaine = queryResult.getJsonObject(i);
                                             final Map<String, String> infoDomaine = new HashMap<>();
                                             infoDomaine.put("id", String.valueOf(domaine.getLong("id")));
                                             infoDomaine.put("codification", domaine.getString("codification"));
@@ -548,7 +549,7 @@ public class ExportPDFController extends ControllerHelper {
                                         e.setDomainesRacines(domainesRacines);
                                     }
                                 }else {
-                                    collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des domaines dispensés pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + respMap.left().getValue()), result, handler);
+                                    collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des domaines dispensés pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + respMap.left().getValue()), result, handler);
                                     log.error("getBFC : mapOfDispenseDomaineByIdEleve (" + classe.getKey() + ") : " + respMap.left().getValue());
                                 }
                             }
@@ -556,10 +557,10 @@ public class ExportPDFController extends ControllerHelper {
 
                         JsonArray classeResult = formatBFC(classe.getValue());
                         if (classeResult != null) {
-                            collectBFCEleve(classe.getKey(), new JsonObject().putArray("eleves", classeResult), result, handler);
+                            collectBFCEleve(classe.getKey(), new JsonObject().put("eleves", classeResult), result, handler);
                         }
                     } else {
-                        collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des domaines pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
+                        collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des domaines pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
                         log.error("getBFC : getDomainesRacines (" + classe.getKey() + ") : " + event.left().getValue());
                     }
                 }
@@ -586,7 +587,7 @@ public class ExportPDFController extends ControllerHelper {
                                                 // On récupère les enseignements de complément par élève
                                                 JsonArray niveauEnseignementComplementEleveResultArray = eventNCPL.right().getValue();
                                                 for (int i = 0; i < niveauEnseignementComplementEleveResultArray.size(); i++) {
-                                                    JsonObject _o = niveauEnseignementComplementEleveResultArray.get(i);
+                                                    JsonObject _o = niveauEnseignementComplementEleveResultArray.getJsonObject(i);
                                                     String id_eleve = _o.getString("id_eleve");
 
                                                     if (!niveauEnseignementComplementEleve.containsKey(id_eleve)) {
@@ -597,7 +598,7 @@ public class ExportPDFController extends ControllerHelper {
                                                 // On récupère les synthèses des bfcs par cycle par élève
                                                 JsonArray syntheseEleveResultArray = repSynthese.right().getValue();
                                                 for (int i = 0; i < syntheseEleveResultArray.size(); i++) {
-                                                    JsonObject _o = syntheseEleveResultArray.get(i);
+                                                    JsonObject _o = syntheseEleveResultArray.getJsonObject(i);
                                                     String id_eleve = _o.getString("id_eleve");
 
                                                     if (!syntheseEleve.containsKey(id_eleve)) {
@@ -606,10 +607,10 @@ public class ExportPDFController extends ControllerHelper {
                                                 }
                                                 // On récupère les résultats par domaine par élève
                                                 for (int i = 0; i <idEleves.size() ; i++) {
-                                                    JsonArray resultats = event.right().getValue().getArray(idEleves.get(i));
+                                                    JsonArray resultats = event.right().getValue().getJsonArray(idEleves.get(i));
                                                     Map<Long, Integer> resultEleves = new HashMap<>();
                                                     for (Object resultat : resultats) {
-                                                        resultEleves.put((Long) ((JsonObject) resultat).getNumber("idDomaine"), (Integer) ((JsonObject) resultat).getNumber("niveau"));
+                                                        resultEleves.put((Long) ((JsonObject) resultat).getLong("idDomaine"), (Integer) ((JsonObject) resultat).getInteger("niveau"));
                                                     }
                                                     resultatsEleves.put(idEleves.get(i), resultEleves);
                                                 }
@@ -621,23 +622,23 @@ public class ExportPDFController extends ControllerHelper {
                                                 }
                                                 JsonArray classeResult = formatBFC(classe.getValue());
                                                 if (classeResult != null) {
-                                                    collectBFCEleve(classe.getKey(), new JsonObject().putArray("eleves", classeResult), result, handler);
+                                                    collectBFCEleve(classe.getKey(), new JsonObject().put("eleves", classeResult), result, handler);
                                                 }
                                             }else{
-                                                collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
+                                                collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
                                                 log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.left().getValue());
                                             }
                                         }
                                     });
                                 } else {
-                                    collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
+                                    collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
                                     log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.left().getValue());
                                 }
                             }
                         });
 
                     } else {
-                        collectBFCEleve(classe.getKey(), new JsonObject().putString("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
+                        collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);
                         log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.left().getValue());
                     }
                 }
@@ -886,13 +887,13 @@ public class ExportPDFController extends ControllerHelper {
                             @Override
                             public void handle(Either<String, JsonArray> event) {
                                 if (event.isRight()) {
-                                    final JsonObject result = new JsonObject().putArray("classes", event.right().getValue());
+                                    final JsonObject result = new JsonObject().put("classes", event.right().getValue());
                                     if (idStructure != null) {
                                         utilsService.getNameEntity(new String[]{idStructureGot}, new Handler<Either<String, JsonArray>>() {
                                             @Override
                                             public void handle(Either<String, JsonArray> event) {
                                                 if (event.isRight()) {
-                                                    final String structureName = ((JsonObject) event.right().getValue().get(0)).getString("name").replace(" ", "_");
+                                                    final String structureName = ((JsonObject) event.right().getValue().getJsonObject(0)).getString("name").replace(" ", "_");
                                                     generateBFCExport(result, idPeriode, structureName, request);
                                                 } else {
                                                     leftToResponse(request, event.left());
@@ -907,7 +908,7 @@ public class ExportPDFController extends ControllerHelper {
                                                 if (event.isRight()) {
                                                     final StringBuilder classesName = new StringBuilder();
                                                     for (int i = 0; i < event.right().getValue().size(); i++) {
-                                                        classesName.append(((JsonObject) event.right().getValue().get(i)).getString("name")).append("_");
+                                                        classesName.append(((JsonObject) event.right().getValue().getJsonObject(i)).getString("name")).append("_");
                                                     }
                                                     classesName.setLength(classesName.length() - 1);
                                                     generateBFCExport(result, idPeriode, classesName.toString(), request);
@@ -924,7 +925,7 @@ public class ExportPDFController extends ControllerHelper {
                                                 if (event.isRight()) {
                                                     final StringBuilder elevesName = new StringBuilder();
                                                     for (int i = 0; i < event.right().getValue().size(); i++) {
-                                                        elevesName.append(((JsonObject) event.right().getValue().get(i)).getString("name")).append("_");
+                                                        elevesName.append(((JsonObject) event.right().getValue().getJsonObject(i)).getString("name")).append("_");
                                                     }
                                                     elevesName.setLength(elevesName.length() - 1);
                                                     generateBFCExport(result, idPeriode, elevesName.toString(), request);
@@ -956,15 +957,15 @@ public class ExportPDFController extends ControllerHelper {
     private void generateBFCExport(final JsonObject result, Long idPeriode, final String fileNamePrefix, final HttpServerRequest request) {
         if (idPeriode != null) {
             JsonObject jsonRequest = new JsonObject()
-                    .putObject("headers", new JsonObject().putString("Accept-Language",
+                    .put("headers", new JsonObject().put("Accept-Language",
                             request.headers().get("Accept-Language")))
-                    .putString("Host", getHost(request));
+                    .put("Host", getHost(request));
             JsonObject action = new JsonObject()
-                    .putString("action", "periode.getLibellePeriode")
-                    .putNumber("idType", idPeriode)
-                    .putObject("request", jsonRequest);
+                    .put("action", "periode.getLibellePeriode")
+                    .put("idType", idPeriode)
+                    .put("request", jsonRequest);
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
@@ -978,7 +979,7 @@ public class ExportPDFController extends ControllerHelper {
                         log.error("getPeriode : Unable to get the label of the specified entity (idPeriode).");
                     }
                 }
-            });
+            }));
         } else {
             genererPdf(request, result, "BFC.pdf.xhtml", "BFC_" + fileNamePrefix);
         }
@@ -996,7 +997,7 @@ public class ExportPDFController extends ControllerHelper {
                             final String prefixPdfName) {
 
         final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
-        if (templateProps.containsField("image") && templateProps.getBoolean("image")) {
+        if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation Image du template " + templateName);
         } else {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation PDF du template " + templateName);
@@ -1006,16 +1007,17 @@ public class ExportPDFController extends ControllerHelper {
 //        this.skins = vertx.sharedData().getMap("skins");
 //        final String assetsPath = this.assetsPath + "/assets/themes/" + this.skins.get(Renders.getHost(request));
 //        final String templatePath = assetsPath + "/template/viescolaire/";
-        final String templatePath = container.config().getObject("exports").getString("template-path");
+        final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports").getString("template-path")).toString();
 //        final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) + "/assets/themes/" + this.skins.get(Renders.getHost(request)) + "/img/";
-        final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) + container.config().getString("app-address") + "/public/";
+        final String baseUrl = getScheme(request) + "://" + Renders.getHost(request) + config.getString("app-address") + "/public/";
 
-        node = (String) vertx.sharedData().getMap("server").get("node");
+        node = (String) vertx.sharedData().getLocalMap("server").get("node");
         if (node == null) {
             node = "";
         }
 
-        vertx.fileSystem().readFile(templatePath + templateName, new Handler<AsyncResult<Buffer>>() {
+        vertx.fileSystem().readFile(templatePath + templateName,
+                new Handler<AsyncResult<Buffer>>() {
 
             @Override
             public void handle(AsyncResult<Buffer> result) {
@@ -1048,9 +1050,9 @@ public class ExportPDFController extends ControllerHelper {
                         }
 
                         actionObject
-                                .putBinary("content", bytes)
-                                .putString("baseUrl", baseUrl);
-                        eb.send(node + "entcore.pdf.generator", actionObject, new Handler<Message<JsonObject>>() {
+                                .put("content", bytes)
+                                .put("baseUrl", baseUrl);
+                        eb.send(node + "entcore.pdf.generator", actionObject, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> reply) {
                                 JsonObject pdfResponse = reply.body();
@@ -1060,7 +1062,7 @@ public class ExportPDFController extends ControllerHelper {
                                 }
                                 byte[] pdf = pdfResponse.getBinary("content");
 
-                                if (templateProps.containsField("image") && templateProps.getBoolean("image")) {
+                                if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
                                     File pdfFile = new File(prefixPdfName + "_" + dateDebut + ".pdf");
                                     OutputStream outStream = null;
                                     try {
@@ -1103,7 +1105,7 @@ public class ExportPDFController extends ControllerHelper {
 
                                             request.response().putHeader("Content-Type", "image/jpg");
                                             request.response().putHeader("Content-Disposition", "attachment; filename=" + prefixPdfName + "_" + dateDebut + ".jpg");
-                                            request.response().end(new Buffer(bytes));
+                                            request.response().end(Buffer.buffer(bytes));
                                             outStream.close();
                                             bos.close();
                                             fis.close();
@@ -1119,11 +1121,11 @@ public class ExportPDFController extends ControllerHelper {
                                     request.response().putHeader("Content-Type", "application/pdf");
                                     request.response().putHeader("Content-Disposition",
                                             "attachment; filename=" + prefixPdfName + "_" + dateDebut + ".pdf");
-                                    request.response().end(new Buffer(pdf));
+                                    request.response().end(Buffer.buffer(pdf));
                                     log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Fin Generation PDF du template " + templateName);
                                 }
                             }
-                        });
+                        }));
                     }
                 });
 
@@ -1158,66 +1160,66 @@ public class ExportPDFController extends ControllerHelper {
                                 if (devoirInfo.isRight()) {
 
                                     final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
-                                    result.putString("devoirName", devoirInfos.getString("name"));
-                                    result.putString("devoirCoefficient", devoirInfos.getString("coefficient"));
-                                    result.putNumber("devoirDiviseur", devoirInfos.getLong("diviseur"));
-                                    result.putBoolean("evaluation", devoirInfos.getBoolean("is_evaluated"));
+                                    result.put("devoirName", devoirInfos.getString("name"));
+                                    result.put("devoirCoefficient", devoirInfos.getString("coefficient"));
+                                    result.put("devoirDiviseur", devoirInfos.getLong("diviseur"));
+                                    result.put("evaluation", devoirInfos.getBoolean("is_evaluated"));
 
                                     JsonObject jsonRequest = new JsonObject()
-                                            .putObject("headers", new JsonObject().putString("Accept-Language",
+                                            .put("headers", new JsonObject().put("Accept-Language",
                                                     request.headers().get("Accept-Language")))
-                                            .putString("Host", getHost(request));
+                                            .put("Host", getHost(request));
                                     JsonObject action = new JsonObject()
-                                            .putString("action", "periode.getLibellePeriode")
-                                            .putNumber("type", devoirInfos.getInteger("periodetype"))
-                                            .putNumber("ordre", devoirInfos.getInteger("periodeordre"))
-                                            .putObject("request", jsonRequest);
-                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                            .put("action", "periode.getLibellePeriode")
+                                            .put("type", devoirInfos.getInteger("periodetype"))
+                                            .put("ordre", devoirInfos.getInteger("periodeordre"))
+                                            .put("request", jsonRequest);
+                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                         @Override
                                         public void handle(Message<JsonObject> message) {
                                             JsonObject body = message.body();
 
-                                            result.putString("periode", body.getString("result"));
+                                            result.put("periode", body.getString("result"));
 
                                             JsonObject action = new JsonObject()
-                                                    .putString("action", "classe.getEleveClasse")
-                                                    .putString("idClasse", devoirInfos.getString("id_groupe"));
+                                                    .put("action", "classe.getEleveClasse")
+                                                    .put("idClasse", devoirInfos.getString("id_groupe"));
 
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
                                                 public void handle(Message<JsonObject> message) {
                                                     JsonObject body = message.body();
 
                                                     if ("ok".equals(body.getString("status"))) {
-                                                        result.putArray("eleves", body.getArray("results"));
+                                                        result.put("eleves", body.getJsonArray("results"));
 
                                                         JsonObject action = new JsonObject()
-                                                                .putString("action", "matiere.getMatiere")
-                                                                .putString("idMatiere", devoirInfos.getString("id_matiere"));
+                                                                .put("action", "matiere.getMatiere")
+                                                                .put("idMatiere", devoirInfos.getString("id_matiere"));
 
-                                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                             @Override
                                                             public void handle(Message<JsonObject> message) {
                                                                 JsonObject body = message.body();
 
                                                                 if ("ok".equals(body.getString("status"))) {
-                                                                    result.putString("matiere", body.getObject("result").getObject("n").getObject("data").getString("label"));
+                                                                    result.put("matiere", body.getJsonObject("result").getJsonObject("n").getJsonObject("data").getString("label"));
 
                                                                     JsonObject action = new JsonObject()
-                                                                            .putString("action", "classe.getClasseInfo")
-                                                                            .putString("idClasse", devoirInfos.getString("id_groupe"));
+                                                                            .put("action", "classe.getClasseInfo")
+                                                                            .put("idClasse", devoirInfos.getString("id_groupe"));
 
-                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                         @Override
                                                                         public void handle(Message<JsonObject> message) {
                                                                             JsonObject body = message.body();
                                                                             if ("ok".equals(body.getString("status"))) {
-                                                                                result.putString("classeName", body.getObject("result").getObject("c").getObject("data").getString("name"));
+                                                                                result.put("classeName", body.getJsonObject("result").getJsonObject("c").getJsonObject("data").getString("name"));
                                                                                 if(devoirInfos.getBoolean("is_evaluated") == true){
                                                                                     Integer nbrColone = (devoirInfos.getInteger("nbrcompetence") + 1 );
-                                                                                    result.putString("nbrCompetences",nbrColone.toString());
+                                                                                    result.put("nbrCompetences",nbrColone.toString());
                                                                                 }else{
-                                                                                    result.putString("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString());
+                                                                                    result.put("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString());
                                                                                 }
 
                                                                                 if(devoirInfos.getInteger("nbrcompetence") > 0) {
@@ -1226,33 +1228,33 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         public void handle(Either<String, JsonArray> CompetencesObject) {
                                                                                             if(CompetencesObject.isRight()){
                                                                                                 JsonArray  CompetencesOld = CompetencesObject.right().getValue();
-                                                                                                final JsonArray  CompetencesNew = new JsonArray();
+                                                                                                final JsonArray  CompetencesNew = new fr.wseduc.webutils.collections.JsonArray();
                                                                                                 Integer size =0;
                                                                                                 Double ligne = new Double(0);
                                                                                                 Integer lenght = 103; // le nombre de caractére max dans une ligne
                                                                                                 Double height = new Double(2.2); // la hauteur d'une ligne
                                                                                                 for (int i=0 ; i < CompetencesOld.size() ; i++) {
-                                                                                                    JsonObject Comp = CompetencesOld.get(i);
+                                                                                                    JsonObject Comp = CompetencesOld.getJsonObject(i);
                                                                                                     size = Comp.getString("nom").length() +10; // +10 pour "[ Cx ]"
                                                                                                     ligne += (Integer) size / lenght ;
                                                                                                     if(size%lenght > 0 ){
                                                                                                         ligne++;
                                                                                                     }
-                                                                                                    Comp.putNumber("i", i+1);
-                                                                                                    CompetencesNew.addObject(Comp);
+                                                                                                    Comp.put("i", i+1);
+                                                                                                    CompetencesNew.add(Comp);
                                                                                                 }
 
                                                                                                 ligne = (ligne * height) + 6; // + 6 la hauteur de la 1 ligne du tableau
                                                                                                 if( ligne < 25){ // 25 est la hauteure minimal
                                                                                                     ligne = Double.parseDouble("25") ;
                                                                                                 }
-                                                                                                result.putString("ligne", ligne.toString()+"%");
+                                                                                                result.put("ligne", ligne.toString()+"%");
                                                                                                 if(CompetencesNew.size() > 0){
-                                                                                                    result.putBoolean("hasCompetences",true);
+                                                                                                    result.put("hasCompetences",true);
                                                                                                 }else{
-                                                                                                    result.putBoolean("hasCompetences",false);
+                                                                                                    result.put("hasCompetences",false);
                                                                                                 }
-                                                                                                result.putArray("competences",CompetencesNew);
+                                                                                                result.put("competences",CompetencesNew);
                                                                                                 genererPdf(request, result , "Devoir.saisie.xhtml", "Formulaire_saisie");
                                                                                             }else{
                                                                                                 log.error("Error :can not get competences devoir ");
@@ -1268,21 +1270,21 @@ public class ExportPDFController extends ControllerHelper {
                                                                                 badRequest(request, "Error :can not get  classe informations");
                                                                             }
                                                                         }
-                                                                    });
+                                                                    }));
                                                                 } else {
                                                                     log.error("Error :can not get classe info ");
                                                                     badRequest(request, "Error :can not get  classe info  ");
                                                                 }
                                                             }
-                                                        });
+                                                        }));
                                                     } else {
                                                         log.error("Error :can not get students ");
                                                         badRequest(request, "Error :can not get students  ");
                                                     }
                                                 }
-                                            });
+                                            }));
                                         }
-                                    });
+                                    }));
                                 } else {
                                     log.error("Error :can not get informations from postgres tables ");
                                     badRequest(request, "Error :can not get informations from postgres tables ");
@@ -1329,13 +1331,13 @@ public class ExportPDFController extends ControllerHelper {
                             return;
                         }
                         if (nbrCartouche > 0) {
-                            JsonArray nbr = new JsonArray();
+                            JsonArray nbr = new fr.wseduc.webutils.collections.JsonArray();
                             for (int j = 0; j < nbrCartouche; j++) {
                                 nbr.add(j);
                             }
-                            result.putArray("number", nbr);
+                            result.put("number", nbr);
                         } else {
-                            result.putArray("number", new JsonArray().add("cartouche"));
+                            result.put("number", new fr.wseduc.webutils.collections.JsonArray().add("cartouche"));
                         }
 
                         final String byEleve = params.get("eleve");
@@ -1351,11 +1353,11 @@ public class ExportPDFController extends ControllerHelper {
                                         String reformattedStr = "";
                                         ArrayList<String> classeList = new ArrayList<String>();
 
-                                        result.putString("devoirName", devoirInfos.getString("name"));
+                                        result.put("devoirName", devoirInfos.getString("name"));
                                         if (color.equals("true")) {
-                                            result.putBoolean("byColor", true);
+                                            result.put("byColor", true);
                                         } else {
-                                            result.putBoolean("byColor", false);
+                                            result.put("byColor", false);
                                         }
                                         try {
                                             reformattedStr = dateAftFormat.format(dateBfFormat.parse(devoirInfos.getString("created")));
@@ -1363,61 +1365,61 @@ public class ExportPDFController extends ControllerHelper {
                                             e.printStackTrace();
                                         }
                                         if (reformattedStr != "") {
-                                            result.putString("devoirDate", reformattedStr);
+                                            result.put("devoirDate", reformattedStr);
                                         } else {
-                                            result.putString("devoirDate", devoirInfos.getString("created"));
+                                            result.put("devoirDate", devoirInfos.getString("created"));
                                         }
-//                                        result.putBoolean("evaluation", devoirInfos.getBoolean("is_evaluated"));
-                                        result.putBoolean("evaluation", true);
+//                                        result.put("evaluation", devoirInfos.getBoolean("is_evaluated"));
+                                        result.put("evaluation", true);
                                         //début
                                         classeList.add(devoirInfos.getString("id_groupe"));
                                         utilsService.getCycle(classeList, new Handler<Either<String, JsonArray>>() {
                                             @Override
                                             public void handle(Either<String, JsonArray> cycle) {
                                                 if (cycle.isRight()) {
-                                                    JsonObject cycleobj = cycle.right().getValue().get(0);
+                                                    JsonObject cycleobj = cycle.right().getValue().getJsonObject(0);
                                                     niveauDeMaitriseService.getNiveauDeMaitriseofCycle(cycleobj.getLong("id_cycle"), new Handler<Either<String, JsonArray>>() {
                                                         @Override
                                                         public void handle(Either<String, JsonArray> nivMaitrise) {
                                                             if (nivMaitrise.isRight()) {
-                                                                result.putArray("niveaux", nivMaitrise.right().getValue());
+                                                                result.put("niveaux", nivMaitrise.right().getValue());
                                                                 if (byEleve.equals("true")) {
-                                                                    result.putBoolean("byEleves", true);
+                                                                    result.put("byEleves", true);
                                                                     JsonObject action = new JsonObject()
-                                                                            .putString("action", "classe.getEleveClasse")
-                                                                            .putString("idClasse", devoirInfos.getString("id_groupe"));
+                                                                            .put("action", "classe.getEleveClasse")
+                                                                            .put("idClasse", devoirInfos.getString("id_groupe"));
 
-                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                         @Override
                                                                         public void handle(Message<JsonObject> message) {
                                                                             JsonObject body = message.body();
 
                                                                             if ("ok".equals(body.getString("status"))) {
-                                                                                result.putArray("eleves", body.getArray("results"));
+                                                                                result.put("eleves", body.getJsonArray("results"));
                                                                                 if (devoirInfos.getInteger("nbrcompetence") > 0) {
                                                                                     competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
                                                                                         @Override
                                                                                         public void handle(Either<String, JsonArray> CompetencesObject) {
                                                                                             if (CompetencesObject.isRight()) {
                                                                                                 JsonArray CompetencesOld = CompetencesObject.right().getValue();
-                                                                                                JsonArray CompetencesNew = new JsonArray();
+                                                                                                JsonArray CompetencesNew = new fr.wseduc.webutils.collections.JsonArray();
                                                                                                 for (int i = 0; i < CompetencesOld.size(); i++) {
-                                                                                                    JsonObject Comp = CompetencesOld.get(i);
-                                                                                                    Comp.putNumber("i", i + 1);
+                                                                                                    JsonObject Comp = CompetencesOld.getJsonObject(i);
+                                                                                                    Comp.put("i", i + 1);
                                                                                                     if (i == 0) {
-                                                                                                        Comp.putBoolean("first", true);
+                                                                                                        Comp.put("first", true);
                                                                                                     } else {
-                                                                                                        Comp.putBoolean("first", false);
+                                                                                                        Comp.put("first", false);
                                                                                                     }
-                                                                                                    CompetencesNew.addObject(Comp);
+                                                                                                    CompetencesNew.add(Comp);
                                                                                                 }
                                                                                                 if (CompetencesNew.size() > 0) {
-                                                                                                    result.putBoolean("hasCompetences", true);
+                                                                                                    result.put("hasCompetences", true);
                                                                                                 } else {
-                                                                                                    result.putBoolean("hasCompetences", false);
+                                                                                                    result.put("hasCompetences", false);
                                                                                                 }
-                                                                                                result.putString("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
-                                                                                                result.putArray("competences", CompetencesNew);
+                                                                                                result.put("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
+                                                                                                result.put("competences", CompetencesNew);
                                                                                                 genererPdf(request, result, "cartouche.pdf.xhtml", "Cartouche");
                                                                                             } else {
                                                                                                 log.error("Error :can not get competences devoir ");
@@ -1433,35 +1435,35 @@ public class ExportPDFController extends ControllerHelper {
                                                                                 badRequest(request, "Error :can not get students  ");
                                                                             }
                                                                         }
-                                                                    });
+                                                                    }));
                                                                 } else {
-                                                                    result.putBoolean("byEleves", false);
+                                                                    result.put("byEleves", false);
                                                                     if (devoirInfos.getInteger("nbrcompetence") > 0) {
                                                                         competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
                                                                             @Override
                                                                             public void handle(Either<String, JsonArray> CompetencesObject) {
                                                                                 if (CompetencesObject.isRight()) {
                                                                                     JsonArray CompetencesOld = CompetencesObject.right().getValue();
-                                                                                    JsonArray CompetencesNew = new JsonArray();
+                                                                                    JsonArray CompetencesNew = new fr.wseduc.webutils.collections.JsonArray();
                                                                                     for (int i = 0; i < CompetencesOld.size(); i++) {
-                                                                                        JsonObject Comp = CompetencesOld.get(i);
-                                                                                        Comp.putNumber("i", i + 1);
+                                                                                        JsonObject Comp = CompetencesOld.getJsonObject(i);
+                                                                                        Comp.put("i", i + 1);
                                                                                         if (i == 0) {
-                                                                                            Comp.putBoolean("first", true);
+                                                                                            Comp.put("first", true);
                                                                                         } else {
-                                                                                            Comp.putBoolean("first", false);
+                                                                                            Comp.put("first", false);
                                                                                         }
 
-                                                                                        CompetencesNew.addObject(Comp);
+                                                                                        CompetencesNew.add(Comp);
                                                                                     }
                                                                                     if (CompetencesNew.size() > 0) {
-                                                                                        result.putBoolean("hasCompetences", true);
+                                                                                        result.put("hasCompetences", true);
                                                                                     } else {
-                                                                                        result.putBoolean("hasCompetences", false);
+                                                                                        result.put("hasCompetences", false);
                                                                                     }
-                                                                                    result.putString("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
-                                                                                    result.putArray("competences", CompetencesNew);
-                                                                                    result.putBoolean("image", Boolean.parseBoolean(request.params().get("image")));
+                                                                                    result.put("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
+                                                                                    result.put("competences", CompetencesNew);
+                                                                                    result.put("image", Boolean.parseBoolean(request.params().get("image")));
                                                                                     genererPdf(request, result, "cartouche.pdf.xhtml", "Cartouche");
                                                                                 } else {
                                                                                     log.error("Error :can not get competences devoir ");
@@ -1528,7 +1530,7 @@ public class ExportPDFController extends ControllerHelper {
             public void handle(Either<String, JsonObject> stringJsonObjectEither) {
                 if (stringJsonObjectEither.isRight()) {
                     JsonObject devoir = stringJsonObjectEither.right().getValue();
-                    final Boolean only_evaluation = devoir.getNumber("nbrcompetence").equals(0L);
+                    final Boolean only_evaluation = devoir.getInteger("nbrcompetence").equals(0L);
                     String idGroupe = devoir.getString("id_groupe");
                     String idEtablissement = devoir.getString("id_etablissement");
 
@@ -1540,11 +1542,11 @@ public class ExportPDFController extends ControllerHelper {
                             if (stringJsonObjectEither.isRight()) {
                                 try {
                                     JsonObject result = stringJsonObjectEither.right().getValue();
-                                    result.putBoolean("notOnlyEvaluation", !only_evaluation);
+                                    result.put("notOnlyEvaluation", !only_evaluation);
                                     if (json) {
                                         Renders.renderJson(request, result);
                                     } else {
-                                        String fileName = result.getObject("devoir").getString("classe") + "_" + result.getObject("devoir").getString("nom").replace(' ', '_');
+                                        String fileName = result.getJsonObject("devoir").getString("classe") + "_" + result.getJsonObject("devoir").getString("nom").replace(' ', '_');
                                         genererPdf(request, result, "evaluation.pdf.xhtml", fileName);
                                     }
                                 } catch (Error err) {
@@ -1570,7 +1572,7 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
 
-        final JsonArray idMatieres = new JsonArray();
+        final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < listIdMatieres.size(); i++) {
             idMatieres.add(listIdMatieres.get(i));
         }
@@ -1605,31 +1607,31 @@ public class ExportPDFController extends ControllerHelper {
         final List<String> idEtablissement = new ArrayList<>();
 
         JsonObject action = new JsonObject()
-                .putString("action", "matiere.getMatieres")
-                .putArray("idMatieres", idMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                .put("action", "matiere.getMatieres")
+                .put("idMatieres", idMatieres);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
                 if ("ok".equals(body.getString("status"))) {
-                    final JsonArray results = body.getArray("results");
-                    String mat = ((JsonObject) results.get(0)).getString("name");
+                    final JsonArray results = body.getJsonArray("results");
+                    String mat = ((JsonObject) results.getJsonObject(0)).getString("name");
                     for (int i = 1; i < results.size(); i++) {
-                        mat = mat + ", " + ((JsonObject) results.get(i)).getString("name");
+                        mat = mat + ", " + ((JsonObject) results.getJsonObject(i)).getString("name");
                     }
                     final String matieres = mat;
                     JsonObject jsonRequest = new JsonObject()
-                            .putObject("headers", new JsonObject().putString("Accept-Language",
+                            .put("headers", new JsonObject().put("Accept-Language",
                                     request.headers().get("Accept-Language")))
-                            .putString("Host", getHost(request));
+                            .put("Host", getHost(request));
                     JsonObject action = new JsonObject()
-                            .putString("action", "periode.getLibellePeriode")
-                            .putObject("request", jsonRequest);
+                            .put("action", "periode.getLibellePeriode")
+                            .put("request", jsonRequest);
                     if (!"undefined".equals(finalIdPeriode)) {
-                        action.putNumber("idType", finalIdPeriode);
+                        action.put("idType", finalIdPeriode);
                     }
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                         @Override
                         public void handle(Message<JsonObject> message) {
                             final JsonObject body = message.body();
@@ -1640,20 +1642,20 @@ public class ExportPDFController extends ControllerHelper {
 
                                 if (finalIdClasse == null) {
                                     JsonObject action = new JsonObject()
-                                                        .putString("action", "eleve.getInfoEleve")
-                                                        .putArray("idEleves", new JsonArray(new String[]{finalIdEleve}));
+                                                        .put("action", "eleve.getInfoEleve")
+                                                        .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{finalIdEleve})));
 
-                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                     @Override
                                                     public void handle(Message<JsonObject> message) {
                                                         JsonObject body = message.body();
 
-                                                        if ("ok".equals(body.getString("status")) && body.getArray("results").size() > 0) {
-                                                            JsonObject eleve = body.getArray("results").get(0);
+                                                        if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() > 0) {
+                                                            JsonObject eleve = body.getJsonArray("results").getJsonObject(0);
                                                             final String nomClasse = eleve.getString("classeName");
                                                             final String idClasse = eleve.getString("idClasse");
                                                             final String idEtablissement = eleve.getString("idEtablissement");
-                                                            JsonArray idFunctionalGroupes = eleve.getArray("idGroupes");
+                                                            JsonArray idFunctionalGroupes = eleve.getJsonArray("idGroupes");
                                                             String[] idFunctionalGroupesArr = UtilsConvert.jsonArrayToStringArr(idFunctionalGroupes);
 
                                                             final String[] idEleves = new String[1];
@@ -1663,7 +1665,7 @@ public class ExportPDFController extends ControllerHelper {
                                                             final Map<String, String> elevesMap = new LinkedHashMap<>();
                                                             elevesMap.put(finalIdEleve, eleve.getString("lastName") + " " + eleve.getString("firstName"));
                                                             final AtomicBoolean answered = new AtomicBoolean();
-                                                            JsonArray resultFinal = new JsonArray();
+                                                            JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                                                             final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
                                                                     libellePeriode, json, answered, resultFinal);
                                                             exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), idFunctionalGroupesArr, idEtablissement, listIdMatieres,
@@ -1672,40 +1674,40 @@ public class ExportPDFController extends ControllerHelper {
                                                             leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                                         }
                                         }
-                                    });
+                                    }));
                                 } else {
                                     final JsonObject action = new JsonObject()
-                                            .putString("action", "classe.getEleveClasse")
-                                            .putString("idClasse", finalIdClasse);
-                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                            .put("action", "classe.getEleveClasse")
+                                            .put("idClasse", finalIdClasse);
+                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                         @Override
                                         public void handle(Message<JsonObject> message) {
                                             if ("ok".equals(message.body().getString("status"))) {
-                                                final JsonArray eleves = message.body().getArray("results");
+                                                final JsonArray eleves = message.body().getJsonArray("results");
                                                 final String[] idEleves = new String[eleves.size()];
 
                                                 final Map<String, String> elevesMap = new LinkedHashMap<>();
 
                                                 for (int i = 0; i < eleves.size(); i++) {
-                                                    elevesMap.put(((JsonObject) eleves.get(i)).getString("id"),
-                                                            ((JsonObject) eleves.get(i)).getString("lastName")
-                                                                    + " " + ((JsonObject) eleves.get(i)).getString("firstName"));
-                                                    idEleves[i] = ((JsonObject) eleves.get(i)).getString("id");
+                                                    elevesMap.put(((JsonObject) eleves.getJsonObject(i)).getString("id"),
+                                                            ((JsonObject) eleves.getJsonObject(i)).getString("lastName")
+                                                                    + " " + ((JsonObject) eleves.getJsonObject(i)).getString("firstName"));
+                                                    idEleves[i] = ((JsonObject) eleves.getJsonObject(i)).getString("id");
                                                 }
 
                                                 JsonObject action = new JsonObject()
-                                                        .putString("action", "eleve.getInfoEleve")
-                                                        .putArray("idEleves", new JsonArray(idEleves));
-                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                        .put("action", "eleve.getInfoEleve")
+                                                        .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idEleves)));
+                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                     @Override
                                                     public void handle(Message<JsonObject> message) {
                                                         JsonObject body = message.body();
-                                                        JsonArray result = body.getArray("results");
+                                                        JsonArray result = body.getJsonArray("results");
                                                         if ("ok".equals(body.getString("status"))
                                                                 && result.size() > 0) {
                                                             for (int i = 0; i< result.size(); i++ ) {
-                                                                JsonObject eleve = body.getArray("results")
-                                                                        .get(i);
+                                                                JsonObject eleve = body.getJsonArray("results")
+                                                                        .getJsonObject(i);
                                                                 final String nomClasse =
                                                                         eleve.getString("classeName");
                                                                 final String idClasse =
@@ -1714,12 +1716,12 @@ public class ExportPDFController extends ControllerHelper {
                                                                         eleve.getString("idEtablissement"));
                                                                 idGroupes.add(idClasse);
 
-                                                                nomGroupes.put(((JsonObject)eleves.get(i)).
+                                                                nomGroupes.put(((JsonObject)eleves.getJsonObject(i)).
                                                                         getString("id"),nomClasse);
                                                             }
 
                                                             final AtomicBoolean answered = new AtomicBoolean();
-                                                            JsonArray resultFinal = new JsonArray();
+                                                            JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                                                             final Handler<Either<String, JsonObject>> finalHandler
                                                                     = getReleveCompetences(request, elevesMap,
                                                                     nomGroupes, matieres,
@@ -1728,7 +1730,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                 String [] _idGroupes = new String[1];
                                                                 _idGroupes[0] = idGroupes.get(i);
 
-                                                                JsonArray idFunctionalGroupes = ((JsonObject)result.get(i)).getArray("idGroupes");
+                                                                JsonArray idFunctionalGroupes = ((JsonObject)result.getJsonObject(i)).getJsonArray("idGroupes");
                                                                 String[] idFunctionalGroupesArr = UtilsConvert.jsonArrayToStringArr(idFunctionalGroupes);
 
                                                                 exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
@@ -1740,23 +1742,23 @@ public class ExportPDFController extends ControllerHelper {
                                                             leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                                         }
                                                     }
-                                                });
+                                                }));
                                             } else {
                                                 leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                             }
                                         }
-                                    });
+                                    }));
                                 }
                             } else {
                                 leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                             }
                         }
-                    });
+                    }));
                 } else {
                     leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                 }
             }
-        });
+        }));
     }
 
     @Get("/recapEval/print/:idClasse/export")
@@ -1784,22 +1786,22 @@ public class ExportPDFController extends ControllerHelper {
             @Override
             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                 if (stringJsonArrayEither.isRight()) {
-                    final Long idCycle = ((JsonObject) stringJsonArrayEither.right().getValue().get(0)).getLong("id_cycle");
-                    JsonObject cycleObj = stringJsonArrayEither.right().getValue().get(0);
+                    final Long idCycle = ((JsonObject) stringJsonArrayEither.right().getValue().getJsonObject(0)).getLong("id_cycle");
+                    JsonObject cycleObj = stringJsonArrayEither.right().getValue().getJsonObject(0);
 
                     if (!idCycle.equals(cycleObj.getLong("id_cycle"))) {
                         leftToResponse(request, new Either.Left<>("different cycle"));
                     } else {
                         final JsonObject action = new JsonObject()
-                                .putString("action", "classe.getEtabClasses")
-                                .putArray("idClasses", new JsonArray(new String[]{idClasse}));
+                                .put("action", "classe.getEtabClasses")
+                                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
-                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
                                 if ("ok".equals(body.getString("status"))) {
-                                    final String idEtablissement = ((JsonObject) body.getArray("results").get(0)).getString("idStructure");
+                                    final String idEtablissement = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getString("idStructure");
                                     UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
                                         @Override
                                         public void handle(final UserInfos user) {
@@ -1814,8 +1816,8 @@ public class ExportPDFController extends ControllerHelper {
                                                             Number state = null;
                                                             if (stringJsonArrayEither.isRight()) {
                                                                 JsonArray result = stringJsonArrayEither.right().getValue();
-                                                                JsonObject obj = (JsonObject) result.get(0);
-                                                                state = (obj).getNumber("visible");
+                                                                JsonObject obj = (JsonObject) result.getJsonObject(0);
+                                                                state = (obj).getInteger("visible");
                                                             }
                                                             if (state != null
                                                                     && Competences.BFC_AVERAGE_VISIBILITY_NONE.equals(state)) {
@@ -1840,71 +1842,71 @@ public class ExportPDFController extends ControllerHelper {
                                                                             final JsonObject result = new JsonObject();
 
                                                                             final JsonArray legende = stringJsonObjectEither.right().getValue();
-                                                                            result.putArray("legende", legende);
+                                                                            result.put("legende", legende);
                                                                             String atteint_calcule = new String("Valeurs affichées par domaine : niveau atteint + niveau calculé".getBytes(), StandardCharsets.UTF_8);
                                                                             String atteint = new String("Valeurs affichées par domaine : niveau atteint".getBytes(), StandardCharsets.UTF_8);
-                                                                            result.putString("displayMoy", isHabilite ? atteint_calcule : atteint);
+                                                                            result.put("displayMoy", isHabilite ? atteint_calcule : atteint);
 
                                                                             final JsonObject action = new JsonObject()
-                                                                                    .putString("action", "classe.getEleveClasse")
-                                                                                    .putString("idClasse", idClasse);
+                                                                                    .put("action", "classe.getEleveClasse")
+                                                                                    .put("idClasse", idClasse);
 
-                                                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                                 @Override
                                                                                 public void handle(Message<JsonObject> message) {
                                                                                     JsonObject body = message.body();
 
                                                                                     if ("ok".equals(body.getString("status"))) {
-                                                                                        JsonArray eleves = body.getArray("results");
+                                                                                        JsonArray eleves = body.getJsonArray("results");
 
                                                                                         final String[] idEleves = new String[eleves.size()];
                                                                                         final String[] nameEleves = new String[eleves.size()];
                                                                                         for (int i = 0; i < eleves.size(); i++) {
-                                                                                            idEleves[i] = ((JsonObject) eleves.get(i)).getString("id");
-                                                                                            nameEleves[i] = ((JsonObject) eleves.get(i)).getString("lastName") + " " + ((JsonObject) eleves.get(i)).getString("firstName");
+                                                                                            idEleves[i] = ((JsonObject) eleves.getJsonObject(i)).getString("id");
+                                                                                            nameEleves[i] = ((JsonObject) eleves.getJsonObject(i)).getString("lastName") + " " + ((JsonObject) eleves.getJsonObject(i)).getString("firstName");
                                                                                         }
                                                                                         boolean recapEval = true;
                                                                                         bfcService.buildBFC(recapEval, idEleves, idClasse, idEtablissement, finalIdPeriode, idCycle, new Handler<Either<String, JsonObject>>() {
                                                                                             @Override
                                                                                             public void handle(Either<String, JsonObject> stringMapEither) {
                                                                                                 if (stringMapEither.isRight()) {
-                                                                                                    final JsonArray eleves = new JsonArray();
+                                                                                                    final JsonArray eleves = new fr.wseduc.webutils.collections.JsonArray();
                                                                                                     JsonObject bfc = stringMapEither.right().getValue();
                                                                                                     if (bfc.size() > 0) {
-                                                                                                        final int[] idDomaines = new int[bfc.getArray("domainesRacine").size()];
-                                                                                                        for (int l = 0; l < bfc.getArray("domainesRacine").size(); l++) {
-                                                                                                            Long idDomaine = bfc.getArray("domainesRacine").get(l);
+                                                                                                        final int[] idDomaines = new int[bfc.getJsonArray("domainesRacine").size()];
+                                                                                                        for (int l = 0; l < bfc.getJsonArray("domainesRacine").size(); l++) {
+                                                                                                            Long idDomaine = bfc.getJsonArray("domainesRacine").getLong(l);
                                                                                                             idDomaines[l] = idDomaine.intValue();
                                                                                                         }
 
                                                                                                         for (int i = 0; i < idEleves.length; i++) {
                                                                                                             JsonObject eleve = new JsonObject();
-                                                                                                            JsonArray notesEleve = new JsonArray();
+                                                                                                            JsonArray notesEleve = new fr.wseduc.webutils.collections.JsonArray();
                                                                                                             List domainesEvalues = new ArrayList();
-                                                                                                            if (bfc.containsField(idEleves[i])) {
-                                                                                                                for (Object resultNote : bfc.getArray(idEleves[i])) {
+                                                                                                            if (bfc.containsKey(idEleves[i])) {
+                                                                                                                for (Object resultNote : bfc.getJsonArray(idEleves[i])) {
                                                                                                                     for (Object niveau : legende) {
                                                                                                                         JsonObject note = new JsonObject();
 
-                                                                                                                        if (((JsonObject) resultNote).getNumber("niveau").toString()
+                                                                                                                        if (((JsonObject) resultNote).getValue("niveau").toString()
                                                                                                                                 .equals(((JsonObject) niveau).getLong("ordre").toString())) {
-                                                                                                                            note.putNumber("id", ((JsonObject) resultNote).getNumber("idDomaine"));
-                                                                                                                            note.putString("visu", ((JsonObject) niveau).getString("visu"));
-                                                                                                                            note.putBoolean("nonEvalue", false);
+                                                                                                                            note.put("id", ((JsonObject) resultNote).getInteger("idDomaine"));
+                                                                                                                            note.put("visu", ((JsonObject) niveau).getString("visu"));
+                                                                                                                            note.put("nonEvalue", false);
                                                                                                                             if (isHabilite)
-                                                                                                                                note.putString("moyenne", text ? "- " + ((JsonObject) resultNote).getNumber("moyenne")
-                                                                                                                                        : "" + ((JsonObject) resultNote).getNumber("moyenne"));
+                                                                                                                                note.put("moyenne", text ? "- " + ((JsonObject) resultNote).getLong("moyenne")
+                                                                                                                                        : "" + ((JsonObject) resultNote).getLong("moyenne"));
 
-                                                                                                                            domainesEvalues.add(((JsonObject) note).getNumber("id").intValue());
+                                                                                                                            domainesEvalues.add(((JsonObject) note).getInteger("id").intValue());
                                                                                                                             notesEleve.add(note);
                                                                                                                         }
                                                                                                                     }
                                                                                                                 }
                                                                                                             }
                                                                                                             addMaitriseNE(domainesEvalues, notesEleve, idDomaines, text);
-                                                                                                            eleve.putString("id", idEleves[i]);
-                                                                                                            eleve.putString("nom", nameEleves[i]);
-                                                                                                            eleve.putArray("notes", sortJsonArrayById(notesEleve));
+                                                                                                            eleve.put("id", idEleves[i]);
+                                                                                                            eleve.put("nom", nameEleves[i]);
+                                                                                                            eleve.put("notes", sortJsonArrayById(notesEleve));
                                                                                                             eleves.add(eleve);
                                                                                                         }
 
@@ -1913,28 +1915,28 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                                                                                                                 if (stringJsonArrayEither.isRight()) {
                                                                                                                     JsonArray domaines = stringJsonArrayEither.right().getValue();
-                                                                                                                    result.putArray("domaines", isDomaineParent(sortJsonArrayById(domaines)));
-                                                                                                                    result.putArray("eleves", eleves);
+                                                                                                                    result.put("domaines", isDomaineParent(sortJsonArrayById(domaines)));
+                                                                                                                    result.put("eleves", eleves);
                                                                                                                     JsonObject action = new JsonObject()
-                                                                                                                            .putString("action", "classe.getClasseInfo")
-                                                                                                                            .putString("idClasse", idClasse);
-                                                                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                                                                                            .put("action", "classe.getClasseInfo")
+                                                                                                                            .put("idClasse", idClasse);
+                                                                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                                                                         @Override
                                                                                                                         public void handle(Message<JsonObject> message) {
                                                                                                                             JsonObject body = message.body();
 
                                                                                                                             if ("ok".equals(body.getString("status"))) {
-                                                                                                                                final String classeName = body.getObject("result").getObject("c").getObject("data").getString("name");
-                                                                                                                                result.putString("classe", classeName);
+                                                                                                                                final String classeName = body.getJsonObject("result").getJsonObject("c").getJsonObject("data").getString("name");
+                                                                                                                                result.put("classe", classeName);
 
                                                                                                                                 JsonObject jsonRequest = new JsonObject()
-                                                                                                                                        .putObject("headers", new JsonObject().putString("Accept-Language", request.headers().get("Accept-Language")))
-                                                                                                                                        .putString("Host", getHost(request));
+                                                                                                                                        .put("headers", new JsonObject().put("Accept-Language", request.headers().get("Accept-Language")))
+                                                                                                                                        .put("Host", getHost(request));
                                                                                                                                 JsonObject action = new JsonObject()
-                                                                                                                                        .putString("action", "periode.getLibellePeriode")
-                                                                                                                                        .putNumber("idType", finalIdPeriode)
-                                                                                                                                        .putObject("request", jsonRequest);
-                                                                                                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                                                                                                                        .put("action", "periode.getLibellePeriode")
+                                                                                                                                        .put("idType", finalIdPeriode)
+                                                                                                                                        .put("request", jsonRequest);
+                                                                                                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                                                                                     @Override
                                                                                                                                     public void handle(Message<JsonObject> message) {
                                                                                                                                         JsonObject body = message.body();
@@ -1943,9 +1945,9 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                                             String libellePeriode = body.getString("result")
                                                                                                                                                     .replace("é", "e")
                                                                                                                                                     .replace("è", "e");
-                                                                                                                                            result.putString("periode", libellePeriode);
-                                                                                                                                            result.putBoolean("text", text);
-                                                                                                                                            result.putBoolean("isHabilite", isHabilite);
+                                                                                                                                            result.put("periode", libellePeriode);
+                                                                                                                                            result.put("text", text);
+                                                                                                                                            result.put("isHabilite", isHabilite);
                                                                                                                                             if (json) {
                                                                                                                                                 Renders.renderJson(request, result);
                                                                                                                                             } else {
@@ -1956,12 +1958,12 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                                             leftToResponse(request, new Either.Left<>("periode not found")); //leftToResponse(request, new Either.Left<>(body.getString("message")));
                                                                                                                                         }
                                                                                                                                     }
-                                                                                                                                });
+                                                                                                                                }));
                                                                                                                             } else {
                                                                                                                                 leftToResponse(request, new Either.Left<>("classe not found"));
                                                                                                                             }
                                                                                                                         }
-                                                                                                                    });
+                                                                                                                    }));
                                                                                                                 } else {
                                                                                                                     leftToResponse(request, stringJsonArrayEither.left());
                                                                                                                 }
@@ -1979,7 +1981,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         leftToResponse(request, new Either.Left<>("eleves not found"));
                                                                                     }
                                                                                 }
-                                                                            });
+                                                                            }));
                                                                         } catch (Error err) {
                                                                             leftToResponse(request, new Either.Left<>("An error occured while rendering pdf export : " + err.getMessage()));
                                                                         }
@@ -2002,7 +2004,7 @@ public class ExportPDFController extends ControllerHelper {
                                     leftToResponse(request, new Either.Left<>("etab not found"));
                                 }
                             }
-                        });
+                        }));
                     }
                 } else {
                     leftToResponse(request, stringJsonArrayEither.left());
@@ -2037,15 +2039,15 @@ public class ExportPDFController extends ControllerHelper {
                                 result.add(stringJsonArrayEither.right().getValue());
                                 if (elevesMap.containsKey(idEleve)) {
                                     stringJsonArrayEither.right().getValue()
-                                            .putString("nom", elevesMap.get(idEleve));
-                                    headerEleve.putString("nom", elevesMap.get(idEleve));
+                                            .put("nom", elevesMap.get(idEleve));
+                                    headerEleve.put("nom", elevesMap.get(idEleve));
                                 }
-                                headerEleve.putString("classe", nomGroupes.get(idEleve));
-                                headerEleve.putString("matiere", matieres);
-                                headerEleve.putString("periode", libellePeriode);
-                                JsonObject header = ((JsonObject) result.get(elevesAdd.get())).getObject("header");
+                                headerEleve.put("classe", nomGroupes.get(idEleve));
+                                headerEleve.put("matiere", matieres);
+                                headerEleve.put("periode", libellePeriode);
+                                JsonObject header = ((JsonObject) result.getJsonObject(elevesAdd.get())).getJsonObject("header");
                                 if (header != null) {
-                                    header.putObject("left", headerEleve);
+                                    header.put("left", headerEleve);
                                 }
                                 elevesAdd.addAndGet(1);
                             }
@@ -2053,7 +2055,7 @@ public class ExportPDFController extends ControllerHelper {
                             if (elevesDone.addAndGet(1) == elevesMap.size()) {
                                 answered.set(true);
                                 JsonObject resultFinal = new JsonObject();
-                                resultFinal.putArray("eleves", sortJsonArrayByName(result));
+                                resultFinal.put("eleves", sortJsonArrayByName(result));
                                 if ( 0 == result.size()){
                                     leftToResponse(request,
                                             new Either.Left<>("getExportReleveComp : No exams " +
@@ -2090,7 +2092,7 @@ public class ExportPDFController extends ControllerHelper {
     private JsonArray sortJsonArrayById(JsonArray jsonArray) {
         List<JsonObject> jsonValues = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++) {
-            JsonObject p = jsonArray.get(i);
+            JsonObject p = jsonArray.getJsonObject(i);
             jsonValues.add(p);
         }
         Collections.sort(jsonValues, new Comparator<JsonObject>() {
@@ -2101,8 +2103,8 @@ public class ExportPDFController extends ControllerHelper {
                 Long valA = 0L;
                 Long valB = 0L;
                 try {
-                    valA = (Long) a.getNumber(KEY_NAME);
-                    valB = (Long) b.getNumber(KEY_NAME);
+                    valA = (Long) a.getLong(KEY_NAME);
+                    valB = (Long) b.getLong(KEY_NAME);
                 } catch (Exception e) {
                     //do something
                 }
@@ -2110,7 +2112,7 @@ public class ExportPDFController extends ControllerHelper {
             }
         });
 
-        JsonArray sortedJsonArray = new JsonArray();
+        JsonArray sortedJsonArray = new fr.wseduc.webutils.collections.JsonArray();
         for (JsonObject o : jsonValues) {
             sortedJsonArray.add(o);
         }
@@ -2120,7 +2122,7 @@ public class ExportPDFController extends ControllerHelper {
     private JsonArray sortJsonArrayByName(JsonArray jsonArray) {
         List<JsonObject> jsonValues = new ArrayList<>();
         for (int i = 0; i < jsonArray.size(); i++) {
-            JsonObject p = jsonArray.get(i);
+            JsonObject p = jsonArray.getJsonObject(i);
             if (!p.getBoolean("noDevoir")) {
                 jsonValues.add(p);
             }
@@ -2143,7 +2145,7 @@ public class ExportPDFController extends ControllerHelper {
             }
         });
 
-        JsonArray sortedJsonArray = new JsonArray();
+        JsonArray sortedJsonArray = new fr.wseduc.webutils.collections.JsonArray();
         for (JsonObject o : jsonValues) {
 
             sortedJsonArray.add(o);
@@ -2152,18 +2154,18 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     private JsonArray isDomaineParent(JsonArray domaines) {
-        JsonArray newDomaines = new JsonArray();
+        JsonArray newDomaines = new fr.wseduc.webutils.collections.JsonArray();
         for (int k = 0; k < domaines.size(); k++) {
-            JsonObject domaine = domaines.get(k);
-            if ("0".equals(domaine.getNumber("id_parent").toString()) || k == 0) {
-                domaine.putBoolean("isDomaineParent", true);
+            JsonObject domaine = domaines.getJsonObject(k);
+            if ("0".equals(domaine.getInteger("id_parent").toString()) || k == 0) {
+                domaine.put("isDomaineParent", true);
 //                if(!"0".equals(domaine.getNumber("id_parent").toString()))
-//                    domaine.putString("nomDomaine", "Domaine D" + domaine.getNumber("id_parent").toString());
+//                    domaine.put("nomDomaine", "Domaine D" + domaine.getNumber("id_parent").toString());
 //                else
-//                    domaine.putString("nomDomaine", "Domaine " + domaine.getString("codification"));
+//                    domaine.put("nomDomaine", "Domaine " + domaine.getString("codification"));
 
             } else {
-                domaine.putBoolean("isDomaineParent", false);
+                domaine.put("isDomaineParent", false);
             }
             newDomaines.add(domaine);
         }
@@ -2174,9 +2176,9 @@ public class ExportPDFController extends ControllerHelper {
         for (int idDomaine : idDomaines) {
             if (!domainesEvalues.contains(idDomaine)) {
                 JsonObject note = new JsonObject();
-                note.putNumber("id", new Long(idDomaine));
-                note.putString("visu", text ? "NE" : "white");
-                note.putBoolean("nonEvalue", true);
+                note.put("id", new Long(idDomaine));
+                note.put("visu", text ? "NE" : "white");
+                note.put("nonEvalue", true);
                 notesEleve.add(note);
             }
         }

@@ -25,8 +25,8 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -45,7 +45,7 @@ public class DefaultEnseignementService extends SqlCrudService implements Enseig
     @Override
     public void getEnseignementsOrdered(Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".enseignements ")

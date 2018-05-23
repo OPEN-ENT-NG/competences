@@ -25,19 +25,20 @@ import fr.wseduc.webutils.Either;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
 import static fr.openent.competences.Competences.PERSO_COMPETENCES_TABLE;
-import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 /**
@@ -77,28 +78,29 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             getCompetencesItem(idEtablissement, (Long) null, handler);
         } else {
             JsonObject action = new JsonObject()
-                    .putString("action", "eleve.getCycle")
-                    .putString("idClasse", idClasse);
+                    .put("action", "eleve.getCycle")
+                    .put("idClasse", idClasse);
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
 
                     if ("ok".equals(body.getString("status"))) {
-                        final Number idCycle = ((JsonObject) body.getArray("results").get(0)).getNumber("id_cycle");
+                        final Number idCycle = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getInteger("id_cycle");
 
                         JsonObject action = new JsonObject()
-                                .putString("action", "classe.getEtabClasses")
-                                .putArray("idClasses", new JsonArray(new String[]{idClasse}));
+                                .put("action", "classe.getEtabClasses")
+                                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
-                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
 
                                 if ("ok".equals(body.getString("status"))) {
-                                    final String idEtablissement = ((JsonObject) body.getArray("results").get(0)).getString("idStructure");
+                                    final String idEtablissement = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getString("idStructure");
 
                                     getCompetencesItem(idEtablissement, idCycle, handler);
                                 } else {
@@ -106,14 +108,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                                     handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                                 }
                             }
-                        });
+                        }));
 
                     } else {
                         log.error(body.getString("message"));
                         handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                     }
                 }
-            });
+            }));
         }
     }
 
@@ -131,28 +133,28 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " ON comp.id = compPerso.id_competence " +
                 " WHERE comp.id_type = 2 ";
 
-        JsonArray values = new JsonArray().addString(idEtablissement);
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement);
         if (idCycle != null) {
             query += "AND comp.id_cycle = ?";
-            values.addNumber(idCycle);
+            values.add(idCycle);
         }
 
         query += " AND comp.id_etablissement IS NULL OR comp.id_etablissement = ? " +
                 " ORDER BY nom ASC";
 
-        values.addString(idEtablissement);
+        values.add(idEtablissement);
         sql.prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void setDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray data = new JsonArray();
+        JsonArray data = new fr.wseduc.webutils.collections.JsonArray();
         query.append("INSERT INTO " + COMPETENCES_SCHEMA + ".competences_devoirs (id_devoir, id_competence) VALUES ");
         for(int i = 0; i < values.size(); i++){
             query.append("(?, ?)");
-            data.addNumber(devoirId);
-            data.addNumber((Number) values.get(i));
+            data.add(devoirId);
+            data.add((Number) values.getLong(i));
             if(i != values.size()-1){
                 query.append(",");
             }else{
@@ -166,12 +168,12 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     @Override
     public void remDevoirCompetences(Long devoirId, JsonArray values, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray data = new JsonArray();
+        JsonArray data = new fr.wseduc.webutils.collections.JsonArray();
         query.append("DELETE FROM " + COMPETENCES_SCHEMA + ".competences_devoirs WHERE ");
         for(int i = 0; i < values.size(); i++){
             query.append("(id_devoir = ? AND  id_competence = ?)");
-            data.addNumber(devoirId);
-            data.addNumber((Number) values.get(i));
+            data.add(devoirId);
+            data.add((Number) values.getLong(i));
             if(i != values.size()-1){
                 query.append(" OR ");
             }else{
@@ -200,7 +202,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " GROUP BY compDevoir.id, COALESCE(compPerso.nom, comp.nom), comp.id_type, comp.id_parent, comp.id" +
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
-        Sql.getInstance().prepared(query, new JsonArray().addNumber(devoirId).addNumber(devoirId),
+        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId).add(devoirId),
                 SqlResult.validResultHandler(handler));
     }
 
@@ -217,7 +219,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " WHERE compDevoir.id_devoir = ?" +
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
-        Sql.getInstance().prepared(query, new JsonArray().addNumber(devoirId),
+        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId),
                 SqlResult.validResultHandler(handler));
     }
 
@@ -236,26 +238,26 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " ON comp.id = compPerso.id_competence" +
                 " WHERE compDevoir.id_devoir = (SELECT id FROM lastDevoir)";
 
-        Sql.getInstance().prepared(query, new JsonArray().addString(userId), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(userId), SqlResult.validResultHandler(handler));
     }
 
     @Override
     public void getCompetencesByLevel(final String filter, final String idClasse, final Handler<Either<String, JsonArray>> handler) {
         final JsonObject action = new JsonObject()
-                .putString("action", "classe.getEtabClasses")
-                .putArray("idClasses", new JsonArray(new String[]{idClasse}));
+                .put("action", "classe.getEtabClasses")
+                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
                 if ("ok".equals(body.getString("status"))) {
 
-                    JsonArray results =  body.getArray("results");
+                    JsonArray results =  body.getJsonArray("results");
                     String idEtablissement = null;
                     if (results.size() > 0 ){
-                        idEtablissement = ((JsonObject)results.get(0)).getString("idStructure");
+                        idEtablissement = ((JsonObject)results.getJsonObject(0)).getString("idStructure");
                     }
                     getCompetencesByLevel(idEtablissement, filter, idClasse, handler);
                 } else {
@@ -263,7 +265,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                 }
             }
-        });
+        }));
     }
 
     @Override
@@ -274,7 +276,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
             getCompetencesByLevel(filter, idClasse, handler);
         } else {
 
-            JsonArray params = new JsonArray();
+            JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
             String query = "SELECT DISTINCT string_agg(domaines.codification, ', ') as code_domaine," +
                     " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id," +
@@ -304,11 +306,11 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " ON comp.id = compPerso.id_competence" +
                     " WHERE comp." + filter;
 
-            params.addString(idEtablissement);
+            params.add(idEtablissement);
 
             if (idClasse != null) {
                 query += " AND rel_groupe_cycle.id_groupe = ?";
-                params.addString(idClasse);
+                params.add(idClasse);
             }
 
             query += " GROUP BY comp.id, COALESCE(compPerso.nom, comp.nom), comp.id_parent, comp.id_type," +
@@ -323,33 +325,33 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     public void getCompetencesDomaines(String idClasse, final Long[] idDomaines, final Handler<Either<String, JsonArray>> handler) {
 
         final JsonObject action = new JsonObject()
-                .putString("action", "classe.getEtabClasses")
-                .putArray("idClasses", new JsonArray(new String[]{idClasse}));
+                .put("action", "classe.getEtabClasses")
+                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
                 if ("ok".equals(body.getString("status"))) {
-                    String idEtablissement = ((JsonObject) body.getArray("results").get(0)).getString("idStructure");
-                    JsonArray params = new JsonArray();
+                    String idEtablissement = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getString("idStructure");
+                    JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
                     String query = "SELECT * FROM " + COMPETENCES_DOMAINES_TABLE + " AS compEns" +
                             " WHERE id_domaine IN " + Sql.listPrepared(idDomaines) + " AND id_competence IN (" +
                             "SELECT id FROM " + COMPETENCES_TABLE + " WHERE id_etablissement IS NULL OR id_etablissement = ?)";
 
                     for(Long l : idDomaines) {
-                        params.addNumber(l);
+                        params.add(l);
                     }
 
-                    Sql.getInstance().prepared(query, params.addString(idEtablissement), SqlResult.validResultHandler(handler));
+                    Sql.getInstance().prepared(query, params.add(idEtablissement), SqlResult.validResultHandler(handler));
                 } else {
                     log.error(body.getString("message"));
                     handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                 }
             }
-        });
+        }));
     }
 
     @Override
@@ -364,18 +366,18 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " SELECT id, ? FROM new_competence )," +
                 " dom_insert AS (" +
                 " INSERT INTO " + COMPETENCES_DOMAINES_TABLE + " (id_competence, id_domaine)" +
-                " SELECT id, unnest(" + Sql.arrayPrepared(competence.getArray("ids_domaine").toArray()) +
+                " SELECT id, unnest(" + Sql.arrayPrepared(competence.getJsonArray("ids_domaine").getList().toArray()) +
                 ") FROM new_competence) SELECT id FROM new_competence;";
 
-        JsonArray values = new JsonArray().addString(competence.getString("nom"))
-                .addNumber(competence.getInteger("id_parent"))
-                .addNumber(competence.getInteger("id_type"))
-                .addNumber(competence.getInteger("id_cycle"))
-                .addString(competence.getString("id_etablissement"))
-                .addNumber(competence.getNumber("id_enseignement"));
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(competence.getString("nom"))
+                .add(competence.getInteger("id_parent"))
+                .add(competence.getInteger("id_type"))
+                .add(competence.getInteger("id_cycle"))
+                .add(competence.getString("id_etablissement"))
+                .add(competence.getInteger("id_enseignement"));
 
-        for(Object n : competence.getArray("ids_domaine")) {
-            values.addNumber((Number) n);
+        for(Object n : competence.getJsonArray("ids_domaine")) {
+            values.add((Number) n);
         }
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
@@ -385,7 +387,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
         String query = "SELECT CASE WHEN id_etablissement IS NULL THEN FALSE ELSE TRUE END AS isManuelle"
                 + " FROM " + COMPETENCES_TABLE + " WHERE id = ?";
 
-        sql.prepared(query, new JsonArray().addNumber(id), validUniqueResultHandler(
+        sql.prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(id), validUniqueResultHandler(
                 new Handler<Either<String, JsonObject>>() {
                     @Override
                     public void handle(Either<String, JsonObject> stringJsonObjectEither) {
@@ -402,14 +404,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     private void updateDomain(Number idComp, String idEtablissement, Number idDomaine,
                               Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT notes.updateDomaineCompetence(?, ?, ?);";
-        JsonArray values = new JsonArray().addNumber(idComp).addString(idEtablissement).addNumber(idDomaine);
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idComp).add(idEtablissement).add(idDomaine);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
     private void updateMasqueComp(Number id, String idEtablissement, Boolean masque, Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT notes.masqueCompetence(?, ?, ?);";
-        JsonArray values = new JsonArray().addNumber(id).addString(idEtablissement).addBoolean(masque);
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id).add(idEtablissement).add(masque);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
@@ -425,10 +427,10 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                             " VALUES (?, ?, ?)" +
                             " ON CONFLICT ON CONSTRAINT perso_competences_pk DO UPDATE" +
                             " SET nom = EXCLUDED.nom RETURNING *";
-                    JsonArray values = new JsonArray();
+                    JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-                    values.addNumber(idComp)
-                            .addString(idEtablissement)
+                    values.add(idComp)
+                            .add(idEtablissement)
                             .add(name);
 
                     sql.prepared(query, values, validUniqueResultHandler(handler));
@@ -436,7 +438,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 } else {
                     String query = "UPDATE " + COMPETENCES_TABLE + " SET nom = ?" +
                             " WHERE id = ? AND id_etablissement = ? RETURNING *";
-                    JsonArray values = new JsonArray().addString(name).addNumber(idComp).addString(idEtablissement);
+                    JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(name).add(idComp).add(idEtablissement);
                     sql.prepared(query, values, validUniqueResultHandler(handler));
                 }
 
@@ -449,14 +451,14 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
         StringBuilder query = new StringBuilder("INSERT INTO " + COMPETENCES_PERSO_ORDRE_TABLE +
                 " (id_competence, id_etablissement, id_enseignement, index)  VALUES ") ;
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         for(int i = 0; i < index.size(); i++){
             query.append("(?, ?, ? ,?) ");
-            JsonObject rel_comp_ens = (JsonObject) index.get(i);
-            values.addNumber(rel_comp_ens.getNumber("id"))
-                    .addString(rel_comp_ens.getString("id_etablissement"))
-                    .addNumber(rel_comp_ens.getNumber("id_enseignement"))
-                    .addNumber(rel_comp_ens.getNumber("index"));
+            JsonObject rel_comp_ens = (JsonObject) index.getJsonObject(i);
+            values.add(rel_comp_ens.getLong("id"))
+                    .add(rel_comp_ens.getString("id_etablissement"))
+                    .add(rel_comp_ens.getLong("id_enseignement"))
+                    .add(rel_comp_ens.getLong("index"));
             if(i != index.size()-1){
                 query.append(",");
             }else{
@@ -493,37 +495,37 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     @Override
     public void delete(final Number id, final String idEtablissement, final Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT notes.deleteCompetence(?, ?);";
-        JsonArray values = new JsonArray().addNumber(id).addString(idEtablissement);
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id).add(idEtablissement);
 
         sql.prepared(query, values, validUniqueResultHandler(handler));
     }
 
     @Override
     public void deleteCustom(String idEtablissement, Handler<Either<String, JsonObject>> handler) {
-        JsonArray statements = new JsonArray();
+        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
         // SUPPRESSION DE COMPETENCES MANUELLES NON UTILISEES
         StringBuilder query = new StringBuilder().append(" DELETE FROM " + COMPETENCES_TABLE)
                 .append(" WHERE id_etablissement = ? AND id NOT IN (SELECT  DISTINCT id_competence FROM ")
                 .append(COMPETENCES_DEVOIRS_TABLE + " WHERE id_competence IS NOT NULL )")
                 .append(" AND id_etablissement IS NOT NULL ");
-        JsonArray params = new JsonArray();
-        params.addString(idEtablissement);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        params.add(idEtablissement);
         statements.add(new JsonObject()
-                .putString("statement", query.toString())
-                .putArray("values", params)
-                .putString("action", "prepared"));
+                .put("statement", query.toString())
+                .put("values", params)
+                .put("action", "prepared"));
 
         // SUPPRESSION D'INFO PERSONNALISATION
         StringBuilder queryPerso = new StringBuilder().append("DELETE FROM " + COMPETENCES_PERSO_TABLE)
                 .append(" WHERE id_etablissement = ? ");
-        JsonArray paramsPerso = new JsonArray();
+        JsonArray paramsPerso = new fr.wseduc.webutils.collections.JsonArray();
 
-        paramsPerso.addString(idEtablissement);
+        paramsPerso.add(idEtablissement);
         statements.add(new JsonObject()
-                .putString("statement", queryPerso.toString())
-                .putArray("values", paramsPerso)
-                .putString("action", "prepared"));
+                .put("statement", queryPerso.toString())
+                .put("values", paramsPerso)
+                .put("action", "prepared"));
 
         // CREER PERSO DE MASQUAGE
         StringBuilder queryMask = new StringBuilder()
@@ -533,24 +535,24 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 .append(" INNER JOIN " + COMPETENCES_TABLE)
                 .append(" ON competences_devoirs.id_competence = competences.id AND id_etablissement = ? )")
                 .append(" ON CONFLICT (id_competence, id_etablissement) DO UPDATE SET masque = true ");
-        JsonArray paramsMask = new JsonArray();
+        JsonArray paramsMask = new fr.wseduc.webutils.collections.JsonArray();
 
-        paramsMask.addString(idEtablissement);
+        paramsMask.add(idEtablissement);
         statements.add(new JsonObject()
-                .putString("statement", queryMask.toString())
-                .putArray("values", paramsMask)
-                .putString("action", "prepared"));
+                .put("statement", queryMask.toString())
+                .put("values", paramsMask)
+                .put("action", "prepared"));
 
         // SUPPRESSION D'INFO PERSONNALISATION D'ORDRE
         StringBuilder queryPersoOrdre = new StringBuilder().append("DELETE FROM " + COMPETENCES_PERSO_ORDRE_TABLE)
                 .append(" WHERE id_etablissement = ? ");
-        JsonArray paramsPersoOrdre = new JsonArray();
+        JsonArray paramsPersoOrdre = new fr.wseduc.webutils.collections.JsonArray();
 
-        paramsPersoOrdre.addString(idEtablissement);
+        paramsPersoOrdre.add(idEtablissement);
         statements.add(new JsonObject()
-                .putString("statement", queryPersoOrdre.toString())
-                .putArray("values", paramsPersoOrdre)
-                .putString("action", "prepared"));
+                .put("statement", queryPersoOrdre.toString())
+                .put("values", paramsPersoOrdre)
+                .put("action", "prepared"));
 
         Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
     }

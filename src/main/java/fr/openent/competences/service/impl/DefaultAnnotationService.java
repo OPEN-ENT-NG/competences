@@ -9,9 +9,9 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 public class DefaultAnnotationService extends SqlCrudService implements AnnotationService {
     private final NoteService noteService;
@@ -24,13 +24,13 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
 
     public void listAnnotations(String idEtab, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT * ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".annotations ")
                 .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".annotations.id_etablissement = ?");
 
-        values.addString(idEtab);
+        values.add(idEtab);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
@@ -61,7 +61,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                                     new Handler<Either<String, JsonArray>>() {
                                         @Override
                                         public void handle(Either<String, JsonArray> eventCompetencesDevoir) {
-                                            JsonArray statements = new JsonArray();
+                                            JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
                                             //Si on une compétence note existe sur le devoir, pour un élève donné, on le supprime
                                             if(eventCompetencesDevoir.right() != null){
@@ -69,12 +69,12 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                                                         && eventCompetencesDevoir.right().getValue().size()>0){
                                                     // Suppression compétence note
                                                     StringBuilder queryDeleteCompetenceNote = new StringBuilder().append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes WHERE id_devoir = ? AND id_eleve = ? ;");
-                                                    JsonArray paramsDeleteCompetenceNote = new JsonArray();
-                                                    paramsDeleteCompetenceNote.addNumber(idDevoir).addString(idEleve);
+                                                    JsonArray paramsDeleteCompetenceNote = new fr.wseduc.webutils.collections.JsonArray();
+                                                    paramsDeleteCompetenceNote.add(idDevoir).add(idEleve);
                                                     statements.add(new JsonObject()
-                                                            .putString("statement", queryDeleteCompetenceNote.toString())
-                                                            .putArray("values", paramsDeleteCompetenceNote)
-                                                            .putString("action", "prepared"));
+                                                            .put("statement", queryDeleteCompetenceNote.toString())
+                                                            .put("values", paramsDeleteCompetenceNote)
+                                                            .put("action", "prepared"));
                                                 }
                                             }
 
@@ -84,23 +84,23 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                                                         && eventNotesDevoirs.right().getValue().size()>0){
                                                     // Suppression Note
                                                     StringBuilder queryDeleteNote = new StringBuilder().append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".notes WHERE id_devoir = ? AND id_eleve = ? ;");
-                                                    JsonArray paramsDeleteNote = new JsonArray();
-                                                    paramsDeleteNote.addNumber(idDevoir).addString(idEleve);
+                                                    JsonArray paramsDeleteNote = new fr.wseduc.webutils.collections.JsonArray();
+                                                    paramsDeleteNote.add(idDevoir).add(idEleve);
                                                     statements.add(new JsonObject()
-                                                            .putString("statement", queryDeleteNote.toString())
-                                                            .putArray("values", paramsDeleteNote)
-                                                            .putString("action", "prepared"));
+                                                            .put("statement", queryDeleteNote.toString())
+                                                            .put("values", paramsDeleteNote)
+                                                            .put("action", "prepared"));
                                                 }
                                             }
 
                                             // Ajout de l'annotation sur le devoir, pour un élève donné
                                             StringBuilder query = new StringBuilder().append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs (id_devoir, id_annotation, id_eleve) VALUES (?, ?, ?);");
-                                            JsonArray params = new JsonArray();
-                                            params.addNumber(idDevoir).addNumber(idAnnotation).addString(idEleve);
+                                            JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+                                            params.add(idDevoir).add(idAnnotation).add(idEleve);
                                             statements.add(new JsonObject()
-                                                    .putString("statement", query.toString())
-                                                    .putArray("values", params)
-                                                    .putString("action", "prepared"));
+                                                    .put("statement", query.toString())
+                                                    .put("values", params)
+                                                    .put("action", "prepared"));
 
                                             Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
                                         }
@@ -117,10 +117,10 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     @Override
     public void updateAnnotationDevoir(Long idDevoir, Long idAnnotation, String idEleve, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("UPDATE "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs SET id_annotation = ? WHERE id_devoir = ? AND id_eleve = ?;");
-        values.addNumber(idAnnotation).addNumber(idDevoir).addString(idEleve);
+        values.add(idAnnotation).add(idDevoir).add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
     }
@@ -128,10 +128,10 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
     @Override
     public void deleteAnnotation(Long idDevoir, String idEleve, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder();
-        JsonArray values = new JsonArray();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs WHERE id_devoir = ? AND id_eleve = ?;");
-        values.addNumber(idDevoir).addString(idEleve);
+        values.add(idDevoir).add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
     }

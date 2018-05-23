@@ -20,31 +20,30 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.busmods.BusModBase;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static fr.wseduc.webutils.Server.getEventBus;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 /**
  * Created by ledunoiss on 20/10/2016.
  */
-public class FilterPeriodeUtils extends BusModBase {
+public class FilterPeriodeUtils {
 
     protected static final Logger log = LoggerFactory.getLogger(FilterPeriodeUtils.class);
     private UserInfos user;
@@ -54,7 +53,7 @@ public class FilterPeriodeUtils extends BusModBase {
     public FilterPeriodeUtils(EventBus eventBus) {
         this.eb = eventBus;
     }
-
+    private EventBus eb;
     public FilterPeriodeUtils(EventBus eventBus, UserInfos user) {
         this.eb = eventBus;
         this.user = user;
@@ -72,20 +71,20 @@ public class FilterPeriodeUtils extends BusModBase {
         }
         else {
             JsonObject jsonRequest = new JsonObject()
-                    .putObject("headers", new JsonObject()
-                            .putString("Accept-Language",
+                    .put("headers", new JsonObject()
+                            .put("Accept-Language",
                                     request.headers().get("Accept-Language")))
-                    .putString("Host", getHost(request));
+                    .put("Host", getHost(request));
             JsonObject action = new JsonObject()
-                    .putString("action", "periode.getPeriodes")
-                    //.putString("idEtablissement", idEtablissement)
-                    .putArray("idGroupes", new JsonArray().addString(idClasse))
-                    .putObject("request", jsonRequest);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                    .put("action", "periode.getPeriodes")
+                    //.put("idEtablissement", idEtablissement)
+                    .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse))
+                    .put("request", jsonRequest);
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
-                    JsonArray periodes = body.getArray("result");
+                    JsonArray periodes = body.getJsonArray("result");
                     boolean isUpdatable = true;
 
                     if ("ok".equals(body.getString("status"))) {
@@ -93,8 +92,8 @@ public class FilterPeriodeUtils extends BusModBase {
                         JsonObject periode = null;
                         for (int i = 0; i < periodes.size(); i++) {
                             if (idTypePeriode.intValue()
-                                    == ((JsonObject) periodes.get(i)).getNumber("id_type").intValue()) {
-                                periode = (JsonObject) periodes.get(i);
+                                    == ((JsonObject) periodes.getJsonObject(i)).getInteger("id_type").intValue()) {
+                                periode = (JsonObject) periodes.getJsonObject(i);
                                 break;
                             }
                         }
@@ -119,7 +118,7 @@ public class FilterPeriodeUtils extends BusModBase {
 
                     handler.handle(isUpdatable);
                 }
-            });
+            }));
         }
     }
 
@@ -129,11 +128,11 @@ public class FilterPeriodeUtils extends BusModBase {
                 .append("SELECT count(periode.*) " +
                         "FROM " + Competences.VSCO_SCHEMA + ".periode " +
                         "WHERE periode.id_etablissement = ?");
-        JsonArray params = new JsonArray().addString(idEtablissement);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement);
 
         if(idPeriode != null) {
             query.append("AND  periode.id_type = ? ");
-            params.addNumber(idPeriode);
+            params.add(idPeriode);
         }
 
 

@@ -26,13 +26,13 @@ import org.entcore.common.http.BaseServer;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.http.HttpServer;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import static fr.wseduc.webutils.Server.getEventBus;
 
@@ -49,7 +49,7 @@ public class FilterDevoirUtils  extends ControllerHelper {
                         "WHERE devoirs.id = ? " +
                         "AND devoirs.owner = ?;");
 
-        JsonArray params = new JsonArray().addNumber(idDevoir).addString(owner);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idDevoir).add(owner);
 
         Sql.getInstance().prepared(query.toString(), params, new Handler<Message<JsonObject>>() {
             @Override
@@ -68,7 +68,7 @@ public class FilterDevoirUtils  extends ControllerHelper {
                         "AND devoirs.owner = ?  " +
                         "AND now() < periode.date_fin_saisie;" );
 
-        JsonArray params = new JsonArray().addNumber(idDevoir).addString(user.getUserId());
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idDevoir).add(user.getUserId());
 
         Sql.getInstance().prepared(query.toString(), params, new Handler<Message<JsonObject>>() {
             @Override
@@ -81,7 +81,7 @@ public class FilterDevoirUtils  extends ControllerHelper {
     public void validateAccessDevoir(final Long idDevoir,
                                      final UserInfos user, final Handler<Boolean> handler) {
 
-        JsonArray params = new JsonArray();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
                 .append("SELECT count(*) FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ");
@@ -105,18 +105,18 @@ public class FilterDevoirUtils  extends ControllerHelper {
                 .append(")");
 
         // Ajout des params pour la partie de la requête où on vérifie si on est le propriétaire
-        params.addNumber(idDevoir);
-        params.addString(user.getUserId());
+        params.add(idDevoir);
+        params.add(user.getUserId());
 
         // Ajout des params pour la partie de la requête où on vérifie si on a
         // des titulaires propriétaire
-        params.addNumber(idDevoir);
-        params.addString(user.getUserId());
+        params.add(idDevoir);
+        params.add(user.getUserId());
 
         // Ajout des params pour la partie de la requête où on vérifie si on a des droits
         // de partage provenant d'un remplaçant
-        params.addString(user.getUserId());
-        params.addNumber(idDevoir);
+        params.add(user.getUserId());
+        params.add(idDevoir);
 
 
         Sql.getInstance().prepared(query.toString(), params,

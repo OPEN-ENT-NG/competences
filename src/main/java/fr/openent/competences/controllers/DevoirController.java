@@ -29,6 +29,7 @@ import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -40,13 +41,13 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.MultiMap;
-import org.vertx.java.core.eventbus.EventBus;
-import org.vertx.java.core.eventbus.Message;
-import org.vertx.java.core.http.HttpServerRequest;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
+import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -144,11 +145,11 @@ public class DevoirController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
                         @Override
                         public void handle(final JsonObject resource) {
-                            resource.removeField("competences");
-                            resource.removeField("competencesAdd");
-                            resource.removeField("competencesRem");
-                            resource.removeField("competenceEvaluee");
-                            resource.removeField("competencesUpdate");
+                            resource.remove("competences");
+                            resource.remove("competencesAdd");
+                            resource.remove("competencesRem");
+                            resource.remove("competenceEvaluee");
+                            resource.remove("competencesUpdate");
 
                             RequestUtils.bodyToJson(request, pathPrefix +
                                     Competences.SCHEMA_DEVOIRS_CREATE, new Handler<JsonObject>() {
@@ -174,7 +175,7 @@ public class DevoirController extends ControllerHelper {
 
                                                                 // TODO potentielement il peut y avoir plusieurs
                                                                 // titulaires pour un remplaçant sur le même établissement
-                                                                String userIdTitulaire = ((JsonObject)values.get(0))
+                                                                String userIdTitulaire = ((JsonObject)values.getJsonObject(0))
                                                                         .getString("id_titulaire");
                                                                 List<String> actions = new ArrayList<String>();
                                                                 actions.add(Competences.DEVOIR_ACTION_UPDATE);
@@ -327,31 +328,31 @@ public class DevoirController extends ControllerHelper {
                 final String idEtablissement = devoir.getString("id_etablissement");
 
                 JsonObject jsonRequest = new JsonObject()
-                        .putObject("headers", new JsonObject()
-                                .putString("Accept-Language",
+                        .put("headers", new JsonObject()
+                                .put("Accept-Language",
                                         request.headers().get("Accept-Language")))
-                        .putString("Host", getHost(request));
+                        .put("Host", getHost(request));
                 JsonObject action = new JsonObject()
-                        .putString("action", "periode.getPeriodes")
-                        .putString("idEtablissement", idEtablissement)
-                        .putArray("idGroupes", new JsonArray().addString(idGroupe))
-                        .putObject("request", jsonRequest);
+                        .put("action", "periode.getPeriodes")
+                        .put("idEtablissement", idEtablissement)
+                        .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idGroupe))
+                        .put("request", jsonRequest);
 
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-                        JsonArray periodes = body.getArray("result");
+                        JsonArray periodes = body.getJsonArray("result");
                         boolean isUpdatable = true;
 
                         if ("ok".equals(body.getString("status"))) {
                             // On vérifie que la date de fin de saisie n'est pas dépassée
-                            final Number idPeriode =  devoir.getNumber("id_periode");
+                            final Number idPeriode =  devoir.getLong("id_periode");
                             JsonObject periode = null;
                             for(int i =0; i< periodes.size(); i++) {
                                 if(idPeriode.intValue()
-                                        == ((JsonObject)periodes.get(i)).getNumber("id_type").intValue()) {
-                                    periode = (JsonObject)periodes.get(i);
+                                        == ((JsonObject)periodes.getJsonObject(i)).getLong("id_type").intValue()) {
+                                    periode = (JsonObject)periodes.getJsonObject(i);
                                     break;
                                 }
                             }
@@ -393,7 +394,7 @@ public class DevoirController extends ControllerHelper {
                                                 JsonArray resultNbCompetencesDevoirs = event.right().getValue();
 
                                                 for (int i = 0; i < resultNbCompetencesDevoirs.size(); i++) {
-                                                    JsonObject o = resultNbCompetencesDevoirs.get(i);
+                                                    JsonObject o = resultNbCompetencesDevoirs.getJsonObject(i);
 
                                                     if (o != null) {
                                                         nbCompetencesByDevoir.put(o.getLong("id"),
@@ -402,13 +403,13 @@ public class DevoirController extends ControllerHelper {
                                                 }
 
                                                 // On limite le nbre de compétence d' un devoir
-                                                if ((devoir.containsField("competencesAdd")
-                                                        && devoir.containsField("competencesRem"))
+                                                if ((devoir.containsKey("competencesAdd")
+                                                        && devoir.containsKey("competencesRem"))
 
                                                         && ((nbCompetencesByDevoir.get(Long.valueOf(request
                                                         .params().get("idDevoir")))
-                                                        + devoir.getArray("competencesAdd").size()
-                                                        - devoir.getArray("competencesRem").size())
+                                                        + devoir.getJsonArray("competencesAdd").size()
+                                                        - devoir.getJsonArray("competencesRem").size())
                                                         <= Competences.MAX_NBR_COMPETENCE)) {
                                                     devoirsService.updateDevoir(request.params()
                                                                     .get("idDevoir"),
@@ -428,7 +429,7 @@ public class DevoirController extends ControllerHelper {
                             }
                         }
                     }
-                });
+                }));
 
             }
         });
@@ -557,17 +558,17 @@ public class DevoirController extends ControllerHelper {
                                                     if (result.isRight()) {
                                                         JsonArray competences = result.right().getValue();
                                                         if (competences.size() > 0) {
-                                                            JsonArray idCompetences = new JsonArray();
+                                                            JsonArray idCompetences = new fr.wseduc.webutils.collections.JsonArray();
                                                             JsonObject o;
                                                             for (int i = 0; i < competences.size(); i++) {
-                                                                o = competences.get(i);
-                                                                if (o.containsField("id")) {
-                                                                    idCompetences.addNumber(o.getNumber("id_competence"));
+                                                                o = competences.getJsonObject(i);
+                                                                if (o.containsKey("id")) {
+                                                                    idCompetences.add(o.getLong("id_competence"));
                                                                 }
                                                             }
-                                                            devoir.putArray("competences", idCompetences);
+                                                            devoir.put("competences", idCompetences);
                                                         }
-                                                        devoirsService.duplicateDevoir(idDevoir, devoir, body.getArray("classes"), user, arrayResponseHandler(request));
+                                                        devoirsService.duplicateDevoir(idDevoir, devoir, body.getJsonArray("classes"), user, arrayResponseHandler(request));
                                                     } else {
                                                         log.error("An error occured when collecting competences for devoir id " + idDevoir);
                                                         renderError(request);
@@ -607,7 +608,7 @@ public class DevoirController extends ControllerHelper {
                         JsonArray resultNbNotesDevoir = event.right().getValue();
 
                         if (resultNbNotesDevoir.size() > 0) {
-                            JsonObject o = resultNbNotesDevoir.get(0);
+                            JsonObject o = resultNbNotesDevoir.getJsonObject(0);
                             if (o != null) {
                                 if (String.valueOf(true).equals(has_competence)) {
                                     nbNotesByDevoir.put(o.getLong("id"),
@@ -636,8 +637,8 @@ public class DevoirController extends ControllerHelper {
                                                     final String is_evaluated, final HttpServerRequest request ,
                                                     final boolean returning, final int currentThread, final int number){
 
-        final JsonArray idGroupes = new JsonArray().add(idGroupe);
-        final JsonArray result = new JsonArray();
+        final JsonArray idGroupes = new fr.wseduc.webutils.collections.JsonArray().add(idGroupe);
+        final JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
         final HashMap<String, Integer> nbElevesByGroupe = new HashMap<>();
 
 
@@ -649,7 +650,7 @@ public class DevoirController extends ControllerHelper {
                     JsonArray resultNbAnnotationsDevoir = event.right().getValue();
 
                     if( resultNbAnnotationsDevoir.size() > 0) {
-                        JsonObject o = resultNbAnnotationsDevoir.get(0);
+                        JsonObject o = resultNbAnnotationsDevoir.getJsonObject(0);
 
                         if (o != null) {
                             // On ajoute le nombre d'annotations au nombre de notes pour déterminer le taux d'avancement
@@ -670,7 +671,7 @@ public class DevoirController extends ControllerHelper {
                                 JsonArray resultNbCompetencesByStudents = event.right().getValue();
                                 Float nbCompetences = Float.valueOf(0);
                                 for (int i = 0; i < resultNbCompetencesByStudents.size(); i++) {
-                                    JsonObject o = resultNbCompetencesByStudents.get(i);
+                                    JsonObject o = resultNbCompetencesByStudents.getJsonObject(i);
                                     /*
                                     - Un élève est considéré comme évalué lorsqu'il a au moins une compétence d'évalué.
                                     - Pour l'avancement les compétences comptent à moitié pour les devoirs contenant
@@ -700,16 +701,16 @@ public class DevoirController extends ControllerHelper {
                                 }
                                 // Calcul du taux d'avancement en fonction du nombre d'élève(s)
                                 JsonObject action = new JsonObject()
-                                        .putString("action", "classe.getNbElevesGroupe")
-                                        .putArray("idGroupes", idGroupes);
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, new Handler<Message<JsonObject>>() {
+                                        .put("action", "classe.getNbElevesGroupe")
+                                        .put("idGroupes", idGroupes);
+                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                     @Override
                                     public void handle(Message<JsonObject> res) {
                                         JsonObject body = res.body();
                                         if ("ok".equals(body.getString("status"))) {
-                                            JsonArray resultNbElevesGroupes = body.getArray("results");
+                                            JsonArray resultNbElevesGroupes = body.getJsonArray("results");
                                             if( resultNbElevesGroupes.size() > 0) {
-                                                JsonObject nbEleves = resultNbElevesGroupes.get(0);
+                                                JsonObject nbEleves = resultNbElevesGroupes.getJsonObject(0);
                                                 nbElevesByGroupe.put(
                                                         nbEleves.getString("id_groupe"),
                                                         nbEleves.getInteger("nb"));
@@ -728,8 +729,8 @@ public class DevoirController extends ControllerHelper {
 
                                                 final Integer percent = _percent;
 
-                                                o.putNumber("id", idDevoir);
-                                                o.putNumber("percent", percent);
+                                                o.put("id", idDevoir);
+                                                o.put("percent", percent);
                                                 result.add(o);
 
                                                 devoirsService.updatePercent(idDevoir, percent, new
@@ -742,7 +743,7 @@ public class DevoirController extends ControllerHelper {
                                                                     } else if (number == currentThread) {
                                                                         JsonObject res = new JsonObject();
                                                                         int nbrs = number + 1;
-                                                                        res.putNumber("nbUpdatedDevoirs",nbrs);
+                                                                        res.put("nbUpdatedDevoirs",nbrs);
                                                                         Renders.renderJson(request, res);
                                                                         log.info(" FIN : " + nbrs +
                                                                                 " devoir(s) mis à jour");
@@ -759,7 +760,7 @@ public class DevoirController extends ControllerHelper {
                                             leftToResponse(request,new Either.Left<String, JsonArray>(body.getString("message")));
                                         }
                                     }
-                                });
+                                }));
                             } else {
                                 leftToResponse(request, event.left());
                             }
@@ -822,7 +823,7 @@ public class DevoirController extends ControllerHelper {
                                 log.info(" Récupération de  "+ devoirsInfos.size()+ " devoir(s).");
                                 log.info("Devoir  |  Completude ");
                                 for (int i =0; i < devoirsInfos.size(); i++) {
-                                    JsonObject o = devoirsInfos.get(i);
+                                    JsonObject o = devoirsInfos.getJsonObject(i);
                                     if (o != null) {
                                         // Paramètres d'entrée
                                         final Long idDevoir = Long.valueOf(o.getInteger("id"));
