@@ -26,9 +26,11 @@
             <h4 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine" ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom" ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
             <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
 
-                <div class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
+                <div ng-click="openDetailCompetence(competence)" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
 
-                    <div tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                    <div  ng-class="{whiteSpaceNormal : competence.hovering}"
+                          ng-mouseenter="showIt(competence)"
+                          ng-mouseleave="hideIt(competence)" class="six inline-block ellipsis competence">
                         [[competence.nom]]
                     </div>
                     <div class="five inline-block align-center align-top">
@@ -61,9 +63,11 @@
                     <div ng-repeat="connaissance in enseignement.competences.all | filter:FilterNotEvaluatedConnaissance">
                         <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}" class="margin-top-1em Domaine" ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom" ng-init="connaissance.OpenSousDom = false">[[connaissance.nom]]</h3>
                         <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0, 'openedSectionDom' : connaissance.OpenSousDom}" style='height: auto;'>
-                            <div class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)" ng-repeat="competence in connaissance.competences.all | filter:FilterNotEvaluated">
+                            <div  ng-click="openDetailCompetence(competence)" ng-repeat="competence in connaissance.competences.all | filter:FilterNotEvaluated">
 
-                                <div tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                                <div ng-class="{whiteSpaceNormal : competence.hovering}"
+                                     ng-mouseenter="showIt(competence)"
+                                     ng-mouseleave="hideIt(competence)" class="six inline-block ellipsis competence">
                                     [[competence.nom]]
                                 </div>
                                 <div class="five inline-block align-center align-top">

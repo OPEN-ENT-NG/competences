@@ -22,15 +22,15 @@
     <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)"
          class="domaine-line">
         <div class="cell four twelve-mobile domaine-display" >
-            <div  workflow="competences.createDispenseDomaineEleve" class="one cell">
+            <div workflow="competences.createDispenseDomaineEleve" class="one cell">
                 <label class="checkbox">
                     <input type="checkbox" ng-disabled="!domaine.dispensable" ng-model ="domaine.dispense_eleve"
                            ng-change="!domaine.dispense_eleve" ng-click="saveDispenseEleve(domaine)">
                     <span></span>
                 </label>
             </div>
-            <div ng-class="{disabled: domaine.dispense_eleve}" class="eleven cell text-overflow" tooltip="[[domaine.codification]] - [[domaine.libelle]]">
-            [[domaine.codification]] - [[domaine.libelle]]
+            <div ng-class="{disabled: domaine.dispense_eleve, whiteSpaceNormal: domaine.hovering}" ng-mouseenter="showIt(domaine)" ng-mouseleave="hideIt(domaine)"  class="eleven cell text-overflow">
+                [[domaine.codification]] - [[domaine.libelle]]
             </div>
             <div ng-if="( (isChefEtab() && evaluations.structure.moyenneVisible===1)
                             || evaluations.structure.moyenneVisible===2 )

@@ -11,10 +11,29 @@ import {Utils} from "../models/teacher/Utils";
 declare let _:any;
 
 export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClasseCtl', [
-    '$scope', 'route', '$rootScope', '$location', '$filter', '$route',
-     function ($scope, route, $rootScope, $location, $filter, $route) {
+    '$scope', 'route', '$rootScope', '$location', '$filter', '$route','$timeout',
+     function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
         template.open('container', 'layouts/2_10_layout');
-        /**
+         /**
+          * show label too long
+          */
+             // create the timer variable
+         var timer;
+
+         // mouseenter event
+         $scope.showIt = function (item) {
+             timer = $timeout(function () {
+                 item.hovering = true;
+             }, 350);
+         };
+
+         // mouseleave event
+         $scope.hideIt = function (item) {
+             $timeout.cancel(timer);
+             item.hovering = false;
+         };
+
+         /**
          * Créer une suivi de compétence
          */
         $scope.selectSuivi = function () {
@@ -408,5 +427,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         $scope.selectSuivi($scope.route.current.$$route.originalPath);
         template.open('content', 'enseignants/suivi_competences_classe/content');
         utils.safeApply($scope);
+
     }
+
 ]);

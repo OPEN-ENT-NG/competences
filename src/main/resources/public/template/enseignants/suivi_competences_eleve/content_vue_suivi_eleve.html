@@ -44,9 +44,9 @@
         <h3 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine" ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom" ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h3>
         <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
 
-            <div class="suivi-eleve-item competence-line" ng-click="openDetailCompetence(competence)" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
+            <div class="competence-line" ng-click="openDetailCompetence(competence)" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
 
-                <div tooltip="[[competence.nom]]" class="six inline-block ellipsis competence">
+                <div ng-class="{whiteSpaceNormal: competence.hovering}" ng-mouseenter="showIt(competence)" ng-mouseleave="hideIt(competence)" class="six inline-block ellipsis competence">
                     [[competence.nom]]
                 </div>
                 <div class="two inline-block align-center align-top">

@@ -456,6 +456,28 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             };
             utils.safeApply($scope);
         };
+        /**
+         * show label too long
+         * @type {boolean}
+         */
+        // start with the div hidden
+        $scope.hovering = false;
+
+        // create the timer variable
+        var timer;
+
+        // mouseenter event
+        $scope.showIt = function (item) {
+            timer = $timeout(function () {
+                item.hovering = true;
+            }, 350);
+        };
+
+        // mouseleave event
+        $scope.hideIt = function (item) {
+            $timeout.cancel(timer);
+            item.hovering = false;
+        };
 
         /**
          * Lance la séquence d'ouverture du détail d'une compétence permettant d'accéder à la vue liste ou graph

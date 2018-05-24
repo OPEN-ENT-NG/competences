@@ -91,6 +91,25 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.opened.lightboxEvalLibre = false;
 
         /**
+         * show label too long
+         */
+            // create the timer variable
+        var timer;
+
+        // mouseenter event
+        $scope.showIt = (item) => {
+            timer = $timeout(function () {
+                item.hovering = true;
+            }, 350);
+        };
+
+        // mouseleave event
+        $scope.hideIt =  (item) => {
+            $timeout.cancel(timer);
+            item.hovering = false;
+        };
+
+        /**
          * Initialise d'une évaluation libre.
          */
         $scope.initEvaluationLibre = () => {

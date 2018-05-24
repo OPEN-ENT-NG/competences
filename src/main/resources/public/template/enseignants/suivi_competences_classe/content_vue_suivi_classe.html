@@ -43,8 +43,10 @@
         <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
 
             <div ng-class="{'margin-top-1em' : domaine.competences.length > 0}">
-                <div class="suivi-eleve-item" ng-click="openDetailCompetence(competence)" ng-repeat="competence in domaine.competences.all|filter:ClasseFilterNotEvaluated">
-                    <div class="six inline-block ellipsis">
+                <div class="competence-line" ng-click="openDetailCompetence(competence)"
+                     ng-repeat="competence in domaine.competences.all|filter:ClasseFilterNotEvaluated">
+                    <div class="six inline-block ellipsis competence" ng-class="{whiteSpaceNormal:competence.hovering}"
+                         ng-mouseenter="showIt(competence)" ng-mouseleave="hideIt(competence)">
                         [[competence.nom]]
                     </div>
                     <div class="five inline-block align-center">

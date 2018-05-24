@@ -26,7 +26,7 @@
         <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
 
             <div class="suivi-eleve-item competence-line" ng-repeat="competence in domaine.competences.all">
-                <div tooltip="[[competence.nom]]" class="ten cell inline-block ellipsis competence">
+                <div  ng-class="{whiteSpaceNormal: competence.hovering}" ng-mouseenter="showIt(competence)" ng-mouseleave="hideIt(competence)" class="ten cell inline-block ellipsis competence">
                     [[competence.nom]]
                 </div>
                 <div class="two cell inline-block padding-left align-top">
