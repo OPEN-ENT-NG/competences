@@ -1,72 +1,78 @@
-<div class="three cell">
-    <label><i18n class="bold">evaluations.add.element.programme.summary</i18n></label>
-    <span style="overflow-wrap: break-word;">[[elementProgrammeDisplay]]</span>
-</div>
-<div class="five cell">
+<div class="eight cell ">
+    <div class="">
+        <label><i18n class="bold">viescolaire.utils.appreciation</i18n></label>
                 <textarea
-                          name="appreciation"
-                          class="eleven"
-                          ng-disabled="disabledSaisieMoyenne()"
-                          ng-model="informations.eleve.appreciation_matiere_periode"
-                          ng-blur="saveAppreciationMatierePeriodeEleve(informations.eleve);"
-                          maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]">
+                        name="appreciation"
+                        class="tewelve"
+                        ng-disabled="disabledSaisieMoyenne()"
+                        ng-model="informations.eleve.appreciation_matiere_periode"
+                        ng-blur="saveAppreciationMatierePeriodeEleve(informations.eleve);">
+
                 </textarea>
+    </div>
+    <div class="">
+        <label><i18n class="bold" >evaluations.add.element.programme.summary</i18n></label>
+        <br>
+        <span style="overflow-wrap: break-word;">[[elementProgrammeDisplay]]</span>
+    </div>
 </div>
 <div class="four cell">
-    <section>
-        <label><i18n class="bold">average.auto</i18n> : </label>
-        <span>[[informations.eleve.moyenne]]</span>
-    </section>
-    <section>
-        <label class="cell"><i18n class="bold">average.final</i18n> : </label>
-        <input class="input-note two"
-               style="text-align: center"
-               ng-class="{changedAverage: informations.eleve.moyenne !== informations.eleve.moyenneFinale}"
-               type="text"
-               ng-disabled="disabledSaisieMoyenne()"
-               ng-blur="saveMoyenneFinaleEleve(informations.eleve);"
-               ng-model="informations.eleve.moyenneFinale"
-               max="20" min="0" step="0.01">
-    </section>
-    <section>
-        <label class="cell"><i18n class="bold">viescolaire.classe.moyenne</i18n> : </label>
-        <label style="margin-left: 2px">[[informations.eleve.moyenneClasse]]</label>
-    </section>
-    <section>
-        <label class="cell twelve" tooltip="[[getLibellePositionnement(informations.eleve.positionnementCalcule)]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
-        <ul class="selectable-list twelve" ng-if="!disabledSaisieMoyenne()">
+    <div class="eleven moyenne_pos">
+        <section>
+            <label><i18n class="bold">average.auto</i18n> : </label>
+            <span>[[informations.eleve.moyenne]]</span>
+        </section>
+        <section>
+            <label class="cell"><i18n class="bold">average.final</i18n> : </label>
+            <input class="input-note two"
+                   style="text-align: center"
+                   ng-class="{changedAverage: informations.eleve.moyenne !== informations.eleve.moyenneFinale}"
+                   type="text"
+                   ng-disabled="disabledSaisieMoyenne()"
+                   ng-blur="saveMoyenneFinaleEleve(informations.eleve);"
+                   ng-model="informations.eleve.moyenneFinale"
+                   max="20" min="0" step="0.01">
+        </section>
+        <section>
+            <label ><i18n class="bold">viescolaire.classe.moyenne</i18n> : </label>
+            <span style="margin-left: 2px">[[informations.eleve.moyenneClasse]]</span>
+        </section>
+        <section>
+            <label class="cell twelve" tooltip="[[getLibellePositionnement(informations.eleve.positionnementCalcule)]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
+            <ul class="selectable-list twelve" ng-if="!disabledSaisieMoyenne()">
 
-            <li class="cell"
-                style="margin: 0"
-                ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
-                data-ng-click="savePositionnementEleve(informations.eleve, $index);"
-                ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
-                <label ng-bind-html="$index"></label>
-            </li>
-            <li class="cell"
-                style="margin: 0"
-                ng-class="{ selected:  structure.cycle.niveauCompetencesArray.length === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
-                data-ng-click="savePositionnementEleve(informations.eleve,structure.cycle.niveauCompetencesArray.length);"
-            >
-                <label ng-bind-html="structure.cycle.niveauCompetencesArray.length"></label>
-            </li>
+                <li class="cell"
+                    style="margin: 0"
+                    ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                    data-ng-click="savePositionnementEleve(informations.eleve, $index);"
+                    ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
+                    <label ng-bind-html="$index"></label>
+                </li>
+                <li class="cell"
+                    style="margin: 0"
+                    ng-class="{ selected:  structure.cycle.niveauCompetencesArray.length === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                    data-ng-click="savePositionnementEleve(informations.eleve,structure.cycle.niveauCompetencesArray.length);"
+                >
+                    <label ng-bind-html="structure.cycle.niveauCompetencesArray.length"></label>
+                </li>
 
-        </ul>
-        <ul class="selectable-list twelve" ng-if="disabledSaisieMoyenne()">
+            </ul>
+            <ul class="selectable-list twelve" ng-if="disabledSaisieMoyenne()">
 
-            <li class="cell"
-                style="margin: 0"
-                ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
-                ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
-                <label ng-bind-html="$index"></label>
-            </li>
-            <li class="cell"
-                style="margin: 0"
-                ng-class="{ selected:  structure.cycle.niveauCompetencesArray.length === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
-            >
-                <label ng-bind-html="structure.cycle.niveauCompetencesArray.length"></label>
-            </li>
+                <li class="cell"
+                    style="margin: 0"
+                    ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                    ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
+                    <label ng-bind-html="$index"></label>
+                </li>
+                <li class="cell"
+                    style="margin: 0"
+                    ng-class="{ selected:  structure.cycle.niveauCompetencesArray.length === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                >
+                    <label ng-bind-html="structure.cycle.niveauCompetencesArray.length"></label>
+                </li>
 
-        </ul>
-    </section>
+            </ul>
+        </section>
+    </div>
 </div>

@@ -367,7 +367,7 @@
   "keyboard.button":"Raccourci clavier" ,
   "no.annotation":"Evaluer",
   "evaluations.add":"Ajouter",
-  "evaluations.add.element.programme.summary": "Rappel des élements du programme travaillés",
+  "evaluations.add.element.programme.summary": "Rappel des élements du programme travaillés : ",
   "evaluations.edit":"Modifier",
   "evaluations.add.element.programme.title": "Saisie des élements du programme travaillé",
   "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",

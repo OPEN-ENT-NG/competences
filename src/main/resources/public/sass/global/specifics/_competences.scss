@@ -1869,6 +1869,15 @@ body.evaluations {
       margin: 10px 5px 0 -10px !important;
     }
   }
+  //Relevé périodique lightbox par élève Acquis scolaire, suivi élève, historique
+  .acquis_scolaire{
+    span{
+      font-size: 14px;
+    }
+    .moyenne_pos{
+      margin-left: 20px;
+    }
+  }
 
   .criterion {
     background: $white;
