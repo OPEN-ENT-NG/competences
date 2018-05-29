@@ -54,8 +54,9 @@ public class Adresse {
     protected String commune;
 
     public Adresse(){}
-    public Adresse(String ligne1,String codePostal, String commune){
-        this.ligne1=ligne1;
+    public Adresse(String adress,String codePostal, String commune){
+        //this.ligne1 = adress;
+        this.cutAdressSetLigne(adress);
         this.codePostal=codePostal;
         this.commune=commune;
     }
@@ -207,4 +208,53 @@ public class Adresse {
         this.commune = value;
     }
 
+    /**
+     * Set ligne1, lign2, ligne3, ligne4 in function the length of adress
+     * @param adress
+     */
+    public void cutAdressSetLigne(String adress){
+
+        if(adress.length() > 50) {
+            String[] tabAdress = adress.split(" ");
+            for (int i = 0; i < tabAdress.length; i++) {
+
+                if (ligne1 == null ){
+                    ligne1 = tabAdress[i];
+                }else if((ligne1.length() + tabAdress[i].length())+1 <= 50) {
+                    ligne1 = ligne1 +" "+ tabAdress[i];
+                } else if(ligne2 == null) {
+                    if (tabAdress[i].length() <= 50) {
+                        ligne2 = " " + tabAdress[i];
+                    } else {
+                        int endIndexString = tabAdress[i].length();
+                        ligne2 = " " + tabAdress[i].substring(0, 50);
+                        ligne3 = tabAdress[i].substring(51, endIndexString);
+                    }
+                }else if ((ligne2.length()+tabAdress[i].length())+1 <= 50 ) {
+                    ligne2 = ligne2 +" "+ tabAdress[i];
+                }else if (ligne3 == null){
+                    ligne3 = " "+tabAdress[i];
+                }else if((ligne3.length() + tabAdress[i].length())+1 <= 50 ){
+                    ligne3 = ligne3 +" "+ tabAdress[i];
+                }else if(ligne4 == null) {
+                    ligne4 = " "+ tabAdress[i];
+                }else if((ligne4.length() + tabAdress[i].length())+1 <= 50) {
+                    ligne4 = ligne4 + " " + tabAdress[i];
+                }
+            }
+            this.setLigne1(ligne1);
+            if(ligne2!=null){
+                this.setLigne2(ligne2);
+            }
+            if(ligne3!=null){
+                this.setLigne3(ligne3);
+            }
+            if(ligne4!=null){
+                this.setLigne4(ligne4);
+            }
+
+        }else{
+            this.setLigne1(adress);
+        }
+    }
 }
