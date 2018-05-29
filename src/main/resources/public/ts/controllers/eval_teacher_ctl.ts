@@ -1931,13 +1931,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.competences = [];
 
                     for (let i = 0; i < evaluations.competencesDevoir.length; i++) {
-                        let  _c = _.findWhere(evaluations.competencesDevoir, {index:i});
-                        if (_c !== undefined) {
-                            $scope.devoir.competences.push(_c.id);
-                        }
-                        else {
-                            $scope.devoir.competences.push(evaluations.competencesDevoir[i].id);
-                        }
+                        $scope.devoir.competences.push(evaluations.competencesDevoir[i].id);
                     }
                 }
             }
