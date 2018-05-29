@@ -223,14 +223,14 @@ public class ObjectFactory {
         return new Responsable();
     }
     /*Attention pour la civilité il faudra tenir compte de la class enum Civilte*/
-    public Responsable createResponsable(String externalId, Civilite civilite,String nom, String prenom, JsonArray relatives,Adresse adresse){
-        return new Responsable( externalId, civilite, nom,  prenom, relatives,adresse);
+    public Responsable createResponsable(String externalId, Civilite civilite, String nom, String prenom, String relative, Adresse adresse){
+        return new Responsable( externalId, civilite, nom,  prenom, relative,adresse);
     }
-    public Responsable createResponsable(String externalId, String nom, String prenom, JsonArray relatives,Adresse adresse){
-        return new Responsable( externalId, nom, prenom, relatives,adresse );
+    public Responsable createResponsable(String externalId, String nom, String prenom, String relative, Adresse adresse){
+        return new Responsable( externalId, nom, prenom, relative, adresse );
     }
-    public Responsable createResponsable(String externalId, Civilite civilite,String nom, String prenom, JsonArray relatives){
-        return new Responsable( externalId, civilite, nom,  prenom, relatives);
+    public Responsable createResponsable(String externalId, String nom, String prenom, String relative){
+        return new Responsable( externalId, nom,  prenom, relative);
     }
 
     /**

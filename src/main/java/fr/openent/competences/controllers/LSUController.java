@@ -162,13 +162,14 @@ public class LSUController extends ControllerHelper {
                 if ("ok".equals(body.getString("status"))) {
                     JsonArray jsonElevesRelatives = body.getArray("results");
                     Eleve eleve;
-                    Responsable responsable = null;
+                    //Responsable responsable = null;
                     Adresse adresse = null;
                     Donnees.Eleves eleves = objectFactory.createDonneesEleves();
                     if (jsonElevesRelatives.size() > 0) {
-                       /* try {*/
+                        /* try {*/
                         for (int i = 0; i < jsonElevesRelatives.size(); i++) {
                             JsonObject o = jsonElevesRelatives.get(i);
+                            Responsable responsable = null;
                             if (!eleves.containIdEleve(o.getString("idNeo4j"))) {
                                 String[] externalIdClass = o.getString("externalIdClass").split("\\$");
                                 String className = externalIdClass[(externalIdClass.length - 1)];
@@ -186,19 +187,28 @@ public class LSUController extends ControllerHelper {
                                 adresse = objectFactory.createAdresse(adress, o.getString("zipCode"), o.getString("city"));
                             }
                             if (o.getString("externalIdRelative")!= null && o.getString("lastNameRelative") !=null &&
-                                    o.getString("firstNameRelative")!= null && o.getArray("relative").size() > 0 && adresse != null) {
-                                //création d'un responsable Eleve avec la civilite si MERE ou PERE
-                                responsable = objectFactory.createResponsable(o.getString("externalIdRelative"),o.getString("lastNameRelative"),
-                                        o.getString("firstNameRelative"),o.getArray("relative"),adresse);
+                                    o.getString("firstNameRelative")!= null && o.getArray("relative").size() > 0 ) {
+                                JsonArray relatives = o.getArray("relative");
+                                for(int j=0 ; j < relatives.size(); j++) {
+                                    String relative = relatives.get(j);
+                                    String[] paramRelative = relative.toString().split("\\$");
+                                    //création d'un responsable Eleve avec la civilite si MERE ou PERE
 
-                            }/* else {
-                                    throw new Exception("responsable Eleve non renseigne ");
-                                }*/
-                            if(responsable != null && responsable.getCivilite()!=null) {
-                                eleve.getResponsableList().add(responsable);
-                            }/*else{
-                                    throw new Exception("responsable Eleve sans adresse at sans civilite "+responsable.getNom());
-                                }*/
+                                    if(o.getString("externalIdRelative").equals(paramRelative[0])) {
+                                        if (adresse != null) {
+                                            responsable = objectFactory.createResponsable(o.getString("externalIdRelative"), o.getString("lastNameRelative"),
+                                                    o.getString("firstNameRelative"), relative, adresse);
+                                        }else{
+                                            responsable = objectFactory.createResponsable(o.getString("externalIdRelative"), o.getString("lastNameRelative"),
+                                                    o.getString("firstNameRelative"), relative);
+                                        }
+                                    }
+                                }
+                                //le xml ne peut-être édité si le responsable n'a pas la civilité
+                                if (responsable != null && responsable.getCivilite() != null) {
+                                    eleve.getResponsableList().add(responsable);
+                                }
+                            }
                         }
                         donnees.setEleves(eleves);
                         handler.handle("success");

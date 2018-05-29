@@ -66,27 +66,26 @@ public class  Responsable {
 
     public Responsable(){}
     /*Attention pour la civilité il faudra tenir compte de la class enum Civilte*/
-    public Responsable(String externalId, Civilite civilite,String nom, String prenom, JsonArray relatives,Adresse adresse ){
+    public Responsable(String externalId, Civilite civilite,String nom, String prenom, String relative, Adresse adresse ){
         this.externalId=externalId;
         this.civilite=civilite;
         this.nom=nom;
         this.prenom=prenom;
-        this.addProprietesResponsable(relatives);
+        this.addProprietesResponsable(relative);
         this.adresse=adresse;
     }
-    public Responsable(String externalId, String nom, String prenom, JsonArray relatives,Adresse adresse ){
+    public Responsable(String externalId, String nom, String prenom, String relative, Adresse adresse ){
         this.externalId=externalId;
         this.nom=nom;
         this.prenom=prenom;
-        this.addProprietesResponsable(relatives);
+        this.addProprietesResponsable(relative);
         this.adresse=adresse;
     }
-    public Responsable (String externalId, Civilite civilite,String nom, String prenom, JsonArray relatives){
+    public Responsable (String externalId, String nom, String prenom, String relative){
         this.externalId=externalId;
-        this.civilite=civilite;
         this.nom=nom;
         this.prenom=prenom;
-        this.addProprietesResponsable(relatives);
+        this.addProprietesResponsable(relative);
     }
 
 
@@ -294,15 +293,14 @@ public class  Responsable {
 
     }
     //méthode qui permet de compléter les attributs legal1, legal2 et lienParente
-    public void addProprietesResponsable(JsonArray relatives){
-        for (int j = 0; j < relatives.size(); j++) {
-            String[] relative = relatives.get(j).toString().split("\\$");
-            if (this.externalId.equals(relative[0])) {
-                this.setLienParente(relative[1]);
-                this.setLegals(relative[3]);
-            }
+    //relative = externalId$type_relation$resp_financier$resp_legal$contact$paiement
+    public void addProprietesResponsable(String relative){
+
+        String[] paramRelative = relative.toString().split("\\$");
+        if (this.externalId.equals(paramRelative[0])) {
+            this.setLienParente(paramRelative[1]);
+            this.setLegals(paramRelative[3]);
         }
     }
-
 
 }
