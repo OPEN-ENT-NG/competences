@@ -186,26 +186,32 @@ public class LSUController extends ControllerHelper {
                                 }
                                 adresse = objectFactory.createAdresse(adress, o.getString("zipCode"), o.getString("city"));
                             }
+
+
                             if (o.getString("externalIdRelative")!= null && o.getString("lastNameRelative") !=null &&
                                     o.getString("firstNameRelative")!= null && o.getArray("relative").size() > 0 ) {
                                 JsonArray relatives = o.getArray("relative");
-                                for(int j=0 ; j < relatives.size(); j++) {
-                                    String relative = relatives.get(j);
-                                    String[] paramRelative = relative.toString().split("\\$");
-                                    //création d'un responsable Eleve avec la civilite si MERE ou PERE
 
-                                    if(o.getString("externalIdRelative").equals(paramRelative[0])) {
-                                        if (adresse != null) {
-                                            responsable = objectFactory.createResponsable(o.getString("externalIdRelative"), o.getString("lastNameRelative"),
-                                                    o.getString("firstNameRelative"), relative, adresse);
-                                        }else{
-                                            responsable = objectFactory.createResponsable(o.getString("externalIdRelative"), o.getString("lastNameRelative"),
-                                                    o.getString("firstNameRelative"), relative);
+                                    String civilite = o.getString("civilite");
+
+                                    for (int j = 0; j < relatives.size(); j++) {
+                                        String relative = relatives.get(j);
+                                        String[] paramRelative = relative.toString().split("\\$");
+                                        //création d'un responsable Eleve avec la civilite si MERE ou PERE
+
+                                        if (o.getString("externalIdRelative").equals(paramRelative[0])) {
+                                            if (adresse != null) {
+                                                responsable = objectFactory.createResponsable(o.getString("externalIdRelative"), o.getString("lastNameRelative"),
+                                                        o.getString("firstNameRelative"), relative, adresse);
+                                            } else {
+                                                responsable = objectFactory.createResponsable(o.getString("externalIdRelative"), o.getString("lastNameRelative"),
+                                                        o.getString("firstNameRelative"), relative);
+                                            }
+                                            responsable.setCivilite(civilite);
                                         }
                                     }
-                                }
                                 //le xml ne peut-être édité si le responsable n'a pas la civilité
-                                if (responsable != null && responsable.getCivilite() != null) {
+                                if (responsable != null && responsable.getCivilite() != null && responsable.getLienParente() != null) {
                                     eleve.getResponsableList().add(responsable);
                                 }
                             }

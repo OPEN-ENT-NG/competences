@@ -130,11 +130,34 @@ public class  Responsable {
     /**
      * Sets the value of the civilite property.
      *
-     * @param value allowed object is
-     *              {@link Civilite }
+     * @param civilitNeo4j allowed object is
      */
-    public void setCivilite(Civilite value) {
-        this.civilite = value;
+    public void setCivilite(String civilitNeo4j) {
+
+        if(civilitNeo4j != null) {
+            if (civilitNeo4j.toUpperCase().equals("MME") || civilitNeo4j.toUpperCase().equals("MME.")) {
+                this.civilite = Civilite.MME;
+            } else if (civilitNeo4j.toUpperCase().equals("M") || civilitNeo4j.toUpperCase().equals("M.")) {
+                this.civilite = Civilite.M;
+            }
+        }
+
+        //si civilite pas trouvee, on regarde à partir des liens de parente
+        if(this.civilite == null) {
+            if(this.lienParente != null) {
+                if(this.lienParente.toUpperCase().equals("PERE")) {
+                    this.civilite = Civilite.M;
+                } else if(this.lienParente.toUpperCase().equals("MERE")) {
+                    this.civilite = Civilite.MME;
+                }
+            }
+        }
+
+        // si tojours pas de civilite, on en met une par defaut
+        if(this.civilite == null) {
+            //civilite par defaut
+            this.civilite = Civilite.M;
+        }
     }
 
     /**
@@ -240,32 +263,41 @@ public class  Responsable {
     public void setLienParente(String codeParent) {
 
         switch (codeParent) {
-            case "1":
-                if(this.civilite == null) {
-                    this.lienParente = "PERE";
-                    this.civilite = Civilite.M;
-                }
+            case "20":
+                this.lienParente = "PERE";
                 break;
-            case "2":
-                if(this.civilite == null) {
-                    this.lienParente = "MERE";
-                    this.civilite = Civilite.MME;
-                }
+            case "10":
+                this.lienParente = "MERE";
                 break;
-            case "3":
+            case "50":
                 this.lienParente = "TUTEUR";
                 break;
-            case "4":
+            case "39":
                 this.lienParente ="AUTRE MEMBRE DE LA FAMILLE";
                 break;
-            case "5":
-                this.lienParente = "DDASS";
+            case "51":
+                this.lienParente = "AIDE SOCIALE A L'ENFANT";
                 break;
-            case "6":
-                this.lienParente = "AUTRE CAS";
+            case "90":
+                this.lienParente = "AUTRE LIEN";
                 break;
-            case "7":
+            case "70":
                 this.lienParente = "ELEVE LUI-MEME";
+                break;
+            case "37":
+                this.lienParente = "FRATRIE";
+                break;
+            case "38":
+                this.lienParente = "ASCENDANT";
+                break;
+            case "41":
+                this.lienParente = "EDUCATEUR";
+                break;
+            case "42":
+                this.lienParente = "ASSISTANT FAMILIAL";
+                break;
+            case "43":
+                this.lienParente = "GARDE d'ENFANT";
                 break;
             default:
                 break;
@@ -273,7 +305,6 @@ public class  Responsable {
     }
 
     public void setLegals(String code){
-        Boolean[] tab = new Boolean[2];
         switch (code) {
             case "0":
                 setLegal1(false);
