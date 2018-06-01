@@ -12,7 +12,8 @@ Behaviours.register('competences', {
             paramCompetences: 'fr.openent.competences.controllers.CompetenceController|createCompetence',
             linkGroupCycle: 'fr.openent.competences.controllers.UtilsController|updateLinkGroupesCycles',
             createDispenseDomaineEleve: 'fr.openent.competences.controllers.DomaineController|createDispenseDomaineEleve',
-            canUpdateBFCSynthese: 'fr.openent.competences.controllers.BFCController|updateSynthese'
+            canUpdateBFCSynthese: 'fr.openent.competences.controllers.BFCController|updateSynthese',
+            access:"fr.openent.competences.controllers.CompetencesController|view"
         },
         resource: {}
     },
