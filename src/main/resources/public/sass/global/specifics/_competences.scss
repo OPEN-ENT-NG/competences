@@ -1430,6 +1430,12 @@ body.evaluations {
     cursor: pointer;
     padding: 0 0 0 5px;
   }
+
+  .skills-list-proposition:hover {
+    //transform: scale(0.9);
+    color: #FF8500;
+  }
+
   .skills-checkbox{
     left: 30px;
     position: absolute;
@@ -2820,6 +2826,9 @@ body.evaluations {
 
   .selectable-list li.positionnementcalculee {
     border: 1px solid $cyan !important;
+    background: #4bafb5;
+    color: #FFFFFF;
   }
-}
 
+
+}
