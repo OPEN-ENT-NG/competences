@@ -502,8 +502,6 @@
 
 <lightbox show="lightboxChampsObligatoire == true" on-close="closeLightboxChampsObligatoire()">
     <h2><i18n>formulaire.incomplet</i18n></h2>
-    <div ng-if="devoir.id_groupe == undefined || !devoir.name || devoir.id_periode == undefined || devoir.dateDevoir == undefined
-                || devoir.id_type == undefined">
         <p><i18n>required.fields.not.selected</i18n></p>
         <ul>
             <li ng-if="devoir.id_type == undefined">
@@ -527,13 +525,13 @@
             <li ng-if="errDatePubli">
                 <span><i18n>devoir.errDatePubli</i18n></span>
             </li>
+            <li ng-if="endSaisie">
+                <span><i18n>end.saisie</i18n></span>
+            </li>
         </ul>
-    </div>
-    <div ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
         <p ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
             <i18n>required.fields.double.asterisk</i18n>
         </p>
-    </div>
 </lightbox>
 <lightbox  show="evaluations.competencesDevoir.length > MAX_NBR_COMPETENCE" on-close="controleNewDevoirForm()">
     <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
