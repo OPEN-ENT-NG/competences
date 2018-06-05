@@ -664,6 +664,12 @@ public class LSUController extends ControllerHelper {
                                         for (String idEleve : idsEleve){
                                             JsonArray resultats = repBuildBFC.right().getValue().getArray(idEleve);
                                             Map<Long, Integer> resultEleves  = new HashMap<>();
+
+                                            // si pas de resultats, on passe a l'élève suivant
+                                            if(resultats == null) {
+                                                continue;
+                                            }
+
                                             for (Object resultat : resultats){
                                                 resultEleves.put((Long)((JsonObject) resultat).getNumber("idDomaine"), (Integer)((JsonObject) resultat).getNumber("niveau"));
                                             }
