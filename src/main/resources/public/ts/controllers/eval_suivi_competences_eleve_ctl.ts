@@ -1016,15 +1016,17 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
         }
 
-       $scope.saveDispenseEleve = async (domaine: Domaine = new Domaine()) => {
-            $scope.domaine = new Domaine(domaine);
-            await $scope.domaine.saveDispenseEleve();
-            $scope.domaine.slider.options.disabled = !$scope.domaine.slider.options.disabled;
-            $scope.domaine.slider.options.readOnly = !$scope.domaine.slider.options.readOnly;
+        $scope.saveDispenseEleve = async (domaine) => {
+            //$scope.domaine = new Domaine(domaine);
+            domaine.dispense_eleve = !domaine.dispense_eleve;
+            await domaine.saveDispenseEleve();
+            domaine.slider.options.disabled = !domaine.slider.options.disabled;
+            domaine.slider.options.readOnly = !domaine.slider.options.readOnly;
+
             //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
-           let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
+            let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
             await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode);
-           $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id});
+            $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id});
             utils.safeApply($scope);
         }
     }

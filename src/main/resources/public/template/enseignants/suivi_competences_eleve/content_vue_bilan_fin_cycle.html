@@ -22,13 +22,13 @@
     <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)"
          class="domaine-line">
         <div class="cell four twelve-mobile domaine-display" >
-            <div workflow="competences.createDispenseDomaineEleve" class="one cell">
+           <!-- <div workflow="competences.createDispenseDomaineEleve" class="one cell">
                 <label class="checkbox">
                     <input type="checkbox" ng-disabled="!domaine.dispensable" ng-model ="domaine.dispense_eleve"
                            ng-change="!domaine.dispense_eleve" ng-click="saveDispenseEleve(domaine)">
                     <span></span>
                 </label>
-            </div>
+            </div>  -->
             <div ng-class="{disabled: domaine.dispense_eleve, whiteSpaceNormal: domaine.hovering}" ng-mouseenter="showIt(domaine)" ng-mouseleave="hideIt(domaine)"  class="eleven cell text-overflow">
                 [[domaine.codification]] - [[domaine.libelle]]
             </div>
@@ -53,8 +53,14 @@
                     </div>
                 </label>
             </div>
+            <button workflow="competences.createDispenseDomaineEleve"
+                    ng-model ="domaine.dispense_eleve"
+                    ng-click="saveDispenseEleve(domaine)" ng-show="domaine.dispensable">
+                <span ng-if="domaine.dispense_eleve"><i18n >evaluation.not.dispense.eleve</i18n></span>
+                <span  ng-if="!domaine.dispense_eleve"><i18n>evaluation.dispense.eleve</i18n></span>
+            </button>
         </div>
-        <div class="cell eight twelve-mobile"   >
+        <div class="cell eight twelve-mobile" >
             <rzslider
                     rz-slider-model="domaine.slider.value"
                     rz-slider-options="domaine.slider.options"></rzslider>
