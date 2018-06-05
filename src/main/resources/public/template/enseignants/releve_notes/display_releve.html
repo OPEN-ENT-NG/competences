@@ -201,22 +201,23 @@
                                            ng-model="eleve.moyenneFinale"
                                            max="20" min="0" step="0.01">
                                 </td>
-                                <td class="colMoyenne"
+                                <td class="colMoyenne size"
                                     ng-class="{widthMax: releveNote.toogle}"
                                     data-label="[[translate('viescolaire.utils.appreciation')]]">
                                     <form name="form"
                                           ng-class="{eleven: releveNote.toogle}"
                                           style="float: left">
-                                        <input type="text"
-                                               name="appreciation"
-                                               class="eleven input-appreciation"
-                                               name="appreciation"
-                                               ng-disabled="disabledSaisieMoyenne()"
-                                               ng-model="eleve.appreciation_matiere_periode"
-                                               ng-blur="saveAppreciationMatierePeriodeEleve(eleve)"
-                                               ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
-                                               maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]"
-                                               ng-focus="focusMe($event);getEleveInfo(eleve);">
+                                        <textarea rows="2" cols="200"
+                                                  name="appreciation"
+                                                  class="eleven input-appreciation textarea-appreciation"
+                                                  name="appreciation"
+                                                  ng-disabled="disabledSaisieMoyenne()"
+                                                  ng-model="eleve.appreciation_matiere_periode"
+                                                  ng-blur="saveAppreciationMatierePeriodeEleve(eleve)"
+                                                  ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
+                                                  maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]"
+                                                  ng-focus="focusMe($event);getEleveInfo(eleve);">
+                                        </textarea>
                                     </form>
                                     <i class="pencil"
                                        tooltip="[[translate('viescolaire.utils.appreciation.edit')]]"
