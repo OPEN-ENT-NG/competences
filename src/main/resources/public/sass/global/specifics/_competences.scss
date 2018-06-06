@@ -527,7 +527,8 @@ body.evaluations {
     position: relative;
     z-index: 1;
     height: 10.5vh;
-    background: #D3D8D8;
+    background: #ffffff;
+    box-shadow: 0px 0px 5px 0px rgba(0,0,0,0.35);
   }
 
   .colMoyenne.size {
@@ -2762,6 +2763,7 @@ body.evaluations {
       padding: 5px;
       font-size: 14px;
     }
+
     .display-children {
       height: 150px;
       width: 100%;
@@ -2859,10 +2861,28 @@ body.evaluations {
   }
 
   .selectable-list li.positionnementcalculee {
-    border: 1px solid $cyan !important;
-    background: #4bafb5;
+    background: $cyan;
     color: #FFFFFF;
   }
+
+  .newsizeTD {
+    width: 0% !important;
+    text-align: center !important;
+  }
+
+  .differentSizeTD {
+    width: 20% !important;
+    text-align: center !important;
+  }
+
+  .titleCenter {
+    text-align: center !important;
+  }
+
+  .aligndiff {
+    text-align: left !important;
+  }
+
 
 
 }
