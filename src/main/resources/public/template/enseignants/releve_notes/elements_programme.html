@@ -63,9 +63,11 @@
     <ul ng-if="aideSaisie.cycle !== undefined && aideSaisie.cycle !== null && aideSaisie.domaineEnseignement !== undefined && aideSaisie.domaineEnseignement !== null"
         class="skills-list-aideSaisie">
         <li ng-repeat="sousDomaine in sousDomaines"
-            class="twelve skills-header skill-40 ng-scope" ng-class="{opened: sousDomaine.open}">
+            class="twelve skills-header skill-45 ng-scope" ng-class="{opened: sousDomaine.open}">
                     <span ng-click="sousDomaine.open = !sousDomaine.open;" class="skills-text-overflow skills-teach"
-                          ng-class="{whiteSpaceNormal : sousDomaine.hovering}">
+                          ng-mouseenter="showIt(sousDomaine)"
+                          ng-class="{whiteSpaceNormal : sousDomaine.hoveringRecap}"
+                          ng-mouseleave="hideIt(sousDomaine)">
                         <i class="skills-open-icon"></i>
                         <span>[[sousDomaine.libelle]]</span>
                     </span>
