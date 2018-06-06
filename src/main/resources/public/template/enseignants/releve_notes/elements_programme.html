@@ -72,7 +72,7 @@
             <ul ng-if="aideSaisie.domaineEnseignement !== undefined" class="skills-list">
                 <li ng-repeat="proposition in sousDomaine.propositions">
                             <span ng-click="addProposition(proposition.libelle)" ng-mouseenter="showIt(proposition)"
-                                  ng-class="{whiteSpaceNormal : proposition.hovering}"
+                                  ng-class="{whiteSpaceNormal : proposition.hoveringRecap}"
                                   ng-mouseleave="hideIt(proposition)"
                                   class="ten skills-list-proposition skills-text-overflow italic">[[proposition.libelle]]</span>
                 </li>
