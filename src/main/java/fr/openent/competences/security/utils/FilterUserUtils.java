@@ -54,7 +54,7 @@ public class FilterUserUtils{
     }
 
     public boolean validateClasse(String idClasse) {
-        return user.getClasses().contains(idClasse);
+        return user.getClasses().contains(idClasse) || user.getGroupsIds().contains(idClasse);
     }
 
     public void validateMatiere (final HttpServerRequest request, final String idEtablissement, final String idMatiere, final Handler<Boolean> handler) {
