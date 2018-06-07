@@ -5,7 +5,9 @@
   "average":"Moyenne",
   "average.min":"Moy.",
   "average.auto": "Moyenne auto",
+  "average.auto.min": "Moy. auto",
   "average.final": "Moyenne finale",
+  "average.final.min": "Moy. finale",
   "history": "Historique",
 
   "competences.title": "Competences",
