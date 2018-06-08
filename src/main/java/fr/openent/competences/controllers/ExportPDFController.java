@@ -91,7 +91,6 @@ public class ExportPDFController extends ControllerHelper {
     private BfcSyntheseService bfcSynthseService;
     private EleveEnseignementComplementService eleveEnseignementComplementService;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
-    private NiveauEnseignementComplementService niveauEnseignementComplementService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
         devoirService = new DefaultDevoirService();
