@@ -3389,7 +3389,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.saveMoyenneFinaleEleve = function (eleve) {
+        $scope.saveMoyenneFinaleEleve = function (eleve,updateHistorique) {
             if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
 
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
@@ -3397,7 +3397,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     || eleve.moyenneFinale === "") {
                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
                     $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
-                        $scope.updateHistorique(eleve, 'moyenneFinale');
+                        if(updateHistorique){
+                            $scope.updateHistorique(eleve, 'moyenneFinale');
+                        }
                     });
                 }
                 else {
@@ -3426,11 +3428,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.saveAppreciationMatierePeriodeEleve = (eleve) => {
+        $scope.saveAppreciationMatierePeriodeEleve = (eleve,updateHistorique) => {
             if (eleve.appreciation_matiere_periode !== undefined) {
                 if (eleve.appreciation_matiere_periode.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
                     $scope.releveNote.saveAppreciationMatierePeriodeEleve(eleve).then(()=> {
-                        $scope.updateHistorique(eleve,'appreciation');
+                        if(updateHistorique){
+                            $scope.updateHistorique(eleve,'appreciation');
+                        }
                     });
                 }
                 else {

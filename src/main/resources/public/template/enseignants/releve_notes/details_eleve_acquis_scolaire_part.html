@@ -6,7 +6,7 @@
                         class="tewelve"
                         ng-disabled="disabledSaisieMoyenne()"
                         ng-model="informations.eleve.appreciation_matiere_periode"
-                        ng-blur="saveAppreciationMatierePeriodeEleve(informations.eleve);">
+                        ng-blur="saveAppreciationMatierePeriodeEleve(informations.eleve,false);">
 
                 </textarea>
     </div>
@@ -29,7 +29,7 @@
                    ng-class="{changedAverage: informations.eleve.moyenne !== informations.eleve.moyenneFinale}"
                    type="text"
                    ng-disabled="disabledSaisieMoyenne()"
-                   ng-blur="saveMoyenneFinaleEleve(informations.eleve);"
+                   ng-blur="saveMoyenneFinaleEleve(informations.eleve,true);"
                    ng-model="informations.eleve.moyenneFinale"
                    max="20" min="0" step="0.01">
         </section>

@@ -197,7 +197,7 @@
                                            ng-class="{changedAverage: eleve.moyenne !== eleve.moyenneFinale}"
                                            type="text"
                                            ng-disabled="disabledSaisieMoyenne()"
-                                           ng-blur="saveMoyenneFinaleEleve(eleve)"
+                                           ng-blur="saveMoyenneFinaleEleve(eleve,false)"
                                            ng-model="eleve.moyenneFinale"
                                            max="20" min="0" step="0.01">
                                 </td>
@@ -213,7 +213,7 @@
                                                   name="appreciation"
                                                   ng-disabled="disabledSaisieMoyenne()"
                                                   ng-model="eleve.appreciation_matiere_periode"
-                                                  ng-blur="saveAppreciationMatierePeriodeEleve(eleve)"
+                                                  ng-blur="saveAppreciationMatierePeriodeEleve(eleve,false)"
                                                   ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
                                                   maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]"
                                                   ng-focus="focusMe($event);getEleveInfo(eleve);">
