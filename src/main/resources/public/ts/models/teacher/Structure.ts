@@ -67,7 +67,7 @@ export class Structure extends Model {
                 synchronizationRemplacement: '/competences/remplacements/classes?idEtablissement=' + this.id
             },
             ELEVE: {
-                synchronization: '/viescolaire/eleves?idEtablissement=' + this.id
+                synchronization: '/viescolaire/classe/eleves?idEtablissement=' + this.id
             },
             ANNOTATION: {
                 synchronization: '/competences/annotations?idEtablissement=' + this.id
