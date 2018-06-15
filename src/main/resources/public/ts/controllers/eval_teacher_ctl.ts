@@ -3363,29 +3363,41 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         };
 
+        $scope.isEndSaisie = function() {
+            if ($scope.isChefEtab()) {
+                return false;
+            }
+            else {
+                if ($scope.releveNote === undefined || $scope.releveNote.classe === undefined) {
+                    return true;
+                } else {
+                    let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
+                        {id_type: $scope.search.periode.id});
+                    if (selectedPeriode !== undefined) {
+                        return moment().isAfter(moment(selectedPeriode.date_fin_saisie), "days");
+                    }
+                    else {
+                        return true;
+                    }
+                }
+            }
+        };
+
         $scope.disabledSaisieMoyenne = function () {
             if ($scope.search.periode.id === null || $scope.search.periode === "*"
                 || ($scope.releveNote !== undefined && $scope.releveNote.isNN)) {
                 return true;
             }
             else {
-                if ($scope.isChefEtab()) {
-                    return false;
-                }
-                else {
-                    if ($scope.releveNote === undefined || $scope.releveNote.classe === undefined) {
-                        return true;
-                    } else {
-                        let selectedPeriode = _.findWhere($scope.releveNote.classe.periodes.all,
-                            {id_type: $scope.search.periode.id});
-                        if (selectedPeriode !== undefined) {
-                            return moment().isAfter(moment(selectedPeriode.date_fin_saisie), "days");
-                        }
-                        else {
-                            return true;
-                        }
-                    }
-                }
+               return $scope.isEndSaisie();
+            }
+        };
+        $scope.disabledSaisieNNoutPeriode = () => {
+            if ($scope.search.periode.id === null || $scope.search.periode === "*") {
+                return true;
+            }
+            else {
+                return $scope.isEndSaisie();
             }
         };
 

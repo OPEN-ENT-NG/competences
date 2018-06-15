@@ -5,6 +5,7 @@
                         name="appreciation"
                         class="tewelve"
                         ng-model="informations.eleve.appreciation_matiere_periode"
+                        ng-disabled = "disabledSaisieNNoutPeriode()"
                         ng-blur="saveAppreciationMatierePeriodeEleve(informations.eleve,false);">
 
                 </textarea>
@@ -38,7 +39,7 @@
         </section>
         <section>
             <label class="cell twelve" tooltip="[[getLibellePositionnement(informations.eleve.positionnementCalcule)]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
-            <ul class="selectable-list twelve" ng-if="!disabledSaisieMoyenne()">
+            <ul class="selectable-list twelve" ng-if="!disabledSaisieNNoutPeriode()">
 
                 <li class="cell"
                     style="margin: 0"
@@ -56,7 +57,7 @@
                 </li>
 
             </ul>
-            <ul class="selectable-list twelve" ng-if="disabledSaisieMoyenne()">
+            <ul class="selectable-list twelve" ng-if="disabledSaisieNNoutPeriode()">
 
                 <li class="cell"
                     style="margin: 0"
