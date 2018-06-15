@@ -1001,9 +1001,10 @@ public class ExportPDFController extends ControllerHelper {
         } else {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Debut Generation PDF du template " + templateName);
         }
-        if (log.isDebugEnabled()
-            && null != templateProps){
-            log.debug(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Detail Generation du template templateProps : " + templateProps.toString());
+        if (null != templateProps){
+            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Detail Generation du template templateProps : " + templateProps.toString());
+        } else {
+            log.error(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime()) + " -> Detail Generation du template templateProps : vide");
         }
 //        this.assetsPath = (String) vertx.sharedData().ge  tMap("server").get("assetPath");
 //        this.skins = vertx.sharedData().getMap("skins");
