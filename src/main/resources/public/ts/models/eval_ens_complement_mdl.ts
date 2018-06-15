@@ -64,6 +64,7 @@ export class NiveauEnseignementCpls extends Model {
 export class EleveEnseignementCpl extends Model implements IModel{
     id : number;
     id_eleve : string;
+    id_cycle : string;
     id_enscpl : number;
     id_langue : number;
     id_niveau : number;
@@ -73,9 +74,10 @@ export class EleveEnseignementCpl extends Model implements IModel{
     libelle_lcr : string;
 
 
-    constructor(id_eleve : string){
+    constructor(id_eleve : string, id_cycle : string){
         super();
         this.id_eleve = id_eleve;
+        this.id_cycle = id_cycle;
         this.niveau = 0;
     }
      setAttributsEleveEnsCpl (id_enscpl : number,id_niveau : number,niveau_lcr : number, id_langue : number)  {
@@ -129,7 +131,11 @@ export class EleveEnseignementCpl extends Model implements IModel{
     }
 
     async sync(){
-        let { data } = await  http.get(this.api.get);
+        let url = this.api.get;
+        if(this.id_cycle !== null && this.id_cycle !== undefined){
+            url = url + `&idCycle=${this.id_cycle}`
+        }
+        let { data } = await  http.get(url);
       Mix.extend(this,Mix.castAs(EleveEnseignementCpl,data));
 
        /* if(data !== undefined && data.length === 1) {

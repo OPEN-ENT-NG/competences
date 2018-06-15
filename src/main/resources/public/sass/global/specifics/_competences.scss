@@ -210,12 +210,26 @@ body.evaluations {
     }
   }
 
+  //    Suivi élève : Vue Liste    //
+
   table thead tr, ul.list-view thead tr {
     color: $white !important;
   }
+
+  //    Vue cycle : change couleur du libellé de la vue liste    //
+
+  .enseignantCycle {
+    color: lightgrey;
+  }
+
+  .evaluationCycle {
+    color: darkorange;
+  }
+
   .disabled{
     opacity: 0.45;
   }
+
   @media screen and (min-device-width:$tablette ) {
     .menuLeft {
       position: fixed !important;

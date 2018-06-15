@@ -1,7 +1,7 @@
 /**
  * Created by ledunoiss on 27/10/2016.
  */
-import {ng, template, model, moment} from "entcore";
+import {ng, template, model, moment, notify} from "entcore";
 import {
     SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve,
     Domaine,
@@ -212,7 +212,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             $scope.evaluationLibre.create().then(function (res) {
 
                 // refresh du suivi élève
-                $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode, $scope.search.classe, $scope.evaluations.structure);
+                $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode, $scope.search.classe, $scope.currentCycle, false, $scope.evaluations.structure);
                 $scope.suiviCompetence.sync().then(() => {
                     $scope.suiviCompetence.domaines.sync().then(() => {
                         $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
@@ -354,6 +354,13 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
         };
 
+        $scope.getCyclesEleve = async () => {
+            await $scope.search.eleve.getCycles();
+            $scope.currentCycle = _.findWhere($scope.search.eleve.cycles, {id_cycle: $scope.search.classe.id_cycle});
+            $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
+            utils.safeApply($scope);
+        }
+
         /**
          * Créer un suivi de compétence
          */
@@ -383,8 +390,11 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 // Récupérer le suivi de l'élève
                 let eleveIsEvaluable = $scope.search.eleve.isEvaluable($scope.search.periode);
                 if (eleveIsEvaluable) {
+                    if($scope.currentCycle === null)
+                        await $scope.getCyclesEleve();
+
                     $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve,
-                        $scope.search.periode, $scope.search.classe, $scope.evaluations.structure);
+                        $scope.search.periode, $scope.search.classe, $scope.currentCycle, $scope.isCycle, $scope.evaluations.structure);
                     let niveauCompetence = _.findWhere(evaluations.structure.cycles, {
                         id_cycle: $scope.search.classe.id_cycle
                     });
@@ -771,8 +781,26 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
         };
 
-        $scope.changeContent = async function () {
+        $scope.changeContent = async function (cycle?) {
             let content = $scope.template.containers['suivi-competence-content'].split('.html?hash=')[0].split('template/')[1];
+
+            if(cycle === null || cycle === undefined){
+                $scope.selectedCycleRadio = null;
+                if ($scope.search.periode.libelle === "cycle") {
+                    $scope.currentCycle = null;
+                    $scope.isCycle = true;
+                    $scope.suiviFilter.mine = "false";
+                }
+                else {
+                    $scope.suiviFilter.mine = "true";
+                    $scope.currentCycle = {id_cycle: $scope.search.classe.id_cycle};
+                    $scope.isCycle = false;
+                }
+            }
+            else {
+                $scope.currentCycle = cycle;
+                $scope.isCycle = true;
+            }
             await $scope.selectSuivi($scope.route.current.$$route.originalPath);
             $scope.template.open('suivi-competence-content', content);
             utils.safeApply($scope);

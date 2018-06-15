@@ -49,10 +49,12 @@
         </tr>
         </thead>
         <tbody>
+
         <tr ng-repeat="evaluation in detailCompetence.competencesEvaluations|filter:filterOwnerSuivi | orderBy:sortType:sortReverse">
-            <td ng-if="!evaluation.formative">[[evaluation.evaluation_libelle]]</td>
-            <td ng-if="evaluation.formative">[[evaluation.evaluation_libelle]] (F)</td>
-            <td>[[evaluation.owner_name]]</td>
+            <td ng-class="{'evaluationCycle': search.periode.libelle === 'cycle'}" ng-if="!evaluation.formative">[[evaluation.evaluation_libelle]]</td>
+            <td ng-class="{'evaluationCycle': search.periode.libelle === 'cycle'}" ng-if="evaluation.formative">[[evaluation.evaluation_libelle]] (F)</td>
+            <td ng-show="search.periode.libelle !== 'cycle'" class="titre-widget ten centered">[[evaluation.owner_name]]</td>
+            <td ng-show="search.periode.libelle == 'cycle'" class="enseignantCycle"><i18n>evaluations.cycle.enseignantNC</i18n></td>
             <td>[[getDateFormated(evaluation.evaluation_date)]]</td>
             <td>
                 <c-skills-bubble text="(mapLettres[evaluation.evaluation])"
@@ -62,6 +64,7 @@
             </td>
             </td>
         </tr>
+
         </tbody>
     </table>
 </div>

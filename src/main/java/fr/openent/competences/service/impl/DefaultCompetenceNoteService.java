@@ -159,7 +159,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
+    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(idEleve);
         StringBuilder query = new StringBuilder()
                 .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
@@ -176,6 +176,13 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(idPeriode);
+        }
+        if (idCycle != null) {
+            query.append("AND competences.id_cycle = ? ");
+            values.add(idCycle);
+        }
+        if(!isCycle) {
+            query.append("AND devoirs.eval_lib_historise = false ");
         }
         query.append("ORDER BY competences_notes.created ");
 
@@ -326,6 +333,21 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 }
             }
         });
+    }
+    public void getCyclesEleve(String idEleve, Handler<Either<String, JsonArray>> handler){
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        StringBuilder query = new StringBuilder()
+                .append("SELECT DISTINCT rel_groupe_cycle.id_cycle, cycle.libelle ")
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_groupe_cycle ")
+                .append("INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".cycle ")
+                .append("ON rel_groupe_cycle.id_cycle = cycle.id ")
+                .append("WHERE id_groupe IN (SELECT DISTINCT id_groupe ")
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ")
+                .append("WHERE id_devoir IN (SELECT DISTINCT id_devoir ")
+                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".competences_notes ")
+                .append("WHERE id_eleve = ?))");
+        values.add(idEleve);
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 /*
     @Override

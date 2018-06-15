@@ -147,6 +147,7 @@
   "evaluations.suivi.eleve.vue.liste":"Vue liste",
   "evaluations.suivi.eleve.vue.graph":"Vue graph",
   "evaluations.back.suivi.eleve.title":"Revenir au suivi élève",
+  "evaluations.cycle.enseignantNC": "NC",
   "evaluation.suivi.eleve.empty": "Aucun suivi de compétences élève généré. Vous pouvez en générer un en sélectionnant les critères.",
   "evaluation.bilan.eleve.empty": "Aucun bilan de compétences élève généré. Vous pouvez en générer un en sélectionnant les critères.",
   "evaluation.suivi.classe.empty": "Aucun suivi de compétences classe généré. Vous pouvez en générer un en sélectionnant les critères.",

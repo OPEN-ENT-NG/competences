@@ -81,17 +81,26 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.getI18nPeriode = (periode: any) => {
             let result;
-            if (periode.id === null) {
+
+            if (periode.libelle !== null && periode.libelle !== undefined) {
+
+                if(periode.libelle === ("cycle")){
+                    result = lang.translate("viescolaire.utils.cycle");
+                }
+
+            } else if (periode.id === null) {
+
                 result = lang.translate("viescolaire.utils.annee");
-            }
-            else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))) {
+
+            } else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))) {
+
                 result = periode ?
                     lang.translate("viescolaire.periode." + periode.type) + " " + periode.ordre
                     : lang.translate("viescolaire.utils.periodeError");
-            }
-            else {
-                let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: periode.id_type});
 
+            } else {
+
+                let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: periode.id_type});
                 result = type_periode ?
                     lang.translate("viescolaire.periode." + type_periode.type) + " " + type_periode.ordre
                     : lang.translate("viescolaire.utils.periodeError");
@@ -450,6 +459,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
+        $scope.selectedObj = {};
+        $scope.os = [{
+            key: "a",
+            otherValue: 'Maria'
+        }, {
+            key: "b",
+            otherValue: 'Jordan'
+        }, {
+            key: "c",
+            otherValue: 'Santana'
+        }];
+
         route(routesActions);
 
 
@@ -464,6 +485,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.showRechercheBarFunction = function (display) {
             $scope.showRechercheBar = display;
         }
+
+
+
+        $scope.displayCycles = (periode) => {
+            if(periode !== null && periode !== undefined){
+                if(periode.libelle === "cycle"){
+                    $scope.displayCycle = true;
+                } else {
+                    $scope.displayCycle = false;
+                }
+            }
+        }
+
         $scope.updateOrder = function () {
             let res = [];
             for (let i = 0; i < $scope.evaluations.competencesDevoir.length; i++) {
@@ -586,6 +620,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                         utils.safeApply($scope);
                     });
+                    if(!_.findWhere(classe.periodes.all, {libelle: "cycle"}))
+                        classe.periodes.all.push({libelle: "cycle", id: null})
+                    utils.safeApply($scope);
                 });
 
             } else if (classe && classe.periodes) {
@@ -600,6 +637,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                     utils.safeApply($scope);
                 });
+                if(!_.findWhere(classe.periodes.all, {libelle: "cycle"}))
+                    classe.periodes.all.push({libelle: "cycle", id: null})
+                utils.safeApply($scope);
             }
             utils.safeApply($scope);
         };

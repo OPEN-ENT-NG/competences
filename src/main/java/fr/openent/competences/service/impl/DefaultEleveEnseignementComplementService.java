@@ -40,14 +40,19 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
     }
 
     @Override
-    public void getNiveauEnsCplByEleve(String idEleve, Handler<Either<String, JsonObject>> handler) {
+    public void getNiveauEnsCplByEleve(String idEleve, Long idCycle, Handler<Either<String, JsonObject>> handler) {
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
         String query ="SELECT eleve_enseignement_complement.*, enseignement_complement.libelle " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement " +
                 "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement ON enseignement_complement.id = eleve_enseignement_complement.id_enscpl " +
                 "WHERE id_eleve = ?" ;
 
-            values.add(idEleve);
+        values.add(idEleve);
+        if(idCycle != null) {
+            query = query + " AND id_cycle = ?";
+            values.add(idCycle);
+        }
+
 
         Sql.getInstance().prepared(query,values, SqlResult.validUniqueResultHandler(handler));
     }

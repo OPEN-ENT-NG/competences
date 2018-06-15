@@ -39,7 +39,7 @@ public interface CompetencesService extends CrudService {
      * @param idClasse l'identifiant de la classe.
      * @param handler  handler portant le résultat de la requête
      */
-    void getCompetencesItem(String idEtablissement, String idClasse,
+    void getCompetencesItem(String idEtablissement, String idClasse, Long idCycle,
                             Handler<Either<String, JsonArray>> handler);
 
     void getCompetencesItem(String idEtablissement, Number idCycle, Handler<Either<String, JsonArray>> handler);

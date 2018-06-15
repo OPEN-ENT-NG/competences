@@ -98,9 +98,11 @@ public interface CompetenceNoteService extends CrudService {
      * Récupère toutes les compétences notes d'un élève
      * @param idEleve identifiant de l'élève
      * @param idPeriode identifiant de la période
+     * @param idCycle identifiant du cycle
+     * @param isCycle indique si on demande les competences sur un cycles ou pas
      * @param handler handler portant le résultat de la requête
      */
-    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Handler<Either<String, JsonArray>> handler);
+    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère toutes les compétences notes d'une classe
@@ -135,6 +137,13 @@ public interface CompetenceNoteService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     public void getMaxCompetenceNoteEleve(String[] idEleves, Long idPeriode, Long idCycle, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupère les cycles des groupes sur lequels un élève a des devoirs avec compétences notées
+     * @param idEleve id de l'élève
+     * @param handler handler portant le résultat de la requête
+     */
+    public void getCyclesEleve(String idEleve, Handler<Either<String, JsonArray>> handler);
 
     /**
      * utilise la méthode getConversionNoteCompetence pour associer ordre du niveau de compétence au barème du brevet

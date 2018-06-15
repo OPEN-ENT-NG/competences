@@ -29,7 +29,7 @@
     <section>
         <label class="select" >
             <select ng-model="search.classe"
-                    ng-change="synchronizeStudents(search.classe.id);selectSuivi(true);"
+                    ng-change="synchronizeStudents(search.classe.id);selectSuivi(true); displayCycles(null)"
                     ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
                 <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
             </select>
@@ -39,7 +39,7 @@
         <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
             <select ng-model="search.periode"
                     ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                    ng-change="changeContent()"
+                    ng-change="changeContent(); displayCycles(search.periode);"
                     ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all">
                 <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
             </select>
@@ -50,16 +50,16 @@
                ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
             <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
                     ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
-                    ng-change="changeContent()">
+                    ng-change="changeContent();">
                 <option value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
             </select>
         </label>
     </section>
-    <section ng-show="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') && !isChefEtab()">
+    <section ng-show="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') && !isChefEtab() && !displayCycle">
         <div>
             <label>
                 <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
-                       ng-model="suiviFilter.mine" value="false">
+                       ng-model="$parent.suiviFilter.mine" value="false">
                 <span>
                     <i18n>evaluations.test.all</i18n>
                 </span>
@@ -68,12 +68,24 @@
         <div>
             <label>
                 <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
-                       ng-model="suiviFilter.mine" value="true">
+                       ng-model="$parent.suiviFilter.mine" value="true">
                 <span>
                     <i18n>evaluations.test.mine</i18n>
                 </span>
             </label>
         </div>
+    </section>
+    <section ng-show="search.eleve !== '' && displayCycle">
+        <form name="SelectedCycleForm">
+            <div ng-repeat="cycle in search.eleve.cycles">
+                <label>
+                    <input type="radio" ng-click="changeContent(cycle);"
+                           ng-model="$parent.selectedCycleRadio.id_cycle"
+                           value="[[::cycle.id_cycle]]">
+                    [[::cycle.libelle]]
+                </label>
+            </div><br/>
+        </form>
     </section>
 </div>
 <div class="fiche student-info diffpadding cell card twelve criterion" ng-class="{opened : openedStudentInfo === true}"
@@ -93,7 +105,8 @@
         </div>
     </div>
 </div>
-<div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')&& search.classe.id_cycle === 1"
+<div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')
+        && (search.classe.id_cycle === 1) && (selectedCycleRadio.id_cycle !== '2' || selectedCycleRadio.id_cycle === 2)"
      class="cell card twelve criterion">
     <div class="header">
         <h2><i18n>viescolaire.utils.enseignementComplement</i18n></h2>

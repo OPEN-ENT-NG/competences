@@ -23,7 +23,9 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessCompetenceNoteFilter;
 import fr.openent.competences.security.AccessSuiviCompetenceFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
+import fr.openent.competences.service.BfcSyntheseService;
 import fr.openent.competences.service.CompetenceNoteService;
+import fr.openent.competences.service.impl.DefaultBfcSyntheseService;
 import fr.openent.competences.service.impl.DefaultCompetenceNoteService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -54,13 +56,14 @@ import static org.entcore.common.http.response.DefaultResponseHandler.*;
 public class CompetenceNoteController extends ControllerHelper {
 
     private final CompetenceNoteService competencesNotesService;
+    private final BfcSyntheseService syntheseService;
+    private EventBus eb;
 
 
     public CompetenceNoteController(EventBus eb) {
         this.eb = eb;
-        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
-                Competences.COMPETENCES_NOTES_TABLE);
-
+        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
     }
 
     /**
@@ -209,8 +212,62 @@ public class CompetenceNoteController extends ControllerHelper {
             } else {
                 idPeriode = null;
             }
+            Long idCycle;
+            if (request.params().contains("idCycle")) {
+                try {
+                    idCycle = Long.parseLong(request.params().get("idCycle"));
+                } catch (NumberFormatException e) {
+                    log.error("Error : idCycle must be a long object ", e);
+                    badRequest(request, e.getMessage());
+                    return;
+                }
+            } else {
+                idCycle = null;
+            }
+            boolean isCycle;
+            if (request.params().contains("isCycle")) {
+                isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
+            } else {
+                isCycle = false;
+            }
+            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, arrayResponseHandler(request));
+        } else {
+            Renders.badRequest(request, "Invalid parameters");
+        }
+    }
 
-            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, arrayResponseHandler(request));
+    @Get("/cycles/eleve/:idEleve")
+    @ApiDoc("Récupère les cycles des groupes sur lequels un élève a des devoirs avec compétences notées")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessSuiviCompetenceFilter.class)
+    public void getCyclesEleve (final HttpServerRequest request) {
+        if (request.params().contains("idEleve")) {
+            String idEleve = request.params().get("idEleve");
+            competencesNotesService.getCyclesEleve(idEleve, arrayResponseHandler(request));
+        } else {
+            Renders.badRequest(request, "Invalid parameters");
+        }
+    }
+
+    @Get("/cycle/eleve/:idEleve")
+    @ApiDoc("Retourne l'id du cycle courant à partir d'un idEleve.")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getCycleEleve(final HttpServerRequest request) {
+        if (request.params().contains("idEleve")) {
+            String idEleve = request.params().get("idEleve");
+            syntheseService.getIdCycleWithIdEleve(idEleve, new Handler<Either<String, Integer>>() {
+                @Override
+                public void handle(Either<String, Integer> idCycleObject) {
+                    if (idCycleObject.isRight()) {
+                        JsonObject idCycle = new JsonObject();
+                        idCycle.put("id_cycle", idCycleObject.right().getValue());
+                        renderJson(request, idCycle);
+                    } else {
+                        log.info("idCycle not found");
+                        Renders.badRequest(request);
+                    }
+                }
+            });
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }

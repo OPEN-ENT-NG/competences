@@ -87,11 +87,12 @@ public class DomaineController extends ControllerHelper {
         final JsonArray oArbreDomainesArray = new fr.wseduc.webutils.collections.JsonArray();
         final String idClasse = request.params().get("idClasse");
         final String idEleve = request.params().contains("idEleve")? request.params().get("idEleve") : null;
+        final Long idCycle = request.params().contains("idCycle")? Long.parseLong(request.params().get("idCycle")) : null;
         final String idStructure = request.params().get("idStructure");
 
 
-        // 1 - Chargement des domaines ordonnés selon l'arbre recursif
-        domainesService.getArbreDomaines(idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
+                // 1 - Chargement des domaines ordonnés selon l'arbre recursif
+        domainesService.getArbreDomaines(idClasse, idEleve, idCycle, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 if (event.right().isRight()) {
@@ -100,7 +101,7 @@ public class DomaineController extends ControllerHelper {
                     final JsonArray oDomainesArray = event.right().getValue();
 
                     // 2 - Chargement de toutes les competences evaluables du cycle
-                    competencesService.getCompetencesItem(idStructure,idClasse,
+                    competencesService.getCompetencesItem(idStructure,idClasse, idCycle,
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
                                 public void handle(Either<String, JsonArray> event) {

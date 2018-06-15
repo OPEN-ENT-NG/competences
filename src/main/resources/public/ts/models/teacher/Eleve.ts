@@ -1,4 +1,5 @@
-import {Model, Collection, _, http, moment} from 'entcore';
+import { Model, Collection, _, notify, http as httpCore, moment} from 'entcore';
+import http  from 'axios';
 import { Evaluation, SuiviCompetence } from './index';
 import {Periode} from "./Periode";
 
@@ -14,12 +15,14 @@ export class Eleve extends Model {
     idClasse: string;
     idEtablissement :string;
     details : any;
+    cycles : any;
     deleteDate : any;
 
     get api() {
         return {
             GET_MOYENNE : `/competences/eleve/${this.id}/moyenne?`,
-            GET_DATA_FOR_DETAILS_RELEVE: `/competences/releve/informations/eleve/${this.id}`
+            GET_DATA_FOR_DETAILS_RELEVE: `/competences/releve/informations/eleve/${this.id}`,
+            GET_CYCLES : `/competences/cycles/eleve/`
         }
     }
 
@@ -43,7 +46,7 @@ export class Eleve extends Model {
                     idDevoirsURL += "devoirs=" + id + "&";
                 });
                 idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
-                http().getJson(this.api.GET_MOYENNE + idDevoirsURL).done(function (res) {
+                httpCore().getJson(this.api.GET_MOYENNE + idDevoirsURL).done(function (res) {
                     if (!res.error) {
                         this.moyenne = res.moyenne;
                     } else {
@@ -61,13 +64,25 @@ export class Eleve extends Model {
         return new Promise( ((resolve, reject) => {
             let uri = this.api.GET_DATA_FOR_DETAILS_RELEVE
                 + `?idEtablissement=${idEtablissement}&idClasse=${idClasse}&idMatiere=${idMatiere}`;
-            http().getJson(uri).done( (res) => {
+            httpCore().getJson(uri).done( (res) => {
                 if (!res.error) {
                     this.details = res;
                     resolve ();
                 }
             });
         }))
+    }
+
+    async getCycles () {
+        try {
+            let {data} = await http.get(this.api.GET_CYCLES + this.id);
+            if (!data.error) {
+                this.cycles = data;
+            }
+        } catch (e) {
+            notify.error('evaluations.eleve.cycle.get.error');
+        }
+
     }
 
     isEvaluable(periode) {

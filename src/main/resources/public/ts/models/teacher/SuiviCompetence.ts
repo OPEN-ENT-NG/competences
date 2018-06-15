@@ -4,6 +4,7 @@ import {
     Domaine,
     Periode,
     Classe,
+    Cycle,
     BilanFinDeCycle,
     TableConversion,
     Eleve,
@@ -23,6 +24,8 @@ export class SuiviCompetence extends Model {
     domaines: Collection<Domaine>;
     periode: Periode;
     classe: Classe;
+    cycle: Cycle;
+    isCycle: boolean;
     bilanFinDeCycles: Collection<BilanFinDeCycle>;
     tableConversions: Collection<TableConversion>;
     bfcSynthese: BfcSynthese;
@@ -43,15 +46,17 @@ export class SuiviCompetence extends Model {
         };
     }
     that = this;
-     constructor (eleve: Eleve, periode: any, classe: Classe, structure: Structure) {
+     constructor (eleve: Eleve, periode: any, classe: Classe, cycle: Cycle, isCycle: boolean, structure: Structure) {
         super();
         this.periode = periode;
         this.classe = classe;
-        this.bfcSynthese = new BfcSynthese(eleve.id);
+        this.cycle = cycle;
+        this.isCycle = isCycle;
+        this.bfcSynthese = new BfcSynthese(eleve.id, cycle.id_cycle);
         this.bfcSynthese.syncBfcSynthese();
         this.ensCpls = new EnsCpls();
         this.langues = new LanguesCultRegs();
-        this.eleveEnsCpl = new EleveEnseignementCpl(eleve.id);
+        this.eleveEnsCpl = new EleveEnseignementCpl(eleve.id, cycle.id_cycle);
         this.niveauEnsCpls = new NiveauEnseignementCpls();
         this.baremeBrevetEleves = new BaremeBrevetEleves();
 
@@ -60,12 +65,18 @@ export class SuiviCompetence extends Model {
         this.collection(Domaine, {
             sync: function () {
                 return new Promise((resolve) => {
-                    let url = SuiviCompetence.api.getArbreDomaines + that.classe.id +'&idEleve='+ eleve.id;
+                    let url = SuiviCompetence.api.getArbreDomaines + that.classe.id + '&idEleve=' + eleve.id + '&idCycle=' + cycle.id_cycle;
                     http().getJson(url).done((resDomaines) => {
-                        let url = SuiviCompetence.api.getCompetencesNotes + eleve.id;
+                        let url = SuiviCompetence.api.getCompetencesNotes + eleve.id + '?idCycle=' + cycle.id_cycle;
+
                         if (periode !== null && periode !== undefined && periode !== '*') {
-                            if (periode.id_type) url += '?idPeriode=' + periode.id_type;
+                            if (periode.id_type) url += '&idPeriode=' + periode.id_type;
                         }
+                        if (isCycle !== null && isCycle !== undefined) {
+                            url += '&isCycle=' + isCycle;
+                        }
+
+
 
                         http().getJson(url).done((resCompetencesNotes) => {
                             if (resDomaines) {
@@ -96,7 +107,7 @@ export class SuiviCompetence extends Model {
         this.collection(BilanFinDeCycle, {
             sync: function () {
                 return new Promise((resolve) => {
-                    let url = SuiviCompetence.api.getDomainesBFC + eleve.id + '?idEtablissement=' + structure.id;
+                    let url = SuiviCompetence.api.getDomainesBFC + eleve.id + '?idEtablissement=' + structure.id  + "&idCycle=" +cycle.id_cycle;
                     http().getJson(url).done((resBFC) => {
                         if (resBFC) {
                             for (let i = 0; i < resBFC.length; i++) {

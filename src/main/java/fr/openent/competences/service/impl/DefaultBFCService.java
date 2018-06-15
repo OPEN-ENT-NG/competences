@@ -130,7 +130,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @see Domaine
      */
     private void getDomaines(final String idClasse, final Handler<Either<String, Map<Long, Domaine>>> handler) {
-        domaineService.getArbreDomaines(idClasse,null, new Handler<Either<String, JsonArray>>() {
+        domaineService.getArbreDomaines(idClasse,null, null, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 if (event.isRight()) {

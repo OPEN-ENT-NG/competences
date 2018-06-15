@@ -34,7 +34,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     }
 
     @Override
-    public void getArbreDomaines(String idClasse, String idEleve, Handler<Either<String, JsonArray>> handler) {
+    public void getArbreDomaines(String idClasse, String idEleve, Long idCycle, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -47,11 +47,14 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines ")
                 .append(" WHERE id_parent = 0 ");
 
-        if(null != idClasse) {
+        if(null != idCycle) {
+            query.append(" AND id_cycle = ? ");
+        } else if(null != idClasse) {
             query.append(" AND id_cycle = (SELECT id_cycle FROM " + Competences.COMPETENCES_SCHEMA)
                     .append(".rel_groupe_cycle WHERE id_groupe = ?) ");
         }
-        query.append("UNION ")
+
+        query.append(" UNION ")
                 .append(" SELECT sg.niveau + 1  as niveau , dom.id, dom.id_parent, dom.libelle, ")
                 .append(" dom.codification, dom.evaluated, sg.pathinfo||dom.id, dom.id_cycle, dom.dispensable ")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".domaines dom , search_graph sg ")
@@ -73,7 +76,9 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
         }
         query.append(" ORDER BY pathinfo, id_cycle");
 
-        if(null != idClasse) {
+        if(null != idCycle) {
+            params.add(idCycle);
+        } else if(null != idClasse) {
             params.add(idClasse);
         }
         if(null != idEleve){

@@ -88,8 +88,9 @@
         </div>
     </div>
     <div class= "twelve cell" >
-        <div ng-if=" ( (isChefEtab() && evaluations.structure.baremeDNBvisible===1)
-             || evaluations.structure.baremeDNBvisible===2) " class= "twelve cell " ><span class= "right-magnet bareme-brevet" ><i18n>evaluation.bfc.controle.continu</i18n>
+        <div ng-if="((search.classe.id_cycle === 1) && (selectedCycleRadio.id_cycle !== '2' || selectedCycleRadio.id_cycle === 2)
+        && ((isChefEtab() && evaluations.structure.baremeDNBvisible===1) || evaluations.structure.baremeDNBvisible===2))" class="twelve cell">
+            <span class= "right-magnet bareme-brevet" ><i18n>evaluation.bfc.controle.continu</i18n>
             [[suiviCompetence.baremeBrevetEleve.controlesContinus_brevet]] / [[suiviCompetence.baremeBrevetEleve.totalMaxBaremeBrevet]]</span></div>
         <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
         <div ng-show="successCreateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successCreateSynthese</i18n></div>

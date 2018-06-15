@@ -71,45 +71,47 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void getCompetencesItem(final String idEtablissement, final String idClasse,
+    public void getCompetencesItem(final String idEtablissement, final String idClasse, final Long idCycle,
                                    final Handler<Either<String, JsonArray>> handler) {
 
         if (idEtablissement != null) {
             getCompetencesItem(idEtablissement, (Long) null, handler);
         } else {
             JsonObject action = new JsonObject()
-                    .put("action", "eleve.getCycle")
-                    .put("idClasse", idClasse);
+                    .put("action", "classe.getEtabClasses")
+                    .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
 
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
 
                     if ("ok".equals(body.getString("status"))) {
-                        final Number idCycle = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getInteger("id_cycle");
+                        final String idEtablissement = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getString("idStructure");
 
-                        JsonObject action = new JsonObject()
-                                .put("action", "classe.getEtabClasses")
-                                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
+                        if (idCycle != null) {
+                            getCompetencesItem(idEtablissement, idCycle, handler);
+                        } else {
+                            JsonObject action = new JsonObject()
+                                    .put("action", "eleve.getCycle")
+                                    .put("idClasse", idClasse);
 
-                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                @Override
+                                public void handle(Message<JsonObject> message) {
+                                    JsonObject body = message.body();
 
-                            @Override
-                            public void handle(Message<JsonObject> message) {
-                                JsonObject body = message.body();
-
-                                if ("ok".equals(body.getString("status"))) {
-                                    final String idEtablissement = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getString("idStructure");
-
-                                    getCompetencesItem(idEtablissement, idCycle, handler);
-                                } else {
-                                    log.error(body.getString("message"));
-                                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                                    if ("ok".equals(body.getString("status"))) {
+                                        final Number idCycle = ((JsonObject) body.getJsonArray("results").getJsonObject(0)).getInteger("id_cycle");
+                                        getCompetencesItem(idEtablissement, idCycle, handler);
+                                    } else {
+                                        log.error(body.getString("message"));
+                                        handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                                    }
                                 }
-                            }
-                        }));
-
+                            }));
+                        }
                     } else {
                         log.error(body.getString("message"));
                         handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
