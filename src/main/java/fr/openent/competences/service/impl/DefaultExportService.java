@@ -891,7 +891,13 @@ public class DefaultExportService implements ExportService {
             competenceNotesObj.put("number", number);
             String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
             competenceNotesObj.put("color", color);
-            competenceNotesObj.put("width", String.valueOf(notesMaitrises.getValue() / (double) nbDevoir * 100D));
+
+            String width = "100"; // gestion cas 0 devoir
+            if(nbDevoir > 0) {
+                width =  String.valueOf(notesMaitrises.getValue() / (double) nbDevoir * 100D);
+            }
+            competenceNotesObj.put("width", width);
+
             resultList.add(competenceNotesObj);
         }
         return resultList;
