@@ -894,7 +894,11 @@ public class DefaultExportService implements ExportService {
 
             String width = "100"; // gestion cas 0 devoir
             if(nbDevoir > 0) {
-                width =  String.valueOf(notesMaitrises.getValue() / (double) nbDevoir * 100D);
+                double tempWidth = notesMaitrises.getValue() / (double) nbDevoir * 100D;
+                if(tempWidth < 1){
+                    tempWidth = 1;
+                }
+                width =  String.valueOf(tempWidth);
             }
             competenceNotesObj.put("width", width);
 
