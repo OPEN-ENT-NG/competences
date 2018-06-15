@@ -359,7 +359,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.releveComp = {
                             textMod: true
                         };
-                        $scope.showRechercheBar = true;
+                        $scope.showRechercheBar = false;
                         if (!Utils.isChefEtab()) {
                             http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'name');
