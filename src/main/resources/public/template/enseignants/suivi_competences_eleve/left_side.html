@@ -16,7 +16,8 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div class="cell card twelve criterion">
+<div class="criteres fiche diffsize cell card twelve criterion" ng-class="{opened : opened.criteres === true}">
+    <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
     <div class="header">
         <h2><i18n>viescolaire.utils.criterion</i18n></h2>
     </div>
@@ -75,8 +76,9 @@
         </div>
     </section>
 </div>
-<div class="cell card twelve criterion"
+<div class="fiche student-info cell card twelve criterion" ng-class="{opened : openedStudentInfo === true}"
      ng-if="informations.eleve !== '' && informations.eleve !== undefined && route.current.$$route.originalPath === '/competences/eleve'">
+    <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
 <div ng-if="search.classe.id_cycle !== null && structure.cycle !== undefined ">
@@ -84,7 +86,8 @@
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_classe/content_vue_suivi_classe')
             || evaluations.structure.moyenneVisible===2"
-         class="cell card twelve criterion notes-help">
+         class="fiche cell card twelve criterion notes-help" ng-class="{opened : opened.legend === true}">
+        <span class="plus-input" ng-click="openLeftMenu('opened.legend', opened.legend);"></span>
         <div class="legend"
              ng-include="'/competences/public/template/enseignants/informations/display_competences_legende.html'">
         </div>

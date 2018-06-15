@@ -884,7 +884,7 @@ body.evaluations {
       }
     }
   }
-  .criteres, .statistiques-devoir, .detail-devoir, .student-info, .devoir-info{
+  .criteres, .statistiques-devoir, .detail-devoir, .student-info, .devoir-info, .notes-help {
     position: relative;
     .plus-input{
       right: 5px;
@@ -914,7 +914,7 @@ body.evaluations {
       }
     }
   }
-  .criteres, .statistiques-devoir, .detail-devoir, .devoir-info{
+  .criteres, .statistiques-devoir, .detail-devoir, .devoir-info {
     height: 25px;
     overflow: hidden;
     @include transition(all 100ms ease-out);
@@ -925,7 +925,7 @@ body.evaluations {
     font-size: 14px !important;
     background-color: $white;
     position: relative;
-    &.student-info, &.devoir-info{
+    &.student-info, &.devoir-info, &.notes-help, &.diffsize{
       height: 40px;
       overflow: hidden;
       @include transition(all 100ms ease-out);
@@ -2325,6 +2325,17 @@ body.evaluations {
   }
   .RechercheAcceuil{
     margin-left: 60px !important;
+  }
+
+  ////    Display NumberCycle
+
+  .cycleTitle {
+    text-align: center;
+    font-style: normal !important;
+    color: orange;
+    font-size: 1.8em;
+    margin: auto;
+    width: 100%;
   }
 
   .RechercheSuiviEleve{

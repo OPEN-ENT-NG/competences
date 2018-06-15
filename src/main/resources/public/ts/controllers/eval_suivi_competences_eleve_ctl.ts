@@ -90,6 +90,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
         $scope.opened.lightboxEvalLibre = false;
 
+
+
         /**
          * show label too long
          */

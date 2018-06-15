@@ -23,6 +23,14 @@
         <autocomplete class="ten cell clear-none" options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
     </div>
 </article>
+
+<!-- A afficher dans la vue cycle à la place de la RechercheBar -->
+<article ng-show="showNumberCycle" class="titre-widget ten centered">
+    <div class="row twelve">
+        <h2 class="cell two cycleTitle"><i18n>viescolaire.utils.cycle</i18n></h2>
+    </div>
+</article>
+
 <article class="ten card twelve-mobile centered"
          ng-if="suiviCompetence === undefined && search.classe.id_cycle !== null">
     <i18n>evaluation.suivi.eleve.empty</i18n>
