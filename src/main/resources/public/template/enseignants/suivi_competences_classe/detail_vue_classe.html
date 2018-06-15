@@ -18,13 +18,15 @@
   -->
 <div class="detail classe-view">
     <dic class="dominos">
-        <div class="item" ng-repeat="eleve in informations.classe.eleves.all | filter:FilterColor">
+        <div class="item"
+             ng-repeat="eleve in informations.classe.eleves.all |filter:DisplayEvaluable |filter:FilterColor">
                 <section ng-click="displaySuiviEleve(eleve);" class="domino" style="border: solid 3px  [[getEvaluationResultColor(eleve.id)]]">
                 <div class="top">
                     <img src="/userbook/avatar/[[eleve.id]]" alt="[[eleve.firstName + ' ' + eleve.lastName]]">
                 </div>
                 <div tooltip="[[eleve.firstName + ' ' + eleve.lastName]]" class="bottom">
-                    <h4>[[eleve.firstName + ' ' + eleve.lastName]]</h4>
+                    <h4  ng-class="{'deletedStudent': eleve.deleteDate !== null}">
+                        [[eleve.firstName + ' ' + eleve.lastName]]</h4>
                 </div>
             </section>
         </div>

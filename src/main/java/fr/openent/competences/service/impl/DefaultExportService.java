@@ -40,12 +40,12 @@ public class DefaultExportService implements ExportService {
 
     public DefaultExportService(EventBus eb) {
         this.eb = eb;
-        devoirService = new DefaultDevoirService();
+        devoirService = new DefaultDevoirService(eb);
         utilsService = new DefaultUtilsService();
         bfcService = new DefaultBFCService(eb);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);

@@ -95,9 +95,10 @@ public interface NoteService extends CrudService {
      * @param etablissementId identifiant de l'établissement
      * @param matiereId identifiant de la matière
      * @param periodeId identifiant de la période
+     * @param typeClasse le type de la classe
      * @param handler handler portant le résultat de la requête
      */
-    void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
+    void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId, Integer typeClasse,
                         Handler<Either<String, JsonArray>> handler);
 
 
@@ -107,10 +108,11 @@ public interface NoteService extends CrudService {
      * @param matiereId identifiant de la matière
      * @param periodeId identifiant de la période
      * @param eleveId identifiant de l'élève
+     * @param typeClasse le type de la classe
      * @param handler handler portant le résultat de la requête
      */
     void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
-                                   String eleveId,
+                                   String eleveId, Integer typeClasse,
                                    Handler<Either<String, JsonArray>> handler);
 
     /**

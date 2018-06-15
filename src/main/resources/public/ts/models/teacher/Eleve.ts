@@ -1,5 +1,6 @@
-import { Model, Collection, _, http } from 'entcore';
+import {Model, Collection, _, http, moment} from 'entcore';
 import { Evaluation, SuiviCompetence } from './index';
+import {Periode} from "./Periode";
 
 export class Eleve extends Model {
     moyenne: number;
@@ -13,6 +14,7 @@ export class Eleve extends Model {
     idClasse: string;
     idEtablissement :string;
     details : any;
+    deleteDate : any;
 
     get api() {
         return {
@@ -66,5 +68,24 @@ export class Eleve extends Model {
                 }
             });
         }))
+    }
+
+    isEvaluable(periode) {
+        if (this.deleteDate === null) {
+            return true;
+        }
+        else if(periode === undefined) {
+            return true;
+        }
+        else if (periode.id_type === undefined) {
+            return true;
+        }
+        else {
+            let deleteDate = moment(this.deleteDate);
+            let start = moment(periode.timestamp_dt);
+            let end = moment(periode.timestamp_fn);
+
+            return deleteDate.isBetween(start,end) || deleteDate.isAfter(end);
+        }
     }
 }

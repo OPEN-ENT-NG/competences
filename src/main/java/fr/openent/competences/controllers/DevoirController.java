@@ -24,6 +24,8 @@ import fr.openent.competences.Utils;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessPeriodeFilter;
 import fr.openent.competences.security.AccessVisibilityAppreciation;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
@@ -74,7 +76,7 @@ public class DevoirController extends ControllerHelper {
 
     public DevoirController(EventBus eb) {
         this.eb = eb;
-        devoirsService = new DefaultDevoirService();
+        devoirsService = new DefaultDevoirService(eb);
         utilsService = new DefaultUtilsService();
         competencesService = new DefaultCompetencesService(eb);
     }
@@ -87,8 +89,8 @@ public class DevoirController extends ControllerHelper {
             @Override
             public void handle(final UserInfos user) {
                 if(user != null){
-                    final String _PERSONNEL = "Personnel";
-                    if(_PERSONNEL.equals(user.getType()) && user.getFunctions().containsKey("DIR")){
+                    // si l'utilisateur a la fonction d'admin
+                    if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                         devoirsService.listDevoirsEtab(user, handler);
                     }

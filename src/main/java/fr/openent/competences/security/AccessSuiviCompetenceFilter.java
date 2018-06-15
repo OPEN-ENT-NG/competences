@@ -19,6 +19,8 @@
 
 package fr.openent.competences.security;
 
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
@@ -30,25 +32,21 @@ import io.vertx.core.http.HttpServerRequest;
  */
 public class AccessSuiviCompetenceFilter implements ResourcesProvider {
     @Override
-    public void authorize(HttpServerRequest resourceRequest, Binding binding, UserInfos user, Handler<Boolean> handler) {
-        switch (user.getType()) {
-            case "Teacher" : {
-                handler.handle(true);
-                resourceRequest.resume();
-            }
-            break;
-            case "Personnel" : {
-                resourceRequest.pause();
-                if(user.getFunctions().containsKey("DIR")){
-                    resourceRequest.resume();
+    public void authorize(HttpServerRequest resourceRequest, Binding binding, UserInfos user,
+                          Handler<Boolean> handler) {
+        if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
+            handler.handle(true);
+        }
+        else {
+            switch (user.getType()) {
+                case "Teacher": {
                     handler.handle(true);
-                }else{
+                    resourceRequest.resume();
+                }
+                break;
+                default: {
                     handler.handle(false);
                 }
-            }
-            break;
-            default: {
-                handler.handle(false);
             }
         }
     }

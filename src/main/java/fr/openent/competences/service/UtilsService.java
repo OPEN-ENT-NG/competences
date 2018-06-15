@@ -21,6 +21,7 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.Message;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -175,4 +176,7 @@ public interface UtilsService {
      * @param handler
      */
     void checkDataOnClasses(String[] idClasses, final Handler<Either<String, JsonArray>> handler);
+
+    void studentIdAvailableForPeriode (final String idClasse, final Long idPeriode, Integer typeClasse,
+                                       Handler<Either<String, JsonArray>> handler);
 }

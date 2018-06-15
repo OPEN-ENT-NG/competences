@@ -12,7 +12,7 @@ declare let _:any;
 
 export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClasseCtl', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route','$timeout',
-     function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
+     async function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
         template.open('container', 'layouts/2_10_layout');
          /**
           * show label too long
@@ -36,14 +36,19 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          /**
          * Créer une suivi de compétence
          */
-        $scope.selectSuivi = function () {
+        $scope.selectSuivi = async function (classeHasChange) {
+            if(classeHasChange === true){
+                await $scope.syncPeriode($scope.search.classe.id);
+            }
             if ($scope.search.classe.id_cycle === null) {
                 return ;
             }
             $scope.Display = {EvaluatedCompetences: true};
-            $scope.informations.classe = $scope.search.classe;
+                $scope.informations.classe = $scope.search.classe;
             if ($scope.informations.classe !== null && $scope.search.classe !== '' && $scope.search.classe !== '*') {
-                $scope.suiviCompetence = new SuiviCompetenceClasse($scope.search.classe, $scope.search.periode);
+                $scope.suiviCompetence = new SuiviCompetenceClasse(
+                    $scope.search.classe.filterEvaluableEleve($scope.search.periode)
+                    ,$scope.search.periode);
                 let niveauCompetence = _.findWhere(evaluations.structure.cycles, {
                     id_cycle: $scope.search.classe.id_cycle
                 });
@@ -236,6 +241,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
+        $scope.DisplayEvaluable = function (eleve) {
+            return eleve.isEvaluable($scope.search.periode);
+        };
 
         $scope.FilterColor = function (item){
             var evaluation = $scope.getMaxEvaluations(item.id);
@@ -330,7 +338,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          * Remplace l'élève recherché par le nouveau suite à l'incrémentation de l'index
          * @param num pas d'incrémentation. Peut être positif ou négatif
          */
-        $scope.incrementClasse = function (num) {
+        $scope.incrementClasse = async function (num) {
             $scope.Display = {EvaluatedCompetences : true};
             let index = _.findIndex($scope.classes.all, {id: $scope.search.classe.id});
             if (index !== -1 && (index + parseInt(num)) >= 0
@@ -339,7 +347,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 $scope.syncPeriode($scope.search.classe.id);
                 $scope.search.periode = '*';
                 $scope.synchronizeStudents($scope.search.classe.id);
-                $scope.selectSuivi('/competences/classe');
+                await $scope.selectSuivi('/competences/classe');
                 utils.safeApply($scope);
             }
         };
@@ -424,7 +432,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         // $scope.selectSuivi();
-        $scope.selectSuivi($scope.route.current.$$route.originalPath);
+        await $scope.selectSuivi($scope.route.current.$$route.originalPath);
         template.open('content', 'enseignants/suivi_competences_classe/content');
         utils.safeApply($scope);
 

@@ -20,6 +20,8 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.security.utils.FilterCompetenceNoteUtils;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.http.Renders;
 import org.entcore.common.http.filter.ResourcesProvider;
@@ -40,49 +42,40 @@ public class AccessCompetenceNoteFilter implements ResourcesProvider {
     protected static final Logger log = LoggerFactory.getLogger(AccessCompetenceNoteFilter.class);
 
     @Override
-    public void authorize(final HttpServerRequest resourceRequest, Binding binding, final UserInfos user, final Handler<Boolean> handler) {
-        switch (user.getType()) {
-            case "Teacher" : {
-                try {
-                    resourceRequest.pause();
-                    List<Long> nList = new ArrayList<Long>();
-                    List<String> ids = resourceRequest.params().getAll("id");
-                    for (String s : ids) nList.add(Long.parseLong(s));
-                    new FilterCompetenceNoteUtils().validateAccessCompetencesNotes(nList, user, new Handler<Boolean>() {
-                        @Override
-                        public void handle(Boolean isValid) {
-                            resourceRequest.resume();
-                            handler.handle(isValid);
-                        }
-                    });
-                } catch (NumberFormatException e) {
-                    log.error("Error : idNote must be a long object");
-                    resourceRequest.resume();
-                    Renders.badRequest(resourceRequest, "Error : idNote must be a long object");
-                }
-            }
-
-            break;
-            case "Personnel" : {
-                if (user.getFunctions().containsKey("DIR")) {
-                    resourceRequest.pause();
-                    if (!resourceRequest.params().contains("id")) {
-                        handler.handle(false);
-                    } else {
+    public void authorize(final HttpServerRequest resourceRequest, Binding binding, final UserInfos user,
+                          final Handler<Boolean> handler) {
+        if (new WorkflowActionUtils().hasRight(user,
+                WorkflowActions.ADMIN_RIGHT.toString())) {
+            handler.handle(true);
+        } else {
+            switch (user.getType()) {
+                case "Teacher": {
+                    try {
+                        resourceRequest.pause();
+                        List<Long> nList = new ArrayList<Long>();
+                        List<String> ids = resourceRequest.params().getAll("id");
+                        for (String s : ids) nList.add(Long.parseLong(s));
+                        new FilterCompetenceNoteUtils().validateAccessCompetencesNotes(nList, user,
+                                new Handler<Boolean>() {
+                            @Override
+                            public void handle(Boolean isValid) {
+                                resourceRequest.resume();
+                                handler.handle(isValid);
+                            }
+                        });
+                    } catch (NumberFormatException e) {
+                        log.error("Error : idNote must be a long object");
                         resourceRequest.resume();
-                        handler.handle(true);
+                        Renders.badRequest(resourceRequest, "Error : idNote must be a long object");
                     }
                 }
-                else{
-                    handler.handle(true);
-                }
 
-            }
-            break;
-            default: {
-                handler.handle(false);
+                break;
+                default: {
+                    handler.handle(false);
+                }
             }
         }
-    }
 
+    }
 }

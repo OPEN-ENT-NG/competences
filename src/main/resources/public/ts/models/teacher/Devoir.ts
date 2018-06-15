@@ -86,11 +86,13 @@ export class Devoir extends Model implements IModel{
             }
         });
         this.collection(Eleve, {
-            sync : function () : Promise<any> {
+            sync : function (periode) : Promise<any> {
                 return new Promise((resolve, reject) => {
-                    var _classe = evaluations.structure.classes.findWhere({id : that.id_groupe});
+                    var _classe = evaluations.structure.classes.findWhere({id : that.id_groupe})
+                        .filterEvaluableEleve(periode);
                     // that.eleves.load(JSON.parse(JSON.stringify(_classe.eleves.all)));
                     // that.eleves.load($.extend(true, {}, JSON.stringify(_classe.eleves.all)));
+
                     var e = $.map($.extend(true, {}, _classe.eleves.all), function (el) {
                         return el;
                     });

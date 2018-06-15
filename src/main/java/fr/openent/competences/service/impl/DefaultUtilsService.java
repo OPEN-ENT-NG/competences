@@ -23,7 +23,9 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.eventbus.ResultMessage;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
@@ -35,13 +37,12 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
+import java.text.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 
 /**
@@ -50,8 +51,16 @@ import static org.entcore.common.sql.SqlResult.validResultHandler;
 public class DefaultUtilsService  implements UtilsService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultUtilsService.class);
-
+    protected EventBus eb;
     private final Neo4j neo4j = Neo4j.getInstance();
+
+    public DefaultUtilsService(EventBus eb) {
+        this.eb = eb;
+    }
+
+    public DefaultUtilsService () {
+    }
+
 
     @Override
     /**
@@ -180,7 +189,7 @@ public class DefaultUtilsService  implements UtilsService {
             if (!noteDevoir.getRamenerSur()) {
                 sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
                 sumCJDJ += (currNote * currCoefficient);
-            } else if(currCoefficient.doubleValue() == 0) {
+            } else if (currCoefficient.doubleValue() == 0) {
                 continue;
             } else {
                 sumNIMCIParD += ((currNote * diviseurM * currCoefficient) / currDiviseur);
@@ -205,7 +214,7 @@ public class DefaultUtilsService  implements UtilsService {
 
         DecimalFormat df = new DecimalFormat("##.##", symbols);
         try {
-            if(moyenne.isNaN()) {
+            if (moyenne.isNaN()) {
                 moyenne = null;
             } else {
                 moyenne = Double.valueOf(df.format(moyenne));
@@ -214,7 +223,7 @@ public class DefaultUtilsService  implements UtilsService {
         } catch (NumberFormatException e) {
             log.error("Moyenne : " + String.valueOf(moyenne), e);
         }
-        if(null == moyenne)
+        if (null == moyenne)
             moyenne = 0.0;
         JsonObject r = new JsonObject().put("moyenne", moyenne);
         if (statistiques) {
@@ -349,7 +358,11 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public JsonArray saUnion(JsonArray recipient, JsonArray list) {
         for (int i = 0; i < list.size(); i++) {
-            recipient.add(list.getJsonObject(i));
+            if (list.getValue(i) instanceof JsonObject) {
+                recipient.add(list.getJsonObject(i));
+            } else {
+                recipient.add(list.getValue(i));
+            }
         }
         return recipient;
     }
@@ -428,7 +441,7 @@ public class DefaultUtilsService  implements UtilsService {
     @Override
     public void linkGroupesCycles(final String[] idClasses, final Number id_cycle, final Number[] typeGroupes,
                                   final Handler<Either<String, JsonArray>> handler) {
-        if (idClasses.length > 0 ) {
+        if (idClasses.length > 0) {
             checkDataOnClasses(idClasses, new Handler<Either<String, JsonArray>>() {
                 @Override
                 public void handle(Either<String, JsonArray> event) {
@@ -438,13 +451,13 @@ public class DefaultUtilsService  implements UtilsService {
                         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
 
                         // SUPPRESSION DES DEVOIRS AVEC COMPETENCES AVANT LE CHANGEMENT
-                        if (listDevoir.size() > 0 ) {
+                        if (listDevoir.size() > 0) {
                             StringBuilder queryDeleteDevoir = new StringBuilder();
                             JsonArray idDevoirs = new fr.wseduc.webutils.collections.JsonArray();
                             queryDeleteDevoir.append("DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs")
                                     .append(" WHERE id IN " + Sql.listPrepared(listDevoir.getList().toArray()));
-                            for(int i =0; i < listDevoir.size(); i++) {
-                                idDevoirs.add(((JsonObject)listDevoir.getJsonObject(i)).getLong("id"));
+                            for (int i = 0; i < listDevoir.size(); i++) {
+                                idDevoirs.add(((JsonObject) listDevoir.getJsonObject(i)).getLong("id"));
                             }
 
                             statements.add(new JsonObject()
@@ -482,20 +495,20 @@ public class DefaultUtilsService  implements UtilsService {
                     }
                 }
             });
-        }
-        else {
+        } else {
             handler.handle(new Either.Left<String, JsonArray>("IdClasses is Empty "));
         }
     }
+
     @Override
     public void checkDataOnClasses(String[] idClasses, final Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         query.append(" SELECT devoirs.id, devoirs.name, id_groupe, COUNT(competences_devoirs.id) as nbcompetences ")
-                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs ")
                 .append(" LEFT JOIN notes.rel_devoirs_groupes ")
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append(" LEFT OUTER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs ")
+                .append(" LEFT OUTER JOIN " + Competences.COMPETENCES_SCHEMA + ".competences_devoirs ")
                 .append(" ON devoirs.id = competences_devoirs.id_devoir ")
                 .append(" WHERE rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared(idClasses))
                 .append(" GROUP BY devoirs.id, devoirs.name, id_groupe ")
@@ -510,4 +523,137 @@ public class DefaultUtilsService  implements UtilsService {
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
+    @Override
+    public void studentIdAvailableForPeriode(final String idClasse, final Long idPeriode, final Integer typeClasse,
+                                             Handler<Either<String, JsonArray>> handler) {
+        // Si on a pas de filtre sur la période, on ne récupère pas les période
+        // On va renvoyer tous les id des élèves de la classe ou du groupe d'enseignement
+        if (idPeriode == null) {
+            calculAvailableId (idClasse, typeClasse, null,null, null, handler );
+            return;
+        }
+        else {
+            JsonObject action = new JsonObject();
+            action.put("action", "periode.getPeriodes")
+                    .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
+
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                @Override
+                public void handle(Message<JsonObject> message) {
+                    JsonObject body = message.body();
+                    JsonArray periodes = body.getJsonArray("result");
+                    JsonArray idAvailableEleve = new JsonArray();
+
+                    if ("ok".equals(body.getString("status"))) {
+                        // On récupére la période de la classe
+                        JsonObject periode = null;
+                        for (int i = 0; i < periodes.size(); i++) {
+
+                            if (idPeriode.intValue()
+                                    == ((JsonObject) periodes.getJsonObject(i)).getInteger("id_type").intValue()) {
+                                periode = (JsonObject) periodes.getJsonObject(i);
+                                break;
+                            }
+                        }
+                        if (periode != null) {
+                            String debutPeriode = periode.getString("timestamp_dt")
+                                    .split("T")[0];
+                            String finPeriode = periode.getString("timestamp_fn")
+                                    .split("T")[0];
+
+                            DateFormat formatter = new SimpleDateFormat("yy-MM-dd");
+                            try {
+                                final Date dateDebutPeriode = formatter.parse(debutPeriode);
+                                final Date dateFinPeriode = formatter.parse(finPeriode);
+
+                                calculAvailableId(idClasse, typeClasse, idPeriode,
+                                        dateDebutPeriode, dateFinPeriode, handler);
+
+                            } catch (ParseException e) {
+                                String messageLog = "Error :can not calcul students of groupe : " + idClasse;
+                                log.error(messageLog);
+                                handler.handle(new Either.Left<>(messageLog));
+                            }
+                        } else {
+                            handler.handle(new Either.Right<>(idAvailableEleve));
+                        }
+                    }
+
+                }
+            }));
+        }
+    }
+
+    protected void calculAvailableId (String idClasse, Integer typeClasse,Long idPeriode,
+                                      Date dateDebutPeriode, Date dateFinPeriode,
+                                      Handler<Either<String, JsonArray>> handler ) {
+        JsonObject action = new JsonObject();
+        if(typeClasse == 0) {
+            action.put("action", "classe.getEleveClasse")
+                    .put("idClasse", idClasse);
+        }
+        else if(typeClasse == 1 || typeClasse == 2){
+            action.put("action", "groupe.listUsersByGroupeEnseignementId")
+                    .put("groupEnseignementId", idClasse)
+                    .put("profile", "Student");
+        }
+        else {
+            handler.handle(new Either.Left<>("bad Request"));
+            return;
+        }
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
+                new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        JsonArray students = body.getJsonArray("results");
+                        JsonArray idAvailableEleve = new JsonArray();
+
+                        if ("ok".equals(body.getString("status"))) {
+                            // Si aucune période n'est sélectionnée, on rajoute tous les élèves
+                            for (int i = 0; i < students.size(); i++) {
+                                JsonObject student = (JsonObject)students.getValue(i);
+                                // Sinon Si l'élève n'est pas Supprimé on l'ajoute
+                                if (    idPeriode == null ||
+                                        student.getValue("deleteDate") == null ){
+                                    idAvailableEleve.add(student.getString("id"));
+                                }
+                                // Sinon S'il sa date sa suppression survient avant la fin de
+                                // la période, on l'ajoute aussi
+                                else {
+                                    Date deleteDate = new Date();
+
+                                    if (student.getValue("deleteDate")
+                                            instanceof Number) {
+                                        deleteDate = new Date(student.getLong("deleteDate"));
+                                    }
+                                    else {
+                                        try {
+
+                                            deleteDate = new SimpleDateFormat("yy-MM-dd")
+                                                    .parse(student.getString("deleteDate").split("T")[0]);
+
+                                        } catch (ParseException e) {
+                                            String messageLog = "PB While read date of deleted Student : "
+                                                    + student.getString("id");
+                                            log.error(messageLog);
+                                        }
+
+                                    }
+                                    if ( (deleteDate.after(dateFinPeriode) || deleteDate.equals(dateFinPeriode))
+                                            ||
+                                            ((deleteDate.after(dateDebutPeriode)
+                                                    || deleteDate.equals(dateDebutPeriode))
+                                                    && (deleteDate.before(dateFinPeriode)
+                                                    || deleteDate.equals(dateFinPeriode)))) {
+                                        idAvailableEleve.add(student.getString("id"));
+                                    }
+                                }
+                            }
+                        }
+                        handler.handle(new Either.Right<>(idAvailableEleve));
+                    }
+
+                }));
+    }
 }

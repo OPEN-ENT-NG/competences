@@ -22,6 +22,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.NoteService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.user.UserInfos;
@@ -29,14 +30,23 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 /**
  * Created by ledunoiss on 05/08/2016.
  */
 public class DefaultNoteService extends SqlCrudService implements NoteService {
+
+    private EventBus eb;
     public DefaultNoteService(String schema, String table) {
         super(schema, table);
+    }
+    public DefaultNoteService(String schema, String table, EventBus eb) {
+        super(schema, table);
+        this.eb = eb;
     }
 
 
@@ -207,69 +217,152 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+    public void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
+                               Integer typeClasse,
+                               Handler<Either<String, JsonArray>> handler) {
 
+        new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(classeId,periodeId, typeClasse,
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isRight()) {
+                            JsonArray queryResult = event.right().getValue();
+                            List<String> idEleves = new ArrayList<String>();
 
-        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve, devoirs.is_evaluated, null as annotation " +
-                "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs " +
-                "left join "+ Competences.COMPETENCES_SCHEMA +".notes on devoirs.id = notes.id_devoir " +
-                "INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ) " +
-                "WHERE devoirs.id_etablissement = ? " +
-                "AND devoirs.id_matiere = ? " );
-        values.add(classeId).add(etablissementId).add(matiereId);
-        if(periodeId != null) {
-            query.append("AND devoirs.id_periode = ? ");
-            values.add(periodeId);
-        }
-        query.append(" UNION ");
-        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, rel_annotations_devoirs.id_eleve, devoirs.is_evaluated, rel_annotations_devoirs.id_annotation as annotation " +
-                "FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs " +
-                "LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs ON devoirs.id = rel_annotations_devoirs.id_devoir " +
-                "INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ) " +
-                "WHERE devoirs.id_etablissement = ? " +
-                "AND devoirs.id_matiere = ? " );
-        values.add(classeId).add(etablissementId).add(matiereId);
-        if(periodeId != null) {
-            query.append("AND devoirs.id_periode = ? ");
-            values.add(periodeId);
-        }
+                            if (queryResult != null) {
+                                for (int i = 0; i < queryResult.size(); i++) {
+                                    idEleves.add(queryResult.getString(i));
+                                }
+                            }
+                            StringBuilder query = new StringBuilder();
+                            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("ORDER BY date ASC ;");
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+                            //Construction de la requête
+                            query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
+                                    " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve, " +
+                                    " devoirs.is_evaluated, null as annotation" +
+                                    " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
+                                    " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".notes " +
+                                    " ON (devoirs.id = notes.id_devoir AND " +
+                                    " notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")" +
+                                    " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ON " +
+                                    " (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ?)" +
+                                    " WHERE devoirs.id_etablissement = ? " +
+                                    " AND devoirs.id_matiere = ? ");
+                            for (String eleve : idEleves) {
+                                values.add(eleve);
+                            }
+
+                            values.add(classeId).add(etablissementId).add(matiereId);
+                            if (periodeId != null) {
+                                query.append("AND devoirs.id_periode = ? ");
+                                values.add(periodeId);
+                            }
+                            query.append(" UNION ");
+                            query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
+                                    " devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, " +
+                                    " rel_annotations_devoirs.id_eleve, devoirs.is_evaluated, " +
+                                    " rel_annotations_devoirs.id_annotation as annotation " +
+                                    " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
+                                    " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs " +
+                                    " ON (devoirs.id = rel_annotations_devoirs.id_devoir  AND " +
+                                    " rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(idEleves) + ")" +
+                                    " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
+                                    " ON (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ?) " +
+                                    " WHERE devoirs.id_etablissement = ? " +
+                                    " AND devoirs.id_matiere = ? ");
+                            for (String eleve : idEleves) {
+                                values.add(eleve);
+                            }
+                            values.add(classeId).add(etablissementId).add(matiereId);
+                            if (periodeId != null) {
+                                query.append("AND devoirs.id_periode = ? ");
+                                values.add(periodeId);
+                            }
+
+                            query.append("ORDER BY date ASC ;");
+                            Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+                        } else {
+                            handler.handle(new Either.Left<>("Error While getting Available student "));
+                        }
+                    }
+                });
+
     }
 
 
     public void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
-                                          Long periodeId,  String eleveId, Handler<Either<String, JsonArray>> handler) {
+                                          Long periodeId,  String eleveId, Integer typeClasse,
+                                          Handler<Either<String, JsonArray>> handler) {
+        if(typeClasse == null){
+            runGetCompetencesNotesReleve(etablissementId,classeId,matiereId,periodeId,eleveId,
+                    typeClasse, new ArrayList<String>(),handler);
+            return;
+
+        }
+        else {
+            new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(classeId, periodeId, typeClasse,
+                    new Handler<Either<String, JsonArray>>() {
+                        @Override
+                        public void handle(Either<String, JsonArray> event) {
+                            if (event.isRight()) {
+                                JsonArray queryResult = event.right().getValue();
+                                List<String> idEleves = new ArrayList<String>();
+
+                                if (queryResult != null) {
+                                    for (int i = 0; i < queryResult.size(); i++) {
+                                        idEleves.add(queryResult.getString(i));
+                                    }
+                                }
+                                runGetCompetencesNotesReleve(etablissementId, classeId, matiereId, periodeId, eleveId,
+                                        typeClasse, idEleves, handler);
+
+                            } else {
+                                handler.handle(new Either.Left<>("Error While getting Available student "));
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void runGetCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
+                                              Long periodeId,  String eleveId, Integer typeClasse,
+                                              List<String> idEleves,
+                                              Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-
         query.append("SELECT ")
                 .append( (null != eleveId)? "DISTINCT": "")
-                .append(" devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, ")
-                .append(" devoirs.ramener_sur, competences_notes.evaluation ,")
+                .append(" devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, ")
+                .append(" devoirs.diviseur, devoirs.ramener_sur, competences_notes.evaluation ,")
                 .append( (null != eleveId)? "": " competences_notes.id, ")
-                .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, null as annotation ")
+                .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
+                .append("null as annotation ")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ");
 
         if (null != eleveId) {
-            query.append(" LEFT JOIN (SELECT id, id_devoir, id_competence, max(evaluation) as evaluation, id_eleve " )
+            query.append(" LEFT JOIN (SELECT id, id_devoir, id_competence, max(evaluation) ")
+                    .append("as evaluation, id_eleve " )
                     .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes ")
                     .append(" WHERE id_eleve = ? ")
-                    .append(" GROUP BY (id, id_devoir, id_eleve) ) AS competences_notes  ON devoirs.id ")
+                    .append(" GROUP BY (id, id_devoir, id_eleve) ) AS competences_notes  ")
+                    .append(" ON devoirs.id ")
                     .append(" = competences_notes.id_devoir " );
             values.add(eleveId);
         }
         else {
-            query.append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes on devoirs.id " +
-                    " = competences_notes.id_devoir ");
+            query.append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes " +
+                    "ON (devoirs.id  = competences_notes.id_devoir " +
+                    "AND  competences_notes.id_eleve IN "+ Sql.listPrepared(idEleves)+ ")" );
+            for (String idEleve : idEleves) {
+                values.add(idEleve);
+            }
         }
 
         query.append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON " +
-                " (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ? ) " +
+                " (rel_devoirs_groupes.id_devoir = devoirs.id " +
+                " AND rel_devoirs_groupes.id_groupe = ? ) " +
                 " WHERE devoirs.id_etablissement = ? " +
                 " AND devoirs.id_matiere = ? ");
 
@@ -279,10 +372,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append("AND devoirs.id_periode = ? ");
             values.add(periodeId);
         }
-        query.append("ORDER BY date ASC ;");
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
-
 
     @Override
     public void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,

@@ -69,7 +69,7 @@ public class NoteController extends ControllerHelper {
 
     public NoteController(EventBus eb) {
         this.eb = eb;
-        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
+        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         utilsService = new DefaultUtilsService();
         elementProgramme = new DefaultElementProgramme();
     }
@@ -233,6 +233,7 @@ public class NoteController extends ControllerHelper {
                 final String idClasse = request.params().get("idClasse");
                 final String idMatiere = request.params().get("idMatiere");
                 final String idPeriodeString = request.params().get("idPeriode");
+                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
 
 
                 new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
@@ -299,6 +300,7 @@ public class NoteController extends ControllerHelper {
                                                     idMatiere,
                                                     (null != idPeriodeString)? Long.parseLong(idPeriodeString): null,
                                                     null,
+                                                    typeClasse,
                                                     new Handler<Either<String, JsonArray>>() {
                                                         @Override
                                                         public void handle(Either<String, JsonArray> event) {
@@ -356,12 +358,14 @@ public class NoteController extends ControllerHelper {
                                                 idClasse,
                                                 idMatiere,
                                                 idPeriode,
+                                                typeClasse,
                                                 handler);
                                     } else {
                                         notesService.getNotesReleve(idEtablissement,
                                                 idClasse,
                                                 idMatiere,
                                                 null,
+                                                typeClasse,
                                                 handler);
                                     }
                                 }
@@ -651,6 +655,7 @@ public class NoteController extends ControllerHelper {
                 final String idClasse = request.params().get("idClasse");
                 final String idMatiere = request.params().get("idMatiere");
                 final String idEleve = request.params().get("idEleve");
+                final Integer typeClasse = null;
 
                 new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
                         new Handler<Boolean>() {
@@ -753,7 +758,7 @@ public class NoteController extends ControllerHelper {
                                                 }
                                             }
                                             addMoyenneFinalAndAppreciationPositionnementEleve(idEleve,idClasse,
-                                                    idMatiere, idEtablissement,request,result);
+                                                    idMatiere, idEtablissement, typeClasse, request,result);
 
                                         } else {
                                             JsonObject error = (new JsonObject()).put("error",
@@ -941,6 +946,7 @@ public class NoteController extends ControllerHelper {
 
     private void addMoyenneFinalAndAppreciationPositionnementEleve(final String idEleve, final String idClasse,
                                                                    final String idMatiere, final String idEtablissement,
+                                                                   final Integer typeClasse,
                                                                    final HttpServerRequest request,
                                                                    final  JsonObject result) {
         notesService.getColonneReleve(
@@ -979,7 +985,8 @@ public class NoteController extends ControllerHelper {
                                                                             .put("positionnements",
                                                                                     event.right().getValue());
                                                                     addPositionnementAutoEleve(idEleve, idClasse,
-                                                                            idMatiere, idEtablissement,request,result);
+                                                                            idMatiere, idEtablissement, typeClasse,
+                                                                            request,result);
                                                                 } else {
                                                                     JsonObject error = new JsonObject()
                                                                             .put("error",
@@ -1006,9 +1013,9 @@ public class NoteController extends ControllerHelper {
                 });
     }
     private void addPositionnementAutoEleve(final String idEleve, final String idClasse, final String idMatiere,
-                                            final String idEtablissement,
+                                            final String idEtablissement, final Integer typeClasse,
                                             final HttpServerRequest request,final  JsonObject result) {
-        notesService.getCompetencesNotesReleve( idEtablissement,idClasse, idMatiere,null,idEleve,
+        notesService.getCompetencesNotesReleve( idEtablissement,idClasse, idMatiere,null,idEleve, typeClasse,
                 new Handler<Either<String, JsonArray>>() {
                     @Override
                     public void handle(Either<String, JsonArray> event) {

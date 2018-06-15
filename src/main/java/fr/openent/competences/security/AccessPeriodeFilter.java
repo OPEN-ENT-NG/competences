@@ -21,6 +21,8 @@ package fr.openent.competences.security;
 
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
@@ -40,49 +42,44 @@ public class AccessPeriodeFilter implements ResourcesProvider {
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding, UserInfos user,
                           final Handler<Boolean> handler) {
-        switch (user.getType()) {
-            case "Teacher" : {
-                resourceRequest.pause();
-                MultiMap params = resourceRequest.params();
-                FilterUserUtils userUtils = new FilterUserUtils(user,null);
+        if(new WorkflowActionUtils().hasRight(user,
+                WorkflowActions.ADMIN_RIGHT.toString())) {
+            handler.handle(true);
+        }
+        else {
+            switch (user.getType()) {
+                case "Teacher": {
+                    resourceRequest.pause();
+                    MultiMap params = resourceRequest.params();
+                    FilterUserUtils userUtils = new FilterUserUtils(user, null);
 
-                if (!userUtils.validateUser(params.get("idUser")) &&
-                        !userUtils.validateStructure(params.get("idEtablissement"))) {
+                    if (!userUtils.validateUser(params.get("idUser")) &&
+                            !userUtils.validateStructure(params.get("idEtablissement"))) {
+                        handler.handle(false);
+                    }
+
+                    Long idPeriode;
+                    try {
+                        idPeriode = Long.parseLong(params.get("idPeriode"));
+                    } catch (NumberFormatException e) {
+                        log.error("Error : idPeriode must be a long object", e);
+                        handler.handle(false);
+                        return;
+                    }
+
+                    new FilterPeriodeUtils().validateStructure(params.get("idEtablissement"),
+                            idPeriode, new Handler<Boolean>() {
+                                @Override
+                                public void handle(Boolean isValid) {
+                                    resourceRequest.resume();
+                                    handler.handle(isValid);
+                                }
+                            });
+                }
+                break;
+                default: {
                     handler.handle(false);
                 }
-
-                Long idPeriode;
-                try {
-                    idPeriode = Long.parseLong(params.get("idPeriode"));
-                } catch(NumberFormatException e) {
-                    log.error("Error : idPeriode must be a long object", e);
-                    handler.handle(false);
-                    return;
-                }
-
-                new FilterPeriodeUtils().validateStructure(params.get("idEtablissement"),
-                        idPeriode, new Handler<Boolean>() {
-                            @Override
-                            public void handle(Boolean isValid) {
-                                resourceRequest.resume();
-                                handler.handle(isValid);
-                            }
-                        });
-            }
-            break;
-            case "Personnel" : {
-                resourceRequest.pause();
-
-                if(user.getFunctions().containsKey("DIR")){
-                    resourceRequest.resume();
-                    handler.handle(true);
-                }else{
-                    handler.handle(false);
-                }
-            }
-            break;
-            default: {
-                handler.handle(false);
             }
         }
     }

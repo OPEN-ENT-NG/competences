@@ -56,7 +56,7 @@ public class RemplacementController extends ControllerHelper {
 
     public RemplacementController() {
         remplacementService = new DefaultRemplacementService(Competences.COMPETENCES_SCHEMA, Competences.REL_PROFESSEURS_REMPLACANTS_TABLE);
-        devoirService = new DefaultDevoirService();
+        devoirService = new DefaultDevoirService(eb);
     }
 
 

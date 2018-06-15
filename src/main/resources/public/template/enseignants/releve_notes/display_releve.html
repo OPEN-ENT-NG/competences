@@ -151,9 +151,11 @@
                             </thead>
                             <tbody>
                             <tr ng-repeat="eleve in releveNote.classe.eleves.all">
-                                <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]"
+                                <td class="col1 text-overflow"
+                                    ng-class="{'deletedStudent': eleve.deleteDate !== null}"
+                                    tooltip="[[eleve.lastName]] [[eleve.firstName]]"
                                     ng-click="getEleveInfo(eleve)">
-                                    [[eleve.lastName]] [[eleve.firstName]]
+                                    [[::eleve.lastName]] [[::eleve.firstName]]
                                 </td>
                                 <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir"
                                     ng-repeat="evaluation in eleve.evaluations.all"
@@ -242,8 +244,11 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr ng-repeat="eleve in releveNote.classe.eleves.all">
-                                <td class="col1 text-overflow" tooltip="[[eleve.lastName]] [[eleve.firstName]]"
+                            <tr
+                                    ng-repeat="eleve in releveNote.classe.eleves.all">
+                                <td class="col1 text-overflow"
+                                    ng-class="{'deletedStudent': eleve.deleteDate !== null}"
+                                    tooltip="[[eleve.lastName]] [[eleve.firstName]]"
                                     ng-click="getEleveInfo(eleve)">
                                     [[eleve.lastName]] [[eleve.firstName]]
                                 </td>

@@ -279,7 +279,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.currentDevoir.competences.sync().then(() => {
                                 utils.safeApply($scope);
                             });
-                            $scope.currentDevoir.eleves.sync().then(() => {
+                            $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode).then(() => {
                                 //$scope.$broadcast('initHeaderColumn');
                                 var _evals = [];
                                 for (var i = 0; i < $scope.currentDevoir.eleves.all.length; i++) {

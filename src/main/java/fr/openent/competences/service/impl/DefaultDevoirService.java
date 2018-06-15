@@ -21,7 +21,10 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -48,11 +51,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private DefaultUtilsService utilsService;
     private DefaultNoteService noteService;
+    private EventBus eb;
 
-    public DefaultDevoirService() {
+    public DefaultDevoirService(EventBus eb) {
         super(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
-        utilsService = new DefaultUtilsService();
-        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
+        utilsService = new DefaultUtilsService(eb);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
     }
 
     public StringBuilder formatDate (String date) {
@@ -131,8 +135,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
 
         query.append( "SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement,")
-                .append(" devoir.coefficient, devoir.id_matiere, devoir.diviseur, devoir.is_evaluated,")
-                .append(" rel_periode.type AS periodeType, rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*")
+                .append(" devoir.coefficient,devoir.id_matiere,devoir.diviseur, devoir.is_evaluated,devoir.id_periode,")
+                .append(" rel_periode.type AS periodeType,rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*")
                 .append(" FROM notes.devoirs devoir")
                 .append(" INNER JOIN viesco.rel_type_periode rel_periode on rel_periode.id = devoir.id_periode")
                 .append(" NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" )
@@ -805,8 +809,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
 
         // Si l'utilisateur est null c'est qu'on essait de mettre à jour le taux de completude des devoirs
-        boolean isChefEtab = (user!= null)?("Personnel".equals(user.getType())  &&
-                user.getFunctions().containsKey("DIR")):true;
+        boolean isChefEtab = (user!= null)?(new WorkflowActionUtils().hasRight(user,
+                WorkflowActions.ADMIN_RIGHT.toString())):true;
 
         query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".notes,"+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )
@@ -870,8 +874,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         StringBuilder query = new StringBuilder();
 
         // Si l'utilisateur est null c'est qu'on essait de mettre à jour le taux de completude des devoirs
-        boolean isChefEtab = (user!= null)?("Personnel".equals(user.getType())  &&
-                user.getFunctions().containsKey("DIR")):true ;
+        boolean isChefEtab = (user!= null)?(new WorkflowActionUtils().hasRight(user,
+                WorkflowActions.ADMIN_RIGHT.toString())):true ;
 
         query.append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations , devoirs.id, rel_devoirs_groupes.id_groupe ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs, "+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )

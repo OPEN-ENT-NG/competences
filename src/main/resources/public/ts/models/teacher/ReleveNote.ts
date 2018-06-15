@@ -36,18 +36,22 @@ export class ReleveNote extends  Model implements IModel {
     get api() {
         return {
             get: `/competences/releve?idEtablissement=${this.structure.id}&idClasse=${this.idClasse}&idMatiere=${
-                this.idMatiere}`,
-            GET_MOYENNE_ANNEE: `/competences/releve/annee/classe?idEtablissement=${this.structure.id}&idClasse=${this.idClasse}&idMatiere=${
-                this.idMatiere}`,
+                this.idMatiere}&typeClasse=${this.classe.type_groupe}`,
+            GET_MOYENNE_ANNEE: `/competences/releve/annee/classe?idEtablissement=${this.structure.id}&idClasse=${
+                this.idClasse}&idMatiere=${this.idMatiere}&typeClasse=${this.classe.type_groupe}`,
             GET_INFO_PERIODIQUE: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
-                this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}`,
-            POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
-            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`,
+                this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}&typeClasse=${
+                this.classe.type_groupe}`,
             GET_ELEMENT_PROGRAMME_DOMAINES: `/competences/element/programme/domaines`,
             GET_ELEMENT_PROGRAMME_SOUS_DOMAINES: `/competences/element/programme/sous/domaines`,
             GET_ELEMENT_PROGRAMME_PROPOSITIONS: `/competences/element/programme/propositions`,
             GET_CONVERSION_TABLE: `/competences/competence/notes/bilan/conversion?idEtab=${
-                this.idEtablissement}&idClasse=${this.idClasse}`
+                this.idEtablissement}&idClasse=${this.idClasse}`,
+
+
+            POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
+            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`
+
         }
     }
 
@@ -64,7 +68,7 @@ export class ReleveNote extends  Model implements IModel {
         this.structure = evaluations.structure;
         this.matiere = _.findWhere(evaluations.structure.matieres.all, {id: this.idMatiere});
         let c = _.findWhere(evaluations.structure.classes.all, {id: this.idClasse});
-        this.classe = new Classe({id: c.id, name: c.name});
+        this.classe = new Classe({id: c.id, name: c.name, type_groupe: c.type_groupe});
 
         this.collection(Devoir, {
             sync: () => {
@@ -324,6 +328,8 @@ export class ReleveNote extends  Model implements IModel {
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse(),
                 this.getConversionTable(),this.syncMoyenneAnnee()]);
             this.syncAppreciationClasse();
+            this.periode = _.findWhere(this.classe.periodes.all, {id_type : this.idPeriode});
+            this.classe = this.classe.filterEvaluableEleve(this.periode);
             let _notes, _devoirs, _eleves, _moyennesFinales, _appreciations, _competencesNotes;
             if (this._tmp) {
                 _notes = this._tmp.notes;
@@ -336,7 +342,6 @@ export class ReleveNote extends  Model implements IModel {
             }
             this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated: true});
             this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined) ? false : true;
-
             _.each(this.classe.eleves.all, (eleve) => {
                 // chargement des  competencesNotes de l'élève
                 let competencesNotesEleve = _.where(_competencesNotes, {id_eleve: eleve.id});

@@ -109,7 +109,7 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
     @Override
     public void getIdCycleWithIdEleve(String idEleve,final Handler<Either<String,Integer>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "classe.getClasseByEleve")
+                .put("action", "classe.getClasseIdByEleve")
                 .put("idEleve", idEleve);
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -118,7 +118,8 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
                 JsonObject body = message.body();
 
                 if ("ok".equals(body.getString("status"))) {
-                    utilsService.getCycle(body.getJsonObject("result").getJsonObject("c").getJsonObject("data").getString("id"), new Handler<Either<String, JsonObject>>() {
+                    utilsService.getCycle(body.getJsonObject("result").getJsonObject("c").getJsonObject("data")
+                            .getString("id"), new Handler<Either<String, JsonObject>>() {
                         @Override
                         public void handle(Either<String, JsonObject> idCycleObject) {
                             if (idCycleObject.isRight()) {

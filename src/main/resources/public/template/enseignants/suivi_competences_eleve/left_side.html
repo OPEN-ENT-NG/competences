@@ -29,7 +29,7 @@
     <section>
         <label class="select" >
             <select ng-model="search.classe"
-                    ng-change="syncPeriode(search.classe.id); search.periode = '*'; synchronizeStudents(search.classe.id);selectSuivi(route.current.$$route.originalPath);"
+                    ng-change="synchronizeStudents(search.classe.id);selectSuivi(true);"
                     ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
                 <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
             </select>
@@ -40,14 +40,14 @@
             <select ng-model="search.periode"
                     ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
                     ng-change="changeContent()"
-                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all ">
+                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all  track by periode.id_type ">
                 <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
             </select>
         </label>
     </section>
     <section ng-if="route.current.$$route.originalPath === '/competences/eleve'">
         <label class="select"
-               ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
+               ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
             <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
                     ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
                     ng-change="changeContent()">

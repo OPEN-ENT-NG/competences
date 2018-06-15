@@ -85,15 +85,31 @@ export class Classe extends Model {
     public static get_type_groupe_libelle = (classe) => {
         let libelleClasse;
 
-            if ( classe.type_groupe === Classe.type.CLASSE) {
-                libelleClasse = Classe.libelle.CLASSE;
-            } else if ( classe.type_groupe === Classe.type.GROUPE) {
-                libelleClasse = Classe.libelle.GROUPE;
-            }else if ( classe.type_groupe === Classe.type.GROUPE_MANUEL) {
-                libelleClasse = Classe.libelle.GROUPE_MANUEL;
-            }
-            return libelleClasse;
+        if ( classe.type_groupe === Classe.type.CLASSE) {
+            libelleClasse = Classe.libelle.CLASSE;
+        } else if ( classe.type_groupe === Classe.type.GROUPE) {
+            libelleClasse = Classe.libelle.GROUPE;
+        }else if ( classe.type_groupe === Classe.type.GROUPE_MANUEL) {
+            libelleClasse = Classe.libelle.GROUPE_MANUEL;
+        }
+        return libelleClasse;
 
     }
+
+    filterEvaluableEleve (periode) {
+        let res = _.omit(this, 'eleves');
+
+        if (periode !== undefined) {
+            res.eleves = {
+                all: _.reject(this.eleves.all, function (eleve) {
+                    return !eleve.isEvaluable(periode);
+                })
+            };
+        }
+        else {
+            res.eleves = this.eleves;
+        }
+        return res;
+    };
 
 }

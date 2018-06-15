@@ -25,6 +25,7 @@ import fr.openent.competences.security.AccessSuiviCompetenceFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.impl.DefaultCompetenceNoteService;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -35,7 +36,6 @@ import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -54,12 +54,13 @@ import static org.entcore.common.http.response.DefaultResponseHandler.*;
 public class CompetenceNoteController extends ControllerHelper {
 
     private final CompetenceNoteService competencesNotesService;
-    private EventBus eb;
 
 
     public CompetenceNoteController(EventBus eb) {
         this.eb = eb;
-        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,
+                Competences.COMPETENCES_NOTES_TABLE);
+
     }
 
     /**
@@ -90,8 +91,8 @@ public class CompetenceNoteController extends ControllerHelper {
      */
     @Post("/competence/note")
     @ApiDoc("Créé une note correspondante à une compétence pour un utilisateur donné")
-	@SecuredAction(value = "", type = ActionType.RESOURCE)
-	@ResourceFilter(CreateEvaluationWorkflow.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateEvaluationWorkflow.class)
     public void create(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -252,64 +253,7 @@ public class CompetenceNoteController extends ControllerHelper {
             } else {
                 idPeriode = null;
             }
-
-            // On va récupérer les élèves de la classe
-            List<String> vArrayProfils = new ArrayList<String>();
-            vArrayProfils.add(mProfileStudent);
-            JsonArray types = new fr.wseduc.webutils.collections.JsonArray(vArrayProfils);
-
-            // Récupération des compétences notes d'une classe
-            if(typeClasse == 0) {
-                JsonObject action = new JsonObject()
-                        .put("action", "classe.getEleveClasse")
-                        .put("idClasse", idClasse);
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        List<String> idEleves = new ArrayList<String>();
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray queryResult = body.getJsonArray("results");
-                            if(queryResult != null) {
-                                for (int i =0; i< queryResult.size(); i++) {
-                                    idEleves.add(((JsonObject)queryResult.getJsonObject(i)).getString("id"));
-                                }
-                            }
-                            callCompetencesNotesService(idEleves, idPeriode, request);
-                        } else {
-
-                            log.error("Error :can not get students of groupe : " + idClasse);
-                        }
-                    }
-                }));
-            }
-
-            // Récupération des compétences notes d'un groupe d'enseignement ou d'un groupe manuel
-            if(typeClasse == 1 || typeClasse == 2 ){
-                JsonObject action = new JsonObject()
-                        .put("action", "groupe.listUsersByGroupeEnseignementId")
-                        .put("groupEnseignementId", idClasse)
-                        .put("profile", mProfileStudent);
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> res) {
-                        JsonObject body = res.body();
-                        List<String> idEleves = new ArrayList<String>();
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray queryResult = body.getJsonArray("results");
-                            if(queryResult != null) {
-                                for (int i =0; i< queryResult.size(); i++) {
-                                    idEleves.add(((JsonObject)queryResult.getJsonObject(i)).getString("id"));
-                                }
-                            }
-                            callCompetencesNotesService(idEleves, idPeriode, request);
-                        } else {
-
-                            log.error("Error :can not get students of groupe : " + idClasse);
-                        }
-                    }
-                }));
-            }
+            callGetCompetenceNote(idClasse, idPeriode, typeClasse,   null, request);
 
         } else {
             Renders.badRequest(request, "Invalid parameters");
@@ -340,67 +284,9 @@ public class CompetenceNoteController extends ControllerHelper {
                 idPeriode = null;
             }
 
-            // On va récupérer les élèves de la classe
-            List<String> vArrayProfils = new ArrayList<String>();
-            vArrayProfils.add(mProfileStudent);
-            JsonArray types = new fr.wseduc.webutils.collections.JsonArray(vArrayProfils);
-
-            // Récupération des compétences notes d'une classe
-            if(typeClasse == 0) {
-                JsonObject action = new JsonObject()
-                        .put("action", "classe.getEleveClasse")
-                        .put("idClasse", idClasse);
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        List<String> idEleves = new ArrayList<String>();
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray queryResult = body.getJsonArray("results");
-                            if(queryResult != null) {
-                                for (int i =0; i< queryResult.size(); i++) {
-                                    idEleves.add(((JsonObject)queryResult.getJsonObject(i)).getString("id"));
-                                }
-                            }
-                            callCompetencesNotesDomaineService(idEleves, idPeriode, idDomaines, request);
-                        } else {
-
-                            log.error("Error :can not get students of groupe : " + idClasse);
-                        }
-                    }
-                }));
-            }
-
-            // Récupération des compétences notes d'un groupe d'enseignement ou d'un groupe manuel
-            if(typeClasse == 1 || typeClasse == 2){
-                JsonObject action = new JsonObject()
-                        .put("action", "group.listUsersByGroupeEnseignementId")
-                        .put("groupEnseignementId", idClasse)
-                        .put("profile", mProfileStudent);
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        List<String> idEleves = new ArrayList<String>();
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray queryResult = body.getJsonArray("results");
-                            if(queryResult != null) {
-                                for (int i =0; i< queryResult.size(); i++) {
-                                    idEleves.add(((JsonObject)queryResult.getJsonObject(i)).getString("id"));
-                                }
-                            }
-                            callCompetencesNotesDomaineService(idEleves, idPeriode, idDomaines, request);
-                        } else {
-
-                            log.error("Error :can not get students of groupe : " + idClasse);
-                        }
-                    }
-                }));
-            }
-
-        } else {
-            Renders.badRequest(request, "Invalid parameters");
+            callGetCompetenceNote(idClasse, idPeriode, typeClasse, idDomaines, request);
         }
+
     }
 
 
@@ -439,8 +325,8 @@ public class CompetenceNoteController extends ControllerHelper {
 
     @Post("/competence/notes")
     @ApiDoc("Créer une liste de compétences notes pour un devoir donné")
-	@SecuredAction(value = "", type = ActionType.RESOURCE)
-	@ResourceFilter(CreateEvaluationWorkflow.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateEvaluationWorkflow.class)
     public void createCompetencesNotesDevoir (final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
@@ -492,5 +378,36 @@ public class CompetenceNoteController extends ControllerHelper {
         }
 
         competencesNotesService.dropCompetencesNotesDevoir(oIdsJsonArray, arrayResponseHandler(request));
+    }
+
+    private void callGetCompetenceNote(String idClasse, Long idPeriode, Integer typeClasse,  List<String> idDomaines,
+                                      final HttpServerRequest request) {
+        new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(idClasse,idPeriode, typeClasse,
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isRight()) {
+                            JsonArray queryResult = event.right().getValue();
+                            List<String> idEleves = new ArrayList<String>();
+
+                            if(queryResult != null) {
+                                for (int i =0; i< queryResult.size(); i++) {
+                                    idEleves.add(queryResult.getString(i));
+                                }
+                            }
+                            if(idDomaines != null) {
+                                callCompetencesNotesDomaineService(idEleves, idPeriode, idDomaines, request);
+                            }
+                            else {
+                                callCompetencesNotesService(idEleves, idPeriode, request);
+                            }
+
+                        } else {
+                            Renders.notFound(request,
+                                    "Error :can not get CompNotes of groupe : " + idClasse );
+                            log.error("Error :can not get compNotes of groupe : " + idClasse);
+                        }
+                    }
+                });
     }
 }

@@ -23,6 +23,8 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.openent.competences.utils.UtilsConvert;
@@ -93,7 +95,7 @@ public class ExportPDFController extends ControllerHelper {
     private DispenseDomaineEleveService dispenseDomaineEleveService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
-        devoirService = new DefaultDevoirService();
+        devoirService = new DefaultDevoirService(eb);
         utilsService = new DefaultUtilsService();
         bfcService = new DefaultBFCService(eb);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
@@ -1186,7 +1188,8 @@ public class ExportPDFController extends ControllerHelper {
 
                                             JsonObject action = new JsonObject()
                                                     .put("action", "classe.getEleveClasse")
-                                                    .put("idClasse", devoirInfos.getString("id_groupe"));
+                                                    .put("idClasse", devoirInfos.getString("id_groupe"))
+                                                    .put("idPeriode", devoirInfos.getInteger("id_periode"));
 
                                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
@@ -1390,7 +1393,10 @@ public class ExportPDFController extends ControllerHelper {
                                                                     result.put("byEleves", true);
                                                                     JsonObject action = new JsonObject()
                                                                             .put("action", "classe.getEleveClasse")
-                                                                            .put("idClasse", devoirInfos.getString("id_groupe"));
+                                                                            .put("idClasse", devoirInfos
+                                                                                    .getString("id_groupe"))
+                                                                            .put("idPeriode", devoirInfos
+                                                                                    .getInteger("id_periode"));
 
                                                                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                         @Override
@@ -1681,7 +1687,8 @@ public class ExportPDFController extends ControllerHelper {
                                 } else {
                                     final JsonObject action = new JsonObject()
                                             .put("action", "classe.getEleveClasse")
-                                            .put("idClasse", finalIdClasse);
+                                            .put("idClasse", finalIdClasse)
+                                            .put("idPeriode", finalIdPeriode);
                                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                         @Override
                                         public void handle(Message<JsonObject> message) {
@@ -1808,10 +1815,20 @@ public class ExportPDFController extends ControllerHelper {
                                     UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
                                         @Override
                                         public void handle(final UserInfos user) {
-                                            final boolean isChefEtab = (user != null) ? ("Personnel".equals(user.getType()) && user.getFunctions().containsKey("DIR")) : true;
+
+                                            final boolean isChefEtab;
+                                            if(user != null) {
+                                              isChefEtab =  new WorkflowActionUtils().hasRight(user,
+                                                      WorkflowActions.ADMIN_RIGHT.toString());
+                                            }
+                                            else {
+                                                isChefEtab = false;
+                                            }
+
                                             if ((user != null) || isChefEtab) {
                                                 //idVisibility = 1 pour la visibilité de la moyBFC
-                                                bfcService.getVisibility(idEtablissement,1, user, new Handler<Either<String, JsonArray>>() {
+                                                bfcService.getVisibility(idEtablissement,1,
+                                                        user, new Handler<Either<String, JsonArray>>() {
                                                     @Override
                                                     public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                                                         if (stringJsonArrayEither.isRight() || isChefEtab) {
@@ -1852,7 +1869,8 @@ public class ExportPDFController extends ControllerHelper {
 
                                                                             final JsonObject action = new JsonObject()
                                                                                     .put("action", "classe.getEleveClasse")
-                                                                                    .put("idClasse", idClasse);
+                                                                                    .put("idClasse", idClasse)
+                                                                                    .put("idPeriode", finalIdPeriode);
 
                                                                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                                 @Override
