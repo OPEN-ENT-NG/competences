@@ -2531,6 +2531,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.calculerMoyenneEleve = function (eleve, devoirs) {
             eleve.getMoyenne(devoirs).then(() => {
+                if(!eleve.moyenneFinaleIsSet){
+                    eleve.moyenneFinale = eleve.moyenne;
+                }
                 utils.safeApply($scope);
             });
         };
@@ -3361,6 +3364,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.initMoyenneFinale = function (eleve) {
             if (eleve.moyenneFinale === undefined || eleve.moyenneFinale === null) {
                 eleve.moyenneFinale = eleve.moyenne;
+                eleve.moyenneFinaleIsSet = false;
+            }else{
+                eleve.moyenneFinaleIsSet = true;
             }
 
         };
@@ -3411,6 +3417,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     || eleve.moyenneFinale === "") {
                     eleve.oldMoyenneFinale = eleve.moyenneFinale;
                     $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
+                        eleve.moyenneFinaleIsSet = true;
                         if(updateHistorique){
                             $scope.updateHistorique(eleve, 'moyenneFinale');
                         }

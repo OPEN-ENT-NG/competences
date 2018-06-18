@@ -47,10 +47,10 @@ export class Eleve extends Model {
                     } else {
                         this.moyenne = "";
                     }
+                    if(resolve && typeof(resolve) === 'function'){
+                        resolve();
+                    }
                 }.bind(this));
-                if(resolve && typeof(resolve) === 'function'){
-                    resolve();
-                }
             }
         });
     }

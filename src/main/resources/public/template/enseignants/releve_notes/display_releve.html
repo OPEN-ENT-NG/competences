@@ -194,7 +194,7 @@
                                     data-label="[[translate('average.final')]]">
                                     <input ng-focus="focusMe($event); getEleveInfo(eleve);"
                                            class="input-note"
-                                           ng-class="{changedAverage: eleve.moyenne !== eleve.moyenneFinale}"
+                                           ng-class="{changedAverage: eleve.moyenneFinaleIsSet}"
                                            type="text"
                                            ng-disabled="disabledSaisieMoyenne()"
                                            ng-blur="saveMoyenneFinaleEleve(eleve,false)"
