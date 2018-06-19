@@ -133,6 +133,7 @@
   "evaluations.bilan.fin.cycle.title":"Bilan de fin de cycle",
   "evaluations.bilan.competence.title":"Bilan de compétences",
   "evaluations.bilan.fin.cycle.tilte.synthese":"Synthèse du bilan de fin cycle",
+  "evaluation.bilan.fin.cycle.placeholder.synthese":"Saisissez la synthèse de l'élève",
   "evaluation.bilan.fin.cycle.save.synthese":"Enregistrer la synthèse",
   "evaluation.bilan.fin.cycle.successCreateSynthese":"La synthèse a été enregistrée.",
   "evaluation.bilan.fin.cycle.successUpdateSynthese":"La synthèse de l'élève a été modifiée.",
