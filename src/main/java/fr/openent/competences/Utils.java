@@ -217,4 +217,56 @@ public class Utils {
             }
         }));
     }
+
+    /**
+     *
+     * @param eb
+     * @param idStructure Identifiant de la structure dont on souhaite recuperer les périodes
+     * @param idClasses Identifiants des classes dont on souhaite recuperer les periodes
+     * @param handler Handler contenant pour chaque classe
+     *                la date de creation du BFC = date de début la première periode de l'annee scolaire en cours
+     *                la date verrou du BFC = date de la fin de la dernière periode de l'année scolaire en cours
+     *                ces dates sont necessaires pour export XML du LSU
+     */
+    public static void getDatesCreationVerrouByClasses(EventBus eb, final String idStructure, final List<String> idClasses, final Handler<Either<String,Map<String,JsonObject>>> handler){
+        JsonObject action = new JsonObject()
+                .put("action","periode.getDatesDtFnAnneeByClasse")
+                .put("idEtablissement", idStructure)
+                .put("idClasses",new fr.wseduc.webutils.collections.JsonArray(idClasses));
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                Map<String,JsonObject> datesCreationVerrouByClasse = new HashMap<String,JsonObject>();
+                if("ok".equals(body.getString("status"))) {
+                    JsonArray requestDateByClasse = body.getJsonArray("results");
+                    if(requestDateByClasse.size() > 0 && requestDateByClasse != null){
+                        for(int i = 0; i < requestDateByClasse.size(); i++){
+                            JsonObject jsonObjectRep = requestDateByClasse.getJsonObject(i);
+                            if(jsonObjectRep.containsKey("id_classe")&&
+                                    jsonObjectRep.containsKey("date_debut") && jsonObjectRep.containsKey("date_fin")) {
+                                String idClasse = jsonObjectRep.getString("id_classe");
+                                JsonObject dates = new JsonObject();
+                                dates.put("date_creation", jsonObjectRep.getString("date_debut"));
+                                dates.put("date_verrou", jsonObjectRep.getString("date_fin"));
+                                datesCreationVerrouByClasse.put(idClasse, dates);
+                            }else{
+                                handler.handle(new Either.Left<String,Map<String,JsonObject>>("Cette classe n'a pas de dates de debut et/ou de fin de periode : "+ jsonObjectRep.getString("id_classe")));
+                                log.error("getDatesCreationVerrouByClasses : cette classe n'a pas de dates de debut et/ou de fin de periode : "+jsonObjectRep.getString("id_classe"));
+                            }
+                        }
+                    }else{
+                        handler.handle(new Either.Left<>("Les classes de cet établissement n'ont pas de dates de début et de fin de periode : "+idStructure));
+                        log.error("getDatesCreationVerrouByClasses : " +
+                                "Les classes de cet établissement n'ont pas de dates de début et de fin de periode : "+idStructure);
+                    }
+                    handler.handle(new Either.Right<String,Map<String,JsonObject>>(datesCreationVerrouByClasse));
+                } else {
+                    handler.handle(new Either.Left<String, Map<String,JsonObject>>(body.getString("message")));
+                    log.error("getDatesCreationVerrouByClasses : " + body.getString("message"));
+                }
+            }
+        }) );
+
+    }
 }

@@ -84,8 +84,21 @@ public class Competences extends BaseServer {
     public static final Number BFC_AVERAGE_VISIBILITY_NONE = 0;
     public static final Number BFC_AVERAGE_VISIBILITY_FOR_ADMIN_ONLY = 1;
     public static final Number BFC_AVERAGE_VISIBILITY_FOR_ALL = 2;
-    public static final Integer POSITIONNEMENT_ZERO = 0;
 
+    //LSU
+    public static final Integer POSITIONNEMENT_ZERO = 0;
+    public static final String LIEN_PERE = "PERE";
+    public static final String LIEN_MERE = "MERE";
+    public static final String LIEN_TUTEUR = "TUTEUR";
+    public static final String LIEN_FAMILLE = "AUTRE MEMBRE DE LA FAMILLE";
+    public static final String LIEN_SOCIALE = "AIDE SOCIALE A L'ENFANT";
+    public static final String LIEN_AUTRE = "AUTRE LIEN";
+    public static final String LIEN_ELEVE = "ELEVE LUI-MEME";
+    public static final String LIEN_FRATRIE =  "FRATRIE";
+    public static final String LIEN_ASCENDANT = "ASCENDANT";
+    public static final String LIEN_EDUCATEUR = "EDUCATEUR";
+    public static final String LIEN_ASSISTANT_FAMILIAL =  "ASSISTANT FAMILIAL";
+    public static final String LIEN_GARDE_ENFANT = "GARDE d'ENFANT";
 
     @Override
 	public void start() throws Exception {
@@ -94,6 +107,7 @@ public class Competences extends BaseServer {
         COMPETENCES_SCHEMA = config.getString("db-schema");
         VSCO_SCHEMA = config.getString("vsco-schema");
         LSUN_CONFIG = config.getJsonObject("lsun");
+
 
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender notification = emailFactory.getSender();

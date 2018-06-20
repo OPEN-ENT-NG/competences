@@ -8,9 +8,11 @@
 
 package fr.openent.competences.bean.lsun;
 
+import fr.openent.competences.Competences;
 import io.vertx.core.json.JsonArray;
 
 import javax.xml.bind.annotation.*;
+import java.util.regex.Pattern;
 
 
 /**
@@ -130,14 +132,17 @@ public class  Responsable {
     /**
      * Sets the value of the civilite property.
      *
-     * @param civilitNeo4j allowed object is
+     * @param civiliteNeo4j allowed object is
      */
-    public void setCivilite(String civilitNeo4j) {
+    public void setCivilite(String civiliteNeo4j) {
+        //expression regex vérifie que civiliteNeo4j commence par M ou m et contient un seul M ou m
+        String regex = Competences.LSUN_CONFIG.getString("civilite_regex");
 
-        if(civilitNeo4j != null) {
-            if (civilitNeo4j.toUpperCase().equals("MME") || civilitNeo4j.toUpperCase().equals("MME.")) {
+        if(civiliteNeo4j != null) {
+            boolean isCiviliteMadame = Pattern.matches(regex,civiliteNeo4j);
+            if (isCiviliteMadame) {
                 this.civilite = Civilite.MME;
-            } else if (civilitNeo4j.toUpperCase().equals("M") || civilitNeo4j.toUpperCase().equals("M.")) {
+            } else {
                 this.civilite = Civilite.M;
             }
         }
@@ -145,9 +150,9 @@ public class  Responsable {
         //si civilite pas trouvee, on regarde à partir des liens de parente
         if(this.civilite == null) {
             if(this.lienParente != null) {
-                if(this.lienParente.toUpperCase().equals("PERE")) {
+                if(this.lienParente.equals(Competences.LIEN_PERE)) {
                     this.civilite = Civilite.M;
-                } else if(this.lienParente.toUpperCase().equals("MERE")) {
+                } else if(this.lienParente.equals(Competences.LIEN_MERE)) {
                     this.civilite = Civilite.MME;
                 }
             }
@@ -264,40 +269,40 @@ public class  Responsable {
 
         switch (codeParent) {
             case "20":
-                this.lienParente = "PERE";
+                this.lienParente = Competences.LIEN_PERE;
                 break;
             case "10":
-                this.lienParente = "MERE";
+                this.lienParente = Competences.LIEN_MERE;
                 break;
             case "50":
-                this.lienParente = "TUTEUR";
+                this.lienParente = Competences.LIEN_TUTEUR;
                 break;
             case "39":
-                this.lienParente ="AUTRE MEMBRE DE LA FAMILLE";
+                this.lienParente = Competences.LIEN_FAMILLE;
                 break;
             case "51":
-                this.lienParente = "AIDE SOCIALE A L'ENFANT";
+                this.lienParente = Competences.LIEN_SOCIALE;
                 break;
             case "90":
-                this.lienParente = "AUTRE LIEN";
+                this.lienParente = Competences.LIEN_AUTRE;
                 break;
             case "70":
-                this.lienParente = "ELEVE LUI-MEME";
+                this.lienParente = Competences.LIEN_ELEVE;
                 break;
             case "37":
-                this.lienParente = "FRATRIE";
+                this.lienParente = Competences.LIEN_FRATRIE;
                 break;
             case "38":
-                this.lienParente = "ASCENDANT";
+                this.lienParente = Competences.LIEN_ASCENDANT;
                 break;
             case "41":
-                this.lienParente = "EDUCATEUR";
+                this.lienParente = Competences.LIEN_EDUCATEUR;
                 break;
             case "42":
-                this.lienParente = "ASSISTANT FAMILIAL";
+                this.lienParente = Competences.LIEN_ASSISTANT_FAMILIAL;
                 break;
             case "43":
-                this.lienParente = "GARDE d'ENFANT";
+                this.lienParente = Competences.LIEN_GARDE_ENFANT;
                 break;
             default:
                 break;
