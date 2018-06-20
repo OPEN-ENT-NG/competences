@@ -20,7 +20,9 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.service.TransitionService;
 import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultTransitionService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -32,6 +34,8 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
@@ -40,6 +44,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -50,9 +55,11 @@ import static org.entcore.common.http.response.DefaultResponseHandler.leftToResp
 public class UtilsController extends ControllerHelper {
 
     private final UtilsService utilsService;
+    private final TransitionService transitionService;
 
     public UtilsController() {
         utilsService = new DefaultUtilsService();
+        transitionService = new DefaultTransitionService() ;
     }
 
 
@@ -77,6 +84,9 @@ public class UtilsController extends ControllerHelper {
             }
         });
     }
+
+
+
 
     /**
      * Retourne la liste des enfants pour un utilisateur donné
@@ -119,6 +129,15 @@ public class UtilsController extends ControllerHelper {
                 }
             }
         });
+    }
+
+    @Get("/transition/annee")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SuperAdminFilter.class)
+    @ApiDoc("Met à jour le pourcentage réalisé pour chaque devoir")
+    public void transition(final HttpServerRequest request) {
+        final List<String> structureIds = request.params().getAll("structureId");
+        transitionService.transitionAnnee(eb,structureIds, arrayResponseHandler(request));
     }
 
     @Put("/link/groupes/cycles")

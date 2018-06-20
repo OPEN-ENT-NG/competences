@@ -1,6 +1,7 @@
 package fr.openent.competences;
 
 import fr.openent.competences.controllers.*;
+import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.wseduc.webutils.email.EmailSender;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
@@ -67,6 +68,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
     public static final String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
     public static final String DEVOIR_TABLE = "devoirs";
+    public static final String TRANSITION_TABLE = "transition";
     public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
     public static final String SCHEMA_COMPETENCE_CREATE = "eval_createCompetence";
     public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
@@ -138,6 +140,8 @@ public class Competences extends BaseServer {
 		addController(new UtilsController());
 
 		addController(new EventBusController());
+
+        setRepositoryEvents(new CompetenceRepositoryEvents(eb));
 
     }
 

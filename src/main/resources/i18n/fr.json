@@ -381,5 +381,7 @@
   "evaluations.dispense.domaine.eleve.delete.err":"erreur lors de la suppression de la dispense du domaine pour un élève",
   "evaluation.dispense.eleve":"Dispenser l'élève",
   "evaluation.not.dispense.eleve":"Ne pas Dispenser l'élève",
-  "evaluations.positionnement.calculee":"Positionnement calculé"
+  "evaluations.positionnement.calculee":"Positionnement calculé",
+  "transition.bilan.annee": "NC",
+  "transition.bilan.annee.classe": "Bilan Année classe : "
 }
