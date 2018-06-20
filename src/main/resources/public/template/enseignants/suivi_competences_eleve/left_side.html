@@ -18,7 +18,7 @@
   -->
 <div class="criteres fiche diffsize cell card twelve criterion" ng-class="{opened : opened.criteres === true}">
     <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
-    <div class="header">
+    <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
         <h2><i18n>viescolaire.utils.criterion</i18n></h2>
     </div>
     <section ng-if="evaluations.structures.all.length > 1">
@@ -88,7 +88,7 @@
             || evaluations.structure.moyenneVisible===2"
          class="fiche cell card twelve criterion notes-help" ng-class="{opened : opened.legend === true}">
         <span class="plus-input" ng-click="openLeftMenu('opened.legend', opened.legend);"></span>
-        <div class="legend"
+        <div class="legend" ng-click="openLeftMenu('opened.legend', opened.legend);"
              ng-include="'/competences/public/template/enseignants/informations/display_competences_legende.html'">
         </div>
     </div>
