@@ -60,6 +60,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Matcher m = p.matcher(date);
         if (!m.matches()) {
             StringBuilder dateFormated = new StringBuilder();
+            String[] splitedDate = date.split("/");
+            if(splitedDate.length < 3) {
+                log.error("Date " + date + " cannot be formated");
+                return new StringBuilder(date);
+            }
+
             dateFormated.append(date.split("/")[2]).append('-');
             dateFormated.append(date.split("/")[1]).append('-');
             dateFormated.append(date.split("/")[0]);
