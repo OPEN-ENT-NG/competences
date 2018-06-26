@@ -95,7 +95,7 @@ public interface DevoirService extends CrudService {
     public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long
             idPeriode, Handler<Either<String, JsonArray>> handler);
 
-    public void listDevoirs(String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
+    public void listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
                             String[] idEtablissement, String[] idMatieres, Boolean hasCompetences,
                             Handler<Either<String, JsonArray>> handler);
 

@@ -344,7 +344,7 @@ public class DefaultExportService implements ExportService {
         Collections.addAll(idClasseAndFunctionnalGroups, idFunctionalGroupes);
 
 
-        devoirService.listDevoirs(idClasseAndFunctionnalGroups.toArray(new String[0]), null,
+        devoirService.listDevoirs(idEleve, idClasseAndFunctionnalGroups.toArray(new String[0]), null,
                 idPeriodeType != null ? new Long[]{idPeriodeType} : null,
                 idEtablissement != null ? new String[]{idEtablissement} : null,
                 idMatieres != null ? idMatieresTab : null, null,
