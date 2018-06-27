@@ -71,7 +71,7 @@ export class Eleve extends Model {
     }
 
     isEvaluable(periode) {
-        if (this.deleteDate === null) {
+        if (this.deleteDate === null || this.deleteDate === undefined) {
             return true;
         }
         else if(periode === undefined) {

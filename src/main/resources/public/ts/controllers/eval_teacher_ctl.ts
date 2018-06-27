@@ -3057,6 +3057,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.enseignants = evaluations.structure.enseignants;
             $scope.usePerso = evaluations.structure.usePerso;
             $scope.useDefaut = !$scope.usePerso;
+            $scope.structure = evaluations.structure;
             // $scope.initPeriodesList();
             utils.safeApply($scope);
         };
