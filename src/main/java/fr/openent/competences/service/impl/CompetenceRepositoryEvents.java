@@ -69,9 +69,7 @@ public class CompetenceRepositoryEvents implements RepositoryEvents {
                 || !structure.containsKey("id")){
             log.error("[CompetenceRepositoryEvents] : An error occured when managing transition annee, cannot find id structure");
         } else {
-            List<String> idsStructures = new ArrayList<>();
-            idsStructures.add(idStructure);
-            transitionService.transitionAnnee(this.eb,idsStructures, new Handler<Either<String, JsonArray>>() {
+            transitionService.transitionAnneeStructure(this.eb,structure, new Handler<Either<String, JsonArray>>() {
                 @Override
                 public void handle(Either<String, JsonArray> event) {
                     if (event.isLeft()) {

@@ -40,6 +40,21 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     @Override
+    public void transitionAnneeStructure(EventBus eb, final JsonObject structure, final Handler<Either<String, JsonArray>> finalHandler) {
+
+        String idStructureATraiter =  structure.getString("id");
+        List<String> idStructures= new ArrayList<String>();
+        idStructures.add (idStructureATraiter);
+
+        //FIXME
+        Map<String,List<String>> classeIdsEleves = new HashMap<String,List<String>> ();
+        List<String> vListIdsGroupesATraiter = new ArrayList<>();
+        Map<String,String> vMapGroupesATraiter = new HashMap<String,String>();
+
+        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter,idStructureATraiter, 1, finalHandler, idStructures);
+    }
+
+    @Override
     public void transitionAnnee(EventBus eb, final List<String> idStructures, final Handler<Either<String, JsonArray>> finalHandler) {
         log.info("DEBUT : transition année ");
         JsonObject action = new JsonObject()
@@ -121,40 +136,21 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                                             vListIdEleves.add(idEleve);
                                                                             classeIdsEleves.put(idClasse,vListIdEleves);
                                                                         }
+                                                                        List<String> vListIdsGroupesATraiter = new ArrayList<>();
+                                                                        Map<String,String> vMapGroupesATraiter = new HashMap<String,String>();
 
-                                                                        // On récupère la liste des identifiants de devoir nécessaires à la crétaion de devoir
-                                                                        String queryNextVal = createQueryNextValDevoirs(listGroupes);
-                                                                        if(queryNextVal != null && !queryNextVal.isEmpty()){
-                                                                            sql.raw(queryNextVal.toString(), SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
-                                                                                @Override
-                                                                                public void handle(Either<String, JsonObject> result) {
-                                                                                    if (result.isRight()) {
-                                                                                        // On ajoute l'id du cours aux cours à créer.
-                                                                                        List<Long> listIdDevoirsToCreate = new ArrayList<>();
-                                                                                        for (Object value : result.right().getValue().getMap().values()) {
-                                                                                            listIdDevoirsToCreate.add((Long) value);
-                                                                                        }
-                                                                                        transitionAnneeStructure(classeIdsEleves,listGroupes,listIdDevoirsToCreate, idStructureATraiter,new Handler<Either<String, JsonArray>>() {
-                                                                                            @Override
-                                                                                            public void handle(Either<String, JsonArray> event) {
-                                                                                                if (event.isRight()) {
-                                                                                                    log.info("FIN : transition année id Etablissement : " + idStructureATraiter);
-                                                                                                    endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                                                                                }
-                                                                                            }});
-                                                                                    }
-                                                                                }
-                                                                            }));
-                                                                        } else {
-                                                                            log.warn("transition année :  queryNextVal vide : id Etablissement : " + idStructureATraiter);
-                                                                            endTransition(nbStructureATraiter, finalHandler, idStructures);
+                                                                        for (int i = 0; i < listGroupes.size(); i++) {
+                                                                            JsonObject vGroupe = listGroupes.getJsonObject(i).getJsonObject("m").getJsonObject("data");
+                                                                            vListIdsGroupesATraiter.add(vGroupe.getString("id"));
+                                                                            vMapGroupesATraiter.put(vGroupe.getString("id"),vGroupe.getString("name"));
                                                                         }
+                                                                        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter, idStructureATraiter, nbStructureATraiter, finalHandler, idStructures);
                                                                     }
                                                                 }
                                                             }));
 
                                                         } else {
-                                                            log.warn("transition année :  aucune groupe : id Etablissement : " + idStructureATraiter);
+                                                            log.warn("transition année :  aucune classe : id Etablissement : " + idStructureATraiter);
                                                             endTransition(nbStructureATraiter, finalHandler, idStructures);
                                                         }
                                                     } else {
@@ -186,6 +182,41 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         }));
     }
 
+    private void executeTransitionForStructure(Map<String, List<String>> classeIdsEleves, List<String> pListIdsGroupesATraiter, Map<String,String> vMapGroupesATraiter, String idStructureATraiter, int nbStructureATraiter, Handler<Either<String, JsonArray>> finalHandler, List<String> idStructures) {
+        // On récupère la liste des identifiants de devoir nécessaires à la crétaion de devoir
+
+        String queryNextVal = createQueryNextValDevoirs(pListIdsGroupesATraiter);
+        if(queryNextVal != null && !queryNextVal.isEmpty()){
+            sql.raw(queryNextVal.toString(), SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
+                @Override
+                public void handle(Either<String, JsonObject> result) {
+                    if (result.isRight()) {
+                        // On ajoute l'id du cours aux cours à créer.
+                        List<Long> listIdDevoirsToCreate = new ArrayList<>();
+                        for (Object value : result.right().getValue().getMap().values()) {
+                            listIdDevoirsToCreate.add((Long) value);
+                        }
+                        Map<String,Long> vMapGroupesIdsDevoirATraiter = new HashMap<String,Long>();
+                        for (int i = 0; i < pListIdsGroupesATraiter.size(); i++) {
+                            vMapGroupesIdsDevoirATraiter.put(pListIdsGroupesATraiter.get(i), listIdDevoirsToCreate.get(i));
+                        }
+                        transitionAnneeStructure(classeIdsEleves,pListIdsGroupesATraiter,vMapGroupesATraiter,vMapGroupesIdsDevoirATraiter, idStructureATraiter,new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if (event.isRight()) {
+                                    log.info("FIN : transition année id Etablissement : " + idStructureATraiter);
+                                    endTransition(nbStructureATraiter, finalHandler, idStructures);
+                                }
+                            }});
+                    }
+                }
+            }));
+        } else {
+            log.warn("transition année :  queryNextVal vide : id Etablissement : " + idStructureATraiter);
+            endTransition(nbStructureATraiter, finalHandler, idStructures);
+        }
+    }
+
     /**
      * Détermine si le traitement est fini
      * @param nbStructureATraiter
@@ -199,18 +230,21 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             for (int i = 0; i < listIdsEtablisement.size(); i++) {
                 vJsonArrayEtabTraites.add(listIdsEtablisement.get(i));
             }
-            log.info("FIN : transition année ");
+
+            if (listIdsEtablisement.size() > 1){
+                log.info("FIN : transition année ");
+            }
             finalHandler.handle(new Either.Right<String,JsonArray>(vJsonArrayEtabTraites));
         }
     }
 
     /**
      * Retourne la requête qui récupère la liste des ids de devoirs à créer
-     * @param listGroupes
+     * @param pListIdsGroupesATraiter
      * @return
      */
-    private String createQueryNextValDevoirs(JsonArray listGroupes) {
-        int nbrDevoirsToCreate = listGroupes.size();
+    private String createQueryNextValDevoirs(List pListIdsGroupesATraiter) {
+        int nbrDevoirsToCreate = pListIdsGroupesATraiter.size();
         StringBuilder queryNextVal = new StringBuilder();
         if (nbrDevoirsToCreate > 0) {
             queryNextVal.append("WITH ");
@@ -232,31 +266,21 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     }
 
     private static final String _id_user_transition_annee = "id-user-transition-annee";
-    private static final String _id_periode_transition_annee = "id-periode-transition-annee";
     private static final String key_username_user_transition_annee ="transition.bilan.annee";
     private static final String key_libelle_classe_transition_annee = "transition.bilan.annee.classe";
 
     /**
-     * Effectue la transistion d'année de l'établissement actif passé en paramètre
-     * @param listGroupes : établissement actif
-     * @param classeIdsEleves : liste des ids Elèves par classe
-     * @param listIdDevoirsToCreate : Liste des ids devoris à créer
-     * @param idStructureATraiter : liste des classes, groupes d'enseignements, Groupes manuels de l'établissement à traiter
+     * * Effectue la transistion d'année de l'établissement actif passé en paramètre
+     * @param classeIdsEleves : Map <idClasse,List<IdsEleves>>
+     * @param vListIdsGroupesATraiter : List idsClasses
+     * @param vMapGroupesATraiter : Map <idClasse,Nom Classe>
+     * @param vMapGroupesIdsDevoirATraiter : Map <idClasse, id Devoir>
+     * @param idStructureATraiter : id Structure en cours de traitement
+     * @param handler
      */
-    private void transitionAnneeStructure(Map<String,List<String>> classeIdsEleves, JsonArray listGroupes, List<Long> listIdDevoirsToCreate, String idStructureATraiter, Handler<Either<String, JsonArray>> handler) {
-        List<String> vListIdsGroupesATraiter = new ArrayList<>();
+    private void transitionAnneeStructure(Map<String,List<String>> classeIdsEleves,  List<String> vListIdsGroupesATraiter,Map<String,String> vMapGroupesATraiter, Map<String,Long> vMapGroupesIdsDevoirATraiter ,String idStructureATraiter, Handler<Either<String, JsonArray>> handler) {
 
-        Map<String,String> vMapGroupesATraiter = new HashMap<String,String>();
-        Map<String,Long> vMapGroupesIdsDevoirATraiter = new HashMap<String,Long>();
         log.info("DEBUT : transactions pour la transition année id Etablissement : " + idStructureATraiter);
-
-        for (int i = 0; i < listGroupes.size(); i++) {
-            JsonObject vGroupe = listGroupes.getJsonObject(i).getJsonObject("m").getJsonObject("data");
-            vListIdsGroupesATraiter.add(vGroupe.getString("id"));
-            vMapGroupesATraiter.put(vGroupe.getString("id"),vGroupe.getString("name"));
-            vMapGroupesIdsDevoirATraiter.put(vGroupe.getString("id"), listIdDevoirsToCreate.get(i));
-        }
-
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -334,18 +358,24 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         // Suppresion des members, groups et relations groupes d'enseignement - cycle
         values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(_id_user_transition_annee);
-        String queryUsers = "DELETE FROM notes.users WHERE id <> ? ";
+        String queryUsers = "" +
+                "DELETE FROM notes.users " +
+                "WHERE" +
+                " NOT EXISTS ( " +
+                "    SELECT 1 " +
+                "    FROM notes.devoirs " +
+                "    WHERE " +
+                "     devoirs.owner = users.id " +
+                " )";
         statements.add(new JsonObject().put("statement", queryUsers).put("values", values).put("action", "prepared"));
 
         // Suppresion des remplacants
         values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(idStructureATraiter).add(_id_periode_transition_annee);
+        values.add(idStructureATraiter);
         String queryDeletePeriodes = "" +
                 "DELETE FROM viesco.periode  " +
-                "WHERE " +
-                " id_etablissement = ? " +
-                " AND id_classe <> ? ";
+                " WHERE " +
+                "  id_etablissement = ? ";
         statements.add(new JsonObject().put("statement", queryDeletePeriodes).put("values", values).put("action", "prepared"));
 
     }
@@ -368,21 +398,21 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String query = "INSERT INTO notes.users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
         statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
 
-        values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(idStructureATraiter).add(_id_periode_transition_annee);
-        query = "INSERT INTO viesco.periode(id_etablissement, timestamp_dt, timestamp_fn, date_fin_saisie, id_classe,id_type) " +
-                " VALUES (?, now(), now(), now(), ?, 1)";
-        statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
+//        values = new fr.wseduc.webutils.collections.JsonArray();
+//        values.add(idStructureATraiter).add(_id_periode_transition_annee);
+//        query = "INSERT INTO viesco.periode(id_etablissement, timestamp_dt, timestamp_fn, date_fin_saisie, id_classe,id_type) " +
+//                " VALUES (?, now(), now(), now(), ?, 1)";
+//        statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
 
         for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()){
             String idClasse = entry.getKey();
             // Création des évaluations libre par classe de l'établissement
             values = new fr.wseduc.webutils.collections.JsonArray();
-            values.add(true).add(idStructureATraiter).add(idStructureATraiter).add(_id_periode_transition_annee);
+            values.add(true).add(idStructureATraiter).add(idStructureATraiter).add(idClasse);
             String queryInsertDevoir = "INSERT INTO " +
                     "  notes.devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication, is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) " +
                     "  (" +
-                    "   SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ",'" + _id_user_transition_annee + "','" + classname + entry.getValue() + "', type.id,periode.id_etablissement, 20, false, current_date, false, 1, 0, false, true , MAX(periode.id),MAX(periode.timestamp_fn) " +
+                    "   SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ",'" + _id_user_transition_annee + "','" + classname + entry.getValue() + "', type.id,periode.id_etablissement, 20, false, current_date, false, 1, 0, false, true , MAX(periode.id_type),MAX(periode.timestamp_fn) " +
                     "   FROM notes.type , viesco.periode " +
                     "    WHERE " +
                     "     type.default_type = ? " +
