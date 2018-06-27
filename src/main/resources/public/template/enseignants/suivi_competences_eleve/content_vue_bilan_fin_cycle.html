@@ -22,34 +22,30 @@
     <div ng-if="domaine.evaluated && (parent.evaluated == null || parent.evaluated === false)"
          class="domaine-line">
         <div class="cell four twelve-mobile domaine-display" >
-           <!-- <div workflow="competences.createDispenseDomaineEleve" class="one cell">
-                <label class="checkbox">
-                    <input type="checkbox" ng-disabled="!domaine.dispensable" ng-model ="domaine.dispense_eleve"
-                           ng-change="!domaine.dispense_eleve" ng-click="saveDispenseEleve(domaine)">
-                    <span></span>
-                </label>
-            </div>  -->
             <div ng-class="{disabled: domaine.dispense_eleve, whiteSpaceNormal: domaine.hovering}" ng-mouseenter="showIt(domaine)" ng-mouseleave="hideIt(domaine)"  class="eleven cell text-overflow">
                 [[domaine.codification]] - [[domaine.libelle]]
             </div>
             <div ng-if="( (isChefEtab() && evaluations.structure.moyenneVisible===1)
                             || evaluations.structure.moyenneVisible===2 )
-                            && domaine.moyenne !== -1 && !domaine.dispense_elve "
+                            && !domaine.dispense_elve "
                  class="domaine-maitrise" ng-class = "{disabled : domaine.dispense_eleve}">
                 <label>
                     <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
-                        <div ng-if = " ($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <  Conversion.valmax) || ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax)">
+                        <div ng-if = " hasValueInConversionTable(domaine, Conversion, $index) ">
                             <div ng-if = " isChefEtab() && domaine.bfc !== undefined">
-                                <i class="reset" aria-hidden="true" ng-click="deleteBFC()"
+                                <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne !== -1"
                                    tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
+                                <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne === -1"
+                                   tooltip=" <i18n>evaluation.domaine.niveau.bfc.manuel</i18n>"></i>
                             </div>
-                            <div ng-if = " !isChefEtab() && domaine.bfc !== undefined">
+                            <div ng-if = "domaine.moyenne !== -1 && ((!isChefEtab() && domaine.bfc !== undefined) || domaine.bfc === undefined)">
                                 [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
                             </div>
-                            <div ng-if = "domaine.bfc === undefined" >
-                                [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
+                            <div ng-if = "domaine.moyenne === -1 &&  domaine.bfc !== undefined && !isChefEtab()">
+                                [[Conversion.libelle]] <i18n>évaluation.domaine.bfc.nonevalue</i18n>
                             </div>
                         </div>
+
                     </div>
                 </label>
             </div>

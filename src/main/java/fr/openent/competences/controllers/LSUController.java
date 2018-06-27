@@ -857,7 +857,7 @@ public class LSUController extends ControllerHelper {
                                                                 }
                                                             });
                                                         }else{
-                                                            leftToResponse(request, new Either.Left<String, JsonArray>( "getXML : getDatesCreationVerrouByClasses" + resultsQuery.left().getValue()));
+                                                            leftToResponse(request, new Either.Left<String, JsonArray>( "getXML : getDatesCreationVerrouByClasses " + resultsQuery.left().getValue()));
                                                             log.error("getXML : getDatesCreationVerrouByClasses "+ resultsQuery);
                                                         }
                                                     }

@@ -106,7 +106,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         };
 
         // mouseleave event
-        $scope.hideIt =  (item) => {
+        $scope.hideIt = (item) => {
             $timeout.cancel(timer);
             item.hovering = false;
         };
@@ -279,11 +279,22 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 $scope.$broadcast('rzSliderForceRender');
             });
         };
+        /**
+         * test pour checker si la moyenne ou la valeur du bfc est dans les bornes de la table de conversion pour le bon libelle
+         */
+        $scope.hasValueInConversionTable = (domaine, Conversion, $index) => {
+            return (domaine.moyenne !== -1 &&
+                (($index !== 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne < Conversion.valmax) ||
+                    ($index === 0 && domaine.moyenne >= Conversion.valmin && domaine.moyenne <= Conversion.valmax))) ||
+                ((domaine.moyenne === -1 && domaine.bfc !== undefined) &&
+                    (($index !== 0 && domaine.bfc.valeur >= Conversion.valmin && domaine.bfc.valeur < Conversion.valmax) ||
+                        ($index === 0 && domaine.bfc.valeur >= Conversion.valmin && domaine.bfc.valeur <= Conversion.valmax)))
+        }
 
         /**
          * Supprime un BFC créé par un chef d'établissement
          */
-        $scope.deleteBFC = function () {
+        $scope.deleteBFC = async function () {
             this.domaine.bfc.deleteBilanFinDeCycle().then((res) => {
                 if (res.rows === 1) {
                     this.domaine.bfc = undefined;
@@ -293,6 +304,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 }
                 utils.safeApply($scope);
             });
+            await $scope.baremeBrevet();
         };
 
         $scope.switchEtablissementSuivi = () => {
@@ -477,43 +489,45 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
                     };
 
-                    $scope.suiviCompetence.sync().then(() => {
-                        // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
-                        //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
-                        let idTypePeriode = ($scope.suiviCompetence.periode.id !== null) ? $scope.suiviCompetence.periode.id_type : null;
-                        $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode).then(() => {
-                            $scope.suiviCompetence.bilanFinDeCycles.all = [];
-                            $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
-                                $scope.suiviCompetence.domaines.all = [];
-                                $scope.suiviCompetence.domaines.sync().then(() => {
-                                    $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
-                                    $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve, _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id}));
-                                    $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
-                                    if ($scope.opened.detailCompetenceSuivi) {
-                                        if ($scope.detailCompetence !== undefined) {
-                                            $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
-                                            if ($scope.detailCompetence) {
-                                                let detail = $scope.template.containers['suivi-competence-detail'];
-                                                if (detail !== undefined) {
-                                                    detail = detail.split('.html?hash=')[0].split('template/')[1];
-                                                }
-                                                $scope.openDetailCompetence($scope.detailCompetence, detail);
-                                            } else {
-                                                $scope.backToSuivi();
+                $scope.suiviCompetence.sync().then(() => {
+                    // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
+                    //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
+                    let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
+                   $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode).then(() => {
+                        $scope.suiviCompetence.bilanFinDeCycles.all = [];
+                        $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
+                            $scope.suiviCompetence.domaines.all = [];
+                            $scope.suiviCompetence.domaines.sync().then(() => {
+                                $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
+                                $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve, _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id}));
+                                $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                                model.on('refresh-slider', function () {
+                                    $scope.baremeBrevet();
+                                });if ($scope.opened.detailCompetenceSuivi) {
+                                    if ($scope.detailCompetence !== undefined) {
+                                        $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
+                                        if ($scope.detailCompetence) {
+                                            let detail = $scope.template.containers['suivi-competence-detail'];
+                                            if (detail !== undefined) {
+                                                detail = detail.split('.html?hash=')[0].split('template/')[1];
                                             }
-                                        } else $scope.backToSuivi();
-                                    }
-                                });
+                                            $scope.openDetailCompetence($scope.detailCompetence, detail);
+                                        } else {
+                                            $scope.backToSuivi();
+                                        }
+                                    } else $scope.backToSuivi();
+                                }
                             });
-
                         });
-                        $scope.initSliderBFC();
-                        $scope.informations.eleve.suiviCompetences.push($scope.suiviCompetence);
-                        $scope.template.close('suivi-competence-content');
-                        utils.safeApply($scope);
-                        $scope.template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
-                        if ($scope.displayFromClass) delete $scope.displayFromClass;
-                        utils.safeApply($scope);
+
+                   });
+                    $scope.initSliderBFC();
+                    $scope.informations.eleve.suiviCompetences.push($scope.suiviCompetence);
+                    $scope.template.close('suivi-competence-content');
+                    utils.safeApply($scope);
+                    $scope.template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
+                    if ($scope.displayFromClass) delete $scope.displayFromClass;
+                    utils.safeApply($scope);
                     });
 
 
@@ -603,10 +617,10 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
             $scope.successUpdateEnseignement = true;
             utils.safeApply($scope);
-            $timeout(()=> {
+            $timeout(() => {
                 $scope.successUpdateEnseignement = false;
                 utils.safeApply($scope);
-            },3000);
+            }, 3000);
         };
 
         $scope.successCreateSynthese = false;
@@ -1029,7 +1043,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             } else {
                 return false;
             }
-        }
+        };
 
         $scope.saveDispenseEleve = async (domaine) => {
             //$scope.domaine = new Domaine(domaine);
@@ -1037,12 +1051,15 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             await domaine.saveDispenseEleve();
             domaine.slider.options.disabled = !domaine.slider.options.disabled;
             domaine.slider.options.readOnly = !domaine.slider.options.readOnly;
+            await $scope.baremeBrevet();
 
+        };
+        $scope.baremeBrevet = async() => {
             //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
-            let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
+            let idTypePeriode = ($scope.suiviCompetence.periode.id !== null) ? $scope.suiviCompetence.periode.id_type : null;
             await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode);
-            $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve : $scope.search.eleve.id});
+            $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id});
             utils.safeApply($scope);
-        }
+        };
     }
 ]);

@@ -251,6 +251,8 @@
   "evaluation.classe.average":"Moyenne de la classe",
   "evaluation.domaine.average":"Niveau de maîtrise du domaine",
   "evaluation.domaine.average.refresh":"Niveau de maîtrise (calculé) du domaine : ",
+  "evaluation.domaine.niveau.bfc.manuel":"Niveau de maîtrise (calculé) du domaine : Non évalué (0.00)",
+  "évaluation.domaine.bfc.nonevalue":"(domaine non évalué)",
   "evaluations.grade.min":"Note min",
   "evaluations.grade.max":"Note max",
   "evaluations.grade":"Résultat",

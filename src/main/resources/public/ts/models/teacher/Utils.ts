@@ -62,18 +62,21 @@ export class Utils {
                         }
                         poDomaine.bfc = bfc;
                         poDomaine.lastSliderUpdated = bfc.valeur;
+
                         model.trigger('apply');
                     }
+                    model.trigger('refresh-slider');
+
                 });
             }
         };
 
         poDomaine.slider = {
             options: {
-                ticksTooltip: function(value) {
+               ticksTooltip: function(value) {
                     return String(poDomaine.moyenne);
                 },
-                disabled: parseFloat(poDomaine.moyenne) === -1,
+                //disabled: parseFloat(poDomaine.moyenne) === -1,
                 floor: _.min(tableConversions, function(Conversions){ return Conversions.ordre; }).ordre - 1,
                 ceil: _.max(tableConversions, function(Conversions){ return Conversions.ordre; }).ordre,
                 step: 1,
@@ -106,37 +109,35 @@ export class Utils {
         // Récupération de la moyenne convertie
         let maConvertion = utils.getMoyenneForBFC(moyenneTemp,tableConversions);
 
-        // si ça ne rentre dans aucune case
-        if(maConvertion === -1 ){
-            poDomaine.slider.value = -1 ;
-            poDomaine.slider.options.getSelectionBarClass = function(){ return '#d8e0f3';};
-            poDomaine.slider.options.translate = function(value,sliderId,label){
-                let l = '#label#';
-                if (label === 'model') {
+        poDomaine.slider.value = maConvertion;
 
-                    l = '<b>#label#</b>';
-                }
-                return l.replace('#label#', lang.translate('evaluations.competence.unevaluated'));
-            };
-
-        }else{
-            poDomaine.slider.value = maConvertion ;
-            poDomaine.slider.options.getSelectionBarClass = function(value){
+        poDomaine.slider.options.getSelectionBarClass = function(value){
+            if (value === -1) {
+                return '#d8e0f3'
+            } else {
                 let ConvertionOfValue = _.find(tableConversions,{ordre: value});
                 if(ConvertionOfValue !== undefined)
                     return ConvertionOfValue.couleur;
-            };
-            poDomaine.slider.options.translate = function(value,sliderId,label){
-                let l = '#label#';
-                if (label === 'model') {
+            }
 
-                    l = '<b>#label#</b>';
-                }
+        };
+
+        poDomaine.slider.options.translate = function(value,sliderId,label){
+            let l = '#label#';
+            if (label === 'model') {
+
+                l = '<b>#label#</b>';
+            }
+
+            if(value === -1) {
+                return l.replace('#label#', lang.translate('evaluations.competence.unevaluated'));
+            } else {
                 let libelle = _.find(tableConversions,{ordre: value});
                 if(libelle !== undefined)
                     return l.replace('#label#', lang.translate(libelle.libelle));
-            };
-        }
+            }
+
+        };
     }
 
     static getMaxEvaluationsDomaines(poDomaine, poMaxEvaluationsDomaines,tableConversions, pbMesEvaluations,bfcsParDomaine) {
