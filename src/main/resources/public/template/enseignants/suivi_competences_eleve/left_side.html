@@ -40,7 +40,7 @@
             <select ng-model="search.periode"
                     ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
                     ng-change="changeContent()"
-                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all  track by periode.id_type ">
+                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all">
                 <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
             </select>
         </label>
