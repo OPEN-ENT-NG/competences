@@ -1081,7 +1081,7 @@ public class NoteController extends ControllerHelper {
                                 }
                                 else {
                                     result.getJsonArray("positionnements_auto").add(new JsonObject()
-                                            .put("moyenne", 0)
+                                            .put("moyenne", -1)
                                             .put("id_periode", entryPeriode.getKey()));
                                 }
                             }

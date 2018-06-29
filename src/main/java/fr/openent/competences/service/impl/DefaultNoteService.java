@@ -397,16 +397,27 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
+        // le positionnement est enregistré pour un élève indépendament de sa classe
+        // ou de ses groupes (positionnement global)
+        // on le recupere donc sans filtre sur la classe
+        if(colonne.equals("positionnement")) {
+            query.append("SELECT id_periode, id_eleve," + colonne + ", id_matiere ");
+        } else {
+            query.append("SELECT id_periode, id_eleve," + colonne + ", id_classe, id_matiere ");
+        }
 
-        query.append("SELECT id_periode, id_eleve,"+  colonne + ", id_classe, id_matiere ")
-                .append(" FROM ")
-                .append(Competences.COMPETENCES_SCHEMA +"."+  colonne + ("moyenne".equals(colonne)? "_finale": " "))
-                .append(" WHERE   id_matiere = ? ")
-                .append(" AND id_classe = ? ")
-                .append(" AND id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()))
-                .append( (null != idPeriode)? " AND id_periode = ? ": "" );
+            query.append(" FROM ")
+            .append(Competences.COMPETENCES_SCHEMA +"."+  colonne + ("moyenne".equals(colonne)? "_finale": " "))
+            .append(" WHERE   id_matiere = ? ");
+            values.add(idMatiere);
+            if(!colonne.equals("positionnement")) {
+                query.append(" AND id_classe = ? ");
+                values.add(idClasse);
+            }
+            query.append(" AND id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()))
+            .append( (null != idPeriode)? " AND id_periode = ? ": "" );
 
-        values.add(idMatiere).add(idClasse);
+
         for(int i=0; i < idEleves.size(); i++) {
             values.add(idEleves.getString(i).toString());
         }
@@ -431,6 +442,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         values.add(idPeriode).add(idEleve);
         if ("moyenne".equals(colonne) || "positionnement".equals(colonne)) {
+
+            // le positionnement est enregistré pour un élève indépendament de sa classe
+            // ou de ses groupes (positionnement global)
+            if("positionnement".equals(colonne)) {
+                idClasse = "";
+            }
             values.add(field.getLong(colonne)).add(idClasse).add(idMatiere)
                     .add(field.getLong(colonne));
         }

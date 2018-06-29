@@ -3614,7 +3614,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         details_pos_auto.moyenne + 1,
                         $scope.releveNote.tableConversions.all)) : 0;
                     let positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
-                    $scope.informations.eleve.positionnementCalcule = positionnement;
+
                     // get positionnement final
                     let details_pos = _.findWhere(
                         $scope.informations.eleve.details.positionnements,
@@ -3624,6 +3624,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($scope.releveNote.idPeriode === periode.id_type) {
                         $scope.informations.eleve.positionnement =
                             (positionnementFinal !== "") ? positionnementFinal : (positionnement);
+                        $scope.informations.eleve.positionnementCalcule = positionnement;
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
