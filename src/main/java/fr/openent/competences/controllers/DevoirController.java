@@ -102,7 +102,10 @@ public class DevoirController extends ControllerHelper {
                         } else {
                             String idClasse = request.params().get("idClasse");
                             String idMatiere = request.params().get("idMatiere");
-
+                            boolean historise = false;
+                            if (request.params().get("historise") != null) {
+                                historise = Boolean.parseBoolean(request.params().get("historise"));
+                            }
                             final String _STUDENT = "Student";
                             final String _RELATIVE = "Relative";
                             Long idPeriode = null;
@@ -113,12 +116,12 @@ public class DevoirController extends ControllerHelper {
                             if( _STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType())){
                                 String idEleve = request.params().get("idEleve");
                                 devoirsService.listDevoirs(idEleve,idEtablissement, idClasse, null,
-                                        idPeriode, handler);
+                                        idPeriode,historise, handler);
 
                             } else if (idEtablissement != "undefined" && idClasse != "undefined"
                                     && idMatiere != "undefined" && request.params().get("idPeriode") != "undefined") {
                                 devoirsService.listDevoirs(null,idEtablissement, idClasse, idMatiere,
-                                        idPeriode, handler);
+                                        idPeriode,historise, handler);
                             } else {
                                 Renders.badRequest(request, "Invalid parameters");
                             }

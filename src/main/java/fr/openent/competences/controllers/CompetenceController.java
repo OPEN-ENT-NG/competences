@@ -79,7 +79,7 @@ public class CompetenceController extends ControllerHelper {
     }
 
     /**
-     * Cherche les enfants de la compétences
+     * Cherche les enfants de la compétence
      * @param competence
      * @param values
      * @return Liste des enfants de la compétence

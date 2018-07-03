@@ -238,8 +238,7 @@ public class CompetenceNoteController extends ControllerHelper {
 
     @Get("/cycles/eleve/:idEleve")
     @ApiDoc("Récupère les cycles des groupes sur lequels un élève a des devoirs avec compétences notées")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessSuiviCompetenceFilter.class)
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void getCyclesEleve (final HttpServerRequest request) {
         if (request.params().contains("idEleve")) {
             String idEleve = request.params().get("idEleve");

@@ -35,6 +35,7 @@ export class Classe extends DefaultClasse {
                     return new Promise((resolve, reject) => {
                         http().getJson(this.api.syncPeriode).done((res) => {
                             res.push({libelle: translate('viescolaire.utils.annee'), id: null});
+                            res.push({libelle: "cycle", id: null});
                             this.periodes.load(res);
                             http().getJson(this.api.getCycle).done( async (res) => {
                                 this.id_cycle = res[0].id_cycle;

@@ -90,10 +90,11 @@ public interface DevoirService extends CrudService {
      * @param idClasse identifiant de la classe
      * @param idMatiere identifiant de la matière
      * @param idPeriode identifiant de la période
+     * @param historise evaluation historise
      * @param handler handler portant le résultat de la requête
      */
     public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long
-            idPeriode, Handler<Either<String, JsonArray>> handler);
+            idPeriode,boolean historise, Handler<Either<String, JsonArray>> handler);
 
     public void listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
                             String[] idEtablissement, String[] idMatieres, Boolean hasCompetences,

@@ -119,7 +119,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.getI18nPeriode = (periode) => {
             let result;
-            if (periode.id === null ) {
+            if (periode.libelle === "cycle") {
+                result = lang.translate('viescolaire.utils.cycle');
+            } else if (periode.id === null ) {
                 result = lang.translate('viescolaire.utils.annee');
             }
             else {
@@ -166,6 +168,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.enseignants = evaluations.enseignants;
             $scope.setCurrentPeriode();
             await $scope.updateNiveau(evaluations.usePerso);
+            await $scope.getCyclesEleve();
 
             if ($location.path() === "/competences/eleve") {
                 $scope.initBilan();
@@ -230,6 +233,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.isCurrentPeriode = function(periode) {
             return (periode.id === $scope.currentPeriodeId);
         };
+
         /**
          * Retourne le libelle de la matière correspondant à l'identifiant passé en paramètre
          * @param idMatiere identifiant de la matière
@@ -393,27 +397,61 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return false;
         };
 
+        $scope.getCyclesEleve = async () => {
+            await evaluations.eleve.getCycles();
+            $scope.currentCycle = _.findWhere(evaluations.eleve.cycles, {id_cycle: evaluations.eleve.id_cycle});
+            utils.safeApply($scope);
+        }
 
-        $scope.changePeriode = async function () {
-            if( $scope.searchBilan !== undefined
-                && $scope.searchBilan.periode !== undefined
-                && $scope.searchBilan.periode.id_type !== undefined
-                && $scope.searchBilan.periode.id_type !== null){
-                // On récupère les devoirs de la période sélectionnée
-                await evaluations.devoirs.sync(evaluations.eleve.idStructure,evaluations.eleve.id, undefined, $scope.searchBilan.periode.id_type);
-            }else{
-                // On récupère les devoirs de l'année
-                await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined);
+
+        $scope.changePeriode = async function (cycle?) {
+            if (cycle === null || cycle === undefined){
+                let historise = false;
+                if( $scope.searchBilan !== undefined
+                    && $scope.searchBilan.periode !== undefined
+                    && $scope.searchBilan.periode.id_type !== undefined
+                    && $scope.searchBilan.periode.id_type !== null){
+                    // On récupère les devoirs de la période sélectionnée
+                    await evaluations.devoirs.sync(evaluations.eleve.idStructure,evaluations.eleve.id, undefined, $scope.searchBilan.periode.id_type, undefined, historise);
+                } else if ($scope.searchBilan !== undefined
+                    && $scope.searchBilan.id_cycle !== undefined
+                    && $scope.searchBilan.id_cycle !== null){
+                    // On récupère les devoirs du cycle selectionné
+                    if($scope.currentCycle.id_cycle !== $scope.searchBilan.id_cycle){
+                        historise = true;
+                    }
+                    await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, $scope.searchBilan.id_cycle, historise);
+                }  else {
+                    // On récupère les devoirs de l'année
+                    await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, undefined, historise);
+                }
+
             }
+            else {
+                $scope.currentCycle = cycle;
+                //$scope.isCycle = true;
+            }
+
             $scope.getCompetences(evaluations);
-            await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve,$scope.competences);
-            await evaluations.enseignements.sync(evaluations.eleve.idClasse,$scope.competences);
+            await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences);
+            await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences);
             $scope.evaluations =  evaluations;
             template.close('main');
             utils.safeApply($scope);
             template.open('main',  'parent_enfant/bilan_competences/content_vue_bilan_eleve');
             utils.safeApply($scope);
         };
+
+
+        $scope.displayCycles = (periode) => {
+            if(periode !== null && periode !== undefined){
+                if(periode.libelle === "cycle"){
+                    $scope.displayCycle = true;
+                } else {
+                    $scope.displayCycle = false;
+                }
+            }
+        }
 
         /**
          * Récupère les compétences des évaluations
@@ -436,9 +474,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.getCompetences(evaluations);
 
             $scope.searchBilan = {
-                periode: evaluations.periode,
+               // periode: evaluations.periode,
                 parDomaine: 'false'
             };
+
+            if($scope.currentCycle !== undefined
+                    && $scope.currentCycle.id_cycle !== undefined) {
+                $scope.searchBilan.id_cycle =  $scope.currentCycle.id_cycle;
+            }
 
             if($scope.competences
                 && $scope.competences.length > 0){

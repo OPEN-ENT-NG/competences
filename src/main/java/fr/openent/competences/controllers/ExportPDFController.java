@@ -297,7 +297,7 @@ public class ExportPDFController extends ControllerHelper {
                                 final String classeEleve = userJSON.getJsonObject("u").getJsonObject("data").getJsonArray("classes").getString(0);
 
                                 // Récupération de la liste des devoirs de la personne avec ses notes associées
-                                devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode, new Handler<Either<String, JsonArray>>() {
+                                devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode,false, new Handler<Either<String, JsonArray>>() {
                                     @Override
                                     public void handle(final Either<String, JsonArray> eventListDevoirs) {
                                         if (eventListDevoirs.isRight()) {

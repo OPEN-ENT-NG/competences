@@ -645,7 +645,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
+    public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,boolean historise, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String matiere = idMatiere;
@@ -676,6 +676,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if (idEleve !=  null){
             query.append(" AND  notes.id_eleve = ? AND date_publication <= Now() ");
         }
+
         if (idPeriode != null) {
             query.append("AND ")
                     .append("devoirs.id_periode = ? ");
@@ -684,6 +685,12 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if(idClasse != null) {
             values.add(idClasse);
         }
+
+        if (historise) {
+            query.append(" AND ")
+                    .append("devoirs.eval_lib_historise = ? ");
+        }
+
         values.add(idEtablissement);
 
         if (matiere != null) {
@@ -700,7 +707,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if(idPeriode != null) {
             values.add(idPeriode);
         }
-
+        if (historise) {
+            values.add(historise);
+        }
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 

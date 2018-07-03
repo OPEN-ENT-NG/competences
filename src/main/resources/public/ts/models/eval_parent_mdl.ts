@@ -113,7 +113,7 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Devoir, {
-                sync: async(structureId, userId, classeId, idPeriode) => {
+                sync: async(structureId, userId, classeId, idPeriode, idCycle, historise) => {
                     return new Promise( (resolve) => {
                         let that = this;
                         let uri = Evaluations.api.GET_EVALUATIONS
@@ -124,6 +124,9 @@ export class Evaluations extends Model {
                         if (idPeriode !== undefined) {
                             uri = uri + '&idPeriode=' + idPeriode;
                         }
+                        if (historise !== undefined) {
+                            uri = uri + '&historise=' + historise;
+                        }
                         http().getJson(uri).done((devoirs) => {
 
                             // RECUPERATION DES COMPETENCES
@@ -131,6 +134,9 @@ export class Evaluations extends Model {
                             uriCompetences = uriCompetences + '?idClasse=' + this.eleve.classe.id;
                             if (idPeriode !== undefined) {
                                 uriCompetences = uriCompetences + '&idPeriode=' + idPeriode;
+                            }
+                            if (idCycle !== undefined) {
+                                uriCompetences = uriCompetences + '&idCycle=' + idCycle;
                             }
                             http().getJson(uriCompetences).done((competences) => {
                                 competences.forEach(function (competence) {
@@ -166,7 +172,7 @@ export class Evaluations extends Model {
                                     }
                                 });
 
-                                // RECUPERATION DES ANNOTIONS
+                                // RECUPERATION DES ANNOTATIONS
                                 let uriAnnotations = Evaluations.api.GET_ANNOTATION  + userId;
                                 if (idPeriode !== undefined) {
                                     uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode;

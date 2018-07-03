@@ -20,6 +20,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.service.TransitionService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultTransitionService;
@@ -33,6 +34,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.eventbus.Message;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
@@ -42,10 +44,11 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+import java.util.Objects;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
@@ -101,7 +104,54 @@ public class UtilsController extends ControllerHelper {
             public void handle(UserInfos user) {
                 if(user != null){
                     Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                    utilsService.getEnfants(request.params().get("userId"), handler);
+                    utilsService.getEnfants(request.params().get("userId"), new Handler<Either<String, JsonArray>>() {
+                        @Override
+                        public void handle(Either<String, JsonArray> event) {
+                            if (event.isRight()) {
+                                final JsonArray resultJsonArrayEnfants = new JsonArray();
+                                JsonArray jsonArrayEnfants = event.right().getValue();
+                                List<String> vIdClasseList = new ArrayList<String>();
+                                for (int i = 0; i < jsonArrayEnfants.size(); i++) {
+                                    JsonObject jsonObjectEnfant = jsonArrayEnfants.getJsonObject(i);
+                                    if(null != jsonObjectEnfant
+                                            && jsonObjectEnfant.containsKey("idClasse")){
+                                        String idClasse = jsonObjectEnfant.getString("idClasse");
+                                        vIdClasseList.add(idClasse);
+                                    }
+                                }
+                                utilsService.getCycle(vIdClasseList, new Handler<Either<String, JsonArray>>() {
+                                    @Override
+                                    public void handle(Either<String, JsonArray> event) {
+                                        if (event.isRight()) {
+                                            JsonArray queryResult = event.right().getValue();
+                                            for (int i = 0; i < jsonArrayEnfants.size(); i++) {
+                                                JsonObject jsonObjectEnfant = jsonArrayEnfants.getJsonObject(i);
+                                                if(null != jsonObjectEnfant
+                                                        && jsonObjectEnfant.containsKey("idClasse")){
+                                                    String idClasse = jsonObjectEnfant.getString("idClasse");
+                                                    for (int j = 0; j < queryResult.size(); j++) {
+                                                        JsonObject jsonObjectClassCycle = queryResult.getJsonObject(j);
+                                                        if(null != jsonObjectClassCycle
+                                                                && jsonObjectClassCycle.containsKey("id_groupe")
+                                                                && jsonObjectClassCycle.getString("id_groupe").equalsIgnoreCase(idClasse)){
+                                                            jsonObjectEnfant.put("id_cycle",jsonObjectClassCycle.getInteger("id_cycle"));
+                                                            break;
+                                                        }
+                                                    }
+                                                    resultJsonArrayEnfants.add(jsonObjectEnfant);
+                                                }
+
+                                            }
+                                            handler.handle(new Either.Right<String, JsonArray>(resultJsonArrayEnfants));
+                                        } else {
+                                            handler.handle(new Either.Left<String, JsonArray>(event.left().getValue()));
+                                            log.error("getInfoEleve : getCycle : " + event.left().getValue());
+                                        }
+                                    }
+                                });
+
+                            }
+                        }});
                 }else{
                     unauthorized(request);
                 }
