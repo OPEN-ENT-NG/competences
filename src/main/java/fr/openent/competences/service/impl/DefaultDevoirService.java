@@ -25,7 +25,6 @@ import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.eventbus.EventBus;
-import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -42,6 +41,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 /**
@@ -57,6 +57,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         super(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
         utilsService = new DefaultUtilsService(eb);
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
+        this.eb = eb;
     }
 
     public StringBuilder formatDate (String date) {
@@ -137,6 +138,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append( "SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement,")
                 .append(" devoir.coefficient,devoir.id_matiere,devoir.diviseur, devoir.is_evaluated,devoir.id_periode,")
                 .append(" rel_periode.type AS periodeType,rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*")
+                .append(" , Gdevoir.type_groupe ")
                 .append(" FROM notes.devoirs devoir")
                 .append(" INNER JOIN viesco.rel_type_periode rel_periode on rel_periode.id = devoir.id_periode")
                 .append(" NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" )
@@ -874,9 +876,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".notes,"+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )
-                .append("WHERE notes.id_devoir = devoirs.id AND "+ Competences.NOTES_TABLE + ".id_eleve")
-                .append(" NOT IN (SELECT personnes_supp.id_user FROM ")
-                .append(Competences.VSCO_SCHEMA+".personnes_supp) " )
+                .append("WHERE notes.id_devoir = devoirs.id ")
                 .append("AND rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append("AND devoirs.id = ? ");
 
@@ -913,7 +913,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
         }
         if(!isChefEtab) {
-            // Ajout des params pour les devoirs dont on est le propriétaire
+            // Ajout des params  pour les devoirs dont on est le propriétaire
             values.add(user.getUserId());
 
             // Ajout des params pour la récupération des devoirs de mes tiulaires
@@ -940,9 +940,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations , devoirs.id, rel_devoirs_groupes.id_groupe ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs, "+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )
                 .append("WHERE rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append("AND rel_annotations_devoirs.id_devoir = devoirs.id AND rel_annotations_devoirs.id_eleve")
-                .append(" NOT IN (SELECT personnes_supp.id_user FROM ")
-                .append(Competences.VSCO_SCHEMA+".personnes_supp) " )
+                .append("AND rel_annotations_devoirs.id_devoir = devoirs.id ")
                 .append("AND devoirs.id = ? ");
 
         if(!isChefEtab) {
@@ -1072,43 +1070,86 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void getMoyenne(Long idDevoir, final boolean stats, final Handler<Either<String, JsonObject>> handler) {
 
-        noteService.getNotesParElevesParDevoirs(new String[0], new Long[]{idDevoir},
-                new Handler<Either<String, JsonArray>>() {
+        getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
+            @Override
+            public void handle(final Either<String, JsonObject> devoirInfo) {
+                if (devoirInfo.isRight()) {
 
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            ArrayList<NoteDevoir> notes = new ArrayList<>();
+                    final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
+                    Long idPeriode = devoirInfos.getLong("id_periode");
 
-                            JsonArray listNotes = event.right().getValue();
+                    JsonObject action = new JsonObject()
+                            .put("action", "classe.getEleveClasse")
+                            .put("idClasse", devoirInfos.getString("id_groupe"))
+                            .put("idPeriode", devoirInfos.getInteger("periodetype"));
 
-                            for (int i = 0; i < listNotes.size(); i++) {
+                    eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                            handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                @Override
+                                public void handle(Message<JsonObject> message) {
+                                    JsonObject body = message.body();
 
-                                JsonObject note = listNotes.getJsonObject(i);
+                                    if ("ok".equals(body.getString("status"))) {
+                                        JsonArray eleves = body.getJsonArray("results");
+                                        String[] idEleves = new String[eleves.size()];
+                                        for (int i = 0; i < eleves.size(); i++) {
+                                            idEleves[i] = eleves.getJsonObject(i).getString("id");
+                                        }
 
-                                NoteDevoir noteDevoir = new NoteDevoir(
-                                        Double.valueOf(note.getString("valeur")),
-                                        note.getBoolean("ramener_sur"),
-                                        Double.valueOf(note.getString("coefficient")));
+                                        noteService.getNotesParElevesParDevoirs(idEleves, new Long[]{idDevoir},
+                                                new Handler<Either<String, JsonArray>>() {
 
-                                notes.add(noteDevoir);
-                            }
+                                                    @Override
+                                                    public void handle(Either<String, JsonArray> event) {
+                                                        if (event.isRight()) {
+                                                            ArrayList<NoteDevoir> notes = new ArrayList<>();
 
-                            Either<String, JsonObject> result;
+                                                            JsonArray listNotes = event.right().getValue();
 
-                            if(!notes.isEmpty()) {
-                                result = new Either.Right<>(utilsService.calculMoyenneParDiviseur(notes, stats));
-                            } else {
-                                result = new Either.Right<>(new JsonObject());
-                            }
+                                                            for (int i = 0; i < listNotes.size(); i++) {
 
-                            handler.handle(result);
+                                                                JsonObject note = listNotes.getJsonObject(i);
 
-                        } else {
-                            handler.handle(new Either.Left<String, JsonObject>(event.left().getValue()));
-                        }
-                    }
-                });
+                                                                NoteDevoir noteDevoir = new NoteDevoir(
+                                                                        Double.valueOf(note.getString("valeur")),
+                                                                        note.getBoolean("ramener_sur"),
+                                                                        Double.valueOf(note
+                                                                                .getString("coefficient")));
+
+                                                                notes.add(noteDevoir);
+                                                            }
+
+                                                            Either<String, JsonObject> result;
+
+                                                            if (!notes.isEmpty()) {
+                                                                result = new Either.Right<>(utilsService
+                                                                        .calculMoyenneParDiviseur(notes, stats));
+                                                            } else {
+                                                                result = new Either.Right<>(new JsonObject());
+                                                            }
+
+                                                            handler.handle(result);
+
+                                                        } else {
+                                                            log.error("[get Moyenne]: cannot get Eleves class");
+                                                            handler.handle(new Either.Left<String, JsonObject>(
+                                                                    event.left().getValue()));
+                                                        }
+                                                    }
+                                                });
+                                    }
+                                    else {
+                                        log.error("[get Moyenne]: cannot get Eleves class");
+                                        handler.handle(new Either.Left<>("[get Moyenne]: cannot get Eleves class"));
+                                    }
+                                }
+                            }));
+                } else {
+                    log.error("[get Moyenne]: cannot get Eleves class");
+                    handler.handle(devoirInfo.left());
+                }
+            }
+        });
     }
 
 
@@ -1130,19 +1171,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
-    public void getNbCompetencesDevoirsByEleve(List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
+    public void getNbCompetencesDevoirsByEleve(List<String> idEleves, Long idDevoir,
+                                               Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
         query.append("SELECT count(competences_notes.id_competence) AS nb_competences, id_eleve, id_devoir as id" )
                 .append(" FROM  "+ Competences.COMPETENCES_SCHEMA +'.'+ Competences.COMPETENCES_NOTES_TABLE)
-                .append(" WHERE id_devoir = ?  AND "+ Competences.COMPETENCES_NOTES_TABLE + ".evaluation >= 0 ")
-                .append(" AND "+ Competences.COMPETENCES_NOTES_TABLE + ".id_eleve")
-                .append(" NOT IN (SELECT personnes_supp.id_user FROM ")
-                .append(Competences.VSCO_SCHEMA+".personnes_supp) " );
+                .append(" WHERE id_devoir = ?  AND "+ Competences.COMPETENCES_NOTES_TABLE + ".evaluation >= 0 ");
 
         // filtre sur les élèves de la classe à l'instant T
         if(idEleves != null && idEleves.size() > 0) {
-            query.append(" AND "+ Competences.COMPETENCES_NOTES_TABLE + ".id_eleve IN ").append(Sql.listPrepared(idEleves.toArray()));
+            query.append(" AND "+ Competences.COMPETENCES_NOTES_TABLE + ".id_eleve IN ")
+                    .append(Sql.listPrepared(idEleves.toArray()));
         }
 
 

@@ -3577,7 +3577,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     width: "toggle"
                 }, 'slow');
             } else {
-                $scope.releveNote.toogle = false;
+                if($scope.releveNote !== undefined) {
+                    $scope.releveNote.toogle = false;
+                }
             }
         };
 

@@ -429,6 +429,7 @@ public class NoteController extends ControllerHelper {
 
         final JsonObject action = new JsonObject()
                 .put("action", "classe.getElevesClasses")
+                .put("idPeriode", Long.valueOf(idPeriodeString))
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
         if (idPeriodeString != null) {

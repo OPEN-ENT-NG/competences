@@ -1189,7 +1189,7 @@ public class ExportPDFController extends ControllerHelper {
                                             JsonObject action = new JsonObject()
                                                     .put("action", "classe.getEleveClasse")
                                                     .put("idClasse", devoirInfos.getString("id_groupe"))
-                                                    .put("idPeriode", devoirInfos.getInteger("id_periode"));
+                                                    .put("idPeriode", devoirInfos.getInteger("periodetype"));
 
                                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
@@ -1396,7 +1396,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                             .put("idClasse", devoirInfos
                                                                                     .getString("id_groupe"))
                                                                             .put("idPeriode", devoirInfos
-                                                                                    .getInteger("id_periode"));
+                                                                                    .getInteger("periodetype"));
 
                                                                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                         @Override
@@ -1740,7 +1740,15 @@ public class ExportPDFController extends ControllerHelper {
                                                                 String [] _idGroupes = new String[1];
                                                                 _idGroupes[0] = idGroupes.get(i);
 
-                                                                JsonArray idFunctionalGroupes = ((JsonObject)result.getJsonObject(i)).getJsonArray("idGroupes");
+                                                                JsonArray idFunctionalGroupes;
+                                                                JsonObject o = result.getJsonObject(i);
+                                                                if(o.getValue("idGroupes") instanceof JsonArray ) {
+                                                                    idFunctionalGroupes = o.getJsonArray("idGroupes");
+                                                                }
+                                                                else {
+                                                                    idFunctionalGroupes = new JsonArray().add(o
+                                                                            .getValue("idGroupes"));
+                                                                }
                                                                 String[] idFunctionalGroupesArr = UtilsConvert.jsonArrayToStringArr(idFunctionalGroupes);
 
                                                                 exportService.getExportReleveComp(text, byEnseignement, idEleves[i],

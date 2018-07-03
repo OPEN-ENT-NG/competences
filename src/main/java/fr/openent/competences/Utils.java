@@ -59,10 +59,23 @@ public class Utils {
     }
 
 
-    public static void getIdElevesClassesGroupes(EventBus eb, final String  idGroupe, final int indiceBoucle, final Handler<Either<String, List<String>>> handler) {
-        JsonObject action = new JsonObject()
-                .put("action", "classe.getEleveClasse")
-                .put("idClasse", idGroupe);
+    public static void getIdElevesClassesGroupes(EventBus eb, final String  idGroupe,
+                                                 final int idPeriode,
+                                                 final int typeClasse,
+                                                 final Handler<Either<String, List<String>>> handler) {
+
+        JsonObject action = new JsonObject();
+        if(typeClasse == 0) {
+            action.put("action", "classe.getEleveClasse")
+                    .put("idClasse", idGroupe);
+
+        }
+        else if(typeClasse == 1 || typeClasse == 2){
+            action.put("action", "groupe.listUsersByGroupeEnseignementId")
+                    .put("groupEnseignementId", idGroupe)
+                    .put("profile", "Student");
+        }
+
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
