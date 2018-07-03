@@ -984,8 +984,11 @@ public class NoteController extends ControllerHelper {
                                                                     result
                                                                             .put("positionnements",
                                                                                     event.right().getValue());
-                                                                    addPositionnementAutoEleve(idEleve, idClasse,
-                                                                            idMatiere, idEtablissement, typeClasse,
+
+                                                                    // idClasse et typeClass à null car on récupère le positionnement quelque soit sa classe
+                                                                    //On récupère le positionnement seulement par rapport à la matière
+                                                                    addPositionnementAutoEleve(idEleve, null,
+                                                                            idMatiere, idEtablissement, null,
                                                                             request,result);
                                                                 } else {
                                                                     JsonObject error = new JsonObject()

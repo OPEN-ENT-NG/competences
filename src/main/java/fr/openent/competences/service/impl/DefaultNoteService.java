@@ -360,14 +360,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
 
-        query.append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON " +
-                " (rel_devoirs_groupes.id_devoir = devoirs.id " +
-                " AND rel_devoirs_groupes.id_groupe = ? ) " +
-                " WHERE devoirs.id_etablissement = ? " +
-                " AND devoirs.id_matiere = ? ");
+        query.append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON ");
 
+        if(classeId != null){
+            query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe = ? )");
+            values.add(classeId);
+        }else{
+            query.append("rel_devoirs_groupes.id_devoir = devoirs.id");
+        }
+        query.append(" WHERE devoirs.id_etablissement = ?  AND devoirs.id_matiere = ? ");
 
-        values.add(classeId).add(etablissementId).add(matiereId);
+        values.add(etablissementId).add(matiereId);
         if(periodeId != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(periodeId);
