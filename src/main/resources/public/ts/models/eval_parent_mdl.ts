@@ -244,10 +244,13 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Domaine, {
-                sync: async function (classe, eleve, competences) {
+                sync: async function (classe, eleve, competences, idCycle) {
                     let that = this.composer;
                     return new Promise((resolve, reject) => {
                         var url = Evaluations.api.GET_ARBRE_DOMAINE + classe.id;
+                        if (idCycle !== undefined) {
+                            url = url + '&idCycle=' + idCycle;
+                        }
                         http().getJson(url).done((resDomaines) => {
                             if (resDomaines) {
                                 let _res = [];
@@ -262,6 +265,8 @@ export class Evaluations extends Model {
                             if (resolve && typeof (resolve) === 'function') {
                                 resolve();
                             }
+
+
                         }).bind(this);
                     });
                 }

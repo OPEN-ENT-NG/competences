@@ -412,6 +412,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     && $scope.searchBilan.periode.id_type !== undefined
                     && $scope.searchBilan.periode.id_type !== null){
                     // On récupère les devoirs de la période sélectionnée
+                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, undefined);
                     await evaluations.devoirs.sync(evaluations.eleve.idStructure,evaluations.eleve.id, undefined, $scope.searchBilan.periode.id_type, undefined, historise);
                 } else if ($scope.searchBilan !== undefined
                     && $scope.searchBilan.id_cycle !== undefined
@@ -420,9 +421,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if($scope.currentCycle.id_cycle !== $scope.searchBilan.id_cycle){
                         historise = true;
                     }
+                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, $scope.searchBilan.id_cycle);
                     await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, $scope.searchBilan.id_cycle, historise);
                 }  else {
                     // On récupère les devoirs de l'année
+                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, undefined);
                     await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, undefined, historise);
                 }
 
@@ -433,7 +436,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             $scope.getCompetences(evaluations);
-            await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences);
+
             await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences);
             $scope.evaluations =  evaluations;
             template.close('main');
