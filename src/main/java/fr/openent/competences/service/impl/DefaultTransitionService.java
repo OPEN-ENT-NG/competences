@@ -41,17 +41,89 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
     @Override
     public void transitionAnneeStructure(EventBus eb, final JsonObject structure, final Handler<Either<String, JsonArray>> finalHandler) {
-
         String idStructureATraiter =  structure.getString("id");
         List<String> idStructures= new ArrayList<String>();
         idStructures.add (idStructureATraiter);
+        int nbStructureATraiter = 1;
+        log.info("DEBUT : transition année : isStructure : " + idStructureATraiter);
+        JsonObject action = new JsonObject()
+                .put("action", "structure.getStructuresActives")
+                .put("module","notes");
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                if ("ok".equals(body.getString("status"))) {
+                    List<String> vListIdEtabActifs = new ArrayList<>();
+                    final JsonArray listIdsEtablisement = body.getJsonArray("results");
+                    if (listIdsEtablisement.size() > 0) {
+                        for (int i = 0; i < listIdsEtablisement.size(); i++) {
+                            vListIdEtabActifs.add(listIdsEtablisement.getJsonObject(i).getString("id_etablissement"));
+                        }
+                    }
+                    if (vListIdEtabActifs.size() > 0 && null != idStructures && idStructures.size() > 0) {
+                        // Si l'établissement à traiter est actif on comme la transition d'année pour cet établissement
+                        if(vListIdEtabActifs.contains(idStructureATraiter)){
+                            JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
+                            valuesCount.add(idStructureATraiter);
+                            String isTransitionCount = "SELECT COUNT(*) FROM notes.transition WHERE id_etablissement = ? ";
+                            Sql.getInstance().prepared(isTransitionCount, valuesCount, new Handler<Message<JsonObject>>() {
+                                @Override
+                                public void handle(Message<JsonObject> sqlResultCount) {
+                                    Long nbTransition = SqlResult.countResult(sqlResultCount);
+                                    if (nbTransition > 0) {
+                                        log.warn("transition année : établissement déjà effectuée : id Etablissement : " + idStructureATraiter);
+                                        endTransition(nbStructureATraiter, finalHandler, idStructures);
+                                    } else {
+                                        Map<String,List<String>> classeIdsEleves = new HashMap<String,List<String>> ();
+                                        List<String> vListIdsGroupesATraiter = new ArrayList<>();
+                                        Map<String,String> vMapGroupesATraiter = new HashMap<String,String>();
+                                        if (structure.containsKey("classes")){
+                                            JsonArray vJsonArrayClass = structure.getJsonArray("classes");
+                                            // On récupère la liste des classes à traiter
+                                            for (int i = 0; i < vJsonArrayClass.size() ; i++) {
+                                                JsonObject vJsonObjectClasse = vJsonArrayClass.getJsonObject(i);
+                                                if(vJsonObjectClasse.containsKey("classId")) {
+                                                    String classId = vJsonObjectClasse.getString("classId");
+                                                    vListIdsGroupesATraiter.add(classId);
+                                                    vMapGroupesATraiter.put(classId, vJsonObjectClasse.getString("className"));
+                                                    // On récupère la liste des élèves de chaque classe
+                                                    if(vJsonObjectClasse.containsKey("users")) {
+                                                        JsonArray vJsonArrayIdUsersClasse = vJsonObjectClasse.getJsonArray("users");
+                                                        List<String> vListIdUsersClasse = new ArrayList<String>();
+                                                        if(vJsonArrayIdUsersClasse.size()>0){
+                                                            for (int j = 0; j < vJsonArrayIdUsersClasse.size() ; j++) {
+                                                                vListIdUsersClasse.add(vJsonArrayIdUsersClasse.getString(j));
+                                                            }
+                                                        }
+                                                        classeIdsEleves.put(classId,vListIdUsersClasse);
+                                                    }
+                                                }
 
-        //FIXME
-        Map<String,List<String>> classeIdsEleves = new HashMap<String,List<String>> ();
-        List<String> vListIdsGroupesATraiter = new ArrayList<>();
-        Map<String,String> vMapGroupesATraiter = new HashMap<String,String>();
+                                            }
+                                        }else {
+                                            log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
+                                            endTransition(nbStructureATraiter, finalHandler, idStructures);
+                                        }
+                                        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter,idStructureATraiter, 1, finalHandler, idStructures);
+                                    }
+                                }
+                            });
+                        } else {
+                            log.warn("transition année : établissement inactif : id Etablissement : " + idStructureATraiter);
+                        }
+                    } else {
+                        log.warn("transition année : Aucun établissement actif ou à traiter");
+                        log.info("FIN : transition année ");
+                        finalHandler.handle(new Either.Left<String,JsonArray>("Transition d'année arrêtée : Aucun établissement actif"));
+                    }
+                } else {
+                    log.error("transition année : Impossible de récupérer les établissements actifs");
+                    log.info("FIN : transition année ");
+                    finalHandler.handle(new Either.Left<String,JsonArray>(body.getString("message")));
+                }
+            }}));
 
-        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter,idStructureATraiter, 1, finalHandler, idStructures);
     }
 
     @Override
