@@ -68,7 +68,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await $scope.init();
                 template.close('main');
                 template.close('menu');
-                $scope.initBilan();
+                await $scope.initBilan();
                 template.open('header', 'parent_enfant/accueil/eval_parent_selectEnfants');
                 template.open('main', 'parent_enfant/bilan_competences/content_vue_bilan_eleve');
                 template.open('menu', 'parent_enfant/bilan_competences/left-side');
@@ -97,6 +97,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 else if (model.me.type === 'PERSRELELEVE') {
                     $scope.eleves = evaluations.eleves.all;
                 }
+                $scope.searchBilan = {
+                    // periode: evaluations.periode,
+                    parDomaine: 'false'
+                };
                 $scope.search = {
                     periode: evaluations.periode,
                     classe : null,
@@ -171,7 +175,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             await $scope.getCyclesEleve();
 
             if ($location.path() === "/competences/eleve") {
-                $scope.initBilan();
+               await $scope.initBilan();
             }
             if ($location.path() === "/") {
                 template.close('main');
@@ -211,6 +215,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.periode = periodes.findWhere({id : periodes.all[i].id});
                         $scope.search.periode = $scope.periode;
                         evaluations.periode = $scope.periode;
+                        $scope.searchBilan.periode = $scope.periode;
                         $scope.currentPeriodeId = $scope.periode.id;
                     }
 
@@ -399,7 +404,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.getCyclesEleve = async () => {
             await evaluations.eleve.getCycles();
-            $scope.currentCycle = _.findWhere(evaluations.eleve.cycles, {id_cycle: evaluations.eleve.id_cycle});
+            if (model.me.type === 'ELEVE'
+                && evaluations.eleve.classe !== undefined) {
+                $scope.currentCycle = _.findWhere(evaluations.eleve.cycles, {id_cycle: evaluations.eleve.classe.id_cycle});
+            } else {
+                $scope.currentCycle = _.findWhere(evaluations.eleve.cycles, {id_cycle: evaluations.eleve.id_cycle});
+            }
             utils.safeApply($scope);
         }
 
@@ -408,17 +418,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (cycle === null || cycle === undefined){
                 let historise = false;
                 if( $scope.searchBilan !== undefined
+                    && $scope.searchBilan.periode.id_type > 0
                     && $scope.searchBilan.periode !== undefined
-                    && $scope.searchBilan.periode.id_type !== undefined
-                    && $scope.searchBilan.periode.id_type !== null){
+                    && $scope.searchBilan.periode.id_type !== undefined){
                     // On récupère les devoirs de la période sélectionnée
                     await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, undefined);
                     await evaluations.devoirs.sync(evaluations.eleve.idStructure,evaluations.eleve.id, undefined, $scope.searchBilan.periode.id_type, undefined, historise);
                 } else if ($scope.searchBilan !== undefined
-                    && $scope.searchBilan.id_cycle !== undefined
-                    && $scope.searchBilan.id_cycle !== null){
+                    && $scope.searchBilan.periode.id_type == -2
+                    && $scope.searchBilan.id_cycle !== undefined){
                     // On récupère les devoirs du cycle selectionné
-                    if($scope.currentCycle.id_cycle !== $scope.searchBilan.id_cycle){
+                    if ($scope.currentCycle.id_cycle !== $scope.searchBilan.id_cycle){
                         historise = true;
                     }
                     await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, $scope.searchBilan.id_cycle);
@@ -432,7 +442,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             else {
                 $scope.currentCycle = cycle;
-                //$scope.isCycle = true;
             }
 
             $scope.getCompetences(evaluations);
@@ -475,11 +484,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.initBilan = async function () {
 
             $scope.getCompetences(evaluations);
-
-            $scope.searchBilan = {
-               // periode: evaluations.periode,
-                parDomaine: 'false'
-            };
+            $scope.searchBilan.parDomaine =  'false';
 
             if($scope.currentCycle !== undefined
                     && $scope.currentCycle.id_cycle !== undefined) {

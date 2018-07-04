@@ -988,6 +988,28 @@ body.evaluations {
       font-style: italic;
     }
   }
+
+  //      --- LEFT SIDE (parents-enfants) ---   //
+
+        //    -- Choix critère (cycle) --   //
+
+  .inputContainer {
+    display: flex;
+  }
+
+  .inputSection1{
+    width: 50%;
+    border-right: 1px solid lightgrey;
+  }
+
+  .inputSection2{
+    width: 50%;
+  }
+
+  #inputMargin {
+    margin: 14px;
+  }
+
   .header-opt{
     font-style: italic;
     font-weight: bold !important;

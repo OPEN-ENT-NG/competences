@@ -10,45 +10,45 @@
                     </h2>
                 </div>
                 <div>
-                    <section>
-                        <label class="select">
-                            <select ng-model="searchBilan.periode"
-                                    ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all"
-                                    ng-change="changePeriode(); displayCycles(searchBilan.periode);">
-                                <option class="header-opt" disabled value="">
-                                    [[translate('viescolaire.utils.periode')]]
-                                </option>
-                            </select>
+                    <label class="select">
+                        <select ng-model="searchBilan.periode"
+                                ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all track by periode.id_type"
+                                ng-change="changePeriode(); displayCycles(searchBilan.periode);">
+                            <option class="header-opt" disabled value="">
+                                [[translate('viescolaire.utils.periode')]]
+                            </option>
+                        </select>
 
-                        </label>
-
-                        <p>
-                            <input type="radio" ng-model="searchBilan.parDomaine" value="false">
-                            <span>
-                            <i18n>evaluation.search.by.enseignements</i18n>
-                        </span>
-                        </p>
-                        <p>
-                            <input type="radio" ng-model="searchBilan.parDomaine" value="true">
-                            <span>
-                            <i18n>evaluation.search.by.domaines</i18n>
-                        </span>
-                        </p>
-                    </section>
-                    <section ng-show="displayCycle">
-                        <form name="SelectedCycleForm">
-                            <div ng-repeat="cycle in evaluations.eleve.cycles">
-                                <label>
-                                    <input type="radio"  ng-change="changePeriode();"
-                                           ng-model="searchBilan.id_cycle"
-                                           ng-value="cycle.id_cycle">
-                                    [[::cycle.libelle]]
-                                </label>
-                            </div>
-                            <br/>
-                        </form>
-                    </section>
-
+                    </label>
+                    <div class="inputContainer">
+                        <section ng-class="{'inputSection1': searchBilan.periode.libelle === 'cycle'}">
+                            <p>
+                                <input type="radio" ng-model="searchBilan.parDomaine" value="false">
+                                <span>
+                                    <i18n>evaluation.search.by.enseignements</i18n>
+                                </span>
+                            </p>
+                            <p>
+                                <input type="radio" ng-model="searchBilan.parDomaine" value="true">
+                                <span>
+                                    <i18n>evaluation.search.by.domaines</i18n>
+                                </span>
+                            </p>
+                        </section>
+                        <section class="inputSection2" ng-show="displayCycle">
+                            <form name="SelectedCycleForm">
+                                <div id="inputMargin" ng-repeat="cycle in evaluations.eleve.cycles">
+                                    <label>
+                                        <input type="radio"  ng-change="changePeriode();"
+                                               ng-model="searchBilan.id_cycle"
+                                               ng-value="cycle.id_cycle">
+                                        [[::cycle.libelle]]
+                                    </label>
+                                </div>
+                                <br/>
+                            </form>
+                        </section>
+                    </div>
                 </div>
             </div>
             <div class="legend menuLeftStyle criterion card"
