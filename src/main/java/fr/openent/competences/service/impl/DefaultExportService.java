@@ -53,7 +53,9 @@ public class DefaultExportService implements ExportService {
     }
 
     @Override
-    public void getExportEval(final Boolean text, final Boolean only_evaluation, final JsonObject devoir, String idGroupe, final String idEtablissement,
+    public void getExportEval(final Boolean text, final Boolean only_evaluation, final JsonObject devoir,
+                              String idGroupe,
+                              final String idEtablissement,
                               HttpServerRequest request, final Handler<Either<String, JsonObject>> handler) {
 
         Long idDevoir = devoir.getLong("id");
@@ -69,8 +71,9 @@ public class DefaultExportService implements ExportService {
                 maitriseArray, competencesArray, notesArray, competencesNotesArray, annotationsArray, answered, handler);
 
         JsonObject action = new JsonObject()
-                .put("action", "classe.getElevesGroupesClasses")
-                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idGroupe));
+                .put("action", "classe.getElevesClasses")
+                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idGroupe))
+                .put("idPeriode", devoir.getLong("periodetype"));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
@@ -166,7 +169,7 @@ public class DefaultExportService implements ExportService {
                                                 responseHandler.handle(new Either.Right<String, JsonObject>(
                                                         formatJsonObjectExportDevoir(text,
                                                                 stringJsonObjectEither.right().getValue(),
-                                                                extractData(orderBy(eleves, "lastName"), "id"),
+                                                                extractData(orderBy(eleves, "lastName"), "idEleve"),
                                                                 extractData(orderBy(addMaitriseNE(maitrises), "ordre", true), "ordre"),
                                                                 extractData(competences,"id_competence"),
                                                                 extractData(notes, "id_eleve"),
@@ -198,7 +201,7 @@ public class DefaultExportService implements ExportService {
                                                 responseHandler.handle(new Either.Right<String, JsonObject>(
                                                         formatJsonObjectExportDevoir(text,
                                                                 stringJsonObjectEither.right().getValue(),
-                                                                extractData(orderBy(eleves, "lastName"), "id"),
+                                                                extractData(orderBy(eleves, "lastName"), "idEleve"),
                                                                 extractData(orderBy(addMaitriseNE(maitrises), "ordre", true), "ordre"),
                                                                 extractData(competences,"id_competence"),
                                                                 extractData(notes, "id_eleve"),
