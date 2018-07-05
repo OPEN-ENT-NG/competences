@@ -574,12 +574,12 @@ public class ExportPDFController extends ControllerHelper {
                 public void handle(final Either<String, JsonObject> event) {
                     if (event.isRight()) {
 
-                        eleveEnseignementComplementService.listNiveauCplByEleves(idEleves.toArray(new String[0]), new Handler<Either<String, JsonArray>>() {
+                        eleveEnseignementComplementService.listNiveauCplByEleves(idEleves.toArray(new String[1]), new Handler<Either<String, JsonArray>>() {
                             @Override
                             public void handle (final Either <String, JsonArray> eventNCPL){
                                 if (eventNCPL.isRight()) {
 
-                                    bfcSynthseService.getBfcSyntheseByIdsEleveAndClasse(idEleves.toArray(new String[0]), classe.getKey(), new Handler<Either<String, JsonArray>>() {
+                                    bfcSynthseService.getBfcSyntheseByIdsEleveAndClasse(idEleves.toArray(new String[1]), classe.getKey(), new Handler<Either<String, JsonArray>>() {
                                         @Override
                                         public void handle(Either<String, JsonArray> repSynthese) {
                                             if (repSynthese.isRight()) {
@@ -903,7 +903,7 @@ public class ExportPDFController extends ControllerHelper {
                                             }
                                         });
                                     } else if (!idClasses.isEmpty()) {
-                                        utilsService.getNameEntity(classes.keySet().toArray(new String[0]), new Handler<Either<String, JsonArray>>() {
+                                        utilsService.getNameEntity(classes.keySet().toArray(new String[1]), new Handler<Either<String, JsonArray>>() {
                                             @Override
                                             public void handle(Either<String, JsonArray> event) {
                                                 if (event.isRight()) {
@@ -920,7 +920,7 @@ public class ExportPDFController extends ControllerHelper {
                                             }
                                         });
                                     } else {
-                                        utilsService.getNameEntity(idEleves.toArray(new String[0]), new Handler<Either<String, JsonArray>>() {
+                                        utilsService.getNameEntity(idEleves.toArray(new String[1]), new Handler<Either<String, JsonArray>>() {
                                             @Override
                                             public void handle(Either<String, JsonArray> event) {
                                                 if (event.isRight()) {
@@ -1189,7 +1189,7 @@ public class ExportPDFController extends ControllerHelper {
                                             JsonObject action = new JsonObject()
                                                     .put("action", "classe.getEleveClasse")
                                                     .put("idClasse", devoirInfos.getString("id_groupe"))
-                                                    .put("idPeriode", devoirInfos.getInteger("periodetype"));
+                                                    .put("idPeriode", devoirInfos.getInteger("id_periode"));
 
                                             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
@@ -1396,7 +1396,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                             .put("idClasse", devoirInfos
                                                                                     .getString("id_groupe"))
                                                                             .put("idPeriode", devoirInfos
-                                                                                    .getInteger("periodetype"));
+                                                                                    .getInteger("id_periode"));
 
                                                                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                                         @Override

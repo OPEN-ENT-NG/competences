@@ -464,7 +464,7 @@ public class DevoirController extends ControllerHelper {
                                 final String has_competence =
                                         (devoirInfos.getLong("nbrcompetence") > 0)? "true" : "false";
                                 final String idGroupe = devoirInfos.getString("id_groupe");
-                                final Long idPeriode = devoirInfos.getLong("periodetype");
+                                final Long idPeriode = devoirInfos.getLong("id_periode");
                                 final int typeClasse  = devoirInfos.getInteger("type_groupe");
 
                                 Utils.getIdElevesClassesGroupes(eb, idGroupe, idPeriode.intValue(), typeClasse,

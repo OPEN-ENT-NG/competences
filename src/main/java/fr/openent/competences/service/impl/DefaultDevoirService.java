@@ -1081,7 +1081,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     JsonObject action = new JsonObject()
                             .put("action", "classe.getEleveClasse")
                             .put("idClasse", devoirInfos.getString("id_groupe"))
-                            .put("idPeriode", devoirInfos.getInteger("periodetype"));
+                            .put("idPeriode", devoirInfos.getInteger("id_periode"));
 
                     eb.send(Competences.VIESCO_BUS_ADDRESS, action,
                             handlerToAsyncHandler(new Handler<Message<JsonObject>>() {

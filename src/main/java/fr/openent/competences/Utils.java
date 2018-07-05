@@ -67,13 +67,15 @@ public class Utils {
         JsonObject action = new JsonObject();
         if(typeClasse == 0) {
             action.put("action", "classe.getEleveClasse")
-                    .put("idClasse", idGroupe);
+                    .put("idClasse", idGroupe)
+                    .put("idPeriode", idPeriode);
 
         }
         else if(typeClasse == 1 || typeClasse == 2){
             action.put("action", "groupe.listUsersByGroupeEnseignementId")
                     .put("groupEnseignementId", idGroupe)
-                    .put("profile", "Student");
+                    .put("profile", "Student")
+                    .put("idPeriode", idPeriode);
         }
 
 

@@ -73,7 +73,7 @@ public class DefaultExportService implements ExportService {
         JsonObject action = new JsonObject()
                 .put("action", "classe.getElevesClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idGroupe))
-                .put("idPeriode", devoir.getLong("periodetype"));
+                .put("idPeriode", devoir.getLong("id_periode"));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override

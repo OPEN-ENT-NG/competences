@@ -59,7 +59,7 @@ public class CompetenceRepositoryEvents implements RepositoryEvents {
 
     @Override
     public void deleteUsers(JsonArray jsonArray) {
-        log.info("[CompetenceRepositoryEvents] : delete groups event is not implemented");
+        log.info("[CompetenceRepositoryEvents] : delete users event is not implemented");
     }
 
     @Override

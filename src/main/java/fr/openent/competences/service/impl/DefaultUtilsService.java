@@ -435,7 +435,36 @@ public class DefaultUtilsService  implements UtilsService {
         query.append("MATCH (s) WHERE s.id IN {id} RETURN CASE WHEN s.name IS NULL THEN s.lastName ELSE s.name END AS name");
         params.put("id", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(name)));
 
-        neo4j.execute(query.toString(), params, Neo4jResult.validResultHandler(handler));
+        neo4j.execute(query.toString(), params, new Handler<Message<JsonObject>>() {
+            public void handle(Message<JsonObject> event) {
+                if(!"ok".equals(((JsonObject) event.body()).getString("status"))) {
+                    handler.handle(new Either.Left<>("Error While get User in Neo4J "));
+                }
+                else {
+
+                    JsonArray rNeo = ((JsonObject) event.body()).getJsonArray("result",
+                            new fr.wseduc.webutils.collections.JsonArray());
+                    if(rNeo.size() > 0 ) {
+                        handler.handle(new Either.Right<>(rNeo));
+                    }
+                    else {
+                        // Si l'id n'est pas retrouvé dans l'annuaire, on le récupère dans Postgres
+                        StringBuilder queryPostgres = new StringBuilder();
+                        JsonArray paramsPostgres = new JsonArray();
+
+                        queryPostgres.append(" SELECT  personnes_supp.last_name as \"lastName\" ")
+                                .append(" FROM " + Competences.VSCO_SCHEMA + ".personnes_supp")
+                                .append(" WHERE id_user IN "+ Sql.listPrepared(Arrays.asList(name)));
+                        for (int i= 0;i< name.length; i++) {
+                            paramsPostgres.add(name[i]);
+                        }
+
+                        Sql.getInstance().prepared(queryPostgres.toString(), paramsPostgres,
+                                SqlResult.validResultHandler(handler));
+                    }
+                }
+            }
+        });
     }
 
     @Override
