@@ -219,12 +219,13 @@ body.evaluations {
   //    Vue cycle : change couleur du libellé de la vue liste    //
 
   .enseignantCycle {
-    color: lightgrey;
+    //color: lightgrey;
+    width: 0%;
   }
 
-  .evaluationCycle {
-    color: darkorange;
-  }
+  //.evaluationCycle {
+  //  color: darkorange;
+  //}
 
   .disabled{
     opacity: 0.45;
