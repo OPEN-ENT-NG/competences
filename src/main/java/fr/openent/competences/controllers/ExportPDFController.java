@@ -610,8 +610,10 @@ public class ExportPDFController extends ControllerHelper {
                                                 for (int i = 0; i <idEleves.size() ; i++) {
                                                     JsonArray resultats = event.right().getValue().getJsonArray(idEleves.get(i));
                                                     Map<Long, Integer> resultEleves = new HashMap<>();
-                                                    for (Object resultat : resultats) {
-                                                        resultEleves.put((Long) ((JsonObject) resultat).getLong("idDomaine"), (Integer) ((JsonObject) resultat).getInteger("niveau"));
+                                                    if (resultats != null) {
+                                                        for (Object resultat : resultats) {
+                                                            resultEleves.put((Long) ((JsonObject) resultat).getLong("idDomaine"), (Integer) ((JsonObject) resultat).getInteger("niveau"));
+                                                        }
                                                     }
                                                     resultatsEleves.put(idEleves.get(i), resultEleves);
                                                 }
@@ -658,7 +660,9 @@ public class ExportPDFController extends ControllerHelper {
      * @param idStructure Identifiant de la structure dont on souhaite generer le BFC.
      * @param handler     Handler contenant les listes des eleves, indexees par classes.
      */
-    private void getParamStruct(final String idStructure, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
+    private void getParamStruct(final String idStructure,
+                                final long idPeriode,
+                                final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
 
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
         population.put(idStructure, new LinkedHashMap<String, List<Eleve>>());
@@ -668,7 +672,8 @@ public class ExportPDFController extends ControllerHelper {
             public void handle(Either<String, List<String>> event) {
                 if (event.isRight()) {
                     final List<String> classes = event.right().getValue();
-                    Utils.getElevesClasses(eb, classes.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
+                    Utils.getElevesClasses(eb, classes.toArray(new String[0]), idPeriode,
+                            new Handler<Either<String, Map<String, List<String>>>>() {
                         @Override
                         public void handle(Either<String, Map<String, List<String>>> event) {
                             if (event.isRight()) {
@@ -712,7 +717,9 @@ public class ExportPDFController extends ControllerHelper {
      * @param idClasses Identifiants des classes dont on souhaite generer le BFC.
      * @param handler   Handler contenant les listes des eleves, indexees par classes.
      */
-    private void getParamClasses(final List<String> idClasses, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
+    private void getParamClasses(final List<String> idClasses,
+                                 final Long idPeriode,
+                                 final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
 
         Utils.getStructClasses(eb, idClasses.toArray(new String[0]), new Handler<Either<String, String>>() {
@@ -722,7 +729,9 @@ public class ExportPDFController extends ControllerHelper {
                     final String idStructure = event.right().getValue();
                     population.put(idStructure, new LinkedHashMap<String, List<Eleve>>());
 
-                    Utils.getElevesClasses(eb, idClasses.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
+                    Utils.getElevesClasses(eb, idClasses.toArray(new String[0]),
+                            idPeriode,
+                            new Handler<Either<String, Map<String, List<String>>>>() {
                         @Override
                         public void handle(Either<String, Map<String, List<String>>> event) {
                             if (event.isRight()) {
@@ -769,7 +778,7 @@ public class ExportPDFController extends ControllerHelper {
     private void getParamEleves(final List<String> idEleves, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
 
-        Utils.getInfoEleve(eb, idEleves.toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
+        Utils.getInfoEleve(eb, idEleves.toArray(new String[1]), new Handler<Either<String, List<Eleve>>>() {
             @Override
             public void handle(Either<String, List<Eleve>> event) {
                 if (event.isRight()) {
@@ -804,8 +813,8 @@ public class ExportPDFController extends ControllerHelper {
     /**
      * Se charge d'appeler les methodes permettant la recuperation des parametres manquants en fonction du parametre
      * fournit.
-     * Appelle {@link #getParamStruct(String, Handler)} si seul l'identifiant de la structure est fourni.
-     * Appelle {@link #getParamClasses(List, Handler)} si seuls les identifiants de classes sont fournis.
+     * Appelle {@link #getParamStruct(String,Long, Handler)} si seul l'identifiant de la structure est fourni.
+     * Appelle {@link #getParamClasses(List, Long, Handler)} si seuls les identifiants de classes sont fournis.
      * Appelle {@link #getParamEleves(List, Handler)} si seuls les identifiants d'eleves sont fournis.
      *
      * @param idStructure Identifiant de la structure dont on souhaite generer le BFC.
@@ -813,10 +822,13 @@ public class ExportPDFController extends ControllerHelper {
      * @param idEleves    Identifiants des eleves dont on souhaite generer le BFC.
      * @param handler     Handler contenant les listes des eleves, indexees par classes.
      */
-    private void getParamBFC(final String idStructure, final List<String> idClasses, final List<String> idEleves, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
+    private void getParamBFC(final String idStructure, final List<String> idClasses, final List<String> idEleves,
+                             final Long idPeriode,
+                             final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
 
         if (idStructure != null) {
-            getParamStruct(idStructure, new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
+            getParamStruct(idStructure, idPeriode,
+                    new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                 @Override
                 public void handle(Either<String, Map<String, Map<String, List<Eleve>>>> event) {
                     if (event.isRight()) {
@@ -828,7 +840,9 @@ public class ExportPDFController extends ControllerHelper {
                 }
             });
         } else if (!idClasses.isEmpty()) {
-            getParamClasses(idClasses, new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
+            getParamClasses(idClasses,
+                    idPeriode,
+                    new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                 @Override
                 public void handle(Either<String, Map<String, Map<String, List<Eleve>>>> event) {
                     if (event.isRight()) {
@@ -872,12 +886,15 @@ public class ExportPDFController extends ControllerHelper {
         final String idStructure = request.params().get("idStructure");
         final List<String> idClasses = request.params().getAll("idClasse");
         final List<String> idEleves = request.params().getAll("idEleve");
-        final Long idPeriode = (request.params().get("idPeriode") != null) ? Long.valueOf(request.params().get("idPeriode")) : null;
+        final Long idPeriode =
+                (request.params().get("idPeriode") != null) ? Long.valueOf(request.params().get("idPeriode")) : null;
 
         // Ou exclusif sur la presence des parametres, de facon a s'assurer qu'un seul soit renseigne.
         if (idStructure != null ^ !idClasses.isEmpty() ^ !idEleves.isEmpty()) {
 
-            getParamBFC(idStructure, idClasses, idEleves, new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
+            getParamBFC(idStructure, idClasses, idEleves,
+                    idPeriode,
+                    new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                 @Override
                 public void handle(Either<String, Map<String, Map<String, List<Eleve>>>> event) {
                     if (event.isRight()) {

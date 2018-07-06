@@ -361,7 +361,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     }
 
     @Override
-    public void buildBFC(final boolean recapEval, final String[] idEleves, final String idClasse, final String idStructure, final Long idPeriode,final Long idCycle, final Handler<Either<String, JsonObject>> handler) {
+    public void buildBFC(final boolean recapEval, final String[] idEleves, final String idClasse,
+                         final String idStructure,
+                         final Long idPeriode,final Long idCycle, final Handler<Either<String, JsonObject>> handler) {
 
         final Map<String, Map<Long, Long>> notesCompetencesEleve = new HashMap<>();
         final Map<String, Map<Long, Integer>> bfcEleve = new HashMap<>();
@@ -504,7 +506,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,final Long idPeriode, final Handler<Either<String, JsonArray>> handler) {
         // j'ai besoin de récupérer les idsEleve et idStructure à partir de l'idClass
         final JsonArray moyControlesContinusEleves = new fr.wseduc.webutils.collections.JsonArray();
-        getParamsMethodGetMoyenne(idsClasses, new Handler<Either<String, Map<String, Map<String, List<String>>>>>() {
+        getParamsMethodGetMoyenne(idsClasses,
+                idPeriode,
+                new Handler<Either<String, Map<String, Map<String, List<String>>>>>() {
             @Override
             public void handle(Either<String, Map<String, Map<String, List<String>>>> respParam) {
 
@@ -630,7 +634,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
     }
     //récupérer les paramètres nécessaire pour les méthodes
-    private void getParamsMethodGetMoyenne (final List<String> idsClasses, final Handler<Either<String, Map<String, Map<String, List<String>>>>> handler){
+    private void getParamsMethodGetMoyenne (final List<String> idsClasses,
+                                            final Long idPeriode,
+                                            final Handler<Either<String, Map<String, Map<String, List<String>>>>> handler){
         final Map<String, Map<String, List<String>>> paramsMethods = new HashMap<>();
 
         Utils.getStructClasses(eb, idsClasses.toArray(new String[0]), new Handler<Either<String, String>>() {
@@ -640,7 +646,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     final String idStructure = repStructure.right().getValue();
                     paramsMethods.put(idStructure,new LinkedHashMap<String, List<String>>());
 
-                    Utils.getElevesClasses(eb, idsClasses.toArray(new String[0]), new Handler<Either<String, Map<String, List<String>>>>() {
+                    Utils.getElevesClasses(eb, idsClasses.toArray(new String[0]),
+                            idPeriode,
+                            new Handler<Either<String, Map<String, List<String>>>>() {
                         @Override
                         public void handle(Either<String, Map<String, List<String>>> repEleves) {
                             if(repEleves.isRight()){

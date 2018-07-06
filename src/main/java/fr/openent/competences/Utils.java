@@ -11,6 +11,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
+
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.util.*;
@@ -109,9 +112,12 @@ public class Utils {
      * @param idClasses Identifiant de la classe dont on souhaite recuperer les eleves.
      * @param handler   Handler contenant la liste des identifiants des eleves recuperees.
      */
-    public static void getElevesClasses(EventBus eb, String[] idClasses, final Handler<Either<String, Map<String, List<String>>>> handler) {
+    public static void getElevesClasses(EventBus eb, String[] idClasses,
+                                        Long idPeriode,
+                                        final Handler<Either<String, Map<String, List<String>>>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "classe.getElevesClasses")
+                .put("idPeriode", idPeriode)
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idClasses)));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -161,17 +167,83 @@ public class Utils {
                     final Set<String> classes = new HashSet<>();
                     final List<Eleve> result = new ArrayList<>();
                     JsonArray queryResult = body.getJsonArray("results");
+
+                    // récupération des noms des classes des élèves supprimés et stockés dans postgres
+                    JsonArray idClasses = new JsonArray();
                     for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject eleveBase = queryResult.getJsonObject(i);
-                        Eleve eleveObj = new Eleve(eleveBase.getString("idEleve"),
-                                eleveBase.getString("lastName"),
-                                eleveBase.getString("firstName"),
-                                eleveBase.getString("idClasse"),
-                                eleveBase.getString("classeName"));
-                        classes.add(eleveObj.getIdClasse());
-                        result.add(eleveObj);
+                        if(null == queryResult.getJsonObject(i).getString("classeName") ) {
+                            idClasses.add(queryResult.getJsonObject(i).getString("idClasse"));
+                        }
+                    }
+                    if (idClasses.size() == 0) {
+                        for (int i = 0; i < queryResult.size(); i++) {
+                            JsonObject eleveBase = queryResult.getJsonObject(i);
+                            Eleve eleveObj = new Eleve(eleveBase.getString("idEleve"),
+                                    eleveBase.getString("lastName"),
+                                    eleveBase.getString("firstName"),
+                                    eleveBase.getString("idClasse"),
+                                    eleveBase.getString("classeName"));
+                            classes.add(eleveObj.getIdClasse());
+                            result.add(eleveObj);
+                        }
+                        getCycleElevesForBfcCycle(classes,result, handler);
+                    }
+                    // S'il existe des élèves stockés dans postgres, on va récupérer le nom des classes dans Neo
+                    else{
+                        StringBuilder query = new StringBuilder();
+                        JsonObject params = new JsonObject();
+                        query.append("MATCH (c:Class) WHERE c.id IN {idClasses} return c.id as id, c.name as name");
+                        params.put("idClasses", idClasses);
+
+                        Neo4j.getInstance().execute(query.toString(), params,new Handler<Message<JsonObject>>() {
+                            public void handle(Message<JsonObject> event) {
+                                JsonObject body = event.body();
+
+                                if (!"ok".equals(body.getString("status"))) {
+                                    String message = "PB while getting classeName for BFc export";
+                                    log.error(message);
+                                    handler.handle(new Either.Left<>(message));
+                                }
+                                else {
+                                    final HashMap<String, String> classeName = new HashMap<>();
+                                    JsonArray classesGetFromNeo = body.getJsonArray("result");
+                                    for(int i=0; i<classesGetFromNeo.size(); i++) {
+                                        classeName.put(classesGetFromNeo.getJsonObject(i).getString("id"),
+                                                classesGetFromNeo.getJsonObject(i).getString("name"));
+                                    }
+                                    for (int i = 0; i < queryResult.size(); i++) {
+                                        JsonObject eleveBase = queryResult.getJsonObject(i);
+                                        String eleveBaseClasseName = eleveBase.getString("classeName");
+                                        if (null == eleveBaseClasseName) {
+                                            eleveBaseClasseName = classeName.get(eleveBase.getString("idClasse"));
+                                        }
+                                        Eleve eleveObj = new Eleve(eleveBase.getString("idEleve"),
+                                                eleveBase.getString("lastName"),
+                                                eleveBase.getString("firstName"),
+                                                eleveBase.getString("idClasse"),
+                                                eleveBaseClasseName);
+                                        classes.add(eleveObj.getIdClasse());
+                                        result.add(eleveObj);
+                                    }
+                                    getCycleElevesForBfcCycle(classes,result, handler);
+                                }
+                            }
+                        });
+
                     }
 
+
+                } else {
+                    handler.handle(new Either.Left<String, List<Eleve>>(body.getString("message")));
+                    log.error("getInfoEleve : getInfoEleve : " + body.getString("message"));
+                }
+            }
+        }));
+
+    }
+
+    private static void getCycleElevesForBfcCycle(final Set<String> classes, final List<Eleve> result,
+                                                  final Handler<Either<String, List<Eleve>>> handler) {
                     utilsService.getCycle(new ArrayList<>(classes), new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> event) {
@@ -193,14 +265,7 @@ public class Utils {
                         }
                     });
 
-                } else {
-                    handler.handle(new Either.Left<String, List<Eleve>>(body.getString("message")));
-                    log.error("getInfoEleve : getInfoEleve : " + body.getString("message"));
-                }
-            }
-        }));
     }
-
     /**
      * Recupere l'identifiant de l'ensemble des classes de la structure dont l'identifiant est passe en parametre.
      *
