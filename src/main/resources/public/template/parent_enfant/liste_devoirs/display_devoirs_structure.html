@@ -47,7 +47,7 @@
                     <section>
                         <label class="select">
                             <select ng-model="search.periode"
-                                    ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all">
+                                    ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all | filter:filterCycle()">
                                 <option disabled value="" class="header-opt">
                                     [[translate('viescolaire.utils.periode')]]
                                 </option>
@@ -81,7 +81,7 @@
         <section class="row custom-mobile-releve twelve-mobile">
             <label class="select">
                 <select ng-model="search.periode"
-                        ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all">
+                        ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all | filter:filterCycle(periode)">
                     <option disabled value="" class="header-opt">
                         [[translate('viescolaire.utils.periode')]]
                     </option>

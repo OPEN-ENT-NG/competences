@@ -753,5 +753,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return $scope.search.matiere;
         };
 
+
+        $scope.filterCycle = () => {
+            return (item) => {
+                return item.id_type > -2;
+            };
+        };
     }
+
+
 ]);

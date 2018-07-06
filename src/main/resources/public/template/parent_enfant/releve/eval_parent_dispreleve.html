@@ -30,7 +30,7 @@
                 <label class="select cell two twelve-mobile" ng-hide="searchReleve.eleve===undefined">
                     <select ng-model="searchReleve.periode"
                             ng-change="loadReleveNote()"
-                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all">
+                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all | filter:filterCycle()">
                         <option class="header-opt" disabled value="">
                             [[translate('viescolaire.utils.periode')]]
                         </option>
@@ -47,7 +47,7 @@
                 <label class="select cell two twelve-mobile">
                     <select ng-model="searchReleve.periode"
                             ng-change="loadReleveNote()"
-                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all">
+                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all | filter:filterCycle()">
                         <option class="header-opt" disabled value="">
                             [[translate('viescolaire.utils.periode')]]
                         </option>

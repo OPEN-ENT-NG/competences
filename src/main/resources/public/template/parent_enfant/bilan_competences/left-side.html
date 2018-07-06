@@ -10,16 +10,31 @@
                     </h2>
                 </div>
                 <div>
-                    <label class="select">
-                        <select ng-model="searchBilan.periode"
-                                ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all track by periode.id_type"
-                                ng-change="changePeriode(); displayCycles(searchBilan.periode);">
-                            <option class="header-opt" disabled value="">
-                                [[translate('viescolaire.utils.periode')]]
-                            </option>
-                        </select>
+                    <section ng-if="template.contains('main', 'parent_enfant/bilan_competences/content_vue_bilan_eleve')">
+                        <label class="select">
+                            <select ng-model="searchBilan.periode"
+                                    ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all track by periode.id_type"
+                                    ng-change="changePeriode(); displayCycles(searchBilan.periode);">
+                                <option class="header-opt" disabled value="">
+                                    [[translate('viescolaire.utils.periode')]]
+                                </option>
+                            </select>
+                        </label>
+                    </section>
 
-                    </label>
+                    <section ng-if="!template.contains('main', 'parent_enfant/bilan_competences/content_vue_bilan_eleve')">
+                        <label class="select">
+                            <select ng-model="searchBilan.periode"
+                                    ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all track by periode.id_type | filter:filterCycle()"
+                                    ng-change="changePeriode(); displayCycles(searchBilan.periode);">
+                                <option class="header-opt" disabled value="">
+                                    [[translate('viescolaire.utils.periode')]]
+                                </option>
+                            </select>
+                        </label>
+                    </section>
+
+
                     <div class="inputContainer">
                         <section ng-class="{'inputSection1': searchBilan.periode.libelle === 'cycle'}">
                             <p>

@@ -609,6 +609,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
             if (classe && classe.periodes && classe.periodes.length() === 0) {
                 classe.periodes.sync().then(() => {
+                    if ($location.path() === '/competences/eleve' ) {
+                        if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
+                            classe.periodes.all.push({libelle: "cycle", id: null});
+                        }
+                    }
                     $scope.getCurrentPeriode(classe).then(function (res) {
                         $scope.search.periode = res;
                         if ($location.path() === '/devoir/create' ||
@@ -620,12 +625,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                         utils.safeApply($scope);
                     });
-                    if(!_.findWhere(classe.periodes.all, {libelle: "cycle"}))
-                        classe.periodes.all.push({libelle: "cycle", id: null})
-                    utils.safeApply($scope);
+
                 });
 
             } else if (classe && classe.periodes) {
+                if ($location.path() === '/competences/eleve' ) {
+                    if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
+                        classe.periodes.all.push({libelle: "cycle", id: null});
+                    }
+                }
+                else {
+                    let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
+                   classe.periodes.all = _.without(classe.periodes.all, cycle);
+                }
+
                 $scope.getCurrentPeriode(classe).then(function (res) {
                     $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type});
                     if (($location.path() === '/devoir/create') ||
@@ -637,9 +650,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                     utils.safeApply($scope);
                 });
-                if(!_.findWhere(classe.periodes.all, {libelle: "cycle"}))
-                    classe.periodes.all.push({libelle: "cycle", id: null})
-                utils.safeApply($scope);
+            //     if(!_.findWhere(classe.periodes.all, {libelle: "cycle"}))
+            //         classe.periodes.all.push({libelle: "cycle", id: null})
+            //     utils.safeApply($scope);
             }
             utils.safeApply($scope);
         };

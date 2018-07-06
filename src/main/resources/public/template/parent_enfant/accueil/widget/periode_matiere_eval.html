@@ -15,7 +15,7 @@
         <div class="titre-widget center twelve">
             <label class="select five floatLeft twelve-mobile">
                 <select ng-model="search.periode"
-                        ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all">
+                        ng-options="getI18nPeriode(periode) for periode in selectedEleve.classe.periodes.all | filter:filterCycle()">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
             </label>
