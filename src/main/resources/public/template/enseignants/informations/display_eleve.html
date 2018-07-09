@@ -17,7 +17,8 @@
   ~
   -->
 <div class="header">
-    <h2 tooltip="[[informations.eleve.lastName]] [[informations.eleve.firstName]]" class="head text-overflow"
+    <h2 tooltip="[[informations.eleve.lastName]] [[informations.eleve.firstName]] [[(informations.eleve.deleteDate !== null)? (lang.translate('deleted')):'']]"
+        class="head text-overflow"
         ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}"
         ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</h2>
 </div>

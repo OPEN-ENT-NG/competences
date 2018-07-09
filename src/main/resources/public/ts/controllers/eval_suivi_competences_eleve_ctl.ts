@@ -1,7 +1,7 @@
 /**
  * Created by ledunoiss on 27/10/2016.
  */
-import {ng, template, model, moment, notify} from "entcore";
+import {ng, template, model, moment, notify, idiom as lang} from "entcore";
 import {
     SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve,
     Domaine,
@@ -87,7 +87,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         //
         // };
         $scope.route = $route;
-
+        $scope.lang = lang;
         $scope.opened.lightboxEvalLibre = false;
 
 

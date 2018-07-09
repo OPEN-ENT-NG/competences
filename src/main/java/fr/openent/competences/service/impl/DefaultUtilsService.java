@@ -452,7 +452,7 @@ public class DefaultUtilsService  implements UtilsService {
                         StringBuilder queryPostgres = new StringBuilder();
                         JsonArray paramsPostgres = new JsonArray();
 
-                        queryPostgres.append(" SELECT  personnes_supp.last_name as \"lastName\" ")
+                        queryPostgres.append(" SELECT  personnes_supp.last_name as name ")
                                 .append(" FROM " + Competences.VSCO_SCHEMA + ".personnes_supp")
                                 .append(" WHERE id_user IN "+ Sql.listPrepared(Arrays.asList(name)));
                         for (int i= 0;i< name.length; i++) {

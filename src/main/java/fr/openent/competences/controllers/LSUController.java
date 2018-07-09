@@ -163,7 +163,7 @@ public class LSUController extends ControllerHelper {
                 JsonObject body = message.body();
                 if ("ok".equals(body.getString("status"))) {
                     JsonArray jsonElevesRelatives = body.getJsonArray("results");
-                    Eleve eleve;
+                    Eleve eleve = null;
                     //Responsable responsable = null;
                     Adresse adresse = null;
                     Donnees.Eleves eleves = objectFactory.createDonneesEleves();
@@ -172,16 +172,32 @@ public class LSUController extends ControllerHelper {
                         for (int i = 0; i < jsonElevesRelatives.size(); i++) {
                             JsonObject o = jsonElevesRelatives.getJsonObject(i);
                             Responsable responsable = null;
-                            if (!eleves.containIdEleve(o.getString("idNeo4j"))) {
-                                String[] externalIdClass = o.getString("externalIdClass").split("\\$");
-                                String className = externalIdClass[(externalIdClass.length - 1)];
-                                eleve = objectFactory.createEleve(o.getString("externalId"), o.getString("attachmentId"), o.getString("firstName"),
-                                        o.getString("lastName"),className,o.getString("idNeo4j"),o.getString("idClass"),o.getString("level"));
-                                eleves.add(eleve);
-                            } else {
-                                eleve = eleves.getEleveById(o.getString("idNeo4j"));
+                            String idEleve = o.getString("idNeo4j");
+                            if(idEleve == null) {
+                                idEleve = o.getString("id");
                             }
-                            if(o.getString("address")!= null && o.getString("zipCode")!=null && o.getString("city")!= null ){
+                            if (!eleves.containIdEleve(idEleve)) {
+                                String[] externalIdClass ;
+                                String className;
+                                if (o.getString("externalIdClass") != null) {
+                                    externalIdClass = o.getString("externalIdClass").split("\\$");
+                                    className = externalIdClass[(externalIdClass.length - 1)];
+                                    eleve = objectFactory.createEleve(o.getString("externalId"), o.getString("attachmentId"), o.getString("firstName"),
+                                            o.getString("lastName"), className, o.getString("idNeo4j"), o.getString("idClass"), o.getString("level"));
+                                    eleves.add(eleve);
+                                }
+                                else {
+
+                                    log.info("[EXPORT LSU]: remove " + o.getString("name")
+                                            + o.getString("firstName"));
+
+                                }
+
+                            } else {
+                                eleve = eleves.getEleveById(idEleve);
+                            }
+                            if(o.getString("address")!= null
+                                    && o.getString("zipCode")!=null && o.getString("city")!= null ){
                                 String adress = o.getString("address");
                                 String codePostal =  o.getString("zipCode");
                                 String commune = o.getString("city");
@@ -219,7 +235,8 @@ public class LSUController extends ControllerHelper {
                                         }
                                     }
                                 //le xml ne peut-être édité si le responsable n'a pas la civilité
-                                if (responsable != null && responsable.getCivilite() != null ) {
+                                if (responsable != null && responsable.getCivilite() != null
+                                        && eleve != null) {
                                     eleve.getResponsableList().add(responsable);
                                 }
                             }

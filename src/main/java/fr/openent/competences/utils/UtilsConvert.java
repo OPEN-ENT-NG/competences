@@ -17,4 +17,19 @@ public class UtilsConvert {
         }
         return stringArr;
     }
+
+
+    public static JsonArray strIdGroupesToJsonArray (Object idGroupes) {
+        JsonArray result = new JsonArray();
+        if (idGroupes instanceof JsonArray) {
+            result = (JsonArray) idGroupes;
+        }
+        else if (idGroupes != null) {
+            String [] idGps = ((String)idGroupes).split(",");
+            for(int i=0;i< idGps.length; i++) {
+                result.add(idGps[i]);
+            }
+        }
+        return result;
+    }
 }
