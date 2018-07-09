@@ -793,7 +793,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     $scope.suiviFilter.mine = "false";
                 }
                 else {
-                    $scope.suiviFilter.mine = "true";
+                    $scope.initFilterMine();
                     $scope.currentCycle = {id_cycle: $scope.search.classe.id_cycle};
                     $scope.isCycle = false;
                 }
