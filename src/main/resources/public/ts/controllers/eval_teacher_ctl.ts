@@ -135,6 +135,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
                     $scope.search = $scope.initSearch();
+                    $scope.displayCycles($scope.search.periode);
                 }
                 $scope.opened.lightbox = false;
                 template.open('main', 'enseignants/eval_acu_teacher');
@@ -399,6 +400,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             display();
                         });
                     } else {
+                        $scope.syncPeriode($scope.search.classe.id);
                         display();
                     }
 
@@ -444,6 +446,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.search.classe = classe;
                         if (classe !== undefined) {
                             if (classe.eleves.empty()) classe.eleves.sync();
+                            $scope.syncPeriode(params.idClasse);
                             display();
                         }
                     } else {
@@ -640,7 +643,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
 
                 $scope.getCurrentPeriode(classe).then(function (res) {
-                    $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type});
+                    //on récupère la période en cours de la classe
+                    $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all,{id_type: res.id_type});
+                    $scope.displayCycles($scope.search.periode);
                     if (($location.path() === '/devoir/create') ||
                         ($scope.devoir !== undefined
                             && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {

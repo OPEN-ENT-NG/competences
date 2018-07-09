@@ -372,7 +372,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             if ($scope.search.classe.id_cycle === null) {
                 return;
             }
-            if ($scope.search.classe.eleves.empty) {
+            if ($scope.search.classe.eleves.empty()) {
                 await $scope.search.classe.eleves.sync();
             }
             if ($scope.search.eleve !== undefined &&
@@ -390,7 +390,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 // Récupérer le suivi de l'élève
                 let eleveIsEvaluable = $scope.search.eleve.isEvaluable($scope.search.periode);
                 if (eleveIsEvaluable) {
-                    if($scope.currentCycle === null)
+                    if($scope.currentCycle === null || $scope.currentCycle === undefined)
                         await $scope.getCyclesEleve();
 
                     $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve,
