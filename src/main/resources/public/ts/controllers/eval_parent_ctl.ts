@@ -173,6 +173,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.setCurrentPeriode();
             await $scope.updateNiveau(evaluations.usePerso);
             await $scope.getCyclesEleve();
+            await $scope.displayCycles();
 
             if ($location.path() === "/competences/eleve") {
                await $scope.initBilan();
@@ -407,7 +408,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (model.me.type === 'ELEVE'
                 && evaluations.eleve.classe !== undefined) {
                 $scope.currentCycle = _.findWhere(evaluations.eleve.cycles, {id_cycle: evaluations.eleve.classe.id_cycle});
-            } else {
+            }
+            else {
                 $scope.currentCycle = _.findWhere(evaluations.eleve.cycles, {id_cycle: evaluations.eleve.id_cycle});
             }
             utils.safeApply($scope);
@@ -462,6 +464,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 } else {
                     $scope.displayCycle = false;
                 }
+            }
+            else {
+                $scope.displayCycle = false;
             }
         }
 

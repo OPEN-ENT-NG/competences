@@ -655,9 +655,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                     utils.safeApply($scope);
                 });
-            //     if(!_.findWhere(classe.periodes.all, {libelle: "cycle"}))
-            //         classe.periodes.all.push({libelle: "cycle", id: null})
-            //     utils.safeApply($scope);
             }
             utils.safeApply($scope);
         };
