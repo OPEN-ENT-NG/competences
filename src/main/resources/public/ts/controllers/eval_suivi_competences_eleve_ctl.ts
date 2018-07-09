@@ -570,6 +570,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.initSuivi = () => {
             if ($scope.displayFromClass !== true) {
                 $scope.search.eleve = "";
+                $scope.search.classe = "";
                 delete $scope.informations.eleve;
                 delete $scope.suiviCompetence;
             } else {
