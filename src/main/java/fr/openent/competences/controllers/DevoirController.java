@@ -150,76 +150,96 @@ public class DevoirController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
                         @Override
                         public void handle(final JsonObject resource) {
-                            resource.remove("competences");
-                            resource.remove("competencesAdd");
-                            resource.remove("competencesRem");
-                            resource.remove("competenceEvaluee");
-                            resource.remove("competencesUpdate");
 
-                            RequestUtils.bodyToJson(request, pathPrefix +
-                                    Competences.SCHEMA_DEVOIRS_CREATE, new Handler<JsonObject>() {
+                            JsonObject action = new JsonObject()
+                                    .put("action", "eleve.isEvaluableOnPeriode")
+                                    .put("idEleve", resource.getJsonObject("competenceEvaluee").getString("id_eleve"))
+                                    .put("idPeriode", new Long(resource.getInteger("id_periode")));
+
+                            eb.send(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                 @Override
-                                public void handle(final JsonObject devoir) {
+                                public void handle(Message<JsonObject> message) {
+                                    JsonObject body = message.body();
+                                    if ("ok".equals(body.getString("status"))) {
+                                        if(body.getJsonArray("results").size() > 0){
+                                            resource.remove("competences");
+                                            resource.remove("competencesAdd");
+                                            resource.remove("competencesRem");
+                                            resource.remove("competenceEvaluee");
+                                            resource.remove("competencesUpdate");
 
-                                    devoirsService.createDevoir(devoir, user, new Handler<Either<String, JsonObject>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonObject> event) {
-                                            if (event.isRight()) {
-                                                final JsonObject devoirWithId = event.right().getValue();
-                                                // recuperation des professeurs que l'utilisateur connecté remplacent
-                                                utilsService.getTitulaires(user.getUserId(),
-                                                        devoir.getString("id_etablissement"), new Handler<Either<String, JsonArray>>() {
-                                                            @Override
-                                                            public void handle(Either<String, JsonArray> event) {
-                                                                if (event.isRight()) {
-                                                                    // si l'utilisateur connecté remplace bien un professeur
-                                                                    // on partage à ce professeur (le titulaire) le devoir
-                                                                    JsonArray values = event.right().getValue();
+                                            RequestUtils.bodyToJson(request, pathPrefix +
+                                                    Competences.SCHEMA_DEVOIRS_CREATE, new Handler<JsonObject>() {
+                                                @Override
+                                                public void handle(final JsonObject devoir) {
 
-                                                                    if(values.size() > 0) {
+                                                    devoirsService.createDevoir(devoir, user, new Handler<Either<String, JsonObject>>() {
+                                                        @Override
+                                                        public void handle(Either<String, JsonObject> event) {
+                                                            if (event.isRight()) {
+                                                                final JsonObject devoirWithId = event.right().getValue();
+                                                                // recuperation des professeurs que l'utilisateur connecté remplacent
+                                                                utilsService.getTitulaires(user.getUserId(),
+                                                                        devoir.getString("id_etablissement"), new Handler<Either<String, JsonArray>>() {
+                                                                            @Override
+                                                                            public void handle(Either<String, JsonArray> event) {
+                                                                                if (event.isRight()) {
+                                                                                    // si l'utilisateur connecté remplace bien un professeur
+                                                                                    // on partage à ce professeur (le titulaire) le devoir
+                                                                                    JsonArray values = event.right().getValue();
 
-                                                                        // TODO potentielement il peut y avoir plusieurs
-                                                                        // titulaires pour un remplaçant sur le même établissement
-                                                                        String userIdTitulaire = ((JsonObject)values.getJsonObject(0))
-                                                                                .getString("id_titulaire");
-                                                                        List<String> actions = new ArrayList<String>();
-                                                                        actions.add(Competences.DEVOIR_ACTION_UPDATE);
+                                                                                    if(values.size() > 0) {
 
-                                                                        // TODO ne partager le devoir seulement si le titulaire
-                                                                        // enseigne sur la classe du remplaçant
-                                                                        shareService.userShare(user.getUserId(),
-                                                                                userIdTitulaire,
-                                                                                devoirWithId.getLong("id").toString(),
-                                                                                actions, new Handler<Either<String, JsonObject>>() {
-                                                                                    @Override
-                                                                                    public void handle(Either<String, JsonObject> event) {
-                                                                                        if (event.isRight()) {
-                                                                                            renderJson(request, devoirWithId);
-                                                                                        } else {
-                                                                                            leftToResponse(request, event.left());
-                                                                                        }
+                                                                                        // TODO potentielement il peut y avoir plusieurs
+                                                                                        // titulaires pour un remplaçant sur le même établissement
+                                                                                        String userIdTitulaire = ((JsonObject)values.getJsonObject(0))
+                                                                                                .getString("id_titulaire");
+                                                                                        List<String> actions = new ArrayList<String>();
+                                                                                        actions.add(Competences.DEVOIR_ACTION_UPDATE);
 
+                                                                                        // TODO ne partager le devoir seulement si le titulaire
+                                                                                        // enseigne sur la classe du remplaçant
+                                                                                        shareService.userShare(user.getUserId(),
+                                                                                                userIdTitulaire,
+                                                                                                devoirWithId.getLong("id").toString(),
+                                                                                                actions, new Handler<Either<String, JsonObject>>() {
+                                                                                                    @Override
+                                                                                                    public void handle(Either<String, JsonObject> event) {
+                                                                                                        if (event.isRight()) {
+                                                                                                            renderJson(request, devoirWithId);
+                                                                                                        } else {
+                                                                                                            leftToResponse(request, event.left());
+                                                                                                        }
+
+                                                                                                    }
+                                                                                                });
+                                                                                    } else {
+                                                                                        // sinon on renvoie la réponse, pas besoin de partage
+                                                                                        renderJson(request, devoirWithId);
                                                                                     }
-                                                                                });
-                                                                    } else {
-                                                                        // sinon on renvoie la réponse, pas besoin de partage
-                                                                        renderJson(request, devoirWithId);
-                                                                    }
-                                                                }else {
-                                                                    leftToResponse(request, event.left());
-                                                                }
+                                                                                }else {
+                                                                                    leftToResponse(request, event.left());
+                                                                                }
+                                                                            }
+                                                                        });
+                                                            } else {
+                                                                badRequest(request);
                                                             }
-                                                        });
+                                                        }
+                                                    });
 
-
-                                            } else {
-                                                badRequest(request);
-                                            }
+                                                }
+                                            });
+                                        } else {
+                                            log.debug("Student not evaluable on this period");
+                                            Renders.unauthorized(request);
                                         }
-                                    });
-
+                                    } else {
+                                        log.debug("Student not evaluable on this period");
+                                        Renders.unauthorized(request);
+                                    }
                                 }
-                            });
+                            }));
                         }
                     });
                 } else {
