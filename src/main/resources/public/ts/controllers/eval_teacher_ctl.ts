@@ -622,7 +622,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.search.periode = res;
                         if ($location.path() === '/devoir/create' ||
                             ($scope.devoir !== undefined
-                                && ($location.elevepath() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                                && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
                             $scope.devoir.id_periode = res.id_type;
                             $scope.controleDate($scope.devoir);
                             utils.safeApply($scope);
