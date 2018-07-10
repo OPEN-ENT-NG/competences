@@ -2714,6 +2714,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $rootScope.notYear = () => {
             return (periode) => {
+                return periode.id !== null;
+            };
+        };
+
+        $scope.isEvaluableOnPeriode = () => {
+            return (periode) => {
                 return periode.id !== null && $scope.search.eleve.isEvaluable(periode);
             };
         };

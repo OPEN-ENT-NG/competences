@@ -170,8 +170,8 @@
 
             <div ng-show="opened.detailCompetenceSuivi" class="twelve">
                 <div>
-                    <a class="button twelve-mobile"  ng-disabled="search.periode.id == undefined || detailCompetence.masque || !search.eleve.isEvaluable(search.periode)" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
-                    <a class="button twelve-mobile" ng-disabled="search.periode.id == undefined || detailCompetence.masque  || !search.eleve.isEvaluable(search.periode)" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
+                    <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
+                    <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
                 </div>
                 <div class="right-magnet">
                     <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
