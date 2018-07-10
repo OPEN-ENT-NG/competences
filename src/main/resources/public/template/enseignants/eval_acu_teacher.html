@@ -48,6 +48,7 @@
                         <div class="twelve FloatRight periodeWidgetAccueil">
                             <label class="select right-magnet">
                                 <select ng-model="search.classe"
+                                        ng-change="syncPeriode(search.classe.id);"
                                         ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all:search">
                                     <option value="" class="header-opt"><i18n>Classe / Groupe</i18n></option>
                                 </select>

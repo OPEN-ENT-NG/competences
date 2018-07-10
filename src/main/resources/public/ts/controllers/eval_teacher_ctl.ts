@@ -644,8 +644,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 $scope.getCurrentPeriode(classe).then(function (res) {
                     //on récupère la période en cours de la classe
-                    $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all,{id_type: res.id_type});
-                    $scope.displayCycles($scope.search.periode);
+                    //quand on est sur la vue competence search.periode est l'objet Periode
+                    if($location.path() === '/competences/eleve' || $location.path() === '/competences/classe' ){
+                        $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all,{id_type: res.id_type});
+                }else{//sinon dans les autres vue search.periode est l'objet TypePeriode
+                    $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type});
+                }
+                $scope.displayCycles($scope.search.periode);
+                    //
                     if (($location.path() === '/devoir/create') ||
                         ($scope.devoir !== undefined
                             && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
