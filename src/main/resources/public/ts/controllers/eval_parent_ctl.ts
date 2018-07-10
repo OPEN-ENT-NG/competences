@@ -161,19 +161,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         // Fonction de sélection d'un enfant par le parent
         $scope.chooseChild = async function(eleve) {
             evaluations.eleve = eleve;
+            $scope.displayCycles( $scope.search.periode );
             $scope.eleve = evaluations.eleve;
             $scope.selectedEleve = $scope.eleve;
             eleve.classe = new Classe({id: eleve.idClasse});
             await eleve.classe.sync();
             await evaluations.devoirs.sync( eleve.idStructure, eleve.id, undefined );
+            $scope.search.periode = evaluations.periode;
             $scope.devoirs = evaluations.devoirs;
             $scope.matieres = evaluations.matieres;
-            $scope.search.periode = evaluations.periode;
             $scope.enseignants = evaluations.enseignants;
             $scope.setCurrentPeriode();
             await $scope.updateNiveau(evaluations.usePerso);
             await $scope.getCyclesEleve();
-            await $scope.displayCycles();
 
             if ($location.path() === "/competences/eleve") {
                await $scope.initBilan();
