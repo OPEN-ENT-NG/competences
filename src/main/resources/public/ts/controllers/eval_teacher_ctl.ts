@@ -648,11 +648,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     //on récupère la période en cours de la classe
                     //quand on est sur la vue competence search.periode est l'objet Periode
                     if($location.path() === '/competences/eleve' || $location.path() === '/competences/classe' ){
-                        if($scope.search !== undefined && $scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null ) {
-                            // On choisit l
-                            $scope.search.periode =  _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all,{id: null});
+                        if ($scope.search !== undefined && $scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null) {
+                            // On choisit la periode annee
+                            $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all, {id: null});
                         } else {
-                            $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all,{id_type: res.id_type});
+                            $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all, {id_type: res.id_type});
                         }
                     } else {//sinon dans les autres vue search.periode est l'objet TypePeriode
                         $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type});
@@ -3074,6 +3074,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             let currentPeriode = _.find(classe.periodes.all, (periode) => {
                 return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
             });
+
             return currentPeriode != null ? currentPeriode : -1;
         };
 

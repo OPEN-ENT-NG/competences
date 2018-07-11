@@ -70,7 +70,7 @@ export class Classe extends Model {
             sync : async (): Promise<any> => {
                 return new Promise((resolve, reject) => {
                     http().getJson(this.api.syncPeriode).done((res) => {
-                        res.push({id: null});
+                        res.push({id: null, id_type: null, id_classe: this.id});
                         this.periodes.load(res);
                         resolve();
                     }).error( (res) =>{

@@ -25,7 +25,7 @@ export class SuiviCompetenceClasse extends Model {
                     http().getJson(url).done((resDomaines) => {
                         var url = that.api.getCompetencesNotesClasse + classe.id+"/"+ classe.type_groupe;
                         if (periode !== null && periode !== undefined && periode !== '*') {
-                            if(periode.id_type !== undefined)url += "?idPeriode="+periode.id_type;
+                            if(periode.id_type !== undefined && periode.id_type !== null)url += "?idPeriode="+periode.id_type;
                         }
                         http().getJson(url).done((resCompetencesNotes) => {
                             if(resDomaines) {
