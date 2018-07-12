@@ -2939,4 +2939,10 @@ body.evaluations {
   .deletedStudent {
     color: #E61758 !important;
   }
+
+
+  // Retire le padding de la barre de recherche lors de la recherche d'élève
+  .autocomplete div {
+    padding: 0px !important;
+  }
 }
