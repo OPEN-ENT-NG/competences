@@ -156,15 +156,17 @@ public class DefaultExportService implements ExportService {
                                         public void handle(Either<String, JsonObject> stringJsonObjectEither) {
                                             if (stringJsonObjectEither.isRight()) {
                                                 Map<String, Map<String, JsonObject>> competenceNoteElevesMap = new HashMap<>();
-                                                for (int i = 0; i < competencesNotes.size(); i++) {
-                                                    JsonObject competenceNote = competencesNotes.getJsonObject(i);
-                                                    if (!competenceNoteElevesMap.containsKey(competenceNote.getString("id_eleve"))) {
-                                                        competenceNoteElevesMap.put(
-                                                                competenceNote.getString("id_eleve"),
-                                                                new HashMap<String, JsonObject>());
+                                                if(!competencesNotes.contains("empty")) {
+                                                    for (int i = 0; i < competencesNotes.size(); i++) {
+                                                        JsonObject competenceNote = competencesNotes.getJsonObject(i);
+                                                        if (!competenceNoteElevesMap.containsKey(competenceNote.getString("id_eleve"))) {
+                                                            competenceNoteElevesMap.put(
+                                                                    competenceNote.getString("id_eleve"),
+                                                                    new HashMap<String, JsonObject>());
+                                                        }
+                                                        competenceNoteElevesMap.get(competenceNote.getString("id_eleve"))
+                                                                .put(String.valueOf(competenceNote.getLong("id_competence")), competenceNote);
                                                     }
-                                                    competenceNoteElevesMap.get(competenceNote.getString("id_eleve"))
-                                                            .put(String.valueOf(competenceNote.getLong("id_competence")), competenceNote);
                                                 }
                                                 responseHandler.handle(new Either.Right<String, JsonObject>(
                                                         formatJsonObjectExportDevoir(text,
