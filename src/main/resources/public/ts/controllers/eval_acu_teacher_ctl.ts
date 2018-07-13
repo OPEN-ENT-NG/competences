@@ -4,7 +4,10 @@ import * as utils from '../utils/teacher';
 
 export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', [
     '$scope', 'route', 'model', '$rootScope',
-    function ($scope, route, model, $rootScope) {
+    async function ($scope, route, model, $rootScope) {
+
+        await model.me.workflow.load(['viescolaire']);
+
         $scope.initControler = function () {
 
             $scope.evaluations = evaluations;
@@ -151,7 +154,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 $scope.getCurrentDevoirsNotDone();
                 utils.safeApply($scope);
             };
-            if (!evaluations.structure.isSynchronized) {
+            if (evaluations.structure === undefined || !evaluations.structure.isSynchronized) {
                 $scope.$parent.opened.displayStructureLoader = true;
                 evaluations.structure.sync().then(() => {
                     switchEtab();
@@ -181,7 +184,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
             $scope.getCurrentDevoirsNotDone();
         });
 
-        if (evaluations.structure.isSynchronized) {
+        if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
             $scope.initChartListNotDone();
             $scope.getCurrentDevoirsNotDone();
             $scope.initSearch();

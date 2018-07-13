@@ -21,34 +21,9 @@ declare let location: any;
 
 export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
-    function ($scope, route, $rootScope, $location, $filter, $sce, $compile, $timeout, $route) {
+    async function ($scope, route, $rootScope, $location, $filter, $sce, $compile, $timeout, $route) {
 
-        model.me.workflow.load(['viescolaire']);
-
-        // $scope.initPeriodesList = (Index?: number,annee?:boolean) => {
-        //     $scope.periodesList = {
-        //         "type": "select",
-        //         "name": "Service",
-        //         "value":  $scope.periodeParDefault(),
-        //         "values": []
-        //     };
-        //     if(Index || Index==0) {
-        //         _.map($scope.classes.all[Index].periode, function (per) {
-        //             $scope.periodesList.values.push(per);
-        //         });
-        //     }
-        //     if(annee !== false) {
-        //         $scope.periodesList.values.push({libelle: $scope.translate('viescolaire.utils.annee'), id: undefined});
-        //     }
-        //     if($scope.periodesList.values.length <= 1) {
-        //         $scope.displayPeriode = false   ;
-        //         utils.safeApply($scope);
-        //     }else {
-        //         $scope.displayPeriode =  true  ;
-        //         utils.safeApply($scope);
-        //     }
-        //
-        // };
+        await model.me.workflow.load(['viescolaire']);
 
         $scope.selectCycleForView = function (location) {
             let idCycle;

@@ -93,7 +93,8 @@ routes.define(function($routeProvider){
 
 declare let require: any;
 
-model.build = function () {
+model.build = async function () {
+    await model.me.workflow.load(['viescolaire']);
     require('angular-chart.js');
     (this as any).evaluations = evaluations;
 };
