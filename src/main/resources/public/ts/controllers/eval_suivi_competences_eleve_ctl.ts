@@ -366,6 +366,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         $scope.selectSuivi = async function (classeHasChange) {
             if(classeHasChange === true){
+                if($scope.search.eleve !== undefined && $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined)  $scope.search.eleve = "";
                 await $scope.syncPeriode($scope.search.classe.id);
             }
             $scope.selected.grey = true;
@@ -378,7 +379,9 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             if ($scope.search.eleve !== undefined &&
                 $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined) {
                 $scope.search.eleve = "";
+                $scope.informations.eleve = $scope.search.eleve;
                 delete $scope.suiviCompetence;
+                utils.safeApply($scope);
                 return;
             }
 
@@ -557,11 +560,12 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             );
         };
         $scope.updateSuiviEleve = (Eleve) => {
+            $scope.currentCycle = null;
             $scope.selected.grey = true;
             $scope.search.classe = _.findWhere(evaluations.classes.all, {'id': Eleve.idClasse});
             $scope.search.eleve = _.findWhere($scope.structure.eleves.all, {'id': Eleve.id});
             $scope.syncPeriode($scope.search.classe.id);
-            $scope.search.periode = '*';
+            //$scope.search.periode = '*';
             $scope.search.classe.eleves.sync().then(() => {
                 $scope.search.eleve = _.findWhere($scope.search.classe.eleves.all, {'id': Eleve.id});
                 $scope.selectSuivi($scope.route.current.$$route.originalPath);

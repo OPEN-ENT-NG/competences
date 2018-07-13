@@ -92,7 +92,7 @@ export class Eleve extends Model {
         else if(periode === undefined) {
             return true;
         }
-        else if (periode.id_type === undefined) {
+        else if (periode.id === null || periode.id === undefined) {
             return true;
         }
         else {

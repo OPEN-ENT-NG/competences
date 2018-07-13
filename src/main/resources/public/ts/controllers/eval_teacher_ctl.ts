@@ -376,7 +376,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             display();
                         });
                     } else {
-                        $scope.syncPeriode($scope.search.classe.id);
+                       // $scope.syncPeriode($scope.search.classe.id);
                         display();
                     }
 
@@ -584,6 +584,26 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             sousDomainesEnseignement: [],
         }
 
+        $scope.getClasseBeforeChange = (classe) => {
+            return classe;
+        };
+
+        let setSearchPeriode = function(classe,res){
+            if($location.path() === '/competences/eleve' || $location.path() === '/competences/classe' ){
+                if ($scope.search !== undefined && $scope.search.eleve !== undefined &&
+                    $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null ) {
+                    // On choisit la periode annee
+                    $scope.search.periode = _.findWhere(classe.periodes.all, {id: null});
+                }else {
+                    $scope.search.periode = res;
+                }
+            } /*else {//sinon dans les autres vue search.periode est l'objet TypePeriode et si on veut initialiaser search.periode à la période en cours il faudra faire
+                $scope.search.periode = (res.id !== null)?
+                    _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type}) : _.findWhere($scope.structure.typePeriodes.all, {id: res.id}) ;
+             }*/
+
+        };
+
         $scope.syncPeriode = (idClasse) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
             if (classe && classe.periodes && classe.periodes.length() === 0) {
@@ -594,7 +614,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
                     $scope.getCurrentPeriode(classe).then(function (res) {
-                        $scope.search.periode = res;
+                       setSearchPeriode(classe,res, );
                         if ($location.path() === '/devoir/create' ||
                             ($scope.devoir !== undefined
                                 && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
@@ -620,20 +640,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
 
                 $scope.getCurrentPeriode(classe).then(function (res) {
-                    //on récupère la période en cours de la classe
-                    //quand on est sur la vue competence search.periode est l'objet Periode
-                    if($location.path() === '/competences/eleve' || $location.path() === '/competences/classe' ){
-                        if ($scope.search !== undefined && $scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null) {
-                            // On choisit la periode annee
-                            $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all, {id: null});
-                        } else {
-                            $scope.search.periode = _.findWhere(_.findWhere($scope.structure.classes.all, {id: res.id_classe}).periodes.all, {id_type: res.id_type});
-                        }
-                    } else {//sinon dans les autres vue search.periode est l'objet TypePeriode
-                        $scope.search.periode = _.findWhere($scope.structure.typePeriodes.all, {id: res.id_type});
-                    }
+                    setSearchPeriode(classe,res);
                 $scope.displayCycles($scope.search.periode);
-                    //
                     if (($location.path() === '/devoir/create') ||
                         ($scope.devoir !== undefined
                             && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
