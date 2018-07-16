@@ -79,14 +79,15 @@
                 </section>
 
             </div>
-            <div class="marginFive" ng-if="search.periode.id !== null && search.periode.id !== undefined">
-                <container class="left card tailleMax" template="leftSide-devoirInfo"></container>
+            <div class="marginFive fiche left card tailleMax" ng-if="search.periode.id !== null && search.periode.id !== undefined && showInfosEval">
+                <container template="leftSide-devoirInfo"></container>
+            </div>
 
-                <div ng-if="!template.isEmpty('leftSide-userInfo')" class="fiche student-info card left tailleMax"
-                     ng-class="{opened : openedStudentInfo === true}">
-                    <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
-                    <container template="leftSide-userInfo"></container>
-                </div>
+            <div ng-if="!template.isEmpty('leftSide-userInfo') && showInfosEleve"
+                 class="marginFive fiche student-info card left tailleMax"
+                 ng-class="{opened : openedStudentInfo === true}">
+                <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
+                <container template="leftSide-userInfo"></container>
             </div>
 
             <div class="criteres card criterion"

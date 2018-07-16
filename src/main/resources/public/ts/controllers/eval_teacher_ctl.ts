@@ -2642,6 +2642,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         /**
+         * Masque l'encart du détail de l'élève
+         */
+        $scope.hideInfosEleve = function (){
+            $scope.showInfosEleve = false;
+        };
+
+        /**
+         * Masque l'encart du détail de l'évaluation
+         */
+        $scope.hideInfosEval = function (){
+            $scope.showInfosEval = false;
+        };
+        /**
          * Affiche les informations d'un devoir en fonction de l'objet passé en paramètre
          * @param obj objet de type Evaluation ou de type Devoir
          */
@@ -2654,6 +2667,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             if ($location.$$path === '/releve') {
+                $scope.showInfosEval = true;
                 $scope.openLeftMenu("openedDevoirInfo", false);
                 if ($scope.informations.devoir !== undefined &&
                     $scope.informations.devoir.statistiques === undefined) {
@@ -2672,6 +2686,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param eleve élève
          */
         $scope.getEleveInfo = function (eleve) {
+            $scope.showInfosEleve = true;
             template.close('leftSide-userInfo');
             utils.safeApply($scope);
             template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
