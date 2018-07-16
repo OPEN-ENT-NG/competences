@@ -82,6 +82,10 @@
              ng-if="exportDevoirObj.errExport">
             <i18n>evaluations.export.err</i18n>
         </div>
+        <div class="warning"
+             ng-if="exportDevoirObj.empty">
+            <i18n>evaluations.export.empty</i18n>
+        </div>
         <button ng-if="printOption.fileType !== 'devoir'" class ="right-magnet" ng-click="printCartouche()">
             <i18n>evaluations.export</i18n>
         </button>

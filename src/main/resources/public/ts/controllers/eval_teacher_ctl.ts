@@ -3245,7 +3245,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.exportDevoir = async (idDevoir, textMod = false) => {
             let url = "/competences/devoirs/print/" + idDevoir + "/export?text=" + textMod;
             http().getJson(url + "&json=true").error(() => {
-                $scope.exportDevoirObj.errExport = true;
+                if ("{\"error\":\"exportDevoir : empty result.\"}") {
+                    $scope.exportDevoirObj.errExport = false;
+                    $scope.exportDevoirObj.empty = true;
+                }
+                else {
+                    $scope.exportDevoirObj.errExport = true;
+                }
                 utils.safeApply($scope);
             }).done((result) => {
                 $scope.opened.evaluation.exportDevoirLB = false;
