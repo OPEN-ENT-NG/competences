@@ -278,6 +278,9 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                 if (event.isRight()) {
                                     log.info("FIN : transition année id Etablissement : " + idStructureATraiter);
                                     endTransition(nbStructureATraiter, finalHandler, idStructures);
+                                } else if (event.isLeft()){
+                                    log.error("FIN : transition année id Etablissement ERREUR : " + idStructureATraiter + " Erreur  : " + event.left().getValue());
+                                    endTransition(nbStructureATraiter, finalHandler, idStructures);
                                 }
                             }});
                     }
@@ -303,8 +306,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 vJsonArrayEtabTraites.add(listIdsEtablisement.get(i));
             }
 
-            if (listIdsEtablisement.size() > 1){
-                log.info("FIN : transition année ");
+            if (listIdsEtablisement.size() > 0){
+                log.info("FIN : transition année listIdsEtablisement : " + listIdsEtablisement.toString());
             }
             finalHandler.handle(new Either.Right<String,JsonArray>(vJsonArrayEtabTraites));
         }
@@ -353,14 +356,19 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     private void transitionAnneeStructure(Map<String,List<String>> classeIdsEleves,  List<String> vListIdsGroupesATraiter,Map<String,String> vMapGroupesATraiter, Map<String,Long> vMapGroupesIdsDevoirATraiter ,String idStructureATraiter, Handler<Either<String, JsonArray>> handler) {
 
         log.info("DEBUT : transactions pour la transition année id Etablissement : " + idStructureATraiter);
+        if (vListIdsGroupesATraiter != null && vListIdsGroupesATraiter.size()>0) {
+            log.info("INFO : transactions pour la transition année vListIdsGroupesATraiter  : " + vListIdsGroupesATraiter.toString());
+        } else {
+            log.warn("WARN : transactions pour la transition année vListIdsGroupesATraiter : Aucun groupe ");
+        }
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        // Sauvegarde BDD : Si le schéma n'existe pas
-        String queryCloneNotes ="SELECT notes.clone_schema('notes','notes_2017_2018')";
-        statements.add(new JsonObject().put("statement", queryCloneNotes).put("values", values).put("action", "prepared"));
-        String queryCloneVieSCo ="SELECT notes.clone_schema('viesco','viesco_2017_2018')";
-        statements.add(new JsonObject().put("statement", queryCloneVieSCo).put("values", values).put("action", "prepared"));
+        // Sauvegarde BDD : Si le schéma n'existe pas : sera fait à part
+        //        String queryCloneNotes ="SELECT notes.clone_schema('notes','notes_2017_2018')";
+        //        statements.add(new JsonObject().put("statement", queryCloneNotes).put("values", values).put("action", "prepared"));
+        //        String queryCloneVieSCo ="SELECT notes.clone_schema('viesco','viesco_2017_2018')";
+        //        statements.add(new JsonObject().put("statement", queryCloneVieSCo).put("values", values).put("action", "prepared"));
 
         values = new fr.wseduc.webutils.collections.JsonArray();
         for (String idGroupe:vListIdsGroupesATraiter) {
