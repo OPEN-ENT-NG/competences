@@ -376,7 +376,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             display();
                         });
                     } else {
-                       // $scope.syncPeriode($scope.search.classe.id);
+                       $scope.syncPeriode($scope.search.classe.id);
                         display();
                     }
 
@@ -584,10 +584,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             sousDomainesEnseignement: [],
         }
 
-        $scope.getClasseBeforeChange = (classe) => {
-            return classe;
-        };
-
         let setSearchPeriode = function(classe,res){
             if($location.path() === '/competences/eleve' || $location.path() === '/competences/classe' ){
                 if ($scope.search !== undefined && $scope.search.eleve !== undefined &&
@@ -614,7 +610,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
                     $scope.getCurrentPeriode(classe).then(function (res) {
-                       setSearchPeriode(classe,res, );
+                       setSearchPeriode(classe, res);
                         if ($location.path() === '/devoir/create' ||
                             ($scope.devoir !== undefined
                                 && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
