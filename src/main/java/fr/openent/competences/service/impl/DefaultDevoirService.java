@@ -560,7 +560,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("left join "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id ")
                 .append("inner join "+ Competences.COMPETENCES_SCHEMA + ".users ON users.id = devoirs.owner ")
                 .append("WHERE (rel_devoirs_groupes.id_devoir = devoirs.id) ")
-                .append("AND (devoirs.id_etablissement = ? )")
+                .append("AND (devoirs.id_etablissement = ? ) ")
+                .append("AND (devoirs.eval_lib_historise = false ) ")
                 .append("AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
                 .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ") // ou dont l'un de mes tiulaires le sont (de l'établissement passé en paramètre)
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
@@ -609,6 +610,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("   left join notes.rel_devoirs_groupes ON rel_devoirs_groupes.id_devoir = devoirs.id  ")
                 .append("   inner join notes.users on users.id = devoirs.owner")
                 .append("   where devoirs.id_etablissement IN "+ Sql.listPrepared(user.getStructures().toArray()) +" ")
+                .append("   and devoirs.eval_lib_historise = false ")
                 .append("   and id_groupe is not null ")
                 .append("   GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username,  ")
                 .append("   devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur,  ")
