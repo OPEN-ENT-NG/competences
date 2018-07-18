@@ -4,10 +4,10 @@
                         track by $index">
         <div ng-if="evaluation.valeur !== ''"   class=" alignCenterVertically noteDevoir cell">
             <div>
-                                    <span ng-if="evaluation.annotation === null"
+                                    <span ng-if="evaluation.annotation === null || evaluation.annotation === undefined"
                                           class="bold fontXLarge">[[evaluation.valeur]]
                                     </span>
-                <span ng-if="evaluation.annotation === null">
+                <span ng-if="evaluation.annotation === null || evaluation.annotation === undefined">
                                         / [[evaluation.diviseur]]
                                     </span>
                 <span ng-if="evaluation.annotation !== null"

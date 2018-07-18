@@ -373,11 +373,14 @@ body.evaluations {
 
       tbody {
         display: block;
-        max-height: 410px;
+        max-height: 417px;
         overflow-y: scroll;
         tr {
           height: 25px;
         }
+      }
+      tbody.maxHeight {
+        max-height: 495px !important;
       }
 
       thead {

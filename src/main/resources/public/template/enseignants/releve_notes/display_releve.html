@@ -117,7 +117,8 @@
             <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
                 <div class="tableReleves">
                     <div class="responsive-table">
-                        <table class="list-view tableReleve tableRelevePadding marginTopZero" c-naviga-table ng-if="search.periode.id !== null && search.periode.id !== undefined">
+                        <table class="list-view tableReleve tableRelevePadding marginTopZero"
+                               c-naviga-table ng-if="search.periode.id !== null && search.periode.id !== undefined">
                             <thead>
                             <tr>
                                 <th class="col1">
@@ -149,7 +150,7 @@
                                 </th>
                             </tr>
                             </thead>
-                            <tbody>
+                            <tbody ng-class="{maxHeight: releveNote.toogle || releveNote.isNN}">
                             <tr ng-repeat="eleve in releveNote.classe.eleves.all">
                                 <td class="col1 text-overflow"
                                     ng-class="{'deletedStudent': eleve.deleteDate !== null}"
@@ -264,7 +265,7 @@
                         </table>
                     </div>
                     <div class="responsive-table" ng-if="search.periode.id !== null && search.periode.id !== undefined">
-                        <table id="tableReleveStats" class="tableReleve tableRelevePadding" c-naviga-table>
+                        <table id="tableReleveStats" ng-show="!releveNote.isNN && !releveNote.toogle" class="tableReleve tableRelevePadding" c-naviga-table>
                             <tbody>
                             <tr class="moyenneClasse">
                                 <td class="col1 text-overflow">
