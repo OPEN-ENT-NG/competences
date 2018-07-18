@@ -3259,6 +3259,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.forClasse) {
                 url += "&idClasse=" + $scope.search.classe.id;
             }
+
+           ($scope.search.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
+
             url += "&byEnseignement=" + exportByEnseignement;
             await http().getJson(url + "&json=true")
                 .error((result) => {

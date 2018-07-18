@@ -1596,6 +1596,7 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean byEnseignement = Boolean.parseBoolean(request.params().get("byEnseignement"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
+        final Boolean isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
 
         final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
@@ -1697,7 +1698,7 @@ public class ExportPDFController extends ControllerHelper {
                                                             final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
                                                                     libellePeriode, json, answered, resultFinal);
                                                             exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), idFunctionalGroupesArr, idEtablissement, listIdMatieres,
-                                                                    finalIdPeriode, finalHandler);
+                                                                    finalIdPeriode, isCycle, finalHandler);
                                                         } else {
                                                             leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                                         }
@@ -1766,8 +1767,7 @@ public class ExportPDFController extends ControllerHelper {
 
                                                                 exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
                                                                         _idGroupes , idFunctionalGroupesArr, idEtablissement.get(i),
-                                                                        listIdMatieres,
-                                                                        finalIdPeriode, finalHandler);
+                                                                        listIdMatieres, finalIdPeriode, isCycle, finalHandler);
                                                             }
                                                         } else {
                                                             leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));

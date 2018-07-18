@@ -720,7 +720,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void listDevoirs(String idEleve, String[] idGroupes, Long[] idDevoirs, Long[] idPeriodes,
                             String[] idEtablissements, String[] idMatieres, Boolean hasCompetences,
-                            Handler<Either<String, JsonArray>> handler) {
+                            Boolean historise, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -784,10 +784,22 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         if (idMatieres.length != 0) {
-            query.append(" devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + " AND");
+            query.append(" (devoirs.id_matiere IN " + Sql.listPrepared(idMatieres));
             for (String idMatiere : idMatieres) {
                 params.add(idMatiere);
             }
+            if (historise) {
+                query.append(" OR ");
+            }
+        } else {
+            query.append(" (");
+        }
+        if (historise) {
+            query.append(" devoirs.eval_lib_historise = ? ");
+            params.add(historise);
+        }
+        if (idMatieres.length != 0 || historise) {
+            query.append(")  AND");
         }
 
         query.delete(query.length() - 3, query.length());
@@ -834,10 +846,22 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         if (idMatieres.length != 0) {
-            query.append(" (devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ") AND");
+            query.append(" ((devoirs.id_matiere = '' OR devoirs.id_matiere IN " + Sql.listPrepared(idMatieres) + ") ");
             for (String idMatiere : idMatieres) {
                 params.add(idMatiere);
             }
+            if (historise) {
+                query.append(" OR ");
+            }
+        } else {
+            query.append(" (");
+        }
+        if (historise) {
+            query.append(" devoirs.eval_lib_historise = ? ");
+            params.add(historise);
+        }
+        if (idMatieres.length != 0 || historise) {
+            query.append(")  AND");
         }
 
         query.delete(query.length() - 3, query.length());
