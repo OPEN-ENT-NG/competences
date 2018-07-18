@@ -2940,6 +2940,11 @@ body.evaluations {
     color: #E61758 !important;
   }
 
+  //  POP-UP Relevé Periodique - Acquis Scolaire
+  .itemFlex {
+    display: flex;
+    flex-direction: column;
+  }
 
   // Retire le padding de la barre de recherche lors de la recherche d'élève
   .autocomplete div {

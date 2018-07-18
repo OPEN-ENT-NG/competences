@@ -10,10 +10,15 @@
 
                 </textarea>
     </div>
-    <div class="">
-        <label><i18n class="bold" >evaluations.add.element.programme.summary</i18n></label>
-        <br>
-        <span style="overflow-wrap: break-word;">[[elementProgrammeDisplay]]</span>
+    <div ng-if="informations.eleve.competencesNotes !== undefined" class="itemFlex">
+        <label><i18n class="bold">evaluations.recap.item.evaluate</i18n></label>
+        <proportion-suivi-competence
+                evaluations="informations.competencesNotes"
+                is-classe="false" filter="{mine : false}" user="me"
+                map-lettres="mapLettres"
+                map-couleurs="mapCouleurs"
+                maj-proportions="informations.competencesNotes"
+        ></proportion-suivi-competence>
     </div>
 </div>
 <div class="four cell">
