@@ -10,15 +10,18 @@
 
                 </textarea>
     </div>
-    <div ng-if="informations.eleve.competencesNotes !== undefined" class="itemFlex">
+    <div class="itemFlex">
         <label><i18n class="bold">evaluations.recap.item.evaluate</i18n></label>
-        <proportion-suivi-competence
+        <proportion-suivi-competence ng-if="informations.eleve.competencesNotes.length > 0"
                 evaluations="informations.competencesNotes"
                 is-classe="false" filter="{mine : false}" user="me"
                 map-lettres="mapLettres"
                 map-couleurs="mapCouleurs"
                 maj-proportions="informations.competencesNotes"
         ></proportion-suivi-competence>
+        <div ng-if="informations.eleve.competencesNotes == 0">
+            <i18n class="italic">evaluations.recap.empty</i18n>
+        </div>
     </div>
 </div>
 <div class="four cell">

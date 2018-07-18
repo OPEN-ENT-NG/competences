@@ -3821,6 +3821,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && index + parseInt(num) < $scope.releveNote.classe.eleves.all.length) {
                 $scope.informations.eleve = $scope.releveNote.classe.eleves.all[index + parseInt(num)];
                 $scope.initDataLightBoxEleve();
+                delete $scope.informations.competencesNotes;
+                $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
             }
         };
         $scope.hasCompetences = function (devoir) {

@@ -379,6 +379,7 @@
   "evaluations.add":"Ajouter",
   "evaluations.add.element.programme.summary": "Rappel des élements du programme travaillés : ",
   "evaluations.recap.item.evaluate": "Récapitulatif de tous les items évalués : ",
+  "evaluations.recap.empty": "Il n'y a pas de compétence évaluée sur la période sélectionnée",
   "evaluations.edit":"Modifier",
   "evaluations.add.element.programme.title": "Saisie des élements du programme travaillé",
   "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",
