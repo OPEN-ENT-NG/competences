@@ -3493,6 +3493,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                return $scope.isEndSaisie();
             }
         };
+
         $scope.disabledSaisieNNoutPeriode = () => {
             if ($scope.search.periode.id === null || $scope.search.periode === "*") {
                 return true;
@@ -3591,21 +3592,30 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
+
+
         $scope.openEditElementProgramme = function () {
-
-            $scope.releveNote.syncDomainesEnseignement().then(() => {
-                $scope.releveNote.syncSousDomainesEnseignement().then(() => {
-                    $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
-                    $scope.aideSaisie.cycle = null;
-                    $scope.aideSaisie.domaineEnseignement = null;
-                    template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
-                    $scope.opened.lightbox = true;
-                    utils.safeApply($scope);
+            $scope.disabledSaisieNNoutPeriode = () => {
+                if ($scope.search.periode.id === null || $scope.search.periode === "*") {
+                    return true;
+                }
+                else {
+                    return $scope.isEndSaisie();
+                }
+            };
+                $scope.releveNote.syncDomainesEnseignement().then(() => {
+                    $scope.releveNote.syncSousDomainesEnseignement().then(() => {
+                        $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
+                        $scope.aideSaisie.cycle = null;
+                        $scope.aideSaisie.domaineEnseignement = null;
+                        template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
+                        $scope.opened.lightbox = true;
+                        utils.safeApply($scope);
+                    });
                 });
-            });
-
 
         }
+
         $scope.addProposition = function (libelleProposition) {
             if ($scope.releveNote.elementProgramme.texte === undefined){
                 $scope.releveNote.elementProgramme.texte = "";

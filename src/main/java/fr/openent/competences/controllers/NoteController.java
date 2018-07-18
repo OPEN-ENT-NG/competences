@@ -551,13 +551,28 @@ public class NoteController extends ControllerHelper {
                                     @Override
                                     public void handle(final Boolean hasAccessToMatiere) {
                                         if (hasAccessToMatiere) {
-                                            elementProgramme.setElementProgramme(
-                                                    user.getUserId(),
-                                                    idPeriode,
-                                                    idMatiere,
-                                                    idClasse,
-                                                    texte,
-                                                    arrayResponseHandler(request));
+                                            // Vérification de la date de fin de saisie
+                                            new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
+                                                    idClasse, idPeriode.intValue(),
+                                                    new Handler<Boolean>() {
+                                                        @Override
+                                                        public void handle(Boolean isUpdatable) {
+                                                            //verif date fin de saisie
+                                                            if (isUpdatable) {
+                                                                elementProgramme.setElementProgramme(
+                                                                        user.getUserId(),
+                                                                        idPeriode,
+                                                                        idMatiere,
+                                                                        idClasse,
+                                                                        texte,
+                                                                        arrayResponseHandler(request));
+                                                            }
+                                                            else {
+                                                                log.error("Not access to API because of end of saisie");
+                                                                unauthorized(request);
+                                                            }
+                                                        }
+                                                    });
                                         } else {
                                             log.error("Not access to Matiere");
                                             unauthorized(request);

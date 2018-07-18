@@ -105,7 +105,7 @@
                 </section>
                 <BR/>
                 <div class="right-magnet">
-                    <a class="button noMarginLeft" ng-click="openEditElementProgramme()">
+                    <a class="button noMarginLeft" ng-click="openEditElementProgramme()" ng-disabled="disabledSaisieNNoutPeriode()">
                         <i18n ng-if='elementProgrammeDisplay === undefined || elementProgrammeDisplay === "" '>evaluations.add</i18n>
                         <i18n ng-if='elementProgrammeDisplay !== undefined && elementProgrammeDisplay !== "" '>evaluations.edit</i18n>
                     </a>
