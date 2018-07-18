@@ -23,6 +23,9 @@
         },
         "exports" : {
            "template-path" : "./public/template/pdf/"
+        },
+        "transition" : {
+           "timeout-transaction" : 300
         }
       }
     }

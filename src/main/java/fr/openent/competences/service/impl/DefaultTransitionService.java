@@ -5,6 +5,7 @@ import fr.openent.competences.service.TransitionService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -18,6 +19,7 @@ import org.entcore.common.sql.SqlResult;
 
 import java.util.*;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
@@ -403,7 +405,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String queryInsertTransition ="INSERT INTO notes.transition(id_etablissement) VALUES (?)";
         statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", values).put("action", "prepared"));
 
-        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
+        Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
 
         log.info("FIN : transactions pour la transition année id Etablissement : " + idStructureATraiter);
     }

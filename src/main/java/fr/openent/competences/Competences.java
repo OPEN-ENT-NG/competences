@@ -19,6 +19,7 @@ public class Competences extends BaseServer {
     public static String VSCO_SCHEMA;
 
     public static JsonObject LSUN_CONFIG;
+    public static JsonObject TRANSITION_CONFIG;
 
     public static final String NOTES_TABLE = "notes";
     public static final String ANNOTATIONS = "annotations";
@@ -109,6 +110,7 @@ public class Competences extends BaseServer {
         COMPETENCES_SCHEMA = config.getString("db-schema");
         VSCO_SCHEMA = config.getString("vsco-schema");
         LSUN_CONFIG = config.getJsonObject("lsun");
+        TRANSITION_CONFIG = config.getJsonObject("transition");
 
 
         EmailFactory emailFactory = new EmailFactory(vertx, config);
