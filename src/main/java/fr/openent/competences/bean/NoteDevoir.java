@@ -43,6 +43,11 @@ public class NoteDevoir {
      */
     private Double coefficient;
 
+    /**
+     * identifiant de l'élève à qui appartient la note.
+     */
+    private String idEleve;
+
     public static final Double DIVISEUR_DEFAULT_VALUE = 20.0;
 
     /**
@@ -56,6 +61,21 @@ public class NoteDevoir {
         this.diviseur = diviseur;
         this.ramenerSur = ramenerSur;
         this.coefficient = coefficient;
+    }
+
+    /**
+     * @param note valeur de la note
+     * @param diviseur sur combien est la note.
+     * @param ramenerSur booleen pour savoir s'il faut ramner la note sur le diviseur.
+     * @param coefficient coefficient de la note.
+     * @param idEleve identifiant de l'élève à qui appartient la note.
+     */
+    public NoteDevoir(Double note, Double diviseur, Boolean ramenerSur, Double coefficient, String idEleve) {
+        this.note = note;
+        this.diviseur = diviseur;
+        this.ramenerSur = ramenerSur;
+        this.coefficient = coefficient;
+        this.idEleve = idEleve;
     }
 
     /**
@@ -102,5 +122,13 @@ public class NoteDevoir {
 
     public void setCoefficient(Double coefficient) {
         this.coefficient = coefficient;
+    }
+
+    public String getIdEleve() {
+        return idEleve;
+    }
+
+    public void setIdEleve(String idEleve) {
+        this.idEleve = idEleve;
     }
 }
