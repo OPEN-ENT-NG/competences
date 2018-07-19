@@ -111,7 +111,36 @@
                     </a>
                 </div>
             </div>
+
+            <div class="criteres card criterion"
+                 ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0 && releveNote !== undefined"
+                 ng-class="{openedAppreciation : opened.appreciation === true}">
+                <span class="plus-input" ng-click="openLeftMenu('opened.appreciation', opened.appreciation);"></span>
+                <div class="header" ng-click="openLeftMenu('opened.appreciation', opened.appreciation);">
+                    <h2>
+                        <i18n>evaluations.releve.appreciation.classe</i18n>
+                    </h2>
+                </div>
+                <ng-form name="appreciationClassForm">
+                            <textarea placeholder="[[translate('evaluations.releve.appreciation.classe.placeholder')]]"
+                                      row="4" type="text"
+                                      ng-model="releveNote.appreciationClasse.appreciation"
+                                      class="twelve"
+                                      ng-maxlength="300"
+                                      maxlength="300"
+                                      ng-blur="releveNote.appreciationClasse.save()"
+                                      ng-disabled="releveNote.appreciationClasse.endSaisie && !isChefEtab()"
+                                      name="appreciationClasse"
+                            >
+                            </textarea>
+                    <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
+                        <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
+                    </div>
+                </ng-form>
+
+            </div>
         </aside>
+
         <section class="ten twelve-mobile cell right">
 
             <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
@@ -332,29 +361,6 @@
                             </tr>
                             </tbody>
                         </table>
-
-                        <div>
-                            <h2>
-                                <i18n>evaluations.releve.appreciation.classe</i18n>
-                            </h2>
-                            <ng-form name="appreciationClassForm">
-                            <textarea placeholder="[[translate('evaluations.releve.appreciation.classe.placeholder')]]"
-                                      row="4" type="text"
-                                      ng-model="releveNote.appreciationClasse.appreciation"
-                                      class="twelve"
-                                      ng-maxlength="300"
-                                      maxlength="300"
-                                      ng-blur="releveNote.appreciationClasse.save()"
-                                      ng-disabled="releveNote.appreciationClasse.endSaisie && !isChefEtab()"
-                                      name="appreciationClasse"
-                            >
-                            </textarea>
-                                <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
-                                    <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
-                                </div>
-                            </ng-form>
-                        </div>
-
                     </div>
                 </div>
             </content>

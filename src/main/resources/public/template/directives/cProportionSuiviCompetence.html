@@ -21,7 +21,7 @@
      ng-style="{'width': prop.percent + '%', 'background-color': mapCouleurs[prop.eval]}"
      style="vertical-align:top"
      tooltip="[[prop.percent.toFixed(0)]] [[translate('%')]] [[addToToolTip]]">
-    <span ng-if="prop.percent>0" class="lettreNiv"
+    <span ng-if="prop.percent>0" class="nivLetter"
           style="color: [[(mapCouleurs[prop.eval])]]; filter: invert(100%); -webkit-filter: invert(100%);" >
         [[(mapLettres[prop.eval])]]
     </span>

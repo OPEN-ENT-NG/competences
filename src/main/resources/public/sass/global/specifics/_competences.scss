@@ -309,7 +309,6 @@ body.evaluations {
       color: $white !important;
     }
     .tableReleves {
-      overflow-x: auto;
       margin-left: 5px;
       margin-top: 5px;
       .responsive-table {
@@ -376,9 +375,6 @@ body.evaluations {
           tr {
           height: 25px;
         }
-      }
-      tbody.maxHeight {
-        max-height: 495px !important;
       }
 
       thead {
@@ -901,7 +897,11 @@ body.evaluations {
         content: "\e841";
       }
     }
+    &.openedAppreciation{
+      height: auto;
+    }
   }
+
   .criteres, .statistiques-devoir, .detail-devoir, .student-info, .devoir-info, .notes-help {
     position: relative;
     .plus-input{
@@ -1388,6 +1388,13 @@ body.evaluations {
                       DIRECTIVE COLOR SKILLS LIST : cColorSkillsList
   ***/
 
+  //       Alignement numéro items évalués
+
+  .nivLetter {
+    display: block;
+    text-align: center;
+  }
+
   /***
                       DIRECTIVE SKILLS LIST
   ***/
@@ -1427,7 +1434,6 @@ body.evaluations {
       }
     }
   }
-
 
   .skills-header{
     cursor: pointer;

@@ -2085,6 +2085,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.criteres = pbAfficherMenu;
             } else if (psMenu === "opened.legend") {
                     $scope.opened.legend = pbAfficherMenu;
+            } else if (psMenu === "opened.appreciation") {
+                $scope.opened.appreciation = pbAfficherMenu;
             } else {
                 console.error("Parametre psMenu inconnu : psMenu=" + psMenu);
             }
