@@ -78,8 +78,10 @@ public class CreateOrUpdateAppreciationClasseFilter implements ResourcesProvider
 
 
                                 // check de la date de fin de saisie et l'accès à la matière côté controleur
-
-                                handler.handle(true);
+                                else {
+                                    handler.handle(true);
+                                    return;
+                                }
                             } else {
                                 log.error("unauthorized for this profile");
                                 handler.handle(false);

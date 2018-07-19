@@ -45,6 +45,8 @@ export class Structure extends Model {
     responsables: Collection<Responsable>;
     moyenneVisible: boolean|number;
     baremeDNBvisible: number;
+    detailsUser: any;
+    composer: any; // Set By infra
 
     get api() {
         return {
@@ -81,6 +83,9 @@ export class Structure extends Model {
             },
             TYPEPERIODES : {
                 synchronisation: '/viescolaire/periodes/types'
+            },
+            GET_TEACHER_DETAILS : {
+                synchronisation : `/directory/user/${model.me.userId}?manual-groups=true`
             }
         };
     }
@@ -369,7 +374,8 @@ export class Structure extends Model {
                     this.synchronized.annotations &&
                     this.synchronized.niveauCompetences &&
                     this.synchronized.devoirs &&
-                    this.synchronized.typePeriodes;
+                    this.synchronized.typePeriodes &&
+                    this.synchronized.detailsUser;
                 if (Utils.isChefEtab()) {
                     b = b && this.synchronized.enseignants;
                 }
@@ -389,7 +395,11 @@ export class Structure extends Model {
             });
             this.syncDevoirs().then(isSynced);
             if (Utils.isChefEtab()) {
+                this.synchronized.detailsUser = true;
                 this.syncEnseignants().then(isSynced);
+            }
+            else {
+                this.getDetailsOfUser().then(isSynced);
             }
             this.typePeriodes.sync().then(isSynced);
         });
@@ -447,5 +457,19 @@ export class Structure extends Model {
                 }
             });
         });
+    }
+
+    getDetailsOfUser(): Promise<any> {
+        return new Promise ( ((resolve, reject) => {
+            http().getJson(this.api.GET_TEACHER_DETAILS.synchronisation)
+                .done((res)=> {
+                this.detailsUser = res;
+                this.synchronized.detailsUser = true;
+                resolve();
+                })
+                .error(() => {
+                    reject();
+                });
+        }));
     }
 }

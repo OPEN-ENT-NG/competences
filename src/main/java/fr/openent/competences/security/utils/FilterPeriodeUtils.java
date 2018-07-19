@@ -20,6 +20,7 @@
 package fr.openent.competences.security.utils;
 
 import fr.openent.competences.Competences;
+import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -60,7 +61,8 @@ public class FilterPeriodeUtils {
     }
 
 
-    public void validateEndSaisie(final HttpServerRequest request, final String idClasse, final Integer idTypePeriode, final Handler<Boolean> handler)  {
+    public void validateEndSaisie(final HttpServerRequest request, final String idClasse,
+                                  final Integer idTypePeriode, final Handler<Boolean> handler)  {
         if(user == null) {
             handler.handle(false);
             return;
@@ -70,58 +72,84 @@ public class FilterPeriodeUtils {
             return;
         }
         else {
-            JsonObject jsonRequest = new JsonObject()
-                    .put("headers", new JsonObject()
-                            .put("Accept-Language",
-                                    request.headers().get("Accept-Language")))
-                    .put("Host", getHost(request));
-            JsonObject action = new JsonObject()
-                    .put("action", "periode.getPeriodes")
-                    //.put("idEtablissement", idEtablissement)
-                    .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse))
-                    .put("request", jsonRequest);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> message) {
-                    JsonObject body = message.body();
-                    JsonArray periodes = body.getJsonArray("result");
-                    boolean isUpdatable = true;
+            WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse), null,
+                    null, null, null, new Handler<Either<String, Boolean>>() {
+                        @Override
+                        public void handle(Either<String, Boolean> event) {
+                            Boolean isHeadTeacher;
+                            if (event.isLeft()) {
+                                isHeadTeacher = false;
+                            }
+                            else {
+                                isHeadTeacher = true;
+                            }
 
-                    if ("ok".equals(body.getString("status"))) {
-                        // On vérifie que la date de fin de saisie n'est pas dépassée
-                        JsonObject periode = null;
-                        for (int i = 0; i < periodes.size(); i++) {
-                            if (idTypePeriode.intValue()
-                                    == ((JsonObject) periodes.getJsonObject(i)).getInteger("id_type").intValue()) {
-                                periode = (JsonObject) periodes.getJsonObject(i);
-                                break;
+
+                            if (isHeadTeacher) {
+                                handler.handle(true);
+                                return;
+                            }
+                            else {
+                                validateEndSaisieUtils(request, idClasse, idTypePeriode, handler);
                             }
                         }
-                        if (periode != null) {
-                            String dateFinSaisieStr = periode.getString("date_fin_saisie")
-                                    .split("T")[0];
-                            DateFormat formatter = new SimpleDateFormat("yy-MM-dd");
-                            try {
-                                Date dateFinSaisie = formatter.parse(dateFinSaisieStr);
-                                Date dateActuelle = new Date();
-                                dateActuelle.setTime(0);
-                                if (dateActuelle.after(dateFinSaisie)) {
-                                    isUpdatable = false;
-                                }
-                            } catch (ParseException e) {
-                                log.error("Erreur lors du calcul de fin de saisie de la periode", e);
-                            }
-                        } else {
-                            isUpdatable = false;
-                        }
-                    }
+                    });
 
-                    handler.handle(isUpdatable);
-                }
-            }));
         }
     }
 
+    private  void validateEndSaisieUtils(final HttpServerRequest request, final String idClasse,
+                                           final Integer idTypePeriode, final Handler<Boolean> handler)  {
+        JsonObject jsonRequest = new JsonObject()
+                .put("headers", new JsonObject()
+                        .put("Accept-Language",
+                                request.headers().get("Accept-Language")))
+                .put("Host", getHost(request));
+        JsonObject action = new JsonObject()
+                .put("action", "periode.getPeriodes")
+                //.put("idEtablissement", idEtablissement)
+                .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse))
+                .put("request", jsonRequest);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                JsonArray periodes = body.getJsonArray("result");
+                boolean isUpdatable = true;
+
+                if ("ok".equals(body.getString("status"))) {
+                    // On vérifie que la date de fin de saisie n'est pas dépassée
+                    JsonObject periode = null;
+                    for (int i = 0; i < periodes.size(); i++) {
+                        if (idTypePeriode.intValue()
+                                == ((JsonObject) periodes.getJsonObject(i)).getInteger("id_type").intValue()) {
+                            periode = (JsonObject) periodes.getJsonObject(i);
+                            break;
+                        }
+                    }
+                    if (periode != null) {
+                        String dateFinSaisieStr = periode.getString("date_fin_saisie")
+                                .split("T")[0];
+                        DateFormat formatter = new SimpleDateFormat("yy-MM-dd");
+                        try {
+                            Date dateFinSaisie = formatter.parse(dateFinSaisieStr);
+                            Date dateActuelle = new Date();
+                            dateActuelle.setTime(0);
+                            if (dateActuelle.after(dateFinSaisie)) {
+                                isUpdatable = false;
+                            }
+                        } catch (ParseException e) {
+                            log.error("Erreur lors du calcul de fin de saisie de la periode", e);
+                        }
+                    } else {
+                        isUpdatable = false;
+                    }
+                }
+
+                handler.handle(isUpdatable);
+            }
+        }));
+    }
     public void validateStructure (final String idEtablissement, Long idPeriode, final Handler<Boolean> handler) {
 
         StringBuilder query = new StringBuilder()

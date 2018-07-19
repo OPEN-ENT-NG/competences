@@ -23,6 +23,9 @@ public class AccessBFCFilter implements ResourcesProvider {
         if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
             handler.handle(true);
         }
+        else if ("Teacher".equals(user.getType())){
+            handler.handle(true);
+        }
         else {
             handler.handle(false);
         }

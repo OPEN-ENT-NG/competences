@@ -14,6 +14,7 @@ import fr.openent.competences.service.impl.DefaultAppreciationService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import org.entcore.common.controller.ControllerHelper;
@@ -167,44 +168,24 @@ public class AppreciationController extends ControllerHelper {
                                     final String idClasse = appreciation.getString("id_classe");
                                     final String idEtablissement = appreciation.getString("idEtablissement");
 
-                                    // si chef etab on ne fait pas plus de controles (date fin de saisie, matiere)
-                                    if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
-                                        appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
-                                                idClasse,
-                                                idPeriode,
-                                                idMatiere
-                                                , defaultResponseHandler(request));
-                                    } else {
-                                        // sinon on vérifier la date de fin de saisie et la présence de la matière sur l'utilisateur
-                                        FilterPeriodeUtils filterPeriodeUtils = new FilterPeriodeUtils(eb,user);
-                                        filterPeriodeUtils.validateEndSaisie(request, idClasse, idPeriode, new Handler<Boolean>() {
-                                            @Override
-                                            public void handle(Boolean isUpdatable) {
-                                                //verif date fin de saisie
-                                                if(isUpdatable) {
-                                                    new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, new Handler<Boolean>() {
-                                                        @Override
-                                                        public void handle(final Boolean hasAccessToMatiere) {
-                                                            // verif possesion matière
-                                                            if(hasAccessToMatiere) {
-                                                                appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
-                                                                        idClasse,
-                                                                        idPeriode,
-                                                                        idMatiere
-                                                                        , defaultResponseHandler(request));
-                                                            } else {
-                                                                log.error("hasAccessToMatiere = " + hasAccessToMatiere);
-                                                                Renders.unauthorized(request);
-                                                            }
-                                                        }
-                                                    });
-                                                } else {
-                                                    log.error("Date de fin de saisie dépassée : isUpdatable = " + isUpdatable);
-                                                    Renders.unauthorized(request);
+                                    WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
+                                            null,null, null, null,
+                                            new Handler<Either<String, Boolean>>() {
+                                                @Override
+                                                public void handle(Either<String, Boolean> event) {
+                                                    Boolean isHeadTeacher;
+                                                    if(event.isLeft()) {
+                                                        isHeadTeacher = false;
+                                                    }
+                                                    else {
+                                                         isHeadTeacher = event.right().getValue();
+                                                    }
+                                                    createOrUpdateAppreciationClasseUtils(request,
+                                                    idPeriode,idMatiere, idClasse,idEtablissement, user, appreciation,
+                                                     isHeadTeacher);
                                                 }
-                                            }
-                                        });
-                                    }
+                                            });
+
                                 }
                             });
                 }else {
@@ -214,7 +195,53 @@ public class AppreciationController extends ControllerHelper {
             }
         });
     }
+    private void createOrUpdateAppreciationClasseUtils(final HttpServerRequest request,
+                                    final Integer idPeriode, final String idMatiere, final String idClasse,
+                                    final String idEtablissement, final UserInfos user, final JsonObject appreciation,
+                                    final Boolean isHeadTeacher) {
+        // si chef etab ou prof principal sur la classe, on ne fait pas plus de controles (date fin de saisie, matiere)
+        if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())
+                || isHeadTeacher) {
+            appreciationService.createOrUpdateAppreciationClasse(appreciation.getString("appreciation"),
+                    idClasse,
+                    idPeriode,
+                    idMatiere
+                    , defaultResponseHandler(request));
+        } else {
+            // sinon on vérifier la date de fin de saisie et la présence de la matière sur l'utilisateur
+            FilterPeriodeUtils filterPeriodeUtils = new FilterPeriodeUtils(eb,user);
+            filterPeriodeUtils.validateEndSaisie(request, idClasse, idPeriode, new Handler<Boolean>() {
+                @Override
+                public void handle(Boolean isUpdatable) {
+                    //verif date fin de saisie
+                    if(isUpdatable) {
+                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                                new Handler<Boolean>() {
+                            @Override
+                            public void handle(final Boolean hasAccessToMatiere) {
+                                // verif possesion matière
+                                if(hasAccessToMatiere) {
+                                    appreciationService.createOrUpdateAppreciationClasse(appreciation
+                                                    .getString("appreciation"),
+                                            idClasse,
+                                            idPeriode,
+                                            idMatiere
+                                            , defaultResponseHandler(request));
+                                } else {
+                                    log.error("hasAccessToMatiere = " + hasAccessToMatiere);
+                                    Renders.unauthorized(request);
+                                }
+                            }
+                        });
+                    } else {
+                        log.error("Date de fin de saisie dépassée : isUpdatable = " + isUpdatable);
+                        Renders.unauthorized(request);
+                    }
+                }
+            });
+        }
 
+    }
     /**
      * Récupère les annotations de l'établissement
      * @param request

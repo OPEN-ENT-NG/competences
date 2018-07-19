@@ -68,7 +68,18 @@ public class BFCController extends ControllerHelper {
                     RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFC_CREATE, new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject resource) {
-                            bfcService.createBFC(resource, user, notEmptyResponseHandler(request));
+                            bfcService.checkHeadTeacherForBFC(user, resource.getString("id_eleve"),
+                                    new Handler<Boolean>() {
+                                        @Override
+                                        public void handle(Boolean event) {
+                                            if(event) {
+                                                bfcService.createBFC(resource, user, notEmptyResponseHandler(request));
+                                            }
+                                            else {
+                                                Renders.unauthorized(request);
+                                            }
+                                        }
+                                    });
                         }
                     });
                 } else {
@@ -94,10 +105,22 @@ public class BFCController extends ControllerHelper {
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFC_UPDATE, new Handler<JsonObject>() {
+                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFC_UPDATE,
+                            new Handler<JsonObject>() {
                         @Override
                         public void handle(JsonObject resource) {
-                            bfcService.updateBFC(resource, user, defaultResponseHandler(request));
+                            bfcService.checkHeadTeacherForBFC(user, resource.getString("id_eleve"),
+                                    new Handler<Boolean>() {
+                                        @Override
+                                        public void handle(Boolean event) {
+                                            if(event) {
+                                                bfcService.updateBFC(resource, user, defaultResponseHandler(request));
+                                            }
+                                            else {
+                                                Renders.unauthorized(request);
+                                            }
+                                        }
+                                    });
                         }
                     });
                 } else {
@@ -133,7 +156,20 @@ public class BFCController extends ControllerHelper {
                     }
 
                     String idEleve = request.params().get("idEleve");
-                    bfcService.deleteBFC(idBFC, idEleve, user, defaultResponseHandler(request));
+                    bfcService.checkHeadTeacherForBFC(user, idEleve,
+                            new Handler<Boolean>() {
+                                @Override
+                                public void handle(Boolean event) {
+                                    if(event) {
+                                        bfcService.deleteBFC(idBFC, idEleve, user, defaultResponseHandler(request));
+                                    }
+                                    else {
+                                        Renders.unauthorized(request);
+                                    }
+                                }
+                            });
+
+
                 } else {
                     unauthorized(request);
                 }
@@ -336,23 +372,23 @@ public class BFCController extends ControllerHelper {
             @Override
             public void handle(final UserInfos userInfos) {
 //                if(userInfos!=null && userInfos.getFunctions().containsKey("ENS")){
-                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
-                        @Override
-                        public void handle(JsonObject data) {
-                            syntheseService.getIdCycleWithIdEleve(data.getString("id_eleve"), new Handler<Either<String, Integer>>() {
-                                @Override
-                                public void handle(Either<String, Integer> idCycle) {
-                                    if (idCycle.isRight()) {
-                                        data.put("id_cycle", idCycle.right().getValue());
-                                        eleveEnseignementComplement.createEnsCplByELeve(data, userInfos, notEmptyResponseHandler(request));
-                                    } else {
-                                        log.info("idCycle not found");
-                                        Renders.badRequest(request);
-                                    }
+                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(JsonObject data) {
+                        syntheseService.getIdCycleWithIdEleve(data.getString("id_eleve"), new Handler<Either<String, Integer>>() {
+                            @Override
+                            public void handle(Either<String, Integer> idCycle) {
+                                if (idCycle.isRight()) {
+                                    data.put("id_cycle", idCycle.right().getValue());
+                                    eleveEnseignementComplement.createEnsCplByELeve(data, userInfos, notEmptyResponseHandler(request));
+                                } else {
+                                    log.info("idCycle not found");
+                                    Renders.badRequest(request);
                                 }
-                            });
-                        }
-                    });
+                            }
+                        });
+                    }
+                });
 //                }else{
 //                    Renders.unauthorized(request);
 //                }
@@ -368,14 +404,14 @@ public class BFCController extends ControllerHelper {
             @Override
             public void handle(final UserInfos userInfos) {
 //                if(userInfos!=null && userInfos.getFunctions().containsKey("ENS")){
-                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
-                        @Override
-                        public void handle(JsonObject data) {
-                            final Integer id = Integer.parseInt(request.params().get("id"));
+                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NIVEAUENSCPL_CREATE, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(JsonObject data) {
+                        final Integer id = Integer.parseInt(request.params().get("id"));
 
-                            eleveEnseignementComplement.updateEnsCpl(id,data,defaultResponseHandler(request));
-                        }
-                    });
+                        eleveEnseignementComplement.updateEnsCpl(id,data,defaultResponseHandler(request));
+                    }
+                });
 //                }else{
 //                    Renders.unauthorized(request);
 //                }

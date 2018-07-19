@@ -1,6 +1,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -21,7 +22,7 @@ public interface BFCService extends CrudService {
      * @param user utilisateur
      * @param handler handler portant le résultat de la requête
      */
-    public void createBFC(final JsonObject bfc, final UserInfos user, final Handler<Either<String, JsonObject>> handler);
+    void createBFC(final JsonObject bfc, final UserInfos user, final Handler<Either<String, JsonObject>> handler);
 
     /**
      * Mise à jour d'un BFC pour un élève
@@ -29,7 +30,7 @@ public interface BFCService extends CrudService {
      * @param user utilisateur
      * @param handler handler portant le resultat de la requête
      */
-    public void updateBFC(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void updateBFC(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Suppression d'un BFC pour un élève
@@ -38,7 +39,7 @@ public interface BFCService extends CrudService {
      * @param user user
      * @param handler handler portant le résultat de la requête
      */
-    public void deleteBFC(long idBFC, String idEleve, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void deleteBFC(long idBFC, String idEleve, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupère les BFCs d'un élève pour chaque domaine
@@ -47,7 +48,7 @@ public interface BFCService extends CrudService {
      * @param idCycle
      * @param handler
      */
-    public void getBFCsByEleve(String[] idEleves, String idEtablissement, Long idCycle, Handler<Either<String, JsonArray>> handler);
+    void getBFCsByEleve(String[] idEleves, String idEtablissement, Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les moyennes par domaines des élève dont l'id est passé en paramètre.
@@ -58,7 +59,7 @@ public interface BFCService extends CrudService {
      * @param idStructure l'id de l'établissement auquel appartient la classe
      * @param handler handler portant le résultat du calcul de moyenne
      */
-    public void buildBFC(boolean recapEval, String[] idEleves, String idClasse, String idStructure, Long idPeriode, Long idCycle, Handler<Either<String, JsonObject>> handler);
+    void buildBFC(boolean recapEval, String[] idEleves, String idClasse, String idStructure, Long idPeriode, Long idCycle, Handler<Either<String, JsonObject>> handler);
 
     /**
      * retourne la date de creation du BFC, si null la date de modification sinon la date du jour
@@ -72,7 +73,7 @@ public interface BFCService extends CrudService {
      * Récupère les valeurs de la table calc_millesime
      * @param handler handler portant le résultat
      */
-    public void getCalcMillesimeValues(Handler<Either<String, JsonArray>> handler);
+    void getCalcMillesimeValues(Handler<Either<String, JsonArray>> handler);
 
     /**
      * Active la visibilité des moyennes sur l'écran de BFC
@@ -82,7 +83,7 @@ public interface BFCService extends CrudService {
      * @param visible 0 : caché pour tout le monde, 1 : caché pour les enseignants, 2 : visible pour tous
      * @param handler handler portant le résultat
      */
-    public void setVisibility(String structureId, Integer idVisibility,UserInfos user, Integer visible,
+    void setVisibility(String structureId, Integer idVisibility,UserInfos user, Integer visible,
                               Handler<Either<String, JsonArray>> handler);
 
 
@@ -94,7 +95,7 @@ public interface BFCService extends CrudService {
      * @param user utilisateur connecté
      * @param handler handler portant le résultat
      */
-    public void getVisibility(String structureId, Integer idVisibility, UserInfos user, Handler<Either<String, JsonArray>> handler);
+    void getVisibility(String structureId, Integer idVisibility, UserInfos user, Handler<Either<String, JsonArray>> handler);
 
     /**
      * donne un JsonArray avec
@@ -108,5 +109,9 @@ public interface BFCService extends CrudService {
      * @param handler  handler portant le résultat
      */
 
-    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,Long idPeriode, final Handler<Either<String, JsonArray>> handler);
+    void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,Long idPeriode, final Handler<Either<String, JsonArray>> handler);
+
+
+    void checkHeadTeacherForBFC(UserInfos user, String id_eleve,
+                                final Handler<Boolean> handler);
 }

@@ -348,7 +348,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             textMod: true
                         };
                         $scope.showRechercheBar = false;
-                        if (!Utils.isChefEtab()) {
+                        if (!Utils.isChefEtab($scope.search.classe)) {
                             http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
                                 $scope.allMatieresSorted = _.sortBy(res, 'name');
                                 utils.safeApply($scope);
@@ -412,7 +412,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         template.open('main', 'enseignants/suivi_competences_classe/container');
                         utils.safeApply($scope);
                     };
-                    if (!Utils.isChefEtab()) {
+                    if (!Utils.isChefEtab($scope.search.classe)) {
                         http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
                             $scope.allMatieresSorted = _.sortBy(res, 'name');
                             utils.safeApply($scope);
@@ -530,8 +530,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             displayStructureLoader: false
         };
 
-        $scope.isChefEtab = () => {
-            return Utils.isChefEtab();
+        $scope.isChefEtab = (classe?) => {
+            return Utils.isChefEtab(classe);
         };
 
         $scope.canUpdateBFCSynthese = () => {
@@ -933,7 +933,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (!Utils.isChefEtab()) {
                     _.map($scope.selected.devoirs.list, async function (devoir) {
                         let isEndSaisieDevoir = await $scope.checkEndSaisieSeul(devoir);
-                        if (isEndSaisieDevoir) {
+                        let isHeadTeacher = Utils.isHeadTeacher(
+                            _.findWhere(evaluations.structure.classes.all, {id: devoir.id_groupe }));
+                        if (isEndSaisieDevoir || !isHeadTeacher) {
                             $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, devoir);
                             devoir.selected = false;
                             $scope.devoirsUncancelable.push(devoir);
@@ -3049,7 +3051,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             let date_fin_saisie = _.findWhere(classe.periodes.all, {id_type: devoir.id_periode}).date_fin_saisie;
 
-            return !(moment(date_fin_saisie).isAfter(moment(), "days") || Utils.isChefEtab());
+            return !(moment(date_fin_saisie).isAfter(moment(), "days")
+                || Utils.isChefEtab(_.findWhere(evaluations.structure.classes.all, {id: devoir.id_groupe})));
         };
 
         /**
@@ -3065,7 +3068,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             let date_fin_saisie = _.findWhere(classe.periodes.all, {id_type: devoir.id_periode}).date_fin_saisie;
 
-            return moment().isAfter(date_fin_saisie, "days");
+            return moment().isAfter(date_fin_saisie, "days") &&  !Utils.isHeadTeacher(classe);
         };
 
         $scope.getPeriodeAnnee = () => {
@@ -3469,7 +3472,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.isEndSaisie = function() {
-            if ($scope.isChefEtab()) {
+            let classe = ($scope.releveNote !== undefined)? $scope.releveNote.classe : undefined;
+            if ($scope.isChefEtab(classe)) {
                 return false;
             }
             else {

@@ -21,6 +21,7 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.security.utils.FilterDevoirUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.Either;
@@ -892,13 +893,35 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
-    @Override
-    public void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
 
+    @Override
+    public void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
+                                  Handler<Either<String, JsonArray>> handler) {
         // Si l'utilisateur est null c'est qu'on essait de mettre à jour le taux de completude des devoirs
         boolean isChefEtab = (user!= null)?(new WorkflowActionUtils().hasRight(user,
                 WorkflowActions.ADMIN_RIGHT.toString())):true;
+
+        WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idDevoir),
+                Competences.DEVOIR_TABLE, null, null, new Handler<Either<String, Boolean>>() {
+                    @Override
+                    public void handle(Either<String, Boolean> event) {
+                        Boolean isHeadTeacher;
+                        if(event.isLeft()){
+                            isHeadTeacher = false;
+                        }
+                        else {
+                            isHeadTeacher = event.right().getValue();
+                        }
+                        getNbNotesDevoirs(user,idEleves,idDevoir,handler, isChefEtab || isHeadTeacher);
+                    }
+                });
+
+
+    }
+    private void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
+                                  Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
+        StringBuilder query = new StringBuilder();
+
 
         query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".notes,"+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )
@@ -938,31 +961,40 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 values.add(idEleve);
             }
         }
-        if(!isChefEtab) {
-            // Ajout des params  pour les devoirs dont on est le propriétaire
-            values.add(user.getUserId());
-
-            // Ajout des params pour la récupération des devoirs de mes tiulaires
-            values.add(user.getUserId());
-            for (int i = 0; i < user.getStructures().size(); i++) {
-                values.add(user.getStructures().get(i));
-            }
-
-            // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-            values.add(user.getUserId());
-        }
+        addValueForRequest(values,user,isChefEtab);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
     @Override
-    public void getNbAnnotationsDevoirs(UserInfos user, List<String> idEleves, Long idDevoir, Handler<Either<String, JsonArray>> handler) {
+    public void getNbAnnotationsDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
+                                        Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
         // Si l'utilisateur est null c'est qu'on essait de mettre à jour le taux de completude des devoirs
         boolean isChefEtab = (user!= null)?(new WorkflowActionUtils().hasRight(user,
-                WorkflowActions.ADMIN_RIGHT.toString())):true ;
+                WorkflowActions.ADMIN_RIGHT.toString())):true;
 
+        WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idDevoir),
+                Competences.DEVOIR_TABLE, null, null, new Handler<Either<String, Boolean>>() {
+                    @Override
+                    public void handle(Either<String, Boolean> event) {
+                        Boolean isHeadTeacher;
+                        if(event.isLeft()){
+                            isHeadTeacher = false;
+                        }
+                        else {
+                            isHeadTeacher = event.right().getValue();
+                        }
+                        getNbAnnotationsDevoirs(user,idEleves,idDevoir,handler, isChefEtab || isHeadTeacher);
+                    }
+                });
+
+    }
+
+    private void getNbAnnotationsDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
+                                        Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
+        StringBuilder query = new StringBuilder();
         query.append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations , devoirs.id, rel_devoirs_groupes.id_groupe ")
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs, "+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )
                 .append("WHERE rel_devoirs_groupes.id_devoir = devoirs.id ")
@@ -995,20 +1027,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         //Ajout des id désirés
         values.add(idDevoir);
-        if(!isChefEtab) {
-            // Ajout des params pour les devoirs dont on est le propriétaire
-            values.add(user.getUserId());
-
-            // Ajout des params pour la récupération des devoirs de mes tiulaires
-            values.add(user.getUserId());
-            for (int i = 0; i < user.getStructures().size(); i++) {
-                values.add(user.getStructures().get(i));
-            }
-
-            // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-            values.add(user.getUserId());
-        }
-
+        addValueForRequest(values,user,isChefEtab);
         // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
         if(idEleves != null && idEleves.size() > 0) {
             for (String idEleve: idEleves) {
@@ -1017,6 +1036,24 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
+    private void addValueForRequest (JsonArray values, UserInfos user, Boolean isChefEtab) {
+        if(!isChefEtab) {
+            // Ajout des params pour les devoirs dont on est le propriétaire
+            values.add( user.getUserId());
+
+            // Ajout des params pour la récupération des devoirs de mes tiulaires
+            values.add(user.getUserId());
+            for (int i = 0; i < user.getStructures().size(); i++) {
+                values.add( user.getStructures().get(i));
+            }
+
+            // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir
+            // pour un titulaire par exemple)
+            values.add( user.getUserId());
+        }
+
     }
 
     @Override

@@ -3,7 +3,9 @@ package fr.openent.competences.security;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -37,13 +39,29 @@ public class AccessControleContinuFilter implements ResourcesProvider{
                 return;
             }
 
-            if(!new FilterUserUtils(user, null).validateClasse(params.get("idClasse"))) {
-                resourceRequest.resume();
-                handler.handle(false);
-                return;
+            else {
+                WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(params.get("idClasse")),
+                        null, null, null, null, new Handler<Either<String, Boolean>>() {
+                            @Override
+                            public void handle(Either<String, Boolean> event) {
+                                Boolean isHeadTeacher;
+                                if(event.isLeft()) {
+                                    isHeadTeacher = false;
+                                }
+                                else {
+                                    isHeadTeacher = event.right().getValue();
+                                }
+                                if (!new FilterUserUtils(user, null).validateClasse(params.get("idClasse"))) {
+                                    resourceRequest.resume();
+                                    handler.handle(false || isHeadTeacher);
+                                    return;
+                                }
+                                resourceRequest.resume();
+                                handler.handle(true || isHeadTeacher);
+                            }
+                        });
+
             }
-            resourceRequest.resume();
-            handler.handle(true);
         }else{
             handler.handle(false);
         }

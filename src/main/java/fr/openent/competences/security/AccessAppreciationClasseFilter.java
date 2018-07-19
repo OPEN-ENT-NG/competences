@@ -22,7 +22,9 @@ package fr.openent.competences.security;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -57,28 +59,50 @@ public class AccessAppreciationClasseFilter implements ResourcesProvider {
                 return;
             }
 
-            //On check que la classe passée en paramètre soit bien ceux de l'utilisateur
-            if (!userUtils.validateClasse(params.get("id_classe"))) {
-                resourceRequest.resume();
-                handler.handle(false);
-                return;
-            }
+            WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(params.get("id_classe")),
+                    null, null, null, null, new Handler<Either<String, Boolean>>() {
+                        @Override
+                        public void handle(Either<String, Boolean> event) {
+                            Boolean isHeadTeacher;
+                            if (event.isLeft()) {
+                                isHeadTeacher = false;
+                            }
+                            else {
+                                isHeadTeacher = event.right().getValue();
+                            }
+
+                            if (isHeadTeacher) {
+                                resourceRequest.resume();
+                                handler.handle(true);
+                                return;
+                            }
+                            else {
+                                //On check que la classe passée en paramètre soit bien ceux de l'utilisateur
+                                if (!userUtils.validateClasse(params.get("id_classe"))) {
+                                    resourceRequest.resume();
+                                    handler.handle(false);
+                                    return;
+                                }
 
 
-            Integer idPeriode;
-            if (params.get("id_periode") != null) {
-                try {
-                    idPeriode = Integer.parseInt(params.get("id_periode"));
-                } catch (NumberFormatException e) {
-                    log.error("Error : id_periode must be an Integer", e);
-                    resourceRequest.resume();
-                    handler.handle(false);
-                    return;
-                }
-            }
+                                Integer idPeriode;
+                                if (params.get("id_periode") != null) {
+                                    try {
+                                        idPeriode = Integer.parseInt(params.get("id_periode"));
+                                    } catch (NumberFormatException e) {
+                                        log.error("Error : id_periode must be an Integer", e);
+                                        resourceRequest.resume();
+                                        handler.handle(false);
+                                        return;
+                                    }
+                                }
 
-            resourceRequest.resume();
-            handler.handle(true);
+                                resourceRequest.resume();
+                                handler.handle(true);
+                            }
+                        }
+                    }
+            );
         }
         else {
             handler.handle(false);

@@ -46,7 +46,7 @@ export class Classe extends Model {
                 return new Promise((resolve, reject) => {
                     this.mapEleves = {};
                     let url;
-                    if(Utils.isChefEtab()){
+                    if(Utils.isChefEtab(this)){
                         url = this.type_groupe !== Classe.type.CLASSE ?
                             this.api.syncGroupe : this.api.syncClasseChefEtab;
                     }else {

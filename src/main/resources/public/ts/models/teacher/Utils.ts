@@ -1,11 +1,26 @@
 import {model, idiom as lang, _, Behaviours} from 'entcore';
 import * as utils from '../../utils/teacher';
 import { BilanFinDeCycle, CompetenceNote } from './index';
+import {evaluations} from "./model";
 
 export class Utils {
-    static isChefEtab () {
-        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.viescolaire.rights.workflow.adminChefEtab);
+    static isHeadTeacher (classe) {
+        return _.contains(
+            _.union(evaluations.structure.detailsUser.headTeacher,
+                evaluations.structure.detailsUser.headTeacherManual), classe.externalId);
     }
+
+    static isChefEtab (classe?) {
+        let isAdmin = model.me.hasWorkflow(Behaviours.applicationsBehaviours.viescolaire.rights.workflow.adminChefEtab);
+        if(classe === undefined) {
+            return isAdmin;
+        }
+        else {
+            return isAdmin || this.isHeadTeacher(classe);
+
+        }
+    }
+
 
     static canUpdateBFCSynthese () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateBFCSynthese);
@@ -140,7 +155,10 @@ export class Utils {
         };
     }
 
-    static getMaxEvaluationsDomaines(poDomaine, poMaxEvaluationsDomaines,tableConversions, pbMesEvaluations,bfcsParDomaine) {
+    static getMaxEvaluationsDomaines(poDomaine, poMaxEvaluationsDomaines,tableConversions, pbMesEvaluations,
+                                     bfcsParDomaine, classe) {
+
+
         // si le domaine est évalué, on ajoute les max de chacunes de ses competences
         if(poDomaine.evaluated) {
             for (let i = 0; i < poDomaine.competences.all.length; i++) {
@@ -186,7 +204,8 @@ export class Utils {
                         poDomaine.domaines.all[i].bfc = tempBFC;
                     }
                 }
-                this.getMaxEvaluationsDomaines(poDomaine.domaines.all[i], poMaxEvaluationsDomaines,tableConversions, pbMesEvaluations,bfcsParDomaine);
+                this.getMaxEvaluationsDomaines(poDomaine.domaines.all[i], poMaxEvaluationsDomaines,tableConversions,
+                    pbMesEvaluations,bfcsParDomaine, classe);
             }
         }
 
@@ -202,7 +221,7 @@ export class Utils {
         // Chefs d'établissement
 
         //Si l'utilisateur n'est pas un chef d'établissement il ne peut pas modifier le slider
-        if(!this.isChefEtab()){
+        if(!this.isChefEtab(classe)){
             poDomaine.slider.options.readOnly = true;
         }
     }

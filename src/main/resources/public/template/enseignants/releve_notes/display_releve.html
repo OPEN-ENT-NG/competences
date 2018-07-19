@@ -129,7 +129,7 @@
                                       ng-maxlength="300"
                                       maxlength="300"
                                       ng-blur="releveNote.appreciationClasse.save()"
-                                      ng-disabled="releveNote.appreciationClasse.endSaisie && !isChefEtab()"
+                                      ng-disabled="releveNote.appreciationClasse.endSaisie && !isChefEtab(search.classe)"
                                       name="appreciationClasse"
                             >
                             </textarea>
@@ -189,14 +189,14 @@
                                 <td ng-class="{'nav-input' : evaluation.is_evaluated}" class="colDevoir"
                                     ng-repeat="evaluation in eleve.evaluations.all"
                                     data-label="[[getLibelleDevoir(evaluation.id_devoir)]]" >
-                                    <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab() && !evaluation.is_annotation"
+                                    <input ng-if="evaluation.is_evaluated && evaluation.endSaisie && !isChefEtab(search.classe) && !evaluation.is_annotation"
                                            ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
                                            class="input-note"
                                            type="text"
                                            ng-model="evaluation.valeur"
                                            ng-disabled="true"
                                            max="20" min="0" step="0.01">
-                                    <input ng-if="evaluation.is_evaluated && (!evaluation.endSaisie || isChefEtab()) && !evaluation.is_annotation"
+                                    <input ng-if="evaluation.is_evaluated && (!evaluation.endSaisie || isChefEtab(search.classe)) && !evaluation.is_annotation"
                                            ng-focus="focusMe($event); getEleveInfo(eleve); getDevoirInfo(evaluation)"
                                            class="input-note"
                                            type="text"

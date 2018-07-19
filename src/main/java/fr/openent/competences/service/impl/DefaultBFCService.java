@@ -3,8 +3,10 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -669,5 +671,22 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 }
             }
         });
+    }
+    public void checkHeadTeacherForBFC(UserInfos user, String id_eleve,
+                                final Handler<Boolean> handler) {
+        WorkflowActionUtils.hasHeadTeacherRight(user, null, null, null,
+                new JsonArray().add(id_eleve), eb, new Handler<Either<String, Boolean>>() {
+                    @Override
+                    public void handle(Either<String, Boolean> event) {
+                        Boolean isHeadTecher;
+                        if(event.isLeft()) {
+                            isHeadTecher = false;
+                        }
+                        else {
+                            isHeadTecher = event.right().getValue();
+                        }
+                        handler.handle(isHeadTecher);
+                    }
+                });
     }
 }

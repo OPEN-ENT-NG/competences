@@ -33,14 +33,8 @@ public class AccessVisibilityAppreciation implements ResourcesProvider {
                         handler.handle(false);
                         return;
                     }
-
-                    new FilterDevoirUtils().validateAccessDevoir(idDevoir, user, new Handler<Boolean>() {
-                        @Override
-                        public void handle(Boolean isValid) {
-                            resourceRequest.resume();
-                            handler.handle(isValid);
-                        }
-                    });
+                    // On cheque si l'utilisateur est professeur principal sur la classe du devoir
+                    new FilterDevoirUtils().validateAccesDevoirWithHeadTeacher(idDevoir,user,handler,resourceRequest);
                 }
                 break;
                 default: {

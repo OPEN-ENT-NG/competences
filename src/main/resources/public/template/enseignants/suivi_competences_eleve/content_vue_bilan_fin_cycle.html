@@ -25,22 +25,22 @@
             <div ng-class="{disabled: domaine.dispense_eleve, whiteSpaceNormal: domaine.hovering}" ng-mouseenter="showIt(domaine)" ng-mouseleave="hideIt(domaine)"  class="eleven cell text-overflow">
                 [[domaine.codification]] - [[domaine.libelle]]
             </div>
-            <div ng-if="( (isChefEtab() && evaluations.structure.moyenneVisible===1)
+            <div ng-if="( (isChefEtab(search.classe) && evaluations.structure.moyenneVisible===1)
                             || evaluations.structure.moyenneVisible===2 )"
                  class="domaine-maitrise" ng-class = "{disabled : domaine.dispense_eleve}">
                 <label>
                     <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">
                         <div ng-if = " hasValueInConversionTable(domaine, Conversion, $index) ">
-                            <div ng-if = " isChefEtab() && domaine.bfc !== undefined">
+                            <div ng-if = " isChefEtab(search.classe) && domaine.bfc !== undefined">
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne !== -1"
                                    tooltip="<i18n>evaluation.domaine.average.refresh</i18n>[[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])"></i>
                                 <i class="reset" aria-hidden="true" ng-click="deleteBFC()" ng-if="domaine.moyenne === -1"
                                    tooltip=" <i18n>evaluation.domaine.niveau.bfc.manuel</i18n>"></i>
                             </div>
-                            <div ng-if = "domaine.moyenne !== -1 && ((!isChefEtab() && domaine.bfc !== undefined) || domaine.bfc === undefined)">
+                            <div ng-if = "domaine.moyenne !== -1 && ((!isChefEtab(search.classe) && domaine.bfc !== undefined) || domaine.bfc === undefined)">
                                 [[Conversion.libelle]] ([[domaine.moyenne.toFixed(2)]])
                             </div>
-                            <div ng-if = "domaine.moyenne === -1 &&  domaine.bfc !== undefined && !isChefEtab()">
+                            <div ng-if = "domaine.moyenne === -1 &&  domaine.bfc !== undefined && !isChefEtab(search.classe)">
                                 [[Conversion.libelle]] <i18n>évaluation.domaine.bfc.nonevalue</i18n>
                             </div>
                         </div>
@@ -88,7 +88,7 @@
     </div>
     <div class= "twelve cell" >
         <div ng-if="((search.classe.id_cycle === 1) && (selectedCycleRadio.id_cycle !== '2' || selectedCycleRadio.id_cycle === 2)
-        && ((isChefEtab() && evaluations.structure.baremeDNBvisible===1) || evaluations.structure.baremeDNBvisible===2))" class="twelve cell">
+        && ((isChefEtab(search.classe) && evaluations.structure.baremeDNBvisible===1) || evaluations.structure.baremeDNBvisible===2))" class="twelve cell">
             <span class= "right-magnet bareme-brevet" ><i18n>evaluation.bfc.controle.continu</i18n>
             [[suiviCompetence.baremeBrevetEleve.controlesContinus_brevet]] / [[suiviCompetence.baremeBrevetEleve.totalMaxBaremeBrevet]]</span></div>
         <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>

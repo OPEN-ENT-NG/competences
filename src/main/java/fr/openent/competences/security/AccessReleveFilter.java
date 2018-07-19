@@ -23,8 +23,10 @@ import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -99,21 +101,45 @@ public class AccessReleveFilter implements ResourcesProvider {
                 handler.handle(false);
             }
             //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
-           else if (!userUtils.validateClasse(idClasse) &&
-                    !userUtils.validateStructure(idEtablissement)) {
-                resourceRequest.resume();
-                handler.handle(false);
-            }
-
-            else {
-                new FilterPeriodeUtils().validateStructure(idEtablissement,
-                        idPeriode, new Handler<Boolean>() {
+           else {
+                WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
+                        null, null, null, null, new Handler<Either<String, Boolean>>() {
                             @Override
-                            public void handle(Boolean isValid) {
-                                resourceRequest.resume();
-                                handler.handle(isValid);
+                            public void handle(Either<String, Boolean> event) {
+                                Boolean isHeadTeacher;
+
+                                if(event.isLeft()) {
+                                    isHeadTeacher = false;
+                                }
+                                else {
+                                    isHeadTeacher = event.right().getValue();
+                                }
+
+
+                                // Si on est professeur principal de la classe, on a le droit
+                                if(isHeadTeacher) {
+                                    resourceRequest.resume();
+                                    handler.handle(true);
+                                }
+                                else if (!userUtils.validateClasse(idClasse) &&
+                                        !userUtils.validateStructure(idEtablissement)) {
+                                    resourceRequest.resume();
+                                    handler.handle(false);
+                                }
+
+                                else {
+                                    new FilterPeriodeUtils().validateStructure(idEtablissement,
+                                            idPeriode, new Handler<Boolean>() {
+                                                @Override
+                                                public void handle(Boolean isValid) {
+                                                    resourceRequest.resume();
+                                                    handler.handle(isValid);
+                                                }
+                                            });
+                                }
                             }
                         });
+
             }
         }
         else {

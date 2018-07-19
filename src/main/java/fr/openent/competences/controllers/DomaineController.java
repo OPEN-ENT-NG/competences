@@ -21,6 +21,8 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.CreateDispenseDomaineEleveFilter;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.CompetencesService;
 import fr.openent.competences.service.DispenseDomaineEleveService;
 import fr.openent.competences.service.DomainesService;
@@ -222,7 +224,33 @@ public class DomaineController extends ControllerHelper {
                     try {
                         String idEleve = request.params().get("idEleve");
                         Integer idDomaine = Integer.parseInt(request.params().get("idDomaine"));
-                        dispenseDomaineEleveService.deleteDispenseDomaineEleve(idEleve, idDomaine, defaultResponseHandler(request));
+                        WorkflowActionUtils.hasHeadTeacherRight(user, null, null,
+                                null, new JsonArray().add(idEleve), eb, new Handler<Either<String, Boolean>>() {
+                                    @Override
+                                    public void handle(Either<String, Boolean> event) {
+                                        Boolean isHeadTeacher;
+                                        if(event.isLeft()) {
+                                            log.error("[deleteDispenseDomaineEleve]: failed To calcul HeadTeacher");
+                                            isHeadTeacher = false;
+                                        }
+                                        else {
+                                            isHeadTeacher = event.right().getValue();
+                                        }
+
+
+                                        if(isHeadTeacher ||
+                                                new WorkflowActionUtils()
+                                                .hasRight(user,
+                                                        WorkflowActions.CREATE_DISPENSE_DOMAINE_ELEVE.toString())) {
+                                            dispenseDomaineEleveService.deleteDispenseDomaineEleve(idEleve, idDomaine,
+                                                    defaultResponseHandler(request));
+                                        }
+                                        else {
+                                            Renders.unauthorized(request);
+                                        }
+                                    }
+                                });
+
                     } catch (ClassCastException e) {
                         log.error("An Error occured when casting domaine id");
                     }

@@ -19,11 +19,14 @@
 
 package fr.openent.competences.security;
 
+import fr.openent.competences.Competences;
 import fr.openent.competences.security.utils.FilterCompetenceNoteUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.http.Renders;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -54,15 +57,43 @@ public class AccessCompetenceNoteFilter implements ResourcesProvider {
                         resourceRequest.pause();
                         List<Long> nList = new ArrayList<Long>();
                         List<String> ids = resourceRequest.params().getAll("id");
-                        for (String s : ids) nList.add(Long.parseLong(s));
-                        new FilterCompetenceNoteUtils().validateAccessCompetencesNotes(nList, user,
-                                new Handler<Boolean>() {
-                            @Override
-                            public void handle(Boolean isValid) {
-                                resourceRequest.resume();
-                                handler.handle(isValid);
-                            }
-                        });
+                        JsonArray ids_competence_note = new JsonArray();
+                        for (String s : ids) {
+                            nList.add(Long.parseLong(s));
+                            ids_competence_note.add(Long.parseLong(s));
+                        }
+                        WorkflowActionUtils.hasHeadTeacherRight(user, null, ids_competence_note,
+                                Competences.COMPETENCES_NOTES_TABLE, null, null,
+                                new Handler<Either<String, Boolean>>() {
+                                    @Override
+                                    public void handle(Either<String, Boolean> event) {
+                                    Boolean isHeadTecher;
+                                    if(event.isLeft()){
+                                        isHeadTecher = false;
+                                    }
+                                    else {
+                                        isHeadTecher = event.right().getValue();
+                                    }
+
+                                    // Si l'enseignant est prof principal dans la classe de l'élève
+                                    // Alors il a le droit d'accéder à ses compétences notes
+                                    if (isHeadTecher) {
+                                        resourceRequest.resume();
+                                        handler.handle(true);
+                                    }
+                                    else {
+                                        new FilterCompetenceNoteUtils().validateAccessCompetencesNotes(nList, user,
+                                                new Handler<Boolean>() {
+                                                    @Override
+                                                    public void handle(Boolean isValid) {
+                                                        resourceRequest.resume();
+                                                        handler.handle(isValid);
+                                                    }
+                                                });
+                                    }
+                                    }
+                                });
+
                     } catch (NumberFormatException e) {
                         log.error("Error : idNote must be a long object");
                         resourceRequest.resume();

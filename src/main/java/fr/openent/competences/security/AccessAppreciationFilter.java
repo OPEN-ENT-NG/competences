@@ -1,9 +1,13 @@
 package fr.openent.competences.security;
 
+import fr.openent.competences.Competences;
 import fr.openent.competences.security.utils.FilterAppreciationUtils;
+import fr.openent.competences.security.utils.FilterNoteUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Binding;
+import io.vertx.core.json.JsonArray;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -37,15 +41,38 @@ public class AccessAppreciationFilter implements ResourcesProvider {
                         handler.handle(false);
                         return;
                     }
+                    WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idAppreciation),
+                            Competences.APPRECIATIONS_TABLE, null, null,
+                            new Handler<Either<String, Boolean>>() {
+                                @Override
+                                public void handle(Either<String, Boolean> event) {
+                                    Boolean isHeadTecher;
+                                    if(event.isLeft()){
+                                        isHeadTecher = false;
+                                    }
+                                    else {
+                                        isHeadTecher = event.right().getValue();
+                                    }
 
-                    new FilterAppreciationUtils().validateAccessAppreciation(idAppreciation, user,
-                            new Handler<Boolean>() {
-                        @Override
-                        public void handle(Boolean isValid) {
-                            resourceRequest.resume();
-                            handler.handle(isValid);
-                        }
-                    });
+                                    // Si l'enseignant est prof principal dans la classe de l'élève,
+                                    // alors il a le droit d'accéder à l'appréciation de l'élève.
+                                    if (isHeadTecher) {
+                                        resourceRequest.resume();
+                                        handler.handle(true);
+                                    }
+                                    else {
+                                        new FilterAppreciationUtils().validateAccessAppreciation(idAppreciation, user,
+                                                new Handler<Boolean>() {
+                                                    @Override
+                                                    public void handle(Boolean isValid) {
+                                                        resourceRequest.resume();
+                                                        handler.handle(isValid);
+                                                    }
+                                                });
+                                    }
+                                }
+                            });
+
                 }
                 break;
                 default: {

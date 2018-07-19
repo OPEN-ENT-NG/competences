@@ -68,7 +68,7 @@ export class ReleveNote extends  Model implements IModel {
         this.structure = evaluations.structure;
         this.matiere = _.findWhere(evaluations.structure.matieres.all, {id: this.idMatiere});
         let c = _.findWhere(evaluations.structure.classes.all, {id: this.idClasse});
-        this.classe = new Classe({id: c.id, name: c.name, type_groupe: c.type_groupe});
+        this.classe = new Classe({id: c.id, name: c.name, type_groupe: c.type_groupe, externalId: c.externalId});
 
         this.collection(Devoir, {
             sync: () => {

@@ -130,5 +130,39 @@ public class FilterDevoirUtils  extends ControllerHelper {
 
 
     }
+    public void validateAccesDevoirWithHeadTeacher(final Long idDevoir,
+                                    final UserInfos user, final Handler<Boolean> handler,
+                                    final HttpServerRequest resourceRequest) {
+        WorkflowActionUtils.hasHeadTeacherRight(user, null,
+                new JsonArray().add(idDevoir),
+                Competences.DEVOIR_TABLE, null, null, new Handler<Either<String, Boolean>>() {
+                    @Override
+                    public void handle(Either<String, Boolean> event) {
+                        if(event.isLeft()) {
+                            validateAccessDevoirUtils(idDevoir, resourceRequest,user,handler);
+                        }
+                        else {
+                            Boolean isHeadTeacher = event.right().getValue();
+                            if(isHeadTeacher) {
+                                handler.handle(true);
+                            }
+                            else {
+                                validateAccessDevoirUtils(idDevoir, resourceRequest,user,handler);
+                            }
+                        }
 
+                    }
+                });
+    }
+
+    private void validateAccessDevoirUtils (Long idDevoir, final HttpServerRequest resourceRequest,
+                                            UserInfos user, final Handler<Boolean> handler) {
+        new FilterDevoirUtils().validateAccessDevoir(idDevoir, user, new Handler<Boolean>() {
+            @Override
+            public void handle(Boolean isValid) {
+                resourceRequest.resume();
+                handler.handle(isValid);
+            }
+        });
+    }
 }
