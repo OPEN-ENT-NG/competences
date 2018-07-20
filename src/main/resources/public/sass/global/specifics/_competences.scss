@@ -309,6 +309,8 @@ body.evaluations {
       color: $white !important;
     }
     .tableReleves {
+      overflow-x: auto;
+      overflow-y: hidden;
       margin-left: 5px;
       margin-top: 5px;
       .responsive-table {
