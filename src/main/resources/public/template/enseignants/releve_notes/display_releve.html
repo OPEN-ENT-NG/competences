@@ -244,7 +244,7 @@
                                                   name="appreciation"
                                                   ng-model="eleve.appreciation_matiere_periode"
                                                   ng-disabled = "disabledSaisieNNoutPeriode()"
-                                                  ng-blur="saveAppreciationMatierePeriodeEleve(eleve,false)"
+                                                  ng-blur="saveAppreciationMatierePeriodeEleve(eleve,true)"
                                                   ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
                                                   maxlength="[[MAX_CHAR_APPRECIATION_LENGTH]]"
                                                   ng-focus="focusMe($event);getEleveInfo(eleve);">

@@ -26,8 +26,7 @@
                 [[domaine.codification]] - [[domaine.libelle]]
             </div>
             <div ng-if="( (isChefEtab() && evaluations.structure.moyenneVisible===1)
-                            || evaluations.structure.moyenneVisible===2 )
-                            && !domaine.dispense_elve "
+                            || evaluations.structure.moyenneVisible===2 )"
                  class="domaine-maitrise" ng-class = "{disabled : domaine.dispense_eleve}">
                 <label>
                     <div class="maitrise-bfc" ng-repeat ="Conversion in suiviCompetence.tableConversions.all track by $index ">

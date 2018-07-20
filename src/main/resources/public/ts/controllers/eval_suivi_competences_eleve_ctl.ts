@@ -519,7 +519,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                                 $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                                 model.on('refresh-slider', function () {
                                     $scope.baremeBrevet();
-                                });if ($scope.opened.detailCompetenceSuivi) {
+                                });
+                                if ($scope.opened.detailCompetenceSuivi) {
                                     if ($scope.detailCompetence !== undefined) {
                                         $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
                                         if ($scope.detailCompetence) {
