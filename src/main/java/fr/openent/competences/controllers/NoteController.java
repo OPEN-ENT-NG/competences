@@ -774,66 +774,70 @@ public class NoteController extends ControllerHelper {
                                     JsonArray moyennesClasses = new fr.wseduc.webutils.collections.JsonArray();
 
                                     // Calcul des moyennes par période pour la classe
-                                    notesService.getColonneReleve(idEleves, null, idMatiere, idClasse, "moyenne",
-                                            new Handler<Either<String, JsonArray>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonArray> event) {
-                                            if (event.isRight()) {
-                                                JsonArray moyFinalesEleves = event.right().getValue();
+                                    if(idEleves.size() != 0) {
+                                        notesService.getColonneReleve(idEleves, null, idMatiere, idClasse, "moyenne",
+                                                new Handler<Either<String, JsonArray>>() {
+                                                    @Override
+                                                    public void handle(Either<String, JsonArray> event) {
+                                                        if (event.isRight()) {
+                                                            JsonArray moyFinalesEleves = event.right().getValue();
 
-                                                //pour chaque période,
-                                                for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriode :
-                                                        notesByDevoirByPeriodeClasse.entrySet()) {
+                                                            //pour chaque période,
+                                                            for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriode :
+                                                                    notesByDevoirByPeriodeClasse.entrySet()) {
 
-                                                    Long idPeriode = notesByPeriode.getKey();
-                                                    JsonObject moyennePeriodeClasse = new JsonObject();
-                                                    moyennePeriodeClasse.put("id", idPeriode);
+                                                                Long idPeriode = notesByPeriode.getKey();
+                                                                JsonObject moyennePeriodeClasse = new JsonObject();
+                                                                moyennePeriodeClasse.put("id", idPeriode);
 
-                                                    // je suis pas dans trimestre
-                                                    if(idPeriode != null){
+                                                                // je suis pas dans trimestre
+                                                                if (idPeriode != null) {
 
-                                                        ArrayList<NoteDevoir> allNotes =
-                                                                notesByPeriode.getValue().get(notesByPeriode.getKey());
-                                                        moyennePeriodeClasse.put("moyenne",
-                                                                calculMoyenneClasseByPeriode(
-                                                                        allNotes,
-                                                                        moyFinalesEleves,
-                                                                        idPeriode));
-                                                        moyennesClasses.add(moyennePeriodeClasse);
+                                                                    ArrayList<NoteDevoir> allNotes =
+                                                                            notesByPeriode.getValue().get(notesByPeriode.getKey());
+                                                                    moyennePeriodeClasse.put("moyenne",
+                                                                            calculMoyenneClasseByPeriode(
+                                                                                    allNotes,
+                                                                                    moyFinalesEleves,
+                                                                                    idPeriode));
+                                                                    moyennesClasses.add(moyennePeriodeClasse);
 
-                                                    }  else { // additionne les moyennes pour de chaque periode et diviser le tout par le nombre de périodes
-                                                        Double sumMoyPeriode = 0.0;
-                                                        for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesPeriode :
-                                                                notesByDevoirByPeriodeClasse.entrySet()){ //pour toutes les périodes existantes
+                                                                } else { // additionne les moyennes pour de chaque periode et diviser le tout par le nombre de périodes
+                                                                    Double sumMoyPeriode = 0.0;
+                                                                    for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesPeriode :
+                                                                            notesByDevoirByPeriodeClasse.entrySet()) { //pour toutes les périodes existantes
 
-                                                            ArrayList<NoteDevoir> allNotes =
-                                                                    notesPeriode.getValue().get(notesPeriode.getKey());
-                                                            Long periode = notesPeriode.getKey();
-                                                            if(periode != null){
-                                                                sumMoyPeriode = sumMoyPeriode +
-                                                                        calculMoyenneClasseByPeriode(
-                                                                                allNotes,
-                                                                                moyFinalesEleves,
-                                                                                periode);
+                                                                        ArrayList<NoteDevoir> allNotes =
+                                                                                notesPeriode.getValue().get(notesPeriode.getKey());
+                                                                        Long periode = notesPeriode.getKey();
+                                                                        if (periode != null) {
+                                                                            sumMoyPeriode = sumMoyPeriode +
+                                                                                    calculMoyenneClasseByPeriode(
+                                                                                            allNotes,
+                                                                                            moyFinalesEleves,
+                                                                                            periode);
+                                                                        }
+                                                                    }
+                                                                    java.text.DecimalFormat df = new java.text.DecimalFormat("0.##");
+                                                                    moyennePeriodeClasse.put("moyenne",
+                                                                            (double) Math.round((sumMoyPeriode / (notesByDevoirByPeriodeClasse.size() - 1)) * 100) / 100);
+                                                                    moyennesClasses.add(moyennePeriodeClasse);
+                                                                }
                                                             }
+                                                            result.put("moyennesClasse", moyennesClasses);
+                                                            addMoyenneFinalAndAppreciationPositionnementEleve(
+                                                                    idEleve, idClasse,
+                                                                    idMatiere, idEtablissement,
+                                                                    typeClasse, request,
+                                                                    result);
+                                                        } else {
+                                                            JsonObject error = (new JsonObject()).put("error",
+                                                                    (String) event.left().getValue());
+                                                            Renders.renderJson(request, error, 400);
                                                         }
-                                                        java.text.DecimalFormat df = new java.text.DecimalFormat("0.##");
-                                                        moyennePeriodeClasse.put("moyenne",
-                                                                (double) Math.round((sumMoyPeriode/(notesByDevoirByPeriodeClasse.size() - 1)) * 100) / 100);
-                                                        moyennesClasses.add(moyennePeriodeClasse);
                                                     }
-                                                }
-                                                result.put("moyennesClasse", moyennesClasses);
-                                                addMoyenneFinalAndAppreciationPositionnementEleve(
-                                                        idEleve,idClasse,
-                                                        idMatiere, idEtablissement,
-                                                        typeClasse, request,
-                                                        result);
-                                            } else {
-
-                                            }
-                                        }
-                                    });
+                                                });
+                                    }
                                 } else {
                                     JsonObject error = (new JsonObject()).put("error",
                                             (String) event.left().getValue());
@@ -885,6 +889,7 @@ public class NoteController extends ControllerHelper {
         }
         Double sumMoyClasse = 0.0;
 
+
         Map<String, Double> moyFinalesPeriode = moyFinales.get(idPeriode);
 
         //pour tous les élèves mettre leur moyenne finale ou atuo dans sumMoyClasse
@@ -894,7 +899,8 @@ public class NoteController extends ControllerHelper {
 
             //si l'éleve en cours a une moyenne finalesur la période l'ajouter à sumMoyClasse
             //sinon calculer la moyenne de l'eleve et l'ajouter à sumMoyClasse
-            if(moyFinalesPeriode.containsKey(idEleve)){
+
+            if(moyFinalesPeriode != null && moyFinalesPeriode.containsKey(idEleve)){
                 sumMoyClasse = sumMoyClasse + moyFinalesPeriode.get(idEleve);
             } else {
                 sumMoyClasse = sumMoyClasse + utilsService.calculMoyenne(
