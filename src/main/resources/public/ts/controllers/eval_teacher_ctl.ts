@@ -3251,6 +3251,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             }
+            $scope.exportDevoirObj.empty = false;
             $scope.exportDevoirObj.errExport = false;
             $scope.printOption.display = false;
             utils.safeApply($scope);
@@ -3275,6 +3276,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.textModExport = false;
                 $scope.exportDevoirObj.errExport = false;
                 $scope.printOption.display = false;
+                $scope.exportDevoirObj.empty = false;
                 utils.safeApply($scope);
                 location.replace(url);
             });
