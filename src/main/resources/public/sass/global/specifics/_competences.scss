@@ -1,5 +1,12 @@
 body.evaluations {
 
+  .whiteSpaceNormalBox {
+    white-space: normal !important;
+    text-overflow: unset;
+    overflow: unset;
+    height: auto !important;
+  }
+
   .changedAverage {
     color: $red;
   }

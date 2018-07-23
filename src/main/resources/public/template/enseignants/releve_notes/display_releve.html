@@ -63,7 +63,7 @@
                     <label class="select">
                         <select ng-model="search.classe"
                                 ng-change="getReleve(); syncPeriode(search.classe.id);"
-                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all:search">
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>
                     </label>
@@ -130,10 +130,9 @@
                                     </span>
                                 </th>
                                 <th class="colDevoir"
-                                    ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0, 'ellipsis' : true }"
+                                    ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0, 'ellipsis' : true}"
                                     ng-repeat="devoir in releveNote.devoirs.all" ng-click="getDevoirInfo(devoir)"
-                                    ng-dblclick="goTo('/devoir/'+devoir.id)" tooltip="[[devoir.name]]">
-
+                                    ng-dblclick="goTo('/devoir/'+devoir.id)">
                                     [[devoir.name]]
                                 </th>
                                 <th class="colMoyenne">
@@ -153,7 +152,6 @@
                             <tr ng-repeat="eleve in releveNote.classe.eleves.all">
                                 <td class="col1 text-overflow"
                                     ng-class="{'deletedStudent': eleve.deleteDate !== null}"
-                                    tooltip="[[eleve.lastName]] [[eleve.firstName]]"
                                     ng-click="getEleveInfo(eleve)">
                                     [[::eleve.lastName]] [[::eleve.firstName]]
                                 </td>
@@ -244,11 +242,9 @@
                             </tr>
                             </thead>
                             <tbody>
-                            <tr
-                                    ng-repeat="eleve in releveNote.classe.eleves.all">
+                            <tr ng-repeat="eleve in releveNote.classe.eleves.all">
                                 <td class="col1 text-overflow"
                                     ng-class="{'deletedStudent': eleve.deleteDate !== null}"
-                                    tooltip="[[eleve.lastName]] [[eleve.firstName]]"
                                     ng-click="getEleveInfo(eleve)">
                                     [[eleve.lastName]] [[eleve.firstName]]
                                 </td>

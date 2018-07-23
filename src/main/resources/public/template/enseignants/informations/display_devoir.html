@@ -18,7 +18,13 @@
   -->
 <div class="fiche devoir-info" ng-class="{opened : openedDevoirInfo === true}">
     <span class="plus-input" ng-click="openLeftMenu('openedDevoirInfo', openedDevoirInfo);"></span>
-    <h2 tooltip="[[informations.devoir.name]]" class="head text-overflow" ng-click="openLeftMenu('openedDevoirInfo', openedDevoirInfo);">[[informations.devoir.name]]</h2>
+    <h2 ng-class="{whiteSpaceNormalBox : informations.devoir.hoveringRecap}"
+        class="head text-overflow"
+        ng-click="openLeftMenu('openedDevoirInfo', openedDevoirInfo);"
+        ng-mouseenter="showIt(informations.devoir)"
+        ng-mouseleave="hideIt(informations.devoir)">
+        [[informations.devoir.name]]
+    </h2>
     <div ng-show="informations.devoir !== undefined">
         <ul>
             <li><span class="bold"><i18n>viescolaire.utils.description</i18n></span> : [[informations.devoir.libelle]]</li>

@@ -1720,8 +1720,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-// on ecoute sur l'evenement checkConnaissances
-// ie on doit ajouter/supprimer toutes les sous competences dans le recap
+        // on ecoute sur l'evenement checkConnaissances
+        // ie on doit ajouter/supprimer toutes les sous competences dans le recap
         $scope.$on('checkConnaissances', function (event, parentItem) {
             parentItem.competences.each(function (e) {
                 if (e.masque && _.findWhere($scope.devoir.competences.all, {id: e.id}) === undefined) {
@@ -1745,8 +1745,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             });
         });
 
-// on ecoute sur l'evenement checkParent
-// ie on doit ajouter la sous competence selectionnee dans le recap
+        // on ecoute sur l'evenement checkParent
+        // ie on doit ajouter la sous competence selectionnee dans le recap
         $scope.$on('checkParent', function (event, parentItem, item) {
             if ($scope.competencesFilter[item.id + "_" + item.id_enseignement].isSelected === true) {
                 // check si on a pas deja ajoute pour eviter les doublons
@@ -1764,17 +1764,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         });
 
-// create the timer variable
+        // create the timer variable
         var timer;
 
-// mouseenter event
+        // mouseenter event
         $scope.showIt = function (item) {
             timer = $timeout(function () {
                 item.hoveringRecap = true;
             }, 350);
         };
 
-// mouseleave event
+        // mouseleave event
         $scope.hideIt = function (item) {
             $timeout.cancel(timer);
             item.hoveringRecap = false;
@@ -3587,13 +3587,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.toogleDevoirNote = function () {
             if ($scope.releveNote !== undefined && $scope.releveNote.idPeriode !== null) {
                 $scope.releveNote.toogle = !$scope.releveNote.toogle;
-                utils.safeApply($scope);
-                $('html, body')
                 // on arrête toutes les animations en cours
-                    .stop()
-                $(".colDevoir").animate({
-                    width: "toggle"
-                }, 'slow');
+                // $('html, body').stop()
+                $(".colDevoir").toggle();
+                utils.safeApply($scope);
             } else {
                 if($scope.releveNote !== undefined) {
                     $scope.releveNote.toogle = false;
