@@ -818,7 +818,6 @@ public class NoteController extends ControllerHelper {
                                                                                             periode);
                                                                         }
                                                                     }
-                                                                    java.text.DecimalFormat df = new java.text.DecimalFormat("0.##");
                                                                     moyennePeriodeClasse.put("moyenne",
                                                                             (double) Math.round((sumMoyPeriode / (notesByDevoirByPeriodeClasse.size() - 1)) * 100) / 100);
                                                                     moyennesClasses.add(moyennePeriodeClasse);
