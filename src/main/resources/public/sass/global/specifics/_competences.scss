@@ -901,6 +901,9 @@ body.evaluations {
     }
     &.openedAppreciation{
       height: 300px;
+      .plus-input::after {
+        content: "\e841";
+      }
     }
   }
 
