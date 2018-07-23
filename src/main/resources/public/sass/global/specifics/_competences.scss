@@ -900,8 +900,12 @@ body.evaluations {
       }
     }
     &.openedAppreciation{
-      height: auto;
+      height: 300px;
     }
+  }
+
+  .appreciationTextarea{
+    height: 220px;
   }
 
   .criteres, .statistiques-devoir, .detail-devoir, .student-info, .devoir-info, .notes-help {

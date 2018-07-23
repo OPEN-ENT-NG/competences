@@ -115,8 +115,8 @@
             <div class="criteres card criterion"
                  ng-show="search.periode.id !== undefined && search.classe.id !== undefined && search.matiere.id !== undefined && search.periode.type !== 0 && releveNote !== undefined"
                  ng-class="{openedAppreciation : opened.appreciation === true}">
-                <span class="plus-input" ng-click="openLeftMenu('opened.appreciation', opened.appreciation);"></span>
-                <div class="header" ng-click="openLeftMenu('opened.appreciation', opened.appreciation);">
+                <span class="plus-input" ng-click="openAppreciation();"></span>
+                <div class="header" ng-click="openAppreciation();">
                     <h2>
                         <i18n>evaluations.releve.appreciation.classe</i18n>
                     </h2>
@@ -126,6 +126,7 @@
                                       row="4" type="text"
                                       ng-model="releveNote.appreciationClasse.appreciation"
                                       class="twelve"
+                                      ng-class="{appreciationTextarea : opened.appreciation === true}"
                                       ng-maxlength="300"
                                       maxlength="300"
                                       ng-blur="releveNote.appreciationClasse.save()"

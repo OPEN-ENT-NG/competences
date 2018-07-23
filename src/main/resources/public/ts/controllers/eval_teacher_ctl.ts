@@ -2087,8 +2087,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.criteres = pbAfficherMenu;
             } else if (psMenu === "opened.legend") {
                     $scope.opened.legend = pbAfficherMenu;
-            } else if (psMenu === "opened.appreciation") {
-                $scope.opened.appreciation = pbAfficherMenu;
             } else {
                 console.error("Parametre psMenu inconnu : psMenu=" + psMenu);
             }
@@ -3582,6 +3580,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.openElementProgramme = function openElementProgramme() {
             $scope.opened.elementProgramme = !$scope.opened.elementProgramme;
+        }
+
+        $scope.openAppreciation = function () {
+            $scope.opened.appreciation = !$scope.opened.appreciation;
         }
 
         $scope.saveElementProgramme = function (texte) {
