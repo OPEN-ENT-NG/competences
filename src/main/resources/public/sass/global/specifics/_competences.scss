@@ -316,7 +316,7 @@ body.evaluations {
       .responsive-table {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
-        border:none;
+        //border:none;
       }
       .tableReleveStats {
         box-shadow: 0 0 0px 0 grey !important;
@@ -521,7 +521,7 @@ body.evaluations {
       border-bottom: 1px solid rgb(75, 175, 213) !important;
       margin-bottom: 0 !important;
       padding: 0;
-      margin-left: 6px !important;
+      //margin-left: 6px !important;
       &:focus {
         border-bottom: 2px solid $orange !important;
       }
