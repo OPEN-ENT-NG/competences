@@ -322,6 +322,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             || $scope.search.periode.id_type !== $scope.releveNote.idPeriode)) {
                         $scope.releveNote = undefined;
                     }
+
+                    $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+
                     if ($scope.search.classe !== '*' &&
                         ($scope.search.matiere !== null && $scope.search.matiere.id !== '*')
                         && $scope.search.periode !== '*') {
@@ -2173,6 +2176,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.openedStudentInfo = false;
                 utils.safeApply($scope);
             }
+
+            $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
         };
 
         /**

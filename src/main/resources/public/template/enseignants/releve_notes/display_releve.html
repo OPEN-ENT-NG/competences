@@ -53,7 +53,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-change="getReleve()"
-                                ng-options="getI18nPeriode(periode) for periode in (filteredPeriode = (structure.typePeriodes.all | customPeriodeFilters:devoirs.all:search | orderBy:'-type'))">
+                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | orderBy:'-type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
                         </select>
@@ -233,7 +233,7 @@
                                 <th class="col1">
                                     <i18n>student</i18n>
                                 </th>
-                                <th class="colMoyenne" ng-repeat="periode in (filteredPeriode = (structure.typePeriodes.all | customPeriodeFilters:devoirs.all:search | orderBy:'-type'))">
+                                <th class="colMoyenne" ng-repeat="periode in filteredPeriode | orderBy:'-type'">
                                    [[getI18nPeriode(periode)]]
                                 </th>
                                 <th class="colMoyenne">
@@ -248,7 +248,7 @@
                                     ng-click="getEleveInfo(eleve)">
                                     [[eleve.lastName]] [[eleve.firstName]]
                                 </td>
-                                <td class="colMoyenne" ng-repeat="periode in (filteredPeriode = (structure.typePeriodes.all | customPeriodeFilters:devoirs.all:search | orderBy:'-type'))"
+                                <td class="colMoyenne" ng-repeat="periode in filteredPeriode | orderBy:'-type'"
                                     ng-class="{changedAverage: hasMoyenneFinale(periode.id, eleve.moyennesFinales)}">
                                     [[getMoyenne(periode.id,eleve.moyennes, eleve.moyennesFinales)]]
                                 </td>
