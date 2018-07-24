@@ -183,10 +183,13 @@ body.evaluations {
   }
   select.padding-select-accueil {
     padding-right: 30px !important;
-  }@media screen and (max-device-width:$fat-mobile) {
+  }
+
+  @media screen and (max-device-width:$fat-mobile) {
   .responsive-table table thead {
     display: none !important;
   }
+
 
   input[type=text], input[type=password], input[type=search], input[type=tel], input[type=email] {
     text-align: center !important;
@@ -346,6 +349,7 @@ body.evaluations {
         }
       }
     }
+
     .tableReleve {
       tr{
         display: flex !important;
@@ -510,7 +514,20 @@ body.evaluations {
       }
     }
   }
-  .input-note{
+
+  @media screen and (max-device-width:$small-mobile) {
+    .tableRelevePadding tbody tr td {
+      padding: 10px !important;
+    }
+  }
+
+  @media screen and (max-device-width:$fat-mobile) {
+    .tableRelevePadding tbody tr td {
+      padding: 10px !important;
+    }
+  }
+
+    .input-note{
     text-align: right;
     display: block;
     padding: 0;
@@ -521,11 +538,14 @@ body.evaluations {
       border-bottom: 1px solid rgb(75, 175, 213) !important;
       margin-bottom: 0 !important;
       padding: 0;
-      //margin-left: 6px !important;
       &:focus {
         border-bottom: 2px solid $orange !important;
       }
     }
+  }
+
+  .addMargin {
+    margin-left: 6px;
   }
 
   .textarea-appreciation {
@@ -550,6 +570,18 @@ body.evaluations {
   .colMoyenne.size {
     display: flex;
     justify-content: space-between;
+  }
+
+  @media screen and (max-device-width:$small-mobile) {
+    .colMoyenne.size {
+      display: block;
+    }
+  }
+
+  @media screen and (max-device-width:$fat-mobile) {
+    .colMoyenne.size {
+      display: block;
+    }
   }
 
   input.input-list.error {
@@ -2934,6 +2966,7 @@ body.evaluations {
     color: #FFFFFF;
   }
 
+
   .newsizeTD {
     width: 0% !important;
     text-align: center !important;
@@ -2951,6 +2984,17 @@ body.evaluations {
   .aligndiff {
     text-align: left !important;
   }
+
+  @media screen and (max-device-width:$small-mobile) {
+    .responsive-table table td {
+      width: auto !important;
+    }
+  }
+    @media screen and (max-device-width:$fat-mobile) {
+      .responsive-table table td {
+        width: auto !important;
+      }
+    }
 
   .deletedStudent {
     color: #E61758 !important;
