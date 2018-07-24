@@ -284,8 +284,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " string_agg( cast (domaines.id as text), ',') as ids_domaine, comp.id," +
                     " COALESCE(compPerso.nom, comp.nom) AS nom, comp.id_parent, comp.id_type," +
                     " compEns.id_enseignement, comp.id_cycle, perso_ordre.index as index,  " +
-                    " CASE WHEN comp.id_etablissement IS NULL THEN FALSE ELSE TRUE END AS isManuelle," +
-                    " CASE WHEN compPerso.nom IS NULL THEN FALSE ELSE TRUE END AS hasNamePerso," +
+                    " comp.id_etablissement IS NOT NULL AS isManuelle," +
+                    " compPerso.nom IS NOT NULL  AS hasNamePerso," +
                     " CASE WHEN compPerso.masque IS TRUE THEN TRUE ELSE FALSE END AS masque" +
                     " FROM " + COMPETENCES_TABLE + " AS comp" +
                     " INNER JOIN " + COMPETENCES_ENSEIGNEMENTS_TABLE + " AS compEns" +
@@ -304,9 +304,10 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " LEFT JOIN " + COMPETENCES_SCHEMA + ".domaines" +
                     " ON (domaines.id = compDom.id_domaine) " +
                     " LEFT JOIN (SELECT nom, id_competence, masque FROM " + COMPETENCES_PERSO_TABLE +
-                    " WHERE id_etablissement = ?) AS compPerso" +
+                    "  ) AS compPerso" +
                     " ON comp.id = compPerso.id_competence" +
-                    " WHERE comp." + filter;
+                    " WHERE comp." + filter +
+                    " AND (comp.id_etablissement = ? OR comp.id_etablissement IS NULL ) ";
 
             params.add(idEtablissement);
 

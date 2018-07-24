@@ -734,10 +734,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.devoir.id_periode = $scope.search.periode.id_type;
                         utils.safeApply($scope);
                     }
-                    evaluations.structure.enseignements = $scope.devoir.enseignements;
-                    $scope.enseignements = $scope.devoir.enseignements;
-                    await $scope.loadEnseignementsByClasse();
+                    await $scope.loadEnseignementsByClasse(true);
                     await $scope.controleDate($scope.devoir);
+                    $scope.devoir.enseignements = evaluations.structure.enseignements;
                     $scope.updateFilter();
 
                     utils.safeApply($scope);
@@ -1599,7 +1598,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Charge les enseignements et les compétences en fonction de la classe.
          */
-        $scope.loadEnseignementsByClasse = function () {
+        $scope.loadEnseignementsByClasse = function (changeEtab?) {
             let classe_Id = $scope.devoir.id_groupe;
             let newIdCycle = $scope.getClasseData(classe_Id, 'id_cycle');
             if (newIdCycle === null) {
@@ -1619,7 +1618,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             }
-            if (currentIdCycle !== newIdCycle) {
+            if (currentIdCycle !== newIdCycle || changeEtab === true) {
                 evaluations.enseignements.sync(classe_Id).then(function () {
                     // suppression des compétences qui n'appartiennent pas au cycle
                     if($scope.devoir.enseignements.all.length === 0) {
