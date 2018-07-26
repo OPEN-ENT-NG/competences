@@ -2169,7 +2169,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
                         }
                     }
+
+                    // s'il n'ya que des devoirs sans note, on les masque par défaut
                     if (releve.isNN) {
+                        // safeApply avant pour charger le DOM
+                        utils.safeApply($scope);
                         $scope.toogleDevoirNote();
                     }
                     utils.safeApply($scope);
@@ -3594,9 +3598,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.toogleDevoirNote = function () {
             if ($scope.releveNote !== undefined && $scope.releveNote.idPeriode !== null) {
                 $scope.releveNote.toogle = !$scope.releveNote.toogle;
-                // on arrête toutes les animations en cours
-                // $('html, body').stop()
+
+                //masque ou affiche les devoirs
                 $(".colDevoir").toggle();
+
                 utils.safeApply($scope);
             } else {
                 if($scope.releveNote !== undefined) {
