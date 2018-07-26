@@ -54,7 +54,7 @@
                             <form name="SelectedCycleForm">
                                 <div id="inputMargin" ng-repeat="cycle in evaluations.eleve.cycles">
                                     <label>
-                                        <input type="radio"  ng-change="changePeriode();"
+                                        <input type="radio"  ng-change="changePeriode(cycle);"
                                                ng-model="searchBilan.id_cycle"
                                                ng-value="cycle.id_cycle">
                                         [[::cycle.libelle]]

@@ -86,12 +86,14 @@ public interface CompetencesService extends CrudService {
      * Getter : Récupération des compétences suivant le niveau spécifié en paramètre
      * @param filter filtre
      * @param  idClasse : identifiant de la classe
+     * @param  idCycle : identifiant du cycle. A utiliser lorsqu'on veut récupérer des
+     *                 compétences d'un cycle différent du cycle de la classe
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesByLevel(String filter, String idClasse, Handler<Either<String, JsonArray>> handler);
+    void getCompetencesByLevel(String filter, String idClasse, String idCycle, Handler<Either<String, JsonArray>> handler);
 
     void getCompetencesByLevel(String idEtablissement, String filter, String idClasse,
-                               Handler<Either<String, JsonArray>> handler);
+                               String idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère les compétences des domaines dont l'id est passé en paramètre

@@ -424,31 +424,39 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     && $scope.searchBilan.periode !== undefined
                     && $scope.searchBilan.periode.id_type !== undefined){
                     // On récupère les devoirs de la période sélectionnée
-                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, undefined);
+
                     await evaluations.devoirs.sync(evaluations.eleve.idStructure,evaluations.eleve.id, undefined, $scope.searchBilan.periode.id_type, undefined, historise);
+                    $scope.getCompetences(evaluations);
+                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, undefined);
+                    await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences, undefined);
                 } else if ($scope.searchBilan !== undefined
                     && $scope.searchBilan.periode.id_type == -2
                     && $scope.searchBilan.id_cycle !== undefined){
                     // On récupère les devoirs du cycle selectionné
-                    if ($scope.currentCycle.id_cycle !== $scope.searchBilan.id_cycle){
-                        historise = true;
-                    }
-                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, $scope.searchBilan.id_cycle);
-                    await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, $scope.searchBilan.id_cycle, historise);
+                    historise = true;
+
+                    await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, $scope.currentCycle.id_cycle, historise);
+                    $scope.getCompetences(evaluations);
+                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, $scope.currentCycle.id_cycle);
+                    await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences, $scope.currentCycle.id_cycle);
                 }  else {
                     // On récupère les devoirs de l'année
-                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, undefined);
+
                     await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, undefined, historise);
+                    $scope.getCompetences(evaluations);
+                    await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, undefined);
+                    await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences, undefined);
                 }
 
             }
             else {
-                $scope.currentCycle = cycle;
+
+                await evaluations.devoirs.sync(this.eleve.idStructure, this.eleve.id, undefined, undefined, cycle.id_cycle, true);
+                $scope.getCompetences(evaluations);
+                await evaluations.domaines.sync(evaluations.eleve.classe, evaluations.eleve, $scope.competences, cycle.id_cycle);
+                await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences, cycle.id_cycle);
             }
 
-            $scope.getCompetences(evaluations);
-
-            await evaluations.enseignements.sync(evaluations.eleve.idClasse, $scope.competences);
             $scope.evaluations =  evaluations;
             template.close('main');
             utils.safeApply($scope);

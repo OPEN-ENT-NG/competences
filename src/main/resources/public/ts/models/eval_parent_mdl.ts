@@ -272,12 +272,15 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Enseignement, {
-                sync: async function (idClasse: string, competences) {
+                sync: async function (idClasse: string, competences, idCycle: string) {
                     let that = this.composer;
                     return new Promise((resolve, reject) => {
                         let uri = Evaluations.api.GET_ENSEIGNEMENT;
                         if (idClasse !== undefined) {
                             uri += '?idClasse=' + idClasse;
+                            if (idCycle !== undefined) {
+                                uri += '&idCycle=' + idCycle;
+                            }
                             http().getJson(uri).done(function (res) {
                                 this.load(res);
                                 this.each(function (enseignement) {

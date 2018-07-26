@@ -244,7 +244,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
     }
 
     @Override
-    public void getCompetencesByLevel(final String filter, final String idClasse, final Handler<Either<String, JsonArray>> handler) {
+    public void getCompetencesByLevel(final String filter, final String idClasse, final String idCycle, final Handler<Either<String, JsonArray>> handler) {
         final JsonObject action = new JsonObject()
                 .put("action", "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{idClasse})));
@@ -261,7 +261,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     if (results.size() > 0 ){
                         idEtablissement = ((JsonObject)results.getJsonObject(0)).getString("idStructure");
                     }
-                    getCompetencesByLevel(idEtablissement, filter, idClasse, handler);
+                    getCompetencesByLevel(idEtablissement, filter, idClasse, idCycle, handler);
                 } else {
                     log.error(body.getString("message"));
                     handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
@@ -272,10 +272,10 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
 
     @Override
     public void getCompetencesByLevel(final String idEtablissement, final String filter, final String idClasse,
-                                      final Handler<Either<String, JsonArray>> handler) {
+                                      final String idCycle, final Handler<Either<String, JsonArray>> handler) {
 
         if (idEtablissement == null) {
-            getCompetencesByLevel(filter, idClasse, handler);
+            getCompetencesByLevel(filter, idClasse, idCycle, handler);
         } else {
 
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
@@ -294,7 +294,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " ON ( perso_ordre.id_competence = compEns.id_competence AND " +
                     " perso_ordre.id_enseignement = compEns.id_enseignement ) ";
 
-            if (idClasse != null) {
+            if (idClasse != null && idCycle == null) {
                 query += "INNER JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle" +
                         " ON (rel_groupe_cycle.id_cycle = comp.id_cycle) ";
             }
@@ -310,8 +310,12 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " AND (comp.id_etablissement = ? OR comp.id_etablissement IS NULL ) ";
 
             params.add(idEtablissement);
+            if(idCycle != null){
+                query += "AND comp.id_cycle = ?";
+                params.add(idCycle);
+            }
 
-            if (idClasse != null) {
+            if (idClasse != null && idCycle == null) {
                 query += " AND rel_groupe_cycle.id_groupe = ?";
                 params.add(idClasse);
             }
