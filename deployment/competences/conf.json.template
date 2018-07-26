@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~competences~1.0.3",
+      "name": "fr.openent~competences~1.0.4",
       "config": {
         "main" : "fr.openent.competences.Competences",
         "port" : 8129,
@@ -25,7 +25,7 @@
            "template-path" : "./public/template/pdf/"
         },
         "transition" : {
-           "timeout-transaction" : 300
+           "timeout-transaction" : 600
         }
       }
     }
