@@ -91,7 +91,7 @@ public class LSUController extends ControllerHelper {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
+                if ("ok".equals(body.getString("status")) && !body.getJsonObject("result").isEmpty()) {
                     JsonObject valueUAI = body.getJsonObject("result");
                     if (valueUAI != null) {
                         Entete entete = objectFactory.createEntete("CGI","OpenENT", valueUAI.getString("uai"));
@@ -118,7 +118,7 @@ public class LSUController extends ControllerHelper {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
+                if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size()!= 0 ) {
                     JsonArray value = body.getJsonArray("results");
                     Donnees.ResponsablesEtab responsablesEtab = objectFactory.createDonneesResponsablesEtab();
                     try {
@@ -161,14 +161,12 @@ public class LSUController extends ControllerHelper {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
+                if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() != 0) {
                     JsonArray jsonElevesRelatives = body.getJsonArray("results");
                     Eleve eleve = null;
                     //Responsable responsable = null;
                     Adresse adresse = null;
                     Donnees.Eleves eleves = objectFactory.createDonneesEleves();
-                    if (jsonElevesRelatives.size() > 0) {
-                        /* try {*/
                         for (int i = 0; i < jsonElevesRelatives.size(); i++) {
                             JsonObject o = jsonElevesRelatives.getJsonObject(i);
                             Responsable responsable = null;
@@ -182,11 +180,20 @@ public class LSUController extends ControllerHelper {
                                 if (o.getString("externalIdClass") != null) {
                                     externalIdClass = o.getString("externalIdClass").split("\\$");
                                     className = externalIdClass[(externalIdClass.length - 1)];
-                                    eleve = objectFactory.createEleve(o.getString("externalId"), o.getString("attachmentId"), o.getString("firstName"),
-                                            o.getString("lastName"), className, o.getString("idNeo4j"), o.getString("idClass"), o.getString("level"));
-                                    eleves.add(eleve);
-                                }
-                                else {
+                                    try {
+                                        eleve = objectFactory.createEleve(o.getString("externalId"), o.getString("attachmentId"), o.getString("firstName"),
+                                                o.getString("lastName"), className, o.getString("idNeo4j"), o.getString("idClass"), o.getString("level"));
+                                        eleves.add(eleve);
+                                    } catch (Exception e) {
+                                        if(e instanceof NumberFormatException){
+                                            log.error(" method getBaliseEleve : creationEleve " + e.getMessage() +"new BigInteger(attachmentId) is impossible attachmentId : "+o.getString("attachmentId"));
+                                        }else {
+                                            handler.handle(e.getMessage());
+                                            log.error(" method getBaliseEleve : creationEleve " + e.getMessage());
+
+                                        }
+                                    }
+                                }else {
 
                                     log.info("[EXPORT LSU]: remove " + o.getString("name")
                                             + o.getString("firstName"));
@@ -201,9 +208,6 @@ public class LSUController extends ControllerHelper {
                                 String adress = o.getString("address");
                                 String codePostal =  o.getString("zipCode");
                                 String commune = o.getString("city");
-                               /* if(adress.length() > 50){
-                                    adress = o.getString("address").substring(0,50);
-                                }*/
                                 if(codePostal.length() > 10){
                                     codePostal = o.getString("zipCode").substring(0,10);
                                 }
@@ -245,14 +249,6 @@ public class LSUController extends ControllerHelper {
                         handler.handle("success");
                         log.info("FIN method getBaliseEleves : nombre d'eleve ajoutes :"+eleves.getEleve().size());
 
-                       /* }catch (Exception e){
-                            handler.handle( e.getMessage());
-                            log.error("method getBaliseEleve : attribut relative est null " + e.getMessage());
-                        }*/
-                    } else {
-                        handler.handle("getBaliseEleves : error when collecting Eleves " + body.getString("message"));
-                        log.error("method getBaliseEleves an error occured when collecting Eleves " + body.getString("message"));
-                    }
                 }else{
                     handler.handle("getBaliseEleves : error when collecting Eleves " + body.getString("message"));
                     log.error("method getBaliseEleves an error occured when collecting Eleves " + body.getString("message"));
@@ -457,11 +453,6 @@ public class LSUController extends ControllerHelper {
                             //la synthèse
                             bilanCycle.setSynthese(syntheseEleve.getString("texte"));
 
-                           /* if (syntheseEleve.getString("modified") != null) {
-                                bilanCycle.setDateVerrou(syntheseEleve.getString("modified").substring(0,19));
-                            } else {
-                                bilanCycle.setDateVerrou(syntheseEleve.getString("date_creation").substring(0,19));
-                            }*/
                             XMLGregorianCalendar dateCreation = getDateFormatGregorian(datesCreationVerrou.getString("date_creation"));
                             bilanCycle.setDateCreation(dateCreation);
                             bilanCycle.setDateVerrou(datesCreationVerrou.getString("date_verrou").substring(0,19));
@@ -477,7 +468,12 @@ public class LSUController extends ControllerHelper {
 
                             bilanCycle.setResponsableEtabRef(responsableEtabRef);
                             bilanCycle.setEleveRef(eleve);
-                            bilanCycle.setCycle(new BigInteger(String.valueOf(valueCycle)));
+                            try {
+                                bilanCycle.setCycle(new BigInteger(String.valueOf(valueCycle)));
+                            }catch (Exception e){
+                                log.error("method setSocleSyntheseEnsCpl new BigInteger valueCycle : " + valueCycle + " " + e.getMessage());
+
+                            }
                             bilanCycle.setMillesime(millesime);
                             bilansCycle.getBilanCycle().add(bilanCycle);
 
@@ -487,15 +483,15 @@ public class LSUController extends ControllerHelper {
                             //affecter les différentes erreurs en fonction des conditions non respectées
                             erreursEleve.put("idEleve", idEleve).put("prenom", eleve.getPrenom()).put("nom", eleve.getNom()).put("classe", eleve.getCodeDivision());
                             JsonArray erreurs = new fr.wseduc.webutils.collections.JsonArray();
-                            if (syntheseEleve.size() > 0) {
+                            if ( mapIdDomainePosition.size() != mapIdDomaineCodeDomaine.size() || !bmapSansIdDomaineCPDETR ) {
                                 erreurs.add(new JsonObject().put("socleDomaine", "Il manque des domaines du socle commun a cet eleve"));
                                 erreursEleve.put("typeErreur", erreurs);
-                            } else if (mapIdDomainePosition.size() == mapIdDomaineCodeDomaine.size() || bmapSansIdDomaineCPDETR) {
+                                if ( syntheseEleve.size() == 0 ) {
+                                    erreurs.add(new JsonObject().put("synthese", "La synthese du bilan de fin de cycle n'est pas completee "));
+                                    erreursEleve.put("typeErreur", erreurs);
+                                }
+                            } else if ( syntheseEleve.size() == 0 ) {
                                 erreurs.add(new JsonObject().put("synthese", "La synthese du bilan de fin de cycle n'est pas completee "));
-                                erreursEleve.put("typeErreur", erreurs);
-                            } else {
-                                erreurs.add(new JsonObject().put("socleDomaine", "Il manque des domaines du socle commun "));
-                                erreurs.add(new JsonObject().put("synthese", "La synthese du bilan de fin de cycle n'est pas completee"));
                                 erreursEleve.put("typeErreur", erreurs);
                             }
                             if(!ensCplEleve.containsKey("id_eleve")){
@@ -701,27 +697,19 @@ public class LSUController extends ControllerHelper {
                                                     log.error("getBaliseBilansCycle idCycle :  " + idCycle);
                                                 }
                                             } else {
-                                                handler.handle(new Either.Left<String, JsonArray>("getBaliseBilansCycle :  " + repMapCodeDomaineId.left().getValue()));
-                                                log.error("getBaliseBilansCycle XML MapIdDomaineCodeDomaine :  " + repMapCodeDomaineId.left().getValue());
+                                                handler.handle(new Either.Left<String, JsonArray>("getBaliseBilansCycle : Map<String, Map<Long, Integer>>> resultatsEleves : " + resultatsEleves.left().getValue()));
+                                                log.error("getBaliseBilansCycle Map<String, Map<Long, Integer>>> resultatsEleves :  " + resultatsEleves.left().getValue());
                                             }
 
                                         }
                                     });
+                                }else{
+                                    handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansEleve :  : " + repIdClassIdCycleValue.left().getValue()));
+                                    log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>,map<idCycle,cycle>) " + repIdClassIdCycleValue.left().getValue());
                                 }
                             }
                         });
-
-                                        /*}
-                                    });
-                                } else {
-                                    handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansEleve : bfcService.buidBFC : " + repBuildBFC.left().getValue()));
-                                    log.error("getBaliseBilansCycle XML buildBFC map<idEleve,map<idDomaine,positionnement>> : " + repBuildBFC.left().getValue());
-                                }
-
-                            }
-                        });*/
                     }
-
                 } else {
                     handler.handle(new Either.Left<String,JsonArray>("getBaliseBilansEleve : list (map<idclasse,idCycle>,map<idCycle,cycle>) : " + repIdClassIdCycleValue.left().getValue()));
                     log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>,map<idCycle,cycle>) " + repIdClassIdCycleValue.left().getValue());

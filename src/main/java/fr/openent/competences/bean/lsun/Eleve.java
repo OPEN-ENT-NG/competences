@@ -76,15 +76,15 @@ public class Eleve {
         responsableList = new ArrayList<>();
     }
     public Eleve(String externalId,String attachementId,String firstName, String lastName, String nameClass, String idNeo4j,String idClass,String level){
-        this.id="EL_"+externalId;
-        this.idBe=new BigInteger(attachementId);
-        this.prenom=firstName;
-        this.nom=lastName;
-        this.codeDivision=nameClass;
-        this.idNeo4j=idNeo4j;
-        this.id_Class=idClass;
-        this.level = level;
-        this.responsableList = new ArrayList<>();
+            this.id="EL_"+externalId.replaceAll("[^a-bA-Z0-9-\\._]","");
+            this.idBe=new BigInteger(attachementId);
+            this.prenom=firstName;
+            this.nom=lastName;
+            this.codeDivision=nameClass;
+            this.idNeo4j=idNeo4j;
+            this.id_Class=idClass;
+            this.level = level;
+            this.responsableList = new ArrayList<>();
     }
     public String getId_Class() {
         return id_Class;

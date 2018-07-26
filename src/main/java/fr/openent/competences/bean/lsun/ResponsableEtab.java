@@ -47,7 +47,7 @@ public class ResponsableEtab {
 
     public ResponsableEtab (){}
     public ResponsableEtab(String externalId,String displayName){
-        this.id ="RESP_"+externalId;
+        this.id ="RESP_"+externalId.replaceAll("[^a-bA-Z0-9-\\._]","");
         this.libelle=displayName;
     }
 
