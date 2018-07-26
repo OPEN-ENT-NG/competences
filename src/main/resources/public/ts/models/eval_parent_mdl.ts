@@ -27,7 +27,7 @@ import { Matiere } from './parent_eleve/Matiere';
 import { Eleve } from './parent_eleve/Eleve';
 import { Enseignant } from './parent_eleve/Enseignant';
 import { Periode } from './parent_eleve/Periode';
-import { Domaine, Structure } from './teacher';
+import {Domaine, Structure, Utils} from './teacher';
 import { NiveauCompetence } from './eval_niveau_comp';
 import { Enseignement } from './parent_eleve/Enseignement';
 
@@ -354,21 +354,8 @@ export class Evaluations extends Model {
 
         location.replace(uri);
     }
-    setCompetenceNotes(poDomaine, poCompetencesNotes) {
-        if (poDomaine.competences) {
-            _.map(poDomaine.competences.all, function (competence) {
-                competence.competencesEvaluations = _.where(poCompetencesNotes, {
-                    id_competence: competence.id
-                });
-
-            });
-        }
-
-        if ( poDomaine.domaines) {
-            for (let i = 0; i < poDomaine.domaines.all.length; i++) {
-                this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes);
-            }
-        }
+     setCompetenceNotes(poDomaine, poCompetencesNotes) {
+        Utils.setCompetenceNotes(poDomaine, poCompetencesNotes);
     }
 
     async updateUsePerso () {

@@ -245,21 +245,46 @@ export class Utils {
         }
     }
 
-    static setCompetenceNotes(poDomaine, poCompetencesNotes, object, classe) {
-        if(poDomaine.competences) {
+    static setCompetenceNotes(poDomaine, poCompetencesNotes, object?, classe?) {
+        if (object === undefined && classe === undefined) {
+            if (poDomaine.competences) {
+                _.map(poDomaine.competences.all, function (competence) {
+                    competence.competencesEvaluations = _.where(poCompetencesNotes, {
+                        id_competence: competence.id
+                    });
+
+                });
+            }
+        }
+        else if(poDomaine.competences) {
             _.map(poDomaine.competences.all, function (competence) {
                 competence.competencesEvaluations = _.where(poCompetencesNotes, {
                     id_competence: competence.id,
                     id_domaine: competence.id_domaine
                 });
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
-                    for (var i = 0; i < classe.eleves.all.length; i++) {
-                        var mine = _.findWhere(competence.competencesEvaluations, {id_eleve : classe.eleves.all[i].id, owner : model.me.userId});
-                        var others = _.filter(competence.competencesEvaluations, function (evaluation) { return evaluation.owner !== model.me.userId; });
-                        if (mine === undefined)
-                            competence.competencesEvaluations.push(new CompetenceNote({evaluation : -1, id_competence: competence.id, id_eleve : classe.eleves.all[i].id, owner : model.me.userId}));
-                        if (others.length === 0)
-                            competence.competencesEvaluations.push(new CompetenceNote({evaluation : -1, id_competence: competence.id, id_eleve : classe.eleves.all[i].id}));
+                    for (let i = 0; i < classe.eleves.all.length; i++) {
+                        let mine = _.findWhere(competence.competencesEvaluations, {id_eleve : classe.eleves.all[i].id,
+                            owner : model.me.userId});
+                        let others = _.filter(competence.competencesEvaluations, function (evaluation) {
+                            return evaluation.owner !== model.me.userId; });
+
+                        if (mine === undefined) {
+                            competence.competencesEvaluations.push(new CompetenceNote({
+                                evaluation: -1,
+                                id_competence: competence.id,
+                                id_eleve: classe.eleves.all[i].id,
+                                owner: model.me.userId
+                            }));
+                        }
+
+                        if (others.length === 0) {
+                            competence.competencesEvaluations.push(new CompetenceNote({
+                                evaluation: -1,
+                                id_competence: competence.id,
+                                id_eleve: classe.eleves.all[i].id
+                            }));
+                        }
                     }
                 }
             });
@@ -271,4 +296,107 @@ export class Utils {
             }
         }
     }
+
+
+    // Filtres
+    /**
+     * Filtre permettant de retourner l'évaluation maximum en fonction du paramètre de recherche "Mes Evaluations"
+     * @param listeEvaluations Tableau d'évaluations de compétences
+     * @returns {(evaluation:any)=>(boolean|boolean)} Retourne true si la compétence courante est la plus haute du tableau listeEvaluations
+     */
+    static isMaxEvaluation = function (listeEvaluations, $scope) {
+        return function (evaluation) {
+            var _evalFiltered = listeEvaluations;
+            if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
+                _evalFiltered = _.filter(listeEvaluations, function (competence) {
+                    return competence.owner !== undefined && competence.owner === $scope.me.userId;
+                });
+            }
+
+            // filtre sur les competences prises dans le calcul
+            _evalFiltered = _.filter(_evalFiltered, function (competence) {
+                return !competence.formative;
+                // la competence doit être reliée à un devoir ayant un type non "formative"
+            });
+
+            // calcul du max parmis les competences
+            let max = _.max(_evalFiltered, function (competence) {
+                return competence.evaluation;
+            });
+            if (typeof max === 'object') {
+                return evaluation.id_competences_notes === max.id_competences_notes;
+            } else {
+                return false;
+            }
+        };
+    };
+
+
+    static hasMaxNotFormative = function (MaCompetence, $scope) {
+        let _evalFiltered = MaCompetence.competencesEvaluations;
+        if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
+            _evalFiltered = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
+                if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
+                    return evaluation;
+            });
+        }
+
+        // filtre sur les competences prises dans le calcul
+        _evalFiltered = _.filter(_evalFiltered, function (competence) {
+            return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
+        });
+
+        let max = _.max(_evalFiltered, function (evaluation) {
+            return evaluation.evaluation;
+        });
+        if (typeof max === 'object') {
+            return (!(max.evaluation == -1));
+        } else {
+            return false;
+        }
+    };
+
+
+    /**
+     * Retourne si l'utilisateur n'est pas le propriétaire de compétences
+     * @param listeEvaluations Tableau d'évaluations de compétences
+     * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
+     */
+    static notEvalutationOwner = function (listeEvaluations, $scope) {
+        if ($scope.suiviFilter === undefined) $scope.initFilterMine();
+        if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
+            return false;
+        }
+        let _t = _.filter(listeEvaluations, function (competence) {
+            return competence.owner === undefined || competence.owner === $scope.me.userId;
+        });
+        return _t.length === 0;
+    };
+
+    static FilterNotEvaluated = function (MaCompetence, $scope) {
+        if ($scope.selected.grey === true || ($scope.selected.grey === false && MaCompetence.masque)) {
+            let _t = MaCompetence.competencesEvaluations;
+            if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
+                _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
+                    if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
+                        return evaluation;
+                });
+            }
+
+
+            let max = _.max(_t, function (evaluation) {
+                return evaluation.evaluation;
+            });
+            if (typeof max === 'object') {
+                return (!(max.evaluation == -1));
+            } else {
+                return false;
+            }
+
+        } else {
+            return true;
+        }
+
+    };
+
 }

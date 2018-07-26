@@ -7,7 +7,7 @@ import {
     Classe,
     Devoir,
     Structure,
-    evaluations, TableConversion
+    evaluations, TableConversion, Domaine, Utils
 } from './index';
 import {getNN} from "../../utils/functions/utilsNN";
 import * as utils from "../../utils/teacher";
@@ -47,7 +47,7 @@ export class ReleveNote extends  Model implements IModel {
             GET_ELEMENT_PROGRAMME_PROPOSITIONS: `/competences/element/programme/propositions`,
             GET_CONVERSION_TABLE: `/competences/competence/notes/bilan/conversion?idEtab=${
                 this.idEtablissement}&idClasse=${this.idClasse}`,
-
+            GET_ARBRE_DOMAINE: `/competences/domaines?idClasse=${this.idClasse}`,
 
             POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
             POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`
@@ -534,5 +534,28 @@ export class ReleveNote extends  Model implements IModel {
             }
         });
         return this.tableConversions.sync();
+    }
+
+    getArbreDomaine(eleve) :   any {
+        return new Promise((resolve, reject) => {
+            let uri = this.api.GET_ARBRE_DOMAINE + '&idEleve=' + eleve.id;
+            eleve.domaines = {
+                all: []
+            };
+            http().getJson(uri)
+                .done((res) => {
+                    if (res) {
+                        for (let i = 0; i < res.length; i++) {
+                            let domaine = new Domaine(res[i], eleve.id);
+                            eleve.domaines.all.push(domaine);
+                            Utils.setCompetenceNotes(domaine, eleve.competencesNotes);
+                        }
+                    }
+                   resolve();
+                })
+                .error((err) => {
+                    reject(err);
+                });
+        });
     }
 }

@@ -16,7 +16,9 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div class="cell ng-scope twelve vertical-spacing">
+<div
+ ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve')"
+        class="cell ng-scope twelve vertical-spacing">
     <label class="cell six">
         <div class="cell cell-check expandable-content two-mobile">
             <label class="checkbox">
@@ -78,5 +80,10 @@
     </div>
 </script>
 
-<div ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
+<div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve')"
+        ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
+</div>
+
+<div ng-if="template.contains('main', 'enseignants/releve_notes/display_releve')"
+        ng-repeat="domaine in informations.domaines.all" ng-include="'tree_item_renderer.html'">
 </div>

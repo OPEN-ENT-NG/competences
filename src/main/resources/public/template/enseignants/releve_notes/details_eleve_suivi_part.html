@@ -42,4 +42,16 @@
             </div>
         </div>
     </div>
+    <div class="titre-widget">
+        <label class="right-magnet">
+            <h5 class="inline-block ">
+                <a role="button"
+                   ng-click="openedLigthboxDetailsEleve(informations.eleve);"><i18n>show.details</i18n></a>
+            </h5>
+        </label>
+    </div>
 </fieldset>
+
+<lightbox show="informations.eleve.showCompetencesDetails" on-close="closeLightBoxDetails();">
+    <container template="lightboxEleveDetails" class="paddingHeight"></container>
+</lightbox>

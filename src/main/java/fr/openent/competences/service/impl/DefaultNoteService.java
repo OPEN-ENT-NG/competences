@@ -336,6 +336,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append( (null != eleveId)? "DISTINCT": "")
                 .append(" devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, ")
                 .append(" devoirs.diviseur, devoirs.ramener_sur, competences_notes.evaluation ,")
+                .append(" competences_notes.id_competence ,")
                 .append( (null != eleveId)? "": " competences_notes.id, ")
                 .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
                 .append("null as annotation ")

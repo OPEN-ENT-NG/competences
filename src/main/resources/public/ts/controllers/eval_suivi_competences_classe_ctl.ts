@@ -283,14 +283,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
          */
         $scope.notEvalutationOwner = function (listeEvaluations) {
-            if ($scope.suiviFilter === undefined) $scope.initFilterMine();
-            if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
-                return false;
-            }
-            var _t = _.filter(listeEvaluations, function (competence) {
-                return competence.owner === undefined || competence.owner === $scope.me.userId;
-            });
-            return _t.length === 0;
+           return Utils.notEvalutationOwner(listeEvaluations,$scope);
         };
 
 

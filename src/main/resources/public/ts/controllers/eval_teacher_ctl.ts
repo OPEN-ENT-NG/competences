@@ -578,7 +578,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             chartClasse: false,
             classes: [],
             matieres: [],
-
+            grey : true
         };
 
         $scope.aideSaisie = {
@@ -2801,7 +2801,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         /**
          *  Initialiser le filtre de recherche pour faire disparaitre la liste
-         *  des élèves
+         *  des élèves et ferme la popup contenant des filtres
          *
          */
         $scope.cleanRoot = function () {
@@ -2810,6 +2810,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             for (let i = 0; i < elem.length; i++) {
                 elem[i].style.height = "0px";
             }
+            template.close('lightboxEleveDetails');
         };
 
         /**
@@ -3817,15 +3818,30 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.openedLigthboxEleve = (eleve, filteredPeriode)=> {
+        $scope.openedLigthboxEleve = (eleve, filteredPeriode) => {
             $scope.getEleveInfo(eleve);
             $scope.filteredPeriode = filteredPeriode;
             $scope.opened.lightbox = true;
+            eleve.showCompetencesDetails = false;
             $scope.initDataLightBoxEleve();
+            template.close('lightboxEleveDetails');
             template.open('lightboxContainer', 'enseignants/releve_notes/details_releve_periodique_eleve');
+            utils.safeApply($scope);
         };
 
-        $scope.incrementReleveEleve = async function (num) {
+        $scope.openedLigthboxDetailsEleve = async (eleve) => {
+            eleve.showCompetencesDetails = true;
+            delete $scope.informations.domaines;
+            await $scope.releveNote.getArbreDomaine(eleve);
+            $scope.informations.domaines = eleve.domaines;
+            $scope.suiviFilter = {
+                mine: false
+            };
+            template.open('lightboxEleveDetails', 'enseignants/releve_notes/details_competences_eleve');
+            utils.safeApply($scope);
+        };
+
+        $scope.incrementReleveEleve = async function (num, details?) {
             let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.releveNote.classe.eleves.all.length) {
@@ -3833,6 +3849,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.initDataLightBoxEleve();
                 delete $scope.informations.competencesNotes;
                 $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
+            }
+            if(details === true ) {
+                await $scope.openedLigthboxDetailsEleve($scope.informations.eleve);
             }
         };
         $scope.hasCompetences = function (devoir) {
@@ -3862,7 +3881,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
         $scope.hasCompetencesNotes = function (evaluations) {
-            if (evaluations.all === undefined) {
+            if (evaluations === undefined || evaluations.all === undefined) {
                 return false;
             } else {
                 for (let i = 0; i < evaluations.all.length; i++) {
@@ -3875,7 +3894,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
         $scope.hasDevoirsEvalues = function (evaluations) {
-            let hasDevoirsEvalues = _.where(evaluations.all, {is_evaluated: true});
+            let hasDevoirsEvalues = (evaluations)? _.where(evaluations.all, {is_evaluated: true}) : false;
             if (hasDevoirsEvalues.length > 0) {
                 for (let i = 0; i < hasDevoirsEvalues.length; i++) {
                     if (hasDevoirsEvalues[i].valeur !== '') {
@@ -3888,8 +3907,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.isNotFirstEleve = function (evaluations) {
-            if ($scope.releveNote === undefined) {
+        $scope.isNotFirstEleve = function () {
+            if ($scope.releveNote === undefined || $scope.informations.eleve == undefined) {
                 return false;
             }
             let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
@@ -3898,9 +3917,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else {
                 return true;
             }
-        }
-        $scope.isNotLastEleve = function (evaluations) {
-            if ($scope.releveNote === undefined) {
+        };
+        $scope.isNotLastEleve = function () {
+            if ($scope.releveNote === undefined || $scope.informations.eleve == undefined) {
                 return false;
             }
             let index = _.findIndex($scope.releveNote.classe.eleves.all, {id: $scope.informations.eleve.id});
@@ -3909,6 +3928,39 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else {
                 return true;
             }
-        }
+        };
+        /**
+         * Filtre permettant de retourner l'évaluation maximum en fonction du paramètre de recherche "Mes Evaluations"
+         * @param listeEvaluations Tableau d'évaluations de compétences
+         * @returns {(evaluation:any)=>(boolean|boolean)} Retourne true si la compétence courante est la plus haute du
+         * tableau listeEvaluations
+         */
+        $scope.isMaxEvaluation = function (listeEvaluations) {
+           return Utils.isMaxEvaluation(listeEvaluations,$scope);
+        };
+
+
+        $scope.hasMaxNotFormative = function (MaCompetence) {
+           return Utils.hasMaxNotFormative(MaCompetence, $scope);
+        };
+
+
+        /**
+         * Retourne si l'utilisateur n'est pas le propriétaire de compétences
+         * @param listeEvaluations Tableau d'évaluations de compétences
+         * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
+         */
+        $scope.notEvalutationOwner = function (listeEvaluations) {
+           return Utils.hasMaxNotFormative(listeEvaluations, $scope);
+        };
+
+        $scope.FilterNotEvaluated = function (MaCompetence) {
+            return Utils.FilterNotEvaluated(MaCompetence, $scope);
+        };
+
+        $scope.closeLightBoxDetails = function () {
+            $('body').addClass('lightbox-opened');
+            $scope.informations.eleve.showCompetencesDetails = false;
+        };
     }
 ]);

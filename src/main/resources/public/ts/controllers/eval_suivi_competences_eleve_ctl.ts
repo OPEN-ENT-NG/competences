@@ -667,52 +667,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             });
         };
 
-        /**
-         * Filtre permettant de retourner l'évaluation maximum en fonction du paramètre de recherche "Mes Evaluations"
-         * @param listeEvaluations Tableau d'évaluations de compétences
-         * @returns {(evaluation:any)=>(boolean|boolean)} Retourne true si la compétence courante est la plus haute du tableau listeEvaluations
-         */
-        $scope.isMaxEvaluation = function (listeEvaluations) {
-            return function (evaluation) {
-                var _evalFiltered = listeEvaluations;
-                if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
-                    _evalFiltered = _.filter(listeEvaluations, function (competence) {
-                        return competence.owner !== undefined && competence.owner === $scope.me.userId;
-                    });
-                }
 
-                // filtre sur les competences prises dans le calcul
-                _evalFiltered = _.filter(_evalFiltered, function (competence) {
-                    return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
-                });
-
-                // calcul du max parmis les competences
-                var max = _.max(_evalFiltered, function (competence) {
-                    return competence.evaluation;
-                });
-                if (typeof max === 'object') {
-                    return evaluation.id_competences_notes === max.id_competences_notes;
-                } else {
-                    return false;
-                }
-            };
-        };
-
-        /**
-         * Retourne si l'utilisateur n'est pas le propriétaire de compétences
-         * @param listeEvaluations Tableau d'évaluations de compétences
-         * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
-         */
-        $scope.notEvalutationOwner = function (listeEvaluations) {
-            if ($scope.suiviFilter === undefined) $scope.initFilterMine();
-            if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
-                return false;
-            }
-            var _t = _.filter(listeEvaluations, function (competence) {
-                return competence.owner === undefined || competence.owner === $scope.me.userId;
-            });
-            return _t.length === 0;
-        };
 
 
         /*
@@ -1031,56 +986,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
         $scope.selected.grey = true;
 
-        $scope.FilterNotEvaluated = function (MaCompetence) {
-            if ($scope.selected.grey === true || ($scope.selected.grey === false && MaCompetence.masque)) {
-                let _t = MaCompetence.competencesEvaluations;
-                if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
-                    _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
-                        if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
-                            return evaluation;
-                    });
-                }
 
-
-                let max = _.max(_t, function (evaluation) {
-                    return evaluation.evaluation;
-                });
-                if (typeof max === 'object') {
-                    return (!(max.evaluation == -1));
-                } else {
-                    return false;
-                }
-
-            } else {
-                return true;
-            }
-
-        };
-
-
-        $scope.hasMaxNotFormative = function (MaCompetence) {
-            let _evalFiltered = MaCompetence.competencesEvaluations;
-            if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
-                _evalFiltered = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
-                    if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
-                        return evaluation;
-                });
-            }
-
-            // filtre sur les competences prises dans le calcul
-            _evalFiltered = _.filter(_evalFiltered, function (competence) {
-                return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
-            });
-
-            let max = _.max(_evalFiltered, function (evaluation) {
-                return evaluation.evaluation;
-            });
-            if (typeof max === 'object') {
-                return (!(max.evaluation == -1));
-            } else {
-                return false;
-            }
-        };
 
         $scope.saveDispenseEleve = async (domaine) => {
             //$scope.domaine = new Domaine(domaine);
@@ -1097,6 +1003,29 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode);
             $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id});
             utils.safeApply($scope);
+        };
+
+        $scope.isMaxEvaluation = function (listeEvaluations) {
+            return Utils.isMaxEvaluation(listeEvaluations,$scope);
+        };
+
+
+        $scope.hasMaxNotFormative = function (MaCompetence) {
+            return Utils.hasMaxNotFormative(MaCompetence, $scope);
+        };
+
+
+        /**
+         * Retourne si l'utilisateur n'est pas le propriétaire de compétences
+         * @param listeEvaluations Tableau d'évaluations de compétences
+         * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
+         */
+        $scope.notEvalutationOwner = function (listeEvaluations) {
+            return Utils.hasMaxNotFormative(listeEvaluations, $scope);
+        };
+
+        $scope.FilterNotEvaluated = function (MaCompetence) {
+            return Utils.FilterNotEvaluated(MaCompetence, $scope);
         };
     }
 ]);
