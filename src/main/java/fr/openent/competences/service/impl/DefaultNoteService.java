@@ -240,7 +240,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             //Construction de la requête
                             query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
                                     " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve, " +
-                                    " devoirs.is_evaluated, null as annotation" +
+                                    " devoirs.is_evaluated, null as annotation, devoirs.id_matiere " +
                                     " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                                     " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".notes " +
                                     " ON (devoirs.id = notes.id_devoir AND " +
@@ -248,12 +248,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ON " +
                                     " (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ?)" +
                                     " WHERE devoirs.id_etablissement = ? " +
-                                    " AND devoirs.id_matiere = ? ");
+                                    ((matiereId != null)?" AND devoirs.id_matiere = ? ": ""));
                             for (String eleve : idEleves) {
                                 values.add(eleve);
                             }
 
-                            values.add(classeId).add(etablissementId).add(matiereId);
+                            values.add(classeId).add(etablissementId);
+
+                            if (matiereId != null) {
+                                    values.add(matiereId);
+                            }
+
                             if (periodeId != null) {
                                 query.append("AND devoirs.id_periode = ? ");
                                 values.add(periodeId);
@@ -262,7 +267,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
                                     " devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, " +
                                     " rel_annotations_devoirs.id_eleve, devoirs.is_evaluated, " +
-                                    " rel_annotations_devoirs.id_annotation as annotation " +
+                                    " rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere " +
                                     " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                                     " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs " +
                                     " ON (devoirs.id = rel_annotations_devoirs.id_devoir  AND " +
@@ -270,11 +275,15 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
                                     " ON (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ?) " +
                                     " WHERE devoirs.id_etablissement = ? " +
-                                    " AND devoirs.id_matiere = ? ");
+                                    ((matiereId != null)?" AND devoirs.id_matiere = ? ": ""));
                             for (String eleve : idEleves) {
                                 values.add(eleve);
                             }
-                            values.add(classeId).add(etablissementId).add(matiereId);
+                            values.add(classeId).add(etablissementId);
+
+                            if (matiereId != null) {
+                                values.add(matiereId);
+                            }
                             if (periodeId != null) {
                                 query.append("AND devoirs.id_periode = ? ");
                                 values.add(periodeId);
@@ -292,11 +301,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
 
     public void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
-                                          Long periodeId,  String eleveId, Integer typeClasse,
+                                          Long periodeId,  String eleveId, Integer typeClasse, Boolean withDomaineInfo,
                                           Handler<Either<String, JsonArray>> handler) {
         if(typeClasse == null){
             runGetCompetencesNotesReleve(etablissementId,classeId,matiereId,periodeId,eleveId,
-                    typeClasse, new ArrayList<String>(),handler);
+                    typeClasse, new ArrayList<String>(), withDomaineInfo, handler);
             return;
 
         }
@@ -315,7 +324,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     }
                                 }
                                 runGetCompetencesNotesReleve(etablissementId, classeId, matiereId, periodeId, eleveId,
-                                        typeClasse, idEleves, handler);
+                                        typeClasse, idEleves, withDomaineInfo, handler);
 
                             } else {
                                 handler.handle(new Either.Left<>("Error While getting Available student "));
@@ -328,6 +337,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private void runGetCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
                                               Long periodeId,  String eleveId, Integer typeClasse,
                                               List<String> idEleves,
+                                              Boolean withDomaineInfo,
                                               Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -336,8 +346,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append( (null != eleveId)? "DISTINCT": "")
                 .append(" devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, ")
                 .append(" devoirs.diviseur, devoirs.ramener_sur, competences_notes.evaluation ,")
-                .append(" competences_notes.id_competence ,")
+                .append(" competences_notes.id_competence , devoirs.id_matiere, ")
                 .append( (null != eleveId)? "": " competences_notes.id, ")
+                .append((withDomaineInfo)? "compDom.id_domaine, " : "")
                 .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
                 .append("null as annotation ")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ");
@@ -369,13 +380,25 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }else{
             query.append("rel_devoirs_groupes.id_devoir = devoirs.id");
         }
-        query.append(" WHERE devoirs.id_etablissement = ?  AND devoirs.id_matiere = ? ");
 
-        values.add(etablissementId).add(matiereId);
+        if (withDomaineInfo) {
+            query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_competences_domaines " + " AS compDom")
+                    .append(" ON competences_notes.id_competence = compDom.id_competence ");
+        }
+        query.append(" WHERE devoirs.id_etablissement = ? ")
+        .append((matiereId != null)? " AND devoirs.id_matiere = ? ": " ");
+
+        values.add(etablissementId);
+
+        if(matiereId != null){
+          values.add(matiereId);
+        }
+
         if(periodeId != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(periodeId);
         }
+
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 

@@ -237,6 +237,9 @@ body.evaluations {
   }
 
   @media screen and (min-device-width:$tablette ) {
+    .enLargedLightBox div.content {
+      width: 80% !important;
+    }
     .menuLeft {
       position: fixed !important;
       width: 16% !important;
@@ -2011,6 +2014,9 @@ body.evaluations {
     to {
       font-size: 100%;
     }
+  }
+  .solid-bottom{
+    border-bottom: solid 2px black;
   }
 
   .button-edit-devoir-not-fixed {

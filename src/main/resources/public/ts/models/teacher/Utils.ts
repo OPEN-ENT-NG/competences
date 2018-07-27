@@ -245,7 +245,7 @@ export class Utils {
         }
     }
 
-    static setCompetenceNotes(poDomaine, poCompetencesNotes, object?, classe?) {
+    static setCompetenceNotes(poDomaine, poCompetencesNotes, object?, classe?, tabDomaine?) {
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {
                 _.map(poDomaine.competences.all, function (competence) {
@@ -254,6 +254,9 @@ export class Utils {
                     });
 
                 });
+                if (tabDomaine !== undefined) {
+                    tabDomaine.push(poDomaine);
+                }
             }
         }
         else if(poDomaine.competences) {
@@ -292,7 +295,7 @@ export class Utils {
 
         if( poDomaine.domaines) {
             for (var i = 0; i < poDomaine.domaines.all.length; i++) {
-                this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, object, classe);
+                this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, object, classe, tabDomaine);
             }
         }
     }

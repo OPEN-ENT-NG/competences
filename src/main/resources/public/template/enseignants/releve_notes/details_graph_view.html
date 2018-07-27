@@ -1,0 +1,35 @@
+<div class="twelve tabs vertical-spacing-twice heading-tabs">
+
+    <header ng-class="{selected : !displayDomaine}"
+            class="horizontal-spacing-twice">
+        <a href=""
+           data-ng-click="openGraphView(false)"
+           class="horizontal-spacing">
+            <span><i18n>evaluation.search.by.enseignements</i18n></span>
+        </a>
+    </header>
+
+    <header ng-class="{selected : displayDomaine}"
+            class="horizontal-spacing-twice">
+        <a href=""
+           data-ng-click="openGraphView(true);"
+           class="horizontal-spacing">
+            <span><i18n>evaluation.search.by.domaines</i18n></span>
+        </a>
+    </header>
+</div>
+<div ng-if="displayDomaine !== true">
+    <div ng-include="'/competences/public/template/enseignants/releve_notes/graph_view/subject_view.html'"></div>
+</div>
+<div ng-if="displayDomaine === true">
+    <div ng-include="'/competences/public/template/enseignants/releve_notes/graph_view/domaine_view.html'"></div>
+</div>
+<div class="twelve cell" style="font-size: x-small">
+    <div class="inline-block">
+        <span><i18n>level.legend</i18n></span>:
+    </div>
+<div class="inline-block" ng-repeat="niveau in niveauCompetences | orderBy:'ordre'">
+    [[niveau.ordre]] : [[niveau.libelle]]
+    <span ng-if="!$last"> - </span>
+</div>
+</div>

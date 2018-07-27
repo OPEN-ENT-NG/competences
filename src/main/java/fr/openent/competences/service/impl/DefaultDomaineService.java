@@ -32,6 +32,9 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
     public DefaultDomaineService(String schema, String table) {
         super(schema, table);
     }
+    public DefaultDomaineService() {
+        super(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
+    }
 
     @Override
     public void getArbreDomaines(String idClasse, String idEleve, Long idCycle, Handler<Either<String, JsonArray>> handler) {
@@ -136,6 +139,24 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
                 .append("FROM evaluated_domaines AS t1, evaluated_domaines AS t2 ")
                 .append("WHERE t1.id_parent = t2.id) ORDER BY codification;");
 
+        Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getDomaines(String idClasse, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+
+        query.append(" SELECT id, domaines.id_cycle, codification, libelle, type, evaluated, code_domaine ")
+                .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".domaines " )
+                .append(" INNER JOIN " +  Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
+                .append(" ON domaines.id_cycle = rel_groupe_cycle.id_cycle ")
+                .append(" WHERE  id_groupe = ? ")
+                .append(" AND evaluated = true ")
+                .append(" ORDER BY codification ");
+
+        params.add(idClasse);
         Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
     }
 }

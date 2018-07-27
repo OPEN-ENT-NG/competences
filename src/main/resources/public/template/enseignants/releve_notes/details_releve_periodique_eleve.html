@@ -14,28 +14,36 @@
     <label><i18n class="bold">viescolaire.utils.periode</i18n> : [[getI18nPeriode(search.periode)]]
     </label>
 </section>
-
 <div class="twelve-mobile twelve ">
-
     <div class="twelve">
         <h2 class="align-center">
             <i class="previous cell" ng-click="incrementReleveEleve(-1)" ng-if="isNotFirstEleve()"></i>
-            [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+            <span ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}">
+                [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+            </span>
             <i class="next right-magnet" ng-click="incrementReleveEleve(1)" ng-if="isNotLastEleve()"></i>
         </h2>
     </div>
-    <div class="twelve">
-        <fieldset ng-if="releveNote.idPeriode !== null">
-            <legend><i18n>competences.acquired</i18n></legend>
-            <div class="acquis_scolaire" ng-include="'/competences/public/template/enseignants/releve_notes/details_eleve_acquis_scolaire_part.html'"></div>
-        </fieldset>
-        <fieldset>
-            <legend><i18n>evaluations.suivi.eleve.title</i18n></legend>
-            <div ng-include="'/competences/public/template/enseignants/releve_notes/details_eleve_suivi_part.html'"></div>
-        </fieldset>
-        <fieldset>
-            <legend><i18n>history</i18n></legend>
-            <div ng-include="'/competences/public/template/enseignants/releve_notes/details_eleve_historique_part.html'"></div>
-        </fieldset>
+    <div class="twelve" style="margin-bottom: 36px">
+        <div class="right-magnet">
+            <i tooltip="evaluations.suivi.eleve.vue.graph" class="show-chart"
+               ng-class="{ selected: template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view') }"
+               ng-click="openGraphView()"></i>
+            <i tooltip="evaluations.suivi.eleve.vue.liste" class="show-list"
+               ng-class="{ selected: template.contains('contentDetails', 'enseignants/releve_notes/details_list_view') }"
+               ng-click="displayBoxAboveTheHeadBand();
+               template.open('contentDetails', 'enseignants/releve_notes/details_list_view');"></i>
+
+        </div>
     </div>
+
+
+    <div class="twelve">
+        <container
+                ng-init="template.open('contentDetails', 'enseignants/releve_notes/details_list_view')"
+                template="contentDetails" class="twelve"></container>
+    </div>
+
 </div>
+
+

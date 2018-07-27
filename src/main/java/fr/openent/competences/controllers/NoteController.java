@@ -31,6 +31,7 @@ import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.ElementProgramme;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultDomaineService;
 import fr.openent.competences.service.impl.DefaultElementProgramme;
 import fr.openent.competences.service.impl.DefaultNoteService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
@@ -301,6 +302,7 @@ public class NoteController extends ControllerHelper {
                                                     (null != idPeriodeString)? Long.parseLong(idPeriodeString): null,
                                                     null,
                                                     typeClasse,
+                                                    false,
                                                     new Handler<Either<String, JsonArray>>() {
                                                         @Override
                                                         public void handle(Either<String, JsonArray> event) {
@@ -674,125 +676,125 @@ public class NoteController extends ControllerHelper {
                 final Integer typeClasse = null;
 
                 new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
-                    new Handler<Boolean>() {
-                    @Override
-                    public void handle(final Boolean hasAccessToMatiere) {
-
-                        Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
+                        new Handler<Boolean>() {
                             @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if (event.isRight()) {
-                                    final JsonObject result = new JsonObject();
-                                    JsonArray listNotes = event.right().getValue();
-                                    HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriode = new HashMap<>();
-                                    HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = new HashMap<>();
+                            public void handle(final Boolean hasAccessToMatiere) {
 
-                                    notesByDevoirByPeriode.put(null,
-                                            new HashMap<Long, ArrayList<NoteDevoir>>());
-                                    notesByDevoirByPeriodeClasse.put(null,
-                                            new HashMap<Long, ArrayList<NoteDevoir>>());
+                                Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
+                                    @Override
+                                    public void handle(Either<String, JsonArray> event) {
+                                        if (event.isRight()) {
+                                            final JsonObject result = new JsonObject();
+                                            JsonArray listNotes = event.right().getValue();
+                                            HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriode = new HashMap<>();
+                                            HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = new HashMap<>();
 
-                                    JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
+                                            notesByDevoirByPeriode.put(null,
+                                                    new HashMap<Long, ArrayList<NoteDevoir>>());
+                                            notesByDevoirByPeriodeClasse.put(null,
+                                                    new HashMap<Long, ArrayList<NoteDevoir>>());
 
-                                    //pour toutes les notes existantes dans la classe
-                                    for (int i = 0; i < listNotes.size(); i++) {
-                                        JsonObject note =
-                                                listNotes.getJsonObject(i);
-                                        if (note.getString("valeur") == null || !note.getBoolean("is_evaluated")) {
-                                            continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
-                                            // elle n'est pas prise en compte dans le calcul de la moyenne
-                                        }
-                                        else {
-                                            Long id_periode = note.getLong("id_periode");
-                                            String id_eleve = note.getString("id_eleve");
+                                            JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
 
-                                            if(!notesByDevoirByPeriode.containsKey(id_periode)) {
+                                            //pour toutes les notes existantes dans la classe
+                                            for (int i = 0; i < listNotes.size(); i++) {
+                                                JsonObject note =
+                                                        listNotes.getJsonObject(i);
+                                                if (note.getString("valeur") == null || !note.getBoolean("is_evaluated")) {
+                                                    continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
+                                                    // elle n'est pas prise en compte dans le calcul de la moyenne
+                                                }
+                                                else {
+                                                    Long id_periode = note.getLong("id_periode");
+                                                    String id_eleve = note.getString("id_eleve");
 
-                                                notesByDevoirByPeriode.put(id_periode,
-                                                        new HashMap<Long, ArrayList<NoteDevoir>>());
-                                                notesByDevoirByPeriodeClasse.put(id_periode,
-                                                        new HashMap<Long, ArrayList<NoteDevoir>>());
+                                                    if(!notesByDevoirByPeriode.containsKey(id_periode)) {
 
+                                                        notesByDevoirByPeriode.put(id_periode,
+                                                                new HashMap<Long, ArrayList<NoteDevoir>>());
+                                                        notesByDevoirByPeriodeClasse.put(id_periode,
+                                                                new HashMap<Long, ArrayList<NoteDevoir>>());
+
+                                                    }
+                                                    if(!idEleves.contains(id_eleve)) {
+                                                        idEleves.add(id_eleve);
+                                                    }
+
+                                                    NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(
+                                                            note.getString("valeur")),
+                                                            Double.valueOf(note.getLong("diviseur")),
+                                                            note.getBoolean("ramener_sur"),
+                                                            Double.valueOf(note.getString("coefficient")),
+                                                            note.getString("id_eleve"));
+
+                                                    //ajouter la note à la période correspondante et à l'année pour l'élève
+                                                    if(note.getString("id_eleve").equals(idEleve)) {
+                                                        utilsService.addToMap(id_periode,
+                                                                notesByDevoirByPeriode.get(id_periode), noteDevoir);
+                                                        utilsService.addToMap(null,
+                                                                notesByDevoirByPeriode.get(null), noteDevoir);
+                                                    }
+
+                                                    //ajouter la note à la période correspondante et à l'année pour toute la classe
+                                                    utilsService.addToMap(id_periode,
+                                                            notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
+                                                    utilsService.addToMap(null,
+                                                            notesByDevoirByPeriodeClasse.get(null), noteDevoir);
+                                                }
                                             }
-                                            if(!idEleves.contains(id_eleve)) {
-                                                idEleves.add(id_eleve);
+                                            result.put("moyennes",
+                                                    new fr.wseduc.webutils.collections.JsonArray());
+                                            result.put("moyennesClasse",
+                                                    new fr.wseduc.webutils.collections.JsonArray());
+
+                                            HashMap<Long,JsonArray> listMoyDevoirs = new HashMap<>();
+
+                                            // Calcul des moyennes par période pour l'élève
+                                            for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode :
+                                                    notesByDevoirByPeriode.entrySet()) {
+                                                Long idPeriode = entryPeriode.getKey();
+
+                                                //entryPeriode contient les notes de l'élève pour une période
+                                                listMoyDevoirs.put(idPeriode,
+                                                        new fr.wseduc.webutils.collections.JsonArray());
+
+                                                for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
+                                                        entryPeriode.getValue().entrySet()) {
+                                                    JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(),
+                                                            false, 20);
+                                                    moyenne.put("id", idPeriode);
+                                                    listMoyDevoirs.get(idPeriode).add(moyenne);
+                                                }
+
+                                                //ajout des moyennes de l'élève sur chaque période au résultat final
+                                                if (listMoyDevoirs.get(idPeriode).size() > 0) {
+                                                    result.getJsonArray("moyennes").add(listMoyDevoirs.
+                                                            get(idPeriode).getJsonObject(0));
+                                                }
                                             }
-
-                                            NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(
-                                                    note.getString("valeur")),
-                                                    Double.valueOf(note.getLong("diviseur")),
-                                                    note.getBoolean("ramener_sur"),
-                                                    Double.valueOf(note.getString("coefficient")),
-                                                    note.getString("id_eleve"));
-
-                                            //ajouter la note à la période correspondante et à l'année pour l'élève
-                                            if(note.getString("id_eleve").equals(idEleve)) {
-                                                utilsService.addToMap(id_periode,
-                                                        notesByDevoirByPeriode.get(id_periode), noteDevoir);
-                                                utilsService.addToMap(null,
-                                                        notesByDevoirByPeriode.get(null), noteDevoir);
-                                            }
-
-                                            //ajouter la note à la période correspondante et à l'année pour toute la classe
-                                            utilsService.addToMap(id_periode,
-                                                    notesByDevoirByPeriodeClasse.get(id_periode), noteDevoir);
-                                            utilsService.addToMap(null,
-                                                    notesByDevoirByPeriodeClasse.get(null), noteDevoir);
+                                            addMoyenneFinalAndAppreciationPositionnementEleve(
+                                                    idEleve, idClasse,
+                                                    idMatiere, idEtablissement,
+                                                    typeClasse, request,
+                                                    result, idEleves, notesByDevoirByPeriodeClasse);
+                                        } else {
+                                            JsonObject error = (new JsonObject()).put("error",
+                                                    (String) event.left().getValue());
+                                            Renders.renderJson(request, error, 400);
                                         }
                                     }
-                                    result.put("moyennes",
-                                            new fr.wseduc.webutils.collections.JsonArray());
-                                    result.put("moyennesClasse",
-                                            new fr.wseduc.webutils.collections.JsonArray());
-
-                                    HashMap<Long,JsonArray> listMoyDevoirs = new HashMap<>();
-
-                                    // Calcul des moyennes par période pour l'élève
-                                    for(Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode :
-                                            notesByDevoirByPeriode.entrySet()) {
-                                        Long idPeriode = entryPeriode.getKey();
-
-                                        //entryPeriode contient les notes de l'élève pour une période
-                                        listMoyDevoirs.put(idPeriode,
-                                                new fr.wseduc.webutils.collections.JsonArray());
-
-                                        for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :
-                                                entryPeriode.getValue().entrySet()) {
-                                            JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(),
-                                                    false, 20);
-                                            moyenne.put("id", idPeriode);
-                                            listMoyDevoirs.get(idPeriode).add(moyenne);
-                                        }
-
-                                        //ajout des moyennes de l'élève sur chaque période au résultat final
-                                        if (listMoyDevoirs.get(idPeriode).size() > 0) {
-                                            result.getJsonArray("moyennes").add(listMoyDevoirs.
-                                                    get(idPeriode).getJsonObject(0));
-                                        }
-                                    }
-                                    addMoyenneFinalAndAppreciationPositionnementEleve(
-                                            idEleve, idClasse,
-                                            idMatiere, idEtablissement,
-                                            typeClasse, request,
-                                            result, idEleves, notesByDevoirByPeriodeClasse);
+                                };
+                                if (!hasAccessToMatiere) {
+                                    unauthorized(request);
                                 } else {
-                                    JsonObject error = (new JsonObject()).put("error",
-                                            (String) event.left().getValue());
-                                    Renders.renderJson(request, error, 400);
+                                    notesService.getNoteElevePeriode(null,
+                                            idEtablissement,
+                                            idClasse,
+                                            idMatiere,
+                                            null, handler);
                                 }
                             }
-                        };
-                        if (!hasAccessToMatiere) {
-                            unauthorized(request);
-                        } else {
-                            notesService.getNoteElevePeriode(null,
-                                    idEtablissement,
-                                    idClasse,
-                                    idMatiere,
-                                    null, handler);
-                        }
-                    }
-                });
+                        });
             }
         });
     }
@@ -1153,7 +1155,8 @@ public class NoteController extends ControllerHelper {
                                                     HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse) {
         // idClasse et typeClass à null car on récupère le positionnement quelque soit sa classe
         //On récupère le positionnement seulement par rapport à la matière
-        notesService.getCompetencesNotesReleve( idEtablissement,null, idMatiere,null,idEleve, typeClasse,
+        notesService.getCompetencesNotesReleve( idEtablissement,null, idMatiere,null,idEleve,
+                typeClasse, false,
                 new Handler<Either<String, JsonArray>>() {
                     @Override
                     public void handle(Either<String, JsonArray> event) {
@@ -1238,6 +1241,256 @@ public class NoteController extends ControllerHelper {
                     }
                 });
     }
+
+    /**
+     * Récupère les notes pour le relevé de notes
+     *
+     * @param request
+     */
+    @Get("/releve/datas/graph")
+    @ApiDoc("Récupère les données pour construire les graphs du relevé de notes")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void getReleveDataForGraph(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+
+            @Override
+            public void handle(UserInfos user) {
+                final String idEleve = request.params().get("idEleve");
+                final String idEtablissement = request.params().get("idEtablissement");
+                final String idClasse = request.params().get("idClasse");
+                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+
+                // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
+                notesService.getCompetencesNotesReleve(idEtablissement,idClasse,
+                        null,
+                        null,
+                        null,
+                        typeClasse,
+                        false,
+                        new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if(event.isLeft()) {
+                                    String message = "[getReleveDataForGraph] error while getCompetencesNotesReleve";
+                                    badRequest(request, message);
+                                    log.error(message);
+                                }
+                                else {
+                                    final JsonArray listCompNotes = event.right().getValue();
+                                    // 2. On récupère les Notes de toutes les matières et de tous les élèves
+                                    notesService.getNotesReleve(idEtablissement, idClasse, null,
+                                            null, typeClasse,
+                                            new Handler<Either<String, JsonArray>>() {
+                                                @Override
+                                                public void handle(Either<String, JsonArray> event) {
+                                                    if(event.isLeft()) {
+                                                        String message = "[getReleveDataForGraph] " +
+                                                                "error while getNotesReleve";
+                                                        badRequest(request, message);
+                                                        log.error(message);
+                                                    }
+                                                    else {
+                                                        final JsonArray listNotes = event.right().getValue();
+                                                        Map<String,JsonArray> matieresCompNotes = new HashMap<>();
+                                                        Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
+                                                        JsonArray idMatieres;
+
+                                                        // 3. On regroupe  les compétences notes par idMatière
+                                                        idMatieres = groupDataByMatiere(listCompNotes,
+                                                                matieresCompNotes,
+                                                                matieresCompNotesEleve, idEleve);
+
+                                                        // 4. On regroupe les notes par idMatière
+                                                        Map<String,JsonArray> matieresNotes = new HashMap<>();
+                                                        Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
+                                                        idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes,
+                                                                matieresNotes,
+                                                                matieresNotesEleve, idEleve), idMatieres);
+
+                                                        // 5. On récupère tous les libelles des matières de
+                                                        // l'établissement et on fait correspondre aux résultats par
+                                                        // idMatière
+                                                        linkIdSubjectToLibelle(matieresCompNotes,
+                                                                matieresCompNotesEleve, matieresNotes,
+                                                                matieresNotesEleve, idMatieres, request);
+                                                    }
+                                                }
+                                            });
+                                }
+                            }
+                        });
+            }
+        });
+    }
+
+    private JsonArray groupDataByMatiere(JsonArray datas, Map<String,JsonArray> mapDataClasse,
+                                         Map<String,JsonArray> mapDataEleve, String idEleve){
+        JsonArray result = new JsonArray();
+        for (int i=0; i< datas.size(); i++ ) {
+            JsonObject data = datas.getJsonObject(i);
+            if (data != null) {
+                String idMatiere = data.getString("id_matiere");
+                idMatiere = (idMatiere!= null)? idMatiere : "no_id_matiere";
+                if (!mapDataClasse.containsKey(idMatiere)) {
+                    mapDataClasse.put(idMatiere, new JsonArray());
+                    mapDataEleve.put(idMatiere, new JsonArray());
+                    result.add(idMatiere);
+                }
+                mapDataClasse.get(idMatiere).add(data);
+                if(idEleve.equals(data.getString("id_eleve"))) {
+                    mapDataEleve.get(idMatiere).add(data);
+                }
+            }
+
+        }
+        return result;
+    }
+
+    private void linkIdSubjectToLibelle(Map<String,JsonArray> matieresCompNotes,
+                                        Map<String,JsonArray> matieresCompNotesEleve,
+                                        Map<String,JsonArray> matieresNotes,
+                                        Map<String,JsonArray> matieresNotesEleve,
+                                        JsonArray idMatieres, final HttpServerRequest request) {
+
+        JsonObject action = new JsonObject()
+                .put("action", "matiere.getMatieres")
+                .put("idMatieres", idMatieres);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+
+                if (!"ok".equals(body.getString("status"))) {
+
+                } else {
+                    final JsonArray matieres = body.getJsonArray("results");
+                    for (int i = 0 ; i < matieres.size(); i++) {
+                        JsonObject matiere = matieres.getJsonObject(i);
+                        matiere.put("competencesNotes", matieresCompNotes.get(matiere.getString("id")))
+                                .put("competencesNotesEleve", matieresCompNotesEleve.get(matiere.getString("id")))
+                                .put("notes", matieresNotes.get(matiere.getString("id")))
+                                .put("notesEleve", matieresNotesEleve.get(matiere.getString("id")));
+
+                    }
+                    matieres.add(
+                            new JsonObject().put("name", "null")
+                                    .put("competencesNotes", matieresCompNotes.get("no_id_matiere"))
+                                    .put("competencesNotesEleve", matieresCompNotesEleve.get("no_id_matiere"))
+                                    .put("notes", matieresNotes.get("no_id_matiere"))
+                                    .put("notesEleve", matieresNotesEleve.get("no_id_matiere"))
+                    );
+
+                    Renders.renderJson(request, matieres);
+
+                }
+            }
+        }));
+    }
+
+    /**
+     * Récupère les notes pour le relevé de notes
+     *
+     * @param request
+     */
+    @Get("/releve/datas/graph/domaine")
+    @ApiDoc("Récupère les données pour construire les graphs du relevé de notes")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void getReleveDataDomaineForGraph(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+
+            @Override
+            public void handle(UserInfos user) {
+                final String idEleve = request.params().get("idEleve");
+                final String idEtablissement = request.params().get("idEtablissement");
+                final String idClasse = request.params().get("idClasse");
+                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+
+                // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
+                notesService.getCompetencesNotesReleve(idEtablissement, idClasse,
+                        null,
+                        null,
+                        null,
+                        typeClasse,
+                        true,
+                        new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if (event.isLeft()) {
+                                    String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
+                                    badRequest(request, message);
+                                    log.error(message);
+                                }
+                                else {
+                                    final JsonArray compNotes = event.right().getValue();
+                                    // 2. On récupère les domaines du cycle auquel la classe est rattachée
+                                    new DefaultDomaineService().getDomaines(idClasse,
+                                            new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> event) {
+                                            if (event.isLeft()) {
+                                                String message = "[DomaineDataForGraph] error while getting domaines";
+                                                badRequest(request, message);
+                                                log.error(message);
+                                            }
+                                            else {
+                                                final JsonArray domaines = event.right().getValue();
+
+                                                Renders.renderJson(request, linkCompNoteToLibelle(domaines,
+                                                        compNotes, idEleve));
+                                            }
+
+                                            }
+                                    });
+                                }
+                            }
+                        });
+            }
+        });
+    }
+
+    private JsonArray linkCompNoteToLibelle(JsonArray domaines,
+                                                       JsonArray compNotes,
+                                        String idEleve ) {
+        Map<Long,JsonObject> domainesMap = new HashMap<>();
+        JsonArray res = new JsonArray();
+
+        // On groupe Competences-notes par domaine
+        for (int i=0; i<compNotes.size(); i++) {
+            JsonObject compNote = compNotes.getJsonObject(i);
+            Long idDomaine = compNote.getLong("id_domaine");
+            if (!domainesMap.containsKey(idDomaine)) {
+                domainesMap.put(idDomaine, new JsonObject()
+                        .put("competencesNotes", new JsonArray() )
+                        .put("competencesNotesEleve", new JsonArray()));
+            }
+            JsonObject domaine = domainesMap.get(idDomaine);
+            if(domaine != null) {
+                if (idEleve.equals(compNote.getString("id_eleve"))) {
+                    domaine.getJsonArray("competencesNotesEleve").add(compNote);
+                }
+                domaine.getJsonArray("competencesNotes").add(compNote);
+            }
+        }
+
+        // On Lie les competences-notes groupées aux domaines
+        for (int i=0; i<domaines.size(); i++) {
+            JsonObject domaine = domaines.getJsonObject(i);
+            JsonObject data = domainesMap.get(domaine.getLong("id"));
+            JsonArray competencesNotesEleve =
+                    (data!=null)? data.getJsonArray("competencesNotesEleve"): new JsonArray();
+            JsonArray competencesNotes =
+                    (data!=null)?data.getJsonArray("competencesNotes"): new JsonArray();
+            if (data!= null) {
+                res.add(domaine.put("competencesNotes", competencesNotes)
+                        .put("competencesNotesEleve", competencesNotesEleve));
+            }
+        }
+        return res;
+    }
+
 }
 
 

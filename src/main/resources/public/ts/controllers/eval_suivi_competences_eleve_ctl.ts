@@ -505,46 +505,46 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
                     };
 
-                $scope.suiviCompetence.sync().then(() => {
-                    // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
-                    //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
-                    let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
-                   $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode).then(() => {
-                        $scope.suiviCompetence.bilanFinDeCycles.all = [];
-                        $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
-                            $scope.suiviCompetence.domaines.all = [];
-                            $scope.suiviCompetence.domaines.sync().then(() => {
-                                $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
-                                $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve, _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id}));
-                                $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
-                                model.on('refresh-slider', function () {
-                                    $scope.baremeBrevet();
-                                });
-                                if ($scope.opened.detailCompetenceSuivi) {
-                                    if ($scope.detailCompetence !== undefined) {
-                                        $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
-                                        if ($scope.detailCompetence) {
-                                            let detail = $scope.template.containers['suivi-competence-detail'];
-                                            if (detail !== undefined) {
-                                                detail = detail.split('.html?hash=')[0].split('template/')[1];
+                    $scope.suiviCompetence.sync().then(() => {
+                        // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
+                        //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
+                        let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?  $scope.suiviCompetence.periode.id_type : null;
+                        $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode).then(() => {
+                            $scope.suiviCompetence.bilanFinDeCycles.all = [];
+                            $scope.suiviCompetence.bilanFinDeCycles.sync().then(() => {
+                                $scope.suiviCompetence.domaines.all = [];
+                                $scope.suiviCompetence.domaines.sync().then(() => {
+                                    $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
+                                    $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve, _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id}));
+                                    $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                                    model.on('refresh-slider', function () {
+                                        $scope.baremeBrevet();
+                                    });
+                                    if ($scope.opened.detailCompetenceSuivi) {
+                                        if ($scope.detailCompetence !== undefined) {
+                                            $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
+                                            if ($scope.detailCompetence) {
+                                                let detail = $scope.template.containers['suivi-competence-detail'];
+                                                if (detail !== undefined) {
+                                                    detail = detail.split('.html?hash=')[0].split('template/')[1];
+                                                }
+                                                $scope.openDetailCompetence($scope.detailCompetence, detail);
+                                            } else {
+                                                $scope.backToSuivi();
                                             }
-                                            $scope.openDetailCompetence($scope.detailCompetence, detail);
-                                        } else {
-                                            $scope.backToSuivi();
-                                        }
-                                    } else $scope.backToSuivi();
-                                }
+                                        } else $scope.backToSuivi();
+                                    }
+                                });
                             });
-                        });
 
-                   });
-                    $scope.initSliderBFC();
-                    $scope.informations.eleve.suiviCompetences.push($scope.suiviCompetence);
-                    $scope.template.close('suivi-competence-content');
-                    utils.safeApply($scope);
-                    $scope.template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
-                    if ($scope.displayFromClass) delete $scope.displayFromClass;
-                    utils.safeApply($scope);
+                        });
+                        $scope.initSliderBFC();
+                        $scope.informations.eleve.suiviCompetences.push($scope.suiviCompetence);
+                        $scope.template.close('suivi-competence-content');
+                        utils.safeApply($scope);
+                        $scope.template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
+                        if ($scope.displayFromClass) delete $scope.displayFromClass;
+                        utils.safeApply($scope);
                     });
 
 
@@ -884,41 +884,45 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         Chart.plugins.register({
             afterDatasetsDraw: function (chart, easing) {
-                // To only draw at the end of animation, check for easing === 1
-                let ctx = chart.chart.ctx;
+                // Ne pas appliquer la personnalisation sur les graphs du relevé
+                if ($scope.$location.$$path !== '/releve') {
+                    // To only draw at the end of animation, check for easing === 1
+                    let ctx = chart.chart.ctx;
 
-                chart.data.datasets.forEach(function (dataset, i) {
-                    let meta = chart.getDatasetMeta(i);
-                    if (!meta.hidden) {
-                        meta.data.forEach(function (element, index) {
-                            // Draw the text invert color of buble, with the specified font
-                            let rgba = dataset.backgroundColor[index];
-                            rgba = rgba.split('(')[1].split(')')[0].split(',');
-                            let r = 255 - parseInt(rgba[0]);
-                            let g = 255 - parseInt(rgba[1]);
-                            let b = 255 - parseInt(rgba[2]);
-                            let a = rgba[3];
+                    chart.data.datasets.forEach(function (dataset, i) {
+                        let meta = chart.getDatasetMeta(i);
+                        if (!meta.hidden) {
+                            meta.data.forEach(function (element, index) {
+                                // Draw the text invert color of buble, with the specified font
+                                let rgba = dataset.backgroundColor[index];
+                                rgba = rgba.split('(')[1].split(')')[0].split(',');
+                                let r = 255 - parseInt(rgba[0]);
+                                let g = 255 - parseInt(rgba[1]);
+                                let b = 255 - parseInt(rgba[2]);
+                                let a = rgba[3];
 
-                            ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
-                            let fontSize = 10.5;
-                            let fontStyle = 'normal';
-                            let fontFamily = 'Helvetica Neue';
-                            ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
-                            // Just naively convert to string for now
-                            let dataString = dataset.data[index].label;
-                            // Make sure alignment settings are correct
-                            ctx.textAlign = 'center';
-                            ctx.textBaseline = 'middle';
-                            //var padding = 5;
-                            let position = element.tooltipPosition();
-                            if (dataString === undefined) {
-                                dataString = " ";
-                            }
-                            ctx.fillText(dataString, position.x, position.y);
+                                ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + ","
+                                    + b.toString() + "," + a + ")";
+                                let fontSize = 10.5;
+                                let fontStyle = 'normal';
+                                let fontFamily = 'Helvetica Neue';
+                                ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
+                                // Just naively convert to string for now
+                                let dataString = dataset.data[index].label;
+                                // Make sure alignment settings are correct
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                //var padding = 5;
+                                let position = element.tooltipPosition();
+                                if (dataString === undefined) {
+                                    dataString = " ";
+                                }
+                                ctx.fillText(dataString, position.x, position.y);
 
-                        });
-                    }
-                });
+                            });
+                        }
+                    });
+                }
             }
         });
         /**

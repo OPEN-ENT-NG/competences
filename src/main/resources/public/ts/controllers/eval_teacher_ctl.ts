@@ -533,6 +533,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             devoirInfo: true,
             lightbox: false,
             lightboxEvalLibre: false,
+            lightboxReleve : false,
             recapEval: false,
             lightboxs: {
                 updateDevoir: {
@@ -3915,15 +3916,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.openedLigthboxEleve = (eleve, filteredPeriode) => {
+        $scope.openedLigthboxEleve = async (eleve, filteredPeriode) => {
             $scope.getEleveInfo(eleve);
             $scope.filteredPeriode = filteredPeriode;
-            $scope.opened.lightbox = true;
+            $scope.opened.lightboxReleve = true;
             eleve.showCompetencesDetails = false;
             $scope.initDataLightBoxEleve();
             template.close('lightboxEleveDetails');
-            template.open('lightboxContainer', 'enseignants/releve_notes/details_releve_periodique_eleve');
+            template.open('lightboxContainerReleve', 'enseignants/releve_notes/details_releve_periodique_eleve');
             utils.safeApply($scope);
+            if(template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view')) {
+                template.close('contentDetails');
+                utils.safeApply($scope);
+                await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine);
+                template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
+                utils.safeApply($scope);
+            }
         };
 
         $scope.openedLigthboxDetailsEleve = async (eleve) => {
@@ -3949,6 +3957,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             if(details === true ) {
                 await $scope.openedLigthboxDetailsEleve($scope.informations.eleve);
+            }
+            if(template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view')) {
+                template.close('contentDetails');
+                utils.safeApply($scope);
+                await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine);
+                template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
+                utils.safeApply($scope);
             }
         };
         $scope.hasCompetences = function (devoir) {
@@ -4055,9 +4070,25 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return Utils.FilterNotEvaluated(MaCompetence, $scope);
         };
 
-        $scope.closeLightBoxDetails = function () {
+
+        // Permet de faire afficher la lightBox  au dessus du bandeau du thème
+        $scope.displayBoxAboveTheHeadBand = function () {
             $('body').addClass('lightbox-opened');
+        };
+        $scope.closeLightBoxDetails = function () {
+            $scope.displayBoxAboveTheHeadBand();
             $scope.informations.eleve.showCompetencesDetails = false;
+        };
+
+        $scope.openGraphView = async function (displayDomaine) {
+            $scope.displayDomaine = displayDomaine;
+            template.close('contentDetails');
+            utils.safeApply($scope);
+            await $scope.releveNote.getDataForGraph($scope.informations.eleve, displayDomaine);
+            template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
+            utils.safeApply($scope);
+            $scope.displayBoxAboveTheHeadBand();
+            utils.safeApply($scope);
         };
     }
 ]);

@@ -1,4 +1,4 @@
-import { Model, IModel, _, moment, Collection, http } from 'entcore';
+import { Model, IModel, _, moment, Collection, http, idiom as lang } from 'entcore';
 import {
     AppreciationClasse,
     Periode,
@@ -11,7 +11,8 @@ import {
 } from './index';
 import {getNN} from "../../utils/functions/utilsNN";
 import * as utils from "../../utils/teacher";
-
+import {Defaultcolors} from "../eval_niveau_comp";
+declare  let Chart: any;
 export class ReleveNote extends  Model implements IModel {
     synchronized: any;
     elementProgramme: any;
@@ -50,7 +51,12 @@ export class ReleveNote extends  Model implements IModel {
             GET_ARBRE_DOMAINE: `/competences/domaines?idClasse=${this.idClasse}`,
 
             POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
-            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`
+            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`,
+            GET_DATA_FOR_GRAPH: `/competences/releve/datas/graph?idEtablissement=${this.structure.id}&idClasse=${
+                this.idClasse}&idMatiere=${this.idMatiere}&typeClasse=${this.classe.type_groupe}`,
+            GET_DATA_FOR_GRAPH_DOMAINE: `/competences/releve/datas/graph/domaine?idEtablissement=${
+                this.structure.id}&idClasse=${this.idClasse}&idMatiere=${this.idMatiere}&typeClasse=${
+                this.classe.type_groupe}`
 
         }
     }
@@ -149,7 +155,9 @@ export class ReleveNote extends  Model implements IModel {
 
                 let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
 
-                this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode, endSaisie, this.structure.id);
+                this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode,
+                    endSaisie, this.structure.id);
+
                 this.appreciationClasse.sync();
             }
             resolve();
@@ -548,14 +556,219 @@ export class ReleveNote extends  Model implements IModel {
                         for (let i = 0; i < res.length; i++) {
                             let domaine = new Domaine(res[i], eleve.id);
                             eleve.domaines.all.push(domaine);
-                            Utils.setCompetenceNotes(domaine, eleve.competencesNotes);
+                            eleve.tabDomaine = [];
+                            Utils.setCompetenceNotes(domaine, eleve.competencesNotes,
+                                undefined, undefined, eleve.tabDomaine);
                         }
                     }
-                   resolve();
+                    resolve();
                 })
                 .error((err) => {
                     reject(err);
                 });
         });
+    }
+
+    getDataForGraph(eleve,forDomaine?) : any {
+        return new Promise((resolve, reject) => {
+            let uri = (forDomaine === true)? this.api.GET_DATA_FOR_GRAPH_DOMAINE : this.api.GET_DATA_FOR_GRAPH;
+            uri += '&idEleve=' + eleve.id;
+            http().getJson(uri)
+                .done(async (res) => {
+                    this.configCharts (eleve, res, forDomaine);
+                    resolve();
+                })
+                .error((err) => {
+                    reject(err);
+                });
+        });
+    }
+
+    moyenneNiveau (competencesNotes) : number {
+        let res  = 0;
+        let summ = 0;
+        _.forEach(competencesNotes, (c) => {
+            res += c.evaluation;
+            summ ++;
+        });
+
+        return (summ === 0)? 0 : parseFloat(Math.round(res/summ).toFixed(2));
+    }
+
+    moyenneNote (notes) : number {
+        let res = 0;
+        let sum = 0;
+        let sumCoef = 0;
+
+        _.forEach(notes, (n) => {
+            if(n.valeur !== null) {
+                sum += ( parseInt(n.valeur) * parseInt(n.coefficient) * 20 / parseInt(n.diviseur));
+                sumCoef += parseInt(n.coefficient);
+            }
+        });
+        if (sumCoef > 0) {
+            res = sum / sumCoef;
+        }
+        return parseFloat(res.toFixed(2));
+    }
+
+    configCharts (eleve, _datas, forDomaine?) : any {
+        // CompetenceNotes
+        let data = [];
+        let dataStudent = [];  // Moyenne CompetenceNotes par matiere de l'élève
+        let dataClass = []; // Moyenne CompetenceNotes par matière de la classe
+
+        // notes
+        let average = [];
+        let averageStudent = []; // Moyenne notes par matiere de l'élève
+        let averageClass = []; // Moyenne notes par matiere de la classe
+
+
+        let labels = [] //Nom des matières
+        let data_set1 = [];
+        let data_set2 = [];
+        let data_set3 = [];
+        let data_set4 = [];
+        let colors = ['#00ADF9',
+            '#fd9236',
+            '#dc151c',
+            '#46BFBD',
+            '#949fb1',
+            '#5f626c',
+            '#40424b'];
+
+
+        let series = [lang.translate('level.student'),lang.translate('level.class') ];
+        let i18nTitleView =(forDomaine !== true)?'evaluation.search.by.enseignements' :'evaluation.search.by.domaines';
+        let options = {legend : {
+                display: true
+            },
+            title: {
+                display: false,
+                text: lang.translate(i18nTitleView)
+            },
+        };
+        let configRadarChart = {
+            datasets : {
+                data: data,
+                labels: labels,
+                average : average
+            },
+            series : series,
+            averageSeries : [lang.translate('average.student'),lang.translate('average.class')],
+            options : options,
+            colors : colors,
+            niveau : Defaultcolors
+        };
+
+        let configMixedChart = {
+            labels: labels,
+            colors : colors,
+            niveau : Defaultcolors,
+            labelyAxes : [lang.translate('level.items'),lang.translate('averages')],
+            datasets : {
+                test : undefined,
+                average : average,
+                data_set1 : data_set1,
+                data_set2 : data_set2,
+                data_set3 : data_set3,
+                data_set4 : data_set4
+            },
+            averageStudent :  {
+                label: lang.translate('average.student'),
+                type: 'line',
+                data:(forDomaine !== true)? averageStudent : dataStudent,
+                borderColor:'#00ADF9',
+                backgroundColor: '#009eea',
+                fill: false,
+                id: (forDomaine !== true)? "y-axis-1": undefined,
+                options: {
+                    scales: {
+                        xAxes: [{
+                            stacked: false,
+                        }],
+                        yAxes: [{
+                            stacked: false
+                        }]
+                    }
+                }
+
+            },
+            averageClass: {
+                label: lang.translate('average.class'),
+                type: 'line',
+                data: (forDomaine !== true)? averageClass : dataClass,
+                borderColor: '#5f626c',
+                backgroundColor: '#5f626c',
+                borderWidth :
+                1 + Chart.defaults.global.elements.line.borderWidth,
+                fill: false,
+                id: (forDomaine !== true)? "y-axis-1" : undefined,
+                options: {
+                    scales: {
+                        xAxes: [{
+                            stacked: false,
+                        }],
+                        yAxes: [{
+                            stacked: false
+                        }]
+                    }
+                }
+            }
+
+        };
+        _.forEach(_datas, (matiereOrDomaine) => {
+            let diviseur : number = (forDomaine === true )? 4 : 20;
+            if(matiereOrDomaine.id !== undefined) {
+                labels.push(
+                    (matiereOrDomaine.name !== undefined)? matiereOrDomaine.name : matiereOrDomaine.codification);
+                dataStudent.push(this.moyenneNiveau(matiereOrDomaine.competencesNotesEleve));
+                dataClass.push(this.moyenneNiveau(matiereOrDomaine.competencesNotes));
+
+                averageStudent.push(this.moyenneNote(matiereOrDomaine.notesEleve));
+                averageClass.push(this.moyenneNote(matiereOrDomaine.notes));
+
+                let nbrCompNotesUnevaluated =  _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: -1});
+                nbrCompNotesUnevaluated = (!nbrCompNotesUnevaluated)? nbrCompNotesUnevaluated.length: 0;
+                let nbrCompNotes = (!matiereOrDomaine.competencesNotesEleve)? 0 :
+                    (matiereOrDomaine.competencesNotesEleve.length - nbrCompNotesUnevaluated);
+
+                let nbrCompNotes_set1 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 0});
+                nbrCompNotes_set1 =  !(nbrCompNotes_set1)? 0 : nbrCompNotes_set1.length;
+                let set1_val = Math.min(diviseur, diviseur * (nbrCompNotes_set1 / (nbrCompNotes)));
+
+                let nbrCompNotes_set2 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 1});
+                nbrCompNotes_set2 =  !(nbrCompNotes_set2)? 0 : nbrCompNotes_set2.length;
+                let set2_val = Math.min(diviseur, diviseur * (nbrCompNotes_set2 / (nbrCompNotes)) + set1_val);
+
+                let nbrCompNotes_set3 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 2});
+                nbrCompNotes_set3 =  !(nbrCompNotes_set3)? 0 : nbrCompNotes_set3.length;
+                let set3_val = Math.min(diviseur, diviseur * (nbrCompNotes_set3 / (nbrCompNotes)) + set2_val);
+
+                let nbrCompNotes_set4 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 3});
+                nbrCompNotes_set4 =  !(nbrCompNotes_set4)? 0 : nbrCompNotes_set4.length;
+                let set4_val = Math.min(diviseur, diviseur * (nbrCompNotes_set4 / (nbrCompNotes)) + set3_val);
+
+                data_set1.push(set1_val.toFixed(2));
+                data_set2.push(set2_val.toFixed(2));
+                data_set3.push(set3_val.toFixed(2));
+                data_set4.push(set4_val.toFixed(2));
+
+            }
+        });
+        data.push(dataStudent);
+        data.push(dataClass);
+
+        average.push(averageStudent);
+        average.push(averageClass);
+
+        if (forDomaine === true) {
+            eleve.configRadarChartDomaine = configRadarChart;
+            eleve.configMixedChartDomaine = configMixedChart;
+        }
+        else {
+            eleve.configRadarChart = configRadarChart;
+            eleve.configMixedChart = configMixedChart;
+        }
     }
 }
