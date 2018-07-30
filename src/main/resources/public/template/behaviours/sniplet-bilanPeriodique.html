@@ -1,0 +1,76 @@
+<div class="twelve">
+    <h3>
+        <i18n>evaluations.bilan.periodique</i18n>
+    </h3>
+
+    <div class="twelve tabs vertical-spacing-twice heading-tabs">
+        <header ng-class="{selected : EPI.selected = true}"
+                class="horizontal-spacing-twice ng-scope">
+            <div class="horizontal-spacing" ng-click="EPI.selected = true; AP.selected = false; parcours.selected = false">
+                <span><i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span></i18n></span>
+            </div>
+        </header>
+        <header ng-class="{selected : AP.selected = false}"
+                class="horizontal-spacing-twice ng-scope">
+            <div class="horizontal-spacing" ng-click="AP.selected = true;  EPI.selected = false; parcours.selected = false">
+                <span><i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n></span>
+            </div>
+        </header>
+        <header ng-class="{selected : parcours.selected = false}"
+                class="horizontal-spacing-twice ng-scope">
+            <div class="horizontal-spacing" ng-click="parcours.selected = true;  EPI.selected = false; AP.selected = false">
+                <span><i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n></span>
+            </div>
+        </header>
+    </div>
+</div>
+
+<article class="twelve cell">
+    <input ng-show="EPI.selected" class="ten cell"
+           type="text"
+           ng-model="search.name"
+           placeholder="Rechercher un EPI">
+    <input ng-show="AP.selected" class="ten cell"
+           type="text"
+           ng-model="search.name"
+           placeholder="Rechercher un AP">
+    <input ng-show="parcours.selected" class="ten cell"
+           type="text"
+           ng-model="search.name"
+           placeholder="Rechercher un parcours">
+
+    <button class="right-magnet" ng-click="opened.lightboxContainerCreatePE">
+        <i18n ng-show="EPI.selected">evaluations.add.EPI</i18n>
+        <i18n ng-show="AP.selected">evaluations.add.AP</i18n>
+        <i18n ng-show="parcours.selected">evaluations.add.parcours</i18n>
+    </button>
+</article>
+
+<lightbox show="opened.lightboxContainerCreatePE" on-close="opened.lightboxContainerCreatePE = false">
+    <container template="lightboxContainerCreatePE"></container>
+</lightbox>
+
+<div class="card board-bilan twelve row">
+    <div class="expandable-list-header twelve">
+        <div class="cell">
+            <label class="checkbox">
+                <input type="checkbox">
+                <!--ng-model="selected.allClassePeriode"-->
+                <!--ng-change="switchSelectedClasse((structure.classes.all | periodeSearch:search), selected.allClassePeriode)"-->
+                <span></span>
+            </label>
+        </div>
+        <div class="cell" ng-show="!AP.selected">
+            <i18n>viescolaire.competences.theme</i18n>
+        </div>
+        <div class="cell" ng-show="!parcours.selected">
+            <i18n>viescolaire.competences.libelle</i18n>
+        </div>
+        <div class="cell" ng-show="!parcours.selected">
+            <i18n>viescolaire.competences.intervenant</i18n>
+        </div>
+        <div class="cell">
+            <i18n>viescolaire.competences.classe.groupe</i18n>
+        </div>
+    </div>
+</div>

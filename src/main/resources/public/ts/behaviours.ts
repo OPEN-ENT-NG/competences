@@ -3,6 +3,7 @@ import {visibilitymoyBFC} from './sniplets/visibilitymoyBFC';
 import { itemsCompetences } from './sniplets/itemsCompetences';
 import {linkGroupCycle} from "./sniplets/linkGroupCycle";
 import {visibilityDNB} from "./sniplets/visibilityDNB";
+import {bilanPeriodique} from "./sniplets/bilanPeriodique";
 
 Behaviours.register('competences', {
     rights: {
@@ -22,6 +23,7 @@ Behaviours.register('competences', {
         visibilitymoyBFC: visibilitymoyBFC,
         visibilityDNB: visibilityDNB,
         itemsCompetences: itemsCompetences,
-        linkGroupCycle: linkGroupCycle
+        linkGroupCycle: linkGroupCycle,
+        bilanPeriodique: bilanPeriodique
     }
 });
