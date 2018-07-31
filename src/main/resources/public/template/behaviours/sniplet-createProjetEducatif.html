@@ -15,7 +15,14 @@
             <label class="select">
                 <select></select>
             </label>
+
+            <h3 data-ng-click="openCreateTheme()"
+                class="inline-block"><i class="plus"></i></h3>
         </section>
+
+        <lightbox show="opened.lightboxCreateTheme" on-close="!opened.lightboxCreateTheme">
+            <container template="lightboxCreateTheme"></container>
+        </lightbox>
 
         <input type="text" placeholder="saisie libellé"  />
 
@@ -23,6 +30,7 @@
             <label class="select" >
                 <select></select>
             </label>
+
         </section>
 
         <button class="right-magnet" ng-click="">

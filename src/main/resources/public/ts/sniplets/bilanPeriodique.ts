@@ -10,10 +10,15 @@ export const bilanPeriodique = {
         init: function () {
             this.idStructure = this.source.idStructure;
             this.opened.lightboxCreatePE = false;
+            this.opened.lightboxCreateTheme = false;
         },
         openCreatePE: function () {
             this.opened.lightboxCreatePE = true;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
+        },
+        openCreateTheme: function() {
+            this.opened.lightboxCreateTheme = true;
+            template.open('lightboxCreateTheme', '../../../competences/public/template/behaviours/sniplet-createTheme');
         }
     }
 }
