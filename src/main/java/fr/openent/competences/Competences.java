@@ -51,6 +51,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
     public static final String SCHEMA_APPRECIATIONS_UPDATE = "eval_updateAppreciation";
+    public static final String SCHEMA_THEMATIQUE_BILAN_PERIODIQUE = "eval_thematique_bilan_periodique";
 
     public static final String SCHEMA_APPRECIATIONS_CLASSE = "eval_createOrUpdateAppreciationClasse";
 
@@ -144,6 +145,8 @@ public class Competences extends BaseServer {
 		addController(new EventBusController());
 
         setRepositoryEvents(new CompetenceRepositoryEvents(eb));
+
+        addController(new ElementBilanPeriodiqueController());
 
     }
 

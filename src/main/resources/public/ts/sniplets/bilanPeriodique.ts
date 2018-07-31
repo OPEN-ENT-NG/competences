@@ -1,7 +1,6 @@
-import {http, template} from 'entcore';
-import * as utils from "../utils/teacher";
+import {notify, template} from 'entcore';
+import http from "axios";
 
-console.log("peux-tu m'aider à débuguer petit console log ?");
 
 export const bilanPeriodique = {
     title: 'Bilan périodique',
@@ -16,9 +15,31 @@ export const bilanPeriodique = {
             this.opened.lightboxCreatePE = true;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
         },
+
         openCreateTheme: function() {
             this.opened.lightboxCreateTheme = true;
             template.open('lightboxCreateTheme', '../../../competences/public/template/behaviours/sniplet-createTheme');
+        },
+
+        async createThematique (thematique) {
+            try {
+                console.log("here");
+                if(thematique !== undefined && thematique !== null) {
+
+                    if(thematique.code !== undefined && thematique.code !== null
+                        && thematique.libelle !== undefined && thematique.libelle !== null){
+                        await http.post('/competences/thematique', {code: thematique.code, libelle: thematique.libelle, type: 1});
+                    }
+                }
+            } catch (e) {
+                notify.error('Problème lors de la création');
+                console.error('Problème lors de la création');
+                throw e;
+            }
+        },
+
+        async updateThematique (): Promise<void> {
+            await http.put(this.api.update,this.toJSON());
         }
     }
 }

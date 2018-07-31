@@ -6,7 +6,8 @@ package fr.openent.competences.security.utils;
 public enum WorkflowActions {
 	CREATE_EVALUATION ("competences.create.evaluation"),
 	ADMIN_RIGHT ("Viescolaire.view"),
-	CREATE_DISPENSE_DOMAINE_ELEVE ("create.dispense.domaine.eleve");
+	CREATE_DISPENSE_DOMAINE_ELEVE ("create.dispense.domaine.eleve"),
+	CREATE_ELEMENT_BILAN_PERIODIQUE ("create.element.bilan.periodique");
 
 	private final String actionName;
 
