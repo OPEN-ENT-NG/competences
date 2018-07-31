@@ -39,15 +39,15 @@
            ng-model="search.name"
            placeholder="Rechercher un parcours">
 
-    <button class="right-magnet" ng-click="opened.lightboxContainerCreatePE">
+    <button class="right-magnet" ng-click="openCreatePE()">
         <i18n ng-show="EPI.selected">evaluations.add.EPI</i18n>
         <i18n ng-show="AP.selected">evaluations.add.AP</i18n>
         <i18n ng-show="parcours.selected">evaluations.add.parcours</i18n>
     </button>
 </article>
 
-<lightbox show="opened.lightboxContainerCreatePE" on-close="opened.lightboxContainerCreatePE = false">
-    <container template="lightboxContainerCreatePE"></container>
+<lightbox show="opened.lightboxCreatePE" on-close="!opened.lightboxCreatePE">
+    <container template="lightboxCreatePE"></container>
 </lightbox>
 
 <div class="card board-bilan twelve row">
@@ -74,3 +74,5 @@
         </div>
     </div>
 </div>
+
+
