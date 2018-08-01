@@ -4,19 +4,19 @@
     </h3>
 
     <div class="twelve tabs vertical-spacing-twice heading-tabs">
-        <header ng-class="{selected : EPI.selected = true}"
+        <header ng-class="{selected : EPI.selected}"
                 class="horizontal-spacing-twice ng-scope">
             <div class="horizontal-spacing" ng-click="EPI.selected = true; AP.selected = false; parcours.selected = false">
                 <span><i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span></i18n></span>
             </div>
         </header>
-        <header ng-class="{selected : AP.selected = false}"
+        <header ng-class="{selected : AP.selected}"
                 class="horizontal-spacing-twice ng-scope">
             <div class="horizontal-spacing" ng-click="AP.selected = true;  EPI.selected = false; parcours.selected = false">
                 <span><i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n></span>
             </div>
         </header>
-        <header ng-class="{selected : parcours.selected = false}"
+        <header ng-class="{selected : parcours.selected}"
                 class="horizontal-spacing-twice ng-scope">
             <div class="horizontal-spacing" ng-click="parcours.selected = true;  EPI.selected = false; AP.selected = false">
                 <span><i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n></span>

@@ -8,8 +8,6 @@ export const bilanPeriodique = {
     controller: {
         init: function () {
             this.idStructure = this.source.idStructure;
-            this.opened.lightboxCreatePE = false;
-            this.opened.lightboxCreateTheme = false;
         },
         openCreatePE: function () {
             this.opened.lightboxCreatePE = true;
