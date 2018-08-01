@@ -1,32 +1,41 @@
 import {notify, template} from 'entcore';
 import http from "axios";
+import {evaluations} from '../models/teacher';
+import * as utils from '../utils/teacher';
 
+console.log("here");
 
 export const bilanPeriodique = {
     title: 'Bilan périodique',
     description: 'Permet de paramétrer les éléments nécessaires à la construction des bilans périodiques',
     controller: {
-        init: function () {
+        async init () {
             this.idStructure = this.source.idStructure;
+            this.opened.lightboxCreatePE = false;
+            this.opened.lightboxCreateTheme = false;
+            await evaluations.sync();
+            await evaluations.structure.sync();
         },
-        openCreatePE: function () {
+        async openCreatePE () {
+            await this.getThematique (1);
+            this.classes = evaluations.structure.classes;
+            this.enseignants = evaluations.structure.enseignants;
             this.opened.lightboxCreatePE = true;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
+            utils.safeApply(this);
         },
-
         openCreateTheme: function() {
             this.opened.lightboxCreateTheme = true;
             template.open('lightboxCreateTheme', '../../../competences/public/template/behaviours/sniplet-createTheme');
         },
-
         async createThematique (thematique) {
             try {
-                console.log("here");
                 if(thematique !== undefined && thematique !== null) {
-
                     if(thematique.code !== undefined && thematique.code !== null
                         && thematique.libelle !== undefined && thematique.libelle !== null){
-                        await http.post('/competences/thematique', {code: thematique.code, libelle: thematique.libelle, type: 1});
+                        await http.post('/competences/thematique',
+                            {code: thematique.code, libelle: thematique.libelle, type: 1});
+                        this.getThematique (1)
                     }
                 }
             } catch (e) {
@@ -35,9 +44,29 @@ export const bilanPeriodique = {
                 throw e;
             }
         },
-
         async updateThematique (): Promise<void> {
             await http.put(this.api.update,this.toJSON());
+        },
+        async getThematique (type) {
+            try {
+                let {data} = await http.get(`/competences/thematique?type=${type}`);
+                this.themes = data;
+                utils.safeApply(this);
+            } catch (e) {
+                notify.error('evaluations.theme.get.error');
+            }
+        },
+        translate : function (key) {
+            return utils.translate(key);
+        },
+        async syncMatieresEnseignant  (enseignant) {
+            try {
+                let {data} = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
+                this.matieres = data;
+                utils.safeApply(this);
+            } catch (e) {
+                notify.error('evaluations.matiere.get.error');
+            }
         }
     }
 }

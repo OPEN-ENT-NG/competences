@@ -1,43 +1,65 @@
 <div class="header">
-    <h2>
-        Ajouter un EPI
-    </h2>
+    <h2>Ajouter un EPI</h2>
 </div>
 
-<div>
-
-    <div>
-        <label>Description</label>
-        <textarea name="saisie description">
-        </textarea>
-
-        <section>
-            <label class="select">
-                <select></select>
-            </label>
-
-            <h3 data-ng-click="openCreateTheme()"
-                class="inline-block"><i class="plus"></i></h3>
-        </section>
-
-        <lightbox show="opened.lightboxCreateTheme" on-close="!opened.lightboxCreateTheme">
-            <container template="lightboxCreateTheme"></container>
-        </lightbox>
-
-        <input type="text" placeholder="saisie libellé"  />
-
-        <section>
-            <label class="select" >
-                <select></select>
-            </label>
-
-        </section>
-
-        <button class="right-magnet" ng-click="">
-            <i18n>evaluations.add</i18n>
-        </button>
-
+<div class="twelve cell twelve-mobile">
+    <div class="five cell twelve-mobile">
+        <label class="select">
+            <select ng-model="search.theme"
+                    ng-options="theme.libelle for theme in themes">
+                <option class="header-opt" value="">[[translate('viescolaire.utils.themes')]]</option>
+            </select>
+        </label>
     </div>
-
-
+    <div class="two cell twelve-mobile">
+        <h3 data-ng-click="openCreateTheme()" class="inline-block">
+            <i class="plus"></i>
+        </h3>
+    </div>
+    <div class="five cell twelve-mobile">
+        <textarea placeholder="saisie libellé" name="saisie description"></textarea>
+    </div>
+</div>
+<div class="twelve cell twelve-mobile">
+    <div class="five cell twelve-mobile">
+        <input type="text" placeholder="saisie libellé"/>
+    </div>
+</div>
+<div class="twelve cell twelve-mobile">
+    <div class="five cell twelve-mobile">
+        <label class="select">
+            <select ng-model="search.enseignant"
+                    ng-options="enseignant.displayName for enseignant in enseignants.all"
+                    ng-change="syncMatieresEnseignant(search.enseignant)">
+                <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
+            </select>
+        </label>
+    </div>
+    <div class="five cell twelve-mobile">
+        <label class="select">
+            <select ng-model="search.matiere"
+                    ng-options="matiere.name for matiere in matieres">
+                <option class="header-opt" value="">[[translate('viescolaire.utils.subject')]]</option>
+            </select>
+        </label>
+    </div>
+</div>
+<div class="twelve cell twelve-mobile">
+    <div class="five cell twelve-mobile">
+        <label class="select">
+            <select ng-model="search.classe"
+                    ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+            </select>
+        </label>
+    </div>
+</div>
+<div class="twelve cell twelve-mobile">
+    <button class="right-magnet" ng-click="">
+        <i18n>evaluations.add</i18n>
+    </button>
+</div>
+<lightbox show="opened.lightboxCreateTheme" on-close="!opened.lightboxCreateTheme">
+    <container template="lightboxCreateTheme"></container>
+</lightbox>
 </div>
