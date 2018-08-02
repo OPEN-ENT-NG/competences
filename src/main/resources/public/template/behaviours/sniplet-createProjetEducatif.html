@@ -4,19 +4,28 @@
         <h2>Ajouter un EPI</h2>
     </div>
 
-    <div class="twelve cell twelve-mobile beFlex">
-        <label class="select">
-            <select ng-model="theme"
-                    ng-change="data.theme = theme.id"
-                    ng-options="theme.libelle for theme in themes">
-                <option class="header-opt" value="">[[translate('viescolaire.utils.themes')]]</option>
-            </select>
-        </label>
+    <div class="six cell twelve-mobile">
+            <div class="twelve cell twelve-mobile beFlex">
+                <label class="select">
+                    <select ng-model="theme"
+                            ng-change="data.theme = theme.id"
+                            ng-options="theme.libelle for theme in themes">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.themes')]]</option>
+                    </select>
+                </label>
 
-        <h3 data-ng-click="openCreateTheme()" class="inline-block">
-            <i class="plus marginLeft"></i>
-        </h3>
-        <div class="five cell twelve-mobile">
+                <h3 data-ng-click="" class="inline-block">
+                    <i class="plus marginLeft"></i>
+                </h3>
+            </div>
+            <div class="twelve cell twelve-mobile marginTop">
+                <div class="five cell twelve-mobile">
+                    <input  ng-model="data.libelle"
+                            type="text" placeholder="Intitulé"/>
+                </div>
+            </div>
+    </div>
+        <div class="five cell twelve-mobile marginLeft2">
             <p>Ajouter thème EPI</p>
             <input type="text" placeholder="Saisir code" ng-model="thematique.code"/>
             <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle"/>
@@ -24,17 +33,14 @@
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
-    </div>
-    <div class="twelve cell twelve-mobile marginTop">
-        <div class="five cell twelve-mobile">
-            <input ng-model="data.libelle"
-                   type="text" placeholder="Intitulé"/>
-        </div>
-    </div>
-    <h4 class="two cell marginBottomZero">
-        <i18n>viescolaire.utils.description</i18n>
-    </h4>
+
+
+
+
     <div class="twelve cell twelve-mobile">
+        <h4 class="two cell marginBottomZero">
+            <i18n>viescolaire.utils.description</i18n>
+        </h4>
         <textarea ng-model="data.description"
                   placeholder="Saisir la description" name="saisie description"></textarea>
     </div>

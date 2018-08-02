@@ -29,10 +29,6 @@ export const bilanPeriodique = {
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
             utils.safeApply(this);
         },
-        openCreateTheme: function() {
-            this.opened.lightboxCreateTheme = true;
-            template.open('lightboxCreateTheme', '../../../competences/public/template/behaviours/sniplet-createTheme');
-        },
         async createThematique (thematique) {
             try {
                 if(thematique !== undefined && thematique !== null) {
