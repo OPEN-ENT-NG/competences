@@ -14,7 +14,7 @@
                     </select>
                 </label>
 
-                <h3 data-ng-click="" class="inline-block">
+                <h3 data-ng-click="showAddtheme = true" class="inline-block">
                     <i class="plus marginLeft"></i>
                 </h3>
             </div>
@@ -25,7 +25,7 @@
                 </div>
             </div>
     </div>
-        <div class="five cell twelve-mobile marginLeft2">
+        <div ng-show="showAddtheme" class="five cell twelve-mobile marginLeft2">
             <p>Ajouter thème EPI</p>
             <input type="text" placeholder="Saisir code" ng-model="thematique.code"/>
             <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle"/>
