@@ -26,7 +26,10 @@
             </div>
     </div>
         <div ng-show="showAddtheme" class="five cell twelve-mobile marginLeft2">
-            <p>Ajouter thème EPI</p>
+            <div class="beFlex-Justify">
+                <p class="marginTopZero">Ajouter thème EPI</p>
+                <i data-ng-click="showAddtheme = false" class="close-2x"></i>
+            </div>
             <input type="text" placeholder="Saisir code" ng-model="thematique.code"/>
             <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle"/>
             <button class="right-magnet" ng-click="createThematique(thematique)">
@@ -80,8 +83,5 @@
             <i18n>evaluations.add</i18n>
         </button>
     </div>
-    <lightbox show="opened.lightboxCreateTheme" on-close="!opened.lightboxCreateTheme">
-        <container template="lightboxCreateTheme"></container>
-    </lightbox>
 
 </div>
