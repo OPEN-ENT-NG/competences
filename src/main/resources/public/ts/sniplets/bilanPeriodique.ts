@@ -19,7 +19,7 @@ export const bilanPeriodique = {
                 classes: [],
                 ens_mat: []
             };
-            await this.getElements();
+            // await this.getElements();
         },
         async openCreatePE () {
             await this.getThematique (1);

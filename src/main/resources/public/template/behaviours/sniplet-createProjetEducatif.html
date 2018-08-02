@@ -18,36 +18,26 @@
         </h3>
         <div class="five cell twelve-mobile">
             <p>Ajouter thème EPI</p>
-            <input type="text" placeholder="Saisir code"/>
-            <input type="text" placeholder="Saisie intitulé"/>
-            <button class="right-magnet" ng-click="">
+            <input type="text" placeholder="Saisir code" ng-model="thematique.code"/>
+            <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle"/>
+            <button class="right-magnet" ng-click="createThematique(thematique)">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
     </div>
     <div class="twelve cell twelve-mobile marginTop">
         <div class="five cell twelve-mobile">
-            <input type="text" placeholder="Intitulé"/>
+            <input ng-model="data.libelle"
+                   type="text" placeholder="Intitulé"/>
         </div>
     </div>
-    <div class="five cell twelve-mobile">
-        <textarea ng-model="data.description" placeholder="saisie libellé"
-                  name="saisie description"></textarea>
-    </div>
-</div>
-<div class="twelve cell twelve-mobile">
-    <div class="five cell twelve-mobile">
-        <input ng-model="data.libelle" type="text" placeholder="saisie libellé"/>
-    </div>
-
     <h4 class="two cell marginBottomZero">
         <i18n>viescolaire.utils.description</i18n>
     </h4>
     <div class="twelve cell twelve-mobile">
-        <textarea placeholder="Saisir la description" name="saisie description"></textarea>
+        <textarea ng-model="data.description"
+                  placeholder="Saisir la description" name="saisie description"></textarea>
     </div>
-
-
     <div class="twelve cell twelve-mobile">
         <div class="five cell twelve-mobile">
             <label class="select">
