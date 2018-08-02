@@ -6,7 +6,8 @@
 
     <div class="twelve cell twelve-mobile beFlex">
         <label class="select">
-            <select ng-model="search.theme"
+            <select ng-model="theme"
+                    ng-change="data.theme = theme.id"
                     ng-options="theme.libelle for theme in themes">
                 <option class="header-opt" value="">[[translate('viescolaire.utils.themes')]]</option>
             </select>
@@ -28,6 +29,15 @@
         <div class="five cell twelve-mobile">
             <input type="text" placeholder="Intitulé"/>
         </div>
+    </div>
+    <div class="five cell twelve-mobile">
+        <textarea ng-model="data.description" placeholder="saisie libellé"
+                  name="saisie description"></textarea>
+    </div>
+</div>
+<div class="twelve cell twelve-mobile">
+    <div class="five cell twelve-mobile">
+        <input ng-model="data.libelle" type="text" placeholder="saisie libellé"/>
     </div>
 
     <h4 class="two cell marginBottomZero">
@@ -51,6 +61,7 @@
         <div class="five cell twelve-mobile">
             <label class="select">
                 <select ng-model="search.matiere"
+                        ng-change="pushData(search.enseignant.id, search.matiere.id)"
                         ng-options="matiere.name for matiere in matieres">
                     <option class="header-opt" value="">[[translate('viescolaire.utils.subject')]]</option>
                 </select>
@@ -61,6 +72,7 @@
         <div class="five cell twelve-mobile">
             <label class="select">
                 <select ng-model="search.classe"
+                        ng-change="pushData(search.classe.externalId)"
                         ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
                     <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
                 </select>
@@ -68,7 +80,7 @@
         </div>
     </div>
     <div class="twelve cell twelve-mobile">
-        <button class="right-magnet" ng-click="">
+        <button class="right-magnet" ng-click="createElementBilanPeriodique()">
             <i18n>evaluations.add</i18n>
         </button>
     </div>

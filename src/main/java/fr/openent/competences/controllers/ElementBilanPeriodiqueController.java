@@ -43,7 +43,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                 Competences.SCHEMA_THEMATIQUE_BILAN_PERIODIQUE, new Handler<JsonObject>() {
             @Override
             public void handle(JsonObject resource) {
-                defaultElementBilanPeriodiqueService.insertThematiqueBilanPeriodique(resource, defaultResponseHandler(request));
+                defaultElementBilanPeriodiqueService.insertThematiqueBilanPeriodique(resource,
+                        defaultResponseHandler(request));
             }
         });
     }
@@ -71,17 +72,46 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
         });
     }
 
+    /**
+     * Créer les élèments du bilan périodique avec les données passées en paramètre
+     * @param request
+     */
     @Post("/elementBilanPeriodique")
     @ApiDoc("Créer une élément bilan périodique")
     @SecuredAction(value= "create.element.bilan.periodique",type= ActionType.WORKFLOW)
     public void createElementBilanPeriodique(final HttpServerRequest request){
-        RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE, new Handler<JsonObject>() {
+        RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_ELEMENT_BILAN_PERIODIQUE, new Handler<JsonObject>() {
             @Override
-            public void handle(JsonObject dispenseDomaineEleve) {
-//                dispenseDomaineEleveService.createDispenseDomaineEleve(dispenseDomaineEleve,defaultResponseHandler(request));
-
+            public void handle(JsonObject resource) {
+                defaultElementBilanPeriodiqueService.insertElementBilanPeriodique(resource,
+                        defaultResponseHandler(request));
             }
 
+        });
+    }
+
+    /**
+     * Retourne les élèments du bilan périodique
+     * @param request
+     */
+    @Get("/elementBilanPeriodique")
+    @ApiDoc("Retourne les élèments du bilan périodique")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ResourceFilter(CreateElementBilanPeriodique.class)
+    public void getElementBilanPeriodique(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if(user != null){
+                    defaultElementBilanPeriodiqueService.getElementBilanPeriodique(
+                            request.params().get("idEnseignant"),
+                            request.params().get("idClasse"),
+                            request.params().get("idEtablissement"),
+                            arrayResponseHandler(request));
+                }else{
+                    unauthorized(request);
+                }
+            }
         });
     }
 

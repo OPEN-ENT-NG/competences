@@ -14,6 +14,12 @@ export const bilanPeriodique = {
             this.selected = {EPI : true, AP : false, parcours : false};
             await evaluations.sync();
             await evaluations.structure.sync();
+            this.data = {
+                idEtablissement : evaluations.structure.id,
+                classes: [],
+                ens_mat: []
+            };
+            await this.getElements();
         },
         async openCreatePE () {
             await this.getThematique (1);
@@ -34,7 +40,23 @@ export const bilanPeriodique = {
                         && thematique.libelle !== undefined && thematique.libelle !== null){
                         await http.post('/competences/thematique',
                             {code: thematique.code, libelle: thematique.libelle, type: 1});
-                        this.getThematique (1)
+                    }
+                }
+            } catch (e) {
+                notify.error('Problème lors de la création');
+                console.error('Problème lors de la création');
+                throw e;
+            }
+        },
+        async createElementBilanPeriodique () {
+            try {
+                if(this.data !== undefined && this.data !== null) {
+                    if(this.data.theme !== undefined && this.data.theme !== null
+                        && this.data.libelle !== undefined && this.data.libelle !== null
+                        && this.data.description !== undefined && this.data.description !== null
+                        && this.data.classes.length > 0 && this.data.ens_mat.length >= 2){
+                        this.data.type = 2;
+                        await http.post('/competences/elementBilanPeriodique', this.data);
                     }
                 }
             } catch (e) {
@@ -66,6 +88,23 @@ export const bilanPeriodique = {
             } catch (e) {
                 notify.error('evaluations.matiere.get.error');
             }
-        }
+        },
+        pushData : function(param1, param2?) {
+            if(param2){
+                let ens_mat = {ens: param1, mat: param2}
+                this.data.ens_mat.push(ens_mat)
+            } else {
+                this.data.classes.push(param1)
+            }
+        },
+        async getElements () {
+            try {
+                let {data} = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
+                this.elements = data;
+                utils.safeApply(this);
+            } catch (e) {
+                notify.error('evaluations.elements.get.error');
+            }
+        },
     }
 }

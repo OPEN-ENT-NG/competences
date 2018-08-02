@@ -34,11 +34,9 @@ public interface ElementBilanPeriodiqueService {
      * @param idEnseignant enseignant connecté
      * @param idClasse id classe
      * @param idEtablissement id établissement
-     * @param typeElement type de l'élément
      * @param handler Handler de retour
      */
-    public void getElementBilanPeriodique (String idEnseignant, String idClasse,
-                                           String idEtablissement, Long typeElement,
+    public void getElementBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement,
                                            Handler<Either<String, JsonArray>> handler);
 
     /**

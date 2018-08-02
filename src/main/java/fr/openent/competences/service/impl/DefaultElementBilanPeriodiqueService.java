@@ -58,15 +58,15 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
                     JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                             .add(idElement)
-                            .add(element.getString("intitule"))
-                            .add(element.getString("id_thematique"))
+                            .add(element.getString("libelle"))
+                            .add(element.getInteger("theme"))
                             .add(element.getString("description"))
-                            .add(element.getString("type_elt_bilan_periodique"))
-                            .add(element.getString("id_etablissement"));
+                            .add(element.getInteger("type"))
+                            .add(element.getString("idEtablissement"));
                     statements.prepared(query, params);
 
-                    insertRelEltIntervenantMatiere(element.getJsonObject("intervenantMatiere"), idElement, statements);
-                    insertRelEltgroupe(element.getJsonArray("IdGroupes"), idElement, statements);
+                    insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, statements);
+                    insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
                 }
                 Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
             }
@@ -76,23 +76,22 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     /**
      * Enregistremet de la relation élément-intervenants-matieres du nouvel élément
      * (EPI, AP ou parcours) en cours d'insertion.
-     * @param intervenantMatiere association intervenant - matière de élément en cours d'insertion
+     * @param intervenantsMatieres association intervenant - matière de élément en cours d'insertion
      * @param elementId id de l'élément
      * @param statements Sql statement builder
      */
-    private void insertRelEltIntervenantMatiere(JsonObject intervenantMatiere, Long elementId, SqlStatementsBuilder statements){
+    private void insertRelEltIntervenantMatiere(JsonArray intervenantsMatieres, Long elementId, SqlStatementsBuilder statements){
 
-        //element contient un JsonObject intervMat dans lequel à un intervenat est associé une matière
-        Map<String, Object> intervenantMatiereMap = intervenantMatiere.getMap();
+        for (Object o : intervenantsMatieres) {
 
-        for (String id_intervenant : intervenantMatiereMap.keySet()) {
+            JsonObject intervenantMatiere = (JsonObject) o;
             String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
                     ".rel_elt_bilan_periodique_intervenant_matiere(id_elt_bilan_periodique, id_intervenant, id_matiere) " +
                     "VALUES (?, ?, ?);";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(elementId)
-                    .add(id_intervenant)
-                    .add(intervenantMatiereMap.get(id_intervenant));
+                    .add(intervenantMatiere.getString("ens"))
+                    .add(intervenantMatiere.getString("mat"));
             statements.prepared(query, params);
         }
     }
@@ -124,7 +123,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT libelle, code ")
+        query.append("SELECT id, libelle, code ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique ")
                 .append("WHERE type_elt_bilan_periodique = ? ");
 
@@ -133,18 +132,13 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     }
 
     @Override
-    public void getElementBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement, Long typeElement, Handler<Either<String, JsonArray>> handler){
+    public void getElementBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement, Handler<Either<String, JsonArray>> handler){
 
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query.append("SELECT intitule, description, thematique.libelle as theme ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".type_elt_bilan_periodique as type ")
-                .append("ON type.id = ? ")
-                .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique as thematique ")
-                .append("ON thematique.id = id_thematique ");
-        params.add(typeElement);
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ");
 
         if(idClasse != null){
             query.append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
