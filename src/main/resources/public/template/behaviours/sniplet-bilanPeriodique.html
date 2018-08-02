@@ -4,45 +4,67 @@
     </h3>
 
     <div class="twelve tabs vertical-spacing-twice heading-tabs">
-        <header ng-class="{selected : EPI.selected}"
+        <header ng-class="{selected : selected.EPI}"
                 class="horizontal-spacing-twice ng-scope">
-            <div class="horizontal-spacing" ng-click="EPI.selected = true; AP.selected = false; parcours.selected = false">
+            <div class="horizontal-spacing" ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false">
                 <span><i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span></i18n></span>
             </div>
         </header>
-        <header ng-class="{selected : AP.selected}"
+        <header ng-class="{selected : selected.AP}"
                 class="horizontal-spacing-twice ng-scope">
-            <div class="horizontal-spacing" ng-click="AP.selected = true;  EPI.selected = false; parcours.selected = false">
+            <div class="horizontal-spacing" ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false">
                 <span><i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n></span>
             </div>
         </header>
-        <header ng-class="{selected : parcours.selected}"
+        <header ng-class="{selected : selected.parcours}"
                 class="horizontal-spacing-twice ng-scope">
-            <div class="horizontal-spacing" ng-click="parcours.selected = true;  EPI.selected = false; AP.selected = false">
+            <div class="horizontal-spacing" ng-click="selected.parcours = true;  selected.EPI = false; selected.AP = false">
                 <span><i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n></span>
             </div>
         </header>
     </div>
 </div>
 
-<article class="twelve cell">
-    <input ng-show="EPI.selected" class="ten cell"
+
+<article ng-show="selected.EPI" class="twelve cell">
+    <h2 class="two cell">
+        <i18n>evaluations.recherche.EPI</i18n>
+    </h2>
+    <input class="five cell"
            type="text"
            ng-model="search.name"
-           placeholder="Rechercher un EPI">
-    <input ng-show="AP.selected" class="ten cell"
-           type="text"
-           ng-model="search.name"
-           placeholder="Rechercher un AP">
-    <input ng-show="parcours.selected" class="ten cell"
-           type="text"
-           ng-model="search.name"
-           placeholder="Rechercher un parcours">
+           placeholder="Saisir un EPI">
 
     <button class="right-magnet" ng-click="openCreatePE()">
-        <i18n ng-show="EPI.selected">evaluations.add.EPI</i18n>
-        <i18n ng-show="AP.selected">evaluations.add.AP</i18n>
-        <i18n ng-show="parcours.selected">evaluations.add.parcours</i18n>
+        <i18n>evaluations.add.EPI</i18n>
+    </button>
+</article>
+
+<article ng-show="selected.AP" class="twelve cell">
+    <h2 class="two cell">
+        <i18n>evaluations.recherche.AP</i18n>
+    </h2>
+    <input class="five cell"
+           type="text"
+           ng-model="search.name"
+           placeholder="Saisir un AP">
+
+    <button class="right-magnet" ng-click="openCreatePE()">
+        <i18n>evaluations.add.AP</i18n>
+    </button>
+</article>
+
+<article ng-show="selected.parcours" class="twelve cell">
+    <h2 class="two cell">
+        <i18n>evaluations.recherche.parcours</i18n>
+    </h2>
+    <input class="five cell"
+           type="text"
+           ng-model="search.name"
+           placeholder="Saisir un parcours">
+
+    <button class="right-magnet" ng-click="openCreatePE()">
+        <i18n>evaluations.add.parcours</i18n>
     </button>
 </article>
 
@@ -60,13 +82,13 @@
                 <span></span>
             </label>
         </div>
-        <div class="cell" ng-show="!AP.selected">
+        <div class="cell" ng-show="!selected.AP">
             <i18n>viescolaire.competences.theme</i18n>
         </div>
-        <div class="cell" ng-show="!parcours.selected">
+        <div class="cell" ng-show="!selected.parcours">
             <i18n>viescolaire.competences.libelle</i18n>
         </div>
-        <div class="cell" ng-show="!parcours.selected">
+        <div class="cell" ng-show="!selected.parcours">
             <i18n>viescolaire.competences.intervenant</i18n>
         </div>
         <div class="cell">

@@ -11,8 +11,7 @@ export const bilanPeriodique = {
     controller: {
         async init () {
             this.idStructure = this.source.idStructure;
-            this.opened.lightboxCreatePE = false;
-            this.opened.lightboxCreateTheme = false;
+            this.selected = {EPI : true, AP : false, parcours : false};
             await evaluations.sync();
             await evaluations.structure.sync();
         },
