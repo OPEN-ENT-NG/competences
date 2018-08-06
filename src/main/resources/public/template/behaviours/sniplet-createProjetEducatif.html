@@ -1,10 +1,12 @@
 <div class="evaluations-sniplet">
 
-    <div class="header">
-        <h2>Ajouter un EPI</h2>
-    </div>
+    <div ng-show="selected.EPI">
 
-    <div class="six cell twelve-mobile">
+        <div class="header">
+            <h2>Ajouter un EPI</h2>
+        </div>
+
+        <div class="six cell twelve-mobile">
             <div class="twelve cell twelve-mobile beFlex">
                 <label class="select">
                     <select ng-model="theme"
@@ -20,68 +22,180 @@
             </div>
             <div class="twelve cell twelve-mobile marginTop">
                 <div class="five cell twelve-mobile">
-                    <input  ng-model="data.libelle"
-                            type="text" placeholder="Intitulé"/>
+                    <input ng-model="data.libelle"
+                           ng-maxlength="150"
+                           maxlength="150"
+                           type="text" placeholder="Intitulé"/>
                 </div>
             </div>
-    </div>
+        </div>
         <div ng-show="showAddtheme" class="five cell twelve-mobile marginLeft2">
             <div class="beFlex-Justify">
                 <p class="marginTopZero">Ajouter thème EPI</p>
-                <i data-ng-click="showAddtheme = false" class="close-2x"></i>
+                <i data-ng-click="showAddtheme = false" class="close-2x blueCross"></i>
             </div>
-            <input type="text" placeholder="Saisir code" ng-model="thematique.code"/>
-            <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle"/>
+            <input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-maxlength="50" maxlength="50"/>
+            <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle" ng-maxlength="150" maxlength="150"/>
             <button class="right-magnet" ng-click="createThematique(thematique)">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
 
-
-
-
-    <div class="twelve cell twelve-mobile">
-        <h4 class="two cell marginBottomZero">
-            <i18n>viescolaire.utils.description</i18n>
-        </h4>
-        <textarea ng-model="data.description"
-                  placeholder="Saisir la description" name="saisie description"></textarea>
-    </div>
-    <div class="twelve cell twelve-mobile">
-        <div class="five cell twelve-mobile">
-            <label class="select">
-                <select ng-model="search.enseignant"
-                        ng-options="enseignant.displayName for enseignant in enseignants.all"
-                        ng-change="syncMatieresEnseignant(search.enseignant)">
-                    <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
-                </select>
-            </label>
+        <div class="twelve cell twelve-mobile">
+            <h4 class="two cell marginBottomZero">
+                <i18n>viescolaire.utils.description</i18n>
+            </h4>
+            <textarea ng-model="data.description"
+                      ng-maxlength="600" maxlength="600"
+                      placeholder="Saisir la description" name="saisie description"></textarea>
         </div>
-        <div class="five cell twelve-mobile">
-            <label class="select">
-                <select ng-model="search.matiere"
-                        ng-change="pushData(search.enseignant.id, search.matiere.id)"
-                        ng-options="matiere.name for matiere in matieres">
-                    <option class="header-opt" value="">[[translate('viescolaire.utils.subject')]]</option>
-                </select>
-            </label>
+        <div class="twelve cell twelve-mobile selet-blocks">
+            <div class="five cell twelve-mobile">
+                <label class="select">
+                    <select ng-model="search.enseignant"
+                            ng-options="enseignant.displayName for enseignant in enseignants.all"
+                            ng-change="syncMatieresEnseignant(search.enseignant)"
+                            ng-click="dropEnseignant()">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
+                    </select>
+                </label>
+            </div>
+            <div class="five cell twelve-mobile marginLeft">
+                <label class="select"
+                       ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
+                    <select ng-model="search.matiere"
+                            ng-change="pushData(search.enseignant.id, search.matiere.id)"
+                            ng-options="matiere.name for matiere in matieres"
+                            ng-disabled="search.enseignant == null">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.subject')]]</option>
+                    </select>
+                </label>
+            </div>
         </div>
-    </div>
-    <div class="twelve cell twelve-mobile">
-        <div class="five cell twelve-mobile">
-            <label class="select">
-                <select ng-model="search.classe"
-                        ng-change="pushData(search.classe.externalId)"
-                        ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
-                    <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
-                </select>
-            </label>
+        <div class="twelve cell twelve-mobile">
+            <div class="five cell twelve-mobile">
+                <label class="select">
+                    <select ng-model="search.classe"
+                            ng-change="pushData(search.classe.externalId)"
+                            ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+                    </select>
+                </label>
+            </div>
         </div>
+        <div class="twelve cell twelve-mobile">
+            <button class="right-magnet"
+                    ng-click="createElementBilanPeriodique()"
+                    ng-disabled="themes == null || data.libelle || search.enseignant < 2 || search.matiere == null || search.class == null">
+                <i18n>evaluations.add</i18n>
+            </button>
+        </div>
+
     </div>
-    <div class="twelve cell twelve-mobile">
-        <button class="right-magnet" ng-click="createElementBilanPeriodique()">
-            <i18n>evaluations.add</i18n>
-        </button>
+
+    <div ng-show="selected.AP">
+
+        <div class="header">
+            <h2>Ajouter un AP</h2>
+        </div>
+
+        <div class="six cell twelve-mobile">
+            <div class="twelve cell twelve-mobile marginTop">
+                <div class="five cell twelve-mobile">
+                    <input ng-model="data.libelle"
+                           type="text" placeholder="Intitulé"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="twelve cell twelve-mobile">
+            <h4 class="two cell marginBottomZero">
+                <i18n>viescolaire.utils.description</i18n>
+            </h4>
+            <textarea ng-model="data.description"
+                      placeholder="Saisir la description" name="saisie description"
+                      ng-maxlength="600" maxlength="600"></textarea>
+        </div>
+        <div class="twelve cell twelve-mobile selet-blocks">
+            <div class="five cell twelve-mobile">
+                <label class="select">
+                    <select ng-model="search.enseignant"
+                            ng-options="enseignant.displayName for enseignant in enseignants.all"
+                            ng-change="syncMatieresEnseignant(search.enseignant)"
+                            ng-click="dropEnseignant()">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
+                    </select>
+                </label>
+            </div>
+            <div class="five cell twelve-mobile marginLeft">
+                <label class="select"
+                       ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
+                    <select ng-model="search.matiere"
+                            ng-change="pushData(search.enseignant.id, search.matiere.id)"
+                            ng-options="matiere.name for matiere in matieres"
+                            ng-disabled="search.enseignant == null">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.subject')]]</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="twelve cell twelve-mobile">
+            <div class="five cell twelve-mobile">
+                <label class="select">
+                    <select ng-model="search.classe"
+                            ng-change="pushData(search.classe.externalId)"
+                            ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <div class="twelve cell twelve-mobile">
+            <button class="right-magnet"
+                    ng-click="createElementBilanPeriodique()"
+                    ng-disabled="data.libelle || search.enseignant < 2 || search.matiere == null || search.class == null">
+                <i18n>evaluations.add</i18n>
+            </button>
+        </div>
+
+    </div>
+
+    <div ng-show="selected.parcours">
+
+        <div class="header">
+            <h2>Ajouter un parcours</h2>
+        </div>
+
+        <div class="six cell twelve-mobile">
+            <div class="twelve cell twelve-mobile beFlex">
+                <label class="select">
+                    <select ng-model="theme"
+                            ng-change="data.theme = theme.id"
+                            ng-options="theme.libelle for theme in themes">
+                        <option class="header-opt" value="">[[translate('viescolaire.utils.themes')]]</option>
+                    </select>
+                </label>
+            </div>
+            <div class="twelve cell twelve-mobile">
+                <div class="five cell twelve-mobile">
+                    <label class="select">
+                        <select ng-model="search.classe"
+                                ng-change="pushData(search.classe.externalId)"
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                            <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="twelve cell twelve-mobile">
+            <button class="right-magnet"
+                    ng-click="createElementBilanPeriodique()"
+                    ng-disabled="themes == null || search.class == null">
+                <i18n>evaluations.add</i18n>
+            </button>
+        </div>
+
     </div>
 
 </div>

@@ -3035,7 +3035,7 @@ body.evaluations {
   .marginLeft2 {
     margin-left: 55px;
     padding: 5px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.26);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
     border-radius: 2px;
   }
 
@@ -3045,5 +3045,18 @@ body.evaluations {
 
   .marginTop {
     margin-top: 15px;
+  }
+
+  .disabled {
+    select {
+      background-color: lightgrey !important;
+    }
+  &:after {
+    background: grey;
+  }
+}
+
+  .blueCross {
+    color: $cyan;
   }
 }

@@ -14,6 +14,7 @@ export const bilanPeriodique = {
             this.selected = {EPI : true, AP : false, parcours : false};
             await evaluations.sync();
             await evaluations.structure.sync();
+
             this.data = {
                 idEtablissement : evaluations.structure.id,
                 classes: [],
