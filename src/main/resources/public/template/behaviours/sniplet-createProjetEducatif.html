@@ -54,8 +54,7 @@
                 <label class="select">
                     <select ng-model="search.enseignant"
                             ng-options="enseignant.displayName for enseignant in enseignants.all"
-                            ng-change="syncMatieresEnseignant(search.enseignant)"
-                            ng-click="dropEnseignant()">
+                            ng-change="syncMatieresEnseignant(search.enseignant)">
                         <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
                     </select>
                 </label>
@@ -86,7 +85,7 @@
         <div class="twelve cell twelve-mobile">
             <button class="right-magnet"
                     ng-click="createElementBilanPeriodique()"
-                    ng-disabled="themes == null || data.libelle || search.enseignant < 2 || search.matiere == null || search.class == null">
+                    ng-disabled="theme == null || data.libelle == null || search.enseignant < 2 || search.matiere == null || search.classe == null">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>

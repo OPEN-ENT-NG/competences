@@ -85,7 +85,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Post("/elementBilanPeriodique")
     @ApiDoc("Créer une élément bilan périodique")
-    @SecuredAction(value= "create.element.bilan.periodique",type= ActionType.WORKFLOW)
+    @SecuredAction("create.element.bilan.periodique")
     public void createElementBilanPeriodique(final HttpServerRequest request){
         String schema= "";
         switch (request.params().get("type")) {
@@ -118,7 +118,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateElementBilanPeriodique.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {

@@ -73,11 +73,13 @@
 </lightbox>
 
 <div class="card board-bilan twelve row">
-    <div class="expandable-list-header twelve cell"
+    <div class="expandable-list-header twelve"
         ng-if="elements !== null">
         <div class="cell">
             <label class="checkbox">
-                <input type="checkbox">
+                <input type="checkbox"
+                ng-change=""
+                ng-model="element.selected">
                 <span></span>
             </label>
         </div>
@@ -94,7 +96,7 @@
             <i18n>viescolaire.competences.classe.groupe</i18n>
         </div>
     </div>
-    <div class="twelve cell expandable-list-body">
+    <div class="twelve expandable-list-body">
         <div class="row expandable-list-item"
              ng-repeat="element in elements">
             <div class="row expandable-list-item-main"
@@ -128,6 +130,19 @@
             </div>
         </div>
     </div>
+
+    <section class="toggle-buttons"
+             ng-show="item.selected">
+        <div class="toggle">
+            <div class="row">
+                <button class="cell"
+                        ng-click="">
+                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle === null">
+                    <i18n>evaluation.link.group.edit</i18n></span>
+                    <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle !== null">
+                    <i18n>item.modify</i18n></span>
+                </button>
+            </div>
+        </div>
+    </section>
 </div>
-
-
