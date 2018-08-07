@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "libelle": {
+      "type" : "string"
+    },
+    "theme": {
+      "type": "number"
+    },
+    "description": {
+      "type" : "string"
+    },
+    "type": {
+      "type" : "number"
+    },
+    "idEtablissement": {
+      "type" : "string"
+    },
+    "classes": {
+      "type" : "array"
+    },
+    "ens_mat": {
+      "type" : "array"
+    }
+  },
+  "required": [
+    "type",
+    "idEtablissement",
+    "classes",
+    "ens_mat",
+    "description",
+    "theme",
+    "libelle"
+  ]
+}

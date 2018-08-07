@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "theme": {
+      "type": "number"
+    },
+    "type": {
+      "type" : "number"
+    },
+    "idEtablissement": {
+      "type" : "string"
+    },
+    "classes": {
+      "type" : "array"
+    }
+  },
+  "required": [
+    "type",
+    "idEtablissement",
+    "classes",
+    "theme"
+  ]
+}

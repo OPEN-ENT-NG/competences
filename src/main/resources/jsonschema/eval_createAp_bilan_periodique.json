@@ -6,9 +6,6 @@
     "libelle": {
       "type" : "string"
     },
-    "theme": {
-      "type": "number"
-    },
     "description": {
       "type" : "string"
     },
@@ -28,6 +25,9 @@
   "required": [
     "type",
     "idEtablissement",
-    "classes"
+    "classes",
+    "ens_mat",
+    "description",
+    "libelle"
   ]
 }

@@ -1,4 +1,4 @@
-import {notify, template} from 'entcore';
+import {notify, template, _} from 'entcore';
 import http from "axios";
 import {evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
@@ -20,10 +20,10 @@ export const bilanPeriodique = {
                 classes: [],
                 ens_mat: []
             };
-            // await this.getElements();
+            await this.getElements();
         },
         async openCreatePE () {
-            await this.getThematique (1);
+            await this.getThematique (this.getTypeElement());
             this.classes = evaluations.structure.classes;
             this.enseignants = evaluations.structure.enseignants;
             this.opened.lightboxCreatePE = true;
@@ -40,25 +40,20 @@ export const bilanPeriodique = {
                     }
                 }
             } catch (e) {
-                notify.error('Problème lors de la création');
-                console.error('Problème lors de la création');
+                notify.error('Problème lors de la création de la thématique');
+                console.error('Problème lors de la création de la thématique');
                 throw e;
             }
         },
         async createElementBilanPeriodique () {
             try {
                 if(this.data !== undefined && this.data !== null) {
-                    if(this.data.theme !== undefined && this.data.theme !== null
-                        && this.data.libelle !== undefined && this.data.libelle !== null
-                        && this.data.description !== undefined && this.data.description !== null
-                        && this.data.classes.length > 0 && this.data.ens_mat.length >= 2){
-                        this.data.type = 2;
-                        await http.post('/competences/elementBilanPeriodique', this.data);
-                    }
+                    this.data.type = this.getTypeElement();
+                    await http.post(`/competences/elementBilanPeriodique?type=${this.data.type}`, this.data);
                 }
             } catch (e) {
-                notify.error('Problème lors de la création');
-                console.error('Problème lors de la création');
+                notify.error('Problème lors de la création de l\'élément du bilan périodique');
+                console.error('Problème lors de la création de l\'élément du bilan périodique');
                 throw e;
             }
         },
@@ -88,10 +83,14 @@ export const bilanPeriodique = {
         },
         pushData : function(param1, param2?) {
             if(param2){
-                let ens_mat = {ens: param1, mat: param2}
-                this.data.ens_mat.push(ens_mat)
+                if(!_.findWhere(this.data.ens_mat, {ens: param1, mat: param2})){
+                    this.data.ens_mat.push({ens: param1, mat: param2});
+                }
+
             } else {
-                this.data.classes.push(param1)
+                if(!_.contains(this.data.classes, param1)){
+                    this.data.classes.push(param1)
+                }
             }
         },
         async getElements () {
@@ -103,5 +102,39 @@ export const bilanPeriodique = {
                 notify.error('evaluations.elements.get.error');
             }
         },
+
+        getTypeElement : function () {
+            let type = null;
+            if(this.selected.EPI) type = 1;
+            if(this.selected.AP) type = 2;
+            if(this.selected.parcours) type = 3;
+            return type;
+        },
+
+        async deleteElements (idElements) {
+            try {
+                let url = "/competences/elementsBilanPeriodique?idEtablissement=" + evaluations.structure.id;
+                for(var idElement in idElements){
+                    url += "&idElement=" + idElement;
+                }
+                await http.delete(url);
+                utils.safeApply(this);
+            } catch (e) {
+                notify.error('evaluations.elements.delete.error');
+            }
+        },
+
+        async getAppreciations (idElements) {
+            try {
+                let url = "/competences/appreciations?idEtablissement=" + evaluations.structure.id;
+                for(var idElement in idElements){
+                    url += "&idElement=" + idElement;
+                }
+                await http.get(url);
+                utils.safeApply(this);
+            } catch (e) {
+                notify.error('evaluations.elements.delete.error');
+            }
+        }
     }
 }

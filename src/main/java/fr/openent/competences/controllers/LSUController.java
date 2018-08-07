@@ -112,8 +112,8 @@ public class LSUController extends ControllerHelper {
     //récupère chaque responsable d'établissement et les ajouter à la balise responsables-etab puis à la balise donnees
     private void getBaliseResponsables(final Donnees donnees, final List<String> idsResponsable, final Handler<String> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "user.getResponsablesEtabl")
-                .put("idsResponsable", new fr.wseduc.webutils.collections.JsonArray(idsResponsable));
+                .put("action", "user.getUsers")
+                .put("idUsers", new fr.wseduc.webutils.collections.JsonArray(idsResponsable));
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {

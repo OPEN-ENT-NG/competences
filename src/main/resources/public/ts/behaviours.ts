@@ -15,7 +15,7 @@ Behaviours.register('competences', {
             createDispenseDomaineEleve: 'fr.openent.competences.controllers.DomaineController|createDispenseDomaineEleve',
             canUpdateBFCSynthese: 'fr.openent.competences.controllers.BFCController|updateSynthese',
             access:"fr.openent.competences.controllers.CompetencesController|view",
-            bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createThematique"
+            bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createElementBilanPeriodique"
         },
         resource: {}
     },

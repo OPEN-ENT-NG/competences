@@ -5,6 +5,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 public interface ElementBilanPeriodiqueService {
 
     /**
@@ -57,11 +59,9 @@ public interface ElementBilanPeriodiqueService {
     /**
      * Retourne les appéciations de classes ou d'élèves les id sont passés en paramètre.
      * @param idElements id des élèments du bilan périodique
-     * @param type eleve ou classe
      * @param handler Handler de retour
      */
-    public void getAppreciationsBilanPeriodique (String[] idElements, String type,
-                                                 Handler<Either<String, JsonArray>> handler);
+    public void getAppreciationsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Enregistrement d'une appreciation pour un élève.
@@ -96,7 +96,7 @@ public interface ElementBilanPeriodiqueService {
      * @param idEltBilanPeriodique id de l'élément à supprimer
      * @param handler Handler de retour
      */
-    public void deleteElementBilanPeriodique (Long idEltBilanPeriodique, Handler<Either<String, JsonObject>> handler);
+    public void deleteElementBilanPeriodique (List<String> idEltBilanPeriodique, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Mise à jour d'une appreciation pour un élève ou une classe.
