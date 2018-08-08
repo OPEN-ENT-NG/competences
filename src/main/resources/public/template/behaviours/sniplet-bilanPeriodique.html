@@ -72,65 +72,53 @@
     <container template="lightboxCreatePE"></container>
 </lightbox>
 
-<div class="card board-bilan twelve row">
-    <div class="expandable-list-header twelve"
-        ng-if="elements !== null">
-        <div class="cell">
+<table class="twelve responsive-table">
+    <thead>
+    <tr ng-if="elements !== null">
+        <th>
             <label class="checkbox">
                 <input type="checkbox"
-                ng-change=""
-                ng-model="element.selected">
+                       ng-model="element.selected">
                 <span></span>
             </label>
-        </div>
-        <div class="cell" ng-show="!selected.AP">
+        </th>
+        <th ng-show="!selected.AP">
             <i18n>viescolaire.competences.theme</i18n>
-        </div>
-        <div class="cell" ng-show="!selected.parcours">
+        </th>
+        <th ng-show="!selected.parcours">
             <i18n>viescolaire.competences.libelle</i18n>
-        </div>
-        <div class="cell" ng-show="!selected.parcours">
+        </th>
+        <th ng-show="!selected.parcours">
             <i18n>viescolaire.competences.intervenant</i18n>
-        </div>
-        <div class="cell">
+        </th>
+        <th>
             <i18n>viescolaire.competences.classe.groupe</i18n>
-        </div>
-    </div>
-    <div class="twelve expandable-list-body">
-        <div class="row expandable-list-item"
-             ng-repeat="element in elements">
-            <div class="row expandable-list-item-main"
-            ng-click="selectUnselectElement(element)">
-                <div class="cell">
-                    <label class="checkbox">
-                        <input type="checkbox"
-                               ng-change="checkSelectedElements(elements)"
-                               ng-model="element.selected">
-                        <span></span>
-                    </label>
-                </div>
-                <div class="cell">
-                    <div class="cell" ng-show="!selected.AP">
-                        <span>[[ element.theme.libelle ]]</span>
-                    </div>
-                </div>
+        </th>
+    </tr>
+    </thead>
 
-                <div class="cell" ng-show="!selected.parcours">
-                    <div class="cell" ng-show="!selected.AP">
-                        <span>[[ element.libelle ]]</span>
-                    </div>
-                </div>
-                <div class="cell" ng-show="!selected.parcours">
-                    <span ng-repeat="intervenantMatiere in element.intervenantsMatieres">
-                        [[ intervenantMatiere.intervenant.name ]] - </span>
-                </div>
-                <div class="cell">
-                    <span ng-repeat="groupe in element.groupes">
-                        [[ groupe.name ]] - </span>
-                </div>
-            </div>
-        </div>
-    </div>
+    <tbody>
+
+    <tr ng-repeat="element in elements" ng-click="selectUnselectElement(element)">
+        <td><label class="checkbox">
+            <input type="checkbox"
+                   ng-model="element.selected"
+                   ng-change="checkSelectedElements(elements)">
+            <span></span>
+        </label>
+        </td>
+        <td ng-show="!selected.AP"><span>[[ element.theme.libelle ]]</span></td>
+        <td ng-show="!selected.parcours"><span>[[ element.libelle ]]</span></td>
+        <td ng-show="!selected.parcours"><span ng-repeat="intervenantMatiere in element.intervenantsMatieres">
+            [[ intervenantMatiere.intervenant.name ]] - </span>
+        </td>
+        <td>
+            <span ng-repeat="groupe in element.groupes"> [[ groupe.name ]] - </span>
+        </td>
+    </tr>
+
+    </tbody>
+</table>
 
     <section class="toggle-buttons"
              ng-show="checkSelectedElements(elements).length > 0">
