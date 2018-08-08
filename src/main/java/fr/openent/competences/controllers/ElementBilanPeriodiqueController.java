@@ -3,10 +3,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.CreateElementBilanPeriodique;
 import fr.openent.competences.service.impl.*;
-import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Delete;
-import fr.wseduc.rs.Get;
-import fr.wseduc.rs.Post;
+import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
@@ -43,7 +40,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Post("/thematique")
     @ApiDoc("Créer une thématique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateElementBilanPeriodique.class)
     public void createThematique(final HttpServerRequest request){
         RequestUtils.bodyToJson(request, pathPrefix +
@@ -62,7 +59,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/thematique")
     @ApiDoc("Retourne les thématiques correspondantes au type passé en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateElementBilanPeriodique.class)
     public void getThematiques(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
@@ -87,8 +84,51 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     @ApiDoc("Créer une élément bilan périodique")
     @SecuredAction("create.element.bilan.periodique")
     public void createElementBilanPeriodique(final HttpServerRequest request){
+        String schema = getElementSchema(request.params().get("type"));
+
+        if(schema != null){
+            RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
+                @Override
+                public void handle(JsonObject resource) {
+                    defaultElementBilanPeriodiqueService.insertElementBilanPeriodique(resource,
+                            defaultResponseHandler(request));
+                }
+            });
+        } else {
+            JsonObject error = (new JsonObject()).put("error", "element type not found");
+            Renders.renderJson(request, error, 400);
+        }
+    }
+
+    /**
+     * Mettre à jour l'élèment du bilan périodique avec les données passées en paramètre
+     * @param request
+     */
+    @Put("/elementBilanPeriodique")
+    @ApiDoc("Mettre à jour l'élèment bilan périodique")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateElementBilanPeriodique.class)
+    public void updateElementBilanPeriodique(final HttpServerRequest request){
+
+        String schema = getElementSchema(request.params().get("type"));
+
+        if(schema != null){
+            RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
+                @Override
+                public void handle(JsonObject resource) {
+                    defaultElementBilanPeriodiqueService.updateElementBilanPeriodique(Long.parseLong(request.params().get("idElement")), resource,
+                            defaultResponseHandler(request));
+                }
+            });
+        } else {
+            JsonObject error = (new JsonObject()).put("error", "element type not found");
+            Renders.renderJson(request, error, 400);
+        }
+    }
+
+    private String getElementSchema(String type){
         String schema= "";
-        switch (request.params().get("type")) {
+        switch (type) {
             case "1" :
                 schema = Competences.SCHEMA_EPI_BILAN_PERIODIQUE;
                 break;
@@ -99,17 +139,9 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                 schema = Competences.SCHEMA_PARCOURS_BILAN_PERIODIQUE;
                 break;
             default :
-                JsonObject error = (new JsonObject()).put("error", "element type not found");
-                Renders.renderJson(request, error, 400);
+                schema = null;
         }
-
-        RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject resource) {
-                defaultElementBilanPeriodiqueService.insertElementBilanPeriodique(resource,
-                        defaultResponseHandler(request));
-            }
-        });
+        return schema;
     }
 
     /**
@@ -315,7 +347,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Delete("/elementsBilanPeriodique")
     @ApiDoc("Supprimer des éléments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateElementBilanPeriodique.class)
     public void deleteElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
@@ -338,7 +370,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/appreciations")
     @ApiDoc("Retourne les appreciations liées au élèments du bilan périodiques passés en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateElementBilanPeriodique.class)
     public void getAppreciations(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {

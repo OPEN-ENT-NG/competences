@@ -147,6 +147,10 @@
   "evaluation.bfc.controle.continu.eleves.err":"Erreur lors de la récupération du contrôle continu des élèves  de la classe",
   "evaluation.bfc.controle.continu.eleve.err": "Erreur lors de la récupération du contrôle continu de l'élève",
 
+  "evaluations.bilan.periodique": "Bilan périodique",
+  "evaluations.enseignements.pratiques.interdisciplinaires" : "EPI",
+  "evaluations.accompagnement.personnalise" : "AP",
+  "evaluations.parcours.educatifs" : "Parcours",
   "evaluation.bilan.fin.cycle.successUpdateEnseignement":"Enseignement sauvegardé.",
   "evaluations.suivi.eleve.title":"Suivi élève",
   "evaluations.exportLSU":"Export LSU",
@@ -162,6 +166,7 @@
   "evaluation.list.empty": "Aucune évaluation n'a été créée.",
   "evaluation.student.list.empty": "Aucune évaluation ne correspond à vos critères.",
   "evaluations.suivi.classe.title":"Suivi classe",
+  "evaluations.saisir.projets.title":"Saisir projets",
   "evaluations.mes.evaluations" : "Mes évaluations",
   "evaluations.evaluations" : "Toutes les évaluations",
   "evaluations.last.evaluations": "Mes Dernières évaluations",

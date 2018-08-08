@@ -15,6 +15,7 @@ export const bilanPeriodique = {
             await evaluations.sync();
             await evaluations.structure.sync();
 
+            this.selectedElements = [];
             this.data = {
                 idEtablissement : evaluations.structure.id,
                 classes: [],
@@ -57,13 +58,11 @@ export const bilanPeriodique = {
                 throw e;
             }
         },
-        async updateThematique (): Promise<void> {
-            await http.put(this.api.update,this.toJSON());
-        },
+
         async getThematique (type) {
             try {
-                let {data} = await http.get(`/competences/thematique?type=${type}`);
-                this.themes = data;
+                let data = await http.get(`/competences/thematique?type=${type}`);
+                this.themes = data.data;
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.theme.get.error');
@@ -74,8 +73,8 @@ export const bilanPeriodique = {
         },
         async syncMatieresEnseignant  (enseignant) {
             try {
-                let {data} = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
-                this.matieres = data;
+                let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
+                this.matieres = data.data;
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.matiere.get.error');
@@ -95,8 +94,8 @@ export const bilanPeriodique = {
         },
         async getElements () {
             try {
-                let {data} = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
-                this.elements = data;
+                let data = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
+                this.elements = data.data;
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.elements.get.error');
@@ -111,11 +110,17 @@ export const bilanPeriodique = {
             return type;
         },
 
-        async deleteElements (idElements) {
+        async tryDeleteElements (elements) {
+            await this.getAppreciations (elements);
+            this.appreciations ? this.opened.lightboxConfirmDeleteElements = true
+                : await this.deleteElements (elements);
+        },
+
+        async deleteElements (elements) {
             try {
                 let url = "/competences/elementsBilanPeriodique?idEtablissement=" + evaluations.structure.id;
-                for(var idElement in idElements){
-                    url += "&idElement=" + idElement;
+                for(var i = 0; i < elements.length; i++){
+                    url += "&idElement=" + elements[i].id;
                 }
                 await http.delete(url);
                 utils.safeApply(this);
@@ -130,11 +135,31 @@ export const bilanPeriodique = {
                 for(var idElement in idElements){
                     url += "&idElement=" + idElement;
                 }
-                await http.get(url);
+                let data = await http.get(url);
+                this.appreciations = data.data;
                 utils.safeApply(this);
             } catch (e) {
-                notify.error('evaluations.elements.delete.error');
+                notify.error('evaluations.appreciations.get.error');
             }
+        },
+
+        async updateElement (idElement) {
+            try {
+                this.data.type = this.getTypeElement();
+                await http.put(`/competences/elementBilanPeriodique?idElement=${idElement}&type=${this.data.type}`, this.data);
+                utils.safeApply(this);
+            } catch (e) {
+                notify.error('evaluations.elements.update.error');
+            }
+        },
+
+        selectUnselectElement: function (element) {
+            if(!_.contains(this.selectedElements, element)){
+                this.selectedElements.push(element);
+            } else {
+                this.selectedElements = _.without(this.selectedElements, element);
+            }
+
         }
     }
 }

@@ -100,7 +100,7 @@
         <div class="row expandable-list-item"
              ng-repeat="element in elements">
             <div class="row expandable-list-item-main"
-            ng-click="">
+            ng-click="selectUnselectElement(element)">
                 <div class="cell">
                     <label class="checkbox">
                         <input type="checkbox"
@@ -132,17 +132,33 @@
     </div>
 
     <section class="toggle-buttons"
-             ng-show="item.selected">
+             ng-show="selectedElements.length > 0">
         <div class="toggle">
             <div class="row">
                 <button class="cell"
-                        ng-click="">
-                <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle === null">
-                    <i18n>evaluation.link.group.edit</i18n></span>
-                    <span ng-if="checkSelectedClasses(filteredItems)[0].id_cycle !== null">
-                    <i18n>item.modify</i18n></span>
+                        ng-if="selectedElements.length === 1"
+                        ng-click="updateElement(selectedElements)">
+                    <span><i18n>item.modify</i18n></span>
+                </button>
+                <button class="cell"
+                        ng-click="tryDeleteElements(selectedElements)">
+                    <span><i18n>item.delete</i18n></span>
                 </button>
             </div>
         </div>
     </section>
+
+    <lightbox show="opened.lightboxConfirmDeleteElements" on-close="!opened.lightboxConfirmDeleteElements">
+        <h3><i18n>evaluations.bilan.periodique</i18n></h3>
+        <p><i18n>evaluation.link.message</i18n></p>
+        <p><i18n>evaluations.devoir.confirmation.question</i18n></p>
+        <button class="marginFive magnet-right"
+                ng-click="deleteElements(selectedElements);">
+            <i18n>evaluations.perso.ok</i18n>
+        </button>
+        <button data-ng-click="opened.lightboxConfirmDeleteElements=false;"
+                class="right-magnet cancel">
+            <span><i18n>evaluations.perso.cancel</i18n></span>
+        </button>
+    </lightbox>
 </div>

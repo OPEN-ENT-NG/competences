@@ -86,10 +86,11 @@ public interface ElementBilanPeriodiqueService {
 
     /**
      * Mise à jour d'un élément EPI, AP ou parcours.
-     * @param element élément à mettre à jour
+     * @param idElement id de l'élément à mettre à jour
+     * @param element données à mettre à jour
      * @param handler Handler de retour
      */
-    public void updateElementBilanPeriodique (JsonObject element, Handler<Either<String, JsonObject>> handler);
+    public void updateElementBilanPeriodique (Long idElement, JsonObject element, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Suppression d'un élément EPI, AP ou parcours.

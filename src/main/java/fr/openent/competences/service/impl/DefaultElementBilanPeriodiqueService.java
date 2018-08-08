@@ -342,7 +342,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     }
 
     @Override
-    public void updateElementBilanPeriodique (JsonObject element, Handler<Either<String, JsonObject>> handler){
+    public void updateElementBilanPeriodique (Long idElement, JsonObject element, Handler<Either<String, JsonObject>> handler){
 
         //UPDATE notes.type_elt_bilan_periodique SET code='Parcours' WHERE nom='Parcours';
     }
