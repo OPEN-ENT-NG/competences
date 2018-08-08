@@ -74,13 +74,19 @@
 
 <table class="twelve responsive-table">
     <thead>
-    <tr ng-if="elements !== null">
+    <tr class="trSniplet" ng-if="elements !== null">
         <th>
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="element.selected">
                 <span></span>
             </label>
+            <!--<label class="checkbox" ng-class="{multiselect: search.elementAll}">-->
+            <!--<input type="checkbox"-->
+            <!--ng-model="search.elementAll"-->
+            <!--ng-change="selectAllElements(elements)">-->
+            <!--<span></span>-->
+            <!--</label>-->
         </th>
         <th ng-show="!selected.AP">
             <i18n>viescolaire.competences.theme</i18n>

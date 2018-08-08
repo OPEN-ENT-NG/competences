@@ -2,6 +2,7 @@ import {notify, template, _} from 'entcore';
 import http from "axios";
 import {evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
+import {linkGroupCycle} from "./linkGroupCycle";
 
 console.log("here");
 
@@ -177,5 +178,12 @@ export const bilanPeriodique = {
 
             return this.selectedElements;
         },
+        // selectAllElements: function (elements)  {
+        //     this.search.elementAll = !this.search.elementAll;
+        //     _.forEach(elements, (element) => {
+        //         element.selected = this.search.elementAll;
+        //     });
+        //     utils.safeApply(this.search.elementAll);
+        // },
     }
 }

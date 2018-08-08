@@ -85,7 +85,7 @@
         <div class="twelve cell twelve-mobile">
             <button class="right-magnet"
                     ng-click="createElementBilanPeriodique()"
-                    ng-disabled="theme == null || data.libelle == null || search.enseignant < 2 || search.matiere == null || search.classe == null">
+                    ng-disabled="theme == null || data.libelle == null || data.ens_mat.length < 2 || search.matiere == null || search.classe == null">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
@@ -121,7 +121,7 @@
                     <select ng-model="search.enseignant"
                             ng-options="enseignant.displayName for enseignant in enseignants.all"
                             ng-change="syncMatieresEnseignant(search.enseignant)"
-                            ng-click="dropEnseignant()">
+                            ng-click="">
                         <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
                     </select>
                 </label>
@@ -152,7 +152,7 @@
         <div class="twelve cell twelve-mobile">
             <button class="right-magnet"
                     ng-click="createElementBilanPeriodique()"
-                    ng-disabled="data.libelle || search.enseignant < 2 || search.matiere == null || search.class == null">
+                    ng-disabled="data.libelle == null || data.ens_mat.length < 2 || search.matiere == null || search.classe == null">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
@@ -190,7 +190,7 @@
         <div class="twelve cell twelve-mobile">
             <button class="right-magnet"
                     ng-click="createElementBilanPeriodique()"
-                    ng-disabled="themes == null || search.class == null">
+                    ng-disabled="theme == null || search.classe == null">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
