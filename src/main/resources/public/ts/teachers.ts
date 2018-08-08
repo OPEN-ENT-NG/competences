@@ -83,6 +83,7 @@ routes.define(function($routeProvider){
         .when('/competences/classe', {action : 'displaySuiviCompetencesClasse'})
         .when('/remplacements/list',{action:'listRemplacements'})
         .when('/remplacement/create',{action:'createRemplacements'})
+        .when('/projets',{action:'displayBilanPeriodique'})
         .when('/export',{action:'export'})
         .when('/disabled', {action : 'disabled'})
         .when('/',{action:'accueil'})

@@ -1,0 +1,140 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="row">
+    <div class="twelve cell">
+        <aside class="two cell twelve-mobile left">
+            <div class="criteres card criterion" ng-class="{opened : opened.criteres === true}">
+                <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
+                <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
+                    <h2>
+                        <i18n>viescolaire.utils.criterion</i18n>
+                    </h2>
+                </div>
+                <section ng-if="evaluations.structures.all.length > 1">
+                    <label class="select">
+                        <select ng-model="evaluations.structure"
+                                ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
+                                ng-change="changeEtablissement()"></select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select">
+                        <select ng-model="search.periode"
+                                ng-change="getAppreciations()"
+                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | orderBy:'-type'">
+                            <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
+                            </option>
+                        </select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select">
+                        <select ng-model="search.classe"
+                                ng-change="getElementsBilanBilanPeriodique(); syncPeriode(search.classe.id);"
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                            <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        </select>
+                    </label>
+                </section>
+            </div>
+            <div ng-if="!template.isEmpty('leftSide-userInfo') && showInfosEleve"
+                 class="marginFive fiche student-info card left"
+                 ng-class="{opened : openedStudentInfo === true}">
+                <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
+            </div>
+        </aside>
+
+
+            <div class="eight cell twelve-mobile">
+                <article>
+                <div class="twelve tabs vertical-spacing-twice heading-tabs">
+                    <header ng-class="{selected : selected.EPI}"
+                            class="horizontal-spacing-twice ng-scope">
+                        <div class="horizontal-spacing" ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false">
+                            <span><i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span></i18n></span>
+                        </div>
+                    </header>
+                    <header ng-class="{selected : selected.AP}"
+                            class="horizontal-spacing-twice ng-scope">
+                        <div class="horizontal-spacing" ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false">
+                            <span><i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n></span>
+                        </div>
+                    </header>
+                    <header ng-class="{selected : selected.parcours}"
+                            class="horizontal-spacing-twice ng-scope">
+                        <div class="horizontal-spacing" ng-click="selected.parcours = true;  selected.EPI = false; selected.AP = false">
+                            <span><i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n></span>
+                        </div>
+                    </header>
+                </div>
+                <div class="row">
+                    <div class="responsive-table">
+                        <table ng-repeat="cy in structure.cycles | filter:currentCycle"
+                               class="fixed-head">
+                            <thead>
+                            <tr></tr>
+                            <tr>
+                                <th ng-repeat="libelle in cy.niveauCompetencesArray "
+                                    class="text-white">[[libelle.libelle]]
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td ng-repeat="couleur in cy.niveauCompetencesArray "
+                                    style="text-indent: 0px;text-align: center;">
+                                    <input type="color" name="favcolor"
+                                           ng-change="saveNiveau(couleur)"
+                                           ng-model="couleur.couleur">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td ng-repeat="lettre in cy.niveauCompetencesArray ">
+                                    <ng-form name="skillsTextForm">
+                                        <input style="text-indent: 0px;text-align: center;"
+                                               type="text"
+                                               name="letter"
+                                               ng-maxlength="2"
+                                               ng-blur="saveNiveau(lettre)"
+                                               ng-model="lettre.lettre">
+                                        <div ng-if="skillsTextForm.letter.$error.maxlength" class="warning">
+                                            <i18n>evaluation.skill.text.invalid</i18n>
+                                        </div>
+                                    </ng-form>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td ng-repeat="result in cy.niveauCompetencesArray "
+                                    style="text-indent: 0px;text-align: center;">
+
+                                    <c-skills-bubble color="result.couleur"
+                                                     text="result.lettre">
+                                    </c-skills-bubble>
+                                </td>
+                            </tr>
+
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+        </article>
+            </div>
+    </div>
+</div>

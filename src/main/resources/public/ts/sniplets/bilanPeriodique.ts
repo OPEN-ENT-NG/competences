@@ -112,8 +112,14 @@ export const bilanPeriodique = {
 
         async tryDeleteElements (elements) {
             await this.getAppreciations (elements);
-            this.appreciations ? this.opened.lightboxConfirmDeleteElements = true
-                : await this.deleteElements (elements);
+            if(this.appreciations !== undefined){
+                (this.appreciations.length > 0) ? this.opened.lightboxConfirmDeleteElements = true
+                    : await this.deleteElements (elements);
+            } else {
+                await this.deleteElements (elements);
+            }
+
+            utils.safeApply(this);
         },
 
         async deleteElements (elements) {
@@ -129,11 +135,11 @@ export const bilanPeriodique = {
             }
         },
 
-        async getAppreciations (idElements) {
+        async getAppreciations (elements) {
             try {
                 let url = "/competences/appreciations?idEtablissement=" + evaluations.structure.id;
-                for(var idElement in idElements){
-                    url += "&idElement=" + idElement;
+                for(var i = 0; i < elements.length; i++){
+                    url += "&idElement=" + elements[i].id;
                 }
                 let data = await http.get(url);
                 this.appreciations = data.data;
@@ -143,10 +149,10 @@ export const bilanPeriodique = {
             }
         },
 
-        async updateElement (idElement) {
+        async updateElement (element) {
             try {
                 this.data.type = this.getTypeElement();
-                await http.put(`/competences/elementBilanPeriodique?idElement=${idElement}&type=${this.data.type}`, this.data);
+                await http.put(`/competences/elementBilanPeriodique?idElement=${element.id}&type=${this.data.type}`, this.data);
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.elements.update.error');

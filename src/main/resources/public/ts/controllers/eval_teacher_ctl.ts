@@ -336,6 +336,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     template.open('main', 'enseignants/releve_notes/display_releve');
                 }
             },
+            displayBilanPeriodique: function () {
+                $scope.opened.lightbox = false;
+                if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
+                    $scope.cleanRoot();
+                    // $scope.initPeriodesList();
+                    // Affichage des criteres par défaut quand on arrive sur le releve
+                    $scope.openLeftMenu("opened.criteres", false);
+                    if (!template.isEmpty('leftSide-userInfo')) template.close('leftSide-userInfo');
+
+                    // $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+
+                    utils.safeApply($scope);
+                    template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
+                }
+            },
             displaySuiviCompetencesEleve: function (params) {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
