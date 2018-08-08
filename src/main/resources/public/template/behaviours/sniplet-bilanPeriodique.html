@@ -104,6 +104,7 @@
                 <div class="cell">
                     <label class="checkbox">
                         <input type="checkbox"
+                               ng-change="checkSelectedElements(elements)"
                                ng-model="element.selected">
                         <span></span>
                     </label>
@@ -132,12 +133,12 @@
     </div>
 
     <section class="toggle-buttons"
-             ng-show="selectedElements.length > 0">
+             ng-show="checkSelectedElements(elements).length > 0">
         <div class="toggle">
             <div class="row">
                 <button class="cell"
-                        ng-if="selectedElements.length === 1"
-                        ng-click="updateElement(selectedElements)">
+                        ng-if="checkSelectedElements(elements).length === 1"
+                        ng-click="openCreatePE()">
                     <span><i18n>item.modify</i18n></span>
                 </button>
                 <button class="cell"
@@ -156,7 +157,7 @@
                 ng-click="deleteElements(selectedElements);">
             <i18n>evaluations.perso.ok</i18n>
         </button>
-        <button data-ng-click="opened.lightboxConfirmDeleteElements=false;"
+        <button ng-click="opened.lightboxConfirmDeleteElements=false;"
                 class="right-magnet cancel">
             <span><i18n>evaluations.perso.cancel</i18n></span>
         </button>

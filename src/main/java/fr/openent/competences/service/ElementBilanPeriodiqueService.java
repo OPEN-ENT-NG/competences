@@ -57,11 +57,18 @@ public interface ElementBilanPeriodiqueService {
                                                              Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Retourne les appéciations de classes ou d'élèves les id sont passés en paramètre.
+     * Retourne les appéciations de classes les id sont passés en paramètre.
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getAppreciationsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler);
+    public void getApprecBilanPerClasse (List<String> idElements, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Retourne les appéciations d'élèves les id sont passés en paramètre.
+     * @param idElements id des élèments du bilan périodique
+     * @param handler Handler de retour
+     */
+    public void getApprecBilanPerEleve (List<String> idElements, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Enregistrement d'une appreciation pour un élève.
@@ -94,10 +101,24 @@ public interface ElementBilanPeriodiqueService {
 
     /**
      * Suppression d'un élément EPI, AP ou parcours.
-     * @param idEltBilanPeriodique id de l'élément à supprimer
+     * @param idEltBilanPeriodique id des éléments à supprimer
      * @param handler Handler de retour
      */
     public void deleteElementBilanPeriodique (List<String> idEltBilanPeriodique, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Suppression des appréciations de classe d'un élément EPI, AP ou parcours.
+     * @param idEltBilanPeriodique id des éléments
+     * @param handler Handler de retour
+     */
+    public void deleteApprecClasseElement (List<String> idEltBilanPeriodique, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Suppression des appréciations d'élève d'un élément EPI, AP ou parcours.
+     * @param idEltBilanPeriodique id des éléments
+     * @param handler Handler de retour
+     */
+    public void deleteApprecEleveElement (List<String> idEltBilanPeriodique, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Mise à jour d'une appreciation pour un élève ou une classe.

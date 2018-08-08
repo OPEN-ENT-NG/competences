@@ -248,16 +248,11 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     }
 
     @Override
-    public void getAppreciationsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler){
+    public void getApprecBilanPerClasse (List<String> idElements, Handler<Either<String, JsonArray>> handler){
 
-        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        String queryGetApprecEleve = "SELECT * " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve " +
-                "WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
-
-        String queryGetApprecClasse = "SELECT * " +
+        String query = "SELECT * " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe " +
                 "WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
 
@@ -265,15 +260,23 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(idElements.get(i));
         }
 
-        statements.add(new JsonObject()
-                .put("statement", queryGetApprecEleve.toString())
-                .put("values", params)
-                .put("action", "prepared"));
-        statements.add(new JsonObject()
-                .put("statement", queryGetApprecClasse.toString())
-                .put("values", params)
-                .put("action", "prepared"));
-        Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getApprecBilanPerEleve (List<String> idElements, Handler<Either<String, JsonArray>> handler){
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        String query = "SELECT * " +
+                "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve " +
+                "WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
+
+        for (int i = 0; i < idElements.size(); i++) {
+            params.add(idElements.get(i));
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -356,16 +359,12 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(id);
         }
 
-        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique WHERE id IN " + Sql.listPrepared(idsEltBilanPeriodique);
-
         String queryDelAppEleve = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
 
         String queryDelAppClasse = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
 
-        statements.add(new JsonObject()
-                .put("statement", query.toString())
-                .put("values", params)
-                .put("action", "prepared"));
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique WHERE id IN " + Sql.listPrepared(idsEltBilanPeriodique);
+
         statements.add(new JsonObject()
                 .put("statement", queryDelAppEleve.toString())
                 .put("values", params)
@@ -374,7 +373,37 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .put("statement", queryDelAppClasse.toString())
                 .put("values", params)
                 .put("action", "prepared"));
+        statements.add(new JsonObject()
+                .put("statement", query.toString())
+                .put("values", params)
+                .put("action", "prepared"));
         Sql.getInstance().transaction(statements, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void deleteApprecClasseElement (List<String> idsEltBilanPeriodique, Handler<Either<String, JsonArray>> handler){
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        for (String id : idsEltBilanPeriodique) {
+            params.add(id);
+        }
+
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void deleteApprecEleveElement (List<String> idsEltBilanPeriodique, Handler<Either<String, JsonArray>> handler){
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        for (String id : idsEltBilanPeriodique) {
+            params.add(id);
+        }
+
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
     @Override

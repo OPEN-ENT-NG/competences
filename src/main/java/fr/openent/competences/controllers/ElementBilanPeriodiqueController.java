@@ -95,8 +95,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                 }
             });
         } else {
-            JsonObject error = (new JsonObject()).put("error", "element type not found");
-            Renders.renderJson(request, error, 400);
+            Renders.renderJson(request, new JsonObject()
+                    .put("error", "element type not found"), 400);
         }
     }
 
@@ -377,9 +377,34 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             @Override
             public void handle(UserInfos user) {
                 if(user != null){
-                    defaultElementBilanPeriodiqueService.getAppreciationsBilanPeriodique(
-                            request.params().getAll("idElement"),
-                            arrayResponseHandler(request));
+                    defaultElementBilanPeriodiqueService.getApprecBilanPerClasse(
+                        request.params().getAll("idElement"),
+                        new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if(event.isRight()){
+                                    JsonArray apprecClasses = event.right().getValue();
+                                    defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
+                                        request.params().getAll("idElement"),
+                                        new Handler<Either<String, JsonArray>>() {
+                                            @Override
+                                            public void handle(Either<String, JsonArray> event) {
+                                                if(event.isRight()){
+                                                    JsonArray apprecEleves = event.right().getValue();
+                                                    Renders.renderJson(request, apprecClasses.addAll(apprecEleves));
+                                                } else {
+                                                    Renders.renderJson(request, new JsonObject()
+                                                            .put("error", "error while retreiving students appreciations"), 400);
+                                                }
+                                            }
+                                        });
+                                } else {
+                                    Renders.renderJson(request, new JsonObject()
+                                            .put("error", "error while retreiving classes appreciations"), 400);
+                                }
+
+                            }
+                        });
                 }else{
                     unauthorized(request);
                 }

@@ -166,6 +166,16 @@ export const bilanPeriodique = {
                 this.selectedElements = _.without(this.selectedElements, element);
             }
 
-        }
+        },
+        checkSelectedElements: function (elements) {
+            this.selectedElements = _.filter(elements, function (element){
+                return element.selected === true;
+            });
+            if (this.selectedElements.length === 0) {
+                this.opened.lightboxConfirmDeleteElements = false;
+            }
+
+            return this.selectedElements;
+        },
     }
 }
