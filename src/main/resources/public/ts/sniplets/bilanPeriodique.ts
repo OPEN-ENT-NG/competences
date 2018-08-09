@@ -2,7 +2,6 @@ import {notify, template, _} from 'entcore';
 import http from "axios";
 import {evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
-import {linkGroupCycle} from "./linkGroupCycle";
 
 console.log("here");
 
@@ -30,7 +29,7 @@ export const bilanPeriodique = {
             this.enseignants = evaluations.structure.enseignants;
             this.opened.lightboxCreatePE = true;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
-            utils.safeApply(this);
+            this.$apply()
         },
         async createThematique (thematique) {
             try {
@@ -52,12 +51,15 @@ export const bilanPeriodique = {
                 if(this.data !== undefined && this.data !== null) {
                     this.data.type = this.getTypeElement();
                     await http.post(`/competences/elementBilanPeriodique?type=${this.data.type}`, this.data);
+                    this.getElements();
                 }
+                this.opened.lightboxCreatePE = false;
             } catch (e) {
                 notify.error('Problème lors de la création de l\'élément du bilan périodique');
                 console.error('Problème lors de la création de l\'élément du bilan périodique');
                 throw e;
             }
+            utils.safeApply(this);
         },
 
         async getThematique (type) {
@@ -95,9 +97,9 @@ export const bilanPeriodique = {
         },
         async getElements () {
             try {
-                let data = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
-                this.elements = data.data;
-                utils.safeApply(this);
+                let { data } = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
+                this.elements = data;
+                this.$apply();
             } catch (e) {
                 notify.error('evaluations.elements.get.error');
             }
@@ -119,7 +121,6 @@ export const bilanPeriodique = {
             } else {
                 await this.deleteElements (elements);
             }
-
             utils.safeApply(this);
         },
 
@@ -130,10 +131,13 @@ export const bilanPeriodique = {
                     url += "&idElement=" + elements[i].id;
                 }
                 await http.delete(url);
+                _.forEach(elements, (element) => {
+                    element.selected = false;
+                });
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.elements.delete.error');
-            }
+                }
         },
 
         async getAppreciations (elements) {
@@ -175,15 +179,13 @@ export const bilanPeriodique = {
             if (this.selectedElements.length === 0) {
                 this.opened.lightboxConfirmDeleteElements = false;
             }
-
             return this.selectedElements;
         },
-        // selectAllElements: function (elements)  {
-        //     this.search.elementAll = !this.search.elementAll;
-        //     _.forEach(elements, (element) => {
-        //         element.selected = this.search.elementAll;
-        //     });
-        //     utils.safeApply(this.search.elementAll);
-        // },
+        selectAllElements: function (elements)  {
+            this.search.elementAll = !this.search.elementAll;
+            _.forEach(elements, (element) => {
+                element.selected = this.search.elementAll;
+            });
+        },
     }
 }
