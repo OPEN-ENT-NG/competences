@@ -119,10 +119,10 @@
                 <span>[[ element.libelle ]]</span>
             </td>
             <td ng-show="!selected.parcours">
-                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres"> [[ intervenantMatiere.intervenant.name ]] - </span>
+                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres"> [[ intervenantMatiere.intervenant.name ]] [[$last ? '' : '- ']] </span>
             </td>
             <td>
-                <span ng-repeat="groupe in element.groupes"> [[ groupe.name ]] - </span>
+                <span ng-repeat="groupe in element.groupes"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
             </td>
         </tr>
 

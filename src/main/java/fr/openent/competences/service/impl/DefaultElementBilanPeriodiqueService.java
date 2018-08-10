@@ -79,7 +79,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         params.add(element.getInteger("theme"));
                     }
 
-                    query += ");";
+                    query += ") RETURNING *;";
 
                     statements.prepared(query, params);
 
