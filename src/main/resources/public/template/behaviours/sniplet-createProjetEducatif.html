@@ -73,8 +73,9 @@
                 </label>
             </div>
             <div class="row">
-                <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all">
+                <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all" ng-class="{ selected: element.selected }">
                     <span><i18n>[[ens_mat.ens.displayName]] / [[ens_mat.mat.name]]</i18n></span>
+                    <input type="checkbox" ng-model="element.selected" ng-change="openToggle(data.ens_mat)" />
                 </label>
             </div>
 
@@ -106,11 +107,23 @@
         <div class="twelve cell twelve-mobile" ng-if="!modifElem">
             <button class="right-magnet"
                     ng-click="createElementBilanPeriodique()"
-                    ng-disabled="theme == null || dataELem.libelle == null || dataELem.ens_mat.length < 2 || search.matiere == null || search.classe == null">
-                <i18n ng-show="!selected.modify">evaluations.add</i18n>
-                <!--<i18n ng-show="selected.modify">item.modify</i18n>-->
+                    ng-disabled="theme == null || data.libelle == null || data.ens_mat.length < 2 || search.matiere == null || search.classe == null">
+                <i18n>evaluations.add</i18n>
             </button>
         </div>
+
+        <section class="toggle-buttons"
+                 ng-show="selectedChips.length > 0">
+            <div class="toggle">
+                <div class="row">
+                    <button class="cell"
+                            ng-click="deleteEnsMat(selectedChips)">
+                        <span><i18n>item.delete</i18n></span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
     </div>
 
 
@@ -235,6 +248,7 @@
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
+
     </div>
 
 </div>

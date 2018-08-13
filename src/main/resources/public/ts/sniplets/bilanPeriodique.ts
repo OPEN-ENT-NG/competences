@@ -21,8 +21,14 @@ export const bilanPeriodique = {
                 classes: [],
                 ens_mat: []
             };
+            this.empty = {
+                libelle: [],
+                code: [],
+                themes: [],
+            };
             await this.getElements();
         },
+
         async openElementLigthbox(param?) {
             await this.getThematique(this.getTypeElement());
             this.classes = evaluations.structure.classes;
@@ -52,6 +58,7 @@ export const bilanPeriodique = {
             console.log("$scope", this)
 
         },
+
         async createThematique(thematique) {
             try {
                 if (thematique !== undefined && thematique !== null) {
@@ -62,6 +69,7 @@ export const bilanPeriodique = {
                     }
                     this.getThematique(this.getTypeElement());
                     this.showAddtheme = false;
+                    this.emptyLightbox();
                 }
             } catch (e) {
                 notify.error('Problème lors de la création de la thématique');
@@ -70,6 +78,7 @@ export const bilanPeriodique = {
             }
             utils.safeApply(this);
         },
+
         async createElementBilanPeriodique() {
             try {
                 if (this.dataELem !== undefined && this.dataELem !== null) {
@@ -78,11 +87,14 @@ export const bilanPeriodique = {
                     this.elements.push(data);
                 }
                 this.opened.lightboxCreatePE = false;
+                this.getElements();
+                this.emptyLightbox();
             } catch (e) {
                 notify.error('Problème lors de la création de l\'élément du bilan périodique');
                 console.error('Problème lors de la création de l\'élément du bilan périodique');
                 throw e;
             }
+            utils.safeApply(this);
         },
 
         async getThematique(type) {
@@ -94,9 +106,11 @@ export const bilanPeriodique = {
                 notify.error('evaluations.theme.get.error');
             }
         },
+
         translate: function (key) {
             return utils.translate(key);
         },
+
         async syncMatieresEnseignant(enseignant) {
             try {
                 let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
@@ -106,6 +120,7 @@ export const bilanPeriodique = {
                 notify.error('evaluations.matiere.get.error');
             }
         },
+
         pushData: function (param1, param2?) {
             if (param2) {
                 if (!_.findWhere(this.dataELem.ens_mat, {ens: param1, mat: param2})) {
@@ -118,6 +133,13 @@ export const bilanPeriodique = {
                 }
             }
         },
+
+        emptyLightbox: function() {
+            this.data
+            this.empty
+            this.selectedElements
+        },
+
         async getElements() {
             try {
                 let {data} = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
@@ -211,5 +233,37 @@ export const bilanPeriodique = {
                 element.selected = this.search.elementAll;
             });
         },
+
+        filterItem: function () {
+        return (item) => {
+                if (this.selected.EPI) {
+                    if (item.theme && item.libelle)
+                    return item;
+                }
+                else if (this.selected.AP) {
+                    if (!item.theme && item.libelle)
+                        return item;
+                }
+                else if (this.selected.parcours) {
+                    if (item.theme && !item.libelle)
+                        return item;
+                }
+
+            }
+        },
+
+        openToggle: function (ens_mat) {
+            this.selectedChips = _.filter(ens_mat, function (element) {
+                return element.selected === true;
+            })
+            return this.selectedChips;
+        },
+
+        async deleteEnsMat(ens_mat) {
+            _.forEach(ens_mat, (element) => {
+                element.selected = false;
+            });
+            console.log("delete");
+        }
     }
 }

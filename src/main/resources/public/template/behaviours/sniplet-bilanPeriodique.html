@@ -78,53 +78,53 @@
 
 <table class="twelve responsive-table">
     <thead>
-        <tr class="trSniplet" ng-if="elements !== null">
-            <th>
-                <label class="checkbox" ng-class="{multiselect: elementAll.selected}">
-                    <input type="checkbox"
-                           ng-model="elementAll.selected"
-                           ng-change="selectAllElements(elements)">
-                    <span></span>
-                </label>
-            </th>
-            <th ng-show="!selected.AP">
-                <i18n>viescolaire.competences.theme</i18n>
-            </th>
-            <th ng-show="!selected.parcours">
-                <i18n>viescolaire.competences.libelle</i18n>
-            </th>
-            <th ng-show="!selected.parcours">
-                <i18n>viescolaire.competences.intervenant</i18n>
-            </th>
-            <th>
-                <i18n>viescolaire.competences.classe.groupe</i18n>
-            </th>
-        </tr>
+    <tr class="trSniplet" ng-if="elements !== null">
+        <th>
+            <label class="checkbox" ng-class="{multiselect: elementAll.selected}">
+                <input type="checkbox"
+                       ng-model="elementAll.selected"
+                       ng-change="selectAllElements(elements)">
+                <span></span>
+            </label>
+        </th>
+        <th ng-show="!selected.AP">
+            <i18n>viescolaire.competences.theme</i18n>
+        </th>
+        <th ng-show="!selected.parcours">
+            <i18n>viescolaire.competences.libelle</i18n>
+        </th>
+        <th ng-show="!selected.parcours">
+            <i18n>viescolaire.competences.intervenant</i18n>
+        </th>
+        <th>
+            <i18n>viescolaire.competences.classe.groupe</i18n>
+        </th>
+    </tr>
     </thead>
 
     <tbody>
 
-        <tr ng-repeat="element in elements" ng-click="selectUnselectElement(element)">
-            <td><label class="checkbox">
-                <input type="checkbox"
-                       ng-model="element.selected"
-                       ng-change="checkSelectedElements(elements)">
-                <span></span>
-            </label>
-            </td>
-            <td ng-show="!selected.AP">
-                <span>[[ element.theme.libelle ]]</span>
-            </td>
-            <td ng-show="!selected.parcours">
-                <span>[[ element.libelle ]]</span>
-            </td>
-            <td ng-show="!selected.parcours">
-                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres"> [[ intervenantMatiere.intervenant.name ]] [[$last ? '' : '- ']] </span>
-            </td>
-            <td>
-                <span ng-repeat="groupe in element.groupes"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
-            </td>
-        </tr>
+    <tr ng-repeat="element in elements | filter:filterItem()"  ng-click="selectUnselectElement(element)">
+        <td><label class="checkbox">
+            <input type="checkbox"
+                   ng-model="element.selected"
+                   ng-change="checkSelectedElements(elements)">
+            <span></span>
+        </label>
+        </td>
+        <td ng-show="!selected.AP">
+            <span>[[ element.theme.libelle ]]</span>
+        </td>
+        <td ng-show="!selected.parcours">
+            <span>[[ element.libelle ]]</span>
+        </td>
+        <td ng-show="!selected.parcours">
+            <span ng-repeat="intervenantMatiere in element.intervenantsMatieres"> [[ intervenantMatiere.intervenant.name ]] [[$last ? '' : '- ']] </span>
+        </td>
+        <td>
+            <span ng-repeat="groupe in element.groupes"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
+        </td>
+    </tr>
 
     </tbody>
 </table>
@@ -157,7 +157,7 @@
         <i18n>evaluations.devoir.confirmation.question</i18n>
     </p>
     <button class="marginFive magnet-right"
-            ng-click="deleteElements(selectedElements);">
+            ng-click=" (selectedElements);">
         <i18n>evaluations.perso.ok</i18n>
     </button>
     <button ng-click="opened.lightboxConfirmDeleteElements=false;"
