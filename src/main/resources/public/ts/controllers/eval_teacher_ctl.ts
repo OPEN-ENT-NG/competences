@@ -12,6 +12,7 @@ import {
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
+import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
 
 declare let $: any;
 declare let document: any;
@@ -2202,6 +2203,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
         };
+
+        $scope.getElementsBilanBilanPeriodique = function (){
+            $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
+            $scope.bilanPeriodique.syncElements();
+            $scope.bilanPeriodique.syncClasse();
+        }
 
         /**
          * Position l'objet matière sur le devoir en cours de création

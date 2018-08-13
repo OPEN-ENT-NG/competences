@@ -110,8 +110,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                     "VALUES (?, ?, ?);";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(elementId)
-                    .add(intervenantMatiere.getString("ens"))
-                    .add(intervenantMatiere.getString("mat"));
+                    .add(intervenantMatiere.getJsonObject("ens").getString("id"))
+                    .add(intervenantMatiere.getJsonObject("mat").getString("id"));
             statements.prepared(query, params);
         }
     }
@@ -119,20 +119,21 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     /**
      * Enregistremet de la relation élément-intervenants-matieres du nouvel élément
      * (EPI, AP ou parcours) en cours d'insertion.
-     * @param IdGroupes association intervenant - matière de élément en cours d'insertion
+     * @param groupes association intervenant - matière de élément en cours d'insertion
      * @param elementId id de l'élément
      * @param statements Sql statement builder
      */
-    private void insertRelEltgroupe(JsonArray IdGroupes, Long elementId, SqlStatementsBuilder statements){
+    private void insertRelEltgroupe(JsonArray groupes, Long elementId, SqlStatementsBuilder statements){
 
-        for (Object o : IdGroupes) {
-            String idGroup = (String) o;
+        for (Object o : groupes) {
+            JsonObject group = (JsonObject) o;
             String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
-                    ".rel_elt_bilan_periodique_groupe(id_elt_bilan_periodique, id_groupe) " +
-                    "VALUES (?, ?);";
+                    ".rel_elt_bilan_periodique_groupe(id_elt_bilan_periodique, id_groupe, externalid_groupe) " +
+                    "VALUES (?, ?, ?);";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(elementId)
-                    .add(idGroup);
+                    .add(group.getString("id"))
+                    .add(group.getString("externalId"));
             statements.prepared(query, params);
         }
     }
@@ -347,7 +348,40 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     @Override
     public void updateElementBilanPeriodique (Long idElement, JsonObject element, Handler<Either<String, JsonObject>> handler){
 
-        //UPDATE notes.type_elt_bilan_periodique SET code='Parcours' WHERE nom='Parcours';
+        SqlStatementsBuilder statements = new SqlStatementsBuilder();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique SET ";
+
+        if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
+            query += "intitule = ?, description = ?, ";
+        }
+        if(element.getInteger("type") == 1 || element.getInteger("type") == 3){
+            query += "id_thematique = ?, ";
+        }
+
+        query.substring(0, query.length() - 3);
+
+        query += " WHERE id = ?;";
+
+        if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
+            params.add(element.getString("libelle"))
+                .add(element.getString("description"));
+        }
+        if(element.getInteger("type") == 1 || element.getInteger("type") == 3){
+            params.add(element.getInteger("theme"));
+        }
+
+        params.add(idElement);
+
+        statements.prepared(query, params);
+
+        if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
+            insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, statements);
+        }
+        insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
+
+        Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
     }
 
     @Override
@@ -359,9 +393,11 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(id);
         }
 
-        String queryDelAppEleve = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
+        String queryDelAppEleve = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN "
+                + Sql.listPrepared(idsEltBilanPeriodique);
 
-        String queryDelAppClasse = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
+        String queryDelAppClasse = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN "
+                + Sql.listPrepared(idsEltBilanPeriodique);
 
         String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique WHERE id IN " + Sql.listPrepared(idsEltBilanPeriodique);
 
@@ -388,7 +424,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(id);
         }
 
-        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN "
+                + Sql.listPrepared(idsEltBilanPeriodique);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
@@ -401,7 +438,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(id);
         }
 
-        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEltBilanPeriodique);
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN "
+                + Sql.listPrepared(idsEltBilanPeriodique);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }

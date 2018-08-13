@@ -16,6 +16,7 @@ export * from './EvaluationDevoir';
 export * from './GestionRemplacement';
 export * from './Matiere';
 export * from './Periode';
+export * from './ElementBilanPeriodique';
 export * from './ReleveNote';
 export * from './Remplacement';
 export * from './Responsable';

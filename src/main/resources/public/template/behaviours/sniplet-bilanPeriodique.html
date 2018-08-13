@@ -39,7 +39,7 @@
            ng-model="search.name"
            placeholder="Saisir un EPI">
 
-    <button class="right-magnet" ng-click="openCreatePE()">
+    <button class="right-magnet" ng-click="openElementLigthbox(false)">
         <i18n>evaluations.add.EPI</i18n>
     </button>
 </article>
@@ -53,7 +53,7 @@
            ng-model="search.name"
            placeholder="Saisir un AP">
 
-    <button class="right-magnet" ng-click="openCreatePE()">
+    <button class="right-magnet" ng-click="openElementLigthbox(false)">
         <i18n>evaluations.add.AP</i18n>
     </button>
 </article>
@@ -67,7 +67,7 @@
            ng-model="search.name"
            placeholder="Saisir un parcours">
 
-    <button class="right-magnet" ng-click="openCreatePE()">
+    <button class="right-magnet" ng-click="openElementLigthbox(false)">
         <i18n>evaluations.add.parcours</i18n>
     </button>
 </article>
@@ -129,22 +129,22 @@
     </tbody>
 </table>
 
-<section class="toggle-buttons"
-         ng-show="checkSelectedElements(elements).length > 0">
-    <div class="toggle">
-        <div class="row">
-            <button class="cell"
-                    ng-if="checkSelectedElements(elements).length === 1"
-                    ng-click="openCreatePE()">
-                <span><i18n>item.modify</i18n></span>
-            </button>
-            <button class="cell"
-                    ng-click="tryDeleteElements(selectedElements)">
-                <span><i18n>item.delete</i18n></span>
-            </button>
+    <section class="toggle-buttons"
+             ng-show="checkSelectedElements(elements).length > 0">
+        <div class="toggle">
+            <div class="row">
+                <button class="cell"
+                        ng-if="checkSelectedElements(elements).length === 1"
+                        ng-click="openElementLigthbox(true)">
+                    <span><i18n>item.modify</i18n></span>
+                </button>
+                <button class="cell"
+                        ng-click="tryDeleteElements(selectedElements)">
+                    <span><i18n>item.delete</i18n></span>
+                </button>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 
 <lightbox show="opened.lightboxConfirmDeleteElements" on-close="!opened.lightboxConfirmDeleteElements">
     <h3>

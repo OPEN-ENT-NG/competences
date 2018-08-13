@@ -16,20 +16,41 @@ export const bilanPeriodique = {
             await evaluations.structure.sync();
 
             this.selectedElements = [];
-            this.data = {
+            this.dataELem = {
                 idEtablissement: evaluations.structure.id,
                 classes: [],
                 ens_mat: []
             };
             await this.getElements();
         },
-        async openCreatePE() {
+        async openElementLigthbox(param?) {
             await this.getThematique(this.getTypeElement());
             this.classes = evaluations.structure.classes;
             this.enseignants = evaluations.structure.enseignants;
+            this.modifElem = param;
+
+            if(param){
+                this.dataELem = {
+                    theme: this.selectedElements[0].theme,
+                    idEtablissement: evaluations.structure.id,
+                    classes: this.selectedElements[0].groupes,
+                    ens_mat: this.selectedElements[0].intervenantsMatieres,
+                    libelle: this.selectedElements[0].libelle,
+                    description: this.selectedElements[0].description
+                };
+            } else {
+                this.dataELem = {
+                    idEtablissement : evaluations.structure.id,
+                    classes: [],
+                    ens_mat: []
+                };
+            }
             this.opened.lightboxCreatePE = true;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
-            this.$apply()
+            utils.safeApply(this);
+            console.log("lightboxCreatePE this.classes", this.classes)
+            console.log("$scope", this)
+
         },
         async createThematique(thematique) {
             try {
@@ -51,9 +72,9 @@ export const bilanPeriodique = {
         },
         async createElementBilanPeriodique() {
             try {
-                if (this.data !== undefined && this.data !== null) {
-                    this.data.type = this.getTypeElement();
-                    const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.data.type}`, this.data);
+                if (this.dataELem !== undefined && this.dataELem !== null) {
+                    this.dataELem.type = this.getTypeElement();
+                    const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
                     this.elements.push(data);
                 }
                 this.opened.lightboxCreatePE = false;
@@ -87,13 +108,13 @@ export const bilanPeriodique = {
         },
         pushData: function (param1, param2?) {
             if (param2) {
-                if (!_.findWhere(this.data.ens_mat, {ens: param1, mat: param2})) {
-                    this.data.ens_mat.push({ens: param1, mat: param2});
+                if (!_.findWhere(this.dataELem.ens_mat, {ens: param1, mat: param2})) {
+                    this.dataELem.ens_mat.push({ens: param1, mat: param2});
                 }
 
             } else {
-                if (!_.contains(this.data.classes, param1)) {
-                    this.data.classes.push(param1)
+                if (!_.contains(this.dataELem.classes, param1)) {
+                    this.dataELem.classes.push(param1)
                 }
             }
         },
@@ -158,8 +179,7 @@ export const bilanPeriodique = {
 
         async updateElement(element) {
             try {
-                this.data.type = this.getTypeElement();
-                await http.put(`/competences/elementBilanPeriodique?idElement=${element.id}&type=${this.data.type}`, this.data);
+                await http.put(`/competences/elementBilanPeriodique?idElement=${element.id}&type=${this.dataELem.type}`, this.dataELem);
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.elements.update.error');

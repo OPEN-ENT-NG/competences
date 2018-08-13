@@ -150,8 +150,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(CreateElementBilanPeriodique.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+//    @ResourceFilter(CreateElementBilanPeriodique.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
