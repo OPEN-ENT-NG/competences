@@ -30,45 +30,32 @@
 </div>
 
 
-<article ng-show="selected.EPI" class="twelve cell">
+<article class="twelve cell">
     <h2 class="two cell">
-        <i18n>evaluations.recherche.EPI</i18n>
+        <i18n ng-show="selected.EPI">evaluations.recherche.EPI</i18n>
+        <i18n ng-show="selected.AP">evaluations.recherche.AP</i18n>
+        <i18n ng-show="selected.parcours">evaluations.recherche.parcours</i18n>
     </h2>
-    <input class="five cell"
+    <input ng-show="selected.EPI"
+           class="five cell"
            type="text"
            ng-model="search.name"
            placeholder="Saisir un EPI">
-
-    <button class="right-magnet" ng-click="openElementLigthbox(false)">
-        <i18n>evaluations.add.EPI</i18n>
-    </button>
-</article>
-
-<article ng-show="selected.AP" class="twelve cell">
-    <h2 class="two cell">
-        <i18n>evaluations.recherche.AP</i18n>
-    </h2>
-    <input class="five cell"
+    <input ng-show="selected.AP"
+           class="five cell"
            type="text"
            ng-model="search.name"
            placeholder="Saisir un AP">
-
-    <button class="right-magnet" ng-click="openElementLigthbox(false)">
-        <i18n>evaluations.add.AP</i18n>
-    </button>
-</article>
-
-<article ng-show="selected.parcours" class="twelve cell">
-    <h2 class="two cell">
-        <i18n>evaluations.recherche.parcours</i18n>
-    </h2>
-    <input class="five cell"
+    <input ng-show="selected.parcours"
+           class="five cell"
            type="text"
            ng-model="search.name"
            placeholder="Saisir un parcours">
 
     <button class="right-magnet" ng-click="openElementLigthbox(false)">
-        <i18n>evaluations.add.parcours</i18n>
+        <i18n ng-show="selected.EPI">evaluations.add.EPI</i18n>
+        <i18n ng-show="selected.AP">evaluations.add.AP</i18n>
+        <i18n ng-show="selected.parcours">evaluations.add.parcours</i18n>
     </button>
 </article>
 

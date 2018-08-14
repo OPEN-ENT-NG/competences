@@ -14,8 +14,8 @@ export const bilanPeriodique = {
             this.selected = {EPI: true, AP: false, parcours: false};
             await evaluations.sync();
             await evaluations.structure.sync();
-
             this.selectedElements = [];
+            // this.libelleTheme = null;
             this.dataELem = {
                 idEtablissement: evaluations.structure.id,
                 classes: [],
@@ -214,7 +214,6 @@ export const bilanPeriodique = {
             } else {
                 this.selectedElements = _.without(this.selectedElements, element);
             }
-
         },
 
         checkSelectedElements: function (elements) {
@@ -252,6 +251,14 @@ export const bilanPeriodique = {
             }
         },
 
+        selectUnselectChip: function (element) {
+            if (!_.contains(this.selectedChips, element)) {
+                this.selectedChips.push(element);
+            } else {
+                this.selectedChips = _.without(this.selectedChips, element);
+            }
+        },
+
         openToggle: function (ens_mat) {
             this.selectedChips = _.filter(ens_mat, function (element) {
                 return element.selected === true;
@@ -264,6 +271,11 @@ export const bilanPeriodique = {
                 element.selected = false;
             });
             console.log("delete");
-        }
+        },
+
+        addTheme: function (theme) {
+            this.libelleTheme = theme.libelle;
+            this.dataELem.theme = theme.id;
+            }
     }
 }

@@ -1551,7 +1551,6 @@ body.evaluations {
   }
 
   .skills-list-proposition:hover {
-    //transform: scale(0.9);
     color: #FF8500;
   }
 
@@ -3059,4 +3058,71 @@ body.evaluations {
   .blueCross {
     color: $cyan;
   }
+
+  .skills-header{
+    cursor: pointer;
+    @include transition(all 200ms ease);
+    &.skill-50{
+      height: 50px;
+      overflow: hidden;
+    }
+    &.skill-30{
+      height: 30px;
+      overflow: hidden;
+    }
+    &.skill-40{
+      height: 40px;
+      overflow: hidden;
+    }
+    &.skill-45{
+      height: 45px;
+      overflow: hidden;
+    }
+    &.opened{
+      height: auto;
+      overflow: visible;
+      @include transition(all 200ms ease);
+      > .skills-text-overflow{
+        i.skills-open-icon::before {
+          content: "\e841";
+        }
+      }
+    }
+    > span{
+      padding: 10px 35px 10px 50px;
+      border-bottom: solid 1px #e0e0e0;
+      display: block;
+      cursor: pointer;
+      &.skills-teach{
+        padding: 10px 35px 20px 20px;
+
+        > span{
+          margin-bottom: 5px;
+        }
+      }
+    }
+    > .skills-text-overflow{
+      i.skills-open-icon {
+        @include fonticon;
+        &::before{
+          content: "\e823";
+          left: 0;
+          position: absolute;
+          @include transition(all 200ms ease);
+          font-size: 10px;
+        }
+      }
+    }
+  }
+
+  .skills-list-proposition{
+    margin: 10px 5px 0 5px;
+    cursor: pointer;
+    padding: 0 0 0 5px;
+  }
+
+  .skills-list-proposition:hover {
+    color: #FF8500;
+  }
+
 }
