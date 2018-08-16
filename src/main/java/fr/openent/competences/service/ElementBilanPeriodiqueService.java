@@ -32,6 +32,13 @@ public interface ElementBilanPeriodiqueService {
     public void getThematiqueBilanPeriodique (Long typeElement, Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Retourne les éléments correspondants à la thématique passée en paramètre..
+     * @param idThematique
+     * @param handler Handler de retour
+     */
+    public void getElementsOnThematique (String idThematique, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * Retourne les élèments du bilan périodique sur la classe et/ou l'enseignant et/ou l'établissement.
      * @param idEnseignant enseignant connecté
      * @param idClasse id classe
@@ -57,18 +64,36 @@ public interface ElementBilanPeriodiqueService {
                                                              Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Retourne les appéciations de classes les id sont passés en paramètre.
+     * Retourne les appéciations de classe dont les id sont passés en paramètre.
+     * @param idClasse
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getApprecBilanPerClasse (List<String> idElements, Handler<Either<String, JsonArray>> handler);
+    public void getApprecBilanPerClasse (String idClasse, List<String> idElements, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les appéciations d'élèves les id sont passés en paramètre.
+     * @param idClasse
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getApprecBilanPerEleve (List<String> idElements, Handler<Either<String, JsonArray>> handler);
+    public void getApprecBilanPerEleve (String idClasse, List<String> idElements, Handler<Either<String, JsonArray>> handler);
+
+//    /**
+//     * Retourne l'appéciation de classe sur la classe et l'élèment passée en paramètre.
+//     * @param idClasse
+//     * @param idElement
+//     * @param handler Handler de retour
+//     */
+//    public void getApprecClasseOnClasse (String idClasse, String idElement, Handler<Either<String, JsonArray>> handler);
+//
+//    /**
+//     * Retourne les appéciations d'élève sur la classe et l'élèment passée en paramètre.
+//     * @param idClasse
+//     * @param idElement
+//     * @param handler Handler de retour
+//     */
+//    public void getApprecEleveOnClasse (String idClasse, String idElement, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Enregistrement d'une appreciation pour un élève.
@@ -105,6 +130,21 @@ public interface ElementBilanPeriodiqueService {
      * @param handler Handler de retour
      */
     public void deleteElementBilanPeriodique (List<String> idEltBilanPeriodique, Handler<Either<String, JsonArray>> handler);
+    /**
+     * Suppression d'une thématique.
+     * @param idThematique id des éléments à supprimer
+     * @param handler Handler de retour
+     */
+    public void deleteThematique (String idThematique, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Mise à jour d'une appreciation pour un élève ou une classe.
+     * @param idThematique id de la thématique à mettre à jour
+     * @param thematique nouvelles données de la thématique
+     * @param handler Handler de retour
+     */
+    public void updateThematique (String idThematique, JsonObject thematique,
+                                                   Handler<Either<String, JsonObject>> handler);
 
     /**
      * Suppression des appréciations de classe d'un élément EPI, AP ou parcours.

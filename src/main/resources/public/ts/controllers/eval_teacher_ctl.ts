@@ -346,7 +346,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.openLeftMenu("opened.criteres", false);
                     if (!template.isEmpty('leftSide-userInfo')) template.close('leftSide-userInfo');
 
-                    // $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+                    $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
 
                     utils.safeApply($scope);
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
@@ -2208,7 +2208,30 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
             $scope.bilanPeriodique.syncElements();
             $scope.bilanPeriodique.syncClasse();
+            $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+            utils.safeApply($scope);
         }
+
+        /**
+         * Séquence d'enregistrement d'une évaluation
+         * @param appreciation appréciation à enregistrer
+         * @param $event evenement déclenchant
+         * @param eleve élève propriétaire de l'appréciation
+         */
+        // $scope.saveAppElementEleve = function (appreciation, eleve) {
+        //     if (appreciation !== undefined && appreciation !== ''
+        //         && (eleve.oldAppreciation !== appreciation)) {
+        //
+        //         evaluation.saveAppreciation().then((res) => {
+        //             evaluation.oldAppreciation = evaluation.appreciation;
+        //             if (res.id !== undefined) {
+        //                 evaluation.id_appreciation = res.id;
+        //                 evaluation.data.id_appreciation = res.id;
+        //             }
+        //             utils.safeApply($scope);
+        //         });
+        //     }
+        // }
 
         /**
          * Position l'objet matière sur le devoir en cours de création

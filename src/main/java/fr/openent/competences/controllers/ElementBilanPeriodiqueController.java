@@ -54,11 +54,11 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Retourne les thématiques correspondantes au type passé en paramètre
+     * Retourne les thématiques correspondant au type passé en paramètre
      * @param request
      */
     @Get("/thematique")
-    @ApiDoc("Retourne les thématiques correspondantes au type passé en paramètre")
+    @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateElementBilanPeriodique.class)
     public void getThematiques(final HttpServerRequest request){
@@ -75,6 +75,78 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             }
         });
     }
+
+    /**
+     * Retourne les éléments correspondant à la thématique passée en paramètre
+     * @param request
+     */
+    @Get("/elements/thematique")
+    @ApiDoc("Retourne les éléments correspondant à la thématique passée en paramètre")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateElementBilanPeriodique.class)
+    public void getElementsOnThematique(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if(user != null){
+                    defaultElementBilanPeriodiqueService.getElementsOnThematique(
+                            request.params().get("idThematique"),
+                            arrayResponseHandler(request));
+                }else{
+                    unauthorized(request);
+                }
+            }
+        });
+    }
+
+//    /**
+//     * Retourne les appréciations correspondant à la classe passée en paramètre
+//     * @param request
+//     */
+//    @Get("/appreciations/classe")
+//    @ApiDoc("Retourne les appréciations correspondant à la classe passée en paramètre")
+//    @SecuredAction(value = "", type = ActionType.RESOURCE)
+//    @ResourceFilter(CreateElementBilanPeriodique.class)
+//    public void getAppreciationsOnClasse(final HttpServerRequest request){
+//        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+//            @Override
+//            public void handle(UserInfos user) {
+//                if(user != null){
+//                    defaultElementBilanPeriodiqueService.getApprecClasseOnClasse(
+//                            request.params().get("idClasse"),
+//                            request.params().get("idElement"),
+//                            new Handler<Either<String, JsonArray>>() {
+//                                @Override
+//                                public void handle(Either<String, JsonArray> event) {
+//                                    if (event.isRight()) {
+//                                        JsonArray apprecClasses = event.right().getValue();
+//                                        defaultElementBilanPeriodiqueService.getApprecEleveOnClasse(
+//                                                request.params().get("idClasse"),
+//                                                request.params().get("idElement"),
+//                                                new Handler<Either<String, JsonArray>>() {
+//                                                    @Override
+//                                                    public void handle(Either<String, JsonArray> event) {
+//                                                        if (event.isRight()) {
+//                                                            JsonArray apprecEleves = event.right().getValue();
+//                                                            Renders.renderJson(request, apprecClasses.addAll(apprecEleves));
+//                                                        } else {
+//                                                            Renders.renderJson(request, new JsonObject()
+//                                                                    .put("error", "error while retreiving students appreciations"), 400);
+//                                                        }
+//                                                    }
+//                                                });
+//                                    } else {
+//                                        Renders.renderJson(request, new JsonObject()
+//                                                .put("error", "error while retreiving classes appreciations"), 400);
+//                                    }
+//                                }
+//                            });
+//                }else{
+//                    unauthorized(request);
+//                }
+//            }
+//        });
+//    }
 
     /**
      * Créer les élèments du bilan périodique avec les données passées en paramètre
@@ -234,7 +306,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
 
                                                                                 for(Object o : classes){
                                                                                     JsonObject classe = (JsonObject)o;
-                                                                                    classesMap.put(classe.getString("externalId"), classe.getString("name"));
+                                                                                    classesMap.put(classe.getString("id"), classe.getString("name"));
                                                                                 }
 
                                                                                 // récupération des noms des intervenants
@@ -365,7 +437,50 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Retourne les appreciations liées au élèments du bilan périodiques passés en paramètre
+     * Mettre à jour une thématique
+     * @param request
+     */
+    @Put("/thematique")
+    @ApiDoc("Mettre à jour une thématique")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateElementBilanPeriodique.class)
+    public void updateThematique(final HttpServerRequest request){
+        RequestUtils.bodyToJson(request, pathPrefix +
+                Competences.SCHEMA_THEMATIQUE_BILAN_PERIODIQUE, new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject resource) {
+                defaultElementBilanPeriodiqueService.updateThematique(
+                        request.params().get("idThematique"),resource,
+                        defaultResponseHandler(request));
+            }
+        });
+    }
+
+    /**
+     * Supprimer une thématique
+     * @param request
+     */
+    @Delete("/thematique")
+    @ApiDoc("Supprimer une thématique")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateElementBilanPeriodique.class)
+    public void deleteThematique(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if(user != null){
+                    defaultElementBilanPeriodiqueService.deleteThematique(
+                            request.params().get("idThematique"),
+                            arrayResponseHandler(request));
+                }else{
+                    unauthorized(request);
+                }
+            }
+        });
+    }
+
+    /**
+     * Retourne les appreciations liées au élèments du bilan périodiques (et à la classe) passés en paramètre
      * @param request
      */
     @Get("/appreciations")
@@ -378,33 +493,36 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             public void handle(UserInfos user) {
                 if(user != null){
                     defaultElementBilanPeriodiqueService.getApprecBilanPerClasse(
-                        request.params().getAll("idElement"),
-                        new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if(event.isRight()){
-                                    JsonArray apprecClasses = event.right().getValue();
-                                    defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
-                                        request.params().getAll("idElement"),
-                                        new Handler<Either<String, JsonArray>>() {
-                                            @Override
-                                            public void handle(Either<String, JsonArray> event) {
-                                                if(event.isRight()){
-                                                    JsonArray apprecEleves = event.right().getValue();
-                                                    Renders.renderJson(request, apprecClasses.addAll(apprecEleves));
-                                                } else {
-                                                    Renders.renderJson(request, new JsonObject()
-                                                            .put("error", "error while retreiving students appreciations"), 400);
-                                                }
-                                            }
-                                        });
-                                } else {
-                                    Renders.renderJson(request, new JsonObject()
-                                            .put("error", "error while retreiving classes appreciations"), 400);
-                                }
+                            request.params().get("idClasse"),
+                            request.params().getAll("idElement"),
+                            new Handler<Either<String, JsonArray>>() {
+                                @Override
+                                public void handle(Either<String, JsonArray> event) {
+                                    if(event.isRight()){
+                                        JsonArray apprecClasses = event.right().getValue();
 
-                            }
-                        });
+                                        defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
+                                                request.params().get("idClasse"),
+                                                request.params().getAll("idElement"),
+                                                new Handler<Either<String, JsonArray>>() {
+                                                    @Override
+                                                    public void handle(Either<String, JsonArray> event) {
+                                                        if(event.isRight()){
+                                                            JsonArray apprecEleves = event.right().getValue();
+                                                            Renders.renderJson(request, apprecClasses.addAll(apprecEleves));
+                                                        } else {
+                                                            Renders.renderJson(request, new JsonObject()
+                                                                    .put("error", "error while retreiving students appreciations"), 400);
+                                                        }
+                                                    }
+                                                });
+                                    } else {
+                                        Renders.renderJson(request, new JsonObject()
+                                                .put("error", "error while retreiving classes appreciations"), 400);
+                                    }
+
+                                }
+                            });
                 }else{
                     unauthorized(request);
                 }

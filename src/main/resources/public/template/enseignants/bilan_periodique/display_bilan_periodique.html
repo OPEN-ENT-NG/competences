@@ -59,10 +59,8 @@
                 <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
             </div>
         </aside>
-
-
-            <div class="eight cell twelve-mobile">
-                <article>
+        <div class="eight cell twelve-mobile">
+            <article>
                 <div class="twelve tabs vertical-spacing-twice heading-tabs">
                     <header ng-class="{selected : selected.EPI}"
                             class="horizontal-spacing-twice ng-scope">
@@ -88,12 +86,12 @@
                 </div>
 
                 <div ng-repeat="element in bilanPeriodique.elements" class="marginFive card">
-                    <h3 ng-class="{'openedDom' : domaine.OpenSousDom}"
+                    <h2 ng-class="{'openedDom' : domaine.OpenSousDom}"
                         class="margin-top-1em Domaine"
                         ng-click="domaine.OpenSousDom = !domaine.OpenSousDom"
                         ng-init="domaine.OpenSousDom = false">[[element.libelle]]
-                    </h3>
-                    <content class="block row">
+                    </h2>
+                    <content class="block row marginFive card">
                         <div class="devoirs-header" id="liste-notes-devoir-header" current-devoir="currentDevoir" sticky offset="64" confine="true">
                             <div class="two indent-fifteen inline-block cell-indent cell">
                                 <i18n>viescolaire.utils.student</i18n>
@@ -113,11 +111,9 @@
                                                  ng-click="getEleveInfo(eleve);expandNote($index, false)">
                                                 [[::eleve.lastName]] [[::eleve.firstName]]
                                             </div>
-                                            <div
-                                                 class="ten cell cell-input ">
+                                            <div class="ten cell cell-input ">
                                                 <input type="text" class="eleven input-appreciation" name="appreciation"
-                                                       ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
-                                                       ng-model="eleve.evaluation.appreciation" ng-blur="saveNoteDevoirEleve(eleve.evaluation, $event)"
+                                                       ng-model="eleve.appreciation" ng-blur="saveAppElementEleve(eleve.appreciation, eleve)"
                                                        ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
                                             </div>
                                         </div>
@@ -125,8 +121,27 @@
                                 </div>
                         </div>
                     </content>
+                    <div class="marginFive card">
+                        <h3>
+                            <i18n>evaluations.releve.appreciation.classe</i18n>
+                        </h3>
+                        <ng-form name="appreciationClassForm">
+                            <textarea placeholder="[[translate('evaluations.releve.appreciation.classe.placeholder')]]"
+                                      row="4" type="text"
+                                      ng-model="element.appreciationClasse.appreciation"
+                                      class="twelve"
+                                      ng-maxlength="600"
+                                      maxlength="600"
+                                      ng-blur="element.appreciationClasse.save()"
+                                      name="appreciationClasse">
+                            </textarea>
+                            <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
+                                <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
+                            </div>
+                        </ng-form>
+                    </div>
                 </div>
-        </article>
-            </div>
+            </article>
+        </div>
     </div>
 </div>

@@ -65,7 +65,7 @@ export const bilanPeriodique = {
                     if (thematique.code !== undefined && thematique.code !== null
                         && thematique.libelle !== undefined && thematique.libelle !== null) {
                         await http.post('/competences/thematique',
-                            {code: thematique.code, libelle: thematique.libelle, type: 1});
+                            {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
                     }
                     this.getThematique(this.getTypeElement());
                     this.showAddtheme = false;
@@ -75,6 +75,25 @@ export const bilanPeriodique = {
                 notify.error('Problème lors de la création de la thématique');
                 console.error('Problème lors de la création de la thématique');
                 throw e;
+            }
+            utils.safeApply(this);
+        },
+
+        async updateThematique(thematique) {
+            try {
+                await http.put(`/competences/thematique?idThematique=${thematique.id}`,
+                    {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
+            } catch (e) {
+                notify.error('evaluations.thematique.update.error');
+            }
+            utils.safeApply(this);
+        },
+
+        async deleteThematique(thematique) {
+            try {
+                await http.delete(`/competences/thematique?idThematique=${thematique.id}`);
+            } catch (e) {
+                notify.error('evaluations.thematique.delete.error');
             }
             utils.safeApply(this);
         },
@@ -104,6 +123,24 @@ export const bilanPeriodique = {
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.theme.get.error');
+            }
+        },
+
+        async getElementsOnThematique(idThematique) {
+            try {
+                let data = await http.get(`/competences/elements/thematique?idThematique=${idThematique}`);
+                return data.data;
+            } catch (e) {
+                notify.error('evaluations.theme.get.error');
+            }
+        },
+
+        async getAppreciationsOnClasse(idClasse, idElement) {
+            try {
+                let data = await http.get(`/competences/appreciations?idClasse=${idClasse}&idElement=${idElement}`);
+                return data.data;
+            } catch (e) {
+                notify.error('evaluations.appreciations.get.error');
             }
         },
 
@@ -214,6 +251,7 @@ export const bilanPeriodique = {
             } else {
                 this.selectedElements = _.without(this.selectedElements, element);
             }
+
         },
 
         checkSelectedElements: function (elements) {
