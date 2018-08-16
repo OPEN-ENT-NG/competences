@@ -2,14 +2,17 @@ import {notify, template, _} from 'entcore';
 import http from "axios";
 import {evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
+import {itemsCompetences} from "./itemsCompetences";
 
 console.log("here");
 
 export const bilanPeriodique = {
     title: 'Bilan périodique',
     description: 'Permet de paramétrer les éléments nécessaires à la construction des bilans périodiques',
+    that: undefined,
     controller: {
         async init() {
+            bilanPeriodique.that = this;
             this.idStructure = this.source.idStructure;
             this.selected = {EPI: true, AP: false, parcours: false};
             await evaluations.sync();
@@ -31,12 +34,12 @@ export const bilanPeriodique = {
 
         async openElementLigthbox(param?) {
             await this.getThematique(this.getTypeElement());
-            this.classes = evaluations.structure.classes;
-            this.enseignants = evaluations.structure.enseignants;
-            this.modifElem = param;
+            bilanPeriodique.that.classes = evaluations.structure.classes;
+            bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
+            bilanPeriodique.that.modifElem = param;
 
             if(param){
-                this.dataELem = {
+                bilanPeriodique.that.dataELem = {
                     theme: this.selectedElements[0].theme,
                     idEtablissement: evaluations.structure.id,
                     classes: this.selectedElements[0].groupes,
@@ -51,7 +54,7 @@ export const bilanPeriodique = {
                     ens_mat: []
                 };
             }
-            this.opened.lightboxCreatePE = true;
+            bilanPeriodique.that.opened.lightboxCreatePE = true;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
             utils.safeApply(this);
             console.log("lightboxCreatePE this.classes", this.classes)
@@ -172,7 +175,7 @@ export const bilanPeriodique = {
         },
 
         emptyLightbox: function() {
-            this.data
+            this.dataELem
             this.empty
             this.selectedElements
         },
