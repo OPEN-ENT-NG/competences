@@ -271,7 +271,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @returns {any|string} date formattée
          */
         $scope.getDateFormated = function (date) {
-            return utils.getFormatedDate(date, "DD/MM");
+            return utils.getFormatedDate(date, "DD/MM/YYYY");
         };
 
         $scope.saveTheme = function () {
