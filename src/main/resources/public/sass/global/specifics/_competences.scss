@@ -3031,8 +3031,7 @@ body.evaluations {
     margin-left: 15px;
   }
 
-  .marginLeft2 {
-    margin-left: 55px;
+  .borderTheme {
     padding: 5px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
     border-radius: 2px;
@@ -3115,6 +3114,10 @@ body.evaluations {
     }
   }
 
+  .skills-list-aideSaisie ul {
+    list-style-type: none;
+  }
+
   .skills-list-proposition{
     margin: 10px 5px 0 5px;
     cursor: pointer;
@@ -3123,6 +3126,10 @@ body.evaluations {
 
   .skills-list-proposition:hover {
     color: #FF8500;
+  }
+
+  .all.selected {
+    background: grey !important;
   }
 
 }

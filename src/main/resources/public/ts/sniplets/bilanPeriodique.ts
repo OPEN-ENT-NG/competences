@@ -18,7 +18,6 @@ export const bilanPeriodique = {
             await evaluations.sync();
             await evaluations.structure.sync();
             this.selectedElements = [];
-            // this.libelleTheme = null;
             this.dataELem = {
                 idEtablissement: evaluations.structure.id,
                 classes: [],
@@ -92,9 +91,20 @@ export const bilanPeriodique = {
             utils.safeApply(this);
         },
 
+        async tryDeleteTheme(theme) {
+            let elements = await this.getElementsOnThematique(theme.id);
+            if (elements.length > 0) {
+                this.opened.lightboxConfirmDeleteThemes = true;
+            } else {
+                await this.deleteThematique(theme);
+            }
+            utils.safeApply(this);
+        },
+
         async deleteThematique(thematique) {
             try {
                 await http.delete(`/competences/thematique?idThematique=${thematique.id}`);
+                this.getElements();
             } catch (e) {
                 notify.error('evaluations.thematique.delete.error');
             }
@@ -126,6 +136,14 @@ export const bilanPeriodique = {
                 utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.theme.get.error');
+            }
+        },
+
+        filterTheme: function (param) {
+            return (item) => {
+                if (item.personnalise === param) {
+                        return item;
+                }
             }
         },
 
@@ -292,31 +310,40 @@ export const bilanPeriodique = {
             }
         },
 
-        selectUnselectChip: function (element) {
-            if (!_.contains(this.selectedChips, element)) {
-                this.selectedChips.push(element);
-            } else {
-                this.selectedChips = _.without(this.selectedChips, element);
+        // selectUnselectChip: function (element) {
+        //     if (!_.contains(this.selectedChips, element)) {
+        //         this.selectedChips.push(element);
+        //     } else {
+        //         this.selectedChips = _.without(this.selectedChips, element);
+        //     }
+        // },
+
+        async tryDeleteChips(selectedChips) {
+            if (this.element.selected) {
+                this.opened.lightboxConfirmDeleteChips = true;
             }
+            utils.safeApply(this);
         },
 
-        openToggle: function (ens_mat) {
-            this.selectedChips = _.filter(ens_mat, function (element) {
-                return element.selected === true;
-            })
-            return this.selectedChips;
-        },
-
-        async deleteEnsMat(ens_mat) {
+        async deleteChips(ens_mat) {
             _.forEach(ens_mat, (element) => {
                 element.selected = false;
+                this.opened.lightboxConfirmDeleteChips = false;
             });
             console.log("delete");
         },
 
-        addTheme: function (theme) {
+        addThemeDefault: function (theme) {
             this.libelleTheme = theme.libelle;
             this.dataELem.theme = theme.id;
-            }
+            this.themeBase.open = false;
+            },
+
+        // addThemePerso: function (theme) {
+        //     this.libelleTheme = theme.libelle;
+        //     this.dataELem.theme = theme.id;
+        //     this.themeDefault.open = false;
+        // }
+
     }
 }

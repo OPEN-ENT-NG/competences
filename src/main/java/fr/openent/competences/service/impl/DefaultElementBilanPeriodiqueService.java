@@ -27,12 +27,14 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     public void insertThematiqueBilanPeriodique (JsonObject thematique, Handler<Either<String, JsonObject>> handler){
 
         SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique(libelle, code, type_elt_bilan_periodique) VALUES (?, ?, ?);";
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique" +
+                "(libelle, code, type_elt_bilan_periodique, personnalise) VALUES (?, ?, ?, ?);";
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                 .add(thematique.getString("libelle"))
                 .add(thematique.getString("code"))
-                .add(thematique.getInteger("type"));
+                .add(thematique.getInteger("type"))
+                .add(true);
 
         statements.prepared(query, params);
                 Sql.getInstance().prepared(query.toString(), params, validResultHandler(handler));
@@ -439,7 +441,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique " +
-                "WHERE id_elt_bilan_periodique = ? ";
+                "WHERE id = ? ";
         params.add(idThematique);
 
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));

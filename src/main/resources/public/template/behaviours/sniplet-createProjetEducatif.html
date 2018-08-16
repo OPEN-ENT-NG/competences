@@ -8,26 +8,58 @@
 
     <div>
 
-        <div class="six cell twelve-mobile">
+        <div class="seven cell twelve-mobile">
             <div ng-show="!selected.AP" class="twelve cell twelve-mobile beFlex">
 
                 <div class="row">
                     <ul class="skills-list-aideSaisie">
-                        <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeBase.open}">
-                            <span ng-click="themeBase.open = !themeBase.open;"
+                        <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: theme.open}">
+                            <span ng-click="theme.open = !theme.open;"
                                   class="skills-text-overflow skills-teach">
-                                <i class="skills-open-icon"></i>
-                                <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes</i18n></span>
-                                <span ng-show="dataELem.theme">[[libelleTheme]]</span>
-                            </span>
-                            <ul class="skills-list">
-                                <li ng-repeat="theme in themes">
-                                    <span ng-click="addTheme(theme)" ng-model="dataELem.theme" class="twelve skills-list-proposition skills-text-overflow">[[theme.libelle]]</span>
-                                </li>
-                            </ul>
+                                    <i class="skills-open-icon"></i>
+                                    <span><i18n>viescolaire.utils.themes</i18n></span>
+                                </span>
+                        <ul>
+                            <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeBase.open}">
+                                <span ng-click="themeBase.open = !themeBase.open;"
+                                      class="skills-text-overflow skills-teach">
+                                    <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes.default</i18n></span>
+                                    <span ng-show="dataELem.theme">[[libelleTheme]]</span>
+                                </span>
+                                    <ul class="skills-list" >
+                                        <li ng-repeat="theme in themes | filter:filterTheme(false)" class="twelve skills-list-proposition skills-text-overflow italic">
+                                            <span ng-click="addThemeDefault(theme)" ng-model="dataELem.theme">[[theme.libelle]]</span>
+                                        </li>
+                                    </ul>
+                            </li>
+                            <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themePerso.open}">
+                                <span ng-click="themePerso.open = !themePerso.open;"
+                                      class="skills-text-overflow skills-teach">
+                                    <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes.personnalise</i18n></span>
+                                    <span ng-show="dataELem.theme">[[libelleTheme]]</span>
+                                </span>
+                                <ul class="skills-list">
+                                    <li ng-repeat="theme in themes | filter:filterTheme(true)" class="twelve skills-list-proposition skills-text-overflow">
+                                        <span ng-click="addThemePerso(theme)" ng-model="dataELem.theme" class="twelve skills-list-proposition skills-text-overflow italic">[[theme.libelle]]</span>
+                                        <dots-menu>
+                                            <opt data-ng-click="showAddtheme = true">
+                                                <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
+                                            </opt>
+                                            <opt data-ng-click="tryDeleteTheme(theme)">
+                                                <i class="trash"></i>&nbsp;<i18n>item.delete</i18n>
+                                            </opt>
+                                        </dots-menu>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
                         </li>
                     </ul>
                 </div>
+
+                <h3 ng-show="themePerso.open" data-ng-click="showAddtheme = true" class="inline-block">
+                    <i class="plus marginLeft"></i>
+                </h3>
 
                 <!--<label class="select">-->
                 <!--<select ng-model="theme"-->
@@ -37,12 +69,9 @@
                 <!--</select>-->
                 <!--</label>-->
 
-                <h3 data-ng-click="showAddtheme = true" class="inline-block">
-                    <i class="plus marginLeft"></i>
-                </h3>
             </div>
             <div ng-show="!selected.parcours" class="twelve cell twelve-mobile marginTop">
-                <div class="five cell twelve-mobile">
+                <div class="four cell twelve-mobile">
                     <input ng-model="dataELem.libelle"
                            ng-maxlength="150"
                            maxlength="150"
@@ -50,7 +79,8 @@
                 </div>
             </div>
         </div>
-        <div ng-show="showAddtheme" class="five cell twelve-mobile marginLeft2">
+
+        <div ng-show="showAddtheme" class="five cell twelve-mobile borderTheme">
             <div class="beFlex-Justify">
                 <p class="marginTopZero">Ajouter thème EPI</p>
                 <i data-ng-click="showAddtheme = false" class="close-2x blueCross"></i>
@@ -95,9 +125,9 @@
             </div>
             <div class="row">
                 <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all"
-                       ng-class="{ selected: element.selected }" ng-click="selectUnselectChip(element)">
+                       ng-class="{selected: element.selected}" ng-click="tryDeleteChips(data.ens_mat)">
                     <span><i18n>[[ens_mat.ens.displayName]] / [[ens_mat.mat.name]]</i18n></span>
-                    <input type="checkbox" ng-model="element.selected" ng-change="openToggle(data.ens_mat)"/>
+                    <input type="checkbox" ng-model="element.selected"/>
                 </label>
             </div>
 
@@ -124,7 +154,7 @@
             <button class="right-magnet"
                     ng-click="updateElement()"
                     ng-disabled="dataELem.theme == null || dataELem.libelle == null || search.enseignant < 2 || search.matiere == null || search.classe == null">
-                <i18n>evaluations.edit</i18n>
+                <i18n>item.modify</i18n>
             </button>
         </div>
         <div class="twelve cell twelve-mobile" ng-if="!modifElem">
@@ -135,17 +165,39 @@
             </button>
         </div>
 
-        <section class="toggle-buttons"
-                 ng-show="selectedChips.length > 0">
-            <div class="toggle">
-                <div class="row">
-                    <button class="cell"
-                            ng-click="deleteEnsMat(selectedChips)">
-                        <span><i18n>item.delete</i18n></span>
-                    </button>
-                </div>
-            </div>
-        </section>
+        <lightbox show="opened.lightboxConfirmDeleteChips" on-close="!opened.lightboxConfirmDeleteChips">
+            <p>
+                <i18n>evaluations.devoir.confirmation.question</i18n>
+            </p>
+            <button class="marginFive magnet-right"
+                    ng-click="deleteChips(selectedChips)">
+                <i18n>evaluations.perso.ok</i18n>
+            </button>
+            <button ng-click="opened.lightboxConfirmDeleteChips = false;"
+                    class="right-magnet cancel">
+                <span><i18n>evaluations.perso.cancel</i18n></span>
+            </button>
+        </lightbox>
+
+        <lightbox show="opened.lightboxConfirmDeleteThemes" on-close="!opened.lightboxConfirmDeleteThemes">
+            <h3>
+                <i18n>evaluations.bilan.periodique</i18n>
+            </h3>
+            <p>
+                <i18n>evaluation.bilan.periodique.message</i18n>
+            </p>
+            <p>
+                <i18n>evaluations.devoir.confirmation.question</i18n>
+            </p>
+            <button class="marginFive magnet-right"
+                    ng-click="">
+                <i18n>evaluations.perso.ok</i18n>
+            </button>
+            <button ng-click="opened.lightboxConfirmDeleteThemes=false;"
+                    class="right-magnet cancel">
+                <span><i18n>evaluations.perso.cancel</i18n></span>
+            </button>
+        </lightbox>
 
     </div>
 
