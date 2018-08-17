@@ -28,6 +28,10 @@ export const bilanPeriodique = {
                 code: [],
                 themes: [],
             };
+            this.thematique = {
+                code: "",
+                libelle: ""
+            };
             await this.getElements();
         },
 
@@ -63,16 +67,11 @@ export const bilanPeriodique = {
 
         async createThematique(thematique) {
             try {
-                if (thematique !== undefined && thematique !== null) {
-                    if (thematique.code !== undefined && thematique.code !== null
-                        && thematique.libelle !== undefined && thematique.libelle !== null) {
-                        await http.post('/competences/thematique',
-                            {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
-                    }
-                    this.getThematique(this.getTypeElement());
-                    this.showAddtheme = false;
-                    this.emptyLightbox();
-                }
+                await http.post('/competences/thematique',
+                    {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
+                this.getThematique(this.getTypeElement());
+                this.showAddtheme = false;
+                this.emptyLightbox();
             } catch (e) {
                 notify.error('Problème lors de la création de la thématique');
                 console.error('Problème lors de la création de la thématique');
@@ -81,10 +80,18 @@ export const bilanPeriodique = {
             utils.safeApply(this);
         },
 
+        openAddtheme: function (theme) {
+            bilanPeriodique.that.changeThematique = true;
+            this.thematique.code = theme.code;
+            this.thematique.libelle = theme.libelle;
+            bilanPeriodique.that.showAddtheme = true;
+        },
+
         async updateThematique(thematique) {
             try {
                 await http.put(`/competences/thematique?idThematique=${thematique.id}`,
                     {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
+
             } catch (e) {
                 notify.error('evaluations.thematique.update.error');
             }
@@ -104,11 +111,18 @@ export const bilanPeriodique = {
         async deleteThematique(thematique) {
             try {
                 await http.delete(`/competences/thematique?idThematique=${thematique.id}`);
-                this.getElements();
-            } catch (e) {
+            }
+            catch (e) {
                 notify.error('evaluations.thematique.delete.error');
             }
             utils.safeApply(this);
+        },
+
+        addTheme: function (theme) {
+            bilanPeriodique.that.libelleTheme = theme.libelle;
+            this.dataELem.theme = theme.id;
+            this.themeBase.open = false;
+            this.themePerso.open = false;
         },
 
         async createElementBilanPeriodique() {
@@ -119,7 +133,7 @@ export const bilanPeriodique = {
                     this.elements.push(data);
                 }
                 this.opened.lightboxCreatePE = false;
-                this.getElements();
+                bilanPeriodique.that.getElements();
                 this.emptyLightbox();
             } catch (e) {
                 notify.error('Problème lors de la création de l\'élément du bilan périodique');
@@ -310,40 +324,38 @@ export const bilanPeriodique = {
             }
         },
 
-        // selectUnselectChip: function (element) {
-        //     if (!_.contains(this.selectedChips, element)) {
-        //         this.selectedChips.push(element);
-        //     } else {
-        //         this.selectedChips = _.without(this.selectedChips, element);
-        //     }
-        // },
+        async tryDeleteChips(item) {
+            item.selected = true;
+            this.opened.lightboxConfirmDeleteChips = true;
+        },
 
-        async tryDeleteChips(selectedChips) {
-            if (this.element.selected) {
-                this.opened.lightboxConfirmDeleteChips = true;
+        async deleteChips() {
+            this.ensei_matieres = this.dataELem.ens_mat;
+            for(let i = 0; i < this.ensei_matieres.length; i++){
+                if(this.ensei_matieres[i].selected){
+                    this.dataELem.ens_mat = _.without(this.dataELem.ens_mat, this.dataELem.ens_mat[i]);
+                }
             }
-            utils.safeApply(this);
+            bilanPeriodique.that.search.enseignant = null;
+            bilanPeriodique.that.search.matiere = null;
+            bilanPeriodique.that.opened.lightboxConfirmDeleteChips = false;
         },
 
-        async deleteChips(ens_mat) {
-            _.forEach(ens_mat, (element) => {
-                element.selected = false;
-                this.opened.lightboxConfirmDeleteChips = false;
-            });
-            console.log("delete");
+        async tryDeleteClasse(item) {
+            item.selected = true;
+            this.opened.lightboxConfirmDeleteClasse = true;
         },
 
-        addThemeDefault: function (theme) {
-            this.libelleTheme = theme.libelle;
-            this.dataELem.theme = theme.id;
-            this.themeBase.open = false;
-            },
-
-        // addThemePerso: function (theme) {
-        //     this.libelleTheme = theme.libelle;
-        //     this.dataELem.theme = theme.id;
-        //     this.themeDefault.open = false;
-        // }
+        async deleteClasse() {
+            this.chipClasse = this.dataELem.classes;
+            for(let i = 0; i < this.chipClasse.length; i++){
+                if(this.chipClasse[i].selected){
+                    this.dataELem.classes = _.without(this.dataELem.classes, this.dataELem.classes[i]);
+                }
+            }
+            bilanPeriodique.that.search.classe = null;
+            bilanPeriodique.that.opened.lightboxConfirmDeleteClasse = false;
+        },
 
     }
 }
