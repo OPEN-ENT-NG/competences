@@ -113,8 +113,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                     "ON CONFLICT ON CONSTRAINT elt_bilan_period_interv_mat_unique DO NOTHING;";
             JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                     .add(elementId)
-                    .add(intervenantMatiere.getJsonObject("ens").getString("id"))
-                    .add(intervenantMatiere.getJsonObject("mat").getString("id"));
+                    .add(intervenantMatiere.getJsonObject("intervenant").getString("id"))
+                    .add(intervenantMatiere.getJsonObject("matiere").getString("id"));
             statements.prepared(query, params);
         }
     }

@@ -377,7 +377,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
 
                                                                                                         JsonObject intervenant = new JsonObject();
                                                                                                         intervenant.put("id", intMatArray[0]);
-                                                                                                        intervenant.put("name", usersMap.get(intMatArray[0]));
+                                                                                                        intervenant.put("displayName", usersMap.get(intMatArray[0]));
                                                                                                         intervenantMatiere.put("intervenant", intervenant);
 
                                                                                                         JsonObject matiere = new JsonObject();

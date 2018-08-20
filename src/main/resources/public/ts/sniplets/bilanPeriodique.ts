@@ -23,11 +23,11 @@ export const bilanPeriodique = {
                 classes: [],
                 ens_mat: []
             };
-            this.empty = {
-                libelle: [],
-                code: [],
-                themes: [],
-            };
+            // this.empty = {
+            //     libelle: [],
+            //     code: [],
+            //     themes: [],
+            // };
             this.thematique = {
                 code: "",
                 libelle: ""
@@ -43,8 +43,8 @@ export const bilanPeriodique = {
 
             if(param){
                 bilanPeriodique.that.dataELem = {
-                    theme: this.selectedElements[0].theme,
                     idEtablissement: evaluations.structure.id,
+                    theme: this.selectedElements[0].theme,
                     classes: this.selectedElements[0].groupes,
                     ens_mat: this.selectedElements[0].intervenantsMatieres,
                     libelle: this.selectedElements[0].libelle,
@@ -65,13 +65,14 @@ export const bilanPeriodique = {
 
         },
 
+        /////       Création d'un thème personnalisé      /////
+
         async createThematique(thematique) {
             try {
                 await http.post('/competences/thematique',
                     {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
                 this.getThematique(this.getTypeElement());
                 this.showAddtheme = false;
-                this.emptyLightbox();
             } catch (e) {
                 notify.error('Problème lors de la création de la thématique');
                 console.error('Problème lors de la création de la thématique');
@@ -80,12 +81,14 @@ export const bilanPeriodique = {
             utils.safeApply(this);
         },
 
-        openAddtheme: function (theme) {
+        openAddtheme: function(theme) {
             bilanPeriodique.that.changeThematique = true;
             this.thematique.code = theme.code;
             this.thematique.libelle = theme.libelle;
             bilanPeriodique.that.showAddtheme = true;
         },
+
+        /////       Modification d'un thème personnalisé      /////
 
         async updateThematique(thematique) {
             try {
@@ -97,6 +100,8 @@ export const bilanPeriodique = {
             }
             utils.safeApply(this);
         },
+
+        /////       Suppression d'un thème personnalisé      /////
 
         async tryDeleteTheme(theme) {
             let elements = await this.getElementsOnThematique(theme.id);
@@ -118,12 +123,15 @@ export const bilanPeriodique = {
             utils.safeApply(this);
         },
 
-        addTheme: function (theme) {
-            bilanPeriodique.that.libelleTheme = theme.libelle;
+        addTheme: function(theme) {
+            bilanPeriodique.that.libelle = theme.libelle;
             this.dataELem.theme = theme.id;
             this.themeBase.open = false;
             this.themePerso.open = false;
         },
+
+
+        /////       Création d'un EPI/AP/Parcours      /////
 
         async createElementBilanPeriodique() {
             try {
@@ -134,7 +142,7 @@ export const bilanPeriodique = {
                 }
                 this.opened.lightboxCreatePE = false;
                 bilanPeriodique.that.getElements();
-                this.emptyLightbox();
+                // this.emptyLightbox();
             } catch (e) {
                 notify.error('Problème lors de la création de l\'élément du bilan périodique');
                 console.error('Problème lors de la création de l\'élément du bilan périodique');
@@ -146,12 +154,14 @@ export const bilanPeriodique = {
         async getThematique(type) {
             try {
                 let data = await http.get(`/competences/thematique?type=${type}`);
-                this.themes = data.data;
-                utils.safeApply(this);
+                bilanPeriodique.that.themes = data.data;
             } catch (e) {
                 notify.error('evaluations.theme.get.error');
             }
+            utils.safeApply(this);
         },
+
+        /////       Filtre les thèmes pour savoir si ce sont des EPI / AP / Parcours      /////
 
         filterTheme: function (param) {
             return (item) => {
@@ -183,6 +193,8 @@ export const bilanPeriodique = {
             return utils.translate(key);
         },
 
+        /////       Filtre les matières en fonctions de l'enseignant sélectionné      /////
+
         async syncMatieresEnseignant(enseignant) {
             try {
                 let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
@@ -195,8 +207,8 @@ export const bilanPeriodique = {
 
         pushData: function (param1, param2?) {
             if (param2) {
-                if (!_.findWhere(this.dataELem.ens_mat, {ens: param1, mat: param2})) {
-                    this.dataELem.ens_mat.push({ens: param1, mat: param2});
+                if (!_.findWhere(this.dataELem.ens_mat, {intervenant: param1, matiere: param2})) {
+                    this.dataELem.ens_mat.push({intervenant: param1, matiere: param2});
                 }
 
             } else {
@@ -206,11 +218,11 @@ export const bilanPeriodique = {
             }
         },
 
-        emptyLightbox: function() {
-            this.dataELem
-            this.empty
-            this.selectedElements
-        },
+        // emptyLightbox: function() {
+        //     this.dataELem
+        //     this.empty
+        //     this.selectedElements
+        // },
 
         async getElements() {
             try {
@@ -229,6 +241,9 @@ export const bilanPeriodique = {
             if (this.selected.parcours) type = 3;
             return type;
         },
+
+
+        /////       Suppression d'un EPI/AP/Parcours      /////
 
         async tryDeleteElements(elements) {
             await this.getAppreciations(elements);
@@ -271,14 +286,18 @@ export const bilanPeriodique = {
             }
         },
 
+        /////       Modification d'un EPI/AP/Parcours      /////
+
         async updateElement(element) {
             try {
                 await http.put(`/competences/elementBilanPeriodique?idElement=${element.id}&type=${this.dataELem.type}`, this.dataELem);
-                utils.safeApply(this);
             } catch (e) {
                 notify.error('evaluations.elements.update.error');
             }
+            utils.safeApply(this);
         },
+
+        /////       Selection checkbox      /////
 
         selectUnselectElement: function (element) {
             if (!_.contains(this.selectedElements, element)) {
@@ -323,6 +342,8 @@ export const bilanPeriodique = {
 
             }
         },
+
+        /////       Suppression des chips enseigantns / matières et classe lors de la création des EPI/AP/Parcours      /////
 
         async tryDeleteChips(item) {
             item.selected = true;

@@ -18,7 +18,7 @@
                                   class="skills-text-overflow skills-teach">
                                     <i class="skills-open-icon"></i>
                                     <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes</i18n></span>
-                                    <span ng-show="dataELem.theme">[[libelleTheme]]</span>
+                                    <span ng-show="dataELem.theme">[[libelle]]</span>
                                 </span>
                         <ul>
                             <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeBase.open}">
@@ -77,25 +77,13 @@
             </div>
             <input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-maxlength="50" maxlength="50"/>
             <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle" ng-maxlength="150" maxlength="150"/>
-            <button ng-if="!changeThematique"  class="right-magnet" ng-click="createThematique(thematique)">
+            <button ng-if="!changeThematique" class="right-magnet" ng-click="createThematique(thematique)">
                 <i18n>evaluations.add</i18n>
             </button>
-            <button ng-if="changeThematique"  class="right-magnet" ng-click="updateThematique(themCode, themLibelle)">
+            <button ng-if="changeThematique" class="right-magnet" ng-click="updateThematique(themCode, themLibelle)">
                 <i18n>item.modify</i18n>
             </button>
         </div>
-
-        <!--<div ng-if="dataEleme.theme" ng-show="showAddtheme" class="five cell twelve-mobile borderTheme">-->
-            <!--<div class="beFlex-Justify">-->
-                <!--<p class="marginTopZero">Modifier thème</p>-->
-                <!--<i data-ng-click="showAddtheme = false" class="close-2x blueCross"></i>-->
-            <!--</div>-->
-            <!--<input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-maxlength="50" maxlength="50"/>-->
-            <!--<input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle" ng-maxlength="150" maxlength="150"/>-->
-            <!--<button class="right-magnet" ng-click="updateThematique(thematique)">-->
-                <!--<i18n>item.modify</i18n>-->
-            <!--</button>-->
-        <!--</div>-->
 
         <div ng-show="!selected.parcours" class="twelve cell twelve-mobile">
             <h4 class="two cell marginBottomZero">
@@ -130,7 +118,7 @@
             <div class="row">
                 <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all"
                        ng-click="tryDeleteChips(ens_mat)">
-                    <span><i18n>[[ens_mat.ens.displayName]] / [[ens_mat.mat.name]]</i18n></span>
+                    <span><i18n>[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</i18n></span>
                     <input type="checkbox" ng-model="ens_mat.selected"/>
                 </label>
             </div>
@@ -173,7 +161,7 @@
 
         <lightbox show="opened.lightboxConfirmDeleteChips" on-close="!opened.lightboxConfirmDeleteChips">
             <p>
-                <i18n>evaluations.devoir.confirmation.question</i18n>
+                <i18n>evaluations.devoir.confirmation.question.enseignant</i18n>
             </p>
             <button class="marginFive magnet-right"
                     ng-click="deleteChips()">
@@ -187,7 +175,7 @@
 
         <lightbox show="opened.lightboxConfirmDeleteClasse" on-close="!opened.lightboxConfirmDeleteClasse">
             <p>
-                Sur ???
+                <i18n>evaluations.devoir.confirmation.question.classe</i18n>
             </p>
             <button class="marginFive magnet-right"
                     ng-click="deleteClasse()">
@@ -198,7 +186,6 @@
                 <span><i18n>evaluations.perso.cancel</i18n></span>
             </button>
         </lightbox>
-
 
         <lightbox show="opened.lightboxConfirmDeleteThemes" on-close="!opened.lightboxConfirmDeleteThemes">
             <h3>
