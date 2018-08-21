@@ -6,7 +6,7 @@
     "libelle": {
       "type" : "string"
     },
-    "theme": {
+    "id_theme": {
       "type": "number"
     },
     "description": {

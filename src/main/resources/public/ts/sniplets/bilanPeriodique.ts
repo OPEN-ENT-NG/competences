@@ -43,8 +43,10 @@ export const bilanPeriodique = {
 
             if(param){
                 bilanPeriodique.that.dataELem = {
+                    id: this.selectedElements[0].id,
                     idEtablissement: evaluations.structure.id,
                     theme: this.selectedElements[0].theme,
+                    type: this.selectedElements[0].type,
                     classes: this.selectedElements[0].groupes,
                     ens_mat: this.selectedElements[0].intervenantsMatieres,
                     libelle: this.selectedElements[0].libelle,
@@ -124,8 +126,8 @@ export const bilanPeriodique = {
         },
 
         addTheme: function(theme) {
-            bilanPeriodique.that.libelle = theme.libelle;
-            this.dataELem.theme = theme.id;
+            // bilanPeriodique.that.libelle = theme.libelle;
+            this.dataELem.theme = theme;
             this.themeBase.open = false;
             this.themePerso.open = false;
         },
@@ -137,6 +139,9 @@ export const bilanPeriodique = {
             try {
                 if (this.dataELem !== undefined && this.dataELem !== null) {
                     this.dataELem.type = this.getTypeElement();
+                    if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
+                        this.dataELem.id_theme =  this.dataELem.theme.id;
+                    }
                     const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
                     this.elements.push(data);
                 }
@@ -197,9 +202,11 @@ export const bilanPeriodique = {
 
         async syncMatieresEnseignant(enseignant) {
             try {
-                let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
-                this.matieres = data.data;
-                utils.safeApply(this);
+                if (this.getTypeElement() !== 3) {
+                    let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
+                    this.matieres = data.data;
+                    utils.safeApply(this);
+                }
             } catch (e) {
                 notify.error('evaluations.matiere.get.error');
             }
@@ -210,14 +217,19 @@ export const bilanPeriodique = {
                 if (!_.findWhere(this.dataELem.ens_mat, {intervenant: param1, matiere: param2})) {
                     this.dataELem.ens_mat.push({intervenant: param1, matiere: param2});
                 }
-
             } else {
                 if (!_.contains(this.dataELem.classes, param1)) {
                     this.dataELem.classes.push(param1)
                 }
             }
         },
-
+        pushEnseignant: function (enseignant) {
+            if (this.getTypeElement() == 3) {
+                if (!_.findWhere(this.dataELem.ens_mat, {intervenant: enseignant})) {
+                    this.dataELem.ens_mat.push({intervenant: enseignant});
+                }
+            }
+        },
         // emptyLightbox: function() {
         //     this.dataELem
         //     this.empty
@@ -288,9 +300,18 @@ export const bilanPeriodique = {
 
         /////       Modification d'un EPI/AP/Parcours      /////
 
-        async updateElement(element) {
+        async updateElement() {
             try {
-                await http.put(`/competences/elementBilanPeriodique?idElement=${element.id}&type=${this.dataELem.type}`, this.dataELem);
+                if (this.dataELem !== undefined && this.dataELem !== null
+                && this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined ) {
+                    this.dataELem.id_theme =  this.dataELem.theme.id;
+                }
+                if (this.dataELem.description === null
+                    ||  this.dataELem.description === '') {
+                    delete(this.dataELem.description);
+                }
+                await http.put(`/competences/elementBilanPeriodique?idElement=${this.dataELem.id}&type=${this.dataELem.type}`, this.dataELem);
+                this.getElements();
             } catch (e) {
                 notify.error('evaluations.elements.update.error');
             }

@@ -270,7 +270,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                     if(!idUsers.contains(arrayIntMat[0])){
                                                         idUsers.add(arrayIntMat[0]);
                                                     }
-                                                    if(!idMatieres.contains(arrayIntMat[1])){
+                                                    if(arrayIntMat.length > 1 && !idMatieres.contains(arrayIntMat[1])){
                                                         idMatieres.add(arrayIntMat[1]);
                                                     }
                                                 }
@@ -310,11 +310,12 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
 
                                                                             if ("ok".equals(body.getString("status"))) {
                                                                                 JsonArray classes = body.getJsonArray("results");
-                                                                                Map<String, String> classesMap = new HashMap<String, String>();
-
+                                                                                Map<String, String> classesNameMap = new HashMap<String, String>();
+                                                                                Map<String, String> classesExternalIdMap = new HashMap<String, String>();
                                                                                 for(Object o : classes){
                                                                                     JsonObject classe = (JsonObject)o;
-                                                                                    classesMap.put(classe.getString("id"), classe.getString("name"));
+                                                                                    classesNameMap.put(classe.getString("id"), classe.getString("name"));
+                                                                                    classesExternalIdMap.put(classe.getString("id"), classe.getString("externalId"));
                                                                                 }
 
                                                                                 // récupération des noms des intervenants
@@ -361,7 +362,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                                                                 for(int i = 0; i < arrayIdGroupes.length; i++){
                                                                                                     JsonObject groupe = new JsonObject();
                                                                                                     groupe.put("id", arrayIdGroupes[i]);
-                                                                                                    groupe.put("name", classesMap.get(arrayIdGroupes[i]));
+                                                                                                    groupe.put("name", classesNameMap.get(arrayIdGroupes[i]));
+                                                                                                    groupe.put("externalId", classesExternalIdMap.get(arrayIdGroupes[i]));
                                                                                                     groupes.add(groupe);
                                                                                                 }
                                                                                                 parsedElem.put("groupes", groupes);
@@ -379,11 +381,12 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                                                                         intervenant.put("id", intMatArray[0]);
                                                                                                         intervenant.put("displayName", usersMap.get(intMatArray[0]));
                                                                                                         intervenantMatiere.put("intervenant", intervenant);
-
-                                                                                                        JsonObject matiere = new JsonObject();
-                                                                                                        matiere.put("id", intMatArray[1]);
-                                                                                                        matiere.put("name", matieresMap.get(intMatArray[1]));
-                                                                                                        intervenantMatiere.put("matiere", matiere);
+                                                                                                        if(intMatArray.length > 1 ){
+                                                                                                            JsonObject matiere = new JsonObject();
+                                                                                                            matiere.put("id", intMatArray[1]);
+                                                                                                            matiere.put("name", matieresMap.get(intMatArray[1]));
+                                                                                                            intervenantMatiere.put("matiere", matiere);
+                                                                                                        }
 
                                                                                                         intervenantsMatieres.add(intervenantMatiere);
                                                                                                     }

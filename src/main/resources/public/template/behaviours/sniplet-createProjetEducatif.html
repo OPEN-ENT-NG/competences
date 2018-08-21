@@ -18,7 +18,7 @@
                                   class="skills-text-overflow skills-teach">
                                     <i class="skills-open-icon"></i>
                                     <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes</i18n></span>
-                                    <span ng-show="dataELem.theme">[[libelle]]</span>
+                                    <span ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                 </span>
                         <ul>
                             <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeBase.open}">
@@ -28,7 +28,7 @@
                                 </span>
                                     <ul class="skills-list" >
                                         <li ng-repeat="theme in themes | filter:filterTheme(false)" class="twelve skills-list-proposition skills-text-overflow italic">
-                                            <span ng-click="addTheme(theme)" ng-model="dataELem.theme">[[theme.libelle]]</span>
+                                            <span ng-click="addTheme(theme)">[[theme.libelle]]</span>
                                         </li>
                                     </ul>
                             </li>
@@ -39,7 +39,7 @@
                                 </span>
                                 <ul class="skills-list">
                                     <li ng-repeat="theme in themes | filter:filterTheme(true)" class="twelve skills-list-proposition skills-text-overflow">
-                                        <span ng-click="addTheme(theme)" ng-model="dataELem.theme" class="twelve skills-list-proposition skills-text-overflow italic">[[theme.libelle]]</span>
+                                        <span ng-click="addTheme(theme)" class="twelve skills-list-proposition skills-text-overflow italic">[[theme.libelle]]</span>
                                         <dots-menu>
                                             <opt data-ng-click="openAddtheme(theme)">
                                                 <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
@@ -99,7 +99,7 @@
                 <label class="select">
                     <select ng-model="search.enseignant"
                             ng-options="enseignant.displayName for enseignant in enseignants.all"
-                            ng-change="syncMatieresEnseignant(search.enseignant)">
+                            ng-change="syncMatieresEnseignant(search.enseignant);pushEnseignant(search.enseignant);">
                         <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
                     </select>
                 </label>
@@ -118,7 +118,7 @@
             <div class="row">
                 <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all"
                        ng-click="tryDeleteChips(ens_mat)">
-                    <span><i18n>[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</i18n></span>
+                    <span>[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</span>
                     <input type="checkbox" ng-model="ens_mat.selected"/>
                 </label>
             </div>
@@ -145,16 +145,24 @@
         </div>
 
         <div class="twelve cell twelve-mobile" ng-if="modifElem">
+            <!--<button class="right-magnet"-->
+                    <!--ng-click="updateElement()"-->
+                    <!--ng-disabled="dataELem.theme == null || dataELem.libelle == null || dataElem.ens_mat.length < 2 || dataELem.classes.length == 0">-->
+                <!--<i18n>item.modify</i18n>-->
+            <!--</button>-->
             <button class="right-magnet"
-                    ng-click="updateElement()"
-                    ng-disabled="dataELem.theme == null || dataELem.libelle == null || search.enseignant < 2 || search.matiere == null || search.classe == null">
+                    ng-click="updateElement()" >
                 <i18n>item.modify</i18n>
             </button>
         </div>
         <div class="twelve cell twelve-mobile" ng-if="!modifElem">
+            <!--<button class="right-magnet"-->
+                    <!--ng-click="createElementBilanPeriodique()"-->
+                    <!--ng-disabled="dataELem.theme == null || dataELem.libelle == null || dataElem.ens_mat.length < 2 || dataELem.classes.length == 0">-->
+                <!--<i18n>evaluations.add</i18n>-->
+            <!--</button>-->
             <button class="right-magnet"
-                    ng-click="createElementBilanPeriodique()"
-                    ng-disabled="dataELem.theme == null || dataELem.libelle == null || dataElem.ens_mat.length < 2 || search.matiere == null || search.classe == null">
+                    ng-click="createElementBilanPeriodique()">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>
