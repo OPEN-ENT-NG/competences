@@ -511,6 +511,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.lightboxChampsObligatoire = false;
         $scope.MAX_NBR_COMPETENCE = 12;
         $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
+        $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
         $scope.exportRecapEvalObj = {
             errExport: false
         };
@@ -2204,34 +2205,97 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
         };
 
-        $scope.getElementsBilanBilanPeriodique = function (){
-            $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
-            $scope.bilanPeriodique.syncElements();
-            $scope.bilanPeriodique.syncClasse();
-            $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+        $scope.getElementsBilanBilanPeriodique = async function (param?){
+            if($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
+                && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*"){
+
+                if(!$scope.bilanPeriodique || !param){
+                    $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
+                }
+
+                if(!param || $scope.bilanPeriodique.elements === undefined) {
+                    await $scope.bilanPeriodique.syncElements();
+                    await $scope.bilanPeriodique.syncClasse();
+                }
+
+                if($scope.bilanPeriodique.elements.length > 0) {
+                    $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode);
+                }
+                else {
+                    delete $scope.bilanPeriodique;
+                }
+
+                // $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+
+            } else {
+                delete $scope.bilanPeriodique;
+            }
             utils.safeApply($scope);
+        }
+        $scope.displayApprecEleve = function (appreciations, idElement) {
+            _.forEach(appreciations, (appreciation) => {
+                if(appreciation.id_element === idElement)
+                    return appreciation.appreciation_element;
+            });
         }
 
         /**
          * Séquence d'enregistrement d'une évaluation
          * @param appreciation appréciation à enregistrer
-         * @param $event evenement déclenchant
          * @param eleve élève propriétaire de l'appréciation
          */
-        // $scope.saveAppElementEleve = function (appreciation, eleve) {
-        //     if (appreciation !== undefined && appreciation !== ''
-        //         && (eleve.oldAppreciation !== appreciation)) {
-        //
-        //         evaluation.saveAppreciation().then((res) => {
-        //             evaluation.oldAppreciation = evaluation.appreciation;
-        //             if (res.id !== undefined) {
-        //                 evaluation.id_appreciation = res.id;
-        //                 evaluation.data.id_appreciation = res.id;
-        //             }
-        //             utils.safeApply($scope);
-        //         });
-        //     }
-        // }
+        $scope.saveAppElement = function (element, eleve?) {
+            if(eleve){
+                if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
+                    if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
+
+                        // if(eleve.old_appreciation_element){
+                        //     $scope.bilanPeriodique.updateAppreciation(
+                        //         $scope.search.periode, element, eleve)
+                        //         .then(() => {
+                        //             eleve.old_appreciation_element = eleve.appreciation_element
+                        //         });
+                        // }
+                        // else {
+                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve);
+                                // .then(() => {
+                                //     eleve.old_appreciation_element = eleve.appreciation_element
+                                // });
+                        // }
+
+                    }
+                    else {
+                        notify.error(lang.translate("error.char.outbound") +
+                            $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH);
+                    }
+                }
+            } else {
+                if (element.appreciationClasse[$scope.search.periode.id] !== undefined) {
+                    if (element.appreciationClasse[$scope.search.periode.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
+
+                        // if(element.old_appreciation_element){
+                        //     $scope.bilanPeriodique.updateAppreciation(
+                        //         $scope.search.periode, element)
+                        //         .then(() => {
+                        //             element.old_appreciation_element = element.appreciationClasse
+                        //         });
+                        // }
+                        // else {
+                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element);
+                                // .then(() => {
+                                //     element.old_appreciation_element = element.appreciationClasse
+                                // });
+                        // }
+
+                    }
+                    else {
+                        notify.error(lang.translate("error.char.outbound") +
+                            $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH);
+                    }
+                }
+            }
+                utils.safeApply($scope);
+        }
 
         /**
          * Position l'objet matière sur le devoir en cours de création

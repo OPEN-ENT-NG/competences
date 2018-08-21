@@ -172,7 +172,7 @@ export const bilanPeriodique = {
 
         async getAppreciationsOnClasse(idClasse, idElement) {
             try {
-                let data = await http.get(`/competences/appreciations?idClasse=${idClasse}&idElement=${idElement}`);
+                let data = await http.get(`/competences/elementsAppreciations?idClasse=${idClasse}&idElement=${idElement}`);
                 return data.data;
             } catch (e) {
                 notify.error('evaluations.appreciations.get.error');
@@ -259,7 +259,7 @@ export const bilanPeriodique = {
 
         async getAppreciations(elements) {
             try {
-                let url = "/competences/appreciations?idEtablissement=" + evaluations.structure.id;
+                let url = "/competences/elementsAppreciations?idEtablissement=" + evaluations.structure.id;
                 for (var i = 0; i < elements.length; i++) {
                     url += "&idElement=" + elements[i].id;
                 }

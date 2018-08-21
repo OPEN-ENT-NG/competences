@@ -1,6 +1,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.AccessElementBilanPeriodiqueFilter;
 import fr.openent.competences.security.CreateElementBilanPeriodique;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.*;
@@ -210,6 +211,12 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             case "3" :
                 schema = Competences.SCHEMA_PARCOURS_BILAN_PERIODIQUE;
                 break;
+            case "eleve" :
+                schema = Competences.SCHEMA_APPRECIATION_ELEVE_CREATE;
+                break;
+            case "classe" :
+                schema = Competences.SCHEMA_APPRECIATION_CLASSE_CREATE;
+                break;
             default :
                 schema = null;
         }
@@ -223,7 +230,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-//    @ResourceFilter(CreateElementBilanPeriodique.class)
+//    @SecuredAction(value = "", type = ActionType.RESOURCE)
+//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -483,10 +491,11 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      * Retourne les appreciations liées au élèments du bilan périodiques (et à la classe) passés en paramètre
      * @param request
      */
-    @Get("/appreciations")
+    @Get("/elementsAppreciations")
     @ApiDoc("Retourne les appreciations liées au élèments du bilan périodiques passés en paramètre")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(CreateElementBilanPeriodique.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+//    @SecuredAction(value = "", type = ActionType.RESOURCE)
+//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getAppreciations(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -494,6 +503,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                 if(user != null){
                     defaultElementBilanPeriodiqueService.getApprecBilanPerClasse(
                             request.params().get("idClasse"),
+                            request.params().get("idPeriode"),
                             request.params().getAll("idElement"),
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
@@ -503,6 +513,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
 
                                         defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
                                                 request.params().get("idClasse"),
+                                                request.params().get("idPeriode"),
                                                 request.params().getAll("idElement"),
                                                 new Handler<Either<String, JsonArray>>() {
                                                     @Override
@@ -529,4 +540,76 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             }
         });
     }
+
+    /**
+     * Créer une appréciation avec les données passées en POST
+     * @param request
+     */
+    @Post("/elementsAppreciation")
+    @ApiDoc("Créer une appréciation")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+//    @SecuredAction(value = "", type = ActionType.RESOURCE)
+//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    public void createAppreciation(final HttpServerRequest request){
+        String schema = getElementSchema(request.params().get("type"));
+
+        if(schema != null){
+            RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
+                @Override
+                public void handle(JsonObject resource) {
+                    defaultElementBilanPeriodiqueService.getGroupesElementBilanPeriodique(
+                            resource.getInteger("id_element").toString(),
+                            new Handler<Either<String, JsonArray>> () {
+                            @Override
+                                    public void handle(Either<String, JsonArray> event){
+                                if(event.isRight()){
+                                    defaultElementBilanPeriodiqueService.insertOrUpdateAppreciationElement(
+                                            resource.getString("id_eleve"),
+                                            new Long(resource.getInteger("id_periode")),
+                                            new Long(resource.getInteger("id_element")),
+                                            resource.getString("appreciation"),
+                                            event.right().getValue(),
+                                            defaultResponseHandler(request));
+                                } else {
+                                    leftToResponse(request, event.left());
+                                }
+                            }
+                        });
+                }
+            });
+        } else {
+            Renders.renderJson(request, new JsonObject()
+                    .put("error", "appreciation type not found"), 400);
+        }
+    }
+
+//    /**
+//     * Mettre à jour une appréciation avec les données passées en POST
+//     * @param request
+//     */
+//    @Put("/elementsAppreciation")
+//    @ApiDoc("Mettre à jour une appréciation")
+//    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+////    @SecuredAction(value = "", type = ActionType.RESOURCE)
+////    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+//    public void updateAppreciation(final HttpServerRequest request){
+//
+//        String schema = getElementSchema(request.params().get("type"));
+//
+//        if(schema != null){
+//            RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
+//                @Override
+//                public void handle(JsonObject resource) {
+//                    defaultElementBilanPeriodiqueService.updateAppreciationBilanPeriodique(
+//                            new Long(resource.getInteger("id_appreciation")),
+//                            resource.getString("appreciation"),
+//                            request.params().get("type"),
+//                            defaultResponseHandler(request));
+//                }
+//            });
+//        } else {
+//            Renders.renderJson(request, new JsonObject()
+//                    .put("error", "appreciation type not found"), 400);
+//        }
+//    }
 }

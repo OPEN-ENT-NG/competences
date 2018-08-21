@@ -51,10 +51,12 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
     public static final String SCHEMA_APPRECIATIONS_UPDATE = "eval_updateAppreciation";
-    public static final String SCHEMA_THEMATIQUE_BILAN_PERIODIQUE = "eval_createThematique_bilan_periodique";
-    public static final String SCHEMA_EPI_BILAN_PERIODIQUE = "eval_createEpi_bilan_periodique";
-    public static final String SCHEMA_AP_BILAN_PERIODIQUE = "eval_createAp_bilan_periodique";
-    public static final String SCHEMA_PARCOURS_BILAN_PERIODIQUE = "eval_createParcours_bilan_periodique";
+    public static final String SCHEMA_APPRECIATION_ELEVE_CREATE = "eval_createAppreciationEleve";
+    public static final String SCHEMA_APPRECIATION_CLASSE_CREATE = "eval_createAppreciationClasse";
+    public static final String SCHEMA_THEMATIQUE_BILAN_PERIODIQUE = "eval_createThematiqueBilanPeriodique";
+    public static final String SCHEMA_EPI_BILAN_PERIODIQUE = "eval_createEpiBilanPeriodique";
+    public static final String SCHEMA_AP_BILAN_PERIODIQUE = "eval_createApBilanPeriodique";
+    public static final String SCHEMA_PARCOURS_BILAN_PERIODIQUE = "eval_createParcoursBilanPeriodique";
 
     public static final String SCHEMA_APPRECIATIONS_CLASSE = "eval_createOrUpdateAppreciationClasse";
 
