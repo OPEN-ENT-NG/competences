@@ -80,7 +80,7 @@
             <button ng-if="!changeThematique" class="right-magnet" ng-click="createThematique(thematique)">
                 <i18n>evaluations.add</i18n>
             </button>
-            <button ng-if="changeThematique" class="right-magnet" ng-click="updateThematique(themCode, themLibelle)">
+            <button ng-if="changeThematique" class="right-magnet" ng-click="updateThematique(thematique)">
                 <i18n>item.modify</i18n>
             </button>
         </div>
@@ -118,7 +118,8 @@
             <div class="row">
                 <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all"
                        ng-click="tryDeleteChips(ens_mat)">
-                    <span>[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</span>
+                    <span ng-if="!selected.parcours">[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</span>
+                    <span ng-if="selected.parcours">[[ens_mat.intervenant.displayName]]</span>
                     <input type="checkbox" ng-model="ens_mat.selected"/>
                 </label>
             </div>
@@ -151,7 +152,7 @@
                 <!--<i18n>item.modify</i18n>-->
             <!--</button>-->
             <button class="right-magnet"
-                    ng-click="updateElement()" >
+                    ng-click="updateElement()">
                 <i18n>item.modify</i18n>
             </button>
         </div>
@@ -162,7 +163,8 @@
                 <!--<i18n>evaluations.add</i18n>-->
             <!--</button>-->
             <button class="right-magnet"
-                    ng-click="createElementBilanPeriodique()">
+                    ng-click="createElementBilanPeriodique()"
+                    ng-disabled="required()">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>

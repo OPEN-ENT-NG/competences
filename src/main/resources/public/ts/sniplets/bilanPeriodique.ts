@@ -85,10 +85,12 @@ export const bilanPeriodique = {
 
         openAddtheme: function(theme) {
             bilanPeriodique.that.changeThematique = true;
-            this.thematique.code = theme.code;
-            this.thematique.libelle = theme.libelle;
+            bilanPeriodique.that.thematique.id = theme.id;
+            bilanPeriodique.that.thematique.code = theme.code;
+            bilanPeriodique.that.thematique.libelle = theme.libelle;
             bilanPeriodique.that.showAddtheme = true;
         },
+
 
         /////       Modification d'un thème personnalisé      /////
 
@@ -126,7 +128,6 @@ export const bilanPeriodique = {
         },
 
         addTheme: function(theme) {
-            // bilanPeriodique.that.libelle = theme.libelle;
             this.dataELem.theme = theme;
             this.themeBase.open = false;
             this.themePerso.open = false;
@@ -165,6 +166,7 @@ export const bilanPeriodique = {
             }
             utils.safeApply(this);
         },
+
 
         /////       Filtre les thèmes pour savoir si ce sont des EPI / AP / Parcours      /////
 
@@ -298,6 +300,7 @@ export const bilanPeriodique = {
             }
         },
 
+
         /////       Modification d'un EPI/AP/Parcours      /////
 
         async updateElement() {
@@ -311,12 +314,29 @@ export const bilanPeriodique = {
                     delete(this.dataELem.description);
                 }
                 await http.put(`/competences/elementBilanPeriodique?idElement=${this.dataELem.id}&type=${this.dataELem.type}`, this.dataELem);
-                this.getElements();
+                bilanPeriodique.that.getElements();
             } catch (e) {
                 notify.error('evaluations.elements.update.error');
             }
             utils.safeApply(this);
         },
+
+
+        /////       Champs obligatoire      /////
+
+        // required: function () {
+        //     let check;
+        //     if (this.getTypeElement() == 1) {
+        //         check = this.dataELem.theme == null || this.dataELem.libelle == null || this.dataElem.ens_mat.length < 2 || this.dataELem.classes.length == 0
+        //     }
+        //     else if (this.getTypeElement() == 2) {
+        //         check = this.dataELem.libelle == null || this.dataElem.ens_mat.length < 2 || this.dataELem.classes.length == 0
+        //     }
+        //     else {
+        //         check = this.dataELem.theme == null || this.dataELem.classes.length == 0
+        //     }
+        //     return check;
+        // },
 
         /////       Selection checkbox      /////
 
@@ -363,6 +383,7 @@ export const bilanPeriodique = {
 
             }
         },
+
 
         /////       Suppression des chips enseigantns / matières et classe lors de la création des EPI/AP/Parcours      /////
 

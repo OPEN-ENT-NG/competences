@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id" : {
+      "type":"integer"
+    },
+    "code": {
+      "type": "string"
+    },
+    "libelle": {
+      "type" : "string"
+    },
+    "type": {
+      "type" : "number"
+    }
+  },
+  "required": [
+    "code",
+    "libelle"
+  ]
+}
