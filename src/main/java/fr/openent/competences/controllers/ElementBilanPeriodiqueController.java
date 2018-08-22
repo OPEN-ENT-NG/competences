@@ -45,13 +45,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     @ResourceFilter(CreateElementBilanPeriodique.class)
     public void createThematique(final HttpServerRequest request){
         RequestUtils.bodyToJson(request, pathPrefix +
-                Competences.SCHEMA_THEMATIQUE_BILAN_PERIODIQUE, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject resource) {
-                defaultElementBilanPeriodiqueService.insertThematiqueBilanPeriodique(resource,
-                        defaultResponseHandler(request));
-            }
-        });
+                Competences.SCHEMA_THEMATIQUE_BILAN_PERIODIQUE, resource -> defaultElementBilanPeriodiqueService.insertThematiqueBilanPeriodique(resource,
+                        defaultResponseHandler(request)));
     }
 
     /**
