@@ -435,7 +435,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String queryGroups = "DELETE FROM notes.groups";
         statements.add(new JsonObject().put("statement", queryGroups).put("values", values).put("action", "prepared"));
 
-        String queryRelGroupeType= "DELETE FROM notes.rel_groupe_cycle WHERE type_groupe = 1";
+        String queryRelGroupeType= "DELETE FROM notes.rel_groupe_cycle WHERE type_groupe > 0";
         statements.add(new JsonObject().put("statement", queryRelGroupeType).put("values", values).put("action", "prepared"));
 
         // Suppresion des members, groups et relations groupes d'enseignement - cycle
