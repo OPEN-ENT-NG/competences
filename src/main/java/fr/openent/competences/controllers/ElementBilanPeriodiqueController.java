@@ -55,8 +55,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/thematique")
     @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(CreateElementBilanPeriodique.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getThematiques(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -78,8 +77,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elements/thematique")
     @ApiDoc("Retourne les éléments correspondant à la thématique passée en paramètre")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(CreateElementBilanPeriodique.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getElementsOnThematique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

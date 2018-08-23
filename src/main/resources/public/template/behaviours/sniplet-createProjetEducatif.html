@@ -56,7 +56,7 @@
                     </ul>
                 </div>
 
-                <h3 ng-show="themePerso.open" data-ng-click="showAddtheme = true" class="inline-block">
+                <h3 ng-show="themePerso.open" data-ng-click="showTheme(true)" class="inline-block">
                     <i class="plus marginLeft"></i>
                 </h3>
             </div>
@@ -73,14 +73,14 @@
         <div ng-show="showAddtheme" class="five cell twelve-mobile borderTheme">
             <div class="beFlex-Justify">
                 <p class="marginTopZero">Ajouter thème personnalisé</p>
-                <i data-ng-click="showAddtheme = false" class="close-2x blueCross"></i>
+                <i data-ng-click="showTheme(false)" class="close-2x blueCross"></i>
             </div>
             <input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-maxlength="50" maxlength="50"/>
             <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle" ng-maxlength="150" maxlength="150"/>
-            <button ng-if="!changeThematique" class="right-magnet" ng-click="createThematique(thematique)">
+            <button ng-if="!changeThematique" class="right-magnet" ng-click="createThematique(thematique)" ng-disabled = "requiredTheme()">
                 <i18n>evaluations.add</i18n>
             </button>
-            <button ng-if="changeThematique" class="right-magnet" ng-click="updateThematique(thematique)">
+            <button ng-if="changeThematique" class="right-magnet" ng-click="updateThematique(thematique)" ng-disabled = "requiredTheme()">
                 <i18n>item.modify</i18n>
             </button>
         </div>
@@ -146,25 +146,16 @@
         </div>
 
         <div class="twelve cell twelve-mobile" ng-if="modifElem">
-            <!--<button class="right-magnet"-->
-                    <!--ng-click="updateElement()"-->
-                    <!--ng-disabled="dataELem.theme == null || dataELem.libelle == null || dataElem.ens_mat.length < 2 || dataELem.classes.length == 0">-->
-                <!--<i18n>item.modify</i18n>-->
-            <!--</button>-->
             <button class="right-magnet"
-                    ng-click="updateElement()">
+                    ng-click="updateElement()"
+                    ng-disabled="requiredElement()">
                 <i18n>item.modify</i18n>
             </button>
         </div>
         <div class="twelve cell twelve-mobile" ng-if="!modifElem">
-            <!--<button class="right-magnet"-->
-                    <!--ng-click="createElementBilanPeriodique()"-->
-                    <!--ng-disabled="dataELem.theme == null || dataELem.libelle == null || dataElem.ens_mat.length < 2 || dataELem.classes.length == 0">-->
-                <!--<i18n>evaluations.add</i18n>-->
-            <!--</button>-->
             <button class="right-magnet"
                     ng-click="createElementBilanPeriodique()"
-                    ng-disabled="required()">
+                    ng-disabled="requiredElement()">
                 <i18n>evaluations.add</i18n>
             </button>
         </div>

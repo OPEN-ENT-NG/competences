@@ -113,7 +113,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         "ON CONFLICT ON CONSTRAINT elt_bilan_period_interv_mat_unique DO NOTHING;";
                 JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
                         .add(elementId)
-                        .add(intervenantMatiere.getJsonObject("intervenant").getString("id")) ;
+                        .add(intervenantMatiere.getJsonObject("intervenant").getString("id"));
                 statements.prepared(query, params);
             } else {
                 JsonObject intervenantMatiere = (JsonObject) o;
@@ -510,11 +510,24 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         statements.prepared(query, params);
         int type = element.getInteger("type");
         if(type == 1 || type == 2 || type == 3){
+            //appel de la fonction de suppression des relations element - enseignant/matiere
+            deleteRelEltIntervenantMatiere(idElement, statements);
             insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, type, statements);
         }
         insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
 
         Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
+    }
+
+
+    private void deleteRelEltIntervenantMatiere (Long idEltBilanPeriodique, SqlStatementsBuilder statements){
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere " +
+                "WHERE id_elt_bilan_periodique = ? ";
+        params.add(idEltBilanPeriodique);
+
+        statements.prepared(query, params);
     }
 
     @Override
