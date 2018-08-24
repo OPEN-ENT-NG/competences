@@ -720,6 +720,50 @@ body.evaluations {
         }
       }
     }
+
+    .appreciation-classe{
+      padding-left: 20px;
+      padding-top: 5px;
+      margin-top: 10px;
+      textarea {
+        width: 98%;
+      }
+    }
+
+    .openedElem{
+      height: auto;
+      &::before {
+        @include fonticon;
+        margin-right: 1%;
+        content: "\e823";
+        font-size:10px;
+        float: left;
+      }
+    }
+
+    .padding-table-elements{
+      margin-top: 15px;
+      padding-left: 20px;
+      padding-right: 25px;
+      padding-top: 10px;
+      padding-bottom: 10px;
+    }
+
+    .elements-header{
+      display: block;
+      background-color: $white;
+      margin-top: 1%;
+      height: 60px !important;
+      padding: 12px 5px;
+      box-sizing: border-box;
+      vertical-align: middle;
+      @include transition(all 200ms ease);
+      border-bottom: solid 1px $light-grey;
+
+      &.card {
+        background-color: $white;
+      }
+    }
   }
   .indent-five{
     text-indent: 5px;

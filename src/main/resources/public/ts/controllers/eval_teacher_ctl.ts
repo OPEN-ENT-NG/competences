@@ -346,6 +346,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.openLeftMenu("opened.criteres", false);
                     if (!template.isEmpty('leftSide-userInfo')) template.close('leftSide-userInfo');
 
+                    $scope.selected = {EPI: true, AP: false, parcours: false};
+
                     $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
 
                     utils.safeApply($scope);
@@ -2219,6 +2221,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
 
                 if($scope.bilanPeriodique.elements.length > 0) {
+                    // await $scope.bilanPeriodique.getEnseignantsOnElements($scope.bilanPeriodique.elements);
                     $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode);
                 }
                 else {
@@ -2248,21 +2251,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if(eleve){
                 if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
                     if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-
-                        // if(eleve.old_appreciation_element){
-                        //     $scope.bilanPeriodique.updateAppreciation(
-                        //         $scope.search.periode, element, eleve)
-                        //         .then(() => {
-                        //             eleve.old_appreciation_element = eleve.appreciation_element
-                        //         });
-                        // }
-                        // else {
                         $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve);
-                                // .then(() => {
-                                //     eleve.old_appreciation_element = eleve.appreciation_element
-                                // });
-                        // }
-
                     }
                     else {
                         notify.error(lang.translate("error.char.outbound") +
@@ -2272,21 +2261,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else {
                 if (element.appreciationClasse[$scope.search.periode.id] !== undefined) {
                     if (element.appreciationClasse[$scope.search.periode.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-
-                        // if(element.old_appreciation_element){
-                        //     $scope.bilanPeriodique.updateAppreciation(
-                        //         $scope.search.periode, element)
-                        //         .then(() => {
-                        //             element.old_appreciation_element = element.appreciationClasse
-                        //         });
-                        // }
-                        // else {
                         $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element);
-                                // .then(() => {
-                                //     element.old_appreciation_element = element.appreciationClasse
-                                // });
-                        // }
-
                     }
                     else {
                         notify.error(lang.translate("error.char.outbound") +
@@ -2296,6 +2271,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
                 utils.safeApply($scope);
         }
+
+        $scope.filterElements = () => {
+            return (item) => {
+                if($scope.selected.AP){
+                    return !item.theme;
+                }
+                else if($scope.selected.parcours){
+                    return !item.libelle;
+                }
+                else {
+                    return item.theme && item.libelle;
+                }
+            };
+        };
 
         /**
          * Position l'objet matière sur le devoir en cours de création

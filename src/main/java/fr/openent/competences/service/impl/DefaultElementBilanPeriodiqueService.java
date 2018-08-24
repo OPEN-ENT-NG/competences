@@ -224,6 +224,22 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     }
 
     @Override
+    public void getEnseignantsElementsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT id_elt_bilan_periodique, id_intervenant, id_matiere ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idElements));
+
+        for (int i = 0; i < idElements.size(); i++) {
+            params.add(idElements.get(i));
+        }
+
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
     public void getGroupesElementBilanPeriodique (String idElement, Handler<Either<String, JsonArray>> handler){
 
         StringBuilder query = new StringBuilder();

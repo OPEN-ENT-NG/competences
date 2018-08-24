@@ -20,6 +20,7 @@ export class BilanPeriodique extends  Model {
     static get api() {
         return {
             GET_ELEMENTS: '/competences/elementsBilanPeriodique?idEtablissement=' + evaluations.structure.id,
+            GET_ENSEIGNANTS: '/competences/elementsBilanPeriodique/enseignants',
             GET_APPRECIATIONS: '/competences/elementsAppreciations',
             create: '/competences/elementsAppreciation'
         }
@@ -95,10 +96,38 @@ export class BilanPeriodique extends  Model {
         try {
             let data = await http.get(BilanPeriodique.api.GET_ELEMENTS + "&idClasse=" + this.classe.id + "&idEnseignant=" + model.me.userId);
             this.elements = data.data;
+
+            if(data.data.length > 0) {
+                let url = BilanPeriodique.api.GET_ENSEIGNANTS + "?idElement=" + this.elements[0].id;
+                for (let i = 1; i < data.data.length; i++) {
+                    url += "&idElement=" + this.elements[i].id;
+                }
+                let result = await http.get(url);
+                _.forEach(this.elements, (element) => {
+                    let enseignants = _.findWhere(result.data, {idElement: element.id})
+                    element.enseignants = enseignants.idsEnseignants;
+                });
+            }
+
         } catch (e) {
             notify.error('evaluations.elements.get.error');
         }
     }
+
+    // async getEnseignantsOnElements (elements) {
+    //     try {
+    //         let url = BilanPeriodique.api.GET_ENSEIGNANTS + "&idElement=" + elements[0].id;
+    //         for (let i = 1; i < elements.length; i++) {
+    //             url += "&idElement=" + elements[i].id;
+    //         }
+    //         let data = await http.get(url);
+    //         _.forEach(elements, (element) => {
+    //             element.enseignantsMatieres = _.where(data.data, {id_elt_bilan_periodique: element.id});
+    //         });
+    //     } catch (e) {
+    //         notify.error('evaluations.enseignants.get.error');
+    //     }
+    // }
 
     async syncAppreciations (elements, periode) {
         try {
@@ -133,14 +162,6 @@ export class BilanPeriodique extends  Model {
                                     eleve.appreciations[periode.id] = [];
                                     eleve.appreciations[periode.id][element.id] = elemApprec.commentaire;
                                 }
-
-                                // if(eleve.appreciations !== undefined){
-                                //     eleve.appreciations[element.id] = elemApprec.commentaire;
-                                // }
-                                // else {
-                                //     eleve.appreciations = [];
-                                //     eleve.appreciations[element.id] = elemApprec.commentaire;
-                                // }
                             }
                         })
                     }

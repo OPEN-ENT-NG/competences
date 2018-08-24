@@ -49,6 +49,13 @@ public interface ElementBilanPeriodiqueService {
                                            Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Retourne les élèments du bilan périodique sur la classe et/ou l'enseignant et/ou l'établissement.
+     * @param idElements id des éléments
+     * @param handler Handler de retour
+     */
+    public void getEnseignantsElementsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * Retourne les groupes de l'élèment du bilan périodique dont l'id est passé en paramètre.
      * @param idElement id élèment bilan périodique
      * @param handler Handler de retour

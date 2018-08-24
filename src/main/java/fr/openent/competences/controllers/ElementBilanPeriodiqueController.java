@@ -418,6 +418,90 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
+     * Retourne les thématiques correspondant au type passé en paramètre
+     * @param request
+     */
+    @Get("/elementsBilanPeriodique/enseignants")
+    @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+//    @SecuredAction(value = "", type = ActionType.RESOURCE)
+//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    public void getEnseignantsElements(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if(user != null){
+                    defaultElementBilanPeriodiqueService.getEnseignantsElementsBilanPeriodique(
+                            request.params().getAll("idElement"),
+                            new Handler<Either<String, JsonArray>>() {
+                                @Override
+                                public void handle(Either<String, JsonArray> event) {
+                                    if (event.isRight()) {
+                                        JsonArray result = event.right().getValue();
+
+                                        List<String> idUsers = new ArrayList<>();
+                                        Map<Long, List<String>> ensElemMap = new HashMap<Long, List<String>>();
+
+                                        for (Object o : result) {
+                                            JsonObject ensMat = (JsonObject) o;
+                                            if (!idUsers.contains(ensMat.getString("id_intervenant"))) {
+                                                idUsers.add(ensMat.getString("id_intervenant"));
+                                            }
+                                            if (!ensElemMap.containsKey(ensMat.getLong("id_elt_bilan_periodique"))) {
+                                                ensElemMap.put(ensMat.getLong("id_elt_bilan_periodique"), new ArrayList<>());
+                                            }
+                                            ensElemMap.get(ensMat.getLong("id_elt_bilan_periodique")).add(ensMat.getString("id_intervenant"));
+                                        }
+
+                                        // récupération des noms des intervenants
+                                        JsonObject action = new JsonObject()
+                                                .put("action", "user.getUsers")
+                                                .put("idUsers", idUsers);
+
+                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                            @Override
+                                            public void handle(Message<JsonObject> message) {
+                                                JsonObject body = message.body();
+
+                                                if ("ok".equals(body.getString("status"))) {
+                                                    JsonArray users = body.getJsonArray("results");
+                                                    Map<String, String> usersMap = new HashMap<String, String>();
+                                                    for(Object o : users){
+                                                        JsonObject user = (JsonObject)o;
+                                                        usersMap.put(user.getString("id"), user.getString("displayName"));
+                                                    }
+                                                    JsonArray resultat = new JsonArray();
+
+                                                    for(Map.Entry<Long, List<String>> entry : ensElemMap.entrySet()) {
+                                                        JsonObject enseignantsElem = new JsonObject();
+                                                        enseignantsElem.put("idElement", entry.getKey());
+                                                        JsonArray ens = new fr.wseduc.webutils.collections.JsonArray();
+                                                        for(Object o : entry.getValue()){
+                                                            String idEns = (String)o;
+                                                            ens.add(usersMap.get(idEns));
+                                                        }
+                                                        enseignantsElem.put("idsEnseignants", ens);
+                                                        resultat.add(enseignantsElem);
+                                                    }
+                                                    Renders.renderJson(request, resultat);
+                                                } else {
+                                                    leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
+                                                }
+                                            }
+                                        }));
+                                    } else {
+                                        leftToResponse(request, event.left());
+                                    }
+                                }
+                            });
+                }else{
+                    unauthorized(request);
+                }
+            }
+        });
+    }
+
+    /**
      * Supprimer des élèments du bilan périodique dont les ids sont passés en paramètre
      * @param request
      */

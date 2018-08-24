@@ -36,6 +36,7 @@ export const bilanPeriodique = {
             bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
+            delete this.dataELem;
 
             if(param) {
                 bilanPeriodique.that.dataELem = {
@@ -50,11 +51,12 @@ export const bilanPeriodique = {
                 };
                 this.dataELem = bilanPeriodique.that.dataELem;
             } else {
-                this.dataELem = {
+                bilanPeriodique.that.dataELem = {
                     idEtablissement : evaluations.structure.id,
                     classes: [],
                     ens_mat: []
                 };
+                this.dataELem = bilanPeriodique.that.dataELem;
             }
             bilanPeriodique.that.themeBase = {
                 open: false
