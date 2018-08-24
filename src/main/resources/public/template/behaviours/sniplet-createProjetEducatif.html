@@ -94,36 +94,34 @@
                       placeholder="Saisir la description" name="saisie description"></textarea>
         </div>
 
-        <div class="twelve cell twelve-mobile selet-blocks">
-            <div class="five cell twelve-mobile">
+        <div ng-show="!selected.parcours" class="twelve cell twelve-mobile selet-blocks">
+            <div  class="five cell twelve-mobile">
                 <label class="select">
                     <select ng-model="search.enseignant"
                             ng-options="enseignant.displayName for enseignant in enseignants.all"
-                            ng-change="syncMatieresEnseignant(search.enseignant);pushEnseignant(search.enseignant);">
-                        <option class="header-opt" value="">[[translate('viescolaire.utils.teacher')]]</option>
+                            ng-change="syncMatieresEnseignant(search.enseignant)">
+                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.teacher')]]</option>
                     </select>
                 </label>
             </div>
-            <div ng-show="!selected.parcours" class="five cell twelve-mobile marginLeft">
+            <div class="five cell twelve-mobile marginLeft">
                 <label class="select"
                        ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
                     <select ng-model="search.matiere"
                             ng-change="pushData(search.enseignant, search.matiere)"
                             ng-options="matiere.name for matiere in matieres"
                             ng-disabled="search.enseignant == null">
-                        <option class="header-opt" value="">[[translate('viescolaire.utils.subject')]]</option>
+                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.subject')]]</option>
                     </select>
                 </label>
             </div>
             <div class="row">
                 <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all"
                        ng-click="tryDeleteChips(ens_mat)">
-                    <span ng-if="!selected.parcours">[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</span>
-                    <span ng-if="selected.parcours">[[ens_mat.intervenant.displayName]]</span>
+                    <span>[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</span>
                     <input type="checkbox" ng-model="ens_mat.selected"/>
                 </label>
             </div>
-
         </div>
 
         <div class="twelve cell twelve-mobile">
@@ -132,7 +130,7 @@
                     <select ng-model="search.classe"
                             ng-change="pushData(search.classe)"
                             ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
-                        <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
                     </select>
                 </label>
                 <div class="row">

@@ -85,8 +85,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
                     statements.prepared(query, params);
                     int type = element.getInteger("type");
-                    if(type == 1 || type == 2 || type == 3){
-                        insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement,type, statements);
+                    if(type == 1 || type == 2){
+                        insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, statements);
                     }
                     insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
                 }
@@ -102,31 +102,19 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
      * @param elementId id de l'élément
      * @param statements Sql statement builder
      */
-    private void insertRelEltIntervenantMatiere(JsonArray intervenantsMatieres, Long elementId, int type, SqlStatementsBuilder statements){
+    private void insertRelEltIntervenantMatiere(JsonArray intervenantsMatieres, Long elementId, SqlStatementsBuilder statements){
 
         for (Object o : intervenantsMatieres) {
-            if(type == 3) {
-                JsonObject intervenantMatiere = (JsonObject) o;
-                String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
-                        ".rel_elt_bilan_periodique_intervenant_matiere(id_elt_bilan_periodique, id_intervenant) " +
-                        "VALUES (?, ?) " +
-                        "ON CONFLICT ON CONSTRAINT elt_bilan_period_interv_mat_unique DO NOTHING;";
-                JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                        .add(elementId)
-                        .add(intervenantMatiere.getJsonObject("intervenant").getString("id"));
-                statements.prepared(query, params);
-            } else {
-                JsonObject intervenantMatiere = (JsonObject) o;
-                String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
-                        ".rel_elt_bilan_periodique_intervenant_matiere(id_elt_bilan_periodique, id_intervenant, id_matiere) " +
-                        "VALUES (?, ?, ?) " +
-                        "ON CONFLICT ON CONSTRAINT elt_bilan_period_interv_mat_unique DO NOTHING;";
-                JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                        .add(elementId)
-                        .add(intervenantMatiere.getJsonObject("intervenant").getString("id"))
-                        .add(intervenantMatiere.getJsonObject("matiere").getString("id"));
-                statements.prepared(query, params);
-            }
+            JsonObject intervenantMatiere = (JsonObject) o;
+            String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA +
+                    ".rel_elt_bilan_periodique_intervenant_matiere(id_elt_bilan_periodique, id_intervenant, id_matiere) " +
+                    "VALUES (?, ?, ?) " +
+                    "ON CONFLICT ON CONSTRAINT elt_bilan_period_interv_mat_unique DO NOTHING;";
+            JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                    .add(elementId)
+                    .add(intervenantMatiere.getJsonObject("intervenant").getString("id"))
+                    .add(intervenantMatiere.getJsonObject("matiere").getString("id"));
+            statements.prepared(query, params);
         }
     }
 
@@ -184,7 +172,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         }
 
         query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
-                .append(" ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = elt_bilan_periodique.id AND rel_elt_bilan_periodique_intervenant_matiere IS NOT NULL ");
+                .append(" ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = elt_bilan_periodique.id ");
         if(idEnseignant != null){
             query.append(" AND rel_elt_bilan_periodique_intervenant_matiere.id_intervenant = ? ");
             params.add(idEnseignant);
@@ -196,12 +184,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         params.add(idEtablissement);
 
         query.append(" UNION ")
-                .append(" (SELECT elt_bilan_periodique.*, thematique_bilan_periodique.libelle, string_agg(DISTINCT id_groupe, ',') AS groupes, array_agg (DISTINCT CONCAT (id_intervenant, ',', id_matiere)) AS intervenants_matieres ")
+                .append(" (SELECT elt_bilan_periodique.*, thematique_bilan_periodique.libelle, string_agg(DISTINCT id_groupe, ',') AS groupes, null ")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
                 .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe ")
                 .append(" ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ");
-        query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
-                .append(" ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = elt_bilan_periodique.id ");
         if(idClasse != null){
             query.append(" AND rel_elt_bilan_periodique_groupe.id_groupe = ? ");
             params.add(idClasse);
@@ -509,10 +495,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         statements.prepared(query, params);
         int type = element.getInteger("type");
-        if(type == 1 || type == 2 || type == 3){
+        if(type == 1 || type == 2){
             //appel de la fonction de suppression des relations element - enseignant/matiere
             deleteRelEltIntervenantMatiere(idElement, statements);
-            insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, type, statements);
+            insertRelEltIntervenantMatiere(element.getJsonArray("ens_mat"), idElement, statements);
         }
         insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
 

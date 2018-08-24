@@ -48,6 +48,7 @@ export const bilanPeriodique = {
                     libelle: this.selectedElements[0].libelle,
                     description: this.selectedElements[0].description
                 };
+                this.dataELem = bilanPeriodique.that.dataELem;
             } else {
                 this.dataELem = {
                     idEtablissement : evaluations.structure.id,
@@ -220,11 +221,9 @@ export const bilanPeriodique = {
 
         async syncMatieresEnseignant(enseignant) {
             try {
-                if (this.getTypeElement() !== 3) {
                     let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
                     this.matieres = data.data;
                     utils.safeApply(this);
-                }
             } catch (e) {
                 notify.error('evaluations.matiere.get.error');
             }
@@ -238,13 +237,6 @@ export const bilanPeriodique = {
             } else {
                 if (!_.contains(this.dataELem.classes, param1)) {
                     this.dataELem.classes.push(param1)
-                }
-            }
-        },
-        pushEnseignant: function (enseignant) {
-            if (this.getTypeElement() == 3) {
-                if (!_.findWhere(this.dataELem.ens_mat, {intervenant: enseignant})) {
-                    this.dataELem.ens_mat.push({intervenant: enseignant});
                 }
             }
         },
