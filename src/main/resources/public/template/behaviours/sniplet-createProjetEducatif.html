@@ -9,9 +9,9 @@
     <div>
 
         <div class="seven cell twelve-mobile">
-            <div ng-show="!selected.AP" class="twelve cell twelve-mobile beFlex">
+            <div ng-show="!selected.AP" class="twelve cell twelve-mobile">
 
-                <div class="row">
+                <div class="row skills-95">
                     <ul class="skills-list-aideSaisie">
                         <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: theme.open}">
                             <span ng-click="theme.open = !theme.open;"
@@ -20,7 +20,7 @@
                                     <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes</i18n></span>
                                     <span ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                 </span>
-                        <ul>
+                        <ul class="skills-list-aideSaisie">
                             <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeBase.open}">
                                 <span ng-click="themeBase.open = !themeBase.open;"
                                       class="skills-text-overflow skills-teach">
@@ -33,21 +33,25 @@
                                     </ul>
                             </li>
                             <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themePerso.open}">
-                                <span ng-click="themePerso.open = !themePerso.open;"
-                                      class="skills-text-overflow skills-teach">
-                                    <span><i18n>viescolaire.utils.themes.personnalise</i18n></span>
+                                <span class="skills-text-overflow skills-teach">
+                                    <span ng-click="themePerso.open = !themePerso.open;"><i18n>viescolaire.utils.themes.personnalise</i18n></span>
+                                    <h3 data-ng-click="showTheme(true)" class="inline-block">
+                                        <i class="plus marginLeft"></i>
+                                    </h3>
                                 </span>
                                 <ul class="skills-list">
-                                    <li ng-repeat="theme in themes | filter:filterTheme(true)" class="twelve skills-list-proposition skills-text-overflow">
+                                    <div class="toto">
+                                        <li ng-repeat="theme in themes | filter:filterTheme(true)" class="twelve skills-list-proposition skills-text-overflow">
+                                            <dots-menu>
+                                                <opt data-ng-click="openAddtheme(theme)">
+                                                    <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
+                                                </opt>
+                                                <opt data-ng-click="tryDeleteTheme(theme)">
+                                                    <i class="trash"></i>&nbsp;<i18n>item.delete</i18n>
+                                                </opt>
+                                            </dots-menu>
                                         <span ng-click="addTheme(theme)" class="twelve skills-list-proposition skills-text-overflow italic">[[theme.libelle]]</span>
-                                        <dots-menu>
-                                            <opt data-ng-click="openAddtheme(theme)">
-                                                <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
-                                            </opt>
-                                            <opt data-ng-click="tryDeleteTheme(theme)">
-                                                <i class="trash"></i>&nbsp;<i18n>item.delete</i18n>
-                                            </opt>
-                                        </dots-menu>
+                                    </div>
                                     </li>
                                 </ul>
                             </li>
@@ -56,9 +60,6 @@
                     </ul>
                 </div>
 
-                <h3 ng-show="themePerso.open" data-ng-click="showTheme(true)" class="inline-block">
-                    <i class="plus marginLeft"></i>
-                </h3>
             </div>
             <div ng-show="!selected.parcours" class="twelve cell twelve-mobile marginTop">
                 <div class="four cell twelve-mobile">
@@ -71,11 +72,11 @@
         </div>
 
         <div ng-show="showAddtheme" class="five cell twelve-mobile borderTheme">
-            <div class="beFlex-Justify">
+            <div class="beFlex">
                 <p class="marginTopZero">Ajouter thème personnalisé</p>
                 <i data-ng-click="showTheme(false)" class="close-2x blueCross"></i>
             </div>
-            <input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-maxlength="50" maxlength="50"/>
+            <input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-disabled="changeThematique" ng-maxlength="50" maxlength="50"/>
             <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle" ng-maxlength="150" maxlength="150"/>
             <button ng-if="!changeThematique" class="right-magnet" ng-click="createThematique(thematique)" ng-disabled = "requiredTheme()">
                 <i18n>evaluations.add</i18n>
@@ -191,18 +192,11 @@
                 <i18n>evaluations.bilan.periodique</i18n>
             </h3>
             <p>
-                <i18n>evaluation.bilan.periodique.message</i18n>
-            </p>
-            <p>
-                <i18n>evaluations.devoir.confirmation.question</i18n>
+                <i18n>evaluation.bilan.periodique.supp.impossible</i18n>
             </p>
             <button class="marginFive magnet-right"
-                    ng-click="">
+                    ng-click="opened.lightboxConfirmDeleteThemes = false;">
                 <i18n>evaluations.perso.ok</i18n>
-            </button>
-            <button ng-click="opened.lightboxConfirmDeleteThemes=false;"
-                    class="right-magnet cancel">
-                <span><i18n>evaluations.perso.cancel</i18n></span>
             </button>
         </lightbox>
 

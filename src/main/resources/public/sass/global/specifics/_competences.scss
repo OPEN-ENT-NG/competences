@@ -1555,7 +1555,7 @@ body.evaluations {
       display: block;
       cursor: pointer;
       &.skills-teach{
-        padding: 10px 35px 20px 20px;
+        padding: 10px 35px 10px 20px;
 
         > span{
           margin-bottom: 5px;
@@ -1575,6 +1575,7 @@ body.evaluations {
       }
     }
   }
+
   .skills-text-overflow{
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1582,6 +1583,7 @@ body.evaluations {
     display: inline-block;
     @include transition(all 200ms ease);
   }
+
   .skills-list-connaissance{
     margin: 10px 5px 0 45px;
     cursor: pointer;
@@ -1603,9 +1605,11 @@ body.evaluations {
     position: absolute;
     top: 9px;
   }
+
   .skills-headers-checkbox{
     left: 20px;
   }
+
   .skill-connaissance-eye{
     height: 100%;
     display: inline-block;
@@ -3062,11 +3066,8 @@ body.evaluations {
 
   //  Bilan périodique - POP UP création EPI / AP / Parcours
 
-  .beFlex {
-    display: flex;
-  }
 
-  .beFlex-Justify {
+  .beFlex {
     display: flex;
     justify-content: space-between;
   }
@@ -3095,33 +3096,34 @@ body.evaluations {
     }
   &:after {
     background: grey;
+    }
   }
-}
 
   .blueCross {
     color: $cyan;
   }
 
-  .skills-header{
+  .skills-header {
     cursor: pointer;
     @include transition(all 200ms ease);
-    &.skill-50{
+    &.skill-50 {
       height: 50px;
       overflow: hidden;
     }
-    &.skill-30{
+    &.skill-30 {
       height: 30px;
       overflow: hidden;
     }
-    &.skill-40{
+    &.skill-40 {
       height: 40px;
       overflow: hidden;
     }
-    &.skill-45{
+    &.skill-45 {
       height: 45px;
       overflow: hidden;
+      list-style-type: none;
     }
-    &.opened{
+    &.opened {
       height: auto;
       overflow: visible;
       @include transition(all 200ms ease);
@@ -3131,15 +3133,15 @@ body.evaluations {
         }
       }
     }
-    > span{
-      padding: 10px 35px 10px 50px;
+    > span {
+      padding: 15px 5px;
       border-bottom: solid 1px #e0e0e0;
       display: block;
       cursor: pointer;
-      &.skills-teach{
+      &.skills-teach {
         padding: 10px 35px 20px 20px;
 
-        > span{
+        > span {
           margin-bottom: 5px;
         }
       }
@@ -3160,9 +3162,11 @@ body.evaluations {
 
   .skills-list-aideSaisie ul {
     list-style-type: none;
+    padding-left: 20px !important;
+    margin: 0 !important;
   }
 
-  .skills-list-proposition{
+  .skills-list-proposition {
     margin: 10px 5px 0 5px;
     cursor: pointer;
     padding: 0 0 0 5px;
@@ -3174,6 +3178,28 @@ body.evaluations {
 
   .all.selected {
     background: grey !important;
+  }
+
+  .skills-list {
+    padding-left: 15px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 150px;
+  }
+
+  .skills-list-proposition:hover dots-menu {
+    opacity: 1;
+  }
+  .skills-list-proposition dots-menu {
+    opacity: 0;
+  }
+
+  .skills-95 {
+    width: 95%;
+  }
+
+  .responsive-table >thead >label.checkbox >input[type="checkbox"]:checked+span::before {
+    border-color: #fff;
   }
 
 }

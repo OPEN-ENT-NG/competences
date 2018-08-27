@@ -7,22 +7,21 @@
         <header ng-class="{selected : selected.EPI}"
                 class="horizontal-spacing-twice ng-scope">
             <div class="horizontal-spacing"
-                 ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false">
-                <!--ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false"-->
+                 ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false; emptyCheckbox(elements)">
                 <i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span></i18n>
             </div>
         </header>
         <header ng-class="{selected : selected.AP}"
                 class="horizontal-spacing-twice ng-scope">
             <div class="horizontal-spacing"
-                 ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false">
+                 ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false; emptyCheckbox(elements)">
                 <i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n>
             </div>
         </header>
         <header ng-class="{selected : selected.parcours}"
                 class="horizontal-spacing-twice ng-scope">
             <div class="horizontal-spacing"
-                 ng-click="selected.parcours = true;  selected.EPI = false; selected.AP = false">
+                 ng-click="selected.parcours = true;  selected.EPI = false; selected.AP = false; emptyCheckbox(elements)">
                 <i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n>
             </div>
         </header>
@@ -144,7 +143,7 @@
         <i18n>evaluations.devoir.confirmation.question</i18n>
     </p>
     <button class="marginFive magnet-right"
-            ng-click=" (selectedElements);">
+            ng-click="deleteElements(selectedElements);">
         <i18n>evaluations.perso.ok</i18n>
     </button>
     <button ng-click="opened.lightboxConfirmDeleteElements=false;"
