@@ -436,7 +436,6 @@ public class DefaultExportService implements ExportService {
                         niveau.put("ordre", o.getInteger("ordre"));
                         legende.add(niveau);
                     }
-                    boolean b = true;
                     handler.handle(new Either.Right<String, JsonArray>(legende));
                 } else {
                     handler.handle(new Either.Left<String, JsonArray>("exportRecapEval : empty result."));

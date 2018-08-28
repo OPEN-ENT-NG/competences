@@ -2222,7 +2222,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 if($scope.bilanPeriodique.elements.length > 0) {
                     // await $scope.bilanPeriodique.getEnseignantsOnElements($scope.bilanPeriodique.elements);
-                    $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode);
+                    $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode, $scope.search.classe);
+                    utils.safeApply($scope);
                 }
                 else {
                     delete $scope.bilanPeriodique;
@@ -2251,7 +2252,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if(eleve){
                 if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
                     if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve);
+                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, null);
                     }
                     else {
                         notify.error(lang.translate("error.char.outbound") +
@@ -2259,9 +2260,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             } else {
-                if (element.appreciationClasse[$scope.search.periode.id] !== undefined) {
-                    if (element.appreciationClasse[$scope.search.periode.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element);
+                if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id] !== undefined) {
+                    if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
+                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, null, $scope.search.classe);
                     }
                     else {
                         notify.error(lang.translate("error.char.outbound") +
@@ -2269,7 +2270,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             }
-                utils.safeApply($scope);
+            utils.safeApply($scope);
         }
 
         $scope.filterElements = () => {

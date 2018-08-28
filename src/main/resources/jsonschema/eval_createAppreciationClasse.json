@@ -9,6 +9,12 @@
     "id_element": {
       "type" : "integer"
     },
+    "id_classe": {
+      "type" : "string"
+    },
+    "externalid_classe": {
+      "type" : "string"
+    },
     "appreciation": {
       "type" : "string"
     }
@@ -16,6 +22,8 @@
   "required": [
     "id_periode",
     "id_element",
+    "id_classe",
+    "externalid_classe",
     "appreciation"
   ]
 }

@@ -118,7 +118,7 @@
             </div>
             <div class="row">
                 <label ng-repeat="ens_mat in dataELem.ens_mat" class="chip multiselect all"
-                       ng-click="tryDeleteChips(ens_mat)">
+                       ng-click="tryDeleteEnseignantMatiere(ens_mat)">
                     <span>[[ens_mat.intervenant.displayName]] / [[ens_mat.matiere.name]]</span>
                     <input type="checkbox" ng-model="ens_mat.selected"/>
                 </label>
@@ -136,7 +136,7 @@
                 </label>
                 <div class="row">
                     <label ng-repeat="classe in dataELem.classes" class="chip multiselect all"
-                           ng-click="tryDeleteClasse(classes)">
+                           ng-click="tryDeleteClasse(classe)">
                         <span><i18n>[[classe.name]]</i18n></span>
                         <input type="checkbox" ng-model="classe.selected"/>
                     </label>
@@ -164,7 +164,7 @@
                 <i18n>evaluations.devoir.confirmation.question.enseignant</i18n>
             </p>
             <button class="marginFive magnet-right"
-                    ng-click="deleteChips()">
+                    ng-click="deleteEnseignantMatiere()">
                 <i18n>evaluations.perso.ok</i18n>
             </button>
             <button ng-click="opened.lightboxConfirmDeleteChips = false;"

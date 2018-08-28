@@ -129,9 +129,9 @@ export class BilanPeriodique extends  Model {
     //     }
     // }
 
-    async syncAppreciations (elements, periode) {
+    async syncAppreciations (elements, periode, classe) {
         try {
-            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id;
+            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id;
             for (let i = 0; i < elements.length; i++) {
                 url += "&idElement=" + elements[i].id;
             }
@@ -142,26 +142,25 @@ export class BilanPeriodique extends  Model {
                 var elemsApprec = _.where(this.appreciations, {id_elt_bilan_periodique: element.id});
                 _.forEach(elemsApprec, (elemApprec) => {
                     if(elemApprec.id_eleve === undefined){
-                        element.appreciationClasse[periode.id] = elemApprec.commentaire;
+                        if(element.appreciationClasse === undefined){
+                            element.appreciationClasse = [];
+                        }
+                        if(element.appreciationClasse[periode.id] === undefined){
+                            element.appreciationClasse[periode.id] = [];
+                        }
+                        element.appreciationClasse[periode.id][classe.id] = elemApprec.commentaire;
                     }
                     else {
                         _.find(this.classe.eleves.all, function(eleve){
                             if(eleve.id === elemApprec.id_eleve){
 
-                                if(eleve.appreciations !== undefined){
-
-                                    if(eleve.appreciations[periode.id] !== undefined){
-                                        eleve.appreciations[periode.id][element.id] = elemApprec.commentaire;
-                                    } else {
-                                        eleve.appreciations[periode.id] = [];
-                                        eleve.appreciations[periode.id][element.id] = elemApprec.commentaire;
-                                    }
-
-                                } else {
+                                if(eleve.appreciations === undefined){
                                     eleve.appreciations = [];
-                                    eleve.appreciations[periode.id] = [];
-                                    eleve.appreciations[periode.id][element.id] = elemApprec.commentaire;
                                 }
+                                if(eleve.appreciations[periode.id] === undefined){
+                                    eleve.appreciations[periode.id] = [];
+                                }
+                                eleve.appreciations[periode.id][element.id] = elemApprec.commentaire;
                             }
                         })
                     }
@@ -172,33 +171,24 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    toJSON(periode, element, eleve?){
+    toJSON(periode, element, eleve, classe){
         let data = {
             id_periode : periode.id,
             id_element : element.id
         };
         eleve ? _.extend(data, {id_eleve : eleve.id, appreciation : eleve.appreciations[periode.id][element.id]})
-            :  _.extend(data, {appreciation : element.appreciationClasse[periode.id]});
+            :  _.extend(data, {appreciation : element.appreciationClasse[periode.id][classe.id], id_classe : classe.id, externalid_classe : classe.externalId});
 
         return data;
     }
 
-    async saveAppreciation (periode, element, eleve?) {
+    async saveAppreciation (periode, element, eleve, classe) {
         try {
-            eleve ? await http.post(BilanPeriodique.api.create + "?type=eleve", this.toJSON(periode, element, eleve))
-                : await http.post(BilanPeriodique.api.create + "?type=classe", this.toJSON(periode, element));
+            eleve ? await http.post(BilanPeriodique.api.create + "?type=eleve", this.toJSON(periode, element, eleve, null))
+                : await http.post(BilanPeriodique.api.create + "?type=classe", this.toJSON(periode, element, null, classe));
         } catch (e) {
             notify.error('evaluations.appreciation.post.error');
         }
     }
-
-    // async updateAppreciation (periode, element, eleve?) {
-    //     // try {
-    //     //     eleve ? await http.put(this.api.create + "?type=eleve", this.toJSON(periode, element, eleve))
-    //     //         : await http.put(this.api.create + "?type=classe", this.toJSON(periode, element));
-    //     // } catch (e) {
-    //     //     notify.error('evaluations.appreciation.put.error');
-    //     // }
-    // }
 
 }

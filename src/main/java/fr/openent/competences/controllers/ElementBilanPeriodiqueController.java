@@ -182,8 +182,154 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
                 @Override
                 public void handle(JsonObject resource) {
-                    defaultElementBilanPeriodiqueService.updateElementBilanPeriodique(Long.parseLong(request.params().get("idElement")), resource,
-                            defaultResponseHandler(request));
+//                    if(Boolean.parseBoolean(request.params().get("hasAppreciations")))
+                    defaultElementBilanPeriodiqueService.getGroupesElementBilanPeriodique(
+                            request.params().get("idElement"),
+                            new Handler<Either<String, JsonArray>> () {
+                        @Override
+                        public void handle(Either<String, JsonArray> event){
+                            if(event.isRight()){
+                                JsonArray classes = event.right().getValue();
+
+                                JsonArray newClass = resource.getJsonArray("classes");
+                                List<String> newClasses = new ArrayList<String>();
+                                for(Object c : newClass){
+                                    JsonObject classe = (JsonObject) c;
+                                    newClasses.add(classe.getString("id"));
+                                }
+                                //pour toutes les classes présentes sur l'élèment actuellement
+                                List<String> deletedClasses = new ArrayList<String>();
+                                for(Object c : classes){
+                                    JsonObject classe = (JsonObject) c;
+                                    //si la classe présente sur l'élèment actuellement n'est pas dans la liste des nouvelles classes alors c'est une classe à supprimer
+                                    if(!newClasses.contains(classe.getString("id_groupe"))){
+                                        deletedClasses.add(classe.getString("id_groupe"));
+                                    }
+                                }
+                                // on récupère les appréciations sur l'élément liées aux classes supprimées
+                                defaultElementBilanPeriodiqueService.getApprecBilanPerClasse(
+                                        deletedClasses, null,
+                                        request.params().getAll("idElement"),
+                                        new Handler<Either<String, JsonArray>> () {
+                                            @Override
+                                            public void handle(Either<String, JsonArray> event) {
+                                                if (event.isRight()) {
+                                                    //je ferai un service qui supprimera l'appreciation
+                                                    JsonArray apprecClasseOnDeletedClasses = event.right().getValue();
+
+                                                    defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
+                                                            deletedClasses, null,
+                                                            request.params().getAll("idElement"),
+                                                            new Handler<Either<String, JsonArray>> () {
+                                                                @Override
+                                                                public void handle(Either<String, JsonArray> event) {
+                                                                    if (event.isRight()) {
+                                                                        JsonArray apprecEleveOnDeletedClasses = event.right().getValue();
+                                                                        List<String> idsEleves = new ArrayList<>();
+
+                                                                        if(apprecEleveOnDeletedClasses.size() > 0){// Si j'ai des appréciations sur élèves à supprimer
+                                                                            //pour chaque appréciation, je récupère l'élève propriétaire
+                                                                            for(Object a : apprecEleveOnDeletedClasses){
+                                                                                JsonObject appreciation = (JsonObject) a;
+                                                                                idsEleves.add(appreciation.getString("id_eleve"));
+                                                                            }
+                                                                            // je cherche la liste des classes/groupes des elèves propriétaires
+                                                                            JsonObject action = new JsonObject()
+                                                                                    .put("action", "user.getUsers")
+                                                                                    .put("idUsers", idsEleves);
+
+                                                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                                                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                                                                        @Override
+                                                                                        public void handle(Message<JsonObject> message) {
+                                                                                            JsonObject body = message.body();
+
+                                                                                            if ("ok".equals(body.getString("status"))) {
+                                                                                                JsonArray users = body.getJsonArray("results");
+
+                                                                                                // je check pour chaque élève et pour chaque classe de resource
+                                                                                                ///// si l'élève est dans les autres classes de resource j'enregistre les deletedClasses
+                                                                                                ///// dans lesquelles est l'élève dans concurrentsClasses et je vais supprimer les relations apprec-classes de concurrentsClasses
+                                                                                                /////
+                                                                                                ///// si l'élève n'est pas dans les autres classes de resource qui ne sont pas dans deletedClasses j'enregistre les deletedClasses dans
+                                                                                                ///// lesquelles est l'élève dans aloneClasses et je vais supprimer les appreciations et les relations apprec-classes de aloneClasses
+
+                                                                                                // map qui à un idUser associe une map de idClass -> externalIdClass de toutes les classes/groupes de l'élève
+                                                                                                Map<String, Map<String, String>> usersMap = new HashMap<String, Map<String, String>>();
+                                                                                                for(Object u : users) {
+                                                                                                    JsonObject user = (JsonObject) u;
+                                                                                                    Map<String, String> classesMap = new HashMap<String, String>();
+
+                                                                                                    JsonArray idClasses = user.getJsonArray("currentClassIds");
+                                                                                                    idClasses.addAll(user.getJsonArray("currentGroupIds"));
+
+                                                                                                    JsonArray externalIdClasses = user.getJsonArray("currentClassExternalIds");
+                                                                                                    externalIdClasses.addAll(user.getJsonArray("currentGroupExternalIds"));
+
+                                                                                                    for(int i = 0; i < idClasses.size(); i++) {
+                                                                                                        classesMap.put(idClasses.getString(i), externalIdClasses.getString(i));
+                                                                                                    }
+
+                                                                                                    usersMap.put(user.getString("id"), classesMap);
+                                                                                                }
+
+                                                                                                JsonArray apprecDeletedConcurrent = new JsonArray();
+                                                                                                JsonArray apprecDeletedAlone = new JsonArray();
+                                                                                                for(Object a : apprecEleveOnDeletedClasses){
+                                                                                                    JsonObject apprec = (JsonObject) a;
+
+                                                                                                    //si l'élève sur l'appreciation appartient à une des nouvelles classes alors j'ajoute l'appreciation à
+                                                                                                    //apprecDeletedConcurrent pour supprimer les relations entre l'appreciation et toutes les deleted classes
+                                                                                                    //
+                                                                                                    //si l'élève sur l'appreciation n'appartient à aucune des nouvelles classes alors j'ajoute l'appreciation à
+                                                                                                    //apprecDeletedAlone pour supprimer l'appréciation et les relations entre l'appreciation et toutes les deleted classes
+                                                                                                    Map<String, String> studentClasses = usersMap.get(apprec.getString("id_eleve"));
+                                                                                                    try {
+                                                                                                        if(Collections.disjoint(studentClasses.keySet(), newClasses)){
+                                                                                                            apprecDeletedAlone.add(apprec);
+                                                                                                        } else {
+                                                                                                            apprecDeletedConcurrent.add(apprec);
+                                                                                                        }
+                                                                                                    } catch (NullPointerException err) {
+                                                                                                        badRequest(request, err.getMessage());
+                                                                                                        log.error(err);
+                                                                                                    }
+                                                                                                }
+                                                                                                JsonObject apprecDeleted = new JsonObject()
+                                                                                                        .put("apprecDeletedAlone", apprecDeletedAlone)
+                                                                                                        .put("apprecDeletedConcurrent", apprecDeletedConcurrent);
+                                                                                                defaultElementBilanPeriodiqueService.updateElementBilanPeriodique(
+                                                                                                        Long.parseLong(request.params().get("idElement")), resource,
+                                                                                                        apprecClasseOnDeletedClasses, apprecDeleted,
+                                                                                                        deletedClasses, defaultResponseHandler(request));
+                                                                                            } else{
+                                                                                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
+                                                                                            }
+                                                                                        }
+                                                                                    }));
+                                                                        } else { // Si je n'ai pas d'appréciations sur élèves à supprimer
+                                                                            defaultElementBilanPeriodiqueService.updateElementBilanPeriodique(
+                                                                                    Long.parseLong(request.params().get("idElement")), resource,
+                                                                                    apprecClasseOnDeletedClasses, null,
+                                                                                    deletedClasses,defaultResponseHandler(request));
+                                                                        }
+                                                                    } else{
+                                                                        Renders.renderJson(request, new JsonObject()
+                                                                                .put("error", "error while retreiving students appreciations"), 400);
+                                                                    }
+                                                                }
+                                                            });
+                                                } else{
+                                                    Renders.renderJson(request, new JsonObject()
+                                                            .put("error", "error while retreiving classes appreciations"), 400);
+                                                }
+                                            }
+                                        });
+                            } else{
+                                leftToResponse(request, event.left());
+                            }
+                        }
+                    });
                 }
             });
         } else {
@@ -582,7 +728,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             public void handle(UserInfos user) {
                 if(user != null){
                     defaultElementBilanPeriodiqueService.getApprecBilanPerClasse(
-                            request.params().get("idClasse"),
+                            request.params().getAll("idClasse"),
                             request.params().get("idPeriode"),
                             request.params().getAll("idElement"),
                             new Handler<Either<String, JsonArray>>() {
@@ -590,9 +736,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                 public void handle(Either<String, JsonArray> event) {
                                     if(event.isRight()){
                                         JsonArray apprecClasses = event.right().getValue();
-
                                         defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
-                                                request.params().get("idClasse"),
+                                                request.params().getAll("idClasse"),
                                                 request.params().get("idPeriode"),
                                                 request.params().getAll("idElement"),
                                                 new Handler<Either<String, JsonArray>>() {
@@ -645,6 +790,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                 if(event.isRight()){
                                     defaultElementBilanPeriodiqueService.insertOrUpdateAppreciationElement(
                                             resource.getString("id_eleve"),
+                                            resource.getString("id_classe"),
+                                            resource.getString("externalid_classe"),
                                             new Long(resource.getInteger("id_periode")),
                                             new Long(resource.getInteger("id_element")),
                                             resource.getString("appreciation"),

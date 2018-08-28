@@ -72,19 +72,19 @@ public interface ElementBilanPeriodiqueService {
 
     /**
      * Retourne les appéciations de classe dont les id sont passés en paramètre.
-     * @param idClasse
+     * @param idsClasses
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getApprecBilanPerClasse (String idClasse, String idPeriode, List<String> idElements, Handler<Either<String, JsonArray>> handler);
+    public void getApprecBilanPerClasse (List<String> idsClasses, String idPeriode, List<String> idElements, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les appéciations d'élèves les id sont passés en paramètre.
-     * @param idClasse
+     * @param idsClasses
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getApprecBilanPerEleve (String idClasse, String idPeriode, List<String> idElements, Handler<Either<String, JsonArray>> handler);
+    public void getApprecBilanPerEleve (List<String> idsClasses, String idPeriode, List<String> idElements, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Enregistrement d'une appreciation pour un élève.
@@ -94,16 +94,21 @@ public interface ElementBilanPeriodiqueService {
      * @param commentaire appréciation laissée par le professeur
      * @param handler Handler de retour
      */
-    public void insertOrUpdateAppreciationElement (String idEleve, Long idPeriode, Long idEltBilanPeriodique,
+    public void insertOrUpdateAppreciationElement (String idEleve, String idClasse, String externalidClasse, Long idPeriode, Long idEltBilanPeriodique,
                                            String commentaire, JsonArray groupes, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Mise à jour d'un élément EPI, AP ou parcours.
      * @param idElement id de l'élément à mettre à jour
      * @param element données à mettre à jour
+     * @param apprecClasseOnDeletedClasses
+     * @param apprecEleveOnDeletedClasses
      * @param handler Handler de retour
      */
-    public void updateElementBilanPeriodique (Long idElement, JsonObject element, Handler<Either<String, JsonObject>> handler);
+    public void updateElementBilanPeriodique (Long idElement, JsonObject element,
+                                              JsonArray apprecClasseOnDeletedClasses,
+                                              JsonObject apprecEleveOnDeletedClasses,
+                                              List<String> deletedClasses, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Suppression d'un élément EPI, AP ou parcours.
@@ -132,8 +137,10 @@ public interface ElementBilanPeriodiqueService {
      * @param idEltBilanPeriodique id de l'élément
      * @param handler Handler de retour
      */
-    public void deleteAppreciationElement (String idEleve, Long idPeriode, Long idEltBilanPeriodique,
-                                           JsonArray groupes, Handler<Either<String, JsonObject>> handler);
+    public void deleteAppreciationElement (String idEleve, Long idPeriode,
+                                           Long idEltBilanPeriodique,
+                                           String idClasse, List<String> groupes,
+                                           Handler<Either<String, JsonObject>> handler);
 
     /**
      * Mise à jour d'une appreciation pour un élève ou une classe.

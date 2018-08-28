@@ -1,11 +1,9 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.security.utils.FilterBilanPeriodique;
-import fr.openent.competences.security.utils.FilterDevoirUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
-import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;

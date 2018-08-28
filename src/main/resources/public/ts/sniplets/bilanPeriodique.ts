@@ -10,7 +10,7 @@ export const bilanPeriodique = {
     description: 'Permet de paramétrer les éléments nécessaires à la construction des bilans périodiques',
     that: undefined,
     controller: {
-        async init() {
+        init: async function () {
             bilanPeriodique.that = this;
             this.idStructure = this.source.idStructure;
             this.selected = {EPI: true, AP: false, parcours: false};
@@ -29,13 +29,13 @@ export const bilanPeriodique = {
             await this.getElements();
         },
 
-        async openElementLigthbox(param?) {
+        openElementLigthbox: async function (param?) {
+            template.close('lightboxCreatePE');
             bilanPeriodique.that.emptyLightbox();
             await this.getThematique(this.getTypeElement());
             bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
-            delete this.dataELem;
 
             if(param) {
                 bilanPeriodique.that.dataELem = {
@@ -49,13 +49,6 @@ export const bilanPeriodique = {
                     description: this.selectedElements[0].description
                 };
                 this.dataELem = bilanPeriodique.that.dataELem;
-            } else {
-                bilanPeriodique.that.dataELem = {
-                    idEtablissement : evaluations.structure.id,
-                    classes: [],
-                    ens_mat: []
-                };
-                this.dataELem = bilanPeriodique.that.dataELem;
             }
             bilanPeriodique.that.themeBase = {
                 open: false
@@ -66,7 +59,8 @@ export const bilanPeriodique = {
             bilanPeriodique.that.opened.lightboxCreatePE = true;
             bilanPeriodique.that.showAddtheme = false;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
-            utils.safeApply(this);
+            utils.safeApply(bilanPeriodique.that);
+            bilanPeriodique.that.$apply();
         },
 
         emptyCheckbox : function(elements) {
@@ -85,7 +79,6 @@ export const bilanPeriodique = {
             }
         },
 
-
         openAddtheme: function(theme) {
             bilanPeriodique.that.changeThematique = true;
 
@@ -97,10 +90,9 @@ export const bilanPeriodique = {
             bilanPeriodique.that.showAddtheme = true;
         },
 
-
         /////       Création d'un thème personnalisé      /////
 
-        async createThematique(thematique) {
+        createThematique: async function (thematique) {
             try {
                 await http.post('/competences/thematique',
                     {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
@@ -112,13 +104,14 @@ export const bilanPeriodique = {
                 console.error('Problème lors de la création de la thématique');
                 throw e;
             }
+
             utils.safeApply(this);
         },
 
 
         /////       Modification d'un thème personnalisé      /////
 
-        async updateThematique(thematique) {
+        updateThematique: async function (thematique) {
             try {
                 await http.put(`/competences/thematique?idThematique=${thematique.id}`,
                     {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
@@ -134,7 +127,7 @@ export const bilanPeriodique = {
 
         /////       Suppression d'un thème personnalisé      /////
 
-        async tryDeleteTheme(theme) {
+         tryDeleteTheme: async function (theme) {
             let elements = await this.getElementsOnThematique(theme.id);
             if (elements.length > 0) {
                 this.opened.lightboxConfirmDeleteThemes = true;
@@ -144,7 +137,7 @@ export const bilanPeriodique = {
             utils.safeApply(this);
         },
 
-        async deleteThematique(thematique) {
+        deleteThematique: async function (thematique) {
             try {
                 await http.delete(`/competences/thematique?idThematique=${thematique.id}`);
                 bilanPeriodique.that.getThematique(this.getTypeElement());
@@ -165,7 +158,7 @@ export const bilanPeriodique = {
 
         /////       Création d'un EPI/AP/Parcours      /////
 
-        async createElementBilanPeriodique() {
+        createElementBilanPeriodique: async function () {
             try {
                 if (this.dataELem !== undefined && this.dataELem !== null) {
                     this.dataELem.type = this.getTypeElement();
@@ -185,7 +178,7 @@ export const bilanPeriodique = {
             }
         },
 
-        async getThematique(type) {
+        getThematique: async function (type) {
             try {
                 let data = await http.get(`/competences/thematique?type=${type}`);
                 bilanPeriodique.that.themes = data.data;
@@ -206,7 +199,7 @@ export const bilanPeriodique = {
             }
         },
 
-        async getElementsOnThematique(idThematique) {
+        getElementsOnThematique: async function (idThematique) {
             try {
                 let data = await http.get(`/competences/elements/thematique?idThematique=${idThematique}`);
                 return data.data;
@@ -215,7 +208,7 @@ export const bilanPeriodique = {
             }
         },
 
-        async getAppreciationsOnClasse(idClasse, idElement) {
+        getAppreciationsOnClasse: async function (idClasse, idElement) {
             try {
                 let data = await http.get(`/competences/elementsAppreciations?idClasse=${idClasse}&idElement=${idElement}`);
                 return data.data;
@@ -230,7 +223,7 @@ export const bilanPeriodique = {
 
         /////       Filtre les matières en fonctions de l'enseignant sélectionné      /////
 
-        async syncMatieresEnseignant(enseignant) {
+        syncMatieresEnseignant: async function (enseignant) {
             try {
                     let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
                     this.matieres = data.data;
@@ -252,7 +245,7 @@ export const bilanPeriodique = {
             }
         },
 
-        async getElements() {
+        getElements: async function () {
             try {
                 let {data} = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
                 this.elements = data;
@@ -273,18 +266,16 @@ export const bilanPeriodique = {
 
         /////       Suppression d'un EPI/AP/Parcours      /////
 
-        async tryDeleteElements(elements) {
+        tryDeleteElements: async function (elements) {
             await this.getAppreciations(elements);
             if (this.appreciations !== undefined) {
                 (this.appreciations.length > 0) ? this.opened.lightboxConfirmDeleteElements = true
                     : await this.deleteElements(elements);
-            } else {
-                await this.deleteElements(elements);
             }
             utils.safeApply(this);
         },
 
-        async deleteElements(elements) {
+        deleteElements: async function (elements) {
             try {
                 let url = "/competences/elementsBilanPeriodique?idEtablissement=" + evaluations.structure.id;
                 for (var i = 0; i < elements.length; i++) {
@@ -301,7 +292,7 @@ export const bilanPeriodique = {
             utils.safeApply(this);
         },
 
-        async getAppreciations(elements) {
+        getAppreciations: async function (elements) {
             try {
                 let url = "/competences/elementsAppreciations?idEtablissement=" + evaluations.structure.id;
                 for (var i = 0; i < elements.length; i++) {
@@ -318,7 +309,7 @@ export const bilanPeriodique = {
 
         /////       Modification d'un EPI/AP/Parcours      /////
 
-        async updateElement() {
+        updateElement: async function () {
             try {
                 if (this.dataELem !== undefined && this.dataELem !== null
                 && this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined ) {
@@ -332,6 +323,7 @@ export const bilanPeriodique = {
                 // bilanPeriodique.that.emptyLightbox();
                 bilanPeriodique.that.opened.lightboxCreatePE = false;
                 bilanPeriodique.that.getElements();
+
             } catch (e) {
                 notify.error('evaluations.elements.update.error');
             }
@@ -358,6 +350,9 @@ export const bilanPeriodique = {
         },
 
         requiredTheme: function() {
+            if(!bilanPeriodique.that.thematique){
+                return false;
+            }
             return bilanPeriodique.that.thematique.code === undefined
                     || bilanPeriodique.that.thematique.libelle === undefined
                     || bilanPeriodique.that.thematique.code === null
@@ -417,14 +412,14 @@ export const bilanPeriodique = {
         },
 
 
-        /////       Suppression des chips enseigantns / matières et classe lors de la création des EPI/AP/Parcours      /////
+        /////       Suppression des chips enseigantns / matières et classe   /////
 
-        tryDeleteChips: function (item) {
+        tryDeleteEnseignantMatiere: function (item) {
             item.selected = true;
             this.opened.lightboxConfirmDeleteChips = true;
         },
 
-        deleteChips: function () {
+        deleteEnseignantMatiere: function () {
                 this.ensei_matieres = this.dataELem.ens_mat;
                 for (let i = 0; i < this.ensei_matieres.length; i++) {
                     if (this.ensei_matieres[i].selected) {
@@ -436,15 +431,22 @@ export const bilanPeriodique = {
                 bilanPeriodique.that.opened.lightboxConfirmDeleteChips = false;
         },
 
-        tryDeleteClasse: function (item) {
-            item.selected = true;
-            this.opened.lightboxConfirmDeleteClasse = true;
+        tryDeleteClasse: async function (classe) {
+            let appreciations = await this.getAppreciationsOnClasse(classe.id, this.dataELem.id);
+            if(appreciations){
+                if (appreciations.length > 0) {
+                    this.opened.lightboxConfirmDeleteClasse = true;
+                    classe.selected = true;
+                } else {
+                    await this.deleteClasse();
+                }
+            }
+            utils.safeApply(this);
         },
 
         deleteClasse: function () {
-            this.chipClasse = this.dataELem.classes;
-            for(let i = 0; i < this.chipClasse.length; i++){
-                if(this.chipClasse[i].selected){
+            for(let i = 0; i < this.dataELem.classes.length; i++){
+                if(this.dataELem.classes[i].selected){
                     this.dataELem.classes = _.without(this.dataELem.classes, this.dataELem.classes[i]);
                 }
             }
@@ -452,7 +454,7 @@ export const bilanPeriodique = {
             bilanPeriodique.that.opened.lightboxConfirmDeleteClasse = false;
         },
 
-        emptyLightbox: function() {
+        emptyLightbox: function () {
             bilanPeriodique.that.search.enseignant = null;
             bilanPeriodique.that.search.matiere = null;
             bilanPeriodique.that.search.classe = null;
@@ -461,6 +463,7 @@ export const bilanPeriodique = {
                 classes: [],
                 ens_mat: []
             };
+            this.dataELem = bilanPeriodique.that.dataELem;
         }
     }
 }
