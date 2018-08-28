@@ -31,7 +31,7 @@ export const bilanPeriodique = {
 
         openElementLigthbox: async function (param?) {
             template.close('lightboxCreatePE');
-            bilanPeriodique.that.emptyLightbox();
+            // bilanPeriodique.that.emptyLightbox();
             await this.getThematique(this.getTypeElement());
             bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
@@ -48,7 +48,12 @@ export const bilanPeriodique = {
                     libelle: this.selectedElements[0].libelle,
                     description: this.selectedElements[0].description
                 };
-                this.dataELem = bilanPeriodique.that.dataELem;
+            } else {
+                bilanPeriodique.that.dataELem = {
+                    idEtablissement : evaluations.structure.id,
+                    classes: [],
+                    ens_mat: []
+                };
             }
             bilanPeriodique.that.themeBase = {
                 open: false
@@ -60,7 +65,6 @@ export const bilanPeriodique = {
             bilanPeriodique.that.showAddtheme = false;
             template.open('lightboxCreatePE', '../../../competences/public/template/behaviours/sniplet-createProjetEducatif');
             utils.safeApply(bilanPeriodique.that);
-            bilanPeriodique.that.$apply();
         },
 
         emptyCheckbox : function(elements) {
