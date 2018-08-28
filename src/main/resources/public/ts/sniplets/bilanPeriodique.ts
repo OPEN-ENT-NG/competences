@@ -11,7 +11,7 @@ export const bilanPeriodique = {
     that: undefined,
     controller: {
         init: async function () {
-            bilanPeriodique.that = this;
+            this.elementAll = {selected: false};
             this.idStructure = this.source.idStructure;
             this.selected = {EPI: true, AP: false, parcours: false};
             await evaluations.sync();
@@ -27,6 +27,7 @@ export const bilanPeriodique = {
                 libelle: ""
             };
             await this.getElements();
+            bilanPeriodique.that = this;
         },
 
         openElementLigthbox: async function (param?) {
@@ -71,6 +72,8 @@ export const bilanPeriodique = {
             _.forEach(elements, (element) => {
                 element.selected = false;
             });
+            bilanPeriodique.that.elementAll.selected = false;
+            utils.safeApply(bilanPeriodique.that);
         },
 
 
@@ -386,10 +389,9 @@ export const bilanPeriodique = {
         },
 
         selectAllElements: function (elements) {
-            this.search.elementAll = !this.search.elementAll;
-            _.forEach(elements, (element) => {
+             _.forEach(elements, (element) => {
                 if(this.itemFiltered(element)){
-                    element.selected = this.search.elementAll;
+                    element.selected = bilanPeriodique.that.elementAll.selected;
                 }
             });
         },
