@@ -32,7 +32,6 @@ export const bilanPeriodique = {
 
         openElementLigthbox: async function (param?) {
             template.close('lightboxCreatePE');
-            // bilanPeriodique.that.emptyLightbox();
             await this.getThematique(this.getTypeElement());
             bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
@@ -59,7 +58,7 @@ export const bilanPeriodique = {
             bilanPeriodique.that.themeBase = {
                 open: false
             };
-            bilanPeriodique.that.themePerso= {
+            bilanPeriodique.that.themePerso = {
                 open: false
             };
             bilanPeriodique.that.opened.lightboxCreatePE = true;
@@ -73,7 +72,7 @@ export const bilanPeriodique = {
                 element.selected = false;
             });
             bilanPeriodique.that.elementAll.selected = false;
-            utils.safeApply(bilanPeriodique.that);
+            // utils.safeApply(bilanPeriodique.that);
         },
 
 

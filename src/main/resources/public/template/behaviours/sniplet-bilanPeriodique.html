@@ -1,72 +1,75 @@
-<div class="twelve">
-    <h3>
-        <i18n>evaluations.bilan.periodique</i18n>
-    </h3>
+<div class="evaluations-sniplet">
 
-    <div class="twelve tabs vertical-spacing-twice heading-tabs">
-        <header ng-class="{selected : selected.EPI}"
-                class="horizontal-spacing-twice ng-scope">
-            <div class="horizontal-spacing"
-                 ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false; emptyCheckbox(elements)">
-                <i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span></i18n>
-            </div>
-        </header>
-        <header ng-class="{selected : selected.AP}"
-                class="horizontal-spacing-twice ng-scope">
-            <div class="horizontal-spacing"
-                 ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false; emptyCheckbox(elements)">
-                <i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n>
-            </div>
-        </header>
-        <header ng-class="{selected : selected.parcours}"
-                class="horizontal-spacing-twice ng-scope">
-            <div class="horizontal-spacing"
-                 ng-click="selected.parcours = true;  selected.EPI = false; selected.AP = false; emptyCheckbox(elements)">
-                <i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n>
-            </div>
-        </header>
+    <div class="twelve">
+        <h3>
+            <i18n>evaluations.bilan.periodique</i18n>
+        </h3>
+
+        <div class="twelve tabs vertical-spacing-twice heading-tabs">
+            <header ng-class="{selected : selected.EPI}"
+                    class="horizontal-spacing-twice ng-scope">
+                <div class="horizontal-spacing"
+                     ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false; emptyCheckbox(elements);">
+                    <i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span>
+                    </i18n>
+                </div>
+            </header>
+            <header ng-class="{selected : selected.AP}"
+                    class="horizontal-spacing-twice ng-scope">
+                <div class="horizontal-spacing"
+                     ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false; emptyCheckbox(elements);">
+                    <i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n>
+                </div>
+            </header>
+            <header ng-class="{selected : selected.parcours}"
+                    class="horizontal-spacing-twice ng-scope">
+                <div class="horizontal-spacing"
+                     ng-click="selected.parcours = true;  selected.EPI = false; selected.AP = false; emptyCheckbox(elements);">
+                    <i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n>
+                </div>
+            </header>
+        </div>
     </div>
-</div>
 
 
-<article class="twelve cell">
-    <h2 class="two cell">
-        <i18n ng-show="selected.EPI">evaluations.recherche.EPI</i18n>
-        <i18n ng-show="selected.AP">evaluations.recherche.AP</i18n>
-        <i18n ng-show="selected.parcours">evaluations.recherche.parcours</i18n>
-    </h2>
-    <input ng-show="selected.EPI"
-           class="five cell"
-           type="text"
-           ng-model="search.name"
-           placeholder="Saisir un EPI">
-    <input ng-show="selected.AP"
-           class="five cell"
-           type="text"
-           ng-model="search.name"
-           placeholder="Saisir un AP">
-    <input ng-show="selected.parcours"
-           class="five cell"
-           type="text"
-           ng-model="search.name"
-           placeholder="Saisir un parcours">
+    <article class="twelve cell">
+        <h2 class="two cell">
+            <i18n ng-show="selected.EPI">evaluations.recherche.EPI</i18n>
+            <i18n ng-show="selected.AP">evaluations.recherche.AP</i18n>
+            <i18n ng-show="selected.parcours">evaluations.recherche.parcours</i18n>
+        </h2>
+        <input ng-show="selected.EPI"
+               class="five cell"
+               type="text"
+               ng-model="search.name"
+               placeholder="Saisir un EPI">
+        <input ng-show="selected.AP"
+               class="five cell"
+               type="text"
+               ng-model="search.name"
+               placeholder="Saisir un AP">
+        <input ng-show="selected.parcours"
+               class="five cell"
+               type="text"
+               ng-model="search.name"
+               placeholder="Saisir un parcours">
 
-    <button class="right-magnet" ng-click="openElementLigthbox(false)">
-        <i18n ng-show="selected.EPI">evaluations.add.EPI</i18n>
-        <i18n ng-show="selected.AP">evaluations.add.AP</i18n>
-        <i18n ng-show="selected.parcours">evaluations.add.parcours</i18n>
-    </button>
-</article>
+        <button class="right-magnet" ng-click="openElementLigthbox()">
+            <i18n ng-show="selected.EPI">evaluations.add.EPI</i18n>
+            <i18n ng-show="selected.AP">evaluations.add.AP</i18n>
+            <i18n ng-show="selected.parcours">evaluations.add.parcours</i18n>
+        </button>
+    </article>
 
-<lightbox show="opened.lightboxCreatePE" on-close="!opened.lightboxCreatePE">
-    <container template="lightboxCreatePE"></container>
-</lightbox>
+    <lightbox show="opened.lightboxCreatePE" on-close="!opened.lightboxCreatePE">
+        <container template="lightboxCreatePE"></container>
+    </lightbox>
 
-<table class="twelve responsive-table">
-    <thead>
+    <table class="twelve responsive-table">
+        <thead>
         <tr class="trSniplet" ng-if="elements !== null">
             <th>
-                <label class="checkbox" ng-class="{multiselect: elementAll.selected}">
+                <label class="checkbox border-white-before" ng-class="{multiselect: elementAll.selected}">
                     <input type="checkbox"
                            ng-model="elementAll.selected"
                            ng-change="selectAllElements(elements)">
@@ -86,11 +89,11 @@
                 <i18n>viescolaire.competences.classe.groupe</i18n>
             </th>
         </tr>
-    </thead>
+        </thead>
 
-    <tbody>
+        <tbody>
 
-        <tr ng-repeat="element in elements | filter:filterItem()"  ng-click="selectUnselectElement(element)">
+        <tr ng-repeat="element in elements | filter:filterItem()" ng-click="selectUnselectElement(element)">
             <td><label class="checkbox">
                 <input type="checkbox"
                        ng-model="element.selected"
@@ -112,8 +115,8 @@
             </td>
         </tr>
 
-    </tbody>
-</table>
+        </tbody>
+    </table>
 
     <section class="toggle-buttons"
              ng-show="checkSelectedElements(elements).length > 0">
@@ -121,7 +124,7 @@
             <div class="row">
                 <button class="cell"
                         ng-if="checkSelectedElements(elements).length === 1"
-                        ng-click="openElementLigthbox(true)">
+                        ng-click="openElementLigthbox(selectedElements[0])">
                     <span><i18n>item.modify</i18n></span>
                 </button>
                 <button class="cell"
@@ -132,23 +135,24 @@
         </div>
     </section>
 
-<lightbox show="opened.lightboxConfirmDeleteElements" on-close="!opened.lightboxConfirmDeleteElements">
-    <h3>
-        <i18n>evaluations.bilan.periodique</i18n>
-    </h3>
-    <p>
-        <i18n>evaluation.bilan.periodique.message</i18n>
-    </p>
-    <p>
-        <i18n>evaluations.devoir.confirmation.question</i18n>
-    </p>
-    <button class="marginFive magnet-right"
-            ng-click="deleteElements(selectedElements);">
-        <i18n>evaluations.perso.ok</i18n>
-    </button>
-    <button ng-click="opened.lightboxConfirmDeleteElements=false;"
-            class="right-magnet cancel">
-        <span><i18n>evaluations.perso.cancel</i18n></span>
-    </button>
-</lightbox>
+    <lightbox show="opened.lightboxConfirmDeleteElements" on-close="!opened.lightboxConfirmDeleteElements">
+        <h3>
+            <i18n>evaluations.bilan.periodique</i18n>
+        </h3>
+        <p>
+            <i18n>evaluation.bilan.periodique.message</i18n>
+        </p>
+        <p>
+            <i18n>evaluations.devoir.confirmation.question</i18n>
+        </p>
+        <button class="marginFive magnet-right"
+                ng-click="deleteElements(selectedElements);">
+            <i18n>evaluations.perso.ok</i18n>
+        </button>
+        <button ng-click="opened.lightboxConfirmDeleteElements=false;"
+                class="right-magnet cancel">
+            <span><i18n>evaluations.perso.cancel</i18n></span>
+        </button>
+    </lightbox>
 </div>
+

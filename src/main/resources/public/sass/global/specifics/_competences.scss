@@ -290,6 +290,7 @@ body.evaluations {
     .overflowXScroll {
       overflow-x: scroll !important;
     }
+
     .marginTopZero {
       margin-top: 0px;
     }
@@ -3082,6 +3083,14 @@ body.evaluations {
     border-radius: 2px;
   }
 
+  .noBold {
+    font-weight: normal !important;
+  }
+
+  .marginTopZero {
+    margin-top: 0;
+  }
+
   .marginBottomZero {
     margin-bottom: 0;
   }
@@ -3139,8 +3148,7 @@ body.evaluations {
       display: block;
       cursor: pointer;
       &.skills-teach {
-        padding: 10px 35px 20px 20px;
-
+        padding: 10px 35px 10px 20px;
         > span {
           margin-bottom: 5px;
         }
@@ -3198,8 +3206,14 @@ body.evaluations {
     width: 95%;
   }
 
-  .responsive-table >thead >label.checkbox >input[type="checkbox"]:checked+span::before {
-    border-color: #fff;
+  .skills-text-overflow {
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
+  .border-white-before.checkbox {
+      > input[type="checkbox"]:checked + span::before {
+        border-color: #fff;
+      }
+    }
 }

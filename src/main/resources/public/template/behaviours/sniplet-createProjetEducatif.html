@@ -1,9 +1,12 @@
 <div class="evaluations-sniplet">
 
     <div class="header">
-        <h2 ng-show="selected.EPI">Ajouter un EPI</h2>
-        <h2 ng-show="selected.AP">Ajouter un AP</h2>
-        <h2 ng-show="selected.parcours">Ajouter un parcours</h2>
+        <h2 ng-show="selected.EPI" ng-if="!modifElem"><i18n>evaluations.create.EPI</i18n></h2>
+        <h2 ng-show="selected.EPI" ng-if="modifElem"><i18n>evaluations.modify.EPI</i18n></h2>
+        <h2 ng-show="selected.AP" ng-if="!modifElem"><i18n>evaluations.create.AP</i18n></h2>
+        <h2 ng-show="selected.AP" ng-if="modifElem"><i18n>evaluations.modify.AP</i18n></h2>
+        <h2 ng-show="selected.parcours" ng-if="!modifElem"><i18n>evaluations.create.parcours</i18n></h2>
+        <h2 ng-show="selected.parcours" ng-if="modifElem"><i18n>evaluations.modify.parcours</i18n></h2>
     </div>
 
     <div>
@@ -17,31 +20,34 @@
                             <span ng-click="theme.open = !theme.open;"
                                   class="skills-text-overflow skills-teach">
                                     <i class="skills-open-icon"></i>
-                                    <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes</i18n></span>
+                                    <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.choix.theme</i18n></span>
                                     <span ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                 </span>
-                        <ul class="skills-list-aideSaisie">
-                            <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeBase.open}">
+                            <ul class="skills-list-aideSaisie">
+                                <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeBase.open}">
                                 <span ng-click="themeBase.open = !themeBase.open;"
                                       class="skills-text-overflow skills-teach">
                                     <span><i18n>viescolaire.utils.themes.default</i18n></span>
                                 </span>
-                                    <ul class="skills-list" >
-                                        <li ng-repeat="theme in themes | filter:filterTheme(false)" class="twelve skills-list-proposition skills-text-overflow italic">
-                                            <span ng-click="addTheme(theme)">[[theme.libelle]]</span>
+                                    <ul class="skills-list">
+                                        <li ng-repeat="theme in themes | filter:filterTheme(false)"
+                                            class="twelve skills-list-proposition skills-text-overflow italic">
+                                            <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length > 38"
+                                                  tooltip="[[theme.libelle]]">[[theme.libelle]]</span>
+                                            <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length <= 38">[[theme.libelle]]</span>
                                         </li>
                                     </ul>
-                            </li>
-                            <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themePerso.open}">
+                                </li>
+                                <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themePerso.open}">
                                 <span class="skills-text-overflow skills-teach">
                                     <span ng-click="themePerso.open = !themePerso.open;"><i18n>viescolaire.utils.themes.personnalise</i18n></span>
-                                    <h3 data-ng-click="showTheme(true)" class="inline-block">
+                                    <h3 data-ng-click="showTheme(true)" class="inline-block marginTopZero marginBottomZero">
                                         <i class="plus marginLeft"></i>
                                     </h3>
                                 </span>
-                                <ul class="skills-list">
-                                    <div class="toto">
-                                        <li ng-repeat="theme in themes | filter:filterTheme(true)" class="twelve skills-list-proposition skills-text-overflow">
+                                    <ul class="skills-list">
+                                        <li ng-repeat="theme in themes | filter:filterTheme(true)"
+                                            class="twelve skills-list-proposition skills-text-overflow italic">
                                             <dots-menu>
                                                 <opt data-ng-click="openAddtheme(theme)">
                                                     <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
@@ -50,23 +56,27 @@
                                                     <i class="trash"></i>&nbsp;<i18n>item.delete</i18n>
                                                 </opt>
                                             </dots-menu>
-                                        <span ng-click="addTheme(theme)" class="twelve skills-list-proposition skills-text-overflow italic">[[theme.libelle]]</span>
-                                    </div>
-                                    </li>
-                                </ul>
-                            </li>
-                        </ul>
+                                            <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length > 38"
+                                                  tooltip="[[theme.libelle]]">[[theme.libelle]]</span>
+                                            <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length <= 38">[[theme.libelle]]</span>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
                         </li>
                     </ul>
                 </div>
 
             </div>
             <div ng-show="!selected.parcours" class="twelve cell twelve-mobile marginTop">
-                <div class="four cell twelve-mobile">
-                    <input ng-model="dataELem.libelle"
-                           ng-maxlength="150"
-                           maxlength="150"
-                           type="text" placeholder="Intitulé"/>
+                <div class="twelve cell twelve-mobile">
+                    <h4 class="twelve cell marginBottomZero noBold">
+                        <i18n>viescolaire.competences.libelle</i18n>
+                    </h4>
+                    <textarea ng-model="dataELem.libelle"
+                              ng-maxlength="150"
+                              maxlength="150"
+                              placeholder="Saisir le libellé" name="saisie libellé"></textarea>
                 </div>
             </div>
         </div>
@@ -76,18 +86,22 @@
                 <p class="marginTopZero">Ajouter thème personnalisé</p>
                 <i data-ng-click="showTheme(false)" class="close-2x blueCross"></i>
             </div>
-            <input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-disabled="changeThematique" ng-maxlength="50" maxlength="50"/>
-            <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle" ng-maxlength="150" maxlength="150"/>
-            <button ng-if="!changeThematique" class="right-magnet" ng-click="createThematique(thematique)" ng-disabled = "requiredTheme()">
+            <input type="text" placeholder="Saisir code" ng-model="thematique.code" ng-disabled="changeThematique"
+                   ng-maxlength="50" maxlength="50"/>
+            <input type="text" placeholder="Saisie intitulé" ng-model="thematique.libelle" ng-maxlength="150"
+                   maxlength="150"/>
+            <button ng-if="!changeThematique" class="right-magnet" ng-click="createThematique(thematique)"
+                    ng-disabled="requiredTheme()">
                 <i18n>evaluations.add</i18n>
             </button>
-            <button ng-if="changeThematique" class="right-magnet" ng-click="updateThematique(thematique)" ng-disabled = "requiredTheme()">
+            <button ng-if="changeThematique" class="right-magnet" ng-click="updateThematique(thematique)"
+                    ng-disabled="requiredTheme()">
                 <i18n>item.modify</i18n>
             </button>
         </div>
 
         <div ng-show="!selected.parcours" class="twelve cell twelve-mobile">
-            <h4 class="two cell marginBottomZero">
+            <h4 class="two cell marginBottomZero noBold">
                 <i18n>viescolaire.utils.description</i18n>
             </h4>
             <textarea ng-model="dataELem.description"
@@ -96,7 +110,7 @@
         </div>
 
         <div ng-show="!selected.parcours" class="twelve cell twelve-mobile selet-blocks">
-            <div  class="five cell twelve-mobile">
+            <div class="five cell twelve-mobile">
                 <label class="select">
                     <select ng-model="search.enseignant"
                             ng-options="enseignant.displayName for enseignant in enseignants.all"
@@ -131,7 +145,8 @@
                     <select ng-model="search.classe"
                             ng-change="pushData(search.classe)"
                             ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
-                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]
+                        </option>
                     </select>
                 </label>
                 <div class="row">
