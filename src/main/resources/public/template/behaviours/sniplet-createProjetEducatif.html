@@ -11,7 +11,10 @@
 
     <div>
 
-        <div class="seven cell twelve-mobile">
+        <div class="seven twelve-mobile">
+            <h4 class="seven cell marginBottomZero custom-h4">
+                <i18n>viescolaire.utils.choix.theme</i18n>
+            </h4>
             <div ng-show="!selected.AP" class="twelve cell twelve-mobile">
 
                 <div class="row skills-95">
@@ -20,7 +23,7 @@
                             <span ng-click="theme.open = !theme.open;"
                                   class="skills-text-overflow skills-teach">
                                     <i class="skills-open-icon"></i>
-                                    <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.choix.theme</i18n></span>
+                                    <span ng-show="!dataELem.theme"><i18n>viescolaire.utils.themes</i18n></span>
                                     <span ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                 </span>
                             <ul class="skills-list-aideSaisie">
@@ -41,7 +44,7 @@
                                 <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themePerso.open}">
                                 <span class="skills-text-overflow skills-teach">
                                     <span ng-click="themePerso.open = !themePerso.open;"><i18n>viescolaire.utils.themes.personnalise</i18n></span>
-                                    <h3 data-ng-click="showTheme(true)" class="inline-block marginTopZero marginBottomZero">
+                                    <h3 data-ng-click="showTheme(true)" class="inline-block marginBottomZero">
                                         <i class="plus marginLeft"></i>
                                     </h3>
                                 </span>
@@ -70,7 +73,7 @@
             </div>
             <div ng-show="!selected.parcours" class="twelve cell twelve-mobile marginTop">
                 <div class="twelve cell twelve-mobile">
-                    <h4 class="twelve cell marginBottomZero noBold">
+                    <h4 class="twelve cell marginBottomZero custom-h4">
                         <i18n>viescolaire.competences.libelle</i18n>
                     </h4>
                     <textarea ng-model="dataELem.libelle"
@@ -101,7 +104,7 @@
         </div>
 
         <div ng-show="!selected.parcours" class="twelve cell twelve-mobile">
-            <h4 class="two cell marginBottomZero noBold">
+            <h4 class="two cell marginBottomZero custom-h4">
                 <i18n>viescolaire.utils.description</i18n>
             </h4>
             <textarea ng-model="dataELem.description"
@@ -110,6 +113,9 @@
         </div>
 
         <div ng-show="!selected.parcours" class="twelve cell twelve-mobile selet-blocks">
+            <h4 class="twelve cell marginBottomZero custom-h4">
+                <i18n>viescolaire.competences.intervenant</i18n> / <i18n>viescolaire.utils.matiere</i18n>
+            </h4>
             <div class="five cell twelve-mobile">
                 <label class="select">
                     <select ng-model="search.enseignant"
@@ -140,6 +146,9 @@
         </div>
 
         <div class="twelve cell twelve-mobile">
+            <h4 class="twelve cell marginBottomZero custom-h4">
+                <i18n>viescolaire.competences.classe.groupe</i18n>
+            </h4>
             <div class="five cell twelve-mobile">
                 <label class="select">
                     <select ng-model="search.classe"

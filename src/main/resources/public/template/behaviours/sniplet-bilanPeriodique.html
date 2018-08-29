@@ -41,17 +41,17 @@
         <input ng-show="selected.EPI"
                class="five cell"
                type="text"
-               ng-model="search.name"
+               ng-model="search.element"
                placeholder="Saisir un EPI">
         <input ng-show="selected.AP"
                class="five cell"
                type="text"
-               ng-model="search.name"
+               ng-model="search.element"
                placeholder="Saisir un AP">
         <input ng-show="selected.parcours"
                class="five cell"
                type="text"
-               ng-model="search.name"
+               ng-model="search.element"
                placeholder="Saisir un parcours">
 
         <button class="right-magnet" ng-click="openElementLigthbox()">
@@ -93,7 +93,7 @@
 
         <tbody>
 
-        <tr ng-repeat="element in elements | filter:filterItem()" ng-click="selectUnselectElement(element)">
+        <tr ng-repeat="element in elements | filter:filterItem() | filter:search.element" ng-click="selectUnselectElement(element)">
             <td><label class="checkbox">
                 <input type="checkbox"
                        ng-model="element.selected"

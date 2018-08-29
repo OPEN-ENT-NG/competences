@@ -3083,7 +3083,8 @@ body.evaluations {
     border-radius: 2px;
   }
 
-  .noBold {
+  .custom-h4 {
+    font-size: 15.5px;
     font-weight: normal !important;
   }
 
@@ -3115,22 +3116,11 @@ body.evaluations {
   .skills-header {
     cursor: pointer;
     @include transition(all 200ms ease);
-    &.skill-50 {
-      height: 50px;
-      overflow: hidden;
-    }
-    &.skill-30 {
-      height: 30px;
-      overflow: hidden;
-    }
-    &.skill-40 {
-      height: 40px;
-      overflow: hidden;
-    }
     &.skill-45 {
       height: 45px;
       overflow: hidden;
       list-style-type: none;
+      color: #555;
     }
     &.opened {
       height: auto;
@@ -3168,10 +3158,13 @@ body.evaluations {
     }
   }
 
-  .skills-list-aideSaisie ul {
-    list-style-type: none;
-    padding-left: 20px !important;
+  .skills-list-aideSaisie {
+    padding-left: 10px !important;
     margin: 0 !important;
+  }
+
+  .skills-list-aideSaisie > ul {
+    list-style-type: none !important;
   }
 
   .skills-list-proposition {
@@ -3216,4 +3209,8 @@ body.evaluations {
         border-color: #fff;
       }
     }
+
+  .skills-header >.skills-text-overflow i.skills-open-icon::before {
+    margin-top: 3px !important;
+  }
 }

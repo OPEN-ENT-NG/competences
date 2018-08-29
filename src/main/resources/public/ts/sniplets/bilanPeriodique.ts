@@ -72,7 +72,6 @@ export const bilanPeriodique = {
                 element.selected = false;
             });
             bilanPeriodique.that.elementAll.selected = false;
-            // utils.safeApply(bilanPeriodique.that);
         },
 
 
@@ -326,7 +325,6 @@ export const bilanPeriodique = {
                     delete(this.dataELem.description);
                 }
                 await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
-                // bilanPeriodique.that.emptyLightbox();
                 bilanPeriodique.that.opened.lightboxCreatePE = false;
                 bilanPeriodique.that.getElements();
 
@@ -422,6 +420,7 @@ export const bilanPeriodique = {
         tryDeleteEnseignantMatiere: function (item) {
             item.selected = true;
             this.opened.lightboxConfirmDeleteChips = true;
+            bilanPeriodique.that.opened.lightboxCreatePE = false;
         },
 
         deleteEnseignantMatiere: function () {
