@@ -420,7 +420,6 @@ export const bilanPeriodique = {
         tryDeleteEnseignantMatiere: function (item) {
             item.selected = true;
             this.opened.lightboxConfirmDeleteChips = true;
-            bilanPeriodique.that.opened.lightboxCreatePE = false;
         },
 
         deleteEnseignantMatiere: function () {
