@@ -595,6 +595,9 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         String queryDelAppEleve = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve WHERE id_elt_bilan_periodique IN "
                 + Sql.listPrepared(idsEltBilanPeriodique);
 
+        String queryDelRelAppEleveGroup = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve WHERE id_elt_bilan_periodique IN "
+                + Sql.listPrepared(idsEltBilanPeriodique);
+
         String queryDelAppClasse = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe WHERE id_elt_bilan_periodique IN "
                 + Sql.listPrepared(idsEltBilanPeriodique);
 
@@ -602,6 +605,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         statements.add(new JsonObject()
                 .put("statement", queryDelAppEleve.toString())
+                .put("values", params)
+                .put("action", "prepared"));
+        statements.add(new JsonObject()
+                .put("statement", queryDelRelAppEleveGroup.toString())
                 .put("values", params)
                 .put("action", "prepared"));
         statements.add(new JsonObject()
