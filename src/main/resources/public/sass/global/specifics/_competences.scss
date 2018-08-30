@@ -1498,7 +1498,7 @@ body.evaluations {
     }
   }
 
-  .skills-list-aideSaisie{
+  .skills-list-aideSaisie {
     list-style-type: none;
     overflow-y: scroll;
     height: 260px;
@@ -3138,7 +3138,7 @@ body.evaluations {
       display: block;
       cursor: pointer;
       &.skills-teach {
-        padding: 10px 35px 10px 20px;
+        padding: 12px 35px 12px 20px;
         > span {
           margin-bottom: 5px;
         }
@@ -3159,11 +3159,15 @@ body.evaluations {
   }
 
   .skills-list-aideSaisie {
-    padding-left: 10px !important;
-    margin: 0 !important;
+    padding-left: 10px;
+    margin: 0;
+    list-style-type: none;
+    ul{
+      list-style-type: none;
+    }
   }
 
-  .skills-list ul {
+  ul.skills-list {
     list-style-type: none;
   }
 
