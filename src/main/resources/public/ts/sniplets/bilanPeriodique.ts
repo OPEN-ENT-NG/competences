@@ -443,6 +443,7 @@ export const bilanPeriodique = {
                     this.opened.lightboxConfirmDeleteClasse = true;
                     classe.selected = true;
                 } else {
+                    classe.selected = true;
                     await this.deleteClasse();
                 }
             }

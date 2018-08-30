@@ -341,8 +341,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
-                    // $scope.initPeriodesList();
-                    // Affichage des criteres par défaut quand on arrive sur le releve
+
+                    // Affichage des criteres par défaut quand on arrive sur le bilan périodique
+                    if($scope.bilanPeriodique !== undefined){
+                        $scope.bilanPeriodique = undefined;
+                    }
+
                     $scope.openLeftMenu("opened.criteres", false);
                     if (!template.isEmpty('leftSide-userInfo')) template.close('leftSide-userInfo');
 
@@ -2208,6 +2212,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getElementsBilanBilanPeriodique = async function (param?){
+            if($scope.bilanPeriodique !== undefined ) {
+                delete $scope.bilanPeriodique;
+            }
             if($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
                 && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*"){
 
@@ -2228,9 +2235,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 else {
                     delete $scope.bilanPeriodique;
                 }
-
-                // $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
-
             } else {
                 delete $scope.bilanPeriodique;
             }
@@ -2252,7 +2256,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if(eleve){
                 if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
                     if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, null);
+                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, $scope.search.classe);
                     }
                     else {
                         notify.error(lang.translate("error.char.outbound") +

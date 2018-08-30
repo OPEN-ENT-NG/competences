@@ -37,7 +37,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-change="getElementsBilanBilanPeriodique(search.periode)"
-                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | orderBy:'-type'">
+                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:notYear() | orderBy:'-type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
                         </select>
@@ -93,14 +93,18 @@
                         </header>
                     </div>
 
-                    <div ng-repeat="element in bilanPeriodique.elements | filter:filterElements()" class=" padding-table-elements marginFive card">
+                    <div ng-repeat="element in bilanPeriodique.elements | filter:filterElements()"
+                         class=" padding-table-elements marginFive card">
                         <h2 ng-class="{'openedElem' : element.opened}"
                             class="margin-top-1em Domaine"
                             ng-click="element.opened = !element.opened"
                             ng-init="element.opened = false">[[element.libelle]]
                         </h2>
                         <div ng-class="{'openedSectionDom' : element.opened}">
-                            <span ng-repeat="enseignant in element.enseignants" class="marginFive italic">[[enseignant]]  [[$last ? '' : ', ']]</span>
+                            <span ng-repeat="enseignant in element.enseignants"
+                                  class="marginFive italic">
+                                [[enseignant]]  [[$last ? '' : ', ']]
+                            </span>
                             <content class="block row marginFive card">
                                 <div class="elements-header">
                                     <div class="two indent-fifteen inline-block cell-indent cell">
@@ -120,7 +124,8 @@
                                     </div>
                                 </div>
                                 <div class="expandable-liste notes-devoir-liste" c-navigable-competences>
-                                    <div ng-repeat="eleve in bilanPeriodique.classe.eleves.all track by $index" ng-class="{openedEleve : openedEleve === $index}">
+                                    <div ng-repeat="eleve in bilanPeriodique.classe.eleves.all track by $index"
+                                         ng-class="{openedEleve : openedEleve === $index}">
 
                                         <div class="expandable navigable-row twelve">
                                             <div class="row navigable-inputs-row">
@@ -132,7 +137,9 @@
                                                 </div>
                                                 <div class="ten cell cell-input">
                                                     <input type="text" class="eleven input-appreciation" name="appreciation"
-                                                           ng-model="eleve.appreciations[search.periode.id][element.id]" ng-blur="saveAppElement(element, eleve)"
+                                                           ng-model="eleve.appreciations[search.periode.id][element.id]"
+                                                           ng-blur="saveAppElement(element, eleve)"
+                                                           ng-disabled="bilanPeriodique.endSaisie"
                                                            ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
                                                 </div>
                                             </div>
@@ -152,7 +159,8 @@
                                       ng-maxlength="600"
                                       maxlength="600"
                                       ng-blur="saveAppElement(element)"
-                                      name="appreciationClasse">
+                                      name="appreciationClasse"
+                                      ng-disabled="bilanPeriodique.endSaisie">
                             </textarea>
                                     <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
                                         <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
@@ -164,9 +172,5 @@
                 </article>
             </content>
         </section>
-
-        <!--<div class="eight cell twelve-mobile">-->
-            <!---->
-        <!--</div>-->
     </div>
 </div>

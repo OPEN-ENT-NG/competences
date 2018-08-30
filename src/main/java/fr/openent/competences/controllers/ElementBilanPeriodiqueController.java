@@ -3,6 +3,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessElementBilanPeriodiqueFilter;
 import fr.openent.competences.security.CreateElementBilanPeriodique;
+import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -10,15 +11,16 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.entcore.common.controller.ControllerHelper;
-import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserInfos;
-import org.entcore.common.user.UserUtils;
+
 
 import java.util.*;
 
@@ -247,13 +249,6 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                                                             if ("ok".equals(body.getString("status"))) {
                                                                                                 JsonArray users = body.getJsonArray("results");
 
-                                                                                                // je check pour chaque élève et pour chaque classe de resource
-                                                                                                ///// si l'élève est dans les autres classes de resource j'enregistre les deletedClasses
-                                                                                                ///// dans lesquelles est l'élève dans concurrentsClasses et je vais supprimer les relations apprec-classes de concurrentsClasses
-                                                                                                /////
-                                                                                                ///// si l'élève n'est pas dans les autres classes de resource qui ne sont pas dans deletedClasses j'enregistre les deletedClasses dans
-                                                                                                ///// lesquelles est l'élève dans aloneClasses et je vais supprimer les appreciations et les relations apprec-classes de aloneClasses
-
                                                                                                 // map qui à un idUser associe une map de idClass -> externalIdClass de toutes les classes/groupes de l'élève
                                                                                                 Map<String, Map<String, String>> usersMap = new HashMap<String, Map<String, String>>();
                                                                                                 for(Object u : users) {
@@ -368,9 +363,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-//    @SecuredAction(value = "", type = ActionType.RESOURCE)
-//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -569,9 +563,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique/enseignants")
     @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-//    @SecuredAction(value = "", type = ActionType.RESOURCE)
-//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getEnseignantsElements(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -719,9 +712,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsAppreciations")
     @ApiDoc("Retourne les appreciations liées au élèments du bilan périodiques passés en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-//    @SecuredAction(value = "", type = ActionType.RESOURCE)
-//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getAppreciations(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -772,36 +764,65 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Post("/elementsAppreciation")
     @ApiDoc("Créer une appréciation")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-//    @SecuredAction(value = "", type = ActionType.RESOURCE)
-//    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void createAppreciation(final HttpServerRequest request){
         String schema = getElementSchema(request.params().get("type"));
 
         if(schema != null){
-            RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
+            UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
                 @Override
-                public void handle(JsonObject resource) {
-                    defaultElementBilanPeriodiqueService.getGroupesElementBilanPeriodique(
-                            resource.getInteger("id_element").toString(),
-                            new Handler<Either<String, JsonArray>> () {
+                public void handle(final UserInfos user) {
+                    if(user != null){
+                        RequestUtils.bodyToJson(request, pathPrefix + schema,
+                                new Handler<JsonObject>() {
                             @Override
-                                    public void handle(Either<String, JsonArray> event){
-                                if(event.isRight()){
-                                    defaultElementBilanPeriodiqueService.insertOrUpdateAppreciationElement(
-                                            resource.getString("id_eleve"),
-                                            resource.getString("id_classe"),
-                                            resource.getString("externalid_classe"),
-                                            new Long(resource.getInteger("id_periode")),
-                                            new Long(resource.getInteger("id_element")),
-                                            resource.getString("appreciation"),
-                                            event.right().getValue(),
-                                            defaultResponseHandler(request));
-                                } else {
-                                    leftToResponse(request, event.left());
-                                }
+                            public void handle(JsonObject resource) {
+                                new FilterUserUtils(user, eb).validateElement(resource.getInteger("id_element").toString(),
+                                        new Handler<Boolean>() {
+                                    @Override
+                                    public void handle(final Boolean isValid) {
+                                        if (isValid) {
+                                            new FilterUserUtils(user, eb).validateEleve(resource.getString("id_eleve"),
+                                                    resource.getString("id_classe"), new Handler<Boolean>() {
+                                                        @Override
+                                                        public void handle(final Boolean isValid) {
+                                                            if (isValid) {
+                                                                defaultElementBilanPeriodiqueService.getGroupesElementBilanPeriodique(
+                                                                        resource.getInteger("id_element").toString(),
+                                                                        new Handler<Either<String, JsonArray>> () {
+                                                                            @Override
+                                                                            public void handle(Either<String, JsonArray> event){
+                                                                                if(event.isRight()){
+                                                                                    defaultElementBilanPeriodiqueService.insertOrUpdateAppreciationElement(
+                                                                                            resource.getString("id_eleve"),
+                                                                                            resource.getString("id_classe"),
+                                                                                            resource.getString("externalid_classe"),
+                                                                                            new Long(resource.getInteger("id_periode")),
+                                                                                            new Long(resource.getInteger("id_element")),
+                                                                                            resource.getString("appreciation"),
+                                                                                            event.right().getValue(),
+                                                                                            defaultResponseHandler(request));
+                                                                                } else {
+                                                                                    leftToResponse(request, event.left());
+                                                                                }
+                                                                            }
+                                                                        });
+                                                            } else {
+                                                                unauthorized(request);
+                                                            }
+                                                        }
+                                                    });
+                                        } else {
+                                            unauthorized(request);
+                                        }
+                                    }
+                                });
                             }
                         });
+                    } else{
+                        unauthorized(request);
+                    }
                 }
             });
         } else {
@@ -809,34 +830,4 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                     .put("error", "appreciation type not found"), 400);
         }
     }
-
-//    /**
-//     * Mettre à jour une appréciation avec les données passées en POST
-//     * @param request
-//     */
-//    @Put("/elementsAppreciation")
-//    @ApiDoc("Mettre à jour une appréciation")
-//    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-////    @SecuredAction(value = "", type = ActionType.RESOURCE)
-////    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
-//    public void updateAppreciation(final HttpServerRequest request){
-//
-//        String schema = getElementSchema(request.params().get("type"));
-//
-//        if(schema != null){
-//            RequestUtils.bodyToJson(request, pathPrefix + schema, new Handler<JsonObject>() {
-//                @Override
-//                public void handle(JsonObject resource) {
-//                    defaultElementBilanPeriodiqueService.updateAppreciationBilanPeriodique(
-//                            new Long(resource.getInteger("id_appreciation")),
-//                            resource.getString("appreciation"),
-//                            request.params().get("type"),
-//                            defaultResponseHandler(request));
-//                }
-//            });
-//        } else {
-//            Renders.renderJson(request, new JsonObject()
-//                    .put("error", "appreciation type not found"), 400);
-//        }
-//    }
 }

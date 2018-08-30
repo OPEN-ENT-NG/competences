@@ -287,7 +287,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(idPeriode);
         }
 
-        if(idsClasses != null){
+        if(idsClasses != null && idsClasses.size() > 0){
             query += " AND " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_classe.id_groupe IN " + Sql.listPrepared(idsClasses);
             for (int i = 0; i < idsClasses.size(); i++) {
                 params.add(idsClasses.get(i));
@@ -305,7 +305,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         String query = "SELECT DISTINCT " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.* " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve ";
 
-        if(idsClasses != null){
+        if(idsClasses != null && idsClasses.size() > 0){
             query += " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve " +
                     " ON rel_groupe_appreciation_elt_eleve.id_groupe IN " + Sql.listPrepared(idsClasses);
             for (int i = 0; i < idsClasses.size(); i++) {
@@ -522,7 +522,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         }
 
         //suppression des relations entre l'élément et les anciennes classes
-        deleteRelEltgroupe(idElement, deletedClasses, statements);
+        deleteRelEltgroupe(idElement, statements);
 
         //insertion des relations entre l'élément et les nouvelles classes
         insertRelEltgroupe(element.getJsonArray("classes"), idElement, statements);
@@ -535,43 +535,42 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                     apprec.getString("id_groupe"), null, statements);
         }
 
-        //suppression des appréciations élève sur les anciennes classes et des relations apprec-classe
-        JsonArray apprecDeletedAlone = apprecEleveOnDeletedClasses.getJsonArray("apprecDeletedAlone");
-        for(Object a : apprecDeletedAlone){
-            JsonObject apprec = (JsonObject) a;
-            deleteAppreciation(apprec.getString("id_eleve"),
-                    apprec.getLong("id_periode"),
-                    apprec.getLong("id_elt_bilan_periodique"),
-                    null, deletedClasses, statements);
-        }
 
-        //suppression des relations entre les appréciations élève sur les anciennes classes
-        // pour les appréciations élève existant sur les nouvelles classes aussi
-        JsonArray apprecDeletedConcurrent = apprecEleveOnDeletedClasses.getJsonArray("apprecDeletedConcurrent");
-        for(Object a : apprecDeletedConcurrent){
-            JsonObject apprec = (JsonObject) a;
-            deleteRelGroupeApprecEleve(apprec.getString("id_eleve"),
-                    apprec.getLong("id_periode"),
-                    apprec.getLong("id_elt_bilan_periodique"),
-                    deletedClasses, statements);
+        if(apprecEleveOnDeletedClasses != null && apprecEleveOnDeletedClasses.size() > 0){
+
+            //suppression des appréciations élève sur les anciennes classes et des relations apprec-classe
+            JsonArray apprecDeletedAlone = apprecEleveOnDeletedClasses.getJsonArray("apprecDeletedAlone");
+            for(Object a : apprecDeletedAlone){
+                JsonObject apprec = (JsonObject) a;
+                deleteAppreciation(apprec.getString("id_eleve"),
+                        apprec.getLong("id_periode"),
+                        apprec.getLong("id_elt_bilan_periodique"),
+                        null, deletedClasses, statements);
+            }
+
+            //suppression des relations entre les appréciations élève sur les anciennes classes
+            // pour les appréciations élève existant sur les nouvelles classes aussi
+            JsonArray apprecDeletedConcurrent = apprecEleveOnDeletedClasses.getJsonArray("apprecDeletedConcurrent");
+            for(Object a : apprecDeletedConcurrent){
+                JsonObject apprec = (JsonObject) a;
+                deleteRelGroupeApprecEleve(apprec.getString("id_eleve"),
+                        apprec.getLong("id_periode"),
+                        apprec.getLong("id_elt_bilan_periodique"),
+                        deletedClasses, statements);
+            }
         }
 
         Sql.getInstance().transaction(statements.build(), SqlResult.validRowsResultHandler(handler));
     }
 
-    private void deleteRelEltgroupe (Long idEltBilanPeriodique, List<String> deletedClasses, SqlStatementsBuilder statements){
+    private void deleteRelEltgroupe (Long idEltBilanPeriodique, SqlStatementsBuilder statements){
 
-        for (Object o : deletedClasses) {
-            String groupe = (String) o;
-            String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe " +
-                    "WHERE id_elt_bilan_periodique = ? " +
-                    "AND id_groupe = ? ";
-            JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                    .add(idEltBilanPeriodique)
-                    .add(groupe);
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_groupe " +
+                "WHERE id_elt_bilan_periodique = ? ";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(idEltBilanPeriodique);
 
-            statements.prepared(query, params);
-        }
+        statements.prepared(query, params);
     }
 
     private void deleteRelEltIntervenantMatiere (Long idEltBilanPeriodique, SqlStatementsBuilder statements){

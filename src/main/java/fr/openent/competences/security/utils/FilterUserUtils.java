@@ -38,9 +38,11 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
  * Created by ledunoiss on 20/10/2016.
@@ -68,6 +70,78 @@ public class FilterUserUtils {
 
     public boolean validateClasse(String idClasse) {
         return user.getClasses().contains(idClasse) || user.getGroupsIds().contains(idClasse);
+    }
+
+    public void validateElement(String element, Handler<Boolean> handler) {
+
+        StringBuilder query = new StringBuilder()
+                .append("SELECT id_intervenant ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("WHERE id_elt_bilan_periodique = ? ");
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+            .add(element);
+
+        Sql.getInstance().prepared(query.toString(), params, new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+
+                if ("ok".equals(body.getString("status"))) {
+                    JsonArray enseignants = body.getJsonArray("results");
+                    JsonArray idsEnseignants = new fr.wseduc.webutils.collections.JsonArray();
+                    for(Object o : enseignants){
+                        JsonArray enseignant = (JsonArray)o;
+                        idsEnseignants.add(enseignant.getString(0));
+                    }
+                    if (idsEnseignants.contains(user.getUserId())) {
+                        handler.handle(true);
+                    }
+                    else {
+                        handler.handle(false);
+                    }
+                } else {
+                    handler.handle(false);
+                }
+            }
+        });
+    }
+
+    public void validateEleve(String idEleve, String idClasse, Handler<Boolean> handler) {
+
+        if(validateClasse(idClasse)){
+            JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray()
+                    .add(idEleve);
+            JsonObject action = new JsonObject()
+                    .put("action", "eleve.getInfoEleve")
+                    .put("idEleves", idsEleves);
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                @Override
+                public void handle(Message<JsonObject> message) {
+                    JsonObject body = message.body();
+
+                    if ("ok".equals(body.getString("status"))) {
+                        JsonObject infosEleve = body.getJsonArray("results").getJsonObject(0);
+
+                        JsonArray idsGroupes = infosEleve.getJsonArray("idGroupes")
+                                .add(infosEleve.getString("idClasse"))
+                                .addAll(infosEleve.getJsonArray("idManualGroupes"));
+
+                        if(idsGroupes.contains(idClasse)){
+                            handler.handle(true);
+                        }
+                        else {
+                            handler.handle(false);
+                        }
+                    } else {
+                        handler.handle(false);
+                    }
+                }
+
+            }));
+        } else {
+            handler.handle(false);
+        }
     }
 
     public void validateMatiere(final HttpServerRequest request, final String idEtablissement, final String idMatiere, final Handler<Boolean> handler) {

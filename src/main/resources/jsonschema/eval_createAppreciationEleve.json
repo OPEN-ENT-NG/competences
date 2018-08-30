@@ -6,6 +6,9 @@
     "id_eleve": {
       "type": "string"
     },
+    "id_classe": {
+      "type" : "string"
+    },
     "id_periode": {
       "type": "integer"
     },
@@ -19,6 +22,7 @@
   "required": [
     "id_eleve",
     "id_periode",
+    "id_classe",
     "id_element",
     "appreciation"
   ]

@@ -1,4 +1,4 @@
-import {Model, _, model, notify, Collection} from 'entcore';
+import {Model, _, model, notify, Collection, moment} from 'entcore';
 import http from 'axios';
 import {
     Periode,
@@ -16,6 +16,7 @@ export class BilanPeriodique extends  Model {
     structure: Structure;
     elements: Collection<ElementBilanPeriodique>;
     appreciations : Collection<AppreciationElement>;
+    endSaisie : Boolean;
 
     static get api() {
         return {
@@ -169,6 +170,9 @@ export class BilanPeriodique extends  Model {
         } catch (e) {
             notify.error('evaluations.appreciations.get.error');
         }
+
+        let period = _.findWhere(this.classe.periodes.all, {id_type: periode.id_type});
+        this.endSaisie = moment(period.date_fin_saisie).isBefore(moment(), "days");
     }
 
     toJSON(periode, element, eleve, classe){
@@ -176,7 +180,7 @@ export class BilanPeriodique extends  Model {
             id_periode : periode.id,
             id_element : element.id
         };
-        eleve ? _.extend(data, {id_eleve : eleve.id, appreciation : eleve.appreciations[periode.id][element.id]})
+        eleve ? _.extend(data, {id_eleve : eleve.id, appreciation : eleve.appreciations[periode.id][element.id], id_classe : classe.id})
             :  _.extend(data, {appreciation : element.appreciationClasse[periode.id][classe.id], id_classe : classe.id, externalid_classe : classe.externalId});
 
         return data;
@@ -184,7 +188,7 @@ export class BilanPeriodique extends  Model {
 
     async saveAppreciation (periode, element, eleve, classe) {
         try {
-            eleve ? await http.post(BilanPeriodique.api.create + "?type=eleve", this.toJSON(periode, element, eleve, null))
+            eleve ? await http.post(BilanPeriodique.api.create + "?type=eleve", this.toJSON(periode, element, eleve, classe))
                 : await http.post(BilanPeriodique.api.create + "?type=classe", this.toJSON(periode, element, null, classe));
         } catch (e) {
             notify.error('evaluations.appreciation.post.error');
