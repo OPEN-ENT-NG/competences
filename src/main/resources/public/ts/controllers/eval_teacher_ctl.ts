@@ -2240,16 +2240,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             utils.safeApply($scope);
         }
-        $scope.displayApprecEleve = function (appreciations, idElement) {
-            _.forEach(appreciations, (appreciation) => {
-                if(appreciation.id_element === idElement)
-                    return appreciation.appreciation_element;
-            });
-        }
 
         /**
-         * Séquence d'enregistrement d'une évaluation
-         * @param appreciation appréciation à enregistrer
+         * Séquence d'enregistrement d'une appréciation
+         * @param element sur lequel est faite l'appréciation
          * @param eleve élève propriétaire de l'appréciation
          */
         $scope.saveAppElement = function (element, eleve?) {

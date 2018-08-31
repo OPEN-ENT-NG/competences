@@ -72,15 +72,17 @@ public class FilterUserUtils {
         return user.getClasses().contains(idClasse) || user.getGroupsIds().contains(idClasse);
     }
 
-    public void validateElement(String element, Handler<Boolean> handler) {
+    public void validateElement(List<String> idsElements, String idClasse, Handler<Boolean> handler) {
 
         StringBuilder query = new StringBuilder()
-                .append("SELECT id_intervenant ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
-                .append("WHERE id_elt_bilan_periodique = ? ");
+                .append("SELECT id, type_elt_bilan_periodique ")
+                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique ")
+                .append("WHERE id IN " + Sql.listPrepared(idsElements));
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-            .add(element);
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        for (String id : idsElements) {
+            params.add(id);
+        }
 
         Sql.getInstance().prepared(query.toString(), params, new Handler<Message<JsonObject>>() {
             @Override
@@ -88,17 +90,58 @@ public class FilterUserUtils {
                 JsonObject body = message.body();
 
                 if ("ok".equals(body.getString("status"))) {
-                    JsonArray enseignants = body.getJsonArray("results");
-                    JsonArray idsEnseignants = new fr.wseduc.webutils.collections.JsonArray();
-                    for(Object o : enseignants){
-                        JsonArray enseignant = (JsonArray)o;
-                        idsEnseignants.add(enseignant.getString(0));
+                    JsonArray elements = body.getJsonArray("results");
+                    List<Integer> idsEPI_AP = new ArrayList<Integer>();
+
+                    for(Object o : elements){
+                        JsonArray element = (JsonArray)o;
+
+                        if(element.getInteger(1) == 3){ // si type = parcours je vérifie si le prof est dans la classe
+                            if(!validateClasse(idClasse)){
+                                handler.handle(false);
+                                return;
+                            }
+                        } else {
+                            idsEPI_AP.add(element.getInteger(0));
+                        }
                     }
-                    if (idsEnseignants.contains(user.getUserId())) {
+                    if(idsEPI_AP.size() > 0){
+                        // sinon on vérifie si le prof est dans la liste des intervenants affectés à l'élèment
+                        StringBuilder query = new StringBuilder()
+                                .append("SELECT id_intervenant ")
+                                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_elt_bilan_periodique_intervenant_matiere ")
+                                .append("WHERE id_elt_bilan_periodique IN " + Sql.listPrepared(idsEPI_AP));
+
+                        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+                        for (int id : idsEPI_AP) {
+                            params.add(id);
+                        }
+
+                        Sql.getInstance().prepared(query.toString(), params, new Handler<Message<JsonObject>>() {
+                            @Override
+                            public void handle(Message<JsonObject> message) {
+                                JsonObject body = message.body();
+
+                                if ("ok".equals(body.getString("status"))) {
+                                    JsonArray enseignants = body.getJsonArray("results");
+                                    JsonArray idsEnseignants = new fr.wseduc.webutils.collections.JsonArray();
+                                    for(Object o : enseignants){
+                                        JsonArray enseignant = (JsonArray)o;
+                                        idsEnseignants.add(enseignant.getString(0));
+                                    }
+                                    if (idsEnseignants.contains(user.getUserId())) {
+                                        handler.handle(true);
+                                    }
+                                    else {
+                                        handler.handle(false);
+                                    }
+                                } else {
+                                    handler.handle(false);
+                                }
+                            }
+                        });
+                    } else {
                         handler.handle(true);
-                    }
-                    else {
-                        handler.handle(false);
                     }
                 } else {
                     handler.handle(false);
@@ -110,35 +153,39 @@ public class FilterUserUtils {
     public void validateEleve(String idEleve, String idClasse, Handler<Boolean> handler) {
 
         if(validateClasse(idClasse)){
-            JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray()
-                    .add(idEleve);
-            JsonObject action = new JsonObject()
-                    .put("action", "eleve.getInfoEleve")
-                    .put("idEleves", idsEleves);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> message) {
-                    JsonObject body = message.body();
+            if(idEleve == null){
+                handler.handle(true);
+            } else {
+                JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray()
+                        .add(idEleve);
+                JsonObject action = new JsonObject()
+                        .put("action", "eleve.getInfoEleve")
+                        .put("idEleves", idsEleves);
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
 
-                    if ("ok".equals(body.getString("status"))) {
-                        JsonObject infosEleve = body.getJsonArray("results").getJsonObject(0);
+                        if ("ok".equals(body.getString("status"))) {
+                            JsonObject infosEleve = body.getJsonArray("results").getJsonObject(0);
 
-                        JsonArray idsGroupes = infosEleve.getJsonArray("idGroupes")
-                                .add(infosEleve.getString("idClasse"))
-                                .addAll(infosEleve.getJsonArray("idManualGroupes"));
+                            JsonArray idsGroupes = infosEleve.getJsonArray("idGroupes")
+                                    .add(infosEleve.getString("idClasse"))
+                                    .addAll(infosEleve.getJsonArray("idManualGroupes"));
 
-                        if(idsGroupes.contains(idClasse)){
-                            handler.handle(true);
-                        }
-                        else {
+                            if(idsGroupes.contains(idClasse)){
+                                handler.handle(true);
+                            }
+                            else {
+                                handler.handle(false);
+                            }
+                        } else {
                             handler.handle(false);
                         }
-                    } else {
-                        handler.handle(false);
                     }
-                }
 
-            }));
+                }));
+            }
         } else {
             handler.handle(false);
         }

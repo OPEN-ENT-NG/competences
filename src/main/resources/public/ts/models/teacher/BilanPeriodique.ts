@@ -38,46 +38,6 @@ export class BilanPeriodique extends  Model {
         this.classe = classe;
 
         this.structure = evaluations.structure;
-        // this.collection(Classe, {
-        //     sync: function () {
-        //         return new Promise(async (resolve) => {
-        //             if (this.classe.eleves.length() === 0) {
-        //                 await this.classe.eleves.sync();
-        //             }
-        //             if (this.classe.periodes.length() === 0) {
-        //                 await this.classe.periodes.sync();
-        //             }
-        //             this.synchronized.classe = true;
-        //             resolve();
-        //         });
-        //     }
-        // });
-
-        // this.collection(ElementBilanPeriodique, {
-        //     sync: async function () {
-        //         try {
-        //             let data = await http.get(BilanPeriodique.api.GET_ELEMENTS + "&idClasse=" + this.classe.id + "&idEnseignant=" + model.me.userId);
-        //             this.elements = data.data;
-        //         } catch (e) {
-        //             notify.error('evaluations.elements.get.error');
-        //         }
-        //     }
-        // });
-        //
-        // this.collection(ElementBilanPeriodique, {
-        //     sync: async function () {
-        //         try {
-        //             let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id;
-        //             for (let i = 0; i < this.elements.length; i++) {
-        //                 url += "&idElement=" + this.elements[i].id;
-        //             }
-        //             let data = await http.get(url);
-        //             this.appreciations = data.data;
-        //         } catch (e) {
-        //             notify.error('evaluations.appreciations.get.error');
-        //         }
-        //     }
-        // });
     }
 
     syncClasse(): Promise<any> {
@@ -99,14 +59,16 @@ export class BilanPeriodique extends  Model {
             this.elements = data.data;
 
             if(data.data.length > 0) {
-                let url = BilanPeriodique.api.GET_ENSEIGNANTS + "?idElement=" + this.elements[0].id;
-                for (let i = 1; i < data.data.length; i++) {
+                let url = BilanPeriodique.api.GET_ENSEIGNANTS + "?idClasse=" + this.classe.id;
+                for (let i = 0; i < data.data.length; i++) {
                     url += "&idElement=" + this.elements[i].id;
                 }
                 let result = await http.get(url);
                 _.forEach(this.elements, (element) => {
-                    let enseignants = _.findWhere(result.data, {idElement: element.id})
-                    element.enseignants = enseignants.idsEnseignants;
+                    let enseignants = _.findWhere(result.data, {idElement: element.id});
+                    if(enseignants) {
+                        element.enseignants = enseignants.idsEnseignants;
+                    }
                 });
             }
 
@@ -114,21 +76,6 @@ export class BilanPeriodique extends  Model {
             notify.error('evaluations.elements.get.error');
         }
     }
-
-    // async getEnseignantsOnElements (elements) {
-    //     try {
-    //         let url = BilanPeriodique.api.GET_ENSEIGNANTS + "&idElement=" + elements[0].id;
-    //         for (let i = 1; i < elements.length; i++) {
-    //             url += "&idElement=" + elements[i].id;
-    //         }
-    //         let data = await http.get(url);
-    //         _.forEach(elements, (element) => {
-    //             element.enseignantsMatieres = _.where(data.data, {id_elt_bilan_periodique: element.id});
-    //         });
-    //     } catch (e) {
-    //         notify.error('evaluations.enseignants.get.error');
-    //     }
-    // }
 
     async syncAppreciations (elements, periode, classe) {
         try {

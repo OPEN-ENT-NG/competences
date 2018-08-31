@@ -778,8 +778,10 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                 new Handler<JsonObject>() {
                             @Override
                             public void handle(JsonObject resource) {
-                                new FilterUserUtils(user, eb).validateElement(resource.getInteger("id_element").toString(),
-                                        new Handler<Boolean>() {
+                                List<String> idsElements = new ArrayList<String>();
+                                idsElements.add(resource.getInteger("id_element").toString());
+                                new FilterUserUtils(user, eb).validateElement(idsElements,
+                                        resource.getString("id_classe"), new Handler<Boolean>() {
                                     @Override
                                     public void handle(final Boolean isValid) {
                                         if (isValid) {

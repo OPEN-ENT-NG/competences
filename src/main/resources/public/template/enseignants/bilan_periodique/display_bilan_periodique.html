@@ -96,9 +96,9 @@
                     <div ng-repeat="element in bilanPeriodique.elements | filter:filterElements()"
                          class=" padding-table-elements marginFive card">
                         <h2 ng-class="{'openedElem' : element.opened}"
-                            class="margin-top-1em Domaine"
+                            class="margin-top-05em Domaine"
                             ng-click="element.opened = !element.opened"
-                            ng-init="element.opened = false">[[element.libelle]]
+                            ng-init="element.opened = false">[[element.type === 3 ? element.theme.libelle : element.libelle]]
                         </h2>
                         <div ng-class="{'openedSectionDom' : element.opened}">
                             <span ng-repeat="enseignant in element.enseignants"

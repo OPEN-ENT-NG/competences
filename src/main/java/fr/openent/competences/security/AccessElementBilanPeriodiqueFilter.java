@@ -29,13 +29,13 @@ public class AccessElementBilanPeriodiqueFilter implements ResourcesProvider {
                 case "Teacher": {
                     resourceRequest.pause();
                     MultiMap params = resourceRequest.params();
-                    if(params.contains("idElement") && !(params.contains("idClasse"))) {
-                        userUtils.validateElement(params.get("idElement"), new Handler<Boolean>() {
+                    if(params.contains("idElement") && (params.contains("idClasse"))) {
+                        userUtils.validateElement(params.getAll("idElement"), params.get("idClasse"), new Handler<Boolean>() {
                             @Override
                             public void handle(Boolean isValid) {
                                 if(isValid){
                                     resourceRequest.resume();
-                                    handler.handle(true);
+                                    handler.handle(userUtils.validateClasse(params.get("idClasse")));
                                 }
                                 else {
                                     resourceRequest.resume();
@@ -49,27 +49,9 @@ public class AccessElementBilanPeriodiqueFilter implements ResourcesProvider {
                             && params.contains("idEnseignant")) {
 
                         resourceRequest.resume();
-                        handler.handle((userUtils.validateClasse(params.get("idClasse"))
+                        handler.handle(userUtils.validateClasse(params.get("idClasse"))
                                 && userUtils.validateStructure(params.get("idEtablissement"))
-                                && userUtils.validateUser(params.get("idEnseignant"))));
-                    }
-                    else if(params.contains("idClasse")
-                            && params.contains("idElement")) {
-
-                        userUtils.validateElement(params.get("idElement"), new Handler<Boolean>() {
-                            @Override
-                            public void handle(Boolean isValid) {
-                                if(isValid){
-                                    resourceRequest.resume();
-                                    handler.handle(userUtils.validateClasse(params.get("idClasse")));
-                                }
-                                else {
-                                    resourceRequest.resume();
-                                    handler.handle(false);
-                                }
-                            }
-                        });
-
+                                && userUtils.validateUser(params.get("idEnseignant")));
                     }
                     else {
                         resourceRequest.resume();

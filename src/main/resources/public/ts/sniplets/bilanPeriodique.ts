@@ -434,7 +434,6 @@ export const bilanPeriodique = {
             item.selected = true;
             this.opened.lightboxConfirmDeleteChips = true;
             bilanPeriodique.that.opened.lightboxCreatePE = false;
-            // template.close('lightboxCreatePE');
         },
 
         deleteEnseignantMatiere: function () {
@@ -448,23 +447,26 @@ export const bilanPeriodique = {
             bilanPeriodique.that.search.matiere = null;
             bilanPeriodique.that.opened.lightboxConfirmDeleteChips = false;
             bilanPeriodique.that.opened.lightboxCreatePE = true;
-            // template.open('lightboxCreatePE');
         },
 
         tryDeleteClasse: async function (classe) {
-            let appreciations = await this.getAppreciationsOnClasse(classe.id, this.dataELem.id);
-            if(appreciations){
-                if (appreciations.length > 0) {
-                    this.opened.lightboxConfirmDeleteClasse = true;
-                    bilanPeriodique.that.opened.lightboxCreatePE = false;
-                    // template.close('lightboxCreatePE');
-                    classe.selected = true;
-                } else {
-                    classe.selected = true;
-                    await this.deleteClasse();
+            if(bilanPeriodique.that.modifElem){
+                let appreciations = await this.getAppreciationsOnClasse(classe.id, this.dataELem.id);
+                if(appreciations){
+                    if (appreciations.length > 0) {
+                        this.opened.lightboxConfirmDeleteClasse = true;
+                        bilanPeriodique.that.opened.lightboxCreatePE = false;
+                        classe.selected = true;
+                    } else {
+                        classe.selected = true;
+                        await this.deleteClasse();
+                    }
                 }
+                utils.safeApply(this);
+            } else {
+                classe.selected = true;
+                await this.deleteClasse();
             }
-            utils.safeApply(this);
         },
 
         deleteClasse: function () {
@@ -476,7 +478,6 @@ export const bilanPeriodique = {
             bilanPeriodique.that.search.classe = null;
             bilanPeriodique.that.opened.lightboxConfirmDeleteClasse = false;
             bilanPeriodique.that.opened.lightboxCreatePE = true;
-            // template.open('lightboxCreatePE');
         },
 
         emptyLightbox: function () {
