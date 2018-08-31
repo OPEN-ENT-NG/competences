@@ -14,7 +14,6 @@ import {
     LanguesCultRegs,
     LangueCultReg,
     BfcSynthese,
-    Matiere,
     EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls,
 } from './index';
 
@@ -35,6 +34,7 @@ export class SuiviCompetence extends Model {
     eleveEnsCpl: EleveEnseignementCpl;
     niveauEnsCpls : NiveauEnseignementCpls;
     baremeBrevetEleves : BaremeBrevetEleves;
+
     static get api() {
         return {
             getCompetencesNotes : '/competences/competence/notes/eleve/',

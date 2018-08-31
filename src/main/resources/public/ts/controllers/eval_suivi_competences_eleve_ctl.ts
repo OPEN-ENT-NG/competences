@@ -201,6 +201,36 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
         };
 
+        $scope.switchColorCompetenceNivFinal = async function(evaluation){
+
+            let niveauCompetenceMin = 0;
+            let niveauCompetenceMax = -1;
+            for (let o in $scope.mapCouleurs) {
+                niveauCompetenceMax++;
+            }
+
+            if(evaluation.niveau_final === null){
+                if( niveauCompetenceMin <= evaluation.evaluation && evaluation.evaluation < niveauCompetenceMax -1 ){
+                    evaluation.niveau_final = evaluation.evaluation +1;
+                }else{
+                    evaluation.niveau_final = niveauCompetenceMin ;
+                }
+            }else{
+                if( niveauCompetenceMin <= evaluation.niveau_final && evaluation.niveau_final < niveauCompetenceMax -1 ){
+                    evaluation.niveau_final = evaluation.niveau_final +1;
+                }else {
+                    evaluation.niveau_final = niveauCompetenceMin;}
+            }
+            let competenceNiveauFinal = new CompetenceNote ({
+                    id_periode:   $scope.search.periode.id_type,
+                    id_eleve: $scope.search.eleve.id,
+                    niveau_final: evaluation.niveau_final,
+                    id_competence: evaluation.id_competence,
+                    ids_matieres: _.pluck($scope.matieres.all,'id'),
+                    id_classe: $scope.search.classe.id})
+               await competenceNiveauFinal.saveNiveaufinal();
+        };
+
         /**
          *  Sauvegarde d'une évaluation libre
          */
@@ -216,7 +246,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             $scope.evaluationLibre.create().then(function (res) {
 
                 // refresh du suivi élève
-                $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode, $scope.search.classe, $scope.currentCycle, false, $scope.evaluations.structure);
+                $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode, $scope.search.classe, $scope.currentCycle, false, $scope.evaluations.structure,$scope.matieres);
                 $scope.suiviCompetence.sync().then(() => {
                     $scope.suiviCompetence.domaines.sync().then(() => {
                         $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
@@ -446,7 +476,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         await $scope.getCyclesEleve();
 
                     $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve,
-                        $scope.search.periode, $scope.search.classe, $scope.currentCycle, $scope.isCycle, $scope.evaluations.structure);
+                        $scope.search.periode, $scope.search.classe, $scope.currentCycle, $scope.isCycle, $scope.evaluations.structure, $scope.matieres);
                     let niveauCompetence = _.findWhere(evaluations.structure.cycles, {
                         id_cycle: $scope.search.classe.id_cycle
                     });
