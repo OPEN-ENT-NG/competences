@@ -3189,7 +3189,7 @@ body.evaluations {
     padding-left: 15px;
     overflow-y: scroll;
     overflow-x: hidden;
-    height: 150px;
+    max-height: 150px;
   }
 
   .skills-list-proposition:hover dots-menu {
