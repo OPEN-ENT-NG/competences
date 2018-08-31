@@ -108,10 +108,10 @@
                 <span>[[ element.libelle ]]</span>
             </td>
             <td ng-show="!selected.parcours">
-                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres"> [[ intervenantMatiere.intervenant.displayName ]] [[$last ? '' : '- ']] </span>
+                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres | orderBy:'intervenantsMatieres'"> [[ intervenantMatiere.intervenant.displayName ]] [[$last ? '' : '- ']] </span>
             </td>
             <td>
-                <span ng-repeat="groupe in element.groupes"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
+                <span ng-repeat="groupe in element.groupes | orderBy:'name'"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
             </td>
         </tr>
 
@@ -239,6 +239,7 @@
                         <textarea ng-model="dataELem.libelle"
                                   ng-maxlength="150"
                                   maxlength="150"
+                                  rows="1"
                                   placeholder="Saisir le libellé" name="saisie libellé"></textarea>
                     </div>
                 </div>
@@ -269,6 +270,7 @@
                 </h4>
                 <textarea ng-model="dataELem.description"
                           ng-maxlength="600" maxlength="600"
+                          rows="5"
                           placeholder="Saisir la description" name="saisie description"></textarea>
             </div>
 

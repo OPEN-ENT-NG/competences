@@ -3086,6 +3086,7 @@ body.evaluations {
   .custom-h4 {
     font-size: 15.5px;
     font-weight: normal !important;
+    color: #000;
   }
 
   .marginTopZero {
@@ -3189,6 +3190,7 @@ body.evaluations {
     padding-left: 15px;
     overflow-y: scroll;
     overflow-x: hidden;
+    min-height: 95px;
     max-height: 150px;
   }
 
@@ -3212,7 +3214,7 @@ body.evaluations {
       > input[type="checkbox"]:checked + span::before {
         border-color: #fff;
       }
-    }
+  }
 
   .skills-header >.skills-text-overflow i.skills-open-icon::before {
     margin-top: 3px !important;
