@@ -46,14 +46,15 @@
         <h3 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine" ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom" ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h3>
         <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
 
-            <div class="competence-line" ng-click="openDetailCompetence(competence)" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
+            <div class="competence-line" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
 
-                <div ng-class="{whiteSpaceNormal: competence.hovering}" ng-mouseenter="showIt(competence)" ng-mouseleave="hideIt(competence)" class="six inline-block ellipsis competence">
+                <div ng-class="{whiteSpaceNormal: competence.hovering}" ng-mouseenter="showIt(competence)"
+                     ng-click="openDetailCompetence(competence)" ng-mouseleave="hideIt(competence)"
+                     class="six inline-block ellipsis competence">
                     [[competence.nom]]
                 </div>
-                <div class="two inline-block align-center align-top">
-                    <span ng-repeat="evaluation in competence.competencesEvaluations|filter:isMaxEvaluation(competence.competencesEvaluations)|limitTo:1"
-                          tabindex="0">
+                <div class="one inline-block align-center align-top" ng-click="openDetailCompetence(competence)">
+                    <span ng-repeat="evaluation in competence.competencesEvaluations|filter:isMaxEvaluation(competence.competencesEvaluations)|limitTo:1" tabindex="0">
                         <c-skills-bubble text="(mapLettres[evaluation.evaluation])"
                                          color="(mapCouleurs[evaluation.evaluation])"
                                          classes="'competence-eval alignVertical'">
@@ -62,7 +63,19 @@
                     <span class="competence-eval rounded grey" ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
                     </span>
                 </div>
-                <div class="three inline-block align-center align-top">
+                <div class="one inline-block align-center align-top">
+                    <span ng-repeat="evaluation in competence.competencesEvaluations |filter:isMaxEvaluation(competence.competencesEvaluations)|limitTo:1" tabindex="0">
+                    <c-skills-bubble ng-if="evaluation.niveau_final !== null" text="(mapLettres[evaluation.niveau_final])"
+                                     color="(mapCouleurs[evaluation.niveau_final])"
+                                     classes="'competence-eval alignVertical'" ng-click="switchColorCompetenceNivFinal(evaluation)">
+                    </c-skills-bubble>
+                    <c-skills-bubble ng-if="evaluation.niveau_final === null" text="(mapLettres[evaluation.evaluation])"
+                                     color="(mapCouleurs[evaluation.evaluation])"
+                                     classes="'competence-eval alignVertical'" ng-click="switchColorCompetenceNivFinal(evaluation)">
+                    </c-skills-bubble>
+                        </span>
+                </div>
+                <div class="three inline-block align-center align-top" ng-click="openDetailCompetence(competence)">
                     <proportion-suivi-competence evaluations="competence.competencesEvaluations"
                                                  filter="suiviFilter" user="me"
                                                  is-classe="false"

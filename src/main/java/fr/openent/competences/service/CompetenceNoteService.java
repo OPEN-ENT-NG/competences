@@ -102,7 +102,7 @@ public interface CompetenceNoteService extends CrudService {
      * @param isCycle indique si on demande les competences sur un cycles ou pas
      * @param handler handler portant le résultat de la requête
      */
-    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, Handler<Either<String, JsonArray>> handler);
+    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, List<String> idsMatieres, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère toutes les compétences notes d'une classe

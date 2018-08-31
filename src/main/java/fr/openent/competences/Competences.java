@@ -47,6 +47,7 @@ public class Competences extends BaseServer {
     public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
     public static final String NIVEAU_ENS_COMPLEMENT = "niveau_ens_complement";
     public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
+    public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
 
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
@@ -80,6 +81,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_COMPETENCE_CREATE = "eval_createCompetence";
     public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
     public static final String SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE = "eval_createDispenseDomaineEleve";
+    public static final String SCHEMA_CREATE_COMPETENCE_NIVEAU_FINAL = "eval_createCompetenceNiveauFinal";
 
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";

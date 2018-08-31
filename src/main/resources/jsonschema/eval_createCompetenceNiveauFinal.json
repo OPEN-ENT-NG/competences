@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id_periode": {
+      "type": "integer"
+    },
+    "id_eleve": {
+      "type": "string"
+    },
+    "niveau_final": {
+      "type": "integer"
+    },
+    "id_competence": {
+      "type": "integer"
+    },
+    "ids_matieres": {
+      "type": "array"
+    },
+    "id_classe": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id_periode",
+    "id_eleve",
+    "niveau_final",
+    "id_competence",
+    "ids_matieres",
+    "id_classe"
+  ]
+}

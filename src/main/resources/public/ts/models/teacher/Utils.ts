@@ -337,7 +337,6 @@ export class Utils {
         };
     };
 
-
     static hasMaxNotFormative = function (MaCompetence, $scope) {
         let _evalFiltered = MaCompetence.competencesEvaluations;
         if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {

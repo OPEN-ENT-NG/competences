@@ -14,16 +14,16 @@ import {
     LanguesCultRegs,
     LangueCultReg,
     BfcSynthese,
+    Matiere,
     EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls,
 } from './index';
-
-
 
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
     domaines: Collection<Domaine>;
     periode: Periode;
     classe: Classe;
+    matieres: Collection<Matiere>;
     cycle: Cycle;
     isCycle: boolean;
     bilanFinDeCycles: Collection<BilanFinDeCycle>;
@@ -36,7 +36,6 @@ export class SuiviCompetence extends Model {
     eleveEnsCpl: EleveEnseignementCpl;
     niveauEnsCpls : NiveauEnseignementCpls;
     baremeBrevetEleves : BaremeBrevetEleves;
-
     static get api() {
         return {
             getCompetencesNotes : '/competences/competence/notes/eleve/',
@@ -46,7 +45,7 @@ export class SuiviCompetence extends Model {
         };
     }
     that = this;
-     constructor (eleve: Eleve, periode: any, classe: Classe, cycle: Cycle, isCycle: boolean, structure: Structure) {
+     constructor (eleve: Eleve, periode: any, classe: Classe, cycle: Cycle, isCycle: boolean, structure: Structure,matieres: any) {
         super();
         this.periode = periode;
         this.classe = classe;
@@ -75,7 +74,14 @@ export class SuiviCompetence extends Model {
                         if (isCycle !== null && isCycle !== undefined) {
                             url += '&isCycle=' + isCycle;
                         }
-
+                        if(matieres !== undefined
+                            && matieres.all !== undefined
+                            && matieres.all.length > 0 ){
+                            for (let i = 0; i < matieres.all.length; i++) {
+                                url += '&idMatiere='+ matieres.all[i].id;
+                            }
+                        }
+                        url += "&idClasse="+ that.classe.id ;
 
 
                         http().getJson(url).done((resCompetencesNotes) => {

@@ -1,11 +1,15 @@
-import { Model, IModel, http } from 'entcore';
-
+import {Model, IModel, http, notify} from 'entcore';
+import httpAxios, {AxiosRequestConfig} from 'axios';
 export class CompetenceNote extends Model implements IModel {
     id: number;
     id_devoir: number;
     id_competence: number;
     evaluation: number;
     id_eleve: string;
+    ids_matieres: string[];
+    id_periode: number;
+    niveau_final: number;
+    id_classe: string;
 
     get api() {
         return {
@@ -21,12 +25,23 @@ export class CompetenceNote extends Model implements IModel {
     }
 
     toJSON() {
-        return {
-            id: this.id,
-            id_devoir: this.id_devoir,
-            id_competence: this.id_competence,
-            evaluation: this.evaluation,
-            id_eleve: this.id_eleve
+        if(this.niveau_final !== undefined){
+            return {
+                id_periode: this.id_periode,
+                id_eleve: this.id_eleve,
+                niveau_final: this.niveau_final,
+                id_competence: this.id_competence,
+                ids_matieres: this.ids_matieres,
+                id_classe: this.id_classe
+            }
+        }else {
+            return {
+                id: this.id,
+                id_devoir: this.id_devoir,
+                id_competence: this.id_competence,
+                evaluation: this.evaluation,
+                id_eleve: this.id_eleve
+            }
         }
     }
 
@@ -82,4 +97,13 @@ export class CompetenceNote extends Model implements IModel {
             }
         });
     }
+
+    async saveNiveaufinal(): Promise<void> {
+        try{
+            await httpAxios.post(`/competences/competence/note/niveaufinal`,this.toJSON());
+        }catch (e) {
+            notify.error('competences.competence.niveau.final.save.err');
+        }
+    }
+
 }

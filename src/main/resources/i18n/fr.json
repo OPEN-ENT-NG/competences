@@ -415,5 +415,6 @@
   "evaluation.not.dispense.eleve":"Ne pas Dispenser l'élève",
   "evaluations.positionnement.calculee":"Positionnement calculé",
   "transition.bilan.annee": "NC",
-  "transition.bilan.annee.classe": "Bilan Année classe : "
+  "transition.bilan.annee.classe": "Bilan Année classe : ",
+  "competences.competence.niveau.final.save.err":"Erreur lors de la sauvegarde du niveau final"
 }

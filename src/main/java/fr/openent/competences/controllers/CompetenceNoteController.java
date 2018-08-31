@@ -24,8 +24,10 @@ import fr.openent.competences.security.AccessCompetenceNoteFilter;
 import fr.openent.competences.security.AccessSuiviCompetenceFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.service.BfcSyntheseService;
+import fr.openent.competences.service.CompetenceNiveauFinalService;
 import fr.openent.competences.service.CompetenceNoteService;
 import fr.openent.competences.service.impl.DefaultBfcSyntheseService;
+import fr.openent.competences.service.impl.DefaultCompetenceNiveauFinalService;
 import fr.openent.competences.service.impl.DefaultCompetenceNoteService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.rs.*;
@@ -57,6 +59,7 @@ public class CompetenceNoteController extends ControllerHelper {
 
     private final CompetenceNoteService competencesNotesService;
     private final BfcSyntheseService syntheseService;
+    private final CompetenceNiveauFinalService competenceNiveauFinalService;
     private EventBus eb;
 
 
@@ -64,6 +67,7 @@ public class CompetenceNoteController extends ControllerHelper {
         this.eb = eb;
         competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
+        competenceNiveauFinalService = new DefaultCompetenceNiveauFinalService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCE_NIVEAU_FINAL);
     }
 
     /**
@@ -198,8 +202,12 @@ public class CompetenceNoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessSuiviCompetenceFilter.class)
     public void getCompetenceNoteEleve (final HttpServerRequest request) {
-        if (request.params().contains("idEleve")) {
+        if (request.params().contains("idEleve") ) {
             String idEleve = request.params().get("idEleve");
+            List<String> idsMatieres = (request.params().contains("idMatiere"))?
+                    request.params().getAll("idMatiere"):null;
+
+
             Long idPeriode;
             if (request.params().contains("idPeriode")) {
                 try {
@@ -230,7 +238,33 @@ public class CompetenceNoteController extends ControllerHelper {
             } else {
                 isCycle = false;
             }
-            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, arrayResponseHandler(request));
+            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, idsMatieres, arrayResponseHandler(request));
+//            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, new Handler<Either<String, JsonArray>>() {
+//                @Override
+//                public void handle(Either<String, JsonArray> repCompetencesNotesEleve) {
+//                    if(repCompetencesNotesEleve.isRight()){
+//                        JsonArray competencesNotesEleve = repCompetencesNotesEleve.right().getValue();
+//
+//                    competenceNiveauFinalService.getNiveauFinalByEleve(idPeriode, idEleve, idsMatieres, idClasse, new Handler<Either<String, JsonArray>>() {
+//                        @Override
+//                        public void handle(Either<String, JsonArray> repNiveauFinal) {
+//                            if(repNiveauFinal.isRight()){
+//
+//                                JsonArray niveauFinalByEleveByMatiereByPeriode = repNiveauFinal.right().getValue();
+//                                JsonObject competenceNoteAndcompetenceNiveauFinal = new JsonObject();
+//                                competenceNoteAndcompetenceNiveauFinal.put("competencesNotesEleve", competencesNotesEleve );
+//
+//                                if( niveauFinalByEleveByMatiereByPeriode != null){
+//                                    competenceNoteAndcompetenceNiveauFinal.put("competenceNiveauFinal", niveauFinalByEleveByMatiereByPeriode);
+//                                }
+//
+//                                Renders.renderJson(request,competenceNoteAndcompetenceNiveauFinal );
+//                            }
+//                        }
+//                    });
+//                    }
+//                }
+//            });
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }
@@ -466,4 +500,28 @@ public class CompetenceNoteController extends ControllerHelper {
                     }
                 });
     }
+
+    @Post("competence/note/niveaufinal")
+    @ApiDoc("Crée ou met à jour le niveau final pour une compétence, un élève, une matière et une classe")
+    //TO DO security
+    public void addCompetenceNiveauFinal(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos userInfos) {
+                if(userInfos != null){
+                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_CREATE_COMPETENCE_NIVEAU_FINAL,
+                            new Handler<JsonObject>() {
+                                @Override
+                                public void handle(JsonObject competenceNiveauFinal) {
+                                    competenceNiveauFinalService.setNiveauFinal(competenceNiveauFinal, defaultResponseHandler(request) );
+                                }
+                            });
+                }else{
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
 }
