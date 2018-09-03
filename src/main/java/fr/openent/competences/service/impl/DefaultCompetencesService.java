@@ -303,12 +303,12 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " ON (comp.id = compDom.id_competence)" +
                     " LEFT JOIN " + COMPETENCES_SCHEMA + ".domaines" +
                     " ON (domaines.id = compDom.id_domaine) " +
-                    " LEFT JOIN (SELECT nom, id_competence, masque FROM " + COMPETENCES_PERSO_TABLE +
-                    "  ) AS compPerso" +
-                    " ON comp.id = compPerso.id_competence" +
+                    " LEFT JOIN (SELECT nom, id_competence, masque  FROM " + COMPETENCES_PERSO_TABLE +
+                    "  WHERE id_etablissement = ? ) AS compPerso" +
+                    " ON comp.id = compPerso.id_competence " +
                     " WHERE comp." + filter +
                     " AND (comp.id_etablissement = ? OR comp.id_etablissement IS NULL ) ";
-
+            params.add(idEtablissement);
             params.add(idEtablissement);
             if(idCycle != null){
                 query += "AND comp.id_cycle = ?";
