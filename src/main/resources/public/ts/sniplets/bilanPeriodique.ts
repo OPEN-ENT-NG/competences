@@ -41,6 +41,7 @@ export const bilanPeriodique = {
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
             bilanPeriodique.that.openedLightbox = true;
+            this.emptyLightbox();
 
             if(param) {
                 bilanPeriodique.that.dataELem = {
@@ -52,12 +53,6 @@ export const bilanPeriodique = {
                     ens_mat: this.selectedElements[0].intervenantsMatieres,
                     libelle: this.selectedElements[0].libelle,
                     description: this.selectedElements[0].description
-                };
-            } else {
-                bilanPeriodique.that.dataELem = {
-                    idEtablissement : evaluations.structure.id,
-                    classes: [],
-                    ens_mat: []
                 };
             }
             bilanPeriodique.that.themeBase = {
@@ -321,12 +316,12 @@ export const bilanPeriodique = {
                     url += "&idElement=" + elements[i].id;
                 }
                 await http.delete(url);
-                this.emptyCheckbox();
-                this.getElements();
+                bilanPeriodique.that.emptyCheckbox();
+                bilanPeriodique.that.getElements();
             } catch (e) {
                 notify.error('evaluations.elements.delete.error');
             }
-            utils.safeApply(this);
+            utils.safeApply(bilanPeriodique.that);
         },
 
         getAppreciations: async function (elements) {
@@ -503,6 +498,9 @@ export const bilanPeriodique = {
         },
 
         emptyLightbox: function () {
+            this.search.enseignant = null;
+            this.search.matiere = null;
+            this.search.classe = null;
             bilanPeriodique.that.search.enseignant = null;
             bilanPeriodique.that.search.matiere = null;
             bilanPeriodique.that.search.classe = null;
