@@ -140,7 +140,7 @@ export const bilanPeriodique = {
             } else {
                 await this.deleteThematique(theme);
             }
-            utils.safeApply(this);
+            utils.safeApply(bilanPeriodique.that);
         },
 
         deleteThematique: async function (thematique) {
@@ -269,21 +269,28 @@ export const bilanPeriodique = {
         closeLightbox: function(){
             bilanPeriodique.that.opened.lightboxConfirmDelete = false;
             bilanPeriodique.that.openedLightbox = true;
+
         },
 
         enableWatchers: function () {
             this.$watch('opened.lightboxConfirmDelete', function(newVal) {
                 if (!newVal && bilanPeriodique.that.openedLightbox) {
                     bilanPeriodique.that.opened.lightboxCreatePE = true;
-                    bilanPeriodique.that.supprElem = false;
-                    bilanPeriodique.that.supprEnseignant = false;
-                    bilanPeriodique.that.supprClasse = false;
-                    bilanPeriodique.that.supprTheme = false;
-                    bilanPeriodique.that.modifElemSupprClasse = false;
                 } else {
                     bilanPeriodique.that.opened.lightboxCreatePE = false;
                     bilanPeriodique.that.openedLightbox = false;
                 }
+                this.supprElem = false;
+                bilanPeriodique.that.supprEnseignant = false;
+                bilanPeriodique.that.supprClasse = false;
+                bilanPeriodique.that.supprTheme = false;
+                bilanPeriodique.that.modifElemSupprClasse = false;
+                utils.safeApply(bilanPeriodique.that);
+                // this.supprElem = false;
+                // this.supprEnseignant = false;
+                // this.supprClasse = false;
+                // this.supprTheme = false;
+                // this.modifElemSupprClasse = false;
             });
         },
 
@@ -319,7 +326,7 @@ export const bilanPeriodique = {
                     url += "&idElement=" + elements[i].id;
                 }
                 await http.delete(url);
-                bilanPeriodique.that.emptyCheckbox();
+                bilanPeriodique.that.emptyCheckbox(elements);
                 bilanPeriodique.that.getElements();
             } catch (e) {
                 notify.error('evaluations.elements.delete.error');
@@ -517,17 +524,26 @@ export const bilanPeriodique = {
                 ens_mat: []
             };
             this.dataELem = bilanPeriodique.that.dataELem;
+            this.supprElem = false;
+            bilanPeriodique.that.supprEnseignant = false;
+            bilanPeriodique.that.supprClasse = false;
+            bilanPeriodique.that.supprTheme = false;
+            bilanPeriodique.that.modifElemSupprClasse = false;
+            utils.safeApply(bilanPeriodique.that);
         },
 
         delete: function () {
-            if (this.supprElem) {
-                bilanPeriodique.that.deleteElements(bilanPeriodique.that.selectedElements);
+            if (this.supprElem || bilanPeriodique.that.supprElem) {
+                bilanPeriodique.that.deleteElements(this.selectedElements);
+                bilanPeriodique.that.opened.lightboxConfirmDelete = false;
             }
-            else if (bilanPeriodique.that.supprEnseignant) {
+            else if (bilanPeriodique.that.supprEnseignant || this.supprEnseignant) {
                 bilanPeriodique.that.openedLightbox = true;
                 bilanPeriodique.that.deleteEnseignantMatiere();
             }
-            else if (bilanPeriodique.that.supprClasse || bilanPeriodique.that.modifElemSupprClasse) {
+            else if (bilanPeriodique.that.supprClasse
+                || bilanPeriodique.that.modifElemSupprClasse
+                || this.supprClasse || this.modifElemSupprClasse) {
                 bilanPeriodique.that.openedLightbox = true;
                 bilanPeriodique.that.deleteClasse();
             }
