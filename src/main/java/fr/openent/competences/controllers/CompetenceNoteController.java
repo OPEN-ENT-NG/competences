@@ -204,10 +204,6 @@ public class CompetenceNoteController extends ControllerHelper {
     public void getCompetenceNoteEleve (final HttpServerRequest request) {
         if (request.params().contains("idEleve") ) {
             String idEleve = request.params().get("idEleve");
-            List<String> idsMatieres = (request.params().contains("idMatiere"))?
-                    request.params().getAll("idMatiere"):null;
-
-
             Long idPeriode;
             if (request.params().contains("idPeriode")) {
                 try {
@@ -238,7 +234,7 @@ public class CompetenceNoteController extends ControllerHelper {
             } else {
                 isCycle = false;
             }
-            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, idsMatieres, arrayResponseHandler(request));
+            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, arrayResponseHandler(request));
 //            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, new Handler<Either<String, JsonArray>>() {
 //                @Override
 //                public void handle(Either<String, JsonArray> repCompetencesNotesEleve) {
