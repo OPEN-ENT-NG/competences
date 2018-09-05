@@ -3182,7 +3182,7 @@ body.evaluations {
     overflow-y: scroll;
     overflow-x: hidden;
     min-height: 95px;
-    max-height: 150px;
+    max-height: 230px;
   }
 
   .skills-list-proposition:hover dots-menu {
@@ -3190,11 +3190,6 @@ body.evaluations {
   }
   .skills-list-proposition dots-menu {
     opacity: 0;
-  }
-
-  .skills-text-overflow {
-    white-space: nowrap;
-    text-overflow: ellipsis;
   }
 
   .border-white-before.checkbox {
@@ -3218,6 +3213,15 @@ body.evaluations {
     margin-bottom: 0px !important;
     display: inline-block !important;
     float: none !important;
+  }
+
+  .input-libelle {
+    width: 55%;
+  }
+
+  .input-code {
+    width: 30%;
+    margin-right: 15px;
   }
 
 }

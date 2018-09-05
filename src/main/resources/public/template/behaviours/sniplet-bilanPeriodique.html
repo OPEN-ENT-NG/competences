@@ -105,7 +105,7 @@
                 <span>[[ element.libelle ]]</span>
             </td>
             <td ng-show="!selected.parcours">
-                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres | orderBy:'intervenantsMatieres'"> [[ intervenantMatiere.intervenant.displayName ]] [[$last ? '' : '- ']] </span>
+                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres | orderBy:'intervenant.displayName'"> [[ intervenantMatiere.intervenant.displayName ]] [[$last ? '' : '- ']] </span>
             </td>
             <td>
                 <span ng-repeat="groupe in element.groupes | orderBy:'name'"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
@@ -174,7 +174,8 @@
                                     <i class="skills-open-icon"></i>
                                     <span ng-click="themeListe.open = !themeListe.open;"
                                           ng-show="!dataELem.theme"><i18n>viescolaire.utils.choix.theme</i18n></span>
-                                    <span ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
+                                    <span ng-click="themeListe.open = !themeListe.open;"
+                                          ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                         <h3 class="inline-block marginTopZero marginBottomZero"
                                             data-ng-click="showTheme(true); themeListe.open = true; getFocus();">
                                             <i class="plus marginLeft"></i>
@@ -185,11 +186,16 @@
 
                                     <li class="twelve skills-list-proposition skills-text-overflow"
                                         ng-show="showAddtheme">
-                                        <div id="7">
-                                            <input type="text" placeholder="Code" ng-model="thematique.code"
+                                            <input type="text"
+                                                   class="input-code"
+                                                   placeholder="Code"
+                                                   ng-model="thematique.code"
                                                    ng-disabled="changeThematique"
                                                    ng-maxlength="50" maxlength="50"/>
-                                            <input type="text" placeholder="Intitulé" ng-model="thematique.libelle"
+                                            <input type="text"
+                                                   class="input-libelle"
+                                                   placeholder="Intitulé"
+                                                   ng-model="thematique.libelle"
                                                    id="scrollto"
                                                    ng-maxlength="150"
                                                    maxlength="150"/>
@@ -205,22 +211,16 @@
                                                     ng-disabled="requiredTheme()">
                                                 <i18n>item.modify</i18n>
                                             </button>
-                                        </div>
                                     </li>
-
 
                                     <li ng-repeat="theme in themes | filter:filterTheme(false) | orderBy:'libelle'"
                                         class="twelve skills-list-proposition skills-text-overflow italic">
-                                            <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length > 38"
-                                                  tooltip="[[theme.libelle]]">[[theme.libelle]]</span>
-                                        <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length <= 38">[[theme.libelle]]</span>
+                                            <span ng-click="addTheme(theme)" >[[theme.libelle]]</span>
                                     </li>
 
                                     <li ng-repeat="theme in themes | filter:filterTheme(true) | orderBy:'libelle'"
                                         class="twelve skills-list-proposition skills-text-overflow italic">
-                                        <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length > 38"
-                                              tooltip="[[theme.libelle]]">[[theme.libelle]]</span>
-                                        <span ng-click="addTheme(theme)" ng-if="(theme.libelle).length <= 38">[[theme.libelle]]</span>
+                                        <span ng-click="addTheme(theme)";>[[theme.libelle]]</span>
                                         <dots-menu>
                                             <opt data-ng-click="openAddtheme(theme); getFocus();">
                                                 <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
@@ -264,9 +264,7 @@
 
             <div ng-show="!selected.parcours" class="twelve cell twelve-mobile selet-blocks">
                 <h4 class="twelve cell marginBottomZero custom-h4">
-                    <i18n>viescolaire.competences.intervenant</i18n>
-                    /
-                    <i18n>viescolaire.utils.matiere</i18n>
+                    <i18n>viescolaire.competences.intervenant.matiere</i18n>
                     <i class="asterisk obligatoire"></i>
                     <i18n class="champsRequis italic">evaluations.nb.intervenant.requis</i18n>
                 </h4>
