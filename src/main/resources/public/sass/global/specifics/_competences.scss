@@ -3074,19 +3074,8 @@ body.evaluations {
   //  Bilan périodique - POP UP création EPI / AP / Parcours
 
 
-  .beFlex {
-    display: flex;
-    justify-content: space-between;
-  }
-
   .marginLeft {
     margin-left: 15px;
-  }
-
-  .borderTheme {
-    padding: 5px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.26);
-    border-radius: 2px;
   }
 
   .custom-h4 {
@@ -3114,10 +3103,6 @@ body.evaluations {
   &:after {
     background: grey;
     }
-  }
-
-  .blueCross {
-    color: $cyan;
   }
 
   .skills-header {
@@ -3207,10 +3192,6 @@ body.evaluations {
     opacity: 0;
   }
 
-  .skills-95 {
-    width: 95%;
-  }
-
   .skills-text-overflow {
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -3225,4 +3206,18 @@ body.evaluations {
   .skills-header >.skills-text-overflow i.skills-open-icon::before {
     margin-top: 3px !important;
   }
+
+  .champsRequis {
+    font-size: 13px;
+  }
+
+  .littleButton {
+    padding: 0px 4px !important;
+    font-size: 11px !important;
+    text-transform: none !important;
+    margin-bottom: 0px !important;
+    display: inline-block !important;
+    float: none !important;
+  }
+
 }
