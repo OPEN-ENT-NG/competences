@@ -128,15 +128,19 @@ export class ReleveNote extends  Model implements IModel {
     syncEvaluations(): Promise<any> {
         return new Promise((resolve, reject) => {
             let url = this.api.get;
+
             if (this.idPeriode) {
+                let _p = _.findWhere(this.classe.periodes, {id_type: this.idPeriode});
                 url += '&idPeriode=' + this.idPeriode;
+                if (_p) {
+                    http().getJson(url)
+                        .done((res) => {
+                            this._tmp = res;
+                            this.synchronized.evaluations = true;
+                            resolve();
+                        });
+                }
             }
-            http().getJson(url)
-                .done((res) => {
-                    this._tmp = res;
-                    this.synchronized.evaluations = true;
-                    resolve();
-                });
         });
     }
 

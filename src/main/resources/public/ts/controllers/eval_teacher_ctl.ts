@@ -2219,23 +2219,28 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
                 && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*"){
 
-                if(!$scope.bilanPeriodique || !param){
-                    $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
-                }
+                //si search.periode est dans les périodes de search.classe
+                let _p = _.findWhere($scope.search.classe.periodes, {id_type: $scope.search.periode});
+                if(_p) {
+                    if(!$scope.bilanPeriodique || !param){
+                        $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
+                    }
 
-                if(!param || $scope.bilanPeriodique.elements === undefined) {
-                    await $scope.bilanPeriodique.syncElements();
-                    await $scope.bilanPeriodique.syncClasse();
-                }
+                    if(!param || $scope.bilanPeriodique.elements === undefined) {
+                        await $scope.bilanPeriodique.syncElements();
+                        await $scope.bilanPeriodique.syncClasse();
+                    }
 
-                if($scope.bilanPeriodique.elements.length > 0) {
-                    // await $scope.bilanPeriodique.getEnseignantsOnElements($scope.bilanPeriodique.elements);
-                    $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode, $scope.search.classe);
-                    utils.safeApply($scope);
-                }
-                else {
+                    if($scope.bilanPeriodique.elements.length > 0) {
+                        $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode, $scope.search.classe);
+                        utils.safeApply($scope);
+                    } else {
+                        delete $scope.bilanPeriodique;
+                    }
+                } else {
                     delete $scope.bilanPeriodique;
                 }
+
             } else {
                 delete $scope.bilanPeriodique;
             }

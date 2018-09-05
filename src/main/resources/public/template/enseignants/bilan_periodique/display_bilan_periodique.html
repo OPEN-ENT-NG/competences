@@ -37,7 +37,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-change="getElementsBilanBilanPeriodique(search.periode)"
-                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:notYear() | orderBy:'-type'">
+                                ng-options="getI18nPeriode(periode) for periode in structure.typePeriodes.all | filter:notYear() | customPeriodeFilters:devoirs.all:search | orderBy:'-type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
                         </select>
@@ -46,7 +46,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="getElementsBilanBilanPeriodique();"
+                                ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique();"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>
@@ -81,7 +81,8 @@
                                 class="horizontal-spacing-twice ng-scope">
                             <div class="horizontal-spacing"
                                  ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false">
-                                <span><i18n><span class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n></span>
+                                <span><i18n><span
+                                        class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n></span>
                             </div>
                         </header>
                         <header ng-class="{selected : selected.parcours}"
@@ -98,7 +99,8 @@
                         <h2 ng-class="{'openedElem' : element.opened}"
                             class="margin-top-05em Domaine"
                             ng-click="element.opened = !element.opened"
-                            ng-init="element.opened = false">[[element.type === 3 ? element.theme.libelle : element.libelle]]
+                            ng-init="element.opened = false">[[element.type === 3 ? element.theme.libelle :
+                            element.libelle]]
                         </h2>
                         <div ng-class="{'openedSectionDom' : element.opened}">
                             <span ng-repeat="enseignant in element.enseignants"
@@ -131,12 +133,14 @@
                                             <div class="row navigable-inputs-row">
                                                 <div class="two cell cell-indent expandable-content text-overflow"
                                                      ng-class="{'deletedStudent': eleve.deleteDate !== null}"
-                                                     class="tooltip-overlay" tooltip="[[eleve.lastName]] [[eleve.firstName]]"
+                                                     class="tooltip-overlay"
+                                                     tooltip="[[eleve.lastName]] [[eleve.firstName]]"
                                                      ng-click="getEleveInfo(eleve);expandNote($index, false)">
                                                     [[::eleve.lastName]] [[::eleve.firstName]]
                                                 </div>
                                                 <div class="ten cell cell-input">
-                                                    <input type="text" class="eleven input-appreciation" name="appreciation"
+                                                    <input type="text" class="eleven input-appreciation"
+                                                           name="appreciation"
                                                            ng-model="eleve.appreciations[search.periode.id][element.id]"
                                                            ng-blur="saveAppElement(element, eleve)"
                                                            ng-disabled="bilanPeriodique.endSaisie"
@@ -162,7 +166,8 @@
                                       name="appreciationClasse"
                                       ng-disabled="bilanPeriodique.endSaisie">
                             </textarea>
-                                    <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength" class="warning">
+                                    <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength"
+                                         class="warning">
                                         <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
                                     </div>
                                 </ng-form>
