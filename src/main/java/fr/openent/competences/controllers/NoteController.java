@@ -361,6 +361,7 @@ public class NoteController extends ControllerHelper {
                                                 idMatiere,
                                                 idPeriode,
                                                 typeClasse,
+                                                false,
                                                 handler);
                                     } else {
                                         notesService.getNotesReleve(idEtablissement,
@@ -368,6 +369,7 @@ public class NoteController extends ControllerHelper {
                                                 idMatiere,
                                                 null,
                                                 typeClasse,
+                                                false,
                                                 handler);
                                     }
                                 }
@@ -1280,7 +1282,7 @@ public class NoteController extends ControllerHelper {
                                     final JsonArray listCompNotes = event.right().getValue();
                                     // 2. On récupère les Notes de toutes les matières et de tous les élèves
                                     notesService.getNotesReleve(idEtablissement, idClasse, null,
-                                            null, typeClasse,
+                                            null, typeClasse, true,
                                             new Handler<Either<String, JsonArray>>() {
                                                 @Override
                                                 public void handle(Either<String, JsonArray> event) {

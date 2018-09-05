@@ -96,10 +96,11 @@ public interface NoteService extends CrudService {
      * @param matiereId identifiant de la matière
      * @param periodeId identifiant de la période
      * @param typeClasse le type de la classe
+     * @param withMoyenneFinale retourner la moyenne finale ou pas
      * @param handler handler portant le résultat de la requête
      */
     void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId, Integer typeClasse,
-                        Handler<Either<String, JsonArray>> handler);
+                        Boolean withMoyenneFinale,Handler<Either<String, JsonArray>> handler);
 
 
     /**

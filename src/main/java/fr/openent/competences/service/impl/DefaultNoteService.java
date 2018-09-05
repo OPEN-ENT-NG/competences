@@ -218,7 +218,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     @Override
     public void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
-                               Integer typeClasse,
+                               Integer typeClasse, Boolean withMoyenneFinale,
                                Handler<Either<String, JsonArray>> handler) {
 
         new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(classeId,periodeId, typeClasse,
@@ -241,19 +241,29 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
                                     " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve, " +
                                     " devoirs.is_evaluated, null as annotation, devoirs.id_matiere " +
+                                    ((withMoyenneFinale)? ", moyenne_finale.moyenne " : " ") +
                                     " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                                     " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".notes " +
                                     " ON (devoirs.id = notes.id_devoir AND " +
                                     " notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")" +
                                     " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ON " +
                                     " (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ?)" +
+                                       ((withMoyenneFinale)?("LEFT JOIN notes.moyenne_finale " +
+                                                    " ON (devoirs.id_periode = moyenne_finale.id_periode " +
+                                               " AND  notes.id_eleve = moyenne_finale.id_eleve " +
+                                               " AND devoirs.id_matiere = moyenne_finale.id_matiere " +
+                                               " AND moyenne_finale.id_classe = ?) ") : " " )+
                                     " WHERE devoirs.id_etablissement = ? " +
-                                    ((matiereId != null)?" AND devoirs.id_matiere = ? ": ""));
+                                    ((matiereId != null)?" AND devoirs.id_matiere = ? ": " "));
                             for (String eleve : idEleves) {
                                 values.add(eleve);
                             }
 
-                            values.add(classeId).add(etablissementId);
+                            values.add(classeId);
+                            if (withMoyenneFinale) {
+                                values.add(classeId);
+                            }
+                            values.add(etablissementId);
 
                             if (matiereId != null) {
                                     values.add(matiereId);
@@ -268,6 +278,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     " devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, " +
                                     " rel_annotations_devoirs.id_eleve, devoirs.is_evaluated, " +
                                     " rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere " +
+                                    ((withMoyenneFinale)? ", null as moyenne" : " " )+
                                     " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                                     " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs " +
                                     " ON (devoirs.id = rel_annotations_devoirs.id_devoir  AND " +
