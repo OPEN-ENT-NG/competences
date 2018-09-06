@@ -46,3 +46,21 @@ export let customPeriodeFilters = ng.filter('customPeriodeFilters', function(){
         });
     };
 });
+
+export let customClassPeriodeFilters = ng.filter('customClassPeriodeFilters', function(){
+    return  function(periodes, search){
+
+        let result = periodes;
+
+        if (search.classe !== '*' && search.classe !== null) {
+
+            result =_.filter(periodes, function (periode) {
+                if(periode.id_type === undefined) {
+                    periode.id_type = periode.id;
+                }
+                return _.findWhere(search.classe.periodes.all, {id_type: periode.id_type})
+            });
+        }
+        return result;
+    };
+});

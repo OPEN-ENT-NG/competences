@@ -63,13 +63,19 @@ export class BilanPeriodique extends  Model {
                 for (let i = 0; i < data.data.length; i++) {
                     url += "&idElement=" + this.elements[i].id;
                 }
-                let result = await http.get(url);
-                _.forEach(this.elements, (element) => {
-                    let enseignants = _.findWhere(result.data, {idElement: element.id});
-                    if(enseignants) {
-                        element.enseignants = enseignants.idsEnseignants;
-                    }
-                });
+                // if (this.classe.periodes.length() === 0) {
+                //     await this.classe.periodes.sync();
+                // }
+                // let _p = _.findWhere(this.classe.periodes.all, {id_type: periode.id_type});
+                // if(_p) {
+                    let result = await http.get(url);
+                    _.forEach(this.elements, (element) => {
+                        let enseignants = _.findWhere(result.data, {idElement: element.id});
+                        if(enseignants) {
+                            element.enseignants = enseignants.idsEnseignants;
+                        }
+                    });
+                // }
             }
 
         } catch (e) {
@@ -119,7 +125,9 @@ export class BilanPeriodique extends  Model {
         }
 
         let period = _.findWhere(this.classe.periodes.all, {id_type: periode.id_type});
-        this.endSaisie = moment(period.date_fin_saisie).isBefore(moment(), "days");
+        if(period){
+            this.endSaisie = moment(period.date_fin_saisie).isBefore(moment(), "days");
+        }
     }
 
     toJSON(periode, element, eleve, classe){

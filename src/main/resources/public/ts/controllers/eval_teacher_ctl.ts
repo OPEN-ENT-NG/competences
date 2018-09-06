@@ -337,7 +337,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     template.open('main', 'enseignants/releve_notes/display_releve');
                 }
             },
-            displayBilanPeriodique: function () {
+            displayBilanPeriodique: async function () {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -352,7 +352,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     $scope.selected = {EPI: true, AP: false, parcours: false};
 
-                    $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+                    $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
 
                     utils.safeApply($scope);
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
@@ -2155,7 +2155,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Séquence de récupération d'un relevé de note
          */
-        $scope.getReleve = function () {
+        $scope.getReleve = async function () {
             if ($scope.releveNote !== undefined) {
                 delete $scope.releveNote;
             }
@@ -2210,25 +2210,31 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
             $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+            utils.safeApply($scope);
         };
 
-        $scope.getElementsBilanBilanPeriodique = async function (param?){
+        $scope.getElementsBilanBilanPeriodique = async function (isClassChanging?){
             if($scope.bilanPeriodique !== undefined ) {
                 delete $scope.bilanPeriodique;
             }
             if($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
                 && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*"){
 
-                //si search.periode est dans les périodes de search.classe
-                let _p = _.findWhere($scope.search.classe.periodes, {id_type: $scope.search.periode});
-                if(_p) {
-                    if(!$scope.bilanPeriodique || !param){
+                if ($scope.search.classe.periodes.length() === 0) {
+                    await $scope.search.classe.periodes.sync();
+                }
+
+                let _p = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
+                if (_p) {
+                    if(!$scope.bilanPeriodique || isClassChanging){
                         $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
                     }
 
-                    if(!param || $scope.bilanPeriodique.elements === undefined) {
+                    if(isClassChanging || $scope.bilanPeriodique.elements === undefined) {
+                        if ($scope.search.classe.eleves.length() === 0) {
+                            await $scope.search.classe.eleves.sync();
+                        }
                         await $scope.bilanPeriodique.syncElements();
-                        await $scope.bilanPeriodique.syncClasse();
                     }
 
                     if($scope.bilanPeriodique.elements.length > 0) {
@@ -2238,12 +2244,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         delete $scope.bilanPeriodique;
                     }
                 } else {
+                    $scope.search.periode = "*";
                     delete $scope.bilanPeriodique;
                 }
-
             } else {
                 delete $scope.bilanPeriodique;
             }
+            if(isClassChanging){
+                if ($scope.search.classe.periodes.length() === 0) {
+                    await $scope.search.classe.periodes.sync();
+                }
+                $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+            }
+
             utils.safeApply($scope);
         }
 

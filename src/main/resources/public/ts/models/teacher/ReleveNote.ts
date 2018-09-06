@@ -117,9 +117,6 @@ export class ReleveNote extends  Model implements IModel {
             if (this.classe.eleves.length() === 0) {
                 await this.classe.eleves.sync();
             }
-            if (this.classe.periodes.length() === 0) {
-                await this.classe.periodes.sync();
-            }
             this.synchronized.classe = true;
             resolve();
         });
@@ -128,9 +125,8 @@ export class ReleveNote extends  Model implements IModel {
     syncEvaluations(): Promise<any> {
         return new Promise((resolve, reject) => {
             let url = this.api.get;
-
             if (this.idPeriode) {
-                let _p = _.findWhere(this.classe.periodes, {id_type: this.idPeriode});
+                let _p = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
                 url += '&idPeriode=' + this.idPeriode;
                 if (_p) {
                     http().getJson(url)
@@ -337,6 +333,9 @@ export class ReleveNote extends  Model implements IModel {
 
     sync(): Promise<any> {
         return new Promise(async (resolve, reject) => {
+            if (this.classe.periodes.length() === 0) {
+                await this.classe.periodes.sync();
+            }
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse(),
                 this.getConversionTable(),this.syncMoyenneAnnee()]);
             this.syncAppreciationClasse();

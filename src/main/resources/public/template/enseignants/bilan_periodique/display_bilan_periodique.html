@@ -36,8 +36,8 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.periode"
-                                ng-change="getElementsBilanBilanPeriodique(search.periode)"
-                                ng-options="getI18nPeriode(periode) for periode in structure.typePeriodes.all | filter:notYear() | customPeriodeFilters:devoirs.all:search | orderBy:'-type'">
+                                ng-change="getElementsBilanBilanPeriodique()"
+                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:notYear() | orderBy:'-type'">  <!--| customClassPeriodeFilters:search-->
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
                         </select>
@@ -46,7 +46,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique();"
+                                ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique(true);"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>
