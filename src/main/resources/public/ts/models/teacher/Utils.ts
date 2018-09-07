@@ -4,7 +4,10 @@ import { BilanFinDeCycle, CompetenceNote } from './index';
 import {evaluations} from "./model";
 
 export class Utils {
-    static isHeadTeacher (classe) {
+    static async isHeadTeacher (classe) {
+        if (evaluations.structure.detailsUser === undefined) {
+            await evaluations.structure.getDetailsOfUser();
+        }
         return _.contains(
             _.union(evaluations.structure.detailsUser.headTeacher,
                 evaluations.structure.detailsUser.headTeacherManual), classe.externalId);

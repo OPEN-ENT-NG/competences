@@ -125,17 +125,15 @@ export class ReleveNote extends  Model implements IModel {
     syncEvaluations(): Promise<any> {
         return new Promise((resolve, reject) => {
             let url = this.api.get;
-            if (this.idPeriode) {
-                let _p = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
-                url += '&idPeriode=' + this.idPeriode;
-                if (_p) {
-                    http().getJson(url)
-                        .done((res) => {
-                            this._tmp = res;
-                            this.synchronized.evaluations = true;
-                            resolve();
-                        });
-                }
+            let _p = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
+            url += (this.idPeriode !== null)? ('&idPeriode=' + this.idPeriode) : '';
+            if (_p !== undefined || this.idPeriode === null) {
+                http().getJson(url)
+                    .done((res) => {
+                        this._tmp = res;
+                        this.synchronized.evaluations = true;
+                        resolve();
+                    });
             }
         });
     }
@@ -576,6 +574,7 @@ export class ReleveNote extends  Model implements IModel {
         return new Promise((resolve, reject) => {
             let uri = (forDomaine === true)? this.api.GET_DATA_FOR_GRAPH_DOMAINE : this.api.GET_DATA_FOR_GRAPH;
             uri += '&idEleve=' + eleve.id;
+            uri += (this.idPeriode !== null)? ('&idPeriode=' + this.idPeriode) : '';
             http().getJson(uri)
                 .done(async (res) => {
                     this.configCharts (eleve, res, forDomaine);
@@ -591,7 +590,7 @@ export class ReleveNote extends  Model implements IModel {
         let res  = 0;
         let summ = 0;
         _.forEach(competencesNotes, (c) => {
-            res += c.evaluation;
+            res += (c.evaluation + 1);
             summ ++;
         });
 
@@ -681,7 +680,7 @@ export class ReleveNote extends  Model implements IModel {
                 data_set4 : data_set4
             },
             averageStudent :  {
-                label: lang.translate('average.student'),
+                label: (forDomaine !== true)? lang.translate('average.student'):lang.translate('level.student'),
                 type: 'line',
                 data:(forDomaine !== true)? averageStudent : dataStudent,
                 borderColor:'#00ADF9',
@@ -701,7 +700,7 @@ export class ReleveNote extends  Model implements IModel {
 
             },
             averageClass: {
-                label: lang.translate('average.class'),
+                label: (forDomaine !== true)? lang.translate('average.class') : lang.translate('level.class'),
                 type: 'line',
                 data: (forDomaine !== true)? averageClass : dataClass,
                 borderColor: '#5f626c',

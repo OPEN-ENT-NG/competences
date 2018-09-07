@@ -20,7 +20,6 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
@@ -1262,11 +1261,12 @@ public class NoteController extends ControllerHelper {
                 final String idEtablissement = request.params().get("idEtablissement");
                 final String idClasse = request.params().get("idClasse");
                 final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
-
+                final String idPeriodeString = request.params().get("idPeriode");
+                final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
                 // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
                 notesService.getCompetencesNotesReleve(idEtablissement,idClasse,
                         null,
-                        null,
+                        idPeriode,
                         null,
                         typeClasse,
                         false,
@@ -1282,7 +1282,7 @@ public class NoteController extends ControllerHelper {
                                     final JsonArray listCompNotes = event.right().getValue();
                                     // 2. On récupère les Notes de toutes les matières et de tous les élèves
                                     notesService.getNotesReleve(idEtablissement, idClasse, null,
-                                            null, typeClasse, true,
+                                            idPeriode, typeClasse, true,
                                             new Handler<Either<String, JsonArray>>() {
                                                 @Override
                                                 public void handle(Either<String, JsonArray> event) {
@@ -1409,11 +1409,12 @@ public class NoteController extends ControllerHelper {
                 final String idEtablissement = request.params().get("idEtablissement");
                 final String idClasse = request.params().get("idClasse");
                 final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+                final String idPeriodeString = request.params().get("idPeriode");
 
                 // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
                 notesService.getCompetencesNotesReleve(idEtablissement, idClasse,
                         null,
-                        null,
+                        (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
                         null,
                         typeClasse,
                         true,
