@@ -177,7 +177,7 @@
                                     <span ng-click="themeListe.open = !themeListe.open;"
                                           ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                         <h3 class="inline-block marginTopZero marginBottomZero"
-                                            data-ng-click="showTheme(true); themeListe.open = true; getFocus();">
+                                            data-ng-click="showTheme(true); themeListe.open = true;">
                                             <i class="plus marginLeft"></i>
                                         </h3>
                                 </span>
@@ -222,7 +222,7 @@
                                         class="twelve skills-list-proposition skills-text-overflow italic">
                                         <span ng-click="addTheme(theme)";>[[theme.libelle]]</span>
                                         <dots-menu>
-                                            <opt data-ng-click="openAddtheme(theme); getFocus();">
+                                            <opt data-ng-click="openAddtheme(theme);">
                                                 <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
                                             </opt>
                                             <opt data-ng-click="tryDeleteTheme(theme)">

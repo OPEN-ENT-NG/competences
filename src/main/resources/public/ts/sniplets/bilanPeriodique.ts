@@ -81,17 +81,18 @@ export const bilanPeriodique = {
                 bilanPeriodique.that.thematique.code = null;
                 bilanPeriodique.that.thematique.libelle = null;
             }
+            this.getFocus();
         },
 
         openAddtheme: function (theme) {
             bilanPeriodique.that.changeThematique = true;
-
             bilanPeriodique.that.thematique = {
                 id: theme.id,
                 code: theme.code,
                 libelle: theme.libelle
             };
             bilanPeriodique.that.showAddtheme = true;
+            this.getFocus();
         },
 
 
