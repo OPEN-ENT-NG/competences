@@ -527,7 +527,6 @@ export const bilanPeriodique = {
                         this.opened.lightboxConfirmDelete = true;
                         bilanPeriodique.that.opened.lightboxCreatePE = false;
                         bilanPeriodique.that.supprClasse = true;
-                        console.error('tryDeleteClasse', bilanPeriodique.that.supprClasse);
                     }
                 }
                 utils.safeApply(this);
@@ -572,7 +571,6 @@ export const bilanPeriodique = {
             bilanPeriodique.that.supprTheme = false;
             bilanPeriodique.that.modifElemSupprClasse = false;
             utils.safeApply(bilanPeriodique.that);
-            console.error('emptyLightbox', bilanPeriodique.that.supprTheme);
         },
 
 
