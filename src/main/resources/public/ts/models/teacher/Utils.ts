@@ -15,7 +15,7 @@ export class Utils {
 
     static isChefEtab (classe?) {
         let isAdmin = model.me.hasWorkflow(Behaviours.applicationsBehaviours.viescolaire.rights.workflow.adminChefEtab);
-        if(classe === undefined) {
+        if(classe === undefined || classe === null || classe === "" || classe === "*") {
             return isAdmin;
         }
         else {
