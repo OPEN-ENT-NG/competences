@@ -266,7 +266,7 @@
                 <h4 class="twelve cell marginBottomZero custom-h4">
                     <i18n>viescolaire.competences.intervenant.matiere</i18n>
                     <i class="asterisk obligatoire"></i>
-                    <i18n class="champsRequis italic">evaluations.nb.intervenant.requis</i18n>
+                    <i18n ng-if="selected.EPI" class="champsRequis italic">evaluations.nb.intervenant.requis</i18n>
                 </h4>
                 <div class="five cell twelve-mobile">
                     <label class="select">
@@ -341,7 +341,8 @@
         </div>
     </lightbox>
 
-    <lightbox show="opened.lightboxConfirmDelete" on-close="!opened.lightboxConfirmDelete">
+    <lightbox show="opened.lightboxConfirmDelete" on-close="opened.lightboxConfirmDelete=false">
+
         <p ng-if="supprElem">
             <i18n>evaluation.bilan.periodique.message</i18n>
         </p>
