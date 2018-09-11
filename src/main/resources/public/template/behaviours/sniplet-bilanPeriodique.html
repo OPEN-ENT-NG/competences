@@ -177,7 +177,7 @@
                                     <span ng-click="themeListe.open = !themeListe.open;"
                                           ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                         <h3 class="inline-block marginTopZero marginBottomZero"
-                                            data-ng-click="showTheme(true);">
+                                            data-ng-click="showTheme(true);  themeListe.open = true; getFocus();">
                                             <i class="plus marginLeft"></i>
                                         </h3>
                                 </span>
@@ -222,7 +222,7 @@
                                         class="twelve skills-list-proposition skills-text-overflow italic">
                                         <span ng-click="addTheme(theme)";>[[theme.libelle]]</span>
                                         <dots-menu>
-                                            <opt data-ng-click="openAddtheme(theme); themeListe.open;">
+                                            <opt data-ng-click="openAddtheme(theme); themeListe.open = true; getFocus();">
                                                 <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
                                             </opt>
                                             <opt data-ng-click="tryDeleteTheme(theme)">
@@ -341,7 +341,7 @@
         </div>
     </lightbox>
 
-    <lightbox show="opened.lightboxConfirmDelete" on-close="opened.lightboxConfirmDelete = false">
+    <lightbox show="opened.lightboxConfirmDelete" on-close="!opened.lightboxConfirmDelete">
 
         <p ng-if="supprElem && selected.EPI">
             <i18n>evaluation.bilan.periodique.suppression.EPI</i18n>
