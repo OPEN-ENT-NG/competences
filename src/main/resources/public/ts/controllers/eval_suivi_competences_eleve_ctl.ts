@@ -808,6 +808,13 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             $scope.template.open('suivi-competence-content', content);
             utils.safeApply($scope);
         };
+        $scope.refreshAndOpenBFC = async function () {
+            $scope.showRechercheBarFunction(false);
+            $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+            template.open('suivi-competence-content',
+                'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle');
+            utils.safeApply($scope);
+        };
         $scope.textPeriode = "Hors periode scolaire";
         // /**
         //  * Return la periode scolaire courante

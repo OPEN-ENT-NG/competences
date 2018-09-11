@@ -165,34 +165,16 @@ export class Utils {
         // si le domaine est évalué, on ajoute les max de chacunes de ses competences
         if(poDomaine.evaluated) {
             for (let i = 0; i < poDomaine.competences.all.length; i++) {
-                var competencesEvaluations = poDomaine.competences.all[i].competencesEvaluations;
-                var _evalFiltered = competencesEvaluations;
-
-                // filtre sur les compétences évaluées par l'enseignant
-                if (pbMesEvaluations) {
-                    _evalFiltered = _.filter(competencesEvaluations, function (competence) {
-                        return competence.owner !== undefined && competence.owner === model.me.userId;
-                    });
-                }
-
-                // filtre sur les competences prises dans le calcul
-                _evalFiltered = _.filter(_evalFiltered, function (competence) {
-                    return !competence.formative; // la competence doit être reliée à un devoir ayant un type non "formative"
-                });
-
-                if (_evalFiltered && _evalFiltered.length > 0) {
-                    // TODO récupérer la vrai valeur numérique :
-                    // par exemple 0 correspond à rouge ce qui mais ça correspond à une note de 1 ou 0.5 ou 0 ?
-                    poMaxEvaluationsDomaines.push(_.max(_evalFiltered, function (_t) {
-                        return _t.evaluation;
-                    }).evaluation + 1);
+                    let competence = poDomaine.competences.all[i];
+                    if(competence.niveauFinaltoShowAllEvaluations !== undefined) {
+                        poMaxEvaluationsDomaines.push(competence.niveauFinaltoShowAllEvaluations + 1);
+                    }
                 }
             }
-        }
 
         // calcul de la moyenne pour les sous-domaines
         if(poDomaine.domaines) {
-            for(var i=0; i < poDomaine.domaines.all.length; i++) {
+            for(var i=0; i<poDomaine.domaines.all.length; i++) {
                 // si le domaine parent n'est pas évalué, il faut vider pour chaque sous-domaine les poMaxEvaluationsDomaines sauvegardés
                 if(!poDomaine.evaluated) {
                     poMaxEvaluationsDomaines = [];

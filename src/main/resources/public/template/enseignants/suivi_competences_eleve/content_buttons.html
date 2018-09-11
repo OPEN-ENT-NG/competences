@@ -24,6 +24,6 @@
         <i tooltip="evaluations.bilan.eleve.title" class="show-bilan-eleve" ng-class="{ selected: template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve') }"
            ng-click="showRechercheBarFunction(true);template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')"></i>
         <i tooltip="evaluations.bilan.fin.cycle.title" class="show-bilan-fin-cycle" ng-class="{ selected: template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') }"
-           ng-click="showRechercheBarFunction(false);template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')"></i>
+           ng-click="refreshAndOpenBFC()"></i>
     </div>
 </div>

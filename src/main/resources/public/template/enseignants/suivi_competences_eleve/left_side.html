@@ -56,7 +56,7 @@
         </label>
     </section>
     <section ng-show="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') && !isChefEtab() && !displayCycle">
-        <div>
+        <div  ng-if="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
             <label>
                 <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
                        ng-model="$parent.suiviFilter.mine" value="false">
@@ -65,10 +65,18 @@
                 </span>
             </label>
         </div>
-        <div>
+        <div  ng-if="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
             <label>
                 <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
                        ng-model="$parent.suiviFilter.mine" value="true">
+                <span>
+                    <i18n>evaluations.test.mine</i18n>
+                </span>
+            </label>
+        </div>
+        <div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
+            <label>
+                <input type="radio" id="fake" checked >
                 <span>
                     <i18n>evaluations.test.mine</i18n>
                 </span>

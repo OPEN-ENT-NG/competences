@@ -30,12 +30,12 @@
                     [[competence.nom]]
                 </div>
                 <div class="two cell inline-block padding-left align-top">
-                <span ng-repeat="evaluation in competence.competencesEvaluations|filter:isMaxEvaluation(competence.competencesEvaluations)|limitTo:1" tabindex="0">
-                    <span ng-if="evaluation.evaluation === -1">
+                <span tabindex="0">
+                    <span ng-if="competence.evaluation === -1">
                         NE
                     </span>
-                    <span ng-if="evaluation.evaluation >= 0">
-                        [[evaluation.evaluation + 1]]
+                    <span ng-if="competence.niveauFinalToShowMyEvaluations >= 0">
+                        [[competence.niveauFinalToShowMyEvaluations + 1]]
                     </span>
                 </span>
                     <span ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
