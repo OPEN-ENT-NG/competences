@@ -74,17 +74,17 @@ export const bilanPeriodique = {
 
         /////       Création et modification des thèmes personnalisés      /////
 
-        showTheme: function (param) {
+        showTheme: async function (param) {
             bilanPeriodique.that.showAddtheme = param;
             bilanPeriodique.that.changeThematique = false;
             if (param) {
                 bilanPeriodique.that.thematique.code = null;
                 bilanPeriodique.that.thematique.libelle = null;
             }
-            this.getFocus();
+            bilanPeriodique.that.getFocus();
         },
 
-        openAddtheme: function (theme) {
+        openAddtheme: async function (theme) {
             bilanPeriodique.that.changeThematique = true;
             bilanPeriodique.that.thematique = {
                 id: theme.id,
@@ -92,7 +92,7 @@ export const bilanPeriodique = {
                 libelle: theme.libelle
             };
             bilanPeriodique.that.showAddtheme = true;
-            this.getFocus();
+            bilanPeriodique.that.getFocus();
         },
 
 
@@ -109,7 +109,6 @@ export const bilanPeriodique = {
                 console.error('Problème lors de la création de la thématique');
                 throw e;
             }
-
             utils.safeApply(this);
         },
 
@@ -278,7 +277,6 @@ export const bilanPeriodique = {
         closeLightbox: function () {
             bilanPeriodique.that.opened.lightboxConfirmDelete = false;
             bilanPeriodique.that.openedLightbox = true;
-
         },
 
 
@@ -291,7 +289,8 @@ export const bilanPeriodique = {
                     bilanPeriodique.that.openedLightbox = false;
                 }
                 if (oldVal === true && newVal === false) {
-                    this.supprElem = false;
+                    // this.supprElem = false;
+                    bilanPeriodique.that.supprElem = false;
                     bilanPeriodique.that.supprEnseignant = false;
                     bilanPeriodique.that.supprClasse = false;
                     bilanPeriodique.that.supprTheme = false;
@@ -318,7 +317,7 @@ export const bilanPeriodique = {
             if (this.appreciations !== undefined) {
                 if (this.appreciations.length > 0) {
                     this.opened.lightboxConfirmDelete = true;
-                    this.supprElem = true;
+                    bilanPeriodique.that.supprElem = true;
                 }
                 else {
                     await this.deleteElements(elements);
@@ -347,7 +346,7 @@ export const bilanPeriodique = {
         getAppreciations: async function (elements) {
             try {
                 let url = "/competences/elementsAppreciations?idEtablissement=" + evaluations.structure.id;
-                for (var i = 0; i < elements.length; i++) {
+                for (let i = 0; i < elements.length; i++) {
                     url += "&idElement=" + elements[i].id;
                 }
                 let data = await http.get(url);
@@ -473,7 +472,7 @@ export const bilanPeriodique = {
         /////       Suppression des chips enseignants / matières et classe   /////
 
         delete: function () {
-            if (this.supprElem || bilanPeriodique.that.supprElem) {
+            if (bilanPeriodique.that.supprElem || bilanPeriodique.that.supprElem) {
                 bilanPeriodique.that.deleteElements(this.selectedElements);
                 bilanPeriodique.that.opened.lightboxConfirmDelete = false;
             }
@@ -565,7 +564,7 @@ export const bilanPeriodique = {
                 ens_mat: []
             };
             this.dataELem = bilanPeriodique.that.dataELem;
-            this.supprElem = false;
+            bilanPeriodique.that.supprElem = false;
             bilanPeriodique.that.supprEnseignant = false;
             bilanPeriodique.that.supprClasse = false;
             bilanPeriodique.that.supprTheme = false;

@@ -177,7 +177,7 @@
                                     <span ng-click="themeListe.open = !themeListe.open;"
                                           ng-show="dataELem.theme">[[dataELem.theme.libelle]]</span>
                                         <h3 class="inline-block marginTopZero marginBottomZero"
-                                            data-ng-click="showTheme(true); themeListe.open = true;">
+                                            data-ng-click="showTheme(true);">
                                             <i class="plus marginLeft"></i>
                                         </h3>
                                 </span>
@@ -222,7 +222,7 @@
                                         class="twelve skills-list-proposition skills-text-overflow italic">
                                         <span ng-click="addTheme(theme)";>[[theme.libelle]]</span>
                                         <dots-menu>
-                                            <opt data-ng-click="openAddtheme(theme);">
+                                            <opt data-ng-click="openAddtheme(theme); themeListe.open;">
                                                 <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
                                             </opt>
                                             <opt data-ng-click="tryDeleteTheme(theme)">
@@ -341,10 +341,16 @@
         </div>
     </lightbox>
 
-    <lightbox show="opened.lightboxConfirmDelete" on-close="opened.lightboxConfirmDelete=false">
+    <lightbox show="opened.lightboxConfirmDelete" on-close="opened.lightboxConfirmDelete = false">
 
-        <p ng-if="supprElem">
-            <i18n>evaluation.bilan.periodique.message</i18n>
+        <p ng-if="supprElem && selected.EPI">
+            <i18n>evaluation.bilan.periodique.suppression.EPI</i18n>
+        </p>
+        <p ng-if="supprElem && selected.AP">
+            <i18n>evaluation.bilan.periodique.suppression.AP</i18n>
+        </p>
+        <p ng-if="supprElem && selected.parcours">
+            <i18n>evaluation.bilan.periodique.suppression.parcours</i18n>
         </p>
         <p ng-if="supprEnseignant">
             <i18n>evaluations.devoir.confirmation.question.enseignant</i18n>
@@ -355,12 +361,22 @@
         <p ng-if="supprTheme">
             <i18n>evaluation.bilan.periodique.supp.impossible</i18n>
         </p>
-        <p ng-if="modifElemSupprClasse">
-            <i18n>evaluation.bilan.periodique.supp.classe</i18n>
+        <p ng-if="modifElemSupprClasse && selected.EPI">
+            <i18n>evaluation.bilan.periodique.modification.EPI</i18n>
+        </p>
+        <p ng-if="modifElemSupprClasse && selected.AP">
+            <i18n>evaluation.bilan.periodique.modification.AP</i18n>
+        </p>
+        <p ng-if="modifElemSupprClasse && selected.parcours">
+            <i18n>evaluation.bilan.periodique.modification.parcours</i18n>
         </p>
 
-        <p ng-if="modifElemSupprClasse || supprElem">
-            <i18n>evaluations.devoir.confirmation.question</i18n>
+        <p ng-if="supprElem">
+            <i18n>evaluations.devoir.recaputilatif.suppression.confirmation</i18n>
+        </p>
+
+        <p ng-if="modifElemSupprClasse">
+            <i18n>evaluations.devoir.recaputilatif.modification.confirmation</i18n>
         </p>
 
         <button class="marginFive magnet-right"
