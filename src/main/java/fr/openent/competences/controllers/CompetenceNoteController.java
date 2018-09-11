@@ -235,32 +235,6 @@ public class CompetenceNoteController extends ControllerHelper {
                 isCycle = false;
             }
             competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, arrayResponseHandler(request));
-//            competencesNotesService.getCompetencesNotesEleve(idEleve, idPeriode, idCycle, isCycle, new Handler<Either<String, JsonArray>>() {
-//                @Override
-//                public void handle(Either<String, JsonArray> repCompetencesNotesEleve) {
-//                    if(repCompetencesNotesEleve.isRight()){
-//                        JsonArray competencesNotesEleve = repCompetencesNotesEleve.right().getValue();
-//
-//                    competenceNiveauFinalService.getNiveauFinalByEleve(idPeriode, idEleve, idsMatieres, idClasse, new Handler<Either<String, JsonArray>>() {
-//                        @Override
-//                        public void handle(Either<String, JsonArray> repNiveauFinal) {
-//                            if(repNiveauFinal.isRight()){
-//
-//                                JsonArray niveauFinalByEleveByMatiereByPeriode = repNiveauFinal.right().getValue();
-//                                JsonObject competenceNoteAndcompetenceNiveauFinal = new JsonObject();
-//                                competenceNoteAndcompetenceNiveauFinal.put("competencesNotesEleve", competencesNotesEleve );
-//
-//                                if( niveauFinalByEleveByMatiereByPeriode != null){
-//                                    competenceNoteAndcompetenceNiveauFinal.put("competenceNiveauFinal", niveauFinalByEleveByMatiereByPeriode);
-//                                }
-//
-//                                Renders.renderJson(request,competenceNoteAndcompetenceNiveauFinal );
-//                            }
-//                        }
-//                    });
-//                    }
-//                }
-//            });
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }

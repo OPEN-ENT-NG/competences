@@ -163,8 +163,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
-                .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
-                .append("rel_competences_domaines.id_domaine, ")
+                .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, ")
+                .append("competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
+                .append("devoirs.id_matiere AS id_matiere, rel_competences_domaines.id_domaine, ")
                 .append("users.username as owner_name, type.formative AS formative ")
                 .append(", competence_niveau_final.niveau_final AS niveau_final ")
                 .append("FROM notes.competences ")
@@ -173,9 +174,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users ON (users.id = devoirs.owner) ")
-                .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id)")
+                .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id AND competence_niveau_final.id_eleve = ? ")
+                .append("AND competence_niveau_final.id_matiere = devoirs.id_matiere )")
                 .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
-            values.add(idEleve);
+            values.add(idEleve).add(idEleve);
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(idPeriode);

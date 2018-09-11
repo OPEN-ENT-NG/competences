@@ -39,10 +39,14 @@
 
 
 <script type="text/ng-template"  id="tree_item_renderer.html">
-
-    <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }" class="margin-top-1em twelve cell " ng-if="domaine.niveau === 1" ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
+    <h4 class="two align-center inline-block marginNiveau" ng-if="isMyEvaluations(suiviFilter) && domaine.niveau === 1 && $first "><i18n>evaluation.suivi.niveau</i18n></h4>
+    <h4 ng-class="{'openedDom' : domaine.OpenDom, 'Domaine' : domaine.competences.all.length > 0 }"
+            class="six margin-top-1em cell " ng-if="domaine.niveau === 1" ng-click="domaine.OpenDom = !domaine.OpenDom" ng-init="domaine.OpenDom = false">[[domaine.codification]] - [[domaine.libelle]]</h4>
+    <div ng-if="isMyEvaluations(suiviFilter)&& domaine.niveau === 1 && $first ">
+        <h4 class="margin-top-1em one align-center inline-block " ><i18n>evaluation.suivi.niveau.atteint</i18n></h4>
+        <h4 class="margin-top-1em one align-center inline-block" ><i18n>evaluation.suivi.niveau.final</i18n></h4>
+    </div>
     <div ng-class="{'openedSectionDom' : domaine.OpenDom}" ng-if="domaine.competences.all.length > 0" class="twelve cell" style='height: auto;'>
-
         <h3 ng-class="{'openedDom' : domaine.OpenSousDom}" class="margin-top-1em Domaine" ng-if="domaine.niveau > 1 && domaine.competences.all.length > 0" ng-click="domaine.OpenSousDom = !domaine.OpenSousDom" ng-init="domaine.OpenSousDom = false">[[domaine.codification]] - [[domaine.libelle]]</h3>
         <div ng-class="{'margin-top-1em' : domaine.competences.length > 0, 'openedSectionDom' : domaine.OpenSousDom}" style='height: auto;'>
 
@@ -53,27 +57,38 @@
                      class="six inline-block ellipsis competence">
                     [[competence.nom]]
                 </div>
-                <div class="one inline-block align-center align-top" ng-click="openDetailCompetence(competence)">
-                    <span ng-repeat="evaluation in competence.competencesEvaluations|filter:isMaxEvaluation(competence.competencesEvaluations)|limitTo:1" tabindex="0">
-                        <c-skills-bubble text="(mapLettres[evaluation.evaluation])"
-                                         color="(mapCouleurs[evaluation.evaluation])"
+                <div class="two inline-block align-center align-top" ng-if="!isMyEvaluations(suiviFilter)" ng-click="openDetailCompetence(competence)">
+                    <span ng-if="competence.niveauFinaltoShowAllEvaluations !== undefined ">
+                        <c-skills-bubble text="(mapLettres[competence.niveauFinaltoShowAllEvaluations])"
+                                         color="(mapCouleurs[competence.niveauFinaltoShowAllEvaluations])"
                                          classes="'competence-eval alignVertical'">
                         </c-skills-bubble>
                     </span>
-                    <span class="competence-eval rounded grey" ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
+                    <span class="competence-eval rounded grey" ng-if="competence.competencesEvaluations.length < 1 ||
+                     notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
                     </span>
                 </div>
-                <div class="one inline-block align-center align-top">
-                    <span ng-repeat="evaluation in competence.competencesEvaluations |filter:isMaxEvaluation(competence.competencesEvaluations)|limitTo:1" tabindex="0">
-                    <c-skills-bubble ng-if="evaluation.niveau_final !== null" text="(mapLettres[evaluation.niveau_final])"
-                                     color="(mapCouleurs[evaluation.niveau_final])"
-                                     classes="'competence-eval alignVertical'" ng-click="switchColorCompetenceNivFinal(evaluation)">
-                    </c-skills-bubble>
-                    <c-skills-bubble ng-if="evaluation.niveau_final === null" text="(mapLettres[evaluation.evaluation])"
-                                     color="(mapCouleurs[evaluation.evaluation])"
-                                     classes="'competence-eval alignVertical'" ng-click="switchColorCompetenceNivFinal(evaluation)">
-                    </c-skills-bubble>
+                <div ng-if="isMyEvaluations(suiviFilter) " class="two inline-block align-top">
+                    <div  class=" six inline-block align-center " ng-click="openDetailCompetence(competence)">
+                        <span ng-if="competence.niveauAtteintToShowMyEvaluations !== undefined">
+                            <c-skills-bubble text="(mapLettres[competence.niveauAtteintToShowMyEvaluations])"
+                                             color="(mapCouleurs[competence.niveauAtteintToShowMyEvaluations])"
+                                             classes="'competence-eval alignVertical'">
+                            </c-skills-bubble>
                         </span>
+                        <span class="competence-eval rounded grey" ng-if="competence.competencesEvaluations.length < 1 ||
+                         notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
+                        </span>
+                    </div>
+                    <div class="six inline-block align-center ">
+                        <span ng-if="competence.niveauFinalToShowMyEvaluations !== undefined">
+                        <c-skills-bubble text="(mapLettres[competence.niveauFinalToShowMyEvaluations])"
+                                         color="(mapCouleurs[competence.niveauFinalToShowMyEvaluations])"
+                                         classes="'competence-eval alignVertical'"
+                                         ng-click="switchColorCompetenceNivFinal(competence)">
+                        </c-skills-bubble>
+                        </span>
+                    </div>
                 </div>
                 <div class="three inline-block align-center align-top" ng-click="openDetailCompetence(competence)">
                     <proportion-suivi-competence evaluations="competence.competencesEvaluations"

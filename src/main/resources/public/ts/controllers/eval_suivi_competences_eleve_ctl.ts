@@ -197,7 +197,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
         };
 
-        $scope.switchColorCompetenceNivFinal = async function(evaluation){
+        $scope.switchColorCompetenceNivFinal = async function(competence){
 
             let niveauCompetenceMin = 0;
             let niveauCompetenceMax = -1;
@@ -205,26 +205,29 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 niveauCompetenceMax++;
             }
 
-            if(evaluation.niveau_final === null){
-                if( niveauCompetenceMin <= evaluation.evaluation && evaluation.evaluation < niveauCompetenceMax -1 ){
-                    evaluation.niveau_final = evaluation.evaluation +1;
-                }else{
-                    evaluation.niveau_final = niveauCompetenceMin ;
-                }
-            }else{
-                if( niveauCompetenceMin <= evaluation.niveau_final && evaluation.niveau_final < niveauCompetenceMax -1 ){
-                    evaluation.niveau_final = evaluation.niveau_final +1;
+            if( niveauCompetenceMin <= competence.niveauFinalToShowMyEvaluations && competence.niveauFinalToShowMyEvaluations < niveauCompetenceMax -1 ){
+                competence.niveauFinalToShowMyEvaluations = competence.niveauFinalToShowMyEvaluations +1;
                 }else {
-                    evaluation.niveau_final = niveauCompetenceMin;}
+                competence.niveauFinalToShowMyEvaluations = niveauCompetenceMin;
             }
+            let myEvaluations = _.filter(competence.competencesEvaluations, function (evaluation) {
+                return evaluation.owner !== undefined && evaluation.owner === model.me.userId && !evaluation.formative;
+            });
             let competenceNiveauFinal = new CompetenceNote ({
                     id_periode:   $scope.search.periode.id_type,
                     id_eleve: $scope.search.eleve.id,
-                    niveau_final: evaluation.niveau_final,
-                    id_competence: evaluation.id_competence,
-                    ids_matieres: _.pluck($scope.matieres.all,'id'),
-                    id_classe: $scope.search.classe.id})
-               await competenceNiveauFinal.saveNiveaufinal();
+                    niveau_final: competence.niveauFinalToShowMyEvaluations,
+                    id_competence: competence.id,
+                    ids_matieres: _.unique(_.pluck(myEvaluations,'id_matiere')),
+                    id_classe: $scope.search.classe.id});
+
+            _.each(competence.competencesEvaluations, (evaluation) => {
+                if(_.contains(competenceNiveauFinal.ids_matieres, evaluation.id_matiere)){
+                    evaluation.niveau_final = competence.niveauFinalToShowMyEvaluations;
+                }
+            });
+            await competenceNiveauFinal.saveNiveaufinal();
+            Utils.setMaxCompetenceShow ( competence );
         };
 
         /**
@@ -312,6 +315,11 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 $scope.$broadcast('rzSliderForceRender');
             });
         };
+        $scope.isMyEvaluations = ( suiviFilter) => {
+
+            return ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true)? true : false;
+
+        }
         /**
          * test pour checker si la moyenne ou la valeur du bfc est dans les bornes de la table de conversion pour le bon libelle
          */

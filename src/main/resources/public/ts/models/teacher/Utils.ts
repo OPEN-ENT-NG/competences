@@ -192,7 +192,7 @@ export class Utils {
 
         // calcul de la moyenne pour les sous-domaines
         if(poDomaine.domaines) {
-            for(var i=0; i<poDomaine.domaines.all.length; i++) {
+            for(var i=0; i < poDomaine.domaines.all.length; i++) {
                 // si le domaine parent n'est pas évalué, il faut vider pour chaque sous-domaine les poMaxEvaluationsDomaines sauvegardés
                 if(!poDomaine.evaluated) {
                     poMaxEvaluationsDomaines = [];
@@ -248,6 +248,70 @@ export class Utils {
         }
     }
 
+    /**
+     *For a list of Evaluations set niveauFinaltoShowAllEvaluations, niveauAtteintToShowMyEvaluations
+     * and niveauFinalToShowMyEvaluations for a competence
+     * @param competence
+     *
+     *
+     */
+
+     static setMaxCompetenceShow  ( competence ) {
+
+        //all evaluations
+        // récupèrer toutes les évaluations de type non "formative"
+        let allEvaluations = _.filter(competence.competencesEvaluations, (evaluation) => {
+            return !evaluation.formative;
+            // la competence doit être reliée à un devoir ayant un type non "formative"
+        });
+        if(allEvaluations !== undefined && allEvaluations.length > 0){
+            competence.niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations);
+        }
+
+        // my evaluations
+        let myEvaluations = _.filter(allEvaluations, function (evaluation) {
+            return evaluation.owner !== undefined && evaluation.owner === model.me.userId;
+        });
+        if( myEvaluations !== undefined && myEvaluations.length > 0){
+            //set the max of my evaluations on this competence for "niveau atteint"
+            competence.niveauAtteintToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, true);
+
+            //set the max of my evaluations on this competence for "niveau final"
+            competence.niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations);
+        }
+    }
+
+    /**
+     *
+     * @param listEval
+     * @param onlyNote
+     */
+    static getNiveauMaxOfListEval (listEval,onlyNote? ){
+        //tableau des max des Evals pour chaque matière
+        if(onlyNote !== undefined && onlyNote){
+            return  _.max(listEval, (e) => {
+                return e.evaluation;
+            }).evaluation;
+        }else {
+            let allmaxMats = [];
+            //trier par idMatiere;
+            let listEvalsByMatiere = _.groupBy(listEval, (e) => {
+                return e.id_matiere;
+            });
+            _.mapObject(listEvalsByMatiere, (tabEvals, idMat) => {
+
+                if (_.first(tabEvals).niveau_final !== null) {
+                    allmaxMats.push(_.first(tabEvals).niveau_final);
+                } else {
+                    allmaxMats.push(_.max(tabEvals, (e) => {
+                        return e.evaluation;
+                    }).evaluation);
+                }
+            });
+
+            return _.max(allmaxMats);
+        }
+    }
     static setCompetenceNotes(poDomaine, poCompetencesNotes, object?, classe?, tabDomaine?) {
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {
@@ -268,6 +332,10 @@ export class Utils {
                     id_competence: competence.id,
                     id_domaine: competence.id_domaine
                 });
+                if( competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
+                        Utils.setMaxCompetenceShow(competence);
+                }
+
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
                     for (let i = 0; i < classe.eleves.all.length; i++) {
                         let mine = _.findWhere(competence.competencesEvaluations, {id_eleve : classe.eleves.all[i].id,
