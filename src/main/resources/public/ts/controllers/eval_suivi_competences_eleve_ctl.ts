@@ -212,7 +212,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             $scope.evaluationLibre.create().then(function (res) {
 
                 // refresh du suivi élève
-                $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode, $scope.search.classe, $scope.currentCycle, false, $scope.evaluations.structure);
+                $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode,
+                    $scope.search.classe, $scope.currentCycle, false, $scope.evaluations.structure);
                 $scope.suiviCompetence.sync().then(() => {
                     $scope.suiviCompetence.domaines.sync().then(() => {
                         $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
@@ -259,6 +260,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.controleNewEvaluationLibreForm = function () {
             return $scope.evaluationLibre == undefined || !(
                 $scope.evaluationLibre.controlledDate
+                && $scope.evaluationLibre.id_matiere !== ""
+                && $scope.evaluationLibre.id_matiere !== null
                 && $scope.evaluationLibre.name !== undefined
                 && $scope.evaluationLibre.id_periode !== null && $scope.evaluationLibre.id_periode !== undefined
                 && $scope.evaluationLibre.competenceEvaluee.evaluation !== -1

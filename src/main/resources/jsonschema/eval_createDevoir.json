@@ -24,7 +24,7 @@
       "type" : "string"
     },
     "id_matiere" : {
-      "type" : ["string","null"]
+      "type" : "string"
     },
     "id_etat" : {
       "type" : "integer"
