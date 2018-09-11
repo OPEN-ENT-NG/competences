@@ -4,19 +4,19 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Domaine;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.http.HttpServerRequest;
-import org.entcore.common.service.impl.SqlCrudService;
-import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
-import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.service.impl.SqlCrudService;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
+import org.entcore.common.user.UserInfos;
 
 import java.util.*;
 
@@ -685,7 +685,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         else {
                             isHeadTecher = event.right().getValue();
                         }
-                        handler.handle(isHeadTecher);
+                        // on autorise si la personne est prof principal ou que c'est un chef etab
+                        handler.handle(isHeadTecher ||
+                                new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()));
                     }
                 });
     }

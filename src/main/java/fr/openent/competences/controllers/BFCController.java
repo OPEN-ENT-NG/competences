@@ -12,15 +12,15 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import org.entcore.common.controller.ControllerHelper;
-import org.entcore.common.http.filter.ResourceFilter;
-import org.entcore.common.user.UserInfos;
-import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 
 import java.util.List;
 
