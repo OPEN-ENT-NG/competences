@@ -238,7 +238,7 @@ export class Utils {
      *
      */
 
-     static setMaxCompetenceShow  ( competence ) {
+     static setMaxCompetenceShow  ( competence) {
 
         //all evaluations
         // récupèrer toutes les évaluations de type non "formative"
@@ -247,6 +247,10 @@ export class Utils {
             // la competence doit être reliée à un devoir ayant un type non "formative"
         });
         if(allEvaluations !== undefined && allEvaluations.length > 0){
+            let notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
+                return evaluation.eval_lib_historise === false;
+            });
+            allEvaluations = (notHistorizedEvals.length > 0)? notHistorizedEvals : allEvaluations;
             competence.niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations);
         }
 
