@@ -54,7 +54,7 @@
                 <tr ng-repeat="evaluation in detailCompetence.competencesEvaluations | orderBy:sortType:sortReverse" ng-click="redirectToDevoir(evaluation.id_devoir)">
                     <td>[[evaluation.name]]</td>
                     <td>[[evaluation.owner_name]]</td>
-                    <td>[[getDateFormated(evaluation.evaluation_date)]]</td>
+                    <td>[[getDateFormated(evaluation.date)]]</td>
                     <td>
                         <c-skills-bubble text="(mapLettres[evaluation.evaluation])"
                                          color="(mapCouleurs[evaluation.evaluation])"

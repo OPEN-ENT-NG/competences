@@ -698,7 +698,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.chartOptionsEval.datasets.labels.push(" ");
                 $scope.chartOptionsEval.colors = [];
                 $scope.chartOptionsEval.colors.push('#FFFFFF');
-                ListEval =  _.sortBy(ListEval, function(evalu){ return evalu.evaluation_date; });
+                ListEval =  _.sortBy(ListEval, function(evalu){ return evalu.date; });
 
                 for (let i = 0; i < ListEval.length; i++) {
 
@@ -707,10 +707,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         fontText = " ";
                     }
                     $scope.chartOptionsEval.datasets.data.push({y :ListEval[i].evaluation + 2,
-                        x: $scope.getDateFormated(ListEval[i].evaluation_date),
+                        x: $scope.getDateFormated(ListEval[i].date),
                         r: 10,
                         label: fontText});
-                    $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].evaluation_date));
+                    $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].date));
                     let colorValue;
                     if(ListEval[i].evaluation !== -1){colorValue = $scope.mapCouleurs[ListEval[i].evaluation];}
                     else{colorValue = Defaultcolors.unevaluated;}
