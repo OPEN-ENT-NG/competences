@@ -34,8 +34,8 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
                 idsMatieres = niveauFinal.getJsonArray("ids_matieres");
 
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCE_NIVEAU_FINAL
-                + "(id_periode, id_eleve, niveau_final, id_competence, id_matiere, id_classe) VALUES(?, ?, ?, ?, ?, ?) "
-                + "ON CONFLICT (id_periode, id_eleve, id_competence, id_matiere, id_classe) "
+                + "(id_periode, id_eleve, niveau_final, id_competence, id_matiere) VALUES(?, ?, ?, ?, ?) "
+                + "ON CONFLICT (id_periode, id_eleve, id_competence, id_matiere) "
                 + "DO UPDATE SET niveau_final = ?";
 
         for ( int i = 0; i < idsMatieres.size(); i++ ) {
@@ -45,7 +45,6 @@ public class DefaultCompetenceNiveauFinalService extends SqlCrudService implemen
                     .add(niveauFinal.getInteger("niveau_final"))
                     .add(niveauFinal.getInteger("id_competence"))
                     .add(idsMatieres.getString(i))
-                    .add(niveauFinal.getString("id_classe"))
                     .add(niveauFinal.getInteger("niveau_final"));
             sqlBuilder.prepared(query,values);
 

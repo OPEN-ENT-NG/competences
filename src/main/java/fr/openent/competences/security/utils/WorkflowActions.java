@@ -7,8 +7,8 @@ public enum WorkflowActions {
 	CREATE_EVALUATION ("competences.create.evaluation"),
 	ADMIN_RIGHT ("Viescolaire.view"),
 	CREATE_DISPENSE_DOMAINE_ELEVE ("create.dispense.domaine.eleve"),
-	CREATE_ELEMENT_BILAN_PERIODIQUE ("create.element.bilan.periodique");
-
+	CREATE_ELEMENT_BILAN_PERIODIQUE ("create.element.bilan.periodique"),
+	SAVE_COMPETENCE_NIVEAU_FINAL ("save.competence.niveau.final");
 	private final String actionName;
 
 	WorkflowActions(String actionName) {

@@ -17,9 +17,6 @@
     },
     "ids_matieres": {
       "type": "array"
-    },
-    "id_classe": {
-      "type": "string"
     }
   },
   "required": [
@@ -27,7 +24,6 @@
     "id_eleve",
     "niveau_final",
     "id_competence",
-    "ids_matieres",
-    "id_classe"
+    "ids_matieres"
   ]
 }

@@ -28,6 +28,9 @@ export class Utils {
     static canUpdateBFCSynthese () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateBFCSynthese);
     }
+    static saveCompetenceNiveauFinal () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.saveCompetenceNiveauFinal);
+    }
 
     /**
      * Méthode récursive de l'affichage des sous domaines d'un domaine

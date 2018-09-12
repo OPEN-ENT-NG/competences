@@ -473,8 +473,8 @@ public class CompetenceNoteController extends ControllerHelper {
 
     @Post("competence/note/niveaufinal")
     @ApiDoc("Crée ou met à jour le niveau final pour une compétence, un élève, une matière et une classe")
-    //TO DO security
-    public void addCompetenceNiveauFinal(final HttpServerRequest request){
+    @SecuredAction("save.competence.niveau.final")
+    public void saveCompetenceNiveauFinal(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos userInfos) {

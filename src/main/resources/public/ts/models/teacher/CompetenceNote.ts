@@ -31,8 +31,7 @@ export class CompetenceNote extends Model implements IModel {
                 id_eleve: this.id_eleve,
                 niveau_final: this.niveau_final,
                 id_competence: this.id_competence,
-                ids_matieres: this.ids_matieres,
-                id_classe: this.id_classe
+                ids_matieres: this.ids_matieres
             }
         }else {
             return {
