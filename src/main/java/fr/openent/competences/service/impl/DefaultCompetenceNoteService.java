@@ -101,15 +101,22 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void getCompetencesNotes(Long idDevoir, String idEleve, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
-        query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, competences.id_parent as id_parent ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, "+ Competences.COMPETENCES_SCHEMA +".competences ")
-                .append("WHERE competences_notes.id_competence = competences.id ")
-                .append("AND competences_notes.id_devoir = ? AND competences_notes.id_eleve = ? ")
-                .append("ORDER BY competences_notes.id ASC;");
+        query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, ")
+                .append(" competences.id_parent as id_parent, ")
+                .append(" competence_niveau_final.niveau_final AS niveau_final  ")
+                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, ")
+                .append( Competences.COMPETENCES_SCHEMA +".competences ")
+
+                .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                .append(" competence_niveau_final.id_competence = competences.id ")
+                .append(" AND competence_niveau_final.id_eleve = ? ")
+
+                .append(" WHERE competences_notes.id_competence = competences.id ")
+                .append(" AND competences_notes.id_devoir = ? AND competences_notes.id_eleve = ? ")
+                .append(" ORDER BY competences_notes.id ASC;");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-        params.add(idDevoir);
-        params.add(idEleve);
+        params.add(idEleve).add(idDevoir).add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }

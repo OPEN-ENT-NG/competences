@@ -598,11 +598,13 @@ public class DefaultExportService implements ExportService {
                                             String compKey = String.valueOf(row.getLong("id_competence"));
                                             String devoirKey = String.valueOf(row.getLong("id_devoir"));
                                             Long eval = row.getLong("evaluation");
+                                            Long niv_final = row.getLong("niveau_final");
                                             if (!competenceNotesMap.containsKey(devoirKey)) {
                                                 competenceNotesMap.put(devoirKey, new HashMap<String, Long>());
                                             }
                                             if (!competenceNotesMap.get(devoirKey).containsKey(compKey)) {
-                                                competenceNotesMap.get(devoirKey).put(compKey, eval);
+                                                competenceNotesMap.get(devoirKey).put(compKey,
+                                                        (niv_final != null)? niv_final: eval);
                                             }
                                         }
                                     }
