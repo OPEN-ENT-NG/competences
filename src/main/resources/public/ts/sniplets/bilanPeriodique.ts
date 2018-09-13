@@ -52,6 +52,9 @@ export const bilanPeriodique = {
                     libelle: this.selectedElements[0].libelle,
                     description: this.selectedElements[0].description
                 };
+                bilanPeriodique.that.search.classe = null;
+                bilanPeriodique.that.search.enseignant = null;
+                bilanPeriodique.that.search.matiere = null;
             } else {
                 bilanPeriodique.that.emptyCheckbox(this.elements);
                 bilanPeriodique.that.emptyLightbox();
@@ -117,13 +120,14 @@ export const bilanPeriodique = {
             try {
                 await http.put(`/competences/thematique?idThematique=${thematique.id}`,
                     {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
+                // bilanPeriodique.that.addTheme(thematique);
                 bilanPeriodique.that.getThematique(this.getTypeElement());
                 bilanPeriodique.that.getElements();
                 bilanPeriodique.that.showAddtheme = false;
             } catch (e) {
                 notify.error('evaluations.thematique.update.error');
             }
-            utils.safeApply(this);
+            utils.safeApply(bilanPeriodique.that);
         },
 
 

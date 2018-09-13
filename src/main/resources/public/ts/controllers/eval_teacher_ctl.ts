@@ -2213,6 +2213,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
+
+
+        /**
+         * Saisir projet   -   Bilan Periodique
+         */
+
+
         $scope.getElementsBilanBilanPeriodique = async function (isClassChanging?){
             if($scope.bilanPeriodique !== undefined ) {
                 delete $scope.bilanPeriodique;
@@ -2226,18 +2233,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 let _p = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
                 if (_p) {
-                    if(!$scope.bilanPeriodique || isClassChanging){
+                    if (!$scope.bilanPeriodique || isClassChanging) {
                         $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
                     }
 
-                    if(isClassChanging || $scope.bilanPeriodique.elements === undefined) {
+                    if (isClassChanging || $scope.bilanPeriodique.elements === undefined) {
                         if ($scope.search.classe.eleves.length() === 0) {
                             await $scope.search.classe.eleves.sync();
                         }
                         await $scope.bilanPeriodique.syncElements();
                     }
 
-                    if($scope.bilanPeriodique.elements.length > 0) {
+                    if ($scope.bilanPeriodique.elements.length > 0) {
                         $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode, $scope.search.classe);
                         utils.safeApply($scope);
                     } else {
@@ -2256,7 +2263,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
             }
-
             utils.safeApply($scope);
         }
 
