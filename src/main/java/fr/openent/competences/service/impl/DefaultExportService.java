@@ -369,6 +369,7 @@ public class DefaultExportService implements ExportService {
                                             getIntermediateHandler(idDevoir, competencesArray, finalHandler));
                                 }
                                 competenceNoteService.getCompetencesNotes(idDevoir, idEleve,
+                                        true,
                                         getIntermediateHandler(idDevoir, competencesNotesArray, finalHandler));
                             }
                             domaineService.getDomainesRacines(idGroupes[0],
@@ -384,6 +385,7 @@ public class DefaultExportService implements ExportService {
                                         getIntermediateHandler(null, competencesArray, finalHandler));
                             }
                             competenceNoteService.getCompetencesNotes(null, idEleve,
+                                    true,
                                     getIntermediateHandler(null, competencesNotesArray, finalHandler));
                             domaineService.getDomainesRacines(idGroupes[0],
                                     getIntermediateHandler(domainesArray, finalHandler));
@@ -603,8 +605,10 @@ public class DefaultExportService implements ExportService {
                                                 competenceNotesMap.put(devoirKey, new HashMap<String, Long>());
                                             }
                                             if (!competenceNotesMap.get(devoirKey).containsKey(compKey)) {
-                                                competenceNotesMap.get(devoirKey).put(compKey,
-                                                        (niv_final != null)? niv_final: eval);
+                                                if (eval != null || niv_final != null) {
+                                                    competenceNotesMap.get(devoirKey).put(compKey,
+                                                            (niv_final != null) ? niv_final : eval);
+                                                }
                                             }
                                         }
                                     }

@@ -58,6 +58,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                     public void handle(final Either<String, JsonArray> eventNotesDevoirs) {
                         if (eventNotesDevoirs.isRight()) {
                             competenceNoteService.getCompetencesNotes(idDevoir,idEleve,
+                                    false,
                                     new Handler<Either<String, JsonArray>>() {
                                         @Override
                                         public void handle(Either<String, JsonArray> eventCompetencesDevoir) {

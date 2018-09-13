@@ -1683,10 +1683,14 @@ public class ExportPDFController extends ControllerHelper {
                                                             final String nomClasse = eleve.getString("classeName");
                                                             final String idClasse = eleve.getString("idClasse");
                                                             final String idEtablissement = eleve.getString("idEtablissement");
+                                                            JsonArray idManualGroupes = UtilsConvert
+                                                                    .strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
                                                             JsonArray idFunctionalGroupes = UtilsConvert
                                                                     .strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
 
-                                                            String[] idFunctionalGroupesArr = UtilsConvert.jsonArrayToStringArr(idFunctionalGroupes);
+                                                            JsonArray _idGroupes = utilsService.saUnion(idFunctionalGroupes,
+                                                                    idManualGroupes);
+                                                            String[] _iGroupesdArr = UtilsConvert.jsonArrayToStringArr(_idGroupes);
 
                                                             final String[] idEleves = new String[1];
                                                             idEleves[0] = finalIdEleve;
@@ -1698,7 +1702,7 @@ public class ExportPDFController extends ControllerHelper {
                                                             JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                                                             final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
                                                                     libellePeriode, json, answered, resultFinal);
-                                                            exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), idFunctionalGroupesArr, idEtablissement, listIdMatieres,
+                                                            exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), _iGroupesdArr, idEtablissement, listIdMatieres,
                                                                     finalIdPeriode, isCycle, finalHandler);
                                                         } else {
                                                             leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
@@ -1761,13 +1765,18 @@ public class ExportPDFController extends ControllerHelper {
                                                                 String [] _idGroupes = new String[1];
                                                                 _idGroupes[0] = idGroupes.get(i);
                                                                 JsonObject o = result.getJsonObject(i);
-                                                                JsonArray idFunctionalGroupes =UtilsConvert
-                                                                        .strIdGroupesToJsonArray(o.getValue("idGroupes"));
-                                                                String[] idFunctionalGroupesArr =
-                                                                        UtilsConvert.jsonArrayToStringArr(idFunctionalGroupes);
 
+                                                                JsonArray idManualGroupes = UtilsConvert
+                                                                        .strIdGroupesToJsonArray(o.getValue("idManualGroupes"));
+                                                                JsonArray idFunctionalGroupes = UtilsConvert
+                                                                        .strIdGroupesToJsonArray(o.getValue("idGroupes"));
+
+                                                                JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
+                                                                        idManualGroupes);
+                                                                String[] idGroupesArr =
+                                                                        UtilsConvert.jsonArrayToStringArr(idGroupes);
                                                                 exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
-                                                                        _idGroupes , idFunctionalGroupesArr, idEtablissement.get(i),
+                                                                        _idGroupes , idGroupesArr, idEtablissement.get(i),
                                                                         listIdMatieres, finalIdPeriode, isCycle, finalHandler);
                                                             }
                                                         } else {

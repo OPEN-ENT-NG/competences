@@ -98,7 +98,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public void getCompetencesNotes(Long idDevoir, String idEleve, Handler<Either<String, JsonArray>> handler) {
+    public void getCompetencesNotes(Long idDevoir, String idEleve, Boolean returnNotEvaluatedcompetences,
+                                    Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
         query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, ")
@@ -107,17 +108,40 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, ")
                 .append( Competences.COMPETENCES_SCHEMA +".competences ")
 
+                // Jointure pour le niveau final
                 .append(" LEFT JOIN notes.competence_niveau_final ON ")
                 .append(" competence_niveau_final.id_competence = competences.id ")
                 .append(" AND competence_niveau_final.id_eleve = ? ")
 
                 .append(" WHERE competences_notes.id_competence = competences.id ")
-                .append(" AND competences_notes.id_devoir = ? AND competences_notes.id_eleve = ? ")
-                .append(" ORDER BY competences_notes.id ASC;");
+                .append(" AND competences_notes.id_devoir = ? AND competences_notes.id_eleve = ? ");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         params.add(idEleve).add(idDevoir).add(idEleve);
+        if (returnNotEvaluatedcompetences) {
+            query.append(" UNION SELECT null as id, competences_devoirs.id_devoir, ")
+                    .append(" competences_devoirs.id_competence, null as evaluation, ")
+                    .append(" null as owner, ? as id_eleve,null as created, null as modified, competences.nom as nom, ")
+                    .append(" competences.id_type as id_type, competences.id_parent as id_parent,  ")
+                    .append(" competence_niveau_final.niveau_final AS niveau_final  ")
+                    .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs, ")
+                    .append( Competences.COMPETENCES_SCHEMA +".competences ")
 
+                    // Jointure pour le niveau final
+                    .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                    .append(" competence_niveau_final.id_competence = competences.id ")
+                    .append(" AND competence_niveau_final.id_eleve = ? ")
+
+                    .append(" WHERE competences_devoirs.id_competence = competences.id  ")
+                    .append(" AND competences_devoirs.id_devoir = ? AND    ")
+                    .append(" NOT competences_devoirs.id_competence IN  ")
+                    .append(" (SELECT id_competence FROM notes.competences_notes ")
+                    .append("  WHERE competences_notes.id_eleve = ? AND competences_notes.id_devoir = ? )");
+            params.add(idEleve).add(idEleve).add(idDevoir).add(idEleve).add(idDevoir);
+
+        }
+
+        query.append(" ORDER BY id ASC ");
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
 
@@ -183,8 +207,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users ON (users.id = devoirs.owner) ")
                 .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id ")
-                .append("AND competence_niveau_final.id_periode = devoirs.id_periode ")
-                .append("AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
+            .append("AND competence_niveau_final.id_periode = devoirs.id_periode ")
+            .append("AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
                 .append("AND competence_niveau_final.id_matiere = devoirs.id_matiere )")
                 .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
             values.add(idEleve);
