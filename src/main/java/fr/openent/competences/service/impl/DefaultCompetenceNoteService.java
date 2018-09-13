@@ -182,11 +182,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ")
                 .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users ON (users.id = devoirs.owner) ")
-                .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id ");
-            if(idPeriode != null){
-                query.append("AND competence_niveau_final.id_periode = devoirs.id_periode ");
-            }
-             query.append("AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
+                .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id ")
+                .append("AND competence_niveau_final.id_periode = devoirs.id_periode ")
+                .append("AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
                 .append("AND competence_niveau_final.id_matiere = devoirs.id_matiere )")
                 .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
             values.add(idEleve);

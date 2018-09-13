@@ -1171,6 +1171,7 @@ public class NoteController extends ControllerHelper {
                             notesByDevoirByPeriode.put(null,
                                     new HashMap<Long, ArrayList<NoteDevoir>>());
 
+                            Set<Long> idsCompetence = new HashSet<Long>() ;
 
                             for (int i = 0; i < listNotes.size(); i++) {
 
@@ -1187,13 +1188,23 @@ public class NoteController extends ControllerHelper {
                                         || note.getLong("evaluation") < 0) {
                                     continue; //Si pas de compétence Note
                                 }
+                                NoteDevoir noteDevoir;
+                                if(note.getLong("niveau_final") != null && !idsCompetence.contains(note.getLong("id_competence"))){
 
-                                NoteDevoir noteDevoir = new NoteDevoir(
-                                        Double.valueOf(note.getLong("evaluation")),
-                                        1.0,
-                                        false,
-                                        1.0);
+                                    idsCompetence.add(note.getLong("id_competence"));
+                                    noteDevoir = new NoteDevoir(
+                                            Double.valueOf(note.getLong("niveau_final")),
+                                            1.0,
+                                            false,
+                                            1.0);
 
+                                }else {
+                                     noteDevoir = new NoteDevoir(
+                                            Double.valueOf(note.getLong("evaluation")),
+                                            1.0,
+                                            false,
+                                            1.0);
+                                }
 
 
                                 utilsService.addToMap(id_periode,

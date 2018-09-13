@@ -361,7 +361,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append( (null != eleveId)? "": " competences_notes.id, ")
                 .append((withDomaineInfo)? "compDom.id_domaine, " : "")
                 .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
-                .append("null as annotation ")
+                .append("null as annotation, ")
+                .append("competence_niveau_final.niveau_final AS niveau_final")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ");
 
         if (null != eleveId) {
@@ -396,6 +397,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_competences_domaines " + " AS compDom")
                     .append(" ON competences_notes.id_competence = compDom.id_competence ");
         }
+        query.append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".competence_niveau_final ON " +
+                "( competence_niveau_final.id_periode = devoirs.id_periode AND competence_niveau_final.id_eleve = competences_notes.id_eleve" +
+               " AND competence_niveau_final.id_competence = competences_notes.id_competence AND competence_niveau_final.id_matiere = devoirs.id_matiere )");
         query.append(" WHERE devoirs.id_etablissement = ? ")
         .append((matiereId != null)? " AND devoirs.id_matiere = ? ": " ");
 
