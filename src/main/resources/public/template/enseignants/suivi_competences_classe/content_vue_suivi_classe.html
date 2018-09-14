@@ -49,7 +49,15 @@
                          ng-mouseenter="showIt(competence)" ng-mouseleave="hideIt(competence)">
                         [[competence.nom]]
                     </div>
-                    <div class="five inline-block align-center">
+                    <div class="five inline-block align-center" ng-if="suiviFilter.mine === 'true'">
+                        <proportion-suivi-competence
+                                evaluations="competence.mineCompetencesEvaluations"
+                                is-classe="true" filter="suiviFilter" user="me"
+                                map-lettres="mapLettres"
+                                map-couleurs="mapCouleurs"
+                        ></proportion-suivi-competence>
+                    </div>
+                    <div class="five inline-block align-center" ng-if="suiviFilter.mine === 'false'">
                         <proportion-suivi-competence
                                 evaluations="competence.competencesEvaluations"
                                 is-classe="true" filter="suiviFilter" user="me"

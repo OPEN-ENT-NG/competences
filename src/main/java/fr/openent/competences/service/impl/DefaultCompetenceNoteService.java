@@ -233,7 +233,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void getCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
-            .append("SELECT competences_notes.id_eleve AS id_eleve, competences.id as id_competence, max(competences_notes.evaluation) as evaluation,rel_competences_domaines.id_domaine, competences_notes.owner ")
+            .append("SELECT competences_notes.id_eleve AS id_eleve, competences.id as id_competence, max(competences_notes.evaluation) as evaluation , competence_niveau_final.niveau_final ,rel_competences_domaines.id_domaine, devoirs.id_matiere, competences_notes.owner ")
             .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
             .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
             .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
@@ -253,8 +253,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         }
 
         query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ");
+        query.append("LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competence_niveau_final ON (competence_niveau_final.id_eleve = competences_notes.id_eleve AND competence_niveau_final.id_periode = devoirs.id_periode AND competence_niveau_final.id_competence = competences.id AND competence_niveau_final.id_matiere= devoirs.id_matiere) ");
         query.append("WHERE type.formative = false ");
-        query.append("GROUP BY competences.id, competences.id_cycle,rel_competences_domaines.id_domaine, competences_notes.id_eleve, competences_notes.owner ");
+        query.append("GROUP BY competences.id, competences.id_cycle,rel_competences_domaines.id_domaine, competences_notes.id_eleve, competences_notes.owner ,competence_niveau_final.niveau_final, devoirs.id_matiere ");
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }

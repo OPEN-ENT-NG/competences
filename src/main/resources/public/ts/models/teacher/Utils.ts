@@ -328,14 +328,23 @@ export class Utils {
                 }
 
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
+                    let mineCompetencesEvaluations = _.filter(competence.competencesEvaluations, {owner : model.me.userId});
+
+                    // Récupère mes évaluations maximales de la compétence pour tous les élèves
+                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence,mineCompetencesEvaluations);
+
+                    // Récupère les évaluations maximales de la compétence pour tous les élèves
+                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence,competence.competencesEvaluations);
+
                     for (let i = 0; i < classe.eleves.all.length; i++) {
-                        let mine = _.findWhere(competence.competencesEvaluations, {id_eleve : classe.eleves.all[i].id,
+                        let mine = _.findWhere(competence.mineCompetencesEvaluations, {id_eleve : classe.eleves.all[i].id,
                             owner : model.me.userId});
                         let others = _.filter(competence.competencesEvaluations, function (evaluation) {
                             return evaluation.owner !== model.me.userId; });
 
                         if (mine === undefined) {
-                            competence.competencesEvaluations.push(new CompetenceNote({
+                            competence.mineCompetencesEvaluations = [];
+                            competence.mineCompetencesEvaluations.push(new CompetenceNote({
                                 evaluation: -1,
                                 id_competence: competence.id,
                                 id_eleve: classe.eleves.all[i].id,
@@ -344,6 +353,7 @@ export class Utils {
                         }
 
                         if (others.length === 0) {
+                            competence.competencesEvaluations = [];
                             competence.competencesEvaluations.push(new CompetenceNote({
                                 evaluation: -1,
                                 id_competence: competence.id,
@@ -362,8 +372,61 @@ export class Utils {
         }
     }
 
+    /**
+     * Récupère l'évaluation maximale (niveau final ou niveau atteint) pour chaque élève
+     * @param classe
+     * @param competence
+     * @param competencesEvaluations
+     * @returns {any}
+     */
+    static getCompetenceEvaluations(classe, competence,competencesEvaluations) {
+        for (let i = 0; i < classe.eleves.all.length; i++) {
+            let currentIdEleve = classe.eleves.all[i].id
+            // MN-175 : On calcule par élève le niveau toutes matières confondues
+            let commpetenceEvaluationsEleve = _.where(competencesEvaluations, {id_eleve: currentIdEleve});
+            if (commpetenceEvaluationsEleve !== undefined && commpetenceEvaluationsEleve.length > 0) {
+                // On initialise la competence evaluation finale de l'élève
+                let commpetenceEvaluationEleveFinal = {
+                    id_competence: competence.id,
+                    id_eleve: currentIdEleve,
+                    id_domaine: competence.id_domaine,
+                    evaluation: 0,
+                    owner: commpetenceEvaluationsEleve[0].owner
+                };
 
-    // Filtres
+                let niveauFinal = 0;
+                for (var j = 0; j < commpetenceEvaluationsEleve.length; j++) {
+                    let tempCommpetenceEvaluationEleve = commpetenceEvaluationsEleve[j];
+                    if (tempCommpetenceEvaluationEleve.id_matiere !== undefined && tempCommpetenceEvaluationEleve.id_matiere !== null && tempCommpetenceEvaluationEleve.id_matiere !== '') {
+                        if (tempCommpetenceEvaluationEleve.niveau_final !== undefined && tempCommpetenceEvaluationEleve.niveau_final !== null) {
+                            // On prend le niveau final  si celui ci est supérieur
+                            if (tempCommpetenceEvaluationEleve.niveau_final > niveauFinal) {
+                                niveauFinal = tempCommpetenceEvaluationEleve.niveau_final;
+                                commpetenceEvaluationEleveFinal.owner = tempCommpetenceEvaluationEleve.owner;
+                            }
+                        } else {
+                            // On prend le max des évaluations si celui ci est supérieur
+                            if (tempCommpetenceEvaluationEleve.evaluation > niveauFinal) {
+                                niveauFinal = tempCommpetenceEvaluationEleve.evaluation;
+                                commpetenceEvaluationEleveFinal.owner = tempCommpetenceEvaluationEleve.owner;
+                            }
+                        }
+                    }
+                }
+                commpetenceEvaluationEleveFinal.evaluation = niveauFinal;
+                // On supprime les évaluations de l'élève
+                let commpetenceEvaluationsFinal = _.filter(competencesEvaluations, function (competencesEvaluation) {
+                    return competencesEvaluation.id_eleve !== currentIdEleve
+                });
+                // On ajoute le niveau calculé
+                commpetenceEvaluationsFinal.push(commpetenceEvaluationEleveFinal)
+                return commpetenceEvaluationsFinal ;
+            }
+
+        }
+    }
+
+// Filtres
     /**
      * Filtre permettant de retourner l'évaluation maximum en fonction du paramètre de recherche "Mes Evaluations"
      * @param listeEvaluations Tableau d'évaluations de compétences
