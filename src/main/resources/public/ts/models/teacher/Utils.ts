@@ -308,7 +308,9 @@ export class Utils {
                     competence.competencesEvaluations = _.where(poCompetencesNotes, {
                         id_competence: competence.id
                     });
-
+                    if( competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
+                        Utils.setMaxCompetenceShow(competence);
+                    }
                 });
                 if (tabDomaine !== undefined) {
                     tabDomaine.push(poDomaine);
