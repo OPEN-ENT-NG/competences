@@ -47,7 +47,7 @@
                     <label class="select">
                         <select ng-model="search.classe"
                                 ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique(true);"
-                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in structure.classesBilanPeriodique | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>
                     </label>

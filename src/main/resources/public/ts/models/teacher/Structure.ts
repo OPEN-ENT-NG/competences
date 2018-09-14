@@ -29,6 +29,7 @@ export class Structure extends Model {
     devoirs: Devoirs;
     synchronized: any;
     classes: Collection<Classe>;
+    classesBilanPeriodique: Collection<Classe>;
     matieres: Collection<Matiere>;
     types: Collection<Type>;
     enseignements: Collection<Enseignement>;
@@ -54,6 +55,7 @@ export class Structure extends Model {
             getEnseignants: '/competences/user/list?profile=Teacher&structureId=',
             getDevoirs: '/competences/etab/devoirs/',
             getClasses: '/viescolaire/classes?idEtablissement=' + this.id,
+            getClassesBilanPeriodique: '/competences/elementsBilanPeriodique/classes?idStructure=' + this.id,
             TYPE: {
                 synchronization: '/competences/types?idEtablissement=' + this.id
             },
@@ -97,6 +99,7 @@ export class Structure extends Model {
         this.synchronized = {
             devoirs: false,
             classes: false,
+            classesBilanPeriodique: false,
             matieres: false,
             typePeriodes: false,
             types: false,
@@ -375,7 +378,8 @@ export class Structure extends Model {
                     this.synchronized.niveauCompetences &&
                     this.synchronized.devoirs &&
                     this.synchronized.typePeriodes &&
-                    this.synchronized.detailsUser;
+                    this.synchronized.detailsUser &&
+                    this.synchronized.classesBilanPeriodique;
                 if (Utils.isChefEtab()) {
                     b = b && this.synchronized.enseignants;
                 }
@@ -402,6 +406,7 @@ export class Structure extends Model {
                 this.getDetailsOfUser().then(isSynced);
             }
             this.typePeriodes.sync().then(isSynced);
+            this.syncClassesBilanPeriodique().then(isSynced);
         });
     }
 
@@ -439,6 +444,19 @@ export class Structure extends Model {
                 that.classes.load(res);
             });
             this.classes.sync();
+        });
+    }
+    syncClassesBilanPeriodique(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            var that = this;
+            http().getJson(this.api.getClassesBilanPeriodique).done((res) => {
+                _.map(res, (classe) => {
+                    classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
+                    return classe;
+                });
+                this.classesBilanPeriodique = res ;
+                this.synchronized.classesBilanPeriodique = true;
+            });
         });
     }
 

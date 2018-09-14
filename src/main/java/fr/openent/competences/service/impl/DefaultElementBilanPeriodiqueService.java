@@ -240,6 +240,35 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
 
+    private static final String _elementBilanPerdiodiqueParcours = "3";
+
+    @Override
+    public void getClassesElementsBilanPeriodique (List<String> idClasses, String idEnseignant,Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        query
+                .append("SELECT externalid_groupe ")
+                .append(" FROM notes.rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("  INNER JOIN notes.rel_elt_bilan_periodique_groupe ")
+                .append("  ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique ")
+                .append(" WHERE id_intervenant = ? ")
+                .append(" UNION ")
+                .append("SELECT externalid_groupe ")
+                .append(" FROM notes.rel_elt_bilan_periodique_groupe ")
+                .append("  INNER JOIN notes.elt_bilan_periodique ")
+                .append("  ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ")
+                .append(" WHERE type_elt_bilan_periodique = ? ")
+                .append("  AND id_groupe IN " + Sql.listPrepared(idClasses));
+        params.add(idEnseignant);
+        params.add(_elementBilanPerdiodiqueParcours);
+        for (int i = 0; i < idClasses.size(); i++) {
+            params.add(idClasses.get(i));
+        }
+
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+    }
+
     @Override
     public void getGroupesElementBilanPeriodique (String idElement, Handler<Either<String, JsonArray>> handler){
 

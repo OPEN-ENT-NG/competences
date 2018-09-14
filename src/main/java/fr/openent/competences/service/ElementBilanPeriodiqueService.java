@@ -151,4 +151,13 @@ public interface ElementBilanPeriodiqueService {
      */
     public void updateAppreciationBilanPeriodique (Long idAppreciation, String commentaire, String type,
                                                    Handler<Either<String, JsonObject>> handler);
+
+
+    /**
+     * Récupère les externalIds de classe des parcours, AP et EPI de l'enseignant en paramètre
+     * @param idClasses
+     * @param idEnseignant
+     * @param handler
+     */
+    public void getClassesElementsBilanPeriodique (List<String> idClasses, String idEnseignant,Handler<Either<String, JsonArray>> handler);
 }
