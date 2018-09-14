@@ -106,6 +106,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append(" competences.id_parent as id_parent, ")
                 .append(" competence_niveau_final.niveau_final AS niveau_final  ")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, ")
+                .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
                 .append( Competences.COMPETENCES_SCHEMA +".competences ")
 
                 // Jointure pour le niveau final
@@ -114,7 +115,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append(" AND competence_niveau_final.id_eleve = ? ")
 
                 .append(" WHERE competences_notes.id_competence = competences.id ")
-                .append(" AND competences_notes.id_devoir = ? AND competences_notes.id_eleve = ? ");
+                .append(" AND competences_notes.id_devoir = ? AND competences_notes.id_eleve = ? ")
+                .append(" AND devoirs.id = competences_notes.id_devoir ")
+                .append(" AND (devoirs.id_matiere = competence_niveau_final.id_matiere " )
+                .append(" OR  competence_niveau_final.id_matiere IS NULL) ");
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         params.add(idEleve).add(idDevoir).add(idEleve);
@@ -125,6 +129,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append(" competences.id_type as id_type, competences.id_parent as id_parent,  ")
                     .append(" competence_niveau_final.niveau_final AS niveau_final  ")
                     .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs, ")
+                    .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
                     .append( Competences.COMPETENCES_SCHEMA +".competences ")
 
                     // Jointure pour le niveau final
@@ -133,6 +138,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append(" AND competence_niveau_final.id_eleve = ? ")
 
                     .append(" WHERE competences_devoirs.id_competence = competences.id  ")
+                    .append(" AND devoirs.id = competences_devoirs.id_devoir  ")
+                    .append(" AND (devoirs.id_matiere = competence_niveau_final.id_matiere ")
+                    .append("       OR  competence_niveau_final.id_matiere IS NULL) ")
                     .append(" AND competences_devoirs.id_devoir = ? AND    ")
                     .append(" NOT competences_devoirs.id_competence IN  ")
                     .append(" (SELECT id_competence FROM notes.competences_notes ")
