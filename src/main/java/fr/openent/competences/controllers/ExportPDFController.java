@@ -1664,9 +1664,14 @@ public class ExportPDFController extends ControllerHelper {
                         public void handle(Message<JsonObject> message) {
                             final JsonObject body = message.body();
                             if ("ok".equals(body.getString("status"))) {
-                                final String libellePeriode = body.getString("result")
+                               String _libellePeriode = body.getString("result")
                                         .replace("é", "e")
                                         .replace("è", "e");
+                               if (isCycle) {
+                                   _libellePeriode = I18n.getInstance().translate("viescolaire.utils.cycle",
+                                           I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+                               }
+                               final String libellePeriode = _libellePeriode;
 
                                 if (finalIdClasse == null) {
                                     JsonObject action = new JsonObject()
