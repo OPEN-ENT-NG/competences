@@ -243,7 +243,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     private static final String _elementBilanPerdiodiqueParcours = "3";
 
     @Override
-    public void getClassesElementsBilanPeriodique (List<String> idClasses, String idEnseignant,Handler<Either<String, JsonArray>> handler){
+    public void getClassesElementsBilanPeriodique (String idEtablissement, String idEnseignant,Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -259,12 +259,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .append("  INNER JOIN notes.elt_bilan_periodique ")
                 .append("  ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ")
                 .append(" WHERE type_elt_bilan_periodique = ? ")
-                .append("  AND id_groupe IN " + Sql.listPrepared(idClasses));
+                .append("  AND id_etablissement = ? ");
         params.add(idEnseignant);
         params.add(_elementBilanPerdiodiqueParcours);
-        for (int i = 0; i < idClasses.size(); i++) {
-            params.add(idClasses.get(i));
-        }
+        params.add(idEtablissement);
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }

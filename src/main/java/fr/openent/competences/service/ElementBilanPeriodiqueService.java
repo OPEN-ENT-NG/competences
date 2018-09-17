@@ -155,9 +155,9 @@ public interface ElementBilanPeriodiqueService {
 
     /**
      * Récupère les externalIds de classe des parcours, AP et EPI de l'enseignant en paramètre
-     * @param idClasses
+     * @param idEtablissement
      * @param idEnseignant
      * @param handler
      */
-    public void getClassesElementsBilanPeriodique (List<String> idClasses, String idEnseignant,Handler<Either<String, JsonArray>> handler);
+    public void getClassesElementsBilanPeriodique (String idEtablissement, String idEnseignant,Handler<Either<String, JsonArray>> handler);
 }

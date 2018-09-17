@@ -653,11 +653,9 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             @Override
             public void handle(UserInfos user) {
                 if(user != null){
-                    List<String> listGroupeIds = user.getClasses();
                     final String idStructure = request.params().get("idStructure");
-                    listGroupeIds.addAll(user.getGroupsIds());
                     defaultElementBilanPeriodiqueService.getClassesElementsBilanPeriodique(
-                            listGroupeIds, user.getUserId(),
+                            idStructure, user.getUserId(),
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
                                 public void handle(Either<String, JsonArray> event) {
