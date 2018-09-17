@@ -200,37 +200,6 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 competenceEvaluee.evaluation = competenceEvaluee.evaluation - 1;
             }
         };
-
-        $scope.switchColorCompetenceNivFinal = async function(evaluation){
-
-            let niveauCompetenceMin = 0;
-            let niveauCompetenceMax = -1;
-            for (let o in $scope.mapCouleurs) {
-                niveauCompetenceMax++;
-            }
-
-            if(evaluation.niveau_final === null){
-                if( niveauCompetenceMin <= evaluation.evaluation && evaluation.evaluation < niveauCompetenceMax -1 ){
-                    evaluation.niveau_final = evaluation.evaluation +1;
-                }else{
-                    evaluation.niveau_final = niveauCompetenceMin ;
-                }
-            }else{
-                if( niveauCompetenceMin <= evaluation.niveau_final && evaluation.niveau_final < niveauCompetenceMax -1 ){
-                    evaluation.niveau_final = evaluation.niveau_final +1;
-                }else {
-                    evaluation.niveau_final = niveauCompetenceMin;}
-            }
-            let competenceNiveauFinal = new CompetenceNote ({
-                    id_periode:   $scope.search.periode.id_type,
-                    id_eleve: $scope.search.eleve.id,
-                    niveau_final: evaluation.niveau_final,
-                    id_competence: evaluation.id_competence,
-                    ids_matieres: _.pluck($scope.matieres.all,'id'),
-                    id_classe: $scope.search.classe.id})
-               await competenceNiveauFinal.saveNiveaufinal();
-        };
-
         /**
          *  Sauvegarde d'une évaluation libre
          */

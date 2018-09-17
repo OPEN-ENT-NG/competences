@@ -209,13 +209,36 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     for (int i = 0; i < notesResultArray.size(); i++) {
                         JsonObject _o = notesResultArray.getJsonObject(i);
                         String id_eleve = _o.getString("id_eleve");
+
                         if(_o.getLong("evaluation") < 0) {
                             continue;
                         }
                         if (!notesCompetencesEleve.containsKey(id_eleve)) {
                             notesCompetencesEleve.put(id_eleve, new HashMap<Long, Long>());
                         }
-                        notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
+                        //si la competence n'est pas dans la map
+                        if(!notesCompetencesEleve.get(id_eleve).containsKey(_o.getLong("id_competence"))) {
+                            //on set la competence avec la note ou le niveau final s'il existe
+                            if(_o.getLong("niveau_final")!= null) {
+                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final"));
+                            }else {
+                                notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
+                            }
+                        }else{
+                            //sinon on récupère la valeur de la competence déjà enregistrée
+                            Long niveauOfThisCompetence = notesCompetencesEleve.get(id_eleve).get(_o.getLong("id_competence"));
+                            // on la compare soit au niveau_final s'il existe soit à la note de l'élève
+                            if(_o.getLong("niveau_final")!= null){
+                                if(niveauOfThisCompetence < _o.getLong("niveau_final")){
+                                    notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("niveau_final"));
+                                }
+                            }else{
+                                if(niveauOfThisCompetence < _o.getLong("evaluation")){
+                                    notesCompetencesEleve.get(id_eleve).put(_o.getLong("id_competence"), _o.getLong("evaluation"));
+                                }
+                            }
+
+                        }
                     }
                     handler.handle(new Either.Right<String, Map<String, Map<Long, Long>>>(notesCompetencesEleve));
                 } else {
