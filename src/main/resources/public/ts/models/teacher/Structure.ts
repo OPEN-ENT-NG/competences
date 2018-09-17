@@ -20,6 +20,7 @@ import {
     TypePeriode,
     Utils
 } from './index';
+import {Mix} from "entcore-toolkit";
 
 export class Structure extends Model {
     id: string;
@@ -29,7 +30,7 @@ export class Structure extends Model {
     devoirs: Devoirs;
     synchronized: any;
     classes: Collection<Classe>;
-    classesBilanPeriodique: Collection<Classe>;
+    classesBilanPeriodique: any[];
     matieres: Collection<Matiere>;
     types: Collection<Type>;
     enseignements: Collection<Enseignement>;
@@ -454,8 +455,11 @@ export class Structure extends Model {
                     classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
                     return classe;
                 });
-                this.classesBilanPeriodique = res ;
+                this.classesBilanPeriodique =  Mix.castArrayAs(Classe,res);
                 this.synchronized.classesBilanPeriodique = true;
+                resolve();
+            }) .error(() => {
+                reject();
             });
         });
     }
