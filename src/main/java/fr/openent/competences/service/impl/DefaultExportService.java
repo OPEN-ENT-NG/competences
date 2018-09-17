@@ -575,7 +575,8 @@ public class DefaultExportService implements ExportService {
 
                         if (devoirsDone.get()
                                 && maitriseDone.get()
-                                && (domainesDone.get() || enseignementsDone.get())
+                                && ((domainesDone.get() && !byEnseignement.get())
+                                     || (byEnseignement.get() && enseignementsDone.get()))
                                 && competencesDone.get()
                                 && competencesNotesDone.get()
                                 ) {
@@ -613,25 +614,29 @@ public class DefaultExportService implements ExportService {
                                         }
                                     }
 
+                                    List<String> devoirsList =  new ArrayList<>(extractData(devoirs, "id").keySet());
+                                    Map<String, JsonObject> maitrisesMap = extractData(
+                                            orderBy(addMaitriseNE(maitrises),"ordre", true), "ordre");
+                                    Map<String, JsonObject> competencesMap = extractData(competences, "id");
+                                    Map<String, JsonObject> domainesMap = extractData(domaines, "id");
+                                    Map<String, JsonObject> enseignementsMap = extractData(enseignements, "id");
+                                    Map<String, Map<String, Long>> competenceNotesByDevoir = competenceNotesMap;
 
-                                    responseHandler.handle(new Either.Right<String, JsonObject>(
-                                            formatJsonObjectExportReleveComp(
-                                                    text,Boolean.valueOf(byEnseignement.get()), idEleve,
-                                                    new ArrayList<>(extractData(devoirs, "id").keySet()),
-                                                    extractData(orderBy(addMaitriseNE(maitrises),
-                                                            "ordre", true), "ordre"),
-                                                    extractData(competences, "id"),
-                                                    extractData(domaines, "id"),
-                                                    extractData(enseignements, "id"),
-                                                    competenceNotesMap)
-                                                    .put("noDevoir",false)));
+                                    JsonObject resToAdd = formatJsonObjectExportReleveComp(
+                                            text,Boolean.valueOf(byEnseignement.get()), idEleve,devoirsList,
+                                            maitrisesMap,competencesMap,domainesMap,
+                                            enseignementsMap,
+                                            competenceNotesMap)
+                                            .put("noDevoir",false);
+
+                                    responseHandler.handle(new Either.Right<String, JsonObject>(resToAdd));
                                 }
                                 else {
                                     responseHandler.handle(new Either.Right<String, JsonObject>(
                                             new JsonObject().put("text", text)
-                                                    .put("idEleve", idEleve)
                                                     .getJsonObject("header", new JsonObject())
                                                     .put("noDevoir", true)
+                                                    .put("idEleve", idEleve)
 
                                     ));
                                 }
@@ -659,7 +664,8 @@ public class DefaultExportService implements ExportService {
         return maitrises;
     }
 
-    private JsonObject formatJsonObjectExportReleveComp(Boolean text,Boolean byEnseignement, String idEleve, List<String> devoirs,
+    private JsonObject formatJsonObjectExportReleveComp(Boolean text,Boolean byEnseignement, String idEleve,
+                                                        List<String> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
                                                         Map<String, JsonObject> domaines,
@@ -683,15 +689,14 @@ public class DefaultExportService implements ExportService {
                             .getLong("ordre"))) : String.valueOf(maitrise.getLong("ordre")));
             headerMiddle.add(_maitrise);
         }
-        header.put("right", headerMiddle);
+            header.put("right", headerMiddle);
         result.put("header", header);
 
         final Map<String, JsonObject> competencesObjByIdComp = new HashMap<>();
 
         Map<String, Set<String>> competencesByDomainOrEnsei = new LinkedHashMap<>();
-        if (byEnseignement) {
-            for (String idEnseignement : enseignements.keySet()) {
-                competencesByDomainOrEnsei.put(idEnseignement, new TreeSet<String>(new Comparator<String>() {
+            for (String idEntity : (byEnseignement)? enseignements.keySet(): domaines.keySet()) {
+                competencesByDomainOrEnsei.put(idEntity, new TreeSet<String>(new Comparator<String>() {
                     @Override
                     public int compare(String o1, String o2) {
                         String s1 = competencesObjByIdComp.get(o1).getString("nom");
@@ -700,18 +705,6 @@ public class DefaultExportService implements ExportService {
                     }
                 }));
             }
-        } else {
-            for (String idDomain : domaines.keySet()) {
-                competencesByDomainOrEnsei.put(idDomain, new TreeSet<String>(new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        String s1 = competencesObjByIdComp.get(o1).getString("nom");
-                        String s2 = competencesObjByIdComp.get(o2).getString("nom");
-                        return s1.compareTo(s2);
-                    }
-                }));
-            }
-        }
 
         Map<String, List<String>> devoirByCompetences = new HashMap<>();
         for(JsonObject competence : competences.values()) {

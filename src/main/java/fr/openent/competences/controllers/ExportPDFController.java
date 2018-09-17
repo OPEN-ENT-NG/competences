@@ -1769,6 +1769,7 @@ public class ExportPDFController extends ControllerHelper {
                                                             for (int i = 0; i < eleves.size(); i++) {
                                                                 String [] _idGroupes = new String[1];
                                                                 _idGroupes[0] = idGroupes.get(i);
+
                                                                 JsonObject o = result.getJsonObject(i);
 
                                                                 JsonArray idManualGroupes = UtilsConvert
@@ -2130,9 +2131,9 @@ public class ExportPDFController extends ControllerHelper {
                             Boolean noDevoir =  res.getBoolean("noDevoir");
                             if (!noDevoir) {
                                 final JsonObject headerEleve = new JsonObject();
+                                final JsonObject _headerEleve = stringJsonArrayEither.right().getValue();
                                 final String idEleve = stringJsonArrayEither.right().getValue()
                                         .getString("idEleve");
-                                result.add(stringJsonArrayEither.right().getValue());
                                 if (elevesMap.containsKey(idEleve)) {
                                     stringJsonArrayEither.right().getValue()
                                             .put("nom", elevesMap.get(idEleve));
@@ -2141,10 +2142,11 @@ public class ExportPDFController extends ControllerHelper {
                                 headerEleve.put("classe", nomGroupes.get(idEleve));
                                 headerEleve.put("matiere", matieres);
                                 headerEleve.put("periode", libellePeriode);
-                                JsonObject header = ((JsonObject) result.getJsonObject(elevesAdd.get())).getJsonObject("header");
+                                JsonObject header = _headerEleve.getJsonObject("header");
                                 if (header != null) {
                                     header.put("left", headerEleve);
                                 }
+                                result.add(_headerEleve);
                                 elevesAdd.addAndGet(1);
                             }
 
