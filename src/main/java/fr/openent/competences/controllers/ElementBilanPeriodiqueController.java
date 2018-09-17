@@ -641,6 +641,81 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
+     * Retourne les classes correspondant à l'enseignant en paramètre
+     * @param request
+     */
+    @Get("/elementsBilanPeriodique/classes")
+    @ApiDoc("Retourne les classes correspondant à l'enseignant")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    public void getClassesElementBilanPeriodique(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if(user != null){
+                    List<String> listGroupeIds = user.getClasses();
+                    final String idStructure = request.params().get("idStructure");
+                    listGroupeIds.addAll(user.getGroupsIds());
+                    defaultElementBilanPeriodiqueService.getClassesElementsBilanPeriodique(
+                            listGroupeIds, user.getUserId(),
+                            new Handler<Either<String, JsonArray>>() {
+                                @Override
+                                public void handle(Either<String, JsonArray> event) {
+                                    if (event.isRight()) {
+                                        JsonArray externalIdElementBilanPeriodique = event.right().getValue();
+                                        JsonObject action = new JsonObject()
+                                                .put("action", "classe.listAllGroupes")
+                                                .put("idStructure", idStructure);
+                                        // On récupère la liste des classes de l'établissement
+                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                            @Override
+                                            public void handle(Message<JsonObject> message) {
+                                                  JsonObject body = message.body();
+                                                if ("ok".equals(body.getString("status"))) {
+                                                    JsonArray listGroupesEtablissement = body.getJsonArray("results");
+                                                    JsonArray jsonArrayResultat = new fr.wseduc.webutils.collections.JsonArray();
+                                                    if(listGroupesEtablissement.size() > 0){
+                                                        for (int i = 0; i < listGroupesEtablissement.size(); i++) {
+                                                            JsonObject vGroupe = listGroupesEtablissement.getJsonObject(i).getJsonObject("m").getJsonObject("data");
+                                                            for (int j = 0; j < externalIdElementBilanPeriodique.size(); j++) {
+                                                                String externalId = externalIdElementBilanPeriodique.getJsonObject(j).getString("externalid_groupe");
+                                                                if(externalId.equalsIgnoreCase(vGroupe.getString("externalId"))){
+                                                                    JsonArray vTypeClasse = listGroupesEtablissement.getJsonObject(i).getJsonObject("m").getJsonObject("metadata").getJsonArray("labels");
+                                                                    if(vTypeClasse.contains("Class")){
+                                                                        vGroupe.put("type_groupe",0);
+                                                                    } else if (vTypeClasse.contains("FunctionnalGroup")){
+                                                                        vGroupe.put("type_groupe",1);
+                                                                    } else{
+                                                                        vGroupe.put("type_groupe",2);
+                                                                    }
+                                                                    jsonArrayResultat.add(vGroupe);
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                        Renders.renderJson(request, jsonArrayResultat);
+                                                    }
+                                                } else {
+                                                    log.warn("getClassesElementBilanPeriodique :  erreur lors de la récupération des groupes/classes : id Etablissement : " + idStructure);
+                                                    Renders.renderJson(request, new JsonObject()
+                                                            .put("error", "error while retreiving classes getClassesElementBilanPeriodique"), 400);
+                                                }
+                                            }
+                                        }));
+
+                                    } else {
+                                        leftToResponse(request, event.left());
+                                    }
+                                }
+                            });
+                }else{
+                    unauthorized(request);
+                }
+            }
+        });
+    }
+
+    /**
      * Supprimer des élèments du bilan périodique dont les ids sont passés en paramètre
      * @param request
      */
