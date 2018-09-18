@@ -92,17 +92,23 @@ public class FilterUserUtils {
                 if ("ok".equals(body.getString("status"))) {
                     JsonArray elements = body.getJsonArray("results");
                     List<Integer> idsEPI_AP = new ArrayList<Integer>();
+                    List<Integer> idsParcours = new ArrayList<Integer>();
 
                     for(Object o : elements){
                         JsonArray element = (JsonArray)o;
 
-                        if(element.getInteger(1) == 3){ // si type = parcours je vérifie si le prof est dans la classe
+                        /*if(element.getInteger(1) == 3){ // si type = parcours je vérifie si le prof est dans la classe
                             if(!validateClasse(idClasse)){
                                 handler.handle(false);
                                 return;
                             }
                         } else {
                             idsEPI_AP.add(element.getInteger(0));
+                        }*/
+                        if (element.getInteger(1) != 3) {
+                            idsEPI_AP.add(element.getInteger(0));
+                        } else {
+                            idsParcours.add(element.getInteger(0));
                         }
                     }
                     if(idsEPI_AP.size() > 0){
@@ -141,7 +147,11 @@ public class FilterUserUtils {
                             }
                         });
                     } else {
-                        handler.handle(true);
+                        if (idsParcours.size() > 0) {
+                            handler.handle(true);
+                        } else {
+                            handler.handle(false);
+                        }
                     }
                 } else {
                     handler.handle(false);
@@ -152,42 +162,38 @@ public class FilterUserUtils {
 
     public void validateEleve(String idEleve, String idClasse, Handler<Boolean> handler) {
 
-        if(validateClasse(idClasse)){
-            if(idEleve == null){
-                handler.handle(true);
-            } else {
-                JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray()
-                        .add(idEleve);
-                JsonObject action = new JsonObject()
-                        .put("action", "eleve.getInfoEleve")
-                        .put("idEleves", idsEleves);
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
+        if(idEleve == null){
+            handler.handle(true);
+        } else {
+            JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray()
+                    .add(idEleve);
+            JsonObject action = new JsonObject()
+                    .put("action", "eleve.getInfoEleve")
+                    .put("idEleves", idsEleves);
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                @Override
+                public void handle(Message<JsonObject> message) {
+                    JsonObject body = message.body();
 
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonObject infosEleve = body.getJsonArray("results").getJsonObject(0);
+                    if ("ok".equals(body.getString("status"))) {
+                        JsonObject infosEleve = body.getJsonArray("results").getJsonObject(0);
 
-                            JsonArray idsGroupes = infosEleve.getJsonArray("idGroupes")
-                                    .add(infosEleve.getString("idClasse"))
-                                    .addAll(infosEleve.getJsonArray("idManualGroupes"));
+                        JsonArray idsGroupes = infosEleve.getJsonArray("idGroupes")
+                                .add(infosEleve.getString("idClasse"))
+                                .addAll(infosEleve.getJsonArray("idManualGroupes"));
 
-                            if(idsGroupes.contains(idClasse)){
-                                handler.handle(true);
-                            }
-                            else {
-                                handler.handle(false);
-                            }
-                        } else {
+                        if(idsGroupes.contains(idClasse)){
+                            handler.handle(true);
+                        }
+                        else {
                             handler.handle(false);
                         }
+                    } else {
+                        handler.handle(false);
                     }
+                }
 
-                }));
-            }
-        } else {
-            handler.handle(false);
+            }));
         }
     }
 

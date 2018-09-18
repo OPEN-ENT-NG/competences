@@ -107,8 +107,15 @@ export const bilanPeriodique = {
             try {
                 await http.post('/competences/thematique',
                     {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
-                bilanPeriodique.that.getThematique(this.getTypeElement());
-                bilanPeriodique.that.showAddtheme = false;
+                let codeUnique = bilanPeriodique.that.themes.find(themes => themes.code === thematique.code);
+                if (!codeUnique) {
+                     bilanPeriodique.that.getThematique(this.getTypeElement());
+                     bilanPeriodique.that.showAddtheme = false;
+                }
+                else {
+                    bilanPeriodique.that.createTheme = true;
+                    bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                }
             } catch (e) {
                 notify.error('Problème lors de la création de la thématique');
                 console.error('Problème lors de la création de la thématique');
@@ -298,6 +305,7 @@ export const bilanPeriodique = {
                     bilanPeriodique.that.openedLightbox = false;
                 }
                 if (oldVal === true && newVal === false) {
+                    bilanPeriodique.that.createTheme = false;
                     bilanPeriodique.that.supprElem = false;
                     bilanPeriodique.that.supprElemAppr = false;
                     bilanPeriodique.that.supprEnseignant = false;
@@ -575,6 +583,7 @@ export const bilanPeriodique = {
                 ens_mat: []
             };
             this.dataELem = bilanPeriodique.that.dataELem;
+            bilanPeriodique.that.createTheme = false;
             bilanPeriodique.that.supprElem = false;
             bilanPeriodique.that.supprElemAppr = false;
             bilanPeriodique.that.supprEnseignant = false;

@@ -425,6 +425,12 @@
             <i18n>evaluations.devoir.recaputilatif.modification.confirmation</i18n>
         </p>
 
+
+        <!--        Impossible de créé un thème       -->
+        <p ng-if="createTheme">
+            <i18n>evaluation.bilan.periodique.creation.impossible</i18n>
+        </p>
+
         <!--        Button de validation / annulation       -->
         <button class="marginFive magnet-right"
                 ng-click="delete()">

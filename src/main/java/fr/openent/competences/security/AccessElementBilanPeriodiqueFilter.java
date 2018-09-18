@@ -33,14 +33,16 @@ public class AccessElementBilanPeriodiqueFilter implements ResourcesProvider {
                         userUtils.validateElement(params.getAll("idElement"), params.get("idClasse"), new Handler<Boolean>() {
                             @Override
                             public void handle(Boolean isValid) {
-                                if(isValid){
+                                resourceRequest.resume();
+                                handler.handle(isValid);
+                                /*if(isValid){
                                     resourceRequest.resume();
-                                    handler.handle(userUtils.validateClasse(params.get("idClasse")));
+                                    handler.handle(true);
                                 }
                                 else {
                                     resourceRequest.resume();
                                     handler.handle(false);
-                                }
+                                }*/
                             }
                         });
                     }
@@ -49,8 +51,7 @@ public class AccessElementBilanPeriodiqueFilter implements ResourcesProvider {
                             && params.contains("idEnseignant")) {
 
                         resourceRequest.resume();
-                        handler.handle(userUtils.validateClasse(params.get("idClasse"))
-                                && userUtils.validateStructure(params.get("idEtablissement"))
+                        handler.handle( userUtils.validateStructure(params.get("idEtablissement"))
                                 && userUtils.validateUser(params.get("idEnseignant")));
                     }
                     else {
