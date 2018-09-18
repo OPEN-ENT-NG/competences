@@ -105,14 +105,16 @@ export const bilanPeriodique = {
 
         createThematique: async function (thematique) {
             try {
-                await http.post('/competences/thematique',
-                    {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
-                let codeUnique = bilanPeriodique.that.themes.find(themes => themes.code === thematique.code);
-                if (!codeUnique) {
+                let notcodeUnique = bilanPeriodique.that.themes.find(themes => themes.code === thematique.code);
+                // Si le code est Unique  on récupère le thème créé
+                if (!notcodeUnique) {
+                    await http.post('/competences/thematique',
+                        {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
                      bilanPeriodique.that.getThematique(this.getTypeElement());
                      bilanPeriodique.that.showAddtheme = false;
                 }
                 else {
+                    // Si le code n'est pas unique : affichage de la lightbox avec message d'erreur
                     bilanPeriodique.that.createTheme = true;
                     bilanPeriodique.that.opened.lightboxConfirmDelete = true;
                 }
