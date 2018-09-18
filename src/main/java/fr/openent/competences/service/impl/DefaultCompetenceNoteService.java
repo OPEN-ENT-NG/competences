@@ -253,7 +253,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         query.append("?)) ");
         values.add(idEleves.get(idEleves.size()-1));
 
-        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ");
+        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) AND devoirs.eval_lib_historise = false ");
 
         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
