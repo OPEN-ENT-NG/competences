@@ -327,6 +327,8 @@
   "evaluation.search.by.enseignements" : "Vue par enseignements",
   "evaluation.search.by.domaines" : "Vue par domaines",
   "evaluation.search.read.only": "(consultative)",
+  "evaluation.by.subject": "Par matière",
+  "evaluation.by.domaine": "Par domaine",
   "evaluation.lsu.export.button.classes" : "Exporter le bilan de fin de cycle de la classe au format XML",
   "evaluations.devoir.updateDevoir.firstConfirmSupp.change.classe":"Suite au changement de classe, les évaluations, annotations et appréciations ne seront pas conservées.",
   "viescolaire.utils.enseignements":"Enseignements",

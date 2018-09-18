@@ -644,7 +644,7 @@ export class ReleveNote extends  Model implements IModel {
 
 
         let series = [lang.translate('level.student'),lang.translate('level.class') ];
-        let i18nTitleView =(forDomaine !== true)?'evaluation.search.by.enseignements' :'evaluation.search.by.domaines';
+        let i18nTitleView =(forDomaine !== true)?'evaluation.by.subject' :'evaluation.by.domaine';
         let options = {legend : {
                 display: true
             },
