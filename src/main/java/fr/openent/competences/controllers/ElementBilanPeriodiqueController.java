@@ -682,7 +682,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                                     JsonArray vTypeClasse = listGroupesEtablissement.getJsonObject(i).getJsonObject("m").getJsonObject("metadata").getJsonArray("labels");
                                                                     if(vTypeClasse.contains("Class")){
                                                                         vGroupe.put("type_groupe",0);
-                                                                    } else if (vTypeClasse.contains("FunctionnalGroup")){
+                                                                    } else if (vTypeClasse.contains("FunctionalGroup")){
                                                                         vGroupe.put("type_groupe",1);
                                                                     } else{
                                                                         vGroupe.put("type_groupe",2);

@@ -105,10 +105,10 @@
                 <span>[[ element.libelle ]]</span>
             </td>
             <td ng-show="!selected.parcours">
-                <span ng-repeat="intervenantMatiere in element.intervenantsMatieres | orderBy:'intervenant.displayName'"> [[ intervenantMatiere.intervenant.displayName ]] [[$last ? '' : '- ']] </span>
+                <span ng-repeat="intervenantMatiere in element.old_intervenantsMatieres | orderBy:'intervenant.displayName'"> [[ intervenantMatiere.intervenant.displayName ]] [[$last ? '' : '- ']] </span>
             </td>
             <td>
-                <span ng-repeat="groupe in element.groupes | orderBy:'name'"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
+                <span ng-repeat="groupe in element.old_groupes | orderBy:'name'"> [[ groupe.name ]] [[$last ? '' : '- ']] </span>
             </td>
         </tr>
 

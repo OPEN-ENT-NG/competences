@@ -287,6 +287,10 @@ export const bilanPeriodique = {
             try {
                 let {data} = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
                 this.elements = data;
+                _.map(this.elements, (element) => {
+                    element.old_groupes = _.clone(element.groupes);
+                    element.old_intervenantsMatieres = _.clone(element.intervenantsMatieres);
+                });
                 this.$apply();
             } catch (e) {
                 notify.error('evaluations.elements.get.error');
