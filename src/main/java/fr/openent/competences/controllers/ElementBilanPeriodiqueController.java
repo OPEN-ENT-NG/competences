@@ -65,6 +65,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                 if(user != null){
                     defaultElementBilanPeriodiqueService.getThematiqueBilanPeriodique(
                             Long.parseLong(request.params().get("type")),
+                            request.params().get("idEtablissement"),
                             arrayResponseHandler(request));
                 }else{
                     unauthorized(request);

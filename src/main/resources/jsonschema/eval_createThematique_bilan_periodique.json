@@ -11,6 +11,9 @@
     },
     "type": {
       "type" : "number"
+    },
+    "idEtablissement": {
+      "type" : "string"
     }
   },
   "required": [

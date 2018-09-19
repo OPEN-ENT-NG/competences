@@ -111,7 +111,7 @@ export const bilanPeriodique = {
                 // Si le code est Unique  on récupère le thème créé
                 if (!notcodeUnique) {
                     await http.post('/competences/thematique',
-                        {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
+                        {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
                      bilanPeriodique.that.getThematique(this.getTypeElement());
                      bilanPeriodique.that.showAddtheme = false;
                 }
@@ -208,7 +208,7 @@ export const bilanPeriodique = {
 
         getThematique: async function (type) {
             try {
-                let data = await http.get(`/competences/thematique?type=${type}`);
+                let data = await http.get(`/competences/thematique?type=${type}&idEtablissement=${evaluations.structure.id}`);
                 bilanPeriodique.that.themes = data.data;
             } catch (e) {
                 notify.error('evaluations.theme.get.error');
@@ -604,6 +604,8 @@ export const bilanPeriodique = {
             $("#scrollto").focus();
         },
 
+
+        /////       O,v       /////
 
         sortBy: function (propertyName) {
             bilanPeriodique.that.reverse = (this.propertyName === propertyName) ? !this.reverse : false;

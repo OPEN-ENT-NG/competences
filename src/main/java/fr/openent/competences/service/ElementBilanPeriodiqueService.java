@@ -29,7 +29,7 @@ public interface ElementBilanPeriodiqueService {
      * @param typeElement type de l'élément
      * @param handler Handler de retour
      */
-    public void getThematiqueBilanPeriodique (Long typeElement, Handler<Either<String, JsonArray>> handler);
+    public void getThematiqueBilanPeriodique (Long typeElement, String idEtablissement, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les éléments correspondants à la thématique passée en paramètre..
