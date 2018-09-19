@@ -29,6 +29,8 @@ export const bilanPeriodique = {
                 code: "",
                 libelle: ""
             };
+            this.propertyName = 'theme.libelle';
+            this.reverse = true;
             this.supprTheme = false;
             await this.getElements();
             bilanPeriodique.that = this;
@@ -600,7 +602,15 @@ export const bilanPeriodique = {
 
         getFocus: function () {
             $("#scrollto").focus();
+        },
+
+
+        sortBy: function (propertyName) {
+            bilanPeriodique.that.reverse = (this.propertyName === propertyName) ? !this.reverse : false;
+            bilanPeriodique.that.propertyName = propertyName;
+            utils.safeApply(bilanPeriodique.that);
         }
+
     }
 
 }

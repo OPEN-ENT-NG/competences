@@ -54,7 +54,7 @@
                ng-model="search.element"
                placeholder="Saisir un parcours">
 
-        <button class="right-magnet" ng-click="openElementLigthbox()">
+        <button class="right-magnet" ng-click="openElementLigthbox();">
             <i18n ng-show="selected.EPI">evaluations.add.EPI</i18n>
             <i18n ng-show="selected.AP">evaluations.add.AP</i18n>
             <i18n ng-show="selected.parcours">evaluations.add.parcours</i18n>
@@ -72,10 +72,12 @@
                     <span></span>
                 </label>
             </th>
-            <th ng-show="!selected.AP">
+            <th ng-show="!selected.AP"
+                ng-click="sortBy('theme.libelle')">
                 <i18n>viescolaire.competences.theme</i18n>
             </th>
-            <th ng-show="!selected.parcours">
+            <th ng-show="!selected.parcours"
+                ng-click="sortBy('libelle')">
                 <i18n>viescolaire.competences.libelle</i18n>
             </th>
             <th ng-show="!selected.parcours">
@@ -89,7 +91,7 @@
 
         <tbody>
 
-        <tr ng-repeat="element in elements | filter:filterItem() | filter:search.element"
+        <tr ng-repeat="element in elements | filter:filterItem() | filter:search.element | orderBy:propertyName:reverse"
             ng-click="selectUnselectElement(element)">
             <td><label class="checkbox">
                 <input type="checkbox"
@@ -171,7 +173,7 @@
                         <ul class="skills-list-aideSaisie">
                             <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeListe.open}">
                                 <span class="skills-text-overflow skills-teach">
-                                    <i class="skills-open-icon"></i>
+                                    <i class="skills-open-icon" ng-click="themeListe.open = !themeListe.open;"></i>
                                     <span ng-click="themeListe.open = !themeListe.open;"
                                           ng-show="!dataELem.theme"><i18n>viescolaire.utils.choix.theme</i18n></span>
                                     <span ng-click="themeListe.open = !themeListe.open;"
@@ -197,6 +199,7 @@
                                                    placeholder="Intitulé"
                                                    ng-model="thematique.libelle"
                                                    id="scrollto"
+                                                   autofocus
                                                    ng-maxlength="150"
                                                    maxlength="150"/>
                                             <button class="littleButton"
@@ -241,7 +244,7 @@
                         <ul class="skills-list-aideSaisie">
                             <li class="twelve skills-header skill-45 ng-scope" ng-class="{opened: themeListe.open}">
                                 <span class="skills-text-overflow skills-teach">
-                                    <i class="skills-open-icon"></i>
+                                    <i class="skills-open-icon"  ng-click="themeListe.open = !themeListe.open;"></i>
                                     <span ng-click="themeListe.open = !themeListe.open;"
                                           ng-show="!dataELem.theme"><i18n>viescolaire.utils.choix.theme</i18n></span>
                                     <span ng-click="themeListe.open = !themeListe.open;"
@@ -355,7 +358,7 @@
             </div>
             <div class="twelve cell twelve-mobile" ng-if="!modifElem">
                 <button class="right-magnet"
-                        ng-click="createElementBilanPeriodique()"
+                        ng-click="createElementBilanPeriodique();"
                         ng-disabled="requiredElement()">
                     <i18n>evaluations.add</i18n>
                 </button>
