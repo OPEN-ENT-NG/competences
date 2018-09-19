@@ -2,7 +2,7 @@
     <label><i18n class="bold">viescolaire.utils.school</i18n> : [[evaluations.structure.libelle]]
     </label>
 </section>
-<section>
+<section ng-if="template.contains('contentDetails', 'enseignants/releve_notes/details_list_view')">
     <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[search.matiere.name]]
     </label>
 </section>
@@ -26,14 +26,15 @@
     </div>
     <div class="twelve" style="margin-bottom: 36px">
         <div class="right-magnet">
-            <i tooltip="evaluations.suivi.eleve.vue.graph" class="show-chart"
-               ng-class="{ selected: template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view') }"
-               ng-click="openGraphView()"></i>
-            <i tooltip="evaluations.suivi.eleve.vue.liste" class="show-list"
+            <i tooltip="evaluations.suivi.eleve.vue.details"
+               style="float: none !important;"
+               class="show-list"
                ng-class="{ selected: template.contains('contentDetails', 'enseignants/releve_notes/details_list_view') }"
                ng-click="displayBoxAboveTheHeadBand();
                template.open('contentDetails', 'enseignants/releve_notes/details_list_view');"></i>
-
+            <i tooltip="evaluations.suivi.eleve.vue.graph" class="show-chart"
+               ng-class="{ selected: template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view') }"
+               ng-click="openGraphView()"></i>
         </div>
     </div>
 

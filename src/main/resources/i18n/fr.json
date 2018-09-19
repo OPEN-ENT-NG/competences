@@ -168,6 +168,7 @@
   "evaluations.exportLSU":"Export LSU",
   "evaluations.suivi.eleve.vue.liste":"Vue liste",
   "evaluations.suivi.eleve.vue.graph":"Vue graph",
+  "evaluations.suivi.eleve.vue.details":"Vue détails",
   "evaluations.back.suivi.eleve.title":"Revenir au suivi élève",
   "evaluations.cycle.enseignantNC": "NC",
   "evaluation.suivi.eleve.empty": "Aucun suivi de compétences élève généré. Vous pouvez en générer un en sélectionnant les critères.",
