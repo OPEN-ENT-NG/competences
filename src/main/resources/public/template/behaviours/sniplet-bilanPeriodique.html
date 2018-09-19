@@ -32,27 +32,25 @@
     </div>
 
 
-    <article class="twelve cell">
-        <h2 class="two cell">
-            <i18n ng-show="selected.EPI">evaluations.recherche.EPI</i18n>
-            <i18n ng-show="selected.AP">evaluations.recherche.AP</i18n>
-            <i18n ng-show="selected.parcours">evaluations.recherche.parcours</i18n>
-        </h2>
+    <article class="twelve cell twelve-mobile">
         <input ng-show="selected.EPI"
                class="five cell"
                type="text"
                ng-model="search.element"
-               placeholder="Saisir un EPI">
+               placeholder="Rechercher un EPI"
+               style="width: 99%;font-size: 1em;font-style: italic;">
         <input ng-show="selected.AP"
                class="five cell"
                type="text"
                ng-model="search.element"
-               placeholder="Saisir un AP">
+               placeholder="Rechercher un AP"
+               style="width: 99%;font-size: 1em;font-style: italic;">
         <input ng-show="selected.parcours"
                class="five cell"
                type="text"
                ng-model="search.element"
-               placeholder="Saisir un parcours">
+               placeholder="Rechercher un parcours"
+               style="width: 99%;font-size: 1em;font-style: italic;">
 
         <button class="right-magnet" ng-click="openElementLigthbox();">
             <i18n ng-show="selected.EPI">evaluations.add.EPI</i18n>
