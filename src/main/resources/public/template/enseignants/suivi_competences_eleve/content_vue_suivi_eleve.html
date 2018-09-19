@@ -75,7 +75,7 @@
                     </span>
                 </div>
                 <div ng-if="isMyEvaluations(suiviFilter) " class="two inline-block align-top">
-                    <div  ng-class="{twelve : search.periode.id === null || !saveCompetenceNiveauFinal(), six : search.periode.id !== null}" class=" inline-block align-center " ng-click="openDetailCompetence(competence)">
+                    <div  ng-class="{twelve : search.periode.id === null || !canSaveCompetenceNiveauFinal(), six : search.periode.id !== null}" class=" inline-block align-center " ng-click="openDetailCompetence(competence)">
                         <span ng-if="competence.niveauAtteintToShowMyEvaluations !== undefined">
                             <c-skills-bubble text="(mapLettres[competence.niveauAtteintToShowMyEvaluations])"
                                              color="(mapCouleurs[competence.niveauAtteintToShowMyEvaluations])"

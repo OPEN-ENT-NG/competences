@@ -34,8 +34,11 @@
                     <span ng-if="competence.evaluation === -1">
                         NE
                     </span>
-                    <span ng-if="competence.niveauFinalToShowMyEvaluations >= 0">
+                    <span workflow="competences.saveCompetenceNiveauFinal" ng-if="competence.niveauFinalToShowMyEvaluations >= 0 ">
                         [[competence.niveauFinalToShowMyEvaluations + 1]]
+                    </span>
+                    <span ng-if = " !canSaveCompetenceNiveauFinal() && competence.niveauFinaltoShowAllEvaluations >= 0" >
+                        [[competence.niveauFinaltoShowAllEvaluations + 1]]
                     </span>
                 </span>
                     <span ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">

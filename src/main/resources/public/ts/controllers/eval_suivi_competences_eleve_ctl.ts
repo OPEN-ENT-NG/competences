@@ -111,8 +111,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             item.hovering = false;
         };
 
-        $scope.saveCompetenceNiveauFinal = () => {
-            return Utils.saveCompetenceNiveauFinal();
+        $scope.canSaveCompetenceNiveauFinal = () => {
+            return Utils.canSaveCompetenceNiveauFinal();
         };
 
         /**

@@ -28,7 +28,7 @@ export class Utils {
     static canUpdateBFCSynthese () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateBFCSynthese);
     }
-    static saveCompetenceNiveauFinal () {
+    static canSaveCompetenceNiveauFinal () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.saveCompetenceNiveauFinal);
     }
 
