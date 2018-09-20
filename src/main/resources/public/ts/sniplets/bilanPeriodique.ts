@@ -79,18 +79,19 @@ export const bilanPeriodique = {
 
         /////       Création et modification des thèmes personnalisés      /////
 
-        showTheme: function (param) {
+        showTheme: async function (param) {
             bilanPeriodique.that.showAddtheme = param;
             bilanPeriodique.that.changeThematique = false;
             if (param) {
                 bilanPeriodique.that.thematique.code = null;
                 bilanPeriodique.that.thematique.libelle = null;
             }
+
+            await utils.safeApply(bilanPeriodique.that);
             bilanPeriodique.that.getFocus();
-            utils.safeApply(bilanPeriodique.that);
         },
 
-        openAddtheme: function (theme) {
+        openAddtheme: async function (theme) {
             bilanPeriodique.that.changeThematique = true;
             bilanPeriodique.that.thematique = {
                 id: theme.id,
@@ -98,8 +99,9 @@ export const bilanPeriodique = {
                 libelle: theme.libelle
             };
             bilanPeriodique.that.showAddtheme = true;
+
+            await utils.safeApply(bilanPeriodique.that);
             bilanPeriodique.that.getFocus();
-            utils.safeApply(bilanPeriodique.that);
         },
 
 
@@ -608,6 +610,7 @@ export const bilanPeriodique = {
         /////       Scroll jusqu'à l'input de création/modification dans la liste des thèmes       /////
 
         getFocus: function () {
+            $("#scrollto").blur();
             $("#scrollto").focus();
         },
 
