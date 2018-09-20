@@ -4,7 +4,7 @@
   "additionalProperties": true,
   "properties": {
     "code": {
-      "type": "string"
+      "type": ["string","null"]
     },
     "libelle": {
       "type" : "string"

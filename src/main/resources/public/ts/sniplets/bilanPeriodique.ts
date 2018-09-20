@@ -107,7 +107,7 @@ export const bilanPeriodique = {
 
         createThematique: async function (thematique) {
             try {
-                let notcodeUnique = bilanPeriodique.that.themes.find(themes => themes.code === thematique.code);
+                /*let notcodeUnique = bilanPeriodique.that.themes.find(themes => themes.code === thematique.code);
                 // Si le code est Unique  on récupère le thème créé
                 if (!notcodeUnique) {
                     await http.post('/competences/thematique',
@@ -119,10 +119,16 @@ export const bilanPeriodique = {
                     // Si le code n'est pas unique : affichage de la lightbox avec message d'erreur
                     bilanPeriodique.that.createTheme = true;
                     bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                }
+                }*/
+
+                await http.post('/competences/thematique',
+                    {code: null, libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
+                bilanPeriodique.that.getThematique(this.getTypeElement());
+                bilanPeriodique.that.showAddtheme = false;
+
             } catch (e) {
                 notify.error('Problème lors de la création de la thématique');
-                console.error('Problème lors de la création de la thématique');
+                console.error('Problème lors de la création de la thématique', e);
                 throw e;
             }
             utils.safeApply(this);
@@ -435,11 +441,8 @@ export const bilanPeriodique = {
                 if (!bilanPeriodique.that.thematique) {
                     return false;
                 }
-                return bilanPeriodique.that.thematique.code === undefined
-                    || bilanPeriodique.that.thematique.libelle === undefined
-                    || bilanPeriodique.that.thematique.code === null
+                return bilanPeriodique.that.thematique.libelle === undefined
                     || bilanPeriodique.that.thematique.libelle === null
-                    || bilanPeriodique.that.thematique.code === ''
                     || bilanPeriodique.that.thematique.libelle === ''
             }
         },

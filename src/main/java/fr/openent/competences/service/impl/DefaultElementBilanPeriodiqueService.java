@@ -27,20 +27,40 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     @Override
     public void insertThematiqueBilanPeriodique (JsonObject thematique, Handler<Either<String, JsonObject>> handler){
 
-        SqlStatementsBuilder statements = new SqlStatementsBuilder();
-        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique" +
-                "(libelle, code, type_elt_bilan_periodique, id_etablissement , personnalise) VALUES (?, ?, ?, ?,?);";
 
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
-                .add(thematique.getString("libelle"))
-                .add(thematique.getString("code"))
-                .add(thematique.getInteger("type"))
-                .add(thematique.getString("idEtablissement"))
-                .add(true);
+        // Insert user in the right table
+        final String queryIdSeq =
+                "SELECT nextval('" + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique_id_seq') as id";
 
-        statements.prepared(query, params);
-                Sql.getInstance().prepared(query.toString(), params, validResultHandler(handler));
+        sql.raw(queryIdSeq, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
+            @Override
+            public void handle(Either<String, JsonObject> event) {
+                if (event.isRight()) {
+                    Long idThematique = event.right().getValue().getLong("id");
+                    String code = thematique.getString("code");
+                    // dans le cas des themes manuels, on genere un code à partir de l'id
+                    // de la thematique (necessaire pour l'export LSU ensuite)
+                    if(code == null) {
+                        code = "THE_"+idThematique;
+                    }
 
+                    SqlStatementsBuilder statements = new SqlStatementsBuilder();
+                    String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique" +
+                            "(id, libelle, code, type_elt_bilan_periodique, id_etablissement , personnalise) VALUES (?, ?, ?, ?, ?,?);";
+
+                    JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                            .add(idThematique)
+                            .add(thematique.getString("libelle"))
+                            .add(code)
+                            .add(thematique.getInteger("type"))
+                            .add(thematique.getString("idEtablissement"))
+                            .add(true);
+
+                    statements.prepared(query, params);
+                    Sql.getInstance().prepared(query.toString(), params, validResultHandler(handler));
+                }
+            }
+            }));
     }
 
     @Override
