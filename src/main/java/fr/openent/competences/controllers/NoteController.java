@@ -1324,8 +1324,9 @@ public class NoteController extends ControllerHelper {
                                                         // 5. On récupère tous les libelles des matières de
                                                         // l'établissement et on fait correspondre aux résultats par
                                                         // idMatière
-                                                        linkIdSubjectToLibelle(matieresCompNotes,
-                                                                matieresCompNotesEleve, matieresNotes,
+                                                        linkIdSubjectToLibelle(getMaxByItem(matieresCompNotes),
+                                                                getMaxByItem(matieresCompNotesEleve),
+                                                                matieresNotes,
                                                                 matieresNotesEleve, idMatieres, request);
                                                     }
                                                 }
@@ -1360,6 +1361,75 @@ public class NoteController extends ControllerHelper {
         return result;
     }
 
+    // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Matière
+    private Map<String,JsonArray> getMaxByItem(Map<String,JsonArray> mapData){
+        Map<String,JsonArray> result = new HashMap<>();
+
+        for (Map.Entry<String,JsonArray> entry: mapData.entrySet()) {
+            String idEntry = entry.getKey();
+            JsonArray currentEntry = entry.getValue();
+            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry);
+            result.put(idEntry, new JsonArray());
+            for (Map.Entry<String,JsonObject> max: maxComp.entrySet()) {
+                result.get(idEntry).add(max.getValue());
+            }
+
+
+        }
+        return result;
+    }
+
+    // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Domaine
+    private JsonArray getMaxByItemDomaine(JsonArray compNotes){
+        JsonArray result = new JsonArray();
+
+        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes);
+        for (Map.Entry<String,JsonObject> max: maxCompNote.entrySet()) {
+            result.add(max.getValue());
+        }
+
+        return result;
+    }
+
+    private Map<String, JsonObject> calculMaxCompNoteItem (JsonArray compNotes) {
+        Map<String, JsonObject> maxComp = new HashMap<>();
+        for (int i = 0; i < compNotes.size(); i++) {
+            JsonObject compNote = compNotes.getJsonObject(i);
+            Long idCompetence = compNote.getLong("id_competence");
+            String idEleve = compNote.getString("id_eleve");
+
+            idEleve = (idEleve!= null)? idEleve : "null";
+
+            String idItem = (idCompetence != null)? idCompetence.toString() : "null";
+            idItem += idEleve;
+
+            if (!maxComp.containsKey(idItem)) {
+                maxComp.put(idItem, compNote);
+            } else {
+
+                Long evaluation = compNote.getLong("evaluation");
+                Long niveauFinal = compNote.getLong("niveau_final");
+                Long valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
+
+
+                JsonObject maxCompetence = maxComp.get(idItem);
+                Long maxEvaluation = maxCompetence.getLong("evaluation");
+                Long maxNiveauFinal = maxCompetence.getLong("niveau_final");
+                Long maxToTake = (maxNiveauFinal != null) ? maxNiveauFinal : maxEvaluation;
+
+                if(maxToTake == null) {
+                    maxComp.replace(idItem, compNote);
+                }
+                else if ((valueToTake != null && maxToTake != null) && (valueToTake > maxToTake)) {
+                    maxComp.replace(idItem, compNote);
+                }
+            }
+
+       }
+        return maxComp;
+    }
+
+
     private void linkIdSubjectToLibelle(Map<String,JsonArray> matieresCompNotes,
                                         Map<String,JsonArray> matieresCompNotesEleve,
                                         Map<String,JsonArray> matieresNotes,
@@ -1381,8 +1451,10 @@ public class NoteController extends ControllerHelper {
                     final JsonArray matieres = body.getJsonArray("results");
                     for (int i = 0 ; i < matieres.size(); i++) {
                         JsonObject matiere = matieres.getJsonObject(i);
-                        matiere.put("competencesNotes", matieresCompNotes.get(matiere.getString("id")))
-                                .put("competencesNotesEleve", matieresCompNotesEleve.get(matiere.getString("id")))
+                        matiere.put("competencesNotes",  matieresCompNotes
+                                .get(matiere.getString("id")))
+                                .put("competencesNotesEleve", matieresCompNotesEleve
+                                        .get(matiere.getString("id")))
                                 .put("notes", matieresNotes.get(matiere.getString("id")))
                                 .put("notesEleve", matieresNotesEleve.get(matiere.getString("id")));
 
@@ -1488,7 +1560,6 @@ public class NoteController extends ControllerHelper {
                 domaine.getJsonArray("competencesNotes").add(compNote);
             }
         }
-
         // On Lie les competences-notes groupées aux domaines
         for (int i=0; i<domaines.size(); i++) {
             JsonObject domaine = domaines.getJsonObject(i);
@@ -1498,8 +1569,8 @@ public class NoteController extends ControllerHelper {
             JsonArray competencesNotes =
                     (data!=null)?data.getJsonArray("competencesNotes"): new JsonArray();
             if (data!= null) {
-                res.add(domaine.put("competencesNotes", competencesNotes)
-                        .put("competencesNotesEleve", competencesNotesEleve));
+                res.add(domaine.put("competencesNotes",   getMaxByItemDomaine(competencesNotes))
+                        .put("competencesNotesEleve", getMaxByItemDomaine(competencesNotesEleve)));
             }
         }
         return res;

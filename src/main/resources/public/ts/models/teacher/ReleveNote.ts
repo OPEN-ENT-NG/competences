@@ -590,7 +590,8 @@ export class ReleveNote extends  Model implements IModel {
         let res  = 0;
         let summ = 0;
         _.forEach(competencesNotes, (c) => {
-            res += (c.evaluation + 1);
+            let val = (c.niveau_final !== null)? c.niveau_final : c.evaluation;
+            res += (val + 1);
             summ ++;
         });
 
@@ -680,13 +681,13 @@ export class ReleveNote extends  Model implements IModel {
                 data_set4 : data_set4
             },
             averageStudent :  {
-                label: (forDomaine !== true)? lang.translate('average.student'):lang.translate('level.student'),
+                label: lang.translate('level.student'),
                 type: 'line',
-                data:(forDomaine !== true)? averageStudent : dataStudent,
+                data: dataStudent,
                 borderColor:'#00ADF9',
                 backgroundColor: '#009eea',
                 fill: false,
-                id: (forDomaine !== true)? "y-axis-1": undefined,
+                id: undefined,
                 options: {
                     scales: {
                         xAxes: [{
@@ -700,15 +701,15 @@ export class ReleveNote extends  Model implements IModel {
 
             },
             averageClass: {
-                label: (forDomaine !== true)? lang.translate('average.class') : lang.translate('level.class'),
+                label: lang.translate('level.class'),
                 type: 'line',
-                data: (forDomaine !== true)? averageClass : dataClass,
+                data: dataClass,
                 borderColor: '#5f626c',
                 backgroundColor: '#5f626c',
                 borderWidth :
                 1 + Chart.defaults.global.elements.line.borderWidth,
                 fill: false,
-                id: (forDomaine !== true)? "y-axis-1" : undefined,
+                id:  undefined,
                 options: {
                     scales: {
                         xAxes: [{
@@ -723,7 +724,7 @@ export class ReleveNote extends  Model implements IModel {
 
         };
         _.forEach(_datas, (matiereOrDomaine) => {
-            let diviseur : number = (forDomaine === true )? 4 : 20;
+            let diviseur : number = 4;
             if(matiereOrDomaine.id !== undefined) {
                 labels.push(
                     (matiereOrDomaine.name !== undefined)? matiereOrDomaine.name : matiereOrDomaine.codification);
@@ -738,19 +739,27 @@ export class ReleveNote extends  Model implements IModel {
                 let nbrCompNotes = (!matiereOrDomaine.competencesNotesEleve)? 0 :
                     (matiereOrDomaine.competencesNotesEleve.length - nbrCompNotesUnevaluated);
 
-                let nbrCompNotes_set1 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 0});
+                let nbrCompNotes_set1 = _.union(
+                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 0, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 0}));
                 nbrCompNotes_set1 =  !(nbrCompNotes_set1)? 0 : nbrCompNotes_set1.length;
                 let set1_val = Math.min(diviseur, diviseur * (nbrCompNotes_set1 / (nbrCompNotes)));
 
-                let nbrCompNotes_set2 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 1});
+                let nbrCompNotes_set2 = _.union(
+                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 1, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 1}));
                 nbrCompNotes_set2 =  !(nbrCompNotes_set2)? 0 : nbrCompNotes_set2.length;
                 let set2_val = Math.min(diviseur, diviseur * (nbrCompNotes_set2 / (nbrCompNotes)) + set1_val);
 
-                let nbrCompNotes_set3 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 2});
+                let nbrCompNotes_set3 = _.union(
+                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 2, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 2}));
                 nbrCompNotes_set3 =  !(nbrCompNotes_set3)? 0 : nbrCompNotes_set3.length;
                 let set3_val = Math.min(diviseur, diviseur * (nbrCompNotes_set3 / (nbrCompNotes)) + set2_val);
 
-                let nbrCompNotes_set4 = _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 3});
+                let nbrCompNotes_set4 = _.union(
+                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 3, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 3}));
                 nbrCompNotes_set4 =  !(nbrCompNotes_set4)? 0 : nbrCompNotes_set4.length;
                 let set4_val = Math.min(diviseur, diviseur * (nbrCompNotes_set4 / (nbrCompNotes)) + set3_val);
 
