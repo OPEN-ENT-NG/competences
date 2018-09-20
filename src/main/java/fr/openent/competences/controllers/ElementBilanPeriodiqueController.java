@@ -677,8 +677,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                         for (int i = 0; i < listGroupesEtablissement.size(); i++) {
                                                             JsonObject vGroupe = listGroupesEtablissement.getJsonObject(i).getJsonObject("m").getJsonObject("data");
                                                             for (int j = 0; j < externalIdElementBilanPeriodique.size(); j++) {
-                                                                String externalId = externalIdElementBilanPeriodique.getJsonObject(j).getString("externalid_groupe");
-                                                                if(externalId.equalsIgnoreCase(vGroupe.getString("externalId"))){
+                                                                String idGroupe = externalIdElementBilanPeriodique.getJsonObject(j).getString("id_groupe");
+                                                                if(idGroupe.equalsIgnoreCase(vGroupe.getString("id"))){
                                                                     JsonArray vTypeClasse = listGroupesEtablissement.getJsonObject(i).getJsonObject("m").getJsonObject("metadata").getJsonArray("labels");
                                                                     if(vTypeClasse.contains("Class")){
                                                                         vGroupe.put("type_groupe",0);

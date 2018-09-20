@@ -250,13 +250,13 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
         query
-                .append("SELECT externalid_groupe ")
+                .append("SELECT id_groupe ")
                 .append(" FROM notes.rel_elt_bilan_periodique_intervenant_matiere ")
                 .append("  INNER JOIN notes.rel_elt_bilan_periodique_groupe ")
                 .append("  ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique ")
                 .append(" WHERE id_intervenant = ? ")
                 .append(" UNION ")
-                .append("SELECT externalid_groupe ")
+                .append("SELECT id_groupe ")
                 .append(" FROM notes.rel_elt_bilan_periodique_groupe ")
                 .append("  INNER JOIN notes.elt_bilan_periodique ")
                 .append("  ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ")
