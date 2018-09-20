@@ -94,6 +94,12 @@
                         </header>
                     </div>
 
+                    <section ng-if="bilanPeriodique.endSaisie" class="row twelve-mobile">
+                        <div class="warning">
+                            <i18n>end.saisie.appreciation</i18n>
+                        </div>
+                    </section>
+
                     <div ng-repeat="element in bilanPeriodique.elements | filter:filterElements()"
                          class=" padding-table-elements marginFive card">
                         <h2 ng-class="{'openedElem' : element.opened}"
@@ -143,7 +149,7 @@
                                                            name="appreciation"
                                                            ng-model="eleve.appreciations[search.periode.id][element.id]"
                                                            ng-blur="saveAppElement(element, eleve)"
-                                                           ng-disabled="bilanPeriodique.endSaisie"
+                                                           ng-disabled="bilanPeriodique.endSaisie && !hasRight()"
                                                            ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
                                                 </div>
                                             </div>
@@ -164,7 +170,7 @@
                                       maxlength="600"
                                       ng-blur="saveAppElement(element)"
                                       name="appreciationClasse"
-                                      ng-disabled="bilanPeriodique.endSaisie">
+                                      ng-disabled="bilanPeriodique.endSaisie && !hasRight()">
                             </textarea>
                                     <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength"
                                          class="warning">

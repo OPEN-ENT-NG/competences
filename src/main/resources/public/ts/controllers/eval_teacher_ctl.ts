@@ -2218,7 +2218,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Saisir projet   -   Bilan Periodique
          */
-console.log("coucou")
 
         $scope.getElementsBilanBilanPeriodique = async function (isClassChanging?){
             if($scope.bilanPeriodique !== undefined ) {
