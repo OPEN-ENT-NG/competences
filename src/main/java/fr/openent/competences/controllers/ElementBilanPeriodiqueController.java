@@ -3,6 +3,7 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessElementBilanPeriodiqueFilter;
 import fr.openent.competences.security.CreateElementBilanPeriodique;
+import fr.openent.competences.security.utils.AccessThematiqueBilanPeriodique;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.*;
@@ -57,15 +58,17 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/thematique")
     @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessThematiqueBilanPeriodique.class)
     public void getThematiques(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos user) {
-                if(user != null){
+                final String idEtablissement = request.params().get("idEtablissement");
+                if(user != null && user.getStructures().contains(idEtablissement)){
                     defaultElementBilanPeriodiqueService.getThematiqueBilanPeriodique(
                             Long.parseLong(request.params().get("type")),
-                            request.params().get("idEtablissement"),
+                            idEtablissement,
                             arrayResponseHandler(request));
                 }else{
                     unauthorized(request);
@@ -80,7 +83,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elements/thematique")
     @ApiDoc("Retourne les éléments correspondant à la thématique passée en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessThematiqueBilanPeriodique.class)
     public void getElementsOnThematique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -95,55 +99,6 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             }
         });
     }
-
-//    /**
-//     * Retourne les appréciations correspondant à la classe passée en paramètre
-//     * @param request
-//     */
-//    @Get("/appreciations/classe")
-//    @ApiDoc("Retourne les appréciations correspondant à la classe passée en paramètre")
-//    @SecuredAction(value = "", type = ActionType.RESOURCE)
-//    @ResourceFilter(CreateElementBilanPeriodique.class)
-//    public void getAppreciationsOnClasse(final HttpServerRequest request){
-//        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-//            @Override
-//            public void handle(UserInfos user) {
-//                if(user != null){
-//                    defaultElementBilanPeriodiqueService.getApprecClasseOnClasse(
-//                            request.params().get("idClasse"),
-//                            request.params().get("idElement"),
-//                            new Handler<Either<String, JsonArray>>() {
-//                                @Override
-//                                public void handle(Either<String, JsonArray> event) {
-//                                    if (event.isRight()) {
-//                                        JsonArray apprecClasses = event.right().getValue();
-//                                        defaultElementBilanPeriodiqueService.getApprecEleveOnClasse(
-//                                                request.params().get("idClasse"),
-//                                                request.params().get("idElement"),
-//                                                new Handler<Either<String, JsonArray>>() {
-//                                                    @Override
-//                                                    public void handle(Either<String, JsonArray> event) {
-//                                                        if (event.isRight()) {
-//                                                            JsonArray apprecEleves = event.right().getValue();
-//                                                            Renders.renderJson(request, apprecClasses.addAll(apprecEleves));
-//                                                        } else {
-//                                                            Renders.renderJson(request, new JsonObject()
-//                                                                    .put("error", "error while retreiving students appreciations"), 400);
-//                                                        }
-//                                                    }
-//                                                });
-//                                    } else {
-//                                        Renders.renderJson(request, new JsonObject()
-//                                                .put("error", "error while retreiving classes appreciations"), 400);
-//                                    }
-//                                }
-//                            });
-//                }else{
-//                    unauthorized(request);
-//                }
-//            }
-//        });
-//    }
 
     /**
      * Créer les élèments du bilan périodique avec les données passées en paramètre
@@ -838,8 +793,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Post("/elementsAppreciation")
     @ApiDoc("Créer une appréciation")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction("create.appreciation.bilan.periodique")
     public void createAppreciation(final HttpServerRequest request){
         String schema = getElementSchema(request.params().get("type"));
 

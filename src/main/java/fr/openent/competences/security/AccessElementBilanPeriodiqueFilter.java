@@ -21,7 +21,7 @@ public class AccessElementBilanPeriodiqueFilter implements ResourcesProvider {
                           final Handler<Boolean> handler) {
         FilterUserUtils userUtils = new FilterUserUtils(user, null);
 
-        if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
+        if(new WorkflowActionUtils().hasRight(user, WorkflowActions.CREATE_ELEMENT_BILAN_PERIODIQUE.toString())) {
             resourceRequest.resume();
             handler.handle(true);
         } else {
@@ -30,7 +30,8 @@ public class AccessElementBilanPeriodiqueFilter implements ResourcesProvider {
                     resourceRequest.pause();
                     MultiMap params = resourceRequest.params();
                     if(params.contains("idElement") && (params.contains("idClasse"))) {
-                        userUtils.validateElement(params.getAll("idElement"), params.get("idClasse"), new Handler<Boolean>() {
+                        userUtils.validateElement(params.getAll("idElement"), params.get("idClasse"),
+                                new Handler<Boolean>() {
                             @Override
                             public void handle(Boolean isValid) {
                                 resourceRequest.resume();
