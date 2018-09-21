@@ -105,7 +105,7 @@
                         <h2 ng-class="{'openedElem' : element.opened}"
                             class="margin-top-05em Domaine"
                             ng-click="element.opened = !element.opened"
-                            ng-init="element.opened = false">[[element.type === 3 ? element.theme.libelle :
+                            ng-init="element.opened = true">[[element.type === 3 ? element.theme.libelle :
                             element.libelle]]
                         </h2>
                         <div ng-class="{'openedSectionDom' : element.opened}">
@@ -131,20 +131,20 @@
                                         <i18n>evaluations.parcours.appreciations</i18n>
                                     </div>
                                 </div>
-                                <div class="expandable-liste notes-devoir-liste" c-navigable-competences>
+                                <div class="expandable-liste notes-devoir-liste">
                                     <div ng-repeat="eleve in bilanPeriodique.classe.eleves.all track by $index"
                                          ng-class="{openedEleve : openedEleve === $index}">
 
-                                        <div class="expandable navigable-row twelve">
-                                            <div class="row navigable-inputs-row">
-                                                <div class="two cell cell-indent expandable-content text-overflow"
+                                        <div class="expandable-appreciation twelve">
+                                            <div class="row">
+                                                <div class="two cell cell-indent expandable-name text-overflow"
                                                      ng-class="{'deletedStudent': eleve.deleteDate !== null}"
                                                      class="tooltip-overlay"
                                                      tooltip="[[eleve.lastName]] [[eleve.firstName]]"
                                                      ng-click="getEleveInfo(eleve);expandNote($index, false)">
                                                     [[::eleve.lastName]] [[::eleve.firstName]]
                                                 </div>
-                                                <div class="ten cell cell-input">
+                                                <div class="ten cell cell-input nav-input">
                                                     <input type="text" class="eleven input-appreciation"
                                                            name="appreciation"
                                                            ng-model="eleve.appreciations[search.periode.id][element.id]"
