@@ -53,7 +53,7 @@
                     </label>
                 </section>
             </div>
-            <div ng-if="!template.isEmpty('leftSide-userInfo')" class="marginFive card">
+            <div ng-if="!template.isEmpty('leftSide-userInfo')" class="marginFive">
                 <div class="fiche student-info" ng-class="{opened : openedStudentInfo == true}">
                     <span class="plus-input" ng-click="openedStudentInfo = !openedStudentInfo"></span>
                     <container class="cell tailleMax" template="leftSide-userInfo"></container>
@@ -63,12 +63,12 @@
 
         <section class="ten twelve-mobile cell right">
             <content ng-show="bilanPeriodique === undefined">
-                <article class="card twelve-mobile centered">
+                <article class="card twelve-mobile centered card-projet">
                     <i18n>evaluation.bilan.periodique.empty</i18n>
                 </article>
             </content>
             <content ng-show="bilanPeriodique !== undefined">
-                <article>
+                <article class="marginFive">
                     <div class="twelve tabs vertical-spacing-twice heading-tabs">
                         <header ng-class="{selected : selected.EPI}"
                                 class="horizontal-spacing-twice ng-scope">
@@ -105,8 +105,8 @@
                         <h2 ng-class="{'openedElem' : element.opened}"
                             class="margin-top-05em Domaine"
                             ng-click="element.opened = !element.opened"
-                            ng-init="element.opened = true">[[element.type === 3 ? element.theme.libelle :
-                            element.libelle]]
+                            ng-init="element.opened = true">
+                            [[element.type === 3 ? element.theme.libelle : element.libelle]]
                         </h2>
                         <div ng-class="{'openedSectionDom' : element.opened}">
                             <span ng-repeat="enseignant in element.enseignants"
@@ -157,13 +157,13 @@
                                     </div>
                                 </div>
                             </content>
-                            <div class="appreciation-classe marginFive card">
+                            <div class="appreciation-classe marginFive">
                                 <h3>
                                     <i18n>evaluations.releve.appreciation.classe</i18n>
                                 </h3>
                                 <ng-form name="appreciationClassForm">
                             <textarea placeholder="[[translate('evaluations.releve.appreciation.classe.placeholder')]]"
-                                      row="4" type="text"
+                                      rows="5" type="text"
                                       ng-model="element.appreciationClasse[search.periode.id][search.classe.id]"
                                       class="twelve"
                                       ng-maxlength="600"

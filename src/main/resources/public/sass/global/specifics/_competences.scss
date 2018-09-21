@@ -726,12 +726,7 @@ body.evaluations {
     }
 
     .appreciation-classe{
-      padding-left: 20px;
       padding-top: 5px;
-      margin-top: 10px;
-      textarea {
-        width: 98%;
-      }
     }
 
     .openedElem{
@@ -746,18 +741,14 @@ body.evaluations {
     }
 
     .padding-table-elements{
-      margin-top: 15px;
-      padding-left: 20px;
-      padding-right: 25px;
-      padding-top: 10px;
-      padding-bottom: 10px;
+      padding: 10px 20px;
     }
 
     .elements-header{
       display: block;
       background-color: $white;
       margin-top: 1%;
-      height: 60px !important;
+      height: 45px !important;
       padding: 12px 5px;
       box-sizing: border-box;
       vertical-align: middle;
@@ -1095,6 +1086,10 @@ body.evaluations {
     > span{
       font-style: italic;
     }
+  }
+
+  .card-projet {
+    margin: 5px;
   }
 
   //      --- LEFT SIDE (parents-enfants) ---   //
