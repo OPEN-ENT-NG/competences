@@ -612,12 +612,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         }
 
         let setSearchPeriode = function(classe,res){
+
             if($location.path() === '/competences/eleve' || $location.path() === '/competences/classe' ){
+                let year = _.findWhere(classe.periodes.all, {id: null});
+                let selectedPeriode = undefined;
+                if ($scope.search.periode !== undefined) {
+                    selectedPeriode = _.findWhere(classe.periodes.all,
+                        {id_type: $scope.search.periode.id_type});
+                }
                 if ($scope.search !== undefined && $scope.search.eleve !== undefined &&
                     $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null ) {
-                    // On choisit la periode annee
-                    $scope.search.periode = _.findWhere(classe.periodes.all, {id: null});
-                }else {
+                    // On choisit la periode annee ou la période présélectionnée
+                    $scope.search.periode = (selectedPeriode !== undefined)? selectedPeriode : year;
+                }else  if ($scope.displayFromClass === true || $scope.displayFromEleve === true){
+                    $scope.search.periode = (selectedPeriode !== undefined)? selectedPeriode : year;
+                    }
+                    else {
                     $scope.search.periode = res;
                 }
             } /*else {//sinon dans les autres vue search.periode est l'objet TypePeriode et si on veut initialiaser search.periode à la période en cours il faudra faire
