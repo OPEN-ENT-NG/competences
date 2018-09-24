@@ -2549,6 +2549,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.saveNoteDevoirEleve = function (evaluation, $event, eleve) {
             if (evaluation !== undefined && ((evaluation.valeur !== evaluation.oldValeur) || (evaluation.oldAppreciation !== evaluation.appreciation))) {
+
+                if(evaluation.valeur !== undefined) {
+                    evaluation.valeur = evaluation.valeur.replace(",",".");
+                }
+
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if (evaluation.data !== undefined && evaluation.data.id_appreciation !== undefined && evaluation.id_appreciation === undefined) {
                     evaluation.id_appreciation = evaluation.data.id_appreciation;
