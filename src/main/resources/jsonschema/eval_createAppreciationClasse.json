@@ -13,7 +13,7 @@
       "type" : "string"
     },
     "externalid_classe": {
-      "type" : "string"
+      "type" : ["string","null"]
     },
     "appreciation": {
       "type" : "string"
@@ -23,7 +23,6 @@
     "id_periode",
     "id_element",
     "id_classe",
-    "externalid_classe",
     "appreciation"
   ]
 }
