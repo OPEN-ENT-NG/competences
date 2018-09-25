@@ -1,0 +1,187 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
+<div class="row">
+    <div class="twelve cell">
+        <aside class="two cell twelve-mobile left">
+            <div class="criteres fiche diffsize card criterion" ng-class="{opened : opened.criteres === true}">
+                <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
+                <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
+                    <h2>
+                        <i18n>viescolaire.utils.criterion</i18n>
+                    </h2>
+                </div>
+                <section ng-if="evaluations.structures.all.length > 1">
+                    <label class="select">
+                        <select ng-model="evaluations.structure"
+                                ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
+                                ng-change="changeEtablissement()"></select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select">
+                        <select ng-model="search.periode"
+                                ng-change="getElementsBilanBilanPeriodique()"
+                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:notYear() | orderBy:'-type'">  <!--| customClassPeriodeFilters:search-->
+                            <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
+                            </option>
+                        </select>
+                    </label>
+                </section>
+                <section>
+                    <label class="select">
+                        <select ng-model="search.classe"
+                                ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique(true);"
+                                ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in structure.classesBilanPeriodique | orderBy:['type_groupe_libelle','name']">
+                            <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
+                        </select>
+                    </label>
+                </section>
+            </div>
+            <div ng-if="!template.isEmpty('leftSide-userInfo')" class="marginFive">
+                <div class="fiche student-info" ng-class="{opened : openedStudentInfo == true}">
+                    <span class="plus-input" ng-click="openedStudentInfo = !openedStudentInfo"></span>
+                    <container class="cell tailleMax" template="leftSide-userInfo"></container>
+                </div>
+            </div>
+        </aside>
+
+        <section class="ten twelve-mobile cell right">
+            <content ng-show="bilanPeriodique === undefined">
+                <article class="card twelve-mobile centered card-projet">
+                    <i18n>evaluation.bilan.periodique.empty</i18n>
+                </article>
+            </content>
+            <content ng-show="bilanPeriodique !== undefined">
+                <article class="marginFive">
+                    <div class="twelve tabs vertical-spacing-twice heading-tabs">
+                        <header ng-class="{selected : selected.EPI}"
+                                class="horizontal-spacing-twice ng-scope">
+                            <div class="horizontal-spacing"
+                                 ng-click="selected.EPI = true; selected.AP = false; selected.parcours = false">
+                                <span><i18n><span class="no-style ng-scope">evaluations.enseignements.pratiques.interdisciplinaires</span></i18n></span>
+                            </div>
+                        </header>
+                        <header ng-class="{selected : selected.AP}"
+                                class="horizontal-spacing-twice ng-scope">
+                            <div class="horizontal-spacing"
+                                 ng-click="selected.AP = true;  selected.EPI = false; selected.parcours = false">
+                                <span><i18n><span
+                                        class="no-style ng-scope">evaluations.accompagnement.personnalise</span></i18n></span>
+                            </div>
+                        </header>
+                        <header ng-class="{selected : selected.parcours}"
+                                class="horizontal-spacing-twice ng-scope">
+                            <div class="horizontal-spacing"
+                                 ng-click="selected.parcours = true;  selected.EPI = false; selected.AP = false">
+                                <span><i18n><span class="no-style ng-scope">evaluations.parcours.educatifs</span></i18n></span>
+                            </div>
+                        </header>
+                    </div>
+
+                    <section ng-if="bilanPeriodique.endSaisie" class="row twelve-mobile">
+                        <div class="warning">
+                            <i18n>end.saisie.appreciation</i18n>
+                        </div>
+                    </section>
+
+                    <div ng-repeat="element in bilanPeriodique.elements | filter:filterElements()"
+                         class=" padding-table-elements marginFive card">
+                        <h2 ng-class="{'openedElem' : element.opened}"
+                            class="margin-top-05em Domaine"
+                            ng-click="element.opened = !element.opened"
+                            ng-init="element.opened = true">
+                            [[element.type === 3 ? element.theme.libelle : element.libelle]]
+                        </h2>
+                        <div ng-class="{'openedSectionDom' : element.opened}">
+                            <span ng-repeat="enseignant in element.enseignants"
+                                  class="marginFive italic">
+                                [[enseignant]]  [[$last ? '' : ', ']]
+                            </span>
+                            <content class="block row marginFive card">
+                                <div class="elements-header">
+                                    <div class="two indent-fifteen inline-block cell-indent cell">
+                                        <i18n>viescolaire.utils.student</i18n>
+                                    </div>
+                                    <div ng-show="selected.EPI === true;"
+                                         class="inline-block cell-indent cell">
+                                        <i18n>evaluations.epi.appreciations</i18n>
+                                    </div>
+                                    <div ng-show="selected.AP === true;"
+                                         class="inline-block cell-indent cell">
+                                        <i18n>evaluations.ap.appreciations</i18n>
+                                    </div>
+                                    <div ng-show="selected.parcours === true"
+                                         class="inline-block cell-indent cell">
+                                        <i18n>evaluations.parcours.appreciations</i18n>
+                                    </div>
+                                </div>
+                                <div class="expandable-liste notes-devoir-liste">
+                                    <div ng-repeat="eleve in bilanPeriodique.classe.eleves.all track by $index"
+                                         ng-class="{openedEleve : openedEleve === $index}">
+
+                                        <div class="expandable-appreciation twelve">
+                                            <div class="row">
+                                                <div class="two cell cell-indent expandable-name text-overflow"
+                                                     ng-class="{'deletedStudent': eleve.deleteDate !== null}"
+                                                     class="tooltip-overlay"
+                                                     tooltip="[[eleve.lastName]] [[eleve.firstName]]"
+                                                     ng-click="getEleveInfo(eleve);expandNote($index, false)">
+                                                    [[::eleve.lastName]] [[::eleve.firstName]]
+                                                </div>
+                                                <div class="ten cell cell-input nav-input">
+                                                    <input type="text" class="eleven input-appreciation"
+                                                           name="appreciation"
+                                                           ng-model="eleve.appreciations[search.periode.id][element.id]"
+                                                           ng-blur="saveAppElement(element, eleve)"
+                                                           ng-disabled="bilanPeriodique.endSaisie && !hasRight()"
+                                                           ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </content>
+                            <div class="appreciation-classe marginFive">
+                                <h3>
+                                    <i18n>evaluations.releve.appreciation.classe</i18n>
+                                </h3>
+                                <ng-form name="appreciationClassForm">
+                            <textarea placeholder="[[translate('evaluations.releve.appreciation.classe.placeholder')]]"
+                                      rows="5" type="text"
+                                      ng-model="element.appreciationClasse[search.periode.id][search.classe.id]"
+                                      class="twelve"
+                                      ng-maxlength="600"
+                                      maxlength="600"
+                                      ng-blur="saveAppElement(element)"
+                                      name="appreciationClasse"
+                                      ng-disabled="bilanPeriodique.endSaisie && !hasRight()">
+                            </textarea>
+                                    <div ng-if="appreciationClassForm.appreciationClasse.$error.maxlength"
+                                         class="warning">
+                                        <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
+                                    </div>
+                                </ng-form>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </content>
+        </section>
+    </div>
+</div>

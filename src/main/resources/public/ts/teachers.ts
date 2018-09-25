@@ -11,12 +11,14 @@ import {evaluationsController} from './controllers/eval_teacher_ctl';
 import {evalAcuTeacherController} from './controllers/eval_acu_teacher_ctl';
 import {evalSuiviCompetenceEleveCtl} from './controllers/eval_suivi_competences_eleve_ctl';
 import {evalSuiviCompetenceClasseCtl} from './controllers/eval_suivi_competences_classe_ctl';
+import {evalBilanPeriodiqueCtl} from './controllers/eval_bilan_periodique_ctl';
 import {exportControleur} from './controllers/eval_export_controller';
 
 ng.controllers.push(evaluationsController);
 ng.controllers.push(evalAcuTeacherController);
 ng.controllers.push(evalSuiviCompetenceEleveCtl);
 ng.controllers.push(evalSuiviCompetenceClasseCtl);
+ng.controllers.push(evalBilanPeriodiqueCtl);
 ng.controllers.push(exportControleur);
 
 //FILTERS
@@ -85,7 +87,8 @@ routes.define(function($routeProvider){
         .when('/competences/classe', {action : 'displaySuiviCompetencesClasse'})
         .when('/remplacements/list',{action:'listRemplacements'})
         .when('/remplacement/create',{action:'createRemplacements'})
-        .when('/projets',{action:'displayBilanPeriodique'})
+        .when('/projets',{action:'displayEpiApParcours'})
+        .when('/bilanperiodique',{action:'displayBilanPeriodique'})
         .when('/export',{action:'export'})
         .when('/disabled', {action : 'disabled'})
         .when('/',{action:'accueil'})

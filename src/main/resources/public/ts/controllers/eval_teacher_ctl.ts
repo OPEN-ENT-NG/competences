@@ -338,12 +338,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     template.open('main', 'enseignants/releve_notes/display_releve');
                 }
             },
-            displayBilanPeriodique: async function () {
+            displayEpiApParcours: async function () {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
 
-                    // Affichage des criteres par défaut quand on arrive sur le bilan périodique
+                    // Affichage des criteres par défaut quand on arrive sur les EPI AP Parcours
                     if($scope.bilanPeriodique !== undefined){
                         $scope.bilanPeriodique = undefined;
                     }
@@ -354,6 +354,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.selected = {EPI: true, AP: false, parcours: false};
 
                     $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+
+                    utils.safeApply($scope);
+                    template.open('main', 'enseignants/epi_ap_parcours/display_epi_ap_parcours');
+                }
+            },
+            displayBilanPeriodique: function () {
+                $scope.opened.lightbox = false;
+                if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
+                    $scope.cleanRoot();
 
                     utils.safeApply($scope);
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
