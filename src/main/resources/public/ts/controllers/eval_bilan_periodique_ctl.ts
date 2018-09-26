@@ -6,8 +6,6 @@ import {Utils} from "../models/teacher/Utils";
 
 declare let _:any;
 
-console.log("test")
-
 export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route','$timeout',
     async function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
@@ -55,6 +53,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
         }
 
+        $scope.changeContentBilanPeriod = function () {
+            $scope.informations.eleve = $scope.search.eleve;
+        }
 
     }
 

@@ -364,6 +364,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
 
+                    $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+                    delete $scope.informations.eleve;
                     utils.safeApply($scope);
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
                 }
@@ -2247,7 +2249,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-
+        $scope.syncPeriodesBilanPeriodique = async function () {
+            if ($scope.search.classe.periodes.length() === 0) {
+                await $scope.search.classe.periodes.sync();
+            }
+            $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+            utils.safeApply($scope);
+        }
 
         /**
          * Saisir projet   -   Bilan Periodique
