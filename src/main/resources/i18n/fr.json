@@ -362,6 +362,7 @@
   "viescolaire.utils.date":"Date",
   "viescolaire.utils.name":"Nom",
   "viescolaire.utils.criterion":"Vos critères",
+  "viescolaire.utils.avis":"Avis",
   "viescolaire.utils.elements.programme":"Eléments du programme",
   "viescolaire.utils.teacher" : "Enseignant",
   "viescolaire.utils.legend" : "Légende",
