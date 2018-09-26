@@ -11,9 +11,11 @@ export const bilanPeriodique = {
     that: undefined,
     controller: {
         init: async function () {
+            this.displayMessageLoader = true;
             this.elementAll = {selected: false};
             this.idStructure = this.source.idStructure;
             this.selected = {EPI: true, AP: false, parcours: false};
+
             await evaluations.sync();
             await evaluations.structure.sync();
             this.selectedElements = [];
@@ -35,6 +37,8 @@ export const bilanPeriodique = {
             await this.getElements();
             bilanPeriodique.that = this;
             this.enableWatchers();
+            this.displayMessageLoader = false;
+            utils.safeApply(this);
         },
 
         openElementLigthbox: async function (param?) {
