@@ -84,7 +84,7 @@ public interface ElementBilanPeriodiqueService {
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getApprecBilanPerEleve (List<String> idsClasses, String idPeriode, List<String> idElements, Handler<Either<String, JsonArray>> handler);
+    public void getApprecBilanPerEleve (List<String> idsClasses, String idPeriode, List<String> idElements, String idEleve, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Enregistrement d'une appreciation pour un élève.

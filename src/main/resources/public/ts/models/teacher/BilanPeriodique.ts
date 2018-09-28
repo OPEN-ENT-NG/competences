@@ -23,7 +23,8 @@ export class BilanPeriodique extends  Model {
             GET_ELEMENTS: '/competences/elementsBilanPeriodique?idEtablissement=' + evaluations.structure.id,
             GET_ENSEIGNANTS: '/competences/elementsBilanPeriodique/enseignants',
             GET_APPRECIATIONS: '/competences/elementsAppreciations',
-            create: '/competences/elementsAppreciation'
+            CREATE_APPRECIATIONS_SAISIE_PROJETS: '/competences/elementsAppreciationsSaisieProjet',
+            CREATE_APPRECIATIONS_BILAN_PERIODIQUE: '/competences/elementsAppreciationBilanPeriodique'
         }
     }
 
@@ -53,29 +54,31 @@ export class BilanPeriodique extends  Model {
         });
     }
 
-    async syncElements () {
+    async syncElements (param?) {
         try {
-            let data = await http.get(BilanPeriodique.api.GET_ELEMENTS + "&idClasse=" + this.classe.id + "&idEnseignant=" + model.me.userId);
+            let url = BilanPeriodique.api.GET_ELEMENTS + "&idClasse=" + this.classe.id
+
+            if(param !== "isBilanPeriodique") {
+               url = url + "&idEnseignant=" + model.me.userId;
+            }
+
+            let data = await http.get(url);
             this.elements = data.data;
 
             if(data.data.length > 0) {
+
                 let url = BilanPeriodique.api.GET_ENSEIGNANTS + "?idClasse=" + this.classe.id;
                 for (let i = 0; i < data.data.length; i++) {
                     url += "&idElement=" + this.elements[i].id;
                 }
-                // if (this.classe.periodes.length() === 0) {
-                //     await this.classe.periodes.sync();
-                // }
-                // let _p = _.findWhere(this.classe.periodes.all, {id_type: periode.id_type});
-                // if(_p) {
-                    let result = await http.get(url);
-                    _.forEach(this.elements, (element) => {
-                        let enseignants = _.findWhere(result.data, {idElement: element.id});
-                        if(enseignants) {
-                            element.enseignants = enseignants.idsEnseignants;
-                        }
-                    });
-                // }
+
+                let result = await http.get(url);
+                _.forEach(this.elements, (element) => {
+                    let enseignants = _.findWhere(result.data, {idElement: element.id});
+                    if(enseignants) {
+                        element.enseignants = enseignants.idsEnseignants;
+                    }
+                });
             }
 
         } catch (e) {
@@ -85,7 +88,8 @@ export class BilanPeriodique extends  Model {
 
     async syncAppreciations (elements, periode, classe) {
         try {
-            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id;
+            let url = BilanPeriodique.api.GET_APPRECIATIONS + '?idPeriode=' + periode.id + '&idClasse=' + classe.id;;
+
             for (let i = 0; i < elements.length; i++) {
                 url += "&idElement=" + elements[i].id;
             }
@@ -141,10 +145,16 @@ export class BilanPeriodique extends  Model {
         return data;
     }
 
-    async saveAppreciation (periode, element, eleve, classe) {
+    async saveAppreciation (periode, element, eleve, classe, param?) {
         try {
-            eleve ? await http.post(BilanPeriodique.api.create + "?type=eleve", this.toJSON(periode, element, eleve, classe))
-                : await http.post(BilanPeriodique.api.create + "?type=classe", this.toJSON(periode, element, null, classe));
+            if(param !== "isBilanPeriodique") {
+                eleve ? await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=eleve", this.toJSON(periode, element, eleve, classe))
+                    : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=classe", this.toJSON(periode, element, null, classe));
+            } else {
+                eleve ? await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE + "?type=eleve", this.toJSON(periode, element, eleve, classe))
+                    : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE + "?type=classe", this.toJSON(periode, element, null, classe));
+            }
+
         } catch (e) {
             notify.error('evaluations.appreciation.post.error');
         }

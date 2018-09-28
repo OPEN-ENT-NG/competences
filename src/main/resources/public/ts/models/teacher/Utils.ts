@@ -24,6 +24,9 @@ export class Utils {
         }
     }
 
+    static canUpdateAppreciations () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations);
+    }
 
     static canUpdateBFCSynthese () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateBFCSynthese);

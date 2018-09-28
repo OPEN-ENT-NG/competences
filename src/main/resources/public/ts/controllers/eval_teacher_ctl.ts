@@ -12,7 +12,6 @@ import {
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
-import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
 
 declare let $: any;
 declare let document: any;
@@ -529,7 +528,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.lightboxChampsObligatoire = false;
         $scope.MAX_NBR_COMPETENCE = 12;
         $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
-        $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
         $scope.exportRecapEvalObj = {
             errExport: false
         };
@@ -572,6 +570,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.canUpdateBFCSynthese = () => {
             return Utils.canUpdateBFCSynthese();
+        };
+
+        $scope.canUpdateAppreciations = () => {
+            return Utils.canUpdateAppreciations();
         };
 
         $scope.evaluations = evaluations;
@@ -2247,110 +2249,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
             utils.safeApply($scope);
-        };
-
-        $scope.syncPeriodesBilanPeriodique = async function () {
-            if ($scope.search.classe.periodes.length() === 0) {
-                await $scope.search.classe.periodes.sync();
-            }
-            $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
-            utils.safeApply($scope);
-        }
-
-        /**
-         * Saisir projet   -   Bilan Periodique
-         */
-
-        $scope.getElementsBilanBilanPeriodique = async function (isClassChanging?){
-            if($scope.bilanPeriodique !== undefined ) {
-                delete $scope.bilanPeriodique;
-            }
-            if($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
-                && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*"){
-
-                if ($scope.search.classe.periodes.length() === 0) {
-                    await $scope.search.classe.periodes.sync();
-                }
-
-                let _p = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
-                if (_p) {
-                    if (!$scope.bilanPeriodique || isClassChanging) {
-                        $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
-                    }
-
-                    if (isClassChanging || $scope.bilanPeriodique.elements === undefined) {
-                        if ($scope.search.classe.eleves.length() === 0) {
-                            await $scope.search.classe.eleves.sync();
-                        }
-                        await $scope.bilanPeriodique.syncElements();
-                    }
-
-                    if ($scope.bilanPeriodique.elements !== undefined && $scope.bilanPeriodique.elements.length > 0) {
-                        $scope.bilanPeriodique.syncAppreciations($scope.bilanPeriodique.elements, $scope.search.periode, $scope.search.classe);
-                        utils.safeApply($scope);
-                    } else {
-                        delete $scope.bilanPeriodique;
-                    }
-                } else {
-                    $scope.search.periode = "*";
-                    delete $scope.bilanPeriodique;
-                }
-            } else {
-                delete $scope.bilanPeriodique;
-            }
-            if(isClassChanging){
-                if ($scope.search.classe.periodes.length() === 0) {
-                    await $scope.search.classe.periodes.sync();
-                }
-                $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
-            }
-            utils.safeApply($scope);
-        }
-
-        /**
-         * Séquence d'enregistrement d'une appréciation
-         * @param element sur lequel est faite l'appréciation
-         * @param eleve élève propriétaire de l'appréciation
-         */
-        $scope.saveAppElement = function (element, eleve?) {
-            if(eleve){
-                if (eleve.appreciations !== undefined) {
-                    if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
-                        if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-                            $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, $scope.search.classe);
-                        }
-                        else {
-                            notify.error(lang.translate("error.char.outbound") +
-                                $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH);
-                        }
-                    }
-                }
-            } else {
-                if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id] !== undefined) {
-                    if (element.appreciationClasse[$scope.search.periode.id][$scope.search.classe.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-                        $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, null, $scope.search.classe);
-                    }
-                    else {
-                        notify.error(lang.translate("error.char.outbound") +
-                            $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH);
-                    }
-                }
-            }
-            utils.safeApply($scope);
-        }
-
-        $scope.filterElements = () => {
-            return (item) => {
-                if($scope.selected.AP){
-                    return !item.theme;
-                }
-                else if($scope.selected.parcours){
-                    return !item.libelle;
-                }
-                else {
-                    return item.theme && item.libelle;
-                }
-            };
         };
 
         /**

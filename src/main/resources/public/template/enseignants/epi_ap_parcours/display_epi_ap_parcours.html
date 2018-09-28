@@ -16,7 +16,7 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div class="row">
+<div class="row" ng-controller="EvalBilanPeriodiqueCtl">
     <div class="twelve cell">
         <aside class="two cell twelve-mobile left">
             <div class="criteres fiche diffsize card criterion" ng-class="{opened : opened.criteres === true}">
@@ -46,7 +46,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique(true);"
+                                ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique('isClassChanging');"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in structure.classesBilanPeriodique | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>

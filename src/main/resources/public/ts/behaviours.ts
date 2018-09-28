@@ -16,7 +16,8 @@ Behaviours.register('competences', {
             canUpdateBFCSynthese: 'fr.openent.competences.controllers.BFCController|updateSynthese',
             access:"fr.openent.competences.controllers.CompetencesController|view",
             bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createElementBilanPeriodique",
-            accessProjets: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciation",
+            accessProjets: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationSaisieProjet",
+            canUpdateAppreciations: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationBilanPeriodique",
             saveCompetenceNiveauFinal: "fr.openent.competences.controllers.CompetenceNoteController|saveCompetenceNiveauFinal"
         },
         resource: {}

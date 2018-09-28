@@ -177,7 +177,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
 
                                                     defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
                                                             deletedClasses, null,
-                                                            request.params().getAll("idElement"),
+                                                            request.params().getAll("idElement"), null,
                                                             new Handler<Either<String, JsonArray>> () {
                                                                 @Override
                                                                 public void handle(Either<String, JsonArray> event) {
@@ -327,7 +327,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             public void handle(UserInfos user) {
                 if(user != null){
                     defaultElementBilanPeriodiqueService.getElementBilanPeriodique(
-                            request.params().get("idEnseignant"),
+                            Boolean.parseBoolean(request.params().get("visu"))
+                                    ? null : request.params().get("idEnseignant"),
                             request.params().get("idClasse"),
                             request.params().get("idEtablissement"),
                             new Handler<Either<String, JsonArray>>() {
@@ -736,7 +737,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Retourne les appreciations liées au élèments du bilan périodiques (et à la classe) passés en paramètre
+     * Retourne les appreciations liées au élèments du bilan périodiques
+     * (et à la classe) passés en paramètre
      * @param request
      */
     @Get("/elementsAppreciations")
@@ -761,6 +763,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                 request.params().getAll("idClasse"),
                                                 request.params().get("idPeriode"),
                                                 request.params().getAll("idElement"),
+                                                request.params().get("idEleve"),
                                                 new Handler<Either<String, JsonArray>>() {
                                                     @Override
                                                     public void handle(Either<String, JsonArray> event) {
@@ -788,13 +791,28 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Créer une appréciation avec les données passées en POST
+     * Créer une appréciation avec les données passées en POST depuis l'écran de la saisie de projet
      * @param request
      */
-    @Post("/elementsAppreciation")
+    @Post("/elementsAppreciationsSaisieProjet")
+    @ApiDoc("Créer une appréciation")
+    @SecuredAction("create.appreciation.saisie.projets")
+    public void createAppreciationSaisieProjet(final HttpServerRequest request){
+        createApprec(request);
+    }
+
+    /**
+     * Créer une appréciation avec les données passées en POST depuis l'écran du bilan périoque
+     * @param request
+     */
+    @Post("/elementsAppreciationBilanPeriodique")
     @ApiDoc("Créer une appréciation")
     @SecuredAction("create.appreciation.bilan.periodique")
     public void createAppreciation(final HttpServerRequest request){
+        createApprec(request);
+    }
+
+    private void createApprec(final HttpServerRequest request){
         String schema = getElementSchema(request.params().get("type"));
 
         if(schema != null){
@@ -804,52 +822,52 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                     if(user != null){
                         RequestUtils.bodyToJson(request, pathPrefix + schema,
                                 new Handler<JsonObject>() {
-                            @Override
-                            public void handle(JsonObject resource) {
-                                List<String> idsElements = new ArrayList<String>();
-                                idsElements.add(resource.getInteger("id_element").toString());
-                                new FilterUserUtils(user, eb).validateElement(idsElements,
-                                        resource.getString("id_classe"), new Handler<Boolean>() {
                                     @Override
-                                    public void handle(final Boolean isValid) {
-                                        if (isValid) {
-                                            new FilterUserUtils(user, eb).validateEleve(resource.getString("id_eleve"),
-                                                    resource.getString("id_classe"), new Handler<Boolean>() {
-                                                        @Override
-                                                        public void handle(final Boolean isValid) {
-                                                            if (isValid) {
-                                                                defaultElementBilanPeriodiqueService.getGroupesElementBilanPeriodique(
-                                                                        resource.getInteger("id_element").toString(),
-                                                                        new Handler<Either<String, JsonArray>> () {
-                                                                            @Override
-                                                                            public void handle(Either<String, JsonArray> event){
-                                                                                if(event.isRight()){
-                                                                                    defaultElementBilanPeriodiqueService.insertOrUpdateAppreciationElement(
-                                                                                            resource.getString("id_eleve"),
-                                                                                            resource.getString("id_classe"),
-                                                                                            resource.getString("externalid_classe"),
-                                                                                            new Long(resource.getInteger("id_periode")),
-                                                                                            new Long(resource.getInteger("id_element")),
-                                                                                            resource.getString("appreciation"),
-                                                                                            event.right().getValue(),
-                                                                                            defaultResponseHandler(request));
-                                                                                } else {
-                                                                                    leftToResponse(request, event.left());
-                                                                                }
+                                    public void handle(JsonObject resource) {
+                                        List<String> idsElements = new ArrayList<String>();
+                                        idsElements.add(resource.getInteger("id_element").toString());
+                                        new FilterUserUtils(user, eb).validateElement(idsElements,
+                                                resource.getString("id_classe"), new Handler<Boolean>() {
+                                                    @Override
+                                                    public void handle(final Boolean isValid) {
+                                                        if (isValid) {
+                                                            new FilterUserUtils(user, eb).validateEleve(resource.getString("id_eleve"),
+                                                                    resource.getString("id_classe"), new Handler<Boolean>() {
+                                                                        @Override
+                                                                        public void handle(final Boolean isValid) {
+                                                                            if (isValid) {
+                                                                                defaultElementBilanPeriodiqueService.getGroupesElementBilanPeriodique(
+                                                                                        resource.getInteger("id_element").toString(),
+                                                                                        new Handler<Either<String, JsonArray>> () {
+                                                                                            @Override
+                                                                                            public void handle(Either<String, JsonArray> event){
+                                                                                                if(event.isRight()){
+                                                                                                    defaultElementBilanPeriodiqueService.insertOrUpdateAppreciationElement(
+                                                                                                            resource.getString("id_eleve"),
+                                                                                                            resource.getString("id_classe"),
+                                                                                                            resource.getString("externalid_classe"),
+                                                                                                            new Long(resource.getInteger("id_periode")),
+                                                                                                            new Long(resource.getInteger("id_element")),
+                                                                                                            resource.getString("appreciation"),
+                                                                                                            event.right().getValue(),
+                                                                                                            defaultResponseHandler(request));
+                                                                                                } else {
+                                                                                                    leftToResponse(request, event.left());
+                                                                                                }
+                                                                                            }
+                                                                                        });
+                                                                            } else {
+                                                                                unauthorized(request);
                                                                             }
-                                                                        });
-                                                            } else {
-                                                                unauthorized(request);
-                                                            }
+                                                                        }
+                                                                    });
+                                                        } else {
+                                                            unauthorized(request);
                                                         }
-                                                    });
-                                        } else {
-                                            unauthorized(request);
-                                        }
+                                                    }
+                                                });
                                     }
                                 });
-                            }
-                        });
                     } else{
                         unauthorized(request);
                     }
