@@ -3,7 +3,7 @@ import http from "axios";
 import {evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
 
-console.log("here");
+console.log("bilanPeriodique");
 
 export const bilanPeriodique = {
     title: 'Bilan périodique',
@@ -282,7 +282,6 @@ export const bilanPeriodique = {
             if (param2) {
 
                 let foundEM = this.dataELem.ens_mat.find(EM => EM.intervenant.id === param1.id && EM.matiere.id === param2.id);
-                console.log(foundEM);
                 if (!foundEM) {
                     this.dataELem.ens_mat.push({intervenant: param1, matiere: param2});
                 }

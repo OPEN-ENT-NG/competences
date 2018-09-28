@@ -27,6 +27,6 @@ Behaviours.register('competences', {
         visibilityDNB: visibilityDNB,
         itemsCompetences: itemsCompetences,
         linkGroupCycle: linkGroupCycle,
-        bilanPeriodique: bilanPeriodique
+        epi_ap_parcours: bilanPeriodique
     }
 });
