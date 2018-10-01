@@ -1,0 +1,122 @@
+<div ng-if="informations.eleve.configMixedChartDomaine !== undefined"
+     class="twelve">
+    <div class=" twelve cell twelve-mobile solid-bottom">
+        <div class="chart-container" style="position: relative; height:auto; width:auto; margin: auto;" >
+            <canvas id="myChart" width="400" height="400"  class="chart-bar"></canvas>
+            <script>
+                var ctx = document.getElementById("myChart").getContext('2d');
+                var $scope = angular.element('#myChart').scope();
+                var myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: $scope.informations.eleve.configMixedChartDomaine.labels,
+                        datasets: [
+                            $scope.informations.eleve.configMixedChartDomaine.averageStudent,
+                            $scope.informations.eleve.configMixedChartDomaine.averageClass,
+                            {
+                                // label: $scope.niveauCompetences[3].libelle,
+                                backgroundColor: $scope.informations.eleve.configMixedChartDomaine.niveau.red,
+                                stack: 'Stack 0',
+                                data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set1,
+                            }, {
+                                // label: $scope.niveauCompetences[2].libelle,
+                                backgroundColor: $scope.informations.eleve.configMixedChartDomaine.niveau.orange,
+                                stack: 'Stack 0',
+                                data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set2,
+                            }, {
+                                // label: $scope.niveauCompetences[1].libelle,
+                                backgroundColor: $scope.informations.eleve.configMixedChartDomaine.niveau.yellow,
+                                stack: 'Stack 0',
+                                data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set3,
+                            }, {
+                                // label: $scope.niveauCompetences[0].libelle,
+                                backgroundColor: $scope.informations.eleve.configMixedChartDomaine.niveau.green,
+                                stack: 'Stack 0',
+                                data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set4,
+                            }
+                        ]
+
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        title: {
+                            display: true,
+                            text: ' '
+                        },
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            pointStyle: 'circle'
+                        },
+                        layout: {
+                            padding: {
+                                left: 100,
+                                right: 0,
+                                top: 100,
+                                bottom: 50
+                            }
+                        },
+                        tooltips: {
+                            mode: 'label',
+                            custom: function(tooltipModel) {
+                                if(tooltipModel.body !== undefined) {
+                                    for (var i=2; i < tooltipModel.body.length; i++) {
+                                        var split_label = tooltipModel.body[i].lines[0].split(':');
+                                        var dim = 0;
+                                        for (var j= i-1; j >= 2; j--) {
+                                            if (i !== 2) {
+                                                dim += (parseFloat(tooltipModel.body[j].lines[0]
+                                                    .split(':')[1]) * 4 / 100);
+                                            }
+                                        }
+                                        var display = (parseFloat(parseFloat(split_label[1] - dim) * 100/ 4 )
+                                        ).toFixed(2);
+                                        var _t = (isNaN(parseFloat(display))? 0 : display );
+                                        tooltipModel.body[i].lines[0] = split_label[0] +
+                                            ' : ' +_t + ' %';
+                                    }
+                                }
+                            }
+                        },
+                        responsive: true,
+                        scales: {
+                            xAxes: [{
+                                stacked: true,
+                                gridLines: {
+                                    display: false
+                                }
+                            }],
+                            yAxes: [{
+                                stacked: false,
+                                position: "left",
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: $scope.informations.eleve.configMixedChartDomaine.labelyAxes[0]
+                                }
+                            }]
+                        }
+                    }
+                });
+            </script>
+        </div>
+    </div>
+</div>
+
+
+<div class="twelve">
+    <div class="three cell twelve-mobile"> 
+        &ensp;
+    </div>
+    <div class=" six cell twelve-mobile">
+        <div class="twelve-mobile">
+            <canvas id="radar" class="chart chart-radar align-center"
+                    chart-data="informations.eleve.configRadarChartDomaine.datasets.data"
+                    chart-labels="informations.eleve.configRadarChartDomaine.datasets.labels"
+                    chart-series="informations.eleve.configRadarChartDomaine.series"
+                    chart-options="informations.eleve.configRadarChartDomaine.options"
+                    chart-colors="informations.eleve.configRadarChartDomaine.colors"
+            >
+            </canvas>
+        </div>
+    </div>
+</div>

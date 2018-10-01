@@ -157,6 +157,8 @@
   "evaluation.bfc.controle.continu.eleve.err": "Erreur lors de la récupération du contrôle continu de l'élève",
 
   "evaluations.bilan.periodique": "Bilan périodique",
+  "evaluations.bilan.by.subject": "Bilan par matière",
+  "evaluations.bilan.by.domaine": "Bilan par domaine",
   "evaluation.bilan.periodique.suivi.acquis": "Suivi des acquis",
   "evaluation.bilan.periodique.projets": "Projets",
   "evaluation.bilan.periodique.vie.scolaire": "Vie scolaire",

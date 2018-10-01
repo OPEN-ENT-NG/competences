@@ -1254,16 +1254,9 @@ public class NoteController extends ControllerHelper {
                 });
     }
 
-    /**
-     * Récupère les notes pour le relevé de notes
-     *
-     * @param request
-     */
-    @Get("/releve/datas/graph")
-    @ApiDoc("Récupère les données pour construire les graphs du relevé de notes")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
-    public void getReleveDataForGraph(final HttpServerRequest request) {
+
+
+    private void getDataGraph(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 
             @Override
@@ -1336,6 +1329,99 @@ public class NoteController extends ControllerHelper {
                         });
             }
         });
+    }
+
+
+    private void getDataGraphDomaine(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+
+            @Override
+            public void handle(UserInfos user) {
+                final String idEleve = request.params().get("idEleve");
+                final String idEtablissement = request.params().get("idEtablissement");
+                final String idClasse = request.params().get("idClasse");
+                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+                final String idPeriodeString = request.params().get("idPeriode");
+
+                // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
+                notesService.getCompetencesNotesReleve(idEtablissement, idClasse,
+                        null,
+                        (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
+                        null,
+                        typeClasse,
+                        true,
+                        new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if (event.isLeft()) {
+                                    String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
+                                    badRequest(request, message);
+                                    log.error(message);
+                                }
+                                else {
+                                    final JsonArray compNotes = event.right().getValue();
+                                    // 2. On récupère les domaines du cycle auquel la classe est rattachée
+                                    new DefaultDomaineService().getDomaines(idClasse,
+                                            new Handler<Either<String, JsonArray>>() {
+                                                @Override
+                                                public void handle(Either<String, JsonArray> event) {
+                                                    if (event.isLeft()) {
+                                                        String message = "[DomaineDataForGraph] error while getting domaines";
+                                                        badRequest(request, message);
+                                                        log.error(message);
+                                                    }
+                                                    else {
+                                                        final JsonArray domaines = event.right().getValue();
+
+                                                        Renders.renderJson(request, linkCompNoteToLibelle(domaines,
+                                                                compNotes, idEleve));
+                                                    }
+
+                                                }
+                                            });
+                                }
+                            }
+                        });
+            }
+        });
+    }
+
+
+
+    /**
+     * Récupère les notes pour le bilan periodique
+     *
+     * @param request
+     */
+    @Get("/bilan/periodique/datas/graph")
+    @ApiDoc("Récupère les données pour construire les graphs du bilan periodique")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    //@ResourceFilter(AccessReleveFilter.class)
+    public void getBilanPeriodiqueDataForGraph(final HttpServerRequest request) {
+        getDataGraph(request);
+    }
+
+
+    @Get("/bilan/periodique/datas/graph/domaine")
+    @ApiDoc("Récupère les données pour construire les graphs du bilan periodique")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    //@ResourceFilter(AccessReleveFilter.class)
+    public void getBilanPeriodiqueDomaineForGraph(final HttpServerRequest request) {
+        getDataGraphDomaine(request);
+    }
+
+
+    /**
+     * Récupère les notes pour le relevé de notes
+     *
+     * @param request
+     */
+    @Get("/releve/datas/graph")
+    @ApiDoc("Récupère les données pour construire les graphs du relevé de notes")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void getReleveDataForGraph(final HttpServerRequest request) {
+        getDataGraph(request);
     }
 
     private JsonArray groupDataByMatiere(JsonArray datas, Map<String,JsonArray> mapDataClasse,
@@ -1484,58 +1570,10 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void getReleveDataDomaineForGraph(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-
-            @Override
-            public void handle(UserInfos user) {
-                final String idEleve = request.params().get("idEleve");
-                final String idEtablissement = request.params().get("idEtablissement");
-                final String idClasse = request.params().get("idClasse");
-                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
-                final String idPeriodeString = request.params().get("idPeriode");
-
-                // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
-                notesService.getCompetencesNotesReleve(idEtablissement, idClasse,
-                        null,
-                        (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
-                        null,
-                        typeClasse,
-                        true,
-                        new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if (event.isLeft()) {
-                                    String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
-                                    badRequest(request, message);
-                                    log.error(message);
-                                }
-                                else {
-                                    final JsonArray compNotes = event.right().getValue();
-                                    // 2. On récupère les domaines du cycle auquel la classe est rattachée
-                                    new DefaultDomaineService().getDomaines(idClasse,
-                                            new Handler<Either<String, JsonArray>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonArray> event) {
-                                            if (event.isLeft()) {
-                                                String message = "[DomaineDataForGraph] error while getting domaines";
-                                                badRequest(request, message);
-                                                log.error(message);
-                                            }
-                                            else {
-                                                final JsonArray domaines = event.right().getValue();
-
-                                                Renders.renderJson(request, linkCompNoteToLibelle(domaines,
-                                                        compNotes, idEleve));
-                                            }
-
-                                            }
-                                    });
-                                }
-                            }
-                        });
-            }
-        });
+        getDataGraphDomaine(request);
     }
+
+
 
     private JsonArray linkCompNoteToLibelle(JsonArray domaines,
                                                        JsonArray compNotes,

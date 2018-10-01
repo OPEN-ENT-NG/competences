@@ -126,7 +126,7 @@ export class ReleveNote extends  Model implements IModel {
         return new Promise((resolve, reject) => {
             let url = this.api.get;
             let _p = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
-            url += (this.idPeriode !== null)? ('&idPeriode=' + this.idPeriode) : '';
+            url += (this.idPeriode !== null) ? ('&idPeriode=' + this.idPeriode) : '';
             if (_p !== undefined || this.idPeriode === null) {
                 http().getJson(url)
                     .done((res) => {
@@ -148,7 +148,7 @@ export class ReleveNote extends  Model implements IModel {
 
     syncAppreciationClasse() {
         return new Promise((resolve, reject) => {
-            if (this.idPeriode != null){
+            if (this.idPeriode != null) {
                 let periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
 
                 let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
@@ -163,7 +163,7 @@ export class ReleveNote extends  Model implements IModel {
     }
 
     syncMoyenneAnnee(): Promise<any> {
-        return new Promise(async(resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             if (this.idPeriode === null) {
                 http().getJson(this.api.GET_MOYENNE_ANNEE)
                     .done((res) => {
@@ -174,30 +174,30 @@ export class ReleveNote extends  Model implements IModel {
                             let moyennesFinales = _.where(res.moyennes_finales, {id_eleve: eleve.id});
 
 
-                            let nbMoyenneAnnee = 0 ;
-                            let moyennesFinalesNumber = 0 ;
-                            let moyennesFinalesAnnee = [] ;
+                            let nbMoyenneAnnee = 0;
+                            let moyennesFinalesNumber = 0;
+                            let moyennesFinalesAnnee = [];
                             // Si une moyenne a été modifiée on recalcule la moyenne à l'année
                             _.forEach(moyennesFinales, (moyenneFinale) => {
                                 moyennesFinalesAnnee.push(moyenneFinale);
                             });
                             _.forEach(moyennes, (moyenne) => {
-                                if (moyenne.id_periode !== null){
-                                    let _moyenne =  _.findWhere(moyennesFinalesAnnee, {id_periode: moyenne.id_periode});
-                                    if(_moyenne === undefined){
+                                if (moyenne.id_periode !== null) {
+                                    let _moyenne = _.findWhere(moyennesFinalesAnnee, {id_periode: moyenne.id_periode});
+                                    if (_moyenne === undefined) {
                                         moyennesFinalesAnnee.push(moyenne);
                                     }
                                 }
                             });
                             _.forEach(moyennesFinalesAnnee, (moyenneFinaleAnnee) => {
-                                nbMoyenneAnnee ++ ;
+                                nbMoyenneAnnee++;
                                 moyennesFinalesNumber += parseFloat(moyenneFinaleAnnee.moyenne);
                             });
-                            if(nbMoyenneAnnee > 0){
+                            if (nbMoyenneAnnee > 0) {
                                 let _moyenneFinaleAnnee = {
-                                    id_eleve : eleve.id,
-                                    id_periode : null,
-                                    moyenne : (moyennesFinalesNumber / nbMoyenneAnnee).toFixed(2)
+                                    id_eleve: eleve.id,
+                                    id_periode: null,
+                                    moyenne: (moyennesFinalesNumber / nbMoyenneAnnee).toFixed(2)
                                 }
                                 if (moyennesFinales !== undefined && moyennesFinales !== null
                                     && moyennesFinales.length > 0) {
@@ -213,7 +213,6 @@ export class ReleveNote extends  Model implements IModel {
                                 eleve.moyennes = moyennes;
                             }
                             eleve.moyennesFinales = moyennesFinales;
-
 
 
                         });
@@ -335,9 +334,9 @@ export class ReleveNote extends  Model implements IModel {
                 await this.classe.periodes.sync();
             }
             await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse(),
-                this.getConversionTable(),this.syncMoyenneAnnee()]);
+                this.getConversionTable(), this.syncMoyenneAnnee()]);
             this.syncAppreciationClasse();
-            this.periode = _.findWhere(this.classe.periodes.all, {id_type : this.idPeriode});
+            this.periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
             this.classe = this.classe.filterEvaluableEleve(this.periode);
             let _notes, _devoirs, _eleves, _moyennesFinales, _appreciations, _competencesNotes;
             if (this._tmp) {
@@ -463,7 +462,7 @@ export class ReleveNote extends  Model implements IModel {
                     resolve(res);
                 })
                 .error((err) => {
-                    reject (err);
+                    reject(err);
                 });
         });
     }
@@ -502,7 +501,7 @@ export class ReleveNote extends  Model implements IModel {
                         resolve(res);
                     })
                     .error((err) => {
-                        reject (err);
+                        reject(err);
                     });
             }
         });
@@ -519,7 +518,7 @@ export class ReleveNote extends  Model implements IModel {
 
             http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data)
                 .done((res) => {
-                    resolve (res);
+                    resolve(res);
                 })
                 .error((err) => {
                     reject(err);
@@ -545,7 +544,7 @@ export class ReleveNote extends  Model implements IModel {
         return this.tableConversions.sync();
     }
 
-    getArbreDomaine(eleve) :   any {
+    getArbreDomaine(eleve): any {
         return new Promise((resolve, reject) => {
             let uri = this.api.GET_ARBRE_DOMAINE + '&idEleve=' + eleve.id;
             eleve.domaines = {
@@ -570,14 +569,14 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    getDataForGraph(eleve,forDomaine?) : any {
+    getDataForGraph(eleve, forDomaine?): any {
         return new Promise((resolve, reject) => {
-            let uri = (forDomaine === true)? this.api.GET_DATA_FOR_GRAPH_DOMAINE : this.api.GET_DATA_FOR_GRAPH;
+            let uri = (forDomaine === true) ? this.api.GET_DATA_FOR_GRAPH_DOMAINE : this.api.GET_DATA_FOR_GRAPH;
             uri += '&idEleve=' + eleve.id;
-            uri += (this.idPeriode !== null)? ('&idPeriode=' + this.idPeriode) : '';
+            uri += (this.idPeriode !== null) ? ('&idPeriode=' + this.idPeriode) : '';
             http().getJson(uri)
                 .done(async (res) => {
-                    this.configCharts (eleve, res, forDomaine);
+                    this.configCharts(eleve, res, forDomaine);
                     resolve();
                 })
                 .error((err) => {
@@ -586,28 +585,28 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    moyenneNiveau (competencesNotes) : number {
-        let res  = 0;
+    moyenneNiveau(competencesNotes): number {
+        let res = 0;
         let summ = 0;
         _.forEach(competencesNotes, (c) => {
-            let val = (c.niveau_final !== null)? c.niveau_final : c.evaluation;
+            let val = (c.niveau_final !== null) ? c.niveau_final : c.evaluation;
             res += (val + 1);
-            summ ++;
+            summ++;
         });
 
-        return (summ === 0)? 0 : parseFloat(Math.round(res/summ).toFixed(2));
+        return (summ === 0) ? 0 : parseFloat(Math.round(res / summ).toFixed(2));
     }
 
-    moyenneNote (notes) : number {
+    moyenneNote(notes): number {
         let res = 0;
         let sum = 0;
         let sumCoef = 0;
 
         _.forEach(notes, (n) => {
-            if(n.valeur !== null) {
+            if (n.valeur !== null) {
                 // si on a une moyenne finale, on la prend
-                let real_note = ( parseInt(n.valeur) * parseInt(n.coefficient) * 20 / parseInt(n.diviseur));
-                let val_to_add = (n.moyenne !== null)? (n.moyenne * parseInt(n.coefficient)) : real_note;
+                let real_note = (parseInt(n.valeur) * parseInt(n.coefficient) * 20 / parseInt(n.diviseur));
+                let val_to_add = (n.moyenne !== null) ? (n.moyenne * parseInt(n.coefficient)) : real_note;
                 sum += val_to_add;
                 sumCoef += parseInt(n.coefficient);
             }
@@ -618,7 +617,7 @@ export class ReleveNote extends  Model implements IModel {
         return parseFloat(res.toFixed(2));
     }
 
-    configCharts (eleve, _datas, forDomaine?) : any {
+    configCharts(eleve, _datas, forDomaine?): any {
         // CompetenceNotes
         let data = [];
         let dataStudent = [];  // Moyenne CompetenceNotes par matiere de l'élève
@@ -644,9 +643,10 @@ export class ReleveNote extends  Model implements IModel {
             '#40424b'];
 
 
-        let series = [lang.translate('level.student'),lang.translate('level.class') ];
-        let i18nTitleView =(forDomaine !== true)?'evaluation.by.subject' :'evaluation.by.domaine';
-        let options = {legend : {
+        let series = [lang.translate('level.student'), lang.translate('level.class')];
+        let i18nTitleView = (forDomaine !== true) ? 'evaluation.by.subject' : 'evaluation.by.domaine';
+        let options = {
+            legend: {
                 display: true
             },
             title: {
@@ -655,36 +655,36 @@ export class ReleveNote extends  Model implements IModel {
             },
         };
         let configRadarChart = {
-            datasets : {
+            datasets: {
                 data: data,
                 labels: labels,
-                average : average
+                average: average
             },
-            series : series,
-            averageSeries : [lang.translate('average.student'),lang.translate('average.class')],
-            options : options,
-            colors : colors,
-            niveau : Defaultcolors
+            series: series,
+            averageSeries: [lang.translate('average.student'), lang.translate('average.class')],
+            options: options,
+            colors: colors,
+            niveau: Defaultcolors
         };
 
         let configMixedChart = {
             labels: labels,
-            colors : colors,
-            niveau : Defaultcolors,
-            labelyAxes : [lang.translate('level.items'),lang.translate('averages')],
-            datasets : {
-                test : undefined,
-                average : average,
-                data_set1 : data_set1,
-                data_set2 : data_set2,
-                data_set3 : data_set3,
-                data_set4 : data_set4
+            colors: colors,
+            niveau: Defaultcolors,
+            labelyAxes: [lang.translate('level.items'), lang.translate('averages')],
+            datasets: {
+                test: undefined,
+                average: average,
+                data_set1: data_set1,
+                data_set2: data_set2,
+                data_set3: data_set3,
+                data_set4: data_set4
             },
-            averageStudent :  {
+            averageStudent: {
                 label: lang.translate('level.student'),
                 type: 'line',
                 data: dataStudent,
-                borderColor:'#00ADF9',
+                borderColor: '#00ADF9',
                 backgroundColor: '#009eea',
                 fill: false,
                 id: undefined,
@@ -706,10 +706,10 @@ export class ReleveNote extends  Model implements IModel {
                 data: dataClass,
                 borderColor: '#5f626c',
                 backgroundColor: '#5f626c',
-                borderWidth :
+                borderWidth:
                 1 + Chart.defaults.global.elements.line.borderWidth,
                 fill: false,
-                id:  undefined,
+                id: undefined,
                 options: {
                     scales: {
                         xAxes: [{
@@ -724,43 +724,43 @@ export class ReleveNote extends  Model implements IModel {
 
         };
         _.forEach(_datas, (matiereOrDomaine) => {
-            let diviseur : number = 4;
-            if(matiereOrDomaine.id !== undefined) {
+            let diviseur: number = 4;
+            if (matiereOrDomaine.id !== undefined) {
                 labels.push(
-                    (matiereOrDomaine.name !== undefined)? matiereOrDomaine.name : matiereOrDomaine.codification);
+                    (matiereOrDomaine.name !== undefined) ? matiereOrDomaine.name : matiereOrDomaine.codification);
                 dataStudent.push(this.moyenneNiveau(matiereOrDomaine.competencesNotesEleve));
                 dataClass.push(this.moyenneNiveau(matiereOrDomaine.competencesNotes));
 
                 averageStudent.push(this.moyenneNote(matiereOrDomaine.notesEleve));
                 averageClass.push(this.moyenneNote(matiereOrDomaine.notes));
 
-                let nbrCompNotesUnevaluated =  _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: -1});
-                nbrCompNotesUnevaluated = (!nbrCompNotesUnevaluated)? nbrCompNotesUnevaluated.length: 0;
-                let nbrCompNotes = (!matiereOrDomaine.competencesNotesEleve)? 0 :
+                let nbrCompNotesUnevaluated = _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: -1});
+                nbrCompNotesUnevaluated = (!nbrCompNotesUnevaluated) ? nbrCompNotesUnevaluated.length : 0;
+                let nbrCompNotes = (!matiereOrDomaine.competencesNotesEleve) ? 0 :
                     (matiereOrDomaine.competencesNotesEleve.length - nbrCompNotesUnevaluated);
 
                 let nbrCompNotes_set1 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 0, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 0}));
-                nbrCompNotes_set1 =  !(nbrCompNotes_set1)? 0 : nbrCompNotes_set1.length;
+                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 0, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 0}));
+                nbrCompNotes_set1 = !(nbrCompNotes_set1) ? 0 : nbrCompNotes_set1.length;
                 let set1_val = Math.min(diviseur, diviseur * (nbrCompNotes_set1 / (nbrCompNotes)));
 
                 let nbrCompNotes_set2 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 1, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 1}));
-                nbrCompNotes_set2 =  !(nbrCompNotes_set2)? 0 : nbrCompNotes_set2.length;
+                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 1, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 1}));
+                nbrCompNotes_set2 = !(nbrCompNotes_set2) ? 0 : nbrCompNotes_set2.length;
                 let set2_val = Math.min(diviseur, diviseur * (nbrCompNotes_set2 / (nbrCompNotes)) + set1_val);
 
                 let nbrCompNotes_set3 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 2, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 2}));
-                nbrCompNotes_set3 =  !(nbrCompNotes_set3)? 0 : nbrCompNotes_set3.length;
+                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 2, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 2}));
+                nbrCompNotes_set3 = !(nbrCompNotes_set3) ? 0 : nbrCompNotes_set3.length;
                 let set3_val = Math.min(diviseur, diviseur * (nbrCompNotes_set3 / (nbrCompNotes)) + set2_val);
 
                 let nbrCompNotes_set4 = _.union(
-                    _.where(matiereOrDomaine.competencesNotesEleve , {evaluation: 3, niveau_final: null}),
-                    _.where(matiereOrDomaine.competencesNotesEleve , {niveau_final: 3}));
-                nbrCompNotes_set4 =  !(nbrCompNotes_set4)? 0 : nbrCompNotes_set4.length;
+                    _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 3, niveau_final: null}),
+                    _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 3}));
+                nbrCompNotes_set4 = !(nbrCompNotes_set4) ? 0 : nbrCompNotes_set4.length;
                 let set4_val = Math.min(diviseur, diviseur * (nbrCompNotes_set4 / (nbrCompNotes)) + set3_val);
 
                 data_set1.push(set1_val.toFixed(2));
@@ -785,4 +785,5 @@ export class ReleveNote extends  Model implements IModel {
             eleve.configMixedChart = configMixedChart;
         }
     }
+
 }

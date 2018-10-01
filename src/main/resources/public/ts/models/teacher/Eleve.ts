@@ -2,6 +2,7 @@ import { Model, Collection, _, notify, http as httpCore, moment} from 'entcore';
 import http  from 'axios';
 import { Evaluation, SuiviCompetence } from './index';
 import {Periode} from "./Periode";
+import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
 
 export class Eleve extends Model {
     moyenne: number;
@@ -17,6 +18,7 @@ export class Eleve extends Model {
     details : any;
     cycles : any;
     deleteDate : any;
+    elementBilanPeriodique : ElementBilanPeriodique[];
 
     get api() {
         return {

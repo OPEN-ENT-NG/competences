@@ -1,5 +1,6 @@
+import {notify, idiom as lang, ng, template} from 'entcore';
 import * as utils from '../utils/teacher';
-import {ng, template, model, moment, notify, idiom as lang} from "entcore";
+import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
 
 
@@ -7,8 +8,16 @@ declare let _:any;
 
 export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route','$timeout',
-    async function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
+    async function ($scope, route, $rootScope, $location, $filter) {
+        template.close('suivi-acquis');
+        template.close('projet');
+        template.close('vie-scolaire');
+        template.close('graphique');
+        utils.safeApply($scope);
+
         template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
+
+        // $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
 
         $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
 
@@ -29,10 +38,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('suivi-acquis');
             template.close('vie-scolaire');
             template.close('graphique');
+            utils.safeApply($scope);
             template.open('projet', 'enseignants/bilan_periodique/display_projets');
             $scope.getElementsBilanBilanPeriodique("isBilanPeriodique");
             $scope.isBilanPeriodique = "isBilanPeriodique";
-
             utils.safeApply($scope);
         }
 
@@ -52,7 +61,24 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('projet');
             template.close('vie-scolaire');
             utils.safeApply($scope);
+            $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
             template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
+            utils.safeApply($scope);
+        }
+
+        $scope.openMatiere = async function () {
+            template.close('graphMatiere');
+            utils.safeApply($scope);
+            await $scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false);
+            template.open('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject');
+            utils.safeApply($scope);
+        }
+
+        $scope.openDomaine = async function () {
+            template.close('graphDomaine');
+            utils.safeApply($scope);
+            await $scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, true);
+            template.open('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine');
             utils.safeApply($scope);
         }
 
@@ -129,6 +155,16 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
          * @param element sur lequel est faite l'appréciation
          * @param eleve élève propriétaire de l'appréciation
          */
+        $scope.incrementEleve = async function (num) {
+            $scope.selected.grey = true;
+            let index = _.findIndex($scope.search.classe.eleves.all, {id: $scope.search.eleve.id});
+            if (index !== -1 && index + parseInt(num) >= 0
+                && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
+                $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
+                $scope.changeContentBilanPeriod();
+            }
+        };
+
         $scope.saveAppElement = function (element, eleve?) {
             if(eleve){
                 if (eleve.appreciations !== undefined) {
@@ -181,5 +217,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
         }
     }
+
 
 ]);
