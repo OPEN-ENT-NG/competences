@@ -15,3 +15,5 @@ src/main/resources/public/js
 src/main/resources/public/template/entcore
 src/main/resources/view
 node_modules
+build.sh
+docker-compose.yml
