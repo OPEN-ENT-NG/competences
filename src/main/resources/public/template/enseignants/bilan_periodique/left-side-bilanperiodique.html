@@ -16,7 +16,7 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div class="criteres fiche diffsize cell card twelve criterion" ng-class="{opened : opened.criteres === true}">
+<div class="criteres card criterion opened" ng-class="{opened : opened.criteres === true}">
     <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
     <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
         <h2><i18n>viescolaire.utils.criterion</i18n></h2>
@@ -29,7 +29,7 @@
     <section>
         <label class="select" >
             <select ng-model="search.classe"
-                    ng-change="synchronizeStudents(search.classe.id); syncPeriodesBilanPeriodique()"
+                    ng-change="synchronizeStudents(search.classe.id); syncPeriodesBilanPeriodique(); deleteStudent();"
                     ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
                 <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
             </select>
@@ -39,7 +39,7 @@
         <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
             <select ng-model="search.periode"
                     ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                    ng-change="changeContentBilanPeriod();"
+                    ng-change="changeContentBilanPeriod(); displayBilanPeriodique(); changeContent();"
                     ng-options="getI18nPeriode(periode) for periode in filteredPeriode">
                 <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
             </select>
@@ -49,20 +49,20 @@
         <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
             <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
                     ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
-                    ng-change="changeContentBilanPeriod(); displayBilanPeriodique();">
+                    ng-change="changeContentBilanPeriod(); displayBilanPeriodique(); changeContent();">
                 <option disabled value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
             </select>
         </label>
     </section>
 </div>
 
-<div class="fiche student-info diffpadding cell card twelve criterion" ng-class="{opened : openedStudentInfo === true}"
+<div class="criteres card criterion" ng-class="{opened : openedStudentInfo === true}"
      ng-if="informations.eleve !== '' && informations.eleve !== undefined">
     <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
 
-<div class="criteres fiche diffsize cell card twelve criterion" ng-class="{opened : opened.avis === true}">
+<div class="criteres card criterion" ng-class="{opened : opened.avis === true}">
     <span class="plus-input" ng-click="openLeftMenu('opened.avis', opened.avis);"></span>
     <div class="header" ng-click="openLeftMenu('opened.avis', opened.avis);">
         <h2><i18n>viescolaire.utils.avis</i18n></h2>

@@ -26,7 +26,7 @@
 </section>
 
 <section ng-if="!displayMessage">
-    <div class="padding-table-elements marginFive card">
+    <div>
         <h4 ng-class="{'openedElem' : graphMat.opened}"
             class="margin-top-05em openGraph"
             data-ng-click="graphMat.opened = !graphMat.opened; openMatiere(false);"
@@ -36,7 +36,7 @@
             <container ng-if="!graphMat.opened" template="graphMatiere"></container>
     </div>
 
-    <div class="padding-table-elements marginFive card">
+    <div>
         <h4 ng-class="{'openedElem' : graphDom.opened}"
             class="margin-top-05em openGraph"
             data-ng-click="graphDom.opened = !graphDom.opened; openDomaine(true);"

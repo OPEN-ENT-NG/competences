@@ -28,6 +28,7 @@ export class ElementBilanPeriodique extends Model {
         }
     }
 
+
     constructor(pClasse, pEleve, pIdPeriode) {
         super();
         this.structure = evaluations.structure;

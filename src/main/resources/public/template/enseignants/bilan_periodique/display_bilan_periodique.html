@@ -18,71 +18,71 @@
   -->
 <div class="evaluations" ng-controller="EvalBilanPeriodiqueCtl">
 
-    <div class="cell two twelve-mobile">
+    <aside class="two cell twelve-mobile left">
         <div ng-include="'/competences/public/template/enseignants/bilan_periodique/left-side-bilanperiodique.html'"></div>
-    </div>
+    </aside>
 
-        <section ng-if="critereIsEmpty">
-            <content>
-                <article class="card twelve-mobile centered card-projet">
+        <section class="ten twelve-mobile cell right">
+
+            <content ng-if="critereIsEmpty">
+                <article class="card tableReleves">
                     <i18n>evaluation.bilan.periodique.empty</i18n>
                 </article>
             </content>
-        </section>
 
-        <section ng-if="!critereIsEmpty">
 
-            <div class="cell ten twelve-mobile">
-                <div class="content-suivi-eleve twelve-mobile ten card">
+            <content ng-if="!critereIsEmpty" class="twelve twelve-mobile cell right">
 
-                        <div class="twelve suivi-eleve-ctl" sticky offset="64">
-                            <h2 class="align-center">
-                                <i class="previous cell" ng-click="incrementEleve(-1)"></i>
-                                [[informations.eleve.lastName]] [[informations.eleve.firstName]]
-                                <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
-                            </h2>
+                    <div class="content-suivi-eleve twelve-mobile ten card">
+
+                            <div class="twelve suivi-eleve-ctl" sticky offset="64">
+                                <h2 class="align-center">
+                                    <i class="previous cell" ng-click="incrementEleve(-1)"></i>
+                                    [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+                                    <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
+                                </h2>
+                            </div>
+
+                        <div class="cell ten twelve-mobile">
+                            <h2><i18n>evaluations.bilan.periodique</i18n></h2>
                         </div>
 
-                    <div class="cell ten twelve-mobile">
-                        <h2><i18n>evaluations.bilan.periodique</i18n></h2>
+                        <div class="twelve tabs vertical-spacing-twice heading-tabs">
+                            <header ng-class="{selected : selected.suiviAcquis}"
+                                    class="horizontal-spacing-twice ng-scope">
+                                <div class="horizontal-spacing" ng-click="openSuiviAcquis()">
+                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.suivi.acquis</span></i18n></span>
+                                </div>
+                            </header>
+                            <header ng-class="{selected : selected.projet}"
+                                    class="horizontal-spacing-twice ng-scope">
+                                <div class="horizontal-spacing" ng-click="openProjet()">
+                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.projets</span></i18n></span>
+                                </div>
+                            </header>
+                            <header ng-class="{selected : selected.vieScolaire}"
+                                    class="horizontal-spacing-twice ng-scope" ng-click="openVieScolaire()">
+                                <div class="horizontal-spacing">
+                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.vie.scolaire</span></i18n></span>
+                                </div>
+                            </header>
+                            <header ng-class="{selected : selected.graphique}"
+                                    class="horizontal-spacing-twice ng-scope" ng-click="openGraphique()">
+                                <div class="horizontal-spacing">
+                                    <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.graphiques</span></i18n></span>
+                                </div>
+                            </header>
+                        </div>
+                        <div class="twelve">
+                            <container template="suivi-acquis"></container>
+                            <container template="projet"></container>
+                            <container template="vie-scolaire"></container>
+                            <container template="graphique"></container>
+                        </div>
+
                     </div>
 
-                    <div class="twelve tabs vertical-spacing-twice heading-tabs">
-                        <header ng-class="{selected : selected.suiviAcquis}"
-                                class="horizontal-spacing-twice ng-scope">
-                            <div class="horizontal-spacing" ng-click="openSuiviAcquis()">
-                                <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.suivi.acquis</span></i18n></span>
-                            </div>
-                        </header>
-                        <header ng-class="{selected : selected.projet}"
-                                class="horizontal-spacing-twice ng-scope">
-                            <div class="horizontal-spacing" ng-click="openProjet()">
-                                <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.projets</span></i18n></span>
-                            </div>
-                        </header>
-                        <header ng-class="{selected : selected.vieScolaire}"
-                                class="horizontal-spacing-twice ng-scope" ng-click="openVieScolaire()">
-                            <div class="horizontal-spacing">
-                                <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.vie.scolaire</span></i18n></span>
-                            </div>
-                        </header>
-                        <header ng-class="{selected : selected.graphique}"
-                                class="horizontal-spacing-twice ng-scope" ng-click="openGraphique()">
-                            <div class="horizontal-spacing">
-                                <span><i18n><span class="no-style ng-scope">evaluation.bilan.periodique.graphiques</span></i18n></span>
-                            </div>
-                        </header>
-                    </div>
-                    <div class="twelve">
-                        <container template="suivi-acquis"></container>
-                        <container template="projet"></container>
-                        <container template="vie-scolaire"></container>
-                        <container template="graphique"></container>
-                    </div>
-
-                </div>
-
-            </div>
+            </content>
 
         </section>
 
