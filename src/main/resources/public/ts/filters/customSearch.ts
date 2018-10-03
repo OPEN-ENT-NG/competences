@@ -18,7 +18,7 @@ export let customSearchFilter = ng.filter('customSearchFilters', function(){
             output = tempTable;
         }
         if (searchParams.sousmatiere !== '*' && searchParams.sousmatiere !== null) {
-            tempTable = _.where(output, {id_sousmatiere : parseInt(searchParams.sousmatiere.id)});
+            tempTable = _.where(output, {id_sousmatiere : parseInt(searchParams.sousmatiere.id_type_sousmatiere)});
             output = tempTable;
         }
         if (searchParams.type !== '*' && searchParams.type !== null) {

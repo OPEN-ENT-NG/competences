@@ -18,9 +18,11 @@ import {
     NiveauCompetence,
     Defaultcolors,
     TypePeriode,
+    TypeSousMatiere,
     Utils
 } from './index';
 import {Mix} from "entcore-toolkit";
+import httpAxios, {AxiosRequestConfig} from 'axios';
 
 export class Structure extends Model {
     id: string;
@@ -41,6 +43,7 @@ export class Structure extends Model {
     cycles: Array<Cycle>;
     cycle: Cycle;
     typePeriodes: Collection<TypePeriode>;
+    typeSousMatieres: TypeSousMatiere[];
     niveauCompetences: Collection<NiveauCompetence>;
     usePerso: any;
     private syncRemplacement: () => any;
@@ -89,7 +92,8 @@ export class Structure extends Model {
             },
             GET_TEACHER_DETAILS : {
                 synchronisation : `/directory/user/${model.me.userId}?manual-groups=true`
-            }
+            },
+            GET_TYPE_SOUS_MATIERES: `/viescolaire/types/sousmatieres`
         };
     }
 
@@ -374,6 +378,7 @@ export class Structure extends Model {
                 let b =
                     this.synchronized.matieres &&
                     this.synchronized.types &&
+                    this.synchronized.typeSousMatieres &&
                     this.synchronized.classes &&
                     this.synchronized.annotations &&
                     this.synchronized.niveauCompetences &&
@@ -408,6 +413,7 @@ export class Structure extends Model {
             }
             this.typePeriodes.sync().then(isSynced);
             this.syncClassesBilanPeriodique().then(isSynced);
+            this.syncTypeSousMatieres().then(isSynced);
         });
     }
 
@@ -493,5 +499,13 @@ export class Structure extends Model {
                     reject();
                 });
         }));
+    }
+
+    async syncTypeSousMatieres() {
+        let {data} = await httpAxios.get(this.api.GET_TYPE_SOUS_MATIERES);
+        if (!data.error) {
+            this.typeSousMatieres = data;
+        }
+        this.synchronized.typeSousMatieres = true;
     }
 }

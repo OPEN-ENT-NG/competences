@@ -26,6 +26,7 @@ export * from './SuiviCompetence';
 export * from './SuiviCompetenceClasse';
 export * from './TableConversion';
 export * from './Type';
+export * from '../common/TypeSousMatiere';
 export * from './Utils';
 export * from '../common/LSU';
 export * from '../eval_cycle';

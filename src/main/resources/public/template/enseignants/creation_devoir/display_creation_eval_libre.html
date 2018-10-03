@@ -88,7 +88,7 @@
                     <select ng-model="evaluationLibre.id_sousmatiere"
                             ng-disabled=" evaluationLibre.sousmatiere.length === 0
                             ||  evaluationLibre.sousmatiere === undefined"
-                            ng-options=" sousmatiere.id as sousmatiere.libelle for sousmatiere in evaluationLibre.sousmatiere ">
+                            ng-options="sousmatiere.id_type_sousmatiere as sousmatiere.libelle for sousmatiere in evaluationLibre.sousmatiere ">
                         <option  value="">[[translate('viescolaire.utils.undersubject')]]
                         </option>
                     </select>

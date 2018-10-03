@@ -17,7 +17,7 @@
             <div class="gradetooltip" ng-show='evaluation.coefficient != null && evaluation.coefficient != 1'
                  tooltip="[[getFormatedDate(evaluation.date)]]<br>[[evaluation.name]]<div>[[evaluation._sousmatiere_libelle]]</div>(<i18n>viescolaire.utils.coef</i18n>. [[evaluation.coefficient]])"></div>
             <div class="gradetooltip" ng-show='evaluation.coefficient == null || evaluation.coefficient == 1'
-                 tooltip="[[getFormatedDate(evaluation.date)]]<br>[[evaluation.name]]<div>[[evaluation._sousmatiere_libelle]]</div>"></div>
+                 tooltip="[[getFormatedDate(evaluation.date)]]<br>[[evaluation.name]]<div>[[getLibelleSousMatiere(evaluation)]]</div>"></div>
         </div>
     </div>
 </fieldset>

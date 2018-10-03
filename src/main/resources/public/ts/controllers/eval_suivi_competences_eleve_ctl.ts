@@ -159,8 +159,12 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         }, function (newValue) {
             if (newValue !== "" && newValue !== undefined && newValue !== null) {
                 let mamatiere = _.findWhere($scope.evaluationLibre.matieres, {id: $scope.evaluationLibre.id_matiere});
-                if (mamatiere != undefined)
+                if (mamatiere != undefined) {
                     $scope.evaluationLibre.sousmatiere = mamatiere.sousMatieres.all;
+                    if(mamatiere.sousMatieres.all !== undefined && mamatiere.sousMatieres.all.length > 0) {
+                        $scope.evaluationLibre.id_sousmatiere = mamatiere.sousMatieres.all[0].id_type_sousmatiere;
+                    }
+                }
             } else if (newValue === null) {
                 $scope.evaluationLibre.sousmatiere = []
             }

@@ -78,8 +78,8 @@
                     </section>
 
                     <section>
-                        <label class="select" ng-hide="selected.matiere.sousMatieres.all.length === 0 || search.matiere === '*' || selected.matiere === undefined">
-                            <select ng-model="search.sousmatiere" ng-options="sousmatiere.libelle for sousmatiere in search.sousmatieres.all">
+                        <label class="select" ng-hide="search.matiere.sousMatieres.all.length === 0 || search.matiere === '*' || search.matiere === undefined">
+                            <select ng-model="search.sousmatiere" ng-options="sousmatiere.libelle for sousmatiere in search.matiere.sousMatieres.all">
                                 <option class="header-opt" value="">[[translate('viescolaire.utils.undersubject')]]</option>
                             </select>
                         </label>

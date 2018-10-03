@@ -129,7 +129,7 @@
                 <div class="six cell cell-indent expandable-content">
                     <i18n>viescolaire.utils.subject</i18n>
                     : <span class="italic">[[getLibelleMatiere(devoir.id_matiere)]] <span
-                        ng-if="devoir.id_sousmatiere !== null">([[devoir._sousmatiere_libelle]])</span></span>
+                        ng-if="devoir.id_sousmatiere !== null">([[getLibelleSousMatiere(devoir)]])</span></span>
                 </div>
                 <div class="six cell cell-indent expandable-content">
                     <span ng-if="devoir.is_evaluated">

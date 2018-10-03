@@ -154,6 +154,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.id_sousmatiere = devoirTmp.id_sousmatiere;
                     $scope.devoir.id_type = parseInt(devoirTmp.id_type);
                     $scope.devoir.id_matiere = devoirTmp.id_matiere;
+                    $scope.devoir.matiere = _.findWhere(evaluations.structure.matieres.all, {id: $scope.devoir.id_matiere});
                     $scope.devoir.id_etat = parseInt(devoirTmp.id_etat);
                     $scope.devoir.date_publication = new Date(devoirTmp.date_publication);
                     $scope.devoir.id_etablissement = devoirTmp.id_etablissement;
@@ -758,7 +759,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 if ($location.path() === '/devoir/create') {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", evaluations.structure.classes.all).id;
-                    $scope.devoir.id_matiere = $scope.searchOrFirst("matiere", evaluations.structure.matieres.all).id;
+                    $scope.devoir.matiere = $scope.searchOrFirst("matiere", evaluations.structure.matieres.all);
+                    $scope.devoir.id_matiere = $scope.devoir.matiere.id;
+
+                    if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+                        $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type;
+                    }
+
                     $scope.devoir.id_type = $scope.searchOrFirst("type", evaluations.structure.types.all).id;
                     let currentPeriode = await $scope.getCurrentPeriode(
                         _.findWhere($scope.structure.classes.all, {id: $scope.devoir.id_groupe}));
@@ -1679,8 +1686,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($location.path() === "/devoir/create") {
                 $scope.devoir = $scope.initDevoir();
                 $scope.devoir.id_groupe = $scope.searchOrFirst("classe", $scope.structure.classes.all).id;
-                $scope.devoir.id_matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all).id;
+                $scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
+                $scope.devoir.id_matiere = $scope.devoir.matiere.id;
                 $scope.devoir.id_type = $scope.searchOrFirst("type", $scope.structure.types.all).id;
+
+                if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+                    // atention sur le devoir on stocker l'id_type t non l'id de la sous matiere
+                    $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+                }
 
                 let currentPeriode = await $scope.getCurrentPeriode(_.findWhere($scope.structure.classes.all, {id: $scope.devoir.id_groupe}));
                 $scope.devoir.id_periode = currentPeriode !== -1 ? currentPeriode.id_type : null;
@@ -1721,7 +1734,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.id_groupe = $scope.search.classe.id;
                     $scope.devoir.id_matiere = $scope.search.matiere.id;
                     $scope.setClasseMatieres();
-                    $scope.selectedMatiere();
+                    $scope.selectedMatiere($scope.devoir);
                 } else {
                     // selection de la premiere classe par defaut
                     $scope.devoir.id_groupe = $scope.classes.all[0].id;
@@ -1752,7 +1765,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             if ($location.path() === "/devoirs/list") {
                 $scope.devoir.id_type = $scope.search.type.id;
-                $scope.devoir.id_sousmatiere = $scope.search.sousmatiere.id;
+                $scope.devoir.id_sousmatiere = $scope.search.sousmatiere.id_type_sousmatiere;
             }
 
             if ($location.path() !== "/devoir/" + $scope.devoir.id + "/edit") {
@@ -1855,7 +1868,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             getClassesMatieres($scope.devoir.id_groupe).then((matieres) => {
                 $scope.devoir.matieresByClasse = matieres;
                 if ($scope.devoir.matieresByClasse.length === 1) $scope.devoir.id_matiere = $scope.devoir.matieresByClasse[0].id;
-                $scope.selectedMatiere();
+                $scope.selectedMatiere($scope.devoir);
             });
         };
 
@@ -2324,9 +2337,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Position l'objet matière sur le devoir en cours de création
          */
-        $scope.selectedMatiere = function () {
-            var matiere = evaluations.matieres.findWhere({id: $scope.devoir.id_matiere});
-            if (matiere !== undefined) $scope.devoir.matiere = matiere;
+        $scope.selectedMatiere = function (devoir) {
+            var matiere = evaluations.matieres.findWhere({id: devoir.id_matiere});
+            if (matiere !== undefined) devoir.matiere = matiere;
         };
 
         /**
@@ -2414,13 +2427,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         /**
          * Retourne le libelle de la sous matière correspondant à l'identifiant passé en paramètre
-         * @param idSousMatiere identifiant de la sous matière
+         * @param currentDevoir le devoir en cours de visualisation
          * @returns {any} libelle de la sous matière
          */
-        $scope.getLibelleSousMatiere = function (idSousMatiere) {
-            if (idSousMatiere === null || idSousMatiere === "" || idSousMatiere === undefined) return "";
-            $scope.selectedMatiere();
-            return _.findWhere($scope.devoir.matiere.sousMatieres.all, {id: parseInt(idSousMatiere)}).libelle;
+        /*$scope.getLibelleSousMatiere = function (currentDevoir) {
+            let id_type_sousmatiere = currentDevoir.id_sousmatiere;
+            if (id_type_sousmatiere === null || id_type_sousmatiere === "" || id_type_sousmatiere === undefined) return "";
+            $scope.selectedMatiere(currentDevoir);
+            return _.findWhere(currentDevoir.matiere.sousMatieres.all, {id_type_sousmatiere: parseInt(id_type_sousmatiere)}).libelle;
+        };*/
+
+        $scope.getLibelleSousMatiere = function (currentDevoir) {
+            let id_type_sousmatiere = currentDevoir.id_sousmatiere;
+            if (id_type_sousmatiere === null || id_type_sousmatiere === "" || id_type_sousmatiere === undefined) return "";
+            return _.findWhere($scope.structure.typeSousMatieres, {id: parseInt(id_type_sousmatiere)}).libelle;
         };
 
 
