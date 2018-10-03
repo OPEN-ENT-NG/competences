@@ -14,12 +14,18 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         template.close('vie-scolaire');
         template.close('graphique');
         utils.safeApply($scope);
+        $scope.critereIsEmpty = true;
 
-        template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
-
-        // $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
 
         $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
+
+        $scope.displayBilanPeriodique = function () {
+            if (($scope.search.classe !== '*' && $scope.search.classe !== null && $scope.search.classe !== undefined)
+                && ($scope.informations.eleve !== null && $scope.informations.eleve !== null && $scope.informations.eleve !== undefined)
+                && ($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
+                $scope.critereIsEmpty = false;
+            }
+        }
 
         $scope.selected = { suiviAcquis: true, projet: false, vieScolaire: false, graphique: false };
 
@@ -63,8 +69,18 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
             $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
             template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
+            // $scope.critereIsEmpty = true;
             utils.safeApply($scope);
         }
+
+        // $scope.displayGraphique = async function () {
+        //     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
+        //     if ($scope.selected = { graphique: true }) {
+        //         template.close('suivi-acquis');
+        //         template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
+        //         $scope.critereIsEmpty = false;
+        //     }
+        // }
 
         $scope.openMatiere = async function () {
             template.close('graphMatiere');
@@ -155,15 +171,32 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
          * @param element sur lequel est faite l'appréciation
          * @param eleve élève propriétaire de l'appréciation
          */
+
         $scope.incrementEleve = async function (num) {
-            $scope.selected.grey = true;
             let index = _.findIndex($scope.search.classe.eleves.all, {id: $scope.search.eleve.id});
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
                 $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
                 $scope.changeContentBilanPeriod();
+                // delete $scope.informations.competencesNotes;
+                // $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
+            }
+            if(template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
+                template.close('graphMatiere');
+                utils.safeApply($scope);
+                await $scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false);
+                template.open('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject');
+                utils.safeApply($scope);
+            }
+            if(template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
+                template.close('graphDomaine');
+                utils.safeApply($scope);
+                await $scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, true);
+                template.open('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine');
+                utils.safeApply($scope);
             }
         };
+
 
         $scope.saveAppElement = function (element, eleve?) {
             if(eleve){
