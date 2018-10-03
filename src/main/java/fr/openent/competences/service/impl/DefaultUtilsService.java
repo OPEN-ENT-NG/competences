@@ -23,7 +23,6 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.eventbus.ResultMessage;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
@@ -40,6 +39,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.text.*;
 import java.util.*;
 import java.util.regex.Pattern;
+
 
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -686,5 +686,15 @@ public class DefaultUtilsService  implements UtilsService {
                     }
 
                 }));
+    }
+    @Override
+    public void getEvenements(String idEleve, Handler<Either<String, JsonArray>> eitherHandler){
+        StringBuilder query = new StringBuilder()
+                .append(" SELECT * " )
+                .append(" FROM viesco.absences_et_retards ")
+                .append(" WHERE id_eleve = ? ");
+        JsonArray params = new JsonArray().add(idEleve);
+
+        Sql.getInstance().prepared(query.toString(),params, validResultHandler(eitherHandler));
     }
 }

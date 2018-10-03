@@ -238,5 +238,11 @@ public class UtilsController extends ControllerHelper {
         });
     }
 
+    @Get("/eleve/evenements/:idEleve")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    public void getEvenement(final HttpServerRequest request) {
+        final String  idEleve = request.params().get("idEleve");
+        utilsService.getEvenements(idEleve,arrayResponseHandler(request));
+    }
 
 }

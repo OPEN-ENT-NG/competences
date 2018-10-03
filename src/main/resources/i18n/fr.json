@@ -17,6 +17,7 @@
   "level.class": "Niveau classe",
   "level.items": "Niveaux items",
   "level.legend": "Légende niveaux",
+  "hours":" heure(s)",
 
   "competences.title": "Competences",
   "competences.notify.saved": "La donnée a été sauvegardée",
@@ -31,6 +32,7 @@
   "competences.root": "Mes competencess",
   "competences.create": "Créer un Competences",
   "competences.acquired": "Acquis scolaires",
+  "competences.on.periode": "Sur la période",
 
   "custom": "Personnalisé",
 
@@ -55,6 +57,7 @@
   "group.class.Student": "Tous les élèves de la classe {0}.",
   "group.class.Relative": "Tous les parents de la classe {0}.",
 
+  "half.days": " demi journée(s)",
   "title": "Titre",
   "from": "De",
   "date": "Date",
@@ -408,6 +411,10 @@
   "viescolaire.utils.appreciation.add" : "Ajouter une appréciation",
   "viescolaire.utils.appreciation.edit" : "Modifier l'appréciation",
   "viescolaire.utils.appreciation.view" : "Visualiser l'appréciation",
+  "viescolaire.retards" : "Retards",
+  "viescolaire.abs.justified" : "Abs justiées",
+  "viescolaire.abs.not.justified" : "Abs non justifiées",
+  "viescolaire.nb.courses.lost" : "Nb heures de cours manquées",
 
   "error.note.outbound":"La note doit être comprise entre 0 et ",
   "error.average.outbound":"La moyenne doit être comprise entre 0 et 20",
@@ -437,5 +444,7 @@
   "evaluations.positionnement.calculee":"Positionnement calculé",
   "transition.bilan.annee": "NC",
   "transition.bilan.annee.classe": "Bilan Année classe : ",
-  "competences.competence.niveau.final.save.err":"Erreur lors de la sauvegarde du niveau final"
+  "competences.competence.niveau.final.save.err":"Erreur lors de la sauvegarde du niveau final",
+  "competences.no.student.selected": "Aucun élève sélectionné",
+  "bilan.periodique.appreciationCPE.placeholder": "Appreciation CPE"
 }

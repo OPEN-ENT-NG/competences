@@ -1,4 +1,4 @@
-import {Behaviours, http} from 'entcore';
+import {Behaviours} from 'entcore';
 import {visibilitymoyBFC} from './sniplets/visibilitymoyBFC';
 import { itemsCompetences } from './sniplets/itemsCompetences';
 import {linkGroupCycle} from "./sniplets/linkGroupCycle";

@@ -179,4 +179,11 @@ public interface UtilsService {
 
     void studentIdAvailableForPeriode (final String idClasse, final Long idPeriode, Integer typeClasse,
                                        Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Permet de récupérer les absences et retards d'un élève
+     * @param idEleve identifiant de l'élève
+     * @param eitherHandler handler qui va servir à retrourner le résultat
+     *  */
+    void getEvenements(String idEleve, Handler<Either<String, JsonArray>> eitherHandler);
 }

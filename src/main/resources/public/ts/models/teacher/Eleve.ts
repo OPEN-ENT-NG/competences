@@ -19,12 +19,15 @@ export class Eleve extends Model {
     cycles : any;
     deleteDate : any;
     elementBilanPeriodique : ElementBilanPeriodique[];
+    evenements : any ;
+
 
     get api() {
         return {
             GET_MOYENNE : `/competences/eleve/${this.id}/moyenne?`,
             GET_DATA_FOR_DETAILS_RELEVE: `/competences/releve/informations/eleve/${this.id}`,
-            GET_CYCLES : `/competences/cycles/eleve/`
+            GET_CYCLES : `/competences/cycles/eleve/`,
+            GET_RETARDS_AND_ABSENCES: `/competences/eleve/evenements/${this.id}`,
         }
     }
 
@@ -104,5 +107,16 @@ export class Eleve extends Model {
 
             return deleteDate.isBetween(start,end) || deleteDate.isAfter(end);
         }
+    }
+
+    getEvenements () {
+        return new Promise( ((resolve) => {
+            httpCore().getJson(this.api.GET_RETARDS_AND_ABSENCES).done( (res) => {
+                if (!res.error) {
+                    this.evenements = res;
+                    resolve ();
+                }
+            });
+        }))
     }
 }

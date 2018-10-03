@@ -1,10 +1,137 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Vie-scolaire</title>
-</head>
-<body>
+<div ng-if="!displayViescolaire">
+    <i18n>competences.no.student.selected</i18n>
+</div>
+<div ng-if="displayViescolaire">
+<fieldset>
+    <legend><i18n>competences.on.periode</i18n></legend>
+    <div class="twelve cell">
+                    <span>
+                        <i18n>viescolaire.retards</i18n>:&nbsp;
+                    </span>
+            <label  class="bold">
+                <span ng-if="search.eleve.evenement.retard !== undefined">
+                    [[ search.eleve.evenement.retard ]]
+                </span>
+                <span ng-if="search.eleve.evenement.retard === undefined">
+                    0
+                </span>
+            </label>
+    </div>
+    <div class="twelve cell">
+                    <span>
+                        <i18n>viescolaire.abs.justified</i18n>:&nbsp;
+                    </span>
+            <label  class="bold">
+                <span ng-if="search.eleve.evenement.abs_just !== undefined">
+                    [[ search.eleve.evenement.abs_just ]]
+                </span>
+                <span ng-if="search.eleve.evenement.abs_just === undefined">
+                    0
+                </span>
+                <i18n>half.days</i18n>
+            </label>
+    </div>
+    <div class="twelve cell">
+                    <span>
+                        <i18n>viescolaire.abs.not.justified</i18n>:&nbsp;
+                    </span>
+            <label  class="bold">
+                 <span ng-if="search.eleve.evenement.abs_non_just !== undefined">
+                    [[ search.eleve.evenement.abs_non_just]]
+                </span>
+                <span ng-if="search.eleve.evenement.abs_non_just === undefined">
+                    0
+                </span>
+                <i18n>half.days</i18n>
+            </label>
+    </div>
+    <div class="twelve cell">
+                    <span>
+                        <i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;
+                    </span>
+            <label  class="bold">
+                 <span ng-if="search.eleve.evenement.abs_totale_heure !== undefined">
+                    [[ search.eleve.evenement.abs_totale_heure]]
+                </span>
+                <span ng-if="search.eleve.evenement.abs_totale_heure === undefined">
+                    0
+                </span>
+                <i18n>hours</i18n>
+            </label>
+    </div>
 
-</body>
+    <div class="twelve">
+        <!-- TODO take the real CPE appreciation -->
+         <textarea placeholder="[[translate('bilan.periodique.appreciationCPE.placeholder')]]"
+                   rows="5" type="text"
+                   ng-model="search.eleve.appreciationCPE"
+                   class="twelve"
+                   ng-maxlength="600"
+                   maxlength="600"
+                   ng-disabled="true">
+                            </textarea>
+    </div>
+</fieldset>
+<fieldset>
+    <legend><i18n>history</i18n></legend>
+    <div class="responsive-table">
+
+        <table>
+            <thead>
+
+            <tr>
+                <th class="titleCenter"><i18n>viescolaire.utils.periode</i18n></th>
+                <th class="titleCenter"><i18n>viescolaire.retards</i18n></th>
+                <th class="titleCenter"><i18n>viescolaire.abs.justified</i18n></th>
+                <th class="titleCenter"><i18n>viescolaire.abs.not.justified</i18n></th>
+                <th class="titleCenter"><i18n>viescolaire.nb.courses.lost</i18n></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="evenement in search.eleve.evenements | orderBy:'ordre' ">
+                <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
+                    [[evenement.periode]] </td>
+                <td class="newsizeTD"
+                    data-label="[[translate('viescolaire.retards')]]" >
+                    <span ng-if="evenement.retard !== undefined">
+                        [[evenement.retard]]
+                        </span>
+                    <span ng-if ="evenement.retard === undefined">
+                        [[0]]
+                    </span>
+                </td>
+                <td class="newsizeTD" data-label="[[translate('viescolaire.abs.justified')]]" >
+                     <span ng-if="evenement.abs_just !== undefined">
+                        [[evenement.abs_just]]
+                        </span>
+                    <span ng-if ="evenement.abs_just === undefined">
+                        [[0]]
+                    </span>
+                    <i18n>half.days</i18n>
+                </td>
+                <td class="newsizeTD" data-label="[[translate('viescolaire.abs.not.justified')]]" >
+                    <span ng-if="evenement.abs_non_just !== undefined">
+                        [[evenement.abs_non_just]]
+                        </span>
+                    <span ng-if ="evenement.abs_non_just === undefined">
+                        [[0]]
+                    </span>
+                    <i18n>half.days</i18n></td>
+                <td class="newsizeTD" data-label="[[translate('viescolaire.nb.courses.lost')]]" >
+                    <span ng-if="evenement.abs_totale_heure !== undefined">
+                        [[evenement.abs_totale_heure]]
+                        </span>
+                    <span ng-if ="evenement.abs_totale_heure === undefined">
+                        [[0]]
+                    </span>
+                    <i18n>hours</i18n>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+</fieldset>
+</div>
 </html>
