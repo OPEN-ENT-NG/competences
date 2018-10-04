@@ -22,8 +22,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.displayBilanPeriodique = function () {
             if (($scope.search.classe !== '*' && $scope.search.classe !== null && $scope.search.classe !== undefined)
-                && ($scope.informations.eleve !== null && $scope.informations.eleve !== null && $scope.informations.eleve !== undefined)
-                && ($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
+                || ($scope.informations.eleve !== '*' && $scope.informations.eleve !== null && $scope.informations.eleve !== undefined)
+                || ($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
                 $scope.critereIsEmpty = false;
             }
             $scope.updateColorAndLetterForSkills();
@@ -153,9 +153,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
                 $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
-                $scope.changeContentBilanPeriod();
-                // delete $scope.informations.competencesNotes;
-                // $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
+                $scope.changeContent();
+                delete $scope.informations.competencesNotes;
+                $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
             }
             if(template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
                 $scope.openMatiere();
@@ -165,7 +165,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
         };
 
-        $scope.changeContent = function () {
+        $scope.changeContent = async function () {
+            $scope.informations.eleve = $scope.search.eleve;
             if (($scope.search.classe !== '*' && $scope.search.classe !== null && $scope.search.classe !== undefined)
                 || ($scope.informations.eleve !== null && $scope.informations.eleve !== null && $scope.informations.eleve !== undefined)
                 || ($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
@@ -176,20 +177,16 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     $scope.openDomaine();
                 }
             }
-        };
-
-        $scope.deleteStudent = function () {
-            $scope.bilanPeriodique = new BilanPeriodique($scope.informations.eleve, $scope.search.classe);
-            delete $scope.bilanPeriodique;
-            $scope.displayBilanPeriodique();
-        }
-
-        $scope.changeContentBilanPeriod = async function () {
-            $scope.informations.eleve = $scope.search.eleve;
-            if( $scope.selected.vieScolaire) {
+            if($scope.selected.vieScolaire) {
                 await $scope.openVieScolaire();
             }
         };
+
+        $scope.deleteStudent = function () {
+                $scope.informations.eleve = '';
+                $scope.critereIsEmpty = true;
+            };
+
 
         /**
          * Saisir projet   -   Bilan Periodique
