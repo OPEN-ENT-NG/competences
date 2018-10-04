@@ -802,7 +802,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Créer une appréciation avec les données passées en POST depuis l'écran du bilan périoque
+     * Créer une appréciation avec les données passées en POST depuis l'écran du bilan périodique
      * @param request
      */
     @Post("/elementsAppreciationBilanPeriodique")

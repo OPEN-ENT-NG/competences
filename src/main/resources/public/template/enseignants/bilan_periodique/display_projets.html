@@ -18,22 +18,22 @@
   -->
 <div class="row">
     <div class="twelve cell">
-        <section>
-            <content ng-show="bilanPeriodique === undefined">
-                <article class="card twelve-mobile centered card-projet">
-                    <i18n>evaluation.bilan.periodique.projet.empty</i18n>
-                </article>
-            </content>
-        </section>
+        <!--<section>-->
+            <!--<content ng-show="bilanPeriodique === undefined">-->
+                <!--<article class="card twelve-mobile centered card-projet">-->
+                    <!--<i18n>evaluation.bilan.periodique.projet.empty</i18n>-->
+                <!--</article>-->
+            <!--</content>-->
+        <!--</section>-->
         <section>
             <content ng-show="bilanPeriodique !== undefined">
-                <h2 ng-class="{'openedElem' : element.opened}"
+                <h4 ng-class="{'openedElem' : EPI.opened}"
                     class="margin-top-05em Domaine"
-                    ng-click="element.opened = !element.opened"
-                    ng-init="element.opened = true">
+                    ng-click="EPI.opened = !EPI.opened"
+                    ng-init="EPI.opened = true">
                     <i18n>enseignements.pratiques.interdisciplinaires</i18n>
-                </h2>
-                <div ng-repeat="element in elementsDisplay | filter:filterElements(1)"
+                </h4>
+                <div ng-show="!EPI.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(1)"
                      class="twelve cell marginFive">
                     <div class="four cell marginFive">
                         <h2>[[element.libelle]]</h2>
@@ -45,7 +45,7 @@
                            ng-blur="saveAppElement(element, informations.eleve)"></textarea>
                     </div>
                     <div class="four cell" ng-show="!canUpdateAppreciations()">
-                        <span style="120%" ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
+                        <span ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
                     </div>
 
                 </div>
@@ -53,13 +53,13 @@
         </section>
         <section>
             <content ng-show="bilanPeriodique !== undefined">
-                <h2 ng-class="{'openedElem' : element.opened}"
+                <h4 ng-class="{'openedElem' : AP.opened}"
                     class="margin-top-05em Domaine"
-                    ng-click="element.opened = !element.opened"
-                    ng-init="element.opened = true">
+                    ng-click="AP.opened = !AP.opened"
+                    ng-init="AP.opened = true">
                     <i18n>accompagnements.personnalises</i18n>
-                </h2>
-                <div ng-repeat="element in elementsDisplay | filter:filterElements(2)"
+                </h4>
+                <div ng-show="!AP.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(2)"
                      class="marginFive">
                     <div><span>[[element.libelle]]</span></div>
                     <div ng-show="canUpdateAppreciations()">
@@ -76,13 +76,13 @@
         </section>
         <section>
             <content ng-show="bilanPeriodique !== undefined">
-                <h2 ng-class="{'openedElem' : element.opened}"
+                <h4 ng-class="{'openedElem' : parcours.opened}"
                     class="margin-top-05em Domaine"
-                    ng-click="element.opened = !element.opened"
-                    ng-init="element.opened = true">
+                    ng-click="parcours.opened = !parcours.opened"
+                    ng-init="parcours.opened = true">
                     <i18n>parcours.educatifs</i18n>
-                </h2>
-                <div ng-repeat="element in elementsDisplay | filter:filterElements(3)"
+                </h4>
+                <div ng-show="!parcours.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(3)"
                      class="marginFive">
                     <div><span>[[element.theme.libelle]]</span></div>
 
