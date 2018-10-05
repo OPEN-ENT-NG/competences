@@ -25,6 +25,7 @@
                 <!--</article>-->
             <!--</content>-->
         <!--</section>-->
+
         <section>
             <content ng-show="bilanPeriodique !== undefined">
                 <h4 ng-class="{'openedElem' : EPI.opened}"
@@ -36,21 +37,26 @@
                 <div ng-show="!EPI.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(1)"
                      class="twelve cell marginFive">
                     <div class="four cell marginFive">
-                        <h2>[[element.libelle]]</h2>
+                        <span>[[element.libelle]]</span>
+                        <span>[[element.theme.libelle]]</span>
+                        <span>[[element.enseignants]]</span>
                     </div>
-                    <div class="four cell" ng-show="canUpdateAppreciations()">
-                        <textarea type="text" class="eleven input-appreciation"
+                    <div class="four cell">
+                        <textarea ng-show="canUpdateAppreciations()"
+                           class="eleven input-appreciation"
+                           type="text"
                            name="appreciation"
                            ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
-                           ng-blur="saveAppElement(element, informations.eleve)"></textarea>
+                           ng-blur="saveAppElement(element, informations.eleve)">
+                        </textarea>
+                        <span ng-show="!canUpdateAppreciations()"
+                              ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
+                        </span>
                     </div>
-                    <div class="four cell" ng-show="!canUpdateAppreciations()">
-                        <span ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
-                    </div>
-
                 </div>
             </content>
         </section>
+
         <section>
             <content ng-show="bilanPeriodique !== undefined">
                 <h4 ng-class="{'openedElem' : AP.opened}"
@@ -61,19 +67,25 @@
                 </h4>
                 <div ng-show="!AP.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(2)"
                      class="marginFive">
-                    <div><span>[[element.libelle]]</span></div>
-                    <div ng-show="canUpdateAppreciations()">
-                        <textarea type="text" class="eleven input-appreciation"
+                    <div class="four cell marginFive">
+                        <span>[[element.libelle]]</span>
+                        <span>[[element.enseignants]]</span>
+                    </div>
+                    <div class="four cell">
+                        <textarea ng-show="canUpdateAppreciations()"
+                           class="eleven input-appreciation"
+                           type="text"
                            name="appreciation"
                            ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
-                           ng-blur="saveAppElement(element, informations.eleve)"></textarea>
-                    </div>
-                    <div ng-show="!canUpdateAppreciations()">
-                        <span ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
+                           ng-blur="saveAppElement(element, informations.eleve)">
+
+                        </textarea>
+                        <span ng-show="!canUpdateAppreciations()" ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
                     </div>
                 </div>
             </content>
         </section>
+
         <section>
             <content ng-show="bilanPeriodique !== undefined">
                 <h4 ng-class="{'openedElem' : parcours.opened}"
@@ -84,17 +96,19 @@
                 </h4>
                 <div ng-show="!parcours.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(3)"
                      class="marginFive">
-                    <div><span>[[element.theme.libelle]]</span></div>
-
-                    <div ng-show="canUpdateAppreciations()">
-                        <textarea type="text" class="eleven input-appreciation"
-                           name="appreciation" ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
-                           ng-blur="saveAppElement(element, informations.eleve)"></textarea>
+                    <div class="four cell marginFive">
+                        <span>[[element.theme.libelle]]</span>
                     </div>
-                    <div ng-show="!canUpdateAppreciations()">
-                        <span ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
+                    <div class="four cell">
+                        <textarea ng-show="canUpdateAppreciations()"
+                                  class="eleven input-appreciation"
+                                  type="text"
+                                  name="appreciation"
+                                  ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
+                                  ng-blur="saveAppElement(element, informations.eleve)">
+                        </textarea>
+                        <span ng-show="!canUpdateAppreciations()" ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
                     </div>
-
                 </div>
             </content>
         </section>

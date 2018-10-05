@@ -302,6 +302,15 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             };
         };
 
+        // $scope.filterName = () => {
+        //     return () => {
+        //         for (let i = 0; i < $scope.element.enseignants.length; i++) {
+        //             return $scope.element.enseignants[i];
+        //         }
+        //     };
+        // };
+
+
         $scope.syncPeriodesBilanPeriodique = async function () {
             if ($scope.search.classe.periodes.length() === 0) {
                 await $scope.search.classe.periodes.sync();
