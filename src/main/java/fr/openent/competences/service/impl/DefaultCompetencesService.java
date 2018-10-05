@@ -292,8 +292,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                     " ON (comp.id = compEns.id_competence) " +
                     " LEFT OUTER JOIN " + COMPETENCES_SCHEMA + ".perso_order_item_enseignement AS perso_ordre" +
                     " ON ( perso_ordre.id_competence = compEns.id_competence AND " +
-                    " perso_ordre.id_enseignement = compEns.id_enseignement ) ";
-
+                    " perso_ordre.id_enseignement = compEns.id_enseignement AND perso_ordre.id_etablissement = ?) ";
+            params.add(idEtablissement);
             if (idClasse != null && idCycle == null) {
                 query += "INNER JOIN " + COMPETENCES_SCHEMA + ".rel_groupe_cycle" +
                         " ON (rel_groupe_cycle.id_cycle = comp.id_cycle) ";
