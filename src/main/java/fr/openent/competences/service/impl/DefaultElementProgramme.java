@@ -49,6 +49,27 @@ public class DefaultElementProgramme implements ElementProgramme {
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
+    @Override
+    public void getElementProgrammeClasses(Long idPeriode, String idMatiere, JsonArray idsClasse, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT element_programme.texte ")
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".element_programme ")
+                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_classe IN " + Sql.listPrepared(idsClasse.getList()))
+                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_periode = ? ")
+                .append("AND "+ Competences.COMPETENCES_SCHEMA +".element_programme.id_matiere = ? ");
+
+        for(Object idClasse : idsClasse){
+            values.add(idClasse);
+        }
+
+        values.add(idPeriode);
+        values.add(idMatiere);
+
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
 
     @Override
     public void getDomainesEnseignement(Handler<Either<String, JsonArray>> handler){

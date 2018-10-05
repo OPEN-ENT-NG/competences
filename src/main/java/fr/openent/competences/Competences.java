@@ -133,6 +133,7 @@ public class Competences extends BaseServer {
 		addController(new CompetenceController(eb));
 		addController(new CompetenceNoteController(eb));
 
+
         // devoir controller
         DevoirController devoirController = new DevoirController(eb);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE, new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
@@ -148,6 +149,7 @@ public class Competences extends BaseServer {
 		addController(new RemplacementController());
         addController(new ElementProgrammeController());
 		addController(new UtilsController());
+        addController(new BilanPeriodiqueController(eb));
 
 		addController(new EventBusController());
 

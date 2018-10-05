@@ -19,12 +19,17 @@
 
 package fr.openent.competences.service;
 
+import fr.openent.competences.bean.NoteDevoir;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -87,7 +92,7 @@ public interface NoteService extends CrudService {
      * @param periodeId identifiant de la periode
      * @param handler handler portant le résultat de la requête
      */
-    void getNoteElevePeriode(String userId, String etablissementId, String classeId, String matiereId, Long periodeId,
+    void getNoteElevePeriode(String userId, String etablissementId, JsonArray classeId, String matiereId, Long periodeId,
                              Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -119,9 +124,9 @@ public interface NoteService extends CrudService {
 
     /**
      * Supprime la colonne d'un élève pour une période, une matiere et une classe
-     * @param idEleve
-     * @param idPeriode
-     * @param idMatiere
+     * @param idEleve identifiant de l'eleve
+     * @param idPeriode identifiant de la période
+     * @param idMatiere identifiant de la matière
      * @param idClasse
      * @param handler
      */
@@ -133,8 +138,8 @@ public interface NoteService extends CrudService {
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe
      * @param idEleve
-     * @param idPeriode
-     * @param idMatiere
+     * @param idPeriode identifiant de la période
+     * @param idMatiere identifiant de la matière
      * @param idClasse
      * @param field (moyenne, positionnement)
      * @param handler
@@ -142,4 +147,45 @@ public interface NoteService extends CrudService {
     void setColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse, JsonObject field,
                           String colonne,Handler<Either<String, JsonArray>> handler);
 
+    /**
+     *Calcul la moyenne d'un eleve a
+     * @param listNotes response of request
+     * @param result JsonObject of result
+     * @param idEleve
+     * @param idEleves id des Eleves ayant une note dans la lisNotes
+     * @return retourne une map avec
+     */
+    HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> calculMoyennesEleveByPeriode (JsonArray listNotes, final JsonObject result, String idEleve, JsonArray idEleves);
+
+    /**
+     * Récupère toutes les appreciations, les moyennes finales et les positionnement pour un eleve, une matiere, une periode
+     * @param idEleve idEleve
+     * @param idMatiere idMatiere
+     * @param idPeriode idPeriode
+     * @param handler response
+     */
+    void getAppreciationMoyFinalePositionnement(String idEleve, String idMatiere, Long idPeriode, Handler<Either<String,JsonArray>> handler);
+
+    /**
+     * calcul la moyenne de la classe pour une période
+     * @param allNotes allNotes
+     * @param moyFinalesEleves moyFinalesEleves
+     * @param idPeriode idPeriode
+     * @return la moyenne
+     */
+    Double calculMoyenneClasseByPeriode(ArrayList<NoteDevoir> allNotes,
+                                        JsonArray moyFinalesEleves,
+                                        Long idPeriode);
+
+    /**
+     * calcul la moyenne de la classe pour toute les périodes où il y a eu une note
+     * @param moyFinalesEleves moyenne finale de l'élève pour une classe donnée
+     * @param notesByDevoirByPeriodeClasse map<periode map<periode,liste de devoirs>>
+     * @param result JsonObject sur lequel est ajouté les moyennes de la classe
+     */
+    void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
+                                                   final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+                                                   final JsonObject result );
+
+    void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result);
 }

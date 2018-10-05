@@ -28,6 +28,15 @@ public interface ElementProgramme {
     public void getElementProgramme(Long idPeriode, String idMatiere, String idClasse, Handler<Either<String, JsonObject>> handler);
 
     /**
+     * Get element Programme for many class
+     * @param idPeriode
+     * @param idMatiere
+     * @param idsClasse
+     * @param handler
+     */
+    public void getElementProgrammeClasses(Long idPeriode, String idMatiere, JsonArray idsClasse, Handler<Either<String, JsonArray>> handler);
+
+    /**
      * @param handler
      */
     public void getDomainesEnseignement(Handler<Either<String, JsonArray>> handler);
