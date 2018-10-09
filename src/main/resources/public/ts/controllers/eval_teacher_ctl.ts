@@ -3919,6 +3919,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.suiviFilter = {
                 mine: false
             };
+            $scope.selected = {
+                grey: true
+            };
             template.open('lightboxEleveDetails', 'enseignants/releve_notes/details_competences_eleve');
             utils.safeApply($scope);
         };
