@@ -3078,7 +3078,26 @@ body.evaluations {
     padding: 0px !important;
   }
 
+
+  //  Bilan périodique
+
+      //  Onglet projet
+
+  .border-bottom {
+    border-bottom: 0.1em solid #555555;
+  }
+
+  .display-flex-space-between {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .text-cyan {
+    color: $cyan;
+  }
+
 }
+
 
 //   Sniplet module vie-scolaire
 

@@ -22,12 +22,12 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.displayBilanPeriodique = function () {
             if (($scope.search.classe !== '*' && $scope.search.classe !== null && $scope.search.classe !== undefined)
-                || ($scope.informations.eleve !== '*' && $scope.informations.eleve !== null && $scope.informations.eleve !== undefined)
+                || ($scope.search.eleve !== '*' && $scope.search.eleve !== null && $scope.search.eleve !== undefined)
                 || ($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
                 $scope.critereIsEmpty = false;
             }
             $scope.updateColorAndLetterForSkills();
-        }
+        };
 
         $scope.selected = { suiviAcquis: true, projet: false, vieScolaire: false, graphique: false };
 
@@ -42,7 +42,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
             utils.safeApply($scope);
-        }
+        };
 
         $scope.openProjet = function () {
             $scope.selected = { projet: true };
@@ -54,7 +54,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.getElementsBilanBilanPeriodique("isBilanPeriodique");
             $scope.isBilanPeriodique = "isBilanPeriodique";
             utils.safeApply($scope);
-        }
+        };
 
         $scope.openVieScolaire = async function () {
             $scope.selected = { vieScolaire: true };
@@ -135,7 +135,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false);
             template.open('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject');
             utils.safeApply($scope);
-        }
+        };
 
         $scope.openDomaine = async function () {
             template.close('graphDomaine');
@@ -171,14 +171,19 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 || ($scope.informations.eleve !== null && $scope.informations.eleve !== null && $scope.informations.eleve !== undefined)
                 || ($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
                 if(template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
+                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
                     $scope.openMatiere();
                 }
                 if(template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
+                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
                     $scope.openDomaine();
                 }
             }
             if($scope.selected.vieScolaire) {
                 await $scope.openVieScolaire();
+            }
+            if($scope.selected.projet) {
+                await $scope.openProjet();
             }
         };
 
@@ -186,6 +191,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.informations.eleve = '';
                 $scope.critereIsEmpty = true;
             };
+
+
+        //////            Lightbox historique            //////
+
+        $scope.openHistoric = function () {
+            $scope.opened.historic = true;
+        }
 
 
         /**
@@ -237,19 +249,18 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             if(param === "isBilanPeriodique"){
                 _.forEach($scope.bilanPeriodique.appreciations, (appreciation) => {
-
                     if($scope.elementsDisplay === undefined) {
                         $scope.elementsDisplay = [_.findWhere($scope.bilanPeriodique.elements, {id: appreciation.id_elt_bilan_periodique})];
-                    } else {
+                    }
+                    else if (!_.findWhere($scope.elementsDisplay, {id: appreciation.id_elt_bilan_periodique})) {
                         $scope.elementsDisplay.push(_.findWhere($scope.bilanPeriodique.elements, {id: appreciation.id_elt_bilan_periodique}));
                     }
-
                 })
 
                 $scope.informations.eleve = _.findWhere($scope.bilanPeriodique.classe.eleves.all, {id: $scope.search.eleve.id});
             }
             utils.safeApply($scope);
-        }
+        };
 
 
         /**
@@ -283,7 +294,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
             }
             utils.safeApply($scope);
-        }
+        };
+
 
         $scope.filterElements = (type) => {
             return (item) => {
@@ -302,14 +314,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             };
         };
 
-        // $scope.filterName = () => {
-        //     return () => {
-        //         for (let i = 0; i < $scope.element.enseignants.length; i++) {
-        //             return $scope.element.enseignants[i];
-        //         }
-        //     };
-        // };
-
 
         $scope.syncPeriodesBilanPeriodique = async function () {
             if ($scope.search.classe.periodes.length() === 0) {
@@ -317,7 +321,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
             utils.safeApply($scope);
-        }
+        };
     }
 
 

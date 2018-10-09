@@ -1,10 +1,89 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Synthèse</title>
-</head>
-<body>
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+  ~
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  ~
+  -->
 
-</body>
-</html>
+<div class="twelve cell">
+    <div class="display-flex-space-between">
+        <h4 class="margin-top-05em">
+            <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(search.periode)]]
+        </h4>
+
+        <span class="text-cyan italic" ng-click="openHistoric()">
+            <i18n>history</i18n>
+        </span>
+    </div>
+
+
+    <textarea class="eleven input-appreciation"
+              type="text"
+              name="appreciation">
+    </textarea>
+
+    <lightbox show="opened.historic" on-close="!opened.historic">
+
+        <div class="header">
+            <h2>
+                <i18n>history</i18n>
+            </h2>
+        </div>
+
+
+        <div class="responsive-table">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th class="titleCenter"><i18n>viescolaire.utils.periode</i18n></th>
+                        <th class="titleCenter"><i18n>average.min.eleve</i18n></th>
+                        <th class="titleCenter"><i18n>average.min.classe</i18n></th>
+                        <th class="titleCenter"><i18n>evaluation.synthese.bilan.periodique.title</i18n></th>
+                        <th class="titleCenter"><i18n>evaluations.evaluation.conseil</i18n></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="evenement in search.eleve.evenements | orderBy:'ordre'">
+                        <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
+                            [[evenement.periode]] </td>
+                        <td class="newsizeTD">
+                            <span>
+                            </span>
+                        </td>
+                        <td class="newsizeTD" data-label="">
+                            <span>
+                            </span>
+                        </td>
+                        <td class="newsizeTD" data-label="">
+                            <span>
+
+                            </span>
+                        </td>
+                        <td class="newsizeTD">
+                            <span>
+
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+
+    </lightbox>
+
+</div>

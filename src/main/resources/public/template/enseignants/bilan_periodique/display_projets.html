@@ -26,22 +26,24 @@
             <!--</content>-->
         <!--</section>-->
 
-        <section>
-            <content ng-show="bilanPeriodique !== undefined">
+            <div class="twelve cell border-bottom"
+                 ng-show="bilanPeriodique !== undefined">
                 <h4 ng-class="{'openedElem' : EPI.opened}"
                     class="margin-top-05em Domaine"
                     ng-click="EPI.opened = !EPI.opened"
                     ng-init="EPI.opened = true">
                     <i18n>enseignements.pratiques.interdisciplinaires</i18n>
                 </h4>
-                <div ng-show="!EPI.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(1)"
+                <div ng-show="!EPI.opened" ng-repeat="element in elementsDisplay | filter:{'type' : 1} track by $index"
                      class="twelve cell marginFive">
-                    <div class="four cell marginFive">
+                    <div class="four cell marginFive itemFlex">
                         <span>[[element.libelle]]</span>
                         <span>[[element.theme.libelle]]</span>
-                        <span>[[element.enseignants]]</span>
+                        <div class="">
+                            <span ng-repeat="enseignant in element.enseignants">[[enseignant]] [[$last ? '' : ', ']]</span>
+                        </div>
                     </div>
-                    <div class="four cell">
+                    <div class="four cell marginFive">
                         <textarea ng-show="canUpdateAppreciations()"
                            class="eleven input-appreciation"
                            type="text"
@@ -54,52 +56,51 @@
                         </span>
                     </div>
                 </div>
-            </content>
-        </section>
+            </div>
 
-        <section>
-            <content ng-show="bilanPeriodique !== undefined">
+            <div class="twelve cell border-bottom"
+                 ng-show="bilanPeriodique !== undefined">
                 <h4 ng-class="{'openedElem' : AP.opened}"
                     class="margin-top-05em Domaine"
                     ng-click="AP.opened = !AP.opened"
                     ng-init="AP.opened = true">
                     <i18n>accompagnements.personnalises</i18n>
                 </h4>
-                <div ng-show="!AP.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(2)"
-                     class="marginFive">
-                    <div class="four cell marginFive">
+                <div ng-show="!AP.opened" ng-repeat="element in elementsDisplay | filter:{'type': 2} track by $index"
+                     class="twelve cell marginFive">
+                    <div class="four cell marginFive itemFlex">
                         <span>[[element.libelle]]</span>
-                        <span>[[element.enseignants]]</span>
+                        <span ng-repeat="enseignant in element.enseignants">[[enseignant]]</span>
                     </div>
-                    <div class="four cell">
+                    <div class="four cell marginFive">
                         <textarea ng-show="canUpdateAppreciations()"
                            class="eleven input-appreciation"
                            type="text"
                            name="appreciation"
                            ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                            ng-blur="saveAppElement(element, informations.eleve)">
-
                         </textarea>
-                        <span ng-show="!canUpdateAppreciations()" ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
+                        <span ng-show="!canUpdateAppreciations()"
+                              ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
+                        </span>
                     </div>
                 </div>
-            </content>
-        </section>
+            </div>
 
-        <section>
-            <content ng-show="bilanPeriodique !== undefined">
+            <div class="twelve cell border-bottom"
+                 ng-show="bilanPeriodique !== undefined">
                 <h4 ng-class="{'openedElem' : parcours.opened}"
                     class="margin-top-05em Domaine"
                     ng-click="parcours.opened = !parcours.opened"
                     ng-init="parcours.opened = true">
                     <i18n>parcours.educatifs</i18n>
                 </h4>
-                <div ng-show="!parcours.opened" ng-repeat="element in elementsDisplay track by $index | filter:filterElements(3)"
-                     class="marginFive">
-                    <div class="four cell marginFive">
+                <div ng-show="!parcours.opened" ng-repeat="element in elementsDisplay | filter:{'type' : 3} track by $index"
+                     class="twelve cell marginFive">
+                    <div class="four cell marginFive itemFlex">
                         <span>[[element.theme.libelle]]</span>
                     </div>
-                    <div class="four cell">
+                    <div class="four cell marginFive">
                         <textarea ng-show="canUpdateAppreciations()"
                                   class="eleven input-appreciation"
                                   type="text"
@@ -107,10 +108,12 @@
                                   ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                                   ng-blur="saveAppElement(element, informations.eleve)">
                         </textarea>
-                        <span ng-show="!canUpdateAppreciations()" ng-bind="informations.eleve.appreciations[search.periode.id][element.id]"></span>
+                        <span ng-show="!canUpdateAppreciations()"
+                              ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
+                        </span>
                     </div>
                 </div>
-            </content>
-        </section>
+            </div>
+
     </div>
 </div>
