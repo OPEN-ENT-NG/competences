@@ -30,6 +30,7 @@ import {evalSuiviCompetenceEleveCtl} from './controllers/eval_suivi_competences_
 import {evalSuiviCompetenceClasseCtl} from './controllers/eval_suivi_competences_classe_ctl';
 import {evalBilanPeriodiqueCtl} from './controllers/eval_bilan_periodique_ctl';
 import {exportControleur} from './controllers/eval_export_controller';
+import {evalBulletinCtl} from "./controllers/eval_print_bulletin_ctl";
 
 ng.controllers.push(evaluationsController);
 ng.controllers.push(evalAcuTeacherController);
@@ -37,6 +38,7 @@ ng.controllers.push(evalSuiviCompetenceEleveCtl);
 ng.controllers.push(evalSuiviCompetenceClasseCtl);
 ng.controllers.push(evalBilanPeriodiqueCtl);
 ng.controllers.push(exportControleur);
+ng.controllers.push(evalBulletinCtl);
 
 //FILTERS
 import {uniqueFilter} from './utils/filters/unique';
@@ -110,6 +112,7 @@ routes.define(function($routeProvider){
         .when('/bilanperiodique',{action:'displayBilanPeriodique'})
         .when('/export',{action:'export'})
         .when('/disabled', {action : 'disabled'})
+        .when('/bulletin', {action : 'bulletin'})
         .when('/',{action:'accueil'})
         .otherwise({
             redirectTo : '/'

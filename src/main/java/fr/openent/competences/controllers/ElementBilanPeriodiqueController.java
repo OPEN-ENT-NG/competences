@@ -29,6 +29,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -51,8 +52,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
 
     private final DefaultElementBilanPeriodiqueService defaultElementBilanPeriodiqueService;
 
-    public ElementBilanPeriodiqueController() {
-        defaultElementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService();
+    public ElementBilanPeriodiqueController(EventBus eb) {
+        defaultElementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
     }
 
     /**
@@ -343,186 +344,11 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             @Override
             public void handle(UserInfos user) {
                 if(user != null){
-                    defaultElementBilanPeriodiqueService.getElementBilanPeriodique(
+                    defaultElementBilanPeriodiqueService.getElementsBilanPeriodique(
                             Boolean.parseBoolean(request.params().get("visu"))
                                     ? null : request.params().get("idEnseignant"),
                             request.params().get("idClasse"),
-                            request.params().get("idEtablissement"),
-                            new Handler<Either<String, JsonArray>>() {
-                                @Override
-                                public void handle(Either<String, JsonArray> event) {
-                                    if (event.isRight()) {
-                                        JsonArray result = event.right().getValue();
-
-                                        List<String> idMatieres = new ArrayList<>();
-                                        List<String> idClasses = new ArrayList<>();
-                                        List<String> idUsers = new ArrayList<>();
-
-                                        for(Object r : result){
-                                            JsonObject element = (JsonObject)r;
-
-                                            String[] arrayIdClasses = element.getString("groupes").split(",");
-                                            JsonArray jsonArrayIntsMats = element.getJsonArray("intervenants_matieres");
-
-                                            for(int i = 0; i < arrayIdClasses.length; i++){
-                                                if(!idClasses.contains(arrayIdClasses[i])){
-                                                    idClasses.add(arrayIdClasses[i]);
-                                                }
-                                            }
-
-                                            if(jsonArrayIntsMats != null){
-                                                for(Object o : jsonArrayIntsMats){
-                                                    JsonArray jsonArrayIntMat = (JsonArray) o;
-                                                    String[] arrayIntMat = jsonArrayIntMat.getString(1).split(",");
-                                                    if(!idUsers.contains(arrayIntMat[0])){
-                                                        idUsers.add(arrayIntMat[0]);
-                                                    }
-                                                    if(arrayIntMat.length > 1 && !idMatieres.contains(arrayIntMat[1])){
-                                                        idMatieres.add(arrayIntMat[1]);
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        // récupération des noms des matières
-                                        JsonObject action = new JsonObject()
-                                                .put("action", "matiere.getMatieres")
-                                                .put("idMatieres", new fr.wseduc.webutils.collections.JsonArray(idMatieres));
-
-                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                                                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                    @Override
-                                                    public void handle(Message<JsonObject> message) {
-                                                        JsonObject body = message.body();
-
-                                                        if ("ok".equals(body.getString("status"))) {
-                                                            JsonArray matieres = body.getJsonArray("results");
-                                                            Map<String, String> matieresMap = new HashMap<String, String>();
-
-                                                            for(Object o : matieres){
-                                                                JsonObject matiere = (JsonObject)o;
-                                                                matieresMap.put(matiere.getString("id"), matiere.getString("name"));
-                                                            }
-
-                                                            // récupération des noms des classes/groupes
-                                                            JsonObject action = new JsonObject()
-                                                                    .put("action", "classe.getClassesInfo")
-                                                                    .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(idClasses));
-
-                                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                                                                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                                        @Override
-                                                                        public void handle(Message<JsonObject> message) {
-                                                                            JsonObject body = message.body();
-
-                                                                            if ("ok".equals(body.getString("status"))) {
-                                                                                JsonArray classes = body.getJsonArray("results");
-                                                                                Map<String, String> classesNameMap = new HashMap<String, String>();
-                                                                                Map<String, String> classesExternalIdMap = new HashMap<String, String>();
-                                                                                for(Object o : classes){
-                                                                                    JsonObject classe = (JsonObject)o;
-                                                                                    classesNameMap.put(classe.getString("id"), classe.getString("name"));
-                                                                                    classesExternalIdMap.put(classe.getString("id"), classe.getString("externalId"));
-                                                                                }
-
-                                                                                // récupération des noms des intervenants
-                                                                                JsonObject action = new JsonObject()
-                                                                                        .put("action", "user.getUsers")
-                                                                                        .put("idUsers", idUsers);
-
-                                                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                                                    @Override
-                                                                                    public void handle(Message<JsonObject> message) {
-                                                                                        JsonObject body = message.body();
-
-                                                                                        if ("ok".equals(body.getString("status"))) {
-                                                                                            JsonArray users = body.getJsonArray("results");
-                                                                                            Map<String, String> usersMap = new HashMap<String, String>();
-                                                                                            for(Object o : users){
-                                                                                                JsonObject user = (JsonObject)o;
-                                                                                                usersMap.put(user.getString("id"), user.getString("displayName"));
-                                                                                            }
-
-                                                                                            JsonArray parsedElems = new fr.wseduc.webutils.collections.JsonArray();
-                                                                                            for(Object o  : result){
-                                                                                                JsonObject element = (JsonObject) o;
-                                                                                                JsonObject parsedElem = new JsonObject();
-
-                                                                                                parsedElem.put("id", element.getInteger("id"));
-                                                                                                parsedElem.put("type", element.getInteger("type_elt_bilan_periodique"));
-
-                                                                                                if(element.getString("intitule") != null){
-                                                                                                    parsedElem.put("libelle", element.getString("intitule"));
-                                                                                                    parsedElem.put("description", element.getString("description"));
-                                                                                                }
-
-                                                                                                if(element.getInteger("id_thematique") != null){
-                                                                                                    JsonObject theme = new JsonObject();
-                                                                                                    theme.put("id", element.getInteger("id_thematique"));
-                                                                                                    theme.put("libelle", element.getString("libelle"));
-                                                                                                    parsedElem.put("theme", theme);
-                                                                                                }
-
-                                                                                                String[] arrayIdGroupes = element.getString("groupes").split(",");
-                                                                                                JsonArray groupes = new fr.wseduc.webutils.collections.JsonArray();
-
-                                                                                                for(int i = 0; i < arrayIdGroupes.length; i++){
-                                                                                                    JsonObject groupe = new JsonObject();
-                                                                                                    groupe.put("id", arrayIdGroupes[i]);
-                                                                                                    groupe.put("name", classesNameMap.get(arrayIdGroupes[i]));
-                                                                                                    groupe.put("externalId", classesExternalIdMap.get(arrayIdGroupes[i]));
-                                                                                                    groupes.add(groupe);
-                                                                                                }
-                                                                                                parsedElem.put("groupes", groupes);
-
-                                                                                                if(element.getJsonArray("intervenants_matieres") != null){
-
-                                                                                                    JsonArray intMat = element.getJsonArray("intervenants_matieres");
-                                                                                                    JsonArray intervenantsMatieres = new fr.wseduc.webutils.collections.JsonArray();
-
-                                                                                                    for(int i = 0; i < intMat.size(); i++){
-                                                                                                        String[] intMatArray = intMat.getJsonArray(i).getString(1).split(",");
-                                                                                                        JsonObject intervenantMatiere = new JsonObject();
-
-                                                                                                        JsonObject intervenant = new JsonObject();
-                                                                                                        intervenant.put("id", intMatArray[0]);
-                                                                                                        intervenant.put("displayName", usersMap.get(intMatArray[0]));
-                                                                                                        intervenantMatiere.put("intervenant", intervenant);
-                                                                                                        if(intMatArray.length > 1 ){
-                                                                                                            JsonObject matiere = new JsonObject();
-                                                                                                            matiere.put("id", intMatArray[1]);
-                                                                                                            matiere.put("name", matieresMap.get(intMatArray[1]));
-                                                                                                            intervenantMatiere.put("matiere", matiere);
-                                                                                                        }
-
-                                                                                                        intervenantsMatieres.add(intervenantMatiere);
-                                                                                                    }
-                                                                                                    parsedElem.put("intervenantsMatieres", intervenantsMatieres);
-                                                                                                }
-
-                                                                                                parsedElems.add(parsedElem);
-                                                                                            }
-                                                                                            Renders.renderJson(request, parsedElems);
-                                                                                        } else{
-                                                                                            leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                                                                        }
-                                                                                    }
-                                                                                }));
-                                                                            } else{
-                                                                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                                                            }
-                                                                        }
-                                                                    }));
-                                                        } else{
-                                                            leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                                        }
-                                                    }
-                                                }));
-                                    } else{
-                                        leftToResponse(request, event.left());
-                                    }
-                                }
-                            });
+                            request.params().get("idEtablissement"), arrayResponseHandler(request));
 
                 }else{
                     unauthorized(request);
@@ -767,39 +593,12 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             @Override
             public void handle(UserInfos user) {
                 if(user != null){
-                    defaultElementBilanPeriodiqueService.getApprecBilanPerClasse(
-                            request.params().getAll("idClasse"),
-                            request.params().get("idPeriode"),
-                            request.params().getAll("idElement"),
-                            new Handler<Either<String, JsonArray>>() {
-                                @Override
-                                public void handle(Either<String, JsonArray> event) {
-                                    if(event.isRight()){
-                                        JsonArray apprecClasses = event.right().getValue();
-                                        defaultElementBilanPeriodiqueService.getApprecBilanPerEleve(
-                                                request.params().getAll("idClasse"),
-                                                request.params().get("idPeriode"),
-                                                request.params().getAll("idElement"),
-                                                request.params().get("idEleve"),
-                                                new Handler<Either<String, JsonArray>>() {
-                                                    @Override
-                                                    public void handle(Either<String, JsonArray> event) {
-                                                        if(event.isRight()){
-                                                            JsonArray apprecEleves = event.right().getValue();
-                                                            Renders.renderJson(request, apprecClasses.addAll(apprecEleves));
-                                                        } else {
-                                                            Renders.renderJson(request, new JsonObject()
-                                                                    .put("error", "error while retreiving students appreciations"), 400);
-                                                        }
-                                                    }
-                                                });
-                                    } else {
-                                        Renders.renderJson(request, new JsonObject()
-                                                .put("error", "error while retreiving classes appreciations"), 400);
-                                    }
-
-                                }
-                            });
+                    List<String> idsClasses =  request.params().getAll("idClasse");
+                    String idPeriode = request.params().get("idPeriode");
+                    List<String> idElements =  request.params().getAll("idElement");
+                    String idEleve = request.params().get("idEleve");
+                    defaultElementBilanPeriodiqueService.getAppreciations(idsClasses, idPeriode,idElements,idEleve,
+                            arrayResponseHandler(request));
                 }else{
                     unauthorized(request);
                 }

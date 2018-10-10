@@ -19,20 +19,38 @@ package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public interface ExportService {
 
-    public void getExportEval(final Boolean text, Boolean only_evaluation, JsonObject devoir, String idGroupe, String idEtablissement, HttpServerRequest request,
-                              Handler<Either<String, JsonObject>> handler);
+    void getExportEval(final Boolean text, Boolean only_evaluation, JsonObject devoir, String idGroupe,
+                       String idEtablissement, HttpServerRequest request,
+                       Handler<Either<String, JsonObject>> handler);
 
-    public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve, String[] idGroupes,
-                                    String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
-                                    Long idPeriodeType, final Boolean isCycle, final Handler<Either<String, JsonObject>> handler);
+    void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve,
+                             String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
+                             final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle,
+                             final Handler<Either<String, JsonObject>> handler);
 
-    public void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement, final Handler<Either<String, JsonArray>> handler);
+    void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement,
+                            final Handler<Either<String, JsonArray>> handler);
+
+    void getExportBulletin(final HttpServerRequest request, final AtomicBoolean answered, String idEleve,
+                           Map<String, JsonObject> elevesMap, Long IdPeriode,JsonObject params,
+                           Handler<Either<String, JsonObject>> finalHandler);
+
+    Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
+                                                             Map<String, JsonObject> elevesMap,
+                                                             Vertx vertx, JsonObject config,
+                                                             final AtomicBoolean answered, JsonObject params);
+
+    void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
+                    final String prefixPdfName, Vertx vertx, JsonObject config);
 }

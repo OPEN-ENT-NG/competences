@@ -174,7 +174,7 @@ public class Competences extends BaseServer {
 
         setRepositoryEvents(new CompetenceRepositoryEvents(eb));
 
-        addController(new ElementBilanPeriodiqueController());
+        addController(new ElementBilanPeriodiqueController(eb));
 
     }
 

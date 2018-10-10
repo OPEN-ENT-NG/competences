@@ -21,7 +21,12 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.data.FileResolver;
+import fr.wseduc.webutils.http.Renders;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -29,14 +34,30 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.entcore.common.user.UserInfos;
+
+import javax.imageio.ImageIO;
+
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import static fr.wseduc.webutils.http.Renders.badRequest;
 import static fr.wseduc.webutils.http.Renders.getHost;
+import static fr.wseduc.webutils.http.Renders.getScheme;
 
-public class DefaultExportService implements ExportService {
+public class DefaultExportService implements ExportService  {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultExportService.class);
 
@@ -54,6 +75,7 @@ public class DefaultExportService implements ExportService {
     private AnnotationService annotationsService;
     private BFCService bfcService;
     private EventBus eb;
+    private DefaultExportBulletinService exportBulletin;
 
     public DefaultExportService(EventBus eb) {
         this.eb = eb;
@@ -67,6 +89,7 @@ public class DefaultExportService implements ExportService {
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         annotationsService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE);
+        exportBulletin = new DefaultExportBulletinService(eb);
     }
 
     @Override
@@ -593,7 +616,7 @@ public class DefaultExportService implements ExportService {
                         if (devoirsDone.get()
                                 && maitriseDone.get()
                                 && ((domainesDone.get() && !byEnseignement.get())
-                                     || (byEnseignement.get() && enseignementsDone.get()))
+                                || (byEnseignement.get() && enseignementsDone.get()))
                                 && competencesDone.get()
                                 && competencesNotesDone.get()
                                 ) {
@@ -706,22 +729,22 @@ public class DefaultExportService implements ExportService {
                             .getLong("ordre"))) : String.valueOf(maitrise.getLong("ordre")));
             headerMiddle.add(_maitrise);
         }
-            header.put("right", headerMiddle);
+        header.put("right", headerMiddle);
         result.put("header", header);
 
         final Map<String, JsonObject> competencesObjByIdComp = new HashMap<>();
 
         Map<String, Set<String>> competencesByDomainOrEnsei = new LinkedHashMap<>();
-            for (String idEntity : (byEnseignement)? enseignements.keySet(): domaines.keySet()) {
-                competencesByDomainOrEnsei.put(idEntity, new TreeSet<String>(new Comparator<String>() {
-                    @Override
-                    public int compare(String o1, String o2) {
-                        String s1 = competencesObjByIdComp.get(o1).getString("nom");
-                        String s2 = competencesObjByIdComp.get(o2).getString("nom");
-                        return s1.compareTo(s2);
-                    }
-                }));
-            }
+        for (String idEntity : (byEnseignement)? enseignements.keySet(): domaines.keySet()) {
+            competencesByDomainOrEnsei.put(idEntity, new TreeSet<String>(new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    String s1 = competencesObjByIdComp.get(o1).getString("nom");
+                    String s2 = competencesObjByIdComp.get(o2).getString("nom");
+                    return s1.compareTo(s2);
+                }
+            }));
+        }
 
         Map<String, List<String>> devoirByCompetences = new HashMap<>();
         for(JsonObject competence : competences.values()) {
@@ -948,5 +971,246 @@ public class DefaultExportService implements ExportService {
             default:
                 return "TB";
         }
+    }
+
+
+    @Override
+    public void getExportBulletin(final HttpServerRequest request, final AtomicBoolean answered, String idEleve,
+                                  Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
+                                  Handler<Either<String, JsonObject>> finalHandler){
+        exportBulletin.getExportBulletin(request, answered,idEleve,elevesMap,idPeriode,params,finalHandler);
+    }
+
+
+
+
+
+    @Override
+    public Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
+                                                                        Map<String, JsonObject> elevesMap,
+                                                                        Vertx vertx, JsonObject config,
+                                                                        final AtomicBoolean answered,
+                                                                        JsonObject params) {
+        final AtomicInteger elevesDone = new AtomicInteger();
+        /*
+            - Récupération des retards et absences
+            - Récupération du suivi des acquis
+            - Récupération du libelle de l'établissement
+            - Récupération des professeurs principaux
+            - Récupération de la synthèse du relevé périodique
+            - Récupération du libelle de la période
+            - Récupération de l'année scolaire
+            - Récupère le cycle de la classe de l'élève
+            - Rajoute tous les libelles i18n nécessaires pour le bulletin
+            - Récupère l'appréciation CPE
+         */
+        int nbServices = 10;
+        if(params.getBoolean("getResponsable")){
+            ++ nbServices;
+        }
+        if (params.getBoolean("showProjects")) {
+         ++ nbServices;
+        }
+        final AtomicInteger nbServicesFinal = new AtomicInteger(nbServices);
+
+        return new Handler<Either<String, JsonObject>>() {
+            @Override
+            public void handle(Either<String, JsonObject> event) {
+                if (elevesDone.addAndGet(1) == (elevesMap.size()* nbServicesFinal.get())) {
+                    answered.set(true);
+                    String title = I18n.getInstance()
+                            .translate("evaluations.bulletin",
+                                    I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+                    JsonObject resultFinal = new JsonObject(params.getMap()).put("title", title);
+
+                    resultFinal.put("eleves", exportBulletin.sortResultByClasseNameAndNameForBulletin(elevesMap));
+                    genererPdf(request, resultFinal,
+                            "bulletin.pdf.xhtml", title, vertx, config);
+                }
+            }
+        };
+    }
+
+
+    /**
+     * Generation d'un PDF à partir d'un template xhtml
+     *
+     * @param request
+     * @param templateProps objet JSON contenant l'ensemble des valeurs à remplir dans le template
+     * @param templateName  nom du template
+     * @param prefixPdfName prefixe du nom du pdf (qui sera complété de la date de génération)
+     */
+    @Override
+    public void  genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
+                            final String prefixPdfName, Vertx vertx, JsonObject config) {
+
+        final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
+        if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
+            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
+
+                    + " -> Debut Generation Image du template " + templateName);
+        } else {
+            log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
+                    + " -> Debut Generation PDF du template " + templateName);
+        }
+        if (null != templateProps){
+            log.debug(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
+                    + " -> Detail Generation du template templateProps : " + templateProps.toString());
+        } else {
+            log.error(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
+                    + " -> Detail Generation du template templateProps : vide");
+        }
+
+        final String templatePath = FileResolver.absolutePath(config.getJsonObject("exports")
+                .getString("template-path")).toString();
+        final String baseUrl = getScheme(request) + "://"
+                + Renders.getHost(request) + config.getString("app-address") + "/public/";
+
+        String node = (String) vertx.sharedData().getLocalMap("server").get("node");
+        if (node == null) {
+            node = "";
+        }
+        final String _node = node;
+        vertx.fileSystem().readFile(templatePath + templateName,
+                new Handler<AsyncResult<Buffer>>() {
+
+                    @Override
+                    public void handle(AsyncResult<Buffer> result) {
+                        if (!result.succeeded()) {
+                            badRequest(request, "Error while reading template : " + templatePath
+                                    + templateName);
+                            log.error("Error while reading template : " + templatePath + templateName);
+                            return;
+                        }
+                        StringReader reader = new StringReader(result.result().toString("UTF-8"));
+                        Renders render = new Renders(vertx,config);
+                        render.processTemplate(request, templateProps, templateName, reader, new Handler<Writer>() {
+
+                            @Override
+                            public void handle(Writer writer) {
+                                String processedTemplate = ((StringWriter) writer).getBuffer().toString();
+                                if (processedTemplate == null) {
+                                    badRequest(request, "Error while processing.");
+                                    if (templateProps != null) {
+                                        log.error("processing error : \ntemplateProps : " + templateProps.toString()
+                                                + "\ntemplateName : " + templateName);
+                                    }
+                                    return;
+                                }
+                                JsonObject actionObject = new JsonObject();
+                                byte[] bytes;
+                                try {
+                                    bytes = processedTemplate.getBytes("UTF-8");
+                                } catch (UnsupportedEncodingException e) {
+                                    bytes = processedTemplate.getBytes();
+                                    log.error(e.getMessage(), e);
+                                }
+
+                                actionObject
+                                        .put("content", bytes)
+                                        .put("baseUrl", baseUrl);
+                                eb.send(_node + "entcore.pdf.generator", actionObject,
+                                        handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                            @Override
+                                            public void handle(Message<JsonObject> reply) {
+                                                JsonObject pdfResponse = reply.body();
+                                                if (!"ok".equals(pdfResponse.getString("status"))) {
+                                                    badRequest(request, pdfResponse.getString("message"));
+                                                    return;
+                                                }
+                                                byte[] pdf = pdfResponse.getBinary("content");
+
+                                                if (templateProps.containsKey("image") && templateProps
+                                                        .getBoolean("image")) {
+                                                    File pdfFile = new File(prefixPdfName + "_"
+                                                            + dateDebut + ".pdf");
+                                                    OutputStream outStream = null;
+                                                    try {
+                                                        outStream = new FileOutputStream(pdfFile);
+                                                    } catch (FileNotFoundException e) {
+                                                        log.error(e.getMessage());
+                                                        e.printStackTrace();
+                                                    }
+                                                    try {
+                                                        outStream.write(pdf);
+                                                    } catch (IOException e) {
+                                                        log.error(e.getMessage());
+                                                        e.printStackTrace();
+                                                    }
+
+                                                    try {
+                                                        String sourceDir = pdfFile.getAbsolutePath();
+                                                        File sourceFile = new File(sourceDir);
+                                                        while (!sourceFile.exists()) {
+                                                            System.err.println(sourceFile.getName()
+                                                                    + " File does not exist");
+                                                        }
+                                                        if (sourceFile.exists()) {
+                                                            PDDocument document = PDDocument.load(sourceDir);
+                                                            @SuppressWarnings("unchecked")
+                                                            List<PDPage> list = document.getDocumentCatalog()
+                                                                    .getAllPages();
+                                                            File imageFile = null;
+                                                            for (PDPage page : list) {
+                                                                BufferedImage image = page.convertToImage();
+                                                                int height = 150
+                                                                        + Integer.parseInt(templateProps
+                                                                        .getString("nbrCompetences")) * 50;
+                                                                BufferedImage SubImage =
+                                                                        image.getSubimage(0, 0, 1684, height);
+                                                                imageFile = new File(prefixPdfName
+                                                                        + "_" + dateDebut + ".jpg");
+                                                                ImageIO.write(SubImage, "jpg", imageFile);
+                                                            }
+                                                            document.close();
+                                                            FileInputStream fis = new FileInputStream(imageFile);
+                                                            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                                            byte[] buf = new byte[(int) imageFile.length()];
+                                                            for (int readNum; (readNum = fis.read(buf)) != -1; ) {
+                                                                bos.write(buf, 0, readNum);
+                                                            }
+                                                            byte[] bytes = bos.toByteArray();
+
+                                                            request.response()
+                                                                    .putHeader("Content-Type", "image/jpg");
+                                                            request.response()
+                                                                    .putHeader("Content-Disposition",
+                                                                            "attachment; filename="
+                                                                                    + prefixPdfName + "_"
+                                                                                    + dateDebut + ".jpg");
+                                                            request.response().end(Buffer.buffer(bytes));
+                                                            outStream.close();
+                                                            bos.close();
+                                                            fis.close();
+
+                                                            Files.deleteIfExists(Paths.get(pdfFile.getAbsolutePath()));
+                                                            Files.deleteIfExists(
+                                                                    Paths.get(imageFile.getAbsolutePath()));
+                                                        }
+                                                    } catch (Exception e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    log.info(new SimpleDateFormat("HH:mm:ss:S")
+                                                            .format(new Date().getTime())
+                                                            + " -> Fin Generation Image du template " + templateName);
+                                                } else {
+                                                    request.response()
+                                                            .putHeader("Content-Type", "application/pdf");
+                                                    request.response().putHeader("Content-Disposition",
+                                                            "attachment; filename=" + prefixPdfName + "_"
+                                                                    + dateDebut + ".pdf");
+                                                    request.response().end(Buffer.buffer(pdf));
+                                                    log.info(new SimpleDateFormat("HH:mm:ss:S")
+                                                            .format(new Date().getTime())
+                                                            + " -> Fin Generation PDF du template " + templateName);
+                                                }
+                                            }
+                                        }));
+                            }
+                        });
+
+                    }
+                });
+
     }
 }

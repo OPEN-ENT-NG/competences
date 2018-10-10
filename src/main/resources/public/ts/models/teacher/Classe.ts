@@ -33,6 +33,10 @@ export class Classe extends Model {
     id_cycle: any;
     selected : boolean;
     baremeBrevetEleves : BaremeBrevetEleves;
+    synchronized : {
+        eleves :  boolean,
+        periodes:  boolean
+    };
 
     public static  libelle = {
         CLASSE:'Classe',
@@ -57,7 +61,14 @@ export class Classe extends Model {
 
     constructor (o? : any) {
         super();
-        if (o !== undefined) this.updateData(o, false);
+        let synchronizeObject = {eleves: false, periodes: false };
+        if (o !== undefined) {
+            o = _.extend(o, {synchronized: synchronizeObject});
+            this.updateData(o, false);
+        }
+        else {
+            this.synchronized = synchronizeObject;
+        }
         this.collection(Eleve, {
             sync : () : Promise<any> => {
                 return new Promise((resolve, reject) => {
@@ -72,11 +83,16 @@ export class Classe extends Model {
                     http().getJson(url).done((data) => {
                         // On tri les élèves par leur lastName en ignorant les accents
                         utils.sortByLastnameWithAccentIgnored(data);
+                        _.forEach(data, (_d) => {
+                           _d.idClasse = this.id;
+                           _d.selected = false;
+                        });
                         this.eleves.load(data);
                         for (var i = 0; i < this.eleves.all.length; i++) {
                             this.mapEleves[this.eleves.all[i].id] = this.eleves.all[i];
                         }
                         this.trigger('sync');
+                        this.synchronized.eleves = true;
                         resolve();
                     });
                 });
@@ -89,9 +105,11 @@ export class Classe extends Model {
                     http().getJson(this.api.syncPeriode).done((res) => {
                         res.push({id: null});
                         this.periodes.load(res);
+                        this.synchronized.periodes = true;
                         resolve();
                     }).error( (res) =>{
                         this.periodes.load([]);
+                        this.synchronized.periodes = true;
                         resolve();
                     });
                 });

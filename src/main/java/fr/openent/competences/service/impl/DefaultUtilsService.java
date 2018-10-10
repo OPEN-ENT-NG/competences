@@ -685,14 +685,5 @@ public class DefaultUtilsService  implements UtilsService {
 
                 }));
     }
-    @Override
-    public void getEvenements(String idEleve, Handler<Either<String, JsonArray>> eitherHandler){
-        StringBuilder query = new StringBuilder()
-                .append(" SELECT * " )
-                .append(" FROM viesco.absences_et_retards ")
-                .append(" WHERE id_eleve = ? ");
-        JsonArray params = new JsonArray().add(idEleve);
 
-        Sql.getInstance().prepared(query.toString(),params, validResultHandler(eitherHandler));
-    }
 }

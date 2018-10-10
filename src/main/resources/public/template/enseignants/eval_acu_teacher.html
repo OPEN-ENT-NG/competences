@@ -18,18 +18,7 @@
 <div class="twelve cell" ng-controller="EvalAcuTeacherController">
 
     <!--  Left side nav  -->
-    <nav class="two cell vertical menu-accueil mobile-navigation zero-mobile">
-        <ul>
-            <li ><a href="#/devoirs/list"><i18n>evaluations.test.list</i18n></a></li>
-            <li ><a href="#/releve"><i18n>evaluations.releve.title</i18n></a></li>
-            <li ><a href="#/competences/eleve"><i18n>evaluations.suivi.eleve.title</i18n></a></li>
-            <li ><a href="#/competences/classe"><i18n>evaluations.suivi.classe.title</i18n></a></li>
-            <li workflow="competences.accessProjets"><a href="#/projets"><i18n>evaluations.saisie.projets.title</i18n></a></li>
-            <li ><a href="#/bilanperiodique"><i18n>evaluations.bilan.periodique</i18n></a></li>
-            <li ng-if="isChefEtab()"><a href="#/remplacements/list"><i18n>evaluations.remplacants.title</i18n></a></li>
-            <li workflow="competences.exportLSU"><a href="#/export"><i18n>evaluations.exportLSU</i18n></a></li>
-        </ul>
-    </nav>
+    <div ng-include="'/competences/public/template/enseignants/menu_teacher.html'"></div>
     <!--  Content (main zone) Enseignant -->
     <div  class="ten cell main-content twelve-mobile">
         <section class="eleven cell headerAccueil">

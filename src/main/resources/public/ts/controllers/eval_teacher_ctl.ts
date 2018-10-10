@@ -22,9 +22,7 @@ import {
     evaluations,
     ReleveNote,
     GestionRemplacement,
-    Classe,
-    Structure,
-    Annotation
+    Classe
 } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
@@ -78,30 +76,32 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getI18nPeriode = (periode: any) => {
-            let result;
+            let result = lang.translate("viescolaire.utils.annee");
+            if(periode !== undefined) {
 
-            if (periode.libelle !== null && periode.libelle !== undefined) {
+                if (periode.libelle !== null && periode.libelle !== undefined) {
 
-                if(periode.libelle === ("cycle")){
-                    result = lang.translate("viescolaire.utils.cycle");
+                    if (periode.libelle === ("cycle")) {
+                        result = lang.translate("viescolaire.utils.cycle");
+                    }
+
+                } else if (periode.id === null) {
+
+                    result = lang.translate("viescolaire.utils.annee");
+
+                } else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))) {
+
+                    result = periode ?
+                        lang.translate("viescolaire.periode." + periode.type) + " " + periode.ordre
+                        : lang.translate("viescolaire.utils.periodeError");
+
+                } else {
+
+                    let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: periode.id_type});
+                    result = type_periode ?
+                        lang.translate("viescolaire.periode." + type_periode.type) + " " + type_periode.ordre
+                        : lang.translate("viescolaire.utils.periodeError");
                 }
-
-            } else if (periode.id === null) {
-
-                result = lang.translate("viescolaire.utils.annee");
-
-            } else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))) {
-
-                result = periode ?
-                    lang.translate("viescolaire.periode." + periode.type) + " " + periode.ordre
-                    : lang.translate("viescolaire.utils.periodeError");
-
-            } else {
-
-                let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: periode.id_type});
-                result = type_periode ?
-                    lang.translate("viescolaire.periode." + type_periode.type) + " " + type_periode.ordre
-                    : lang.translate("viescolaire.utils.periodeError");
             }
             return result;
         };
@@ -494,8 +494,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }, export: function () {
                 template.open('main', 'export/lsun');
                 utils.safeApply($scope);
-            }, disabled: () => {
+            },
+            disabled: () => {
                 template.open('main', 'disabled_structure');
+                utils.safeApply($scope);
+            },
+            bulletin: () => {
+                template.open('main', 'enseignants//bulletin/print_bulletin');
                 utils.safeApply($scope);
             }
         };
@@ -4093,5 +4098,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.displayBoxAboveTheHeadBand();
             utils.safeApply($scope);
         };
+
     }
 ]);

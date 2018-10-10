@@ -20,26 +20,40 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.ElementBilanPeriodiqueService;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.sql.SqlStatementsBuilder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.mongodb.MongoDbResult.validResultHandler;
 
 
 public class DefaultElementBilanPeriodiqueService extends SqlCrudService implements ElementBilanPeriodiqueService {
 
-    public DefaultElementBilanPeriodiqueService() {
+    private static final Logger log = LoggerFactory.getLogger(DefaultElementBilanPeriodiqueService.class);
+    private EventBus eb;
+
+    public DefaultElementBilanPeriodiqueService(EventBus eb) {
         super(Competences.COMPETENCES_SCHEMA, null);
+        this.eb = eb;
     }
+
+
 
     @Override
     public void insertThematiqueBilanPeriodique (JsonObject thematique, Handler<Either<String, JsonObject>> handler){
@@ -77,7 +91,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                     Sql.getInstance().prepared(query.toString(), params, validResultHandler(handler));
                 }
             }
-            }));
+        }));
     }
 
     @Override
@@ -269,6 +283,239 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
 
+
+    @Override
+    public void getElementsBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement,
+                                            Handler<Either<String, JsonArray>> handler) {
+
+        getElementBilanPeriodique(idEnseignant,
+                idClasse,
+                idEtablissement,
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isRight()) {
+                            JsonArray result = event.right().getValue();
+
+                            List<String> idMatieres = new ArrayList<>();
+                            List<String> idClasses = new ArrayList<>();
+                            List<String> idUsers = new ArrayList<>();
+
+                            for(Object r : result){
+                                JsonObject element = (JsonObject)r;
+
+                                String[] arrayIdClasses = element.getString("groupes").split(",");
+                                JsonArray jsonArrayIntsMats = element.getJsonArray("intervenants_matieres");
+
+                                for(int i = 0; i < arrayIdClasses.length; i++){
+                                    if(!idClasses.contains(arrayIdClasses[i])){
+                                        idClasses.add(arrayIdClasses[i]);
+                                    }
+                                }
+
+                                if(jsonArrayIntsMats != null){
+                                    for(Object o : jsonArrayIntsMats){
+                                        JsonArray jsonArrayIntMat = (JsonArray) o;
+                                        String[] arrayIntMat = jsonArrayIntMat.getString(1).split(",");
+                                        if(!idUsers.contains(arrayIntMat[0])){
+                                            idUsers.add(arrayIntMat[0]);
+                                        }
+                                        if(arrayIntMat.length > 1 && !idMatieres.contains(arrayIntMat[1])){
+                                            idMatieres.add(arrayIntMat[1]);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // récupération des noms des matières
+                            getSubjectNames(idMatieres,idClasses,idUsers, result, handler);
+
+                        } else{
+                            handler.handle(event.left());
+                        }
+                    }
+                });
+    }
+
+    private void  getSubjectNames(List<String> idMatieres ,
+                                  List<String> idClasses ,
+                                  List<String> idUsers ,
+                                  JsonArray result,
+                                  Handler<Either<String, JsonArray>> handler){
+        JsonObject action = new JsonObject()
+                .put("action", "matiere.getMatieres")
+                .put("idMatieres", new fr.wseduc.webutils.collections.JsonArray(idMatieres));
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+
+                        if ("ok".equals(body.getString("status"))) {
+                            JsonArray matieres = body.getJsonArray("results");
+                            Map<String, String> matieresMap = new HashMap<String, String>();
+
+                            for(Object o : matieres){
+                                JsonObject matiere = (JsonObject)o;
+                                matieresMap.put(matiere.getString("id"),
+                                        matiere.getString("name"));
+                            }
+
+
+                            // récupération des noms des classes/groupes
+                            getClassesGroupesName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
+                                    handler);
+                        } else{
+                            String _message = body.getString("message");
+                            log.error(_message);
+                            handler.handle(new Either.Left<>(_message));
+                        }
+                    }
+                }));
+    }
+
+    private void getClassesGroupesName(List<String> idMatieres, List<String> idClasses, List<String> idUsers,
+                                       JsonArray matieres, Map<String, String> matieresMap,
+                                       JsonArray result,Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "classe.getClassesInfo")
+                .put("idClasses",
+                        new fr.wseduc.webutils.collections.JsonArray(idClasses));
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+
+                        if ("ok".equals(body.getString("status"))) {
+                            JsonArray classes = body.getJsonArray("results");
+                            Map<String, String> classesNameMap =
+                                    new HashMap<String, String>();
+                            Map<String, String> classesExternalIdMap =
+                                    new HashMap<String, String>();
+                            for(Object o : classes){
+                                JsonObject classe = (JsonObject)o;
+                                classesNameMap.put(classe.getString("id"),
+                                        classe.getString("name"));
+                                classesExternalIdMap.put(
+                                        classe.getString("id"),
+                                        classe.getString("externalId"));
+                            }
+
+                            // récupération des noms des intervenants
+                            getTeacherName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
+                                    classes, classesNameMap, classesExternalIdMap, handler);
+                        } else{
+                            String _message = body.getString("message");
+                            log.error(_message);
+                            handler.handle(new Either.Left<>(_message));
+                        }
+                    }
+                }));
+
+    }
+
+    private void getTeacherName(List<String> idMatieres, List<String> idClasses, List<String> idUsers,
+                                JsonArray matieres, Map<String, String> matieresMap,
+                                JsonArray result, JsonArray classes,
+                                Map<String, String> classesNameMap ,
+                                Map<String, String> classesExternalIdMap, Handler<Either<String, JsonArray>> handler) {
+
+        JsonObject action = new JsonObject()
+                .put("action", "user.getUsers")
+                .put("idUsers", idUsers);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                handlerToAsyncHandler(
+                        new Handler<Message<JsonObject>>() {
+                            @Override
+                            public void handle(
+                                    Message<JsonObject> message) {
+                                JsonObject body = message.body();
+
+                                if ("ok".equals(body
+                                        .getString("status"))) {
+                                    JsonArray users = body.getJsonArray("results");
+                                    Map<String, String> usersMap = new HashMap<String, String>();
+                                    for(Object o : users){
+                                        JsonObject user = (JsonObject)o;
+                                        usersMap.put(user.getString("id"),user.getString("displayName"));
+                                    }
+
+                                    JsonArray parsedElems = new fr.wseduc.webutils.collections.JsonArray();
+                                    for(Object o  : result){
+                                        JsonObject element = (JsonObject) o;
+                                        JsonObject parsedElem = new JsonObject();
+
+                                        parsedElem.put("id", element.getInteger("id"));
+                                        parsedElem.put("type",element.getInteger("type_elt_bilan_periodique"));
+
+                                        if(element
+                                                .getString("intitule")
+                                                != null){
+                                            parsedElem.put("libelle",element.getString("intitule"));
+                                            parsedElem.put("description",element.getString("description"));
+                                        }
+
+                                        if(element.getInteger("id_thematique") != null){
+                                            JsonObject theme = new JsonObject();
+                                            theme.put("id", element.getInteger("id_thematique"));
+                                            theme.put("libelle", element.getString("libelle"));
+                                            parsedElem.put("theme", theme);
+                                        }
+
+                                        String[] arrayIdGroupes = element.getString("groupes").split(",");
+                                        JsonArray groupes = new fr.wseduc.webutils.collections.JsonArray();
+
+                                        for(int i = 0; i < arrayIdGroupes.length; i++){
+                                            JsonObject groupe = new JsonObject();
+                                            groupe.put("id", arrayIdGroupes[i]);
+                                            groupe.put("name", classesNameMap.get(arrayIdGroupes[i]));
+                                            groupe.put("externalId", classesExternalIdMap.get(arrayIdGroupes[i]));
+                                            groupes.add(groupe);
+                                        }
+                                        parsedElem.put("groupes", groupes);
+
+                                        if(element.getJsonArray("intervenants_matieres") != null){
+
+                                            JsonArray intMat = element.getJsonArray("intervenants_matieres");
+                                            JsonArray intervenantsMatieres =
+                                                    new fr.wseduc.webutils.collections.JsonArray();
+
+                                            for(int i = 0; i < intMat.size(); i++){
+                                                String[] intMatArray = intMat.getJsonArray(i)
+                                                        .getString(1).split(",");
+                                                JsonObject intervenantMatiere = new JsonObject();
+
+                                                JsonObject intervenant = new JsonObject();
+                                                intervenant.put("id", intMatArray[0]);
+                                                intervenant.put("displayName", usersMap.get(intMatArray[0]));
+                                                intervenantMatiere.put("intervenant", intervenant);
+                                                if(intMatArray.length > 1 ){
+                                                    JsonObject matiere = new JsonObject();
+                                                    matiere.put("id", intMatArray[1]);
+                                                    matiere.put("name", matieresMap.get(intMatArray[1]));
+                                                    intervenantMatiere.put("matiere", matiere);
+                                                }
+
+                                                intervenantsMatieres.add(intervenantMatiere);
+                                            }
+                                            parsedElem.put("intervenantsMatieres", intervenantsMatieres);
+                                        }
+
+                                        parsedElems.add(parsedElem);
+                                    }
+                                    handler.handle(new Either.Right<>(parsedElems));
+                                } else{
+                                    String _message = body.getString("message");
+                                    log.error(_message);
+                                    handler.handle(new Either.Left<>(_message));
+                                }
+                            }
+                        }));
+    }
     @Override
     public void getEnseignantsElementsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
@@ -405,7 +652,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
     @Override
     public void insertOrUpdateAppreciationElement (String idEleve, String idClasse, String externalidClasse, Long idPeriode, Long idEltBilanPeriodique,
-                                           String commentaire, JsonArray groupes, Handler<Either<String, JsonObject>> handler){
+                                                   String commentaire, JsonArray groupes, Handler<Either<String, JsonObject>> handler){
         if(commentaire.length() == 0){
             List<String> idGroupes = new ArrayList<String>();
             for(Object o : groupes){
@@ -581,7 +828,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         if(element.getInteger("type") == 1 || element.getInteger("type") == 2){
             params.add(element.getString("libelle"))
-                .add(element.getString("description"));
+                    .add(element.getString("description"));
         }
         if(element.getInteger("type") == 1 || element.getInteger("type") == 3){
             params.add(element.getInteger("id_theme"));
@@ -755,5 +1002,38 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         Sql.getInstance().prepared(query, params, SqlResult.validRowsResultHandler(handler));
     }
 
+    @Override
+    public void getAppreciations (List<String> idsClasses, String idPeriode, List<String> idElements, String idEleve,
+                                  Handler<Either<String, JsonArray>> handler) {
+
+        getApprecBilanPerClasse(idsClasses, idPeriode, idElements,
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if(event.isRight()){
+                            JsonArray apprecClasses = event.right().getValue();
+                            getApprecBilanPerEleve(idsClasses, idPeriode,idElements,idEleve,
+                                    new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> event) {
+                                            if(event.isRight()){
+                                                JsonArray apprecEleves = event.right().getValue();
+                                                handler.handle(new Either.Right<>(apprecClasses.addAll(apprecEleves)));
+                                            } else {
+                                                String error = "error while retreiving students appreciations";
+                                                log.error(error);
+                                                handler.handle(new Either.Left<>(error));
+                                            }
+                                        }
+                                    });
+                        } else {
+                            String error = "error while retreiving classes appreciations";
+                            log.error(error);
+                            handler.handle(new Either.Left<>(error));
+                        }
+
+                    }
+                });
+    }
 }
 

@@ -183,5 +183,4 @@ public interface UtilsService {
      * @param idEleve identifiant de l'élève
      * @param eitherHandler handler qui va servir à retrourner le résultat
      *  */
-    void getEvenements(String idEleve, Handler<Either<String, JsonArray>> eitherHandler);
 }

@@ -31,7 +31,7 @@ public interface ElementBilanPeriodiqueService {
      * @param thematique nouvelle thématique à enregistrer
      * @param handler Handler de retour
      */
-    public void insertThematiqueBilanPeriodique (JsonObject thematique,
+   void insertThematiqueBilanPeriodique (JsonObject thematique,
                                                  Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -39,21 +39,21 @@ public interface ElementBilanPeriodiqueService {
      * @param element nouvel élément à enregistrer
      * @param handler Handler de retour
      */
-    public void insertElementBilanPeriodique (JsonObject element, Handler<Either<String, JsonObject>> handler);
+   void insertElementBilanPeriodique (JsonObject element, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Retourne l'ensemble des thématiques d'EPI ou de parcours.
      * @param typeElement type de l'élément
      * @param handler Handler de retour
      */
-    public void getThematiqueBilanPeriodique (Long typeElement, String idEtablissement, Handler<Either<String, JsonArray>> handler);
+   void getThematiqueBilanPeriodique (Long typeElement, String idEtablissement, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les éléments correspondants à la thématique passée en paramètre..
      * @param idThematique
      * @param handler Handler de retour
      */
-    public void getElementsOnThematique (String idThematique, Handler<Either<String, JsonArray>> handler);
+   void getElementsOnThematique (String idThematique, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les élèments du bilan périodique sur la classe et/ou l'enseignant et/ou l'établissement.
@@ -62,29 +62,39 @@ public interface ElementBilanPeriodiqueService {
      * @param idEtablissement id établissement
      * @param handler Handler de retour
      */
-    public void getElementBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement,
+   void getElementBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement,
                                            Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Retourne les élèments du bilan périodique sur la classe et/ou l'enseignant et/ou l'établissement.
+     * @param idEnseignant enseignant connecté
+     * @param idClasse id classe
+     * @param idEtablissement id établissement
+     * @param handler Handler de retour
+     */
+    void getElementsBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement,
+                                    Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les élèments du bilan périodique sur la classe et/ou l'enseignant et/ou l'établissement.
      * @param idElements id des éléments
      * @param handler Handler de retour
      */
-    public void getEnseignantsElementsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler);
+   void getEnseignantsElementsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les groupes de l'élèment du bilan périodique dont l'id est passé en paramètre.
      * @param idElement id élèment bilan périodique
      * @param handler Handler de retour
      */
-    public void getGroupesElementBilanPeriodique (String idElement, Handler<Either<String, JsonArray>> handler);
+   void getGroupesElementBilanPeriodique (String idElement, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les groupes de l'élèment du bilan périodique dont l'id est passé en paramètre.
      * @param idElement id élèment bilan périodique
      * @param handler Handler de retour
      */
-    public void getIntervenantMatiereElementBilanPeriodique (String idElement,
+   void getIntervenantMatiereElementBilanPeriodique (String idElement,
                                                              Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -93,7 +103,7 @@ public interface ElementBilanPeriodiqueService {
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getApprecBilanPerClasse (List<String> idsClasses, String idPeriode, List<String> idElements, Handler<Either<String, JsonArray>> handler);
+   void getApprecBilanPerClasse (List<String> idsClasses, String idPeriode, List<String> idElements, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne les appéciations d'élèves les id sont passés en paramètre.
@@ -101,7 +111,7 @@ public interface ElementBilanPeriodiqueService {
      * @param idElements id des élèments du bilan périodique
      * @param handler Handler de retour
      */
-    public void getApprecBilanPerEleve (List<String> idsClasses, String idPeriode, List<String> idElements, String idEleve, Handler<Either<String, JsonArray>> handler);
+   void getApprecBilanPerEleve (List<String> idsClasses, String idPeriode, List<String> idElements, String idEleve, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Enregistrement d'une appreciation pour un élève.
@@ -111,7 +121,7 @@ public interface ElementBilanPeriodiqueService {
      * @param commentaire appréciation laissée par le professeur
      * @param handler Handler de retour
      */
-    public void insertOrUpdateAppreciationElement (String idEleve, String idClasse, String externalidClasse, Long idPeriode, Long idEltBilanPeriodique,
+   void insertOrUpdateAppreciationElement (String idEleve, String idClasse, String externalidClasse, Long idPeriode, Long idEltBilanPeriodique,
                                            String commentaire, JsonArray groupes, Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -122,7 +132,7 @@ public interface ElementBilanPeriodiqueService {
      * @param apprecEleveOnDeletedClasses
      * @param handler Handler de retour
      */
-    public void updateElementBilanPeriodique (Long idElement, JsonObject element,
+   void updateElementBilanPeriodique (Long idElement, JsonObject element,
                                               JsonArray apprecClasseOnDeletedClasses,
                                               JsonObject apprecEleveOnDeletedClasses,
                                               List<String> deletedClasses, Handler<Either<String, JsonObject>> handler);
@@ -132,13 +142,13 @@ public interface ElementBilanPeriodiqueService {
      * @param idEltBilanPeriodique id des éléments à supprimer
      * @param handler Handler de retour
      */
-    public void deleteElementBilanPeriodique (List<String> idEltBilanPeriodique, Handler<Either<String, JsonArray>> handler);
+   void deleteElementBilanPeriodique (List<String> idEltBilanPeriodique, Handler<Either<String, JsonArray>> handler);
     /**
      * Suppression d'une thématique.
      * @param idThematique id des éléments à supprimer
      * @param handler Handler de retour
      */
-    public void deleteThematique (String idThematique, Handler<Either<String, JsonArray>> handler);
+   void deleteThematique (String idThematique, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Mise à jour d'une appreciation pour un élève ou une classe.
@@ -146,7 +156,7 @@ public interface ElementBilanPeriodiqueService {
      * @param thematique nouvelles données de la thématique
      * @param handler Handler de retour
      */
-    public void updateThematique (String idThematique, JsonObject thematique,
+   void updateThematique (String idThematique, JsonObject thematique,
                                                    Handler<Either<String, JsonObject>> handler);
 
     /**
@@ -154,7 +164,7 @@ public interface ElementBilanPeriodiqueService {
      * @param idEltBilanPeriodique id de l'élément
      * @param handler Handler de retour
      */
-    public void deleteAppreciationElement (String idEleve, Long idPeriode,
+   void deleteAppreciationElement (String idEleve, Long idPeriode,
                                            Long idEltBilanPeriodique,
                                            String idClasse, List<String> groupes,
                                            Handler<Either<String, JsonObject>> handler);
@@ -166,7 +176,7 @@ public interface ElementBilanPeriodiqueService {
      * @param type eleve ou classe
      * @param handler Handler de retour
      */
-    public void updateAppreciationBilanPeriodique (Long idAppreciation, String commentaire, String type,
+   void updateAppreciationBilanPeriodique (Long idAppreciation, String commentaire, String type,
                                                    Handler<Either<String, JsonObject>> handler);
 
 
@@ -176,5 +186,17 @@ public interface ElementBilanPeriodiqueService {
      * @param idEnseignant
      * @param handler
      */
-    public void getClassesElementsBilanPeriodique (String idEtablissement, String idEnseignant,Handler<Either<String, JsonArray>> handler);
+   void getClassesElementsBilanPeriodique (String idEtablissement, String idEnseignant,
+                                                   Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Retourne les appreciations liées au élèments du bilan périodiques passés en paramètre
+     * @param idsClasses
+     * @param idPeriode
+     * @param idElements
+     * @param idEleve
+     * @param handler
+     */
+   void getAppreciations (List<String> idsClasses, String idPeriode, List<String> idElements, String idEleve,
+                          Handler<Either<String, JsonArray>> handler);
 }

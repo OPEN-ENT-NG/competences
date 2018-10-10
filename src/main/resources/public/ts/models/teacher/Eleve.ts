@@ -37,6 +37,7 @@ export class Eleve extends Model {
     deleteDate : any;
     elementBilanPeriodique : ElementBilanPeriodique[];
     evenements : any ;
+    selected : boolean;
 
 
     get api() {

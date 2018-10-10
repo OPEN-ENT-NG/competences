@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+
+<head>
+    <title>{{title}}</title>
+    <style type="text/css">
+
+        body {
+            font-family: "Calibri", sans-serif;
+            align-content: center;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page {
+            page-break-after: always;
+        }
+        .paddingFifty {
+            padding-left : 40px;
+            padding-right : 40px;
+        }
+
+        .page:last-child{
+            page-break-after: avoid;
+        }
+
+        img {
+            width: auto;
+            height: 150px;
+            margin-bottom: 20px;
+            margin-left: -2px;
+        }
+
+        h1 {
+            margin-top: 30px;
+            padding: 5px;
+            text-align: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 20px;
+            width: 100%;
+        }
+
+        h1[color="blue"] {
+            background-color: #009ddd;
+        }
+
+        h1[color="orange"] {
+            background-color: #ff9027;
+        }
+
+        h1[color="green"] {
+            background-color: #b0d243;
+        }
+
+        td {
+            background-color: #EFF7FC;
+            margin: 4px;
+            padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .start { page-break-before : left }
+
+        table tr:nth-child(odd) td {
+            background-color: #E2F0FA;
+        }
+
+        table tr:nth-child(even) td {
+            background-color: #EFF7FC;
+        }
+        table tr:first-child td {
+            background-color: #e2f3fb;
+        }
+        table tr:first-child td:first-child {
+            visibility: hidden;
+        }
+        .secondSuivi {
+            width: 50%!important;
+        }
+        .thirdSuivi {
+            width: 50% !important;
+        }
+
+        .blank_row {
+            height: 20px !important;
+        }
+
+        .eleve {
+            padding: 10px;
+            background-color: #e2f3fb;
+            min-height : 100px;
+        {{#getResponsable}}
+        display: inline-block;
+        width: 60%;
+        {{/getResponsable}}
+        {{^getResponsable}}
+
+        {{/getResponsable}}
+
+        font-size: 14px;
+        }
+
+        .eleve > div {
+            margin: 5px 3px;
+            text-align: center;
+        }
+        .responsable {
+            display:inline-block;
+            margin-left: 3px;
+            padding: 10px;
+            width: 32%;
+            float: right;
+            font-size: 14px;
+            min-height : 100px;
+        }
+
+        .responsable > div {
+            margin-left: 30px;
+            margin-right: 0px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: left;
+        }
+        .left-align {
+            text-align: left;
+            font-weight: normal;
+        }
+
+        .synthese {
+            margin-top: 10px;
+            background-color: #ffd0a0 !important;
+            padding: 10px;
+            visibility: visible !important;
+        }
+        .lefCom {
+            text-align: left;
+            font-weight: normal;
+            font-size: small;
+            color: black;
+        }
+        .rightCom {
+            position: relative;
+            right: 5px;
+
+            top: -51px;
+            text-align: right;
+            font-weight: normal;
+            font-size: small;
+            color: black;
+        }
+        .leftCommunication {
+            margin-top: 0%!important;
+            padding-top: 5px;
+            width: 67.5% !important;
+            min-height: 195px !important;
+
+        }
+        .rightCommunication {
+            margin-top: 0px;
+            min-height: 195px !important;
+
+        }
+        .structure {
+            display: inline-block;
+            height: 150px;
+            font-size: small;
+            font-family: "Calibri", sans-serif;
+
+        }
+        .structure > p {
+            margin: 3px;
+            margin-left : 5px;
+        }
+        @page{
+            size : A4 ;
+            margin-top: 30px;
+            margin-left : 1px;
+            margin-right : 1px;
+
+        }
+        .firstProjet {
+            width: 35%;
+            visibility: visible !important;
+            background-color: #E2F0FA;
+        }
+        .projets tr:nth-child(even) td {
+            background-color: #EFF7FC !important;
+        }
+        .projets tr:first-child td {
+            background-color: #e2f3fb !important;
+        }
+        .header td {
+            font-size: x-small;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+    </style>
+</head>
+<body>
+
+{{#eleves}}
+<div class="page">
+
+    <div style= "height: 180px;" class="paddingFifty">
+        <img style="float:left;" src="img/education_nationale.png" alt="Logo"/>
+        <div class="structure">
+            {{#structureLibelle}}
+            <p style="font-weight: bold">{{academy}}</p>
+            <p style="font-weight: bold">{{type}}</p>
+            <p style="font-weight: bold">{{name}}</p>
+            <p>{{address}}</p>
+            <p>{{town}}</p>
+            <p>{{phone}}</p>
+            <p>{{email}}</p>
+            {{/structureLibelle}}
+        </div>
+    </div>
+
+    <div class="paddingFifty">
+        <div class="eleve">
+            <div style="font-size: small; font-weight: bold">{{schoolYear}}</div>
+            <div style="font-size: small;">{{bilanCycle}}&nbsp;-&nbsp; {{periode}}</div>
+            <div style="font-size: 18px; font-weight: bold">{{firstName}} &nbsp; {{lastName}}  </div>
+            <div style="font-size: small;">{{bornAt}} {{birthDateLibelle}}</div>
+            <div style="font-size: small;">   {{headTeacherLibelle}}
+                {{#headTeachers}}
+                {{civility}} &nbsp; {{name}} <br/>
+                {{/headTeachers}}
+            </div>
+            <div style="font-size: small;">{{classeOf}} {{classeName}}</div>
+            <br/>
+        </div>
+        {{#getResponsable}}
+        <div class="responsable">
+            {{#responsableLibelle}}
+            <div>{{.}}</div><br/>
+            {{/responsableLibelle}}
+        </div>
+        {{/getResponsable}}
+    </div>
+
+    <h1 color="blue">{{suiviAcquisLibelle}}</h1>
+    {{#hasSuiviAcquis}}
+    <table class="suiviDesAcquis paddingFifty">
+
+        <tr class="header">
+            <td class="firstSuivi">&nbsp;</td>
+            <td class="secondSuivi">{{suiviElementLibelle}}</td>
+            <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
+            {{#getMoyenneEleve}}
+            <td class="fourthSuivi">{{moyenneStudentLibelle}}</td>
+            {{/getMoyenneEleve}}
+            {{#getMoyenneClasse}}
+            <td class="fifthSuivi">{{moyenneClasseLibelle}}</td>
+            {{/getMoyenneClasse}}
+            {{#getPositionnement}}
+            <td class="sixthSuivi">{{positionementLibelle}}</td>
+            {{/getPositionnement}}
+        </tr>
+
+        {{#suiviAcquis}}
+        <tr>
+            <td class="left-align">
+                <p>{{libelleMatiere}}</p>
+                {{#teachers}}
+                <p style="color: black; font-size: smaller;">{{name}}</p>
+                {{/teachers}}
+            </td>
+            <td class="secondSuivi">{{elementsProgramme}}</td>
+            <td class="thirdSuivi">{{appreciation}}</td>
+            {{#getMoyenneEleve}}
+            <td class="fourthSuivi">{{moyenneEleve}}</td>
+            {{/getMoyenneEleve}}
+            {{#getMoyenneClasse}}
+            <td class="fifthSuivi">{{moyenneClasse}}</td>
+            {{/getMoyenneClasse}}
+            {{#getPositionnement}}
+            <td class="sixthSuivi">{{positionnement}}</td>
+            {{/getPositionnement}}
+        </tr>
+        {{/suiviAcquis}}
+    </table>
+    <div class="start">
+        {{#showProjects}}
+        {{#projects}}
+        <h4 class="paddingFifty">{{libelle}}</h4>
+        <table class="projets paddingFifty">
+            {{#elements}}
+
+            <tr>
+                <td class="firstProjet left-align">
+                    {{#hasLibelle}}
+                    {{#libelle}}
+                    <span style="font-size: small; font-weight: bold">{{libelle}}</span><br/>
+                    {{/libelle}}
+                    {{/hasLibelle}}
+                    {{#theme}}
+                    {{#hasLibelle}}
+                    <span style="font-size: small;">{{libelle}}</span><br/>
+                    {{/hasLibelle}}
+                    {{^hasLibelle}}
+                    <span style="font-size: small; font-weight: bold">{{libelle}}</span><br/>
+                    {{/hasLibelle}}
+                    {{/theme}}
+                    {{#intervenantsMatieres}}
+
+                    <span style="color: black; font-size: smaller;">{{#intervenant}}
+                    {{displayName}} &nbsp; -
+                    {{/intervenant}}
+                </span>
+                    <span style="color: black; font-size: smaller;">{{#matiere}}
+                   &nbsp; {{name}}
+                    {{/matiere}}
+                </span>
+                    {{/intervenantsMatieres}}
+                </td>
+                <td class="secondProjet">{{commentaire}}</td>
+            </tr>
+            {{/elements}}
+        </table>
+        {{/projects}}
+        {{/showProjects}}
+
+        {{/hasSuiviAcquis}}
+
+
+        <h1 color= "green"> {{bilanAcquisitionLibelle}}</h1>
+
+        <div class="paddingFifty">
+            <div style="background-color: #eef4d7 !important; min-height: 155px; font-size: small;" class="synthese">
+                {{syntheseBilanPeriodque}}
+            </div>
+        </div>
+        <div>
+            <h1 color="orange">{{communicationLibelle}}</h1>
+            <div class="paddingFifty">
+                <table>
+                    <tr>
+                        <td class="synthese leftCommunication">
+                            <div  class="lefCom" >
+                                <br/>
+                                {{appreciationCPE}}
+                            </div>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <div class="lefCom" >
+                                {{#evenements}}
+                                <div>
+                                    {{.}}
+                                </div>
+                                {{/evenements}}
+                            </div>
+                        </td>
+                        <td  class="synthese rightCommunication">
+
+                            <div style="margin-top: 25px;" class="rightCom">
+                                <br/>
+                                {{communicationHeaderRightFirst}}
+                            </div>
+                            <div class="rightCom">
+                                {{communicationHeaderRightSecond}}
+                            </div>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <br/>
+                        </td>
+                    </tr>
+                </table>
+
+
+                {{#showFamily}}
+
+                <div class="synthese" style="height: 60px; padding: 5px">
+                    <span style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">{{familyVisa}}</span>
+
+                    <span style="float: right;margin-left: 5px; margin-top: 0px;font-size: small;">{{signature}}</span>
+                </div>
+
+                {{/showFamily}}
+            </div>
+        </div>
+    </div>
+</div>
+{{/eleves}}
+
+</body>
+</html>
