@@ -1065,6 +1065,20 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             utils.safeApply($scope);
         };
 
+        // Impression du releve de l'eleve
+        $scope.getReleve = function() {
+            let type_periode = _.findWhere($scope.structure.typePeriodes.all,
+                {id: $scope.search.periode.id_type});
+            if (type_periode !== undefined) {
+                $scope.suiviCompetence.getReleve($scope.search.periode.id_type,
+                    $scope.search.eleve.id, type_periode.type, type_periode.ordre);
+            }
+            else {
+                $scope.suiviCompetence.getReleve(undefined,
+                    $scope.search.eleve.id, undefined, undefined);
+            }
+        };
+
         $scope.isMaxEvaluation = function (listeEvaluations) {
             return Utils.isMaxEvaluation(listeEvaluations,$scope);
         };

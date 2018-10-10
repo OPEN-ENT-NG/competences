@@ -162,6 +162,22 @@ export class SuiviCompetence extends Model {
         });
     }
 
+    getReleve (idPeriode, idUser, idTypePeriode, ordrePeriode) {
+        let uri = '/competences/releve/pdf?idEtablissement=' +
+            model.me.structures[0] + '&idUser=' + idUser;
+        if (idPeriode !== undefined && idPeriode !== null) {
+            uri += '&idPeriode=' + idPeriode;
+            if (idTypePeriode !== undefined) {
+                uri += '&idTypePeriode=' + idTypePeriode;
+                if (ordrePeriode !== undefined) {
+                    uri += '&ordrePeriode=' + ordrePeriode;
+                }
+            }
+        }
+
+        location.replace(uri);
+    }
+
     sync (): Promise<any> {
         return new Promise((resolve) => {
             resolve();

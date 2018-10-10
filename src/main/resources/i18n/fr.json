@@ -324,6 +324,7 @@
   "evaluation.bfc.export.button.classe" : "Exporter le bilan de fin de cycle de la classe au format PDF",
 
   "evaluation.suivi.export.button.eleve" : "Exporter le relévé de compétences de l'élève au format PDF",
+  "evaluation.suivi.export.button.eleve.releve" : "Exporter le relévé de notes de l'élève au format PDF",
   "evaluation.suivi.export.button.classe" : "Exporter le relévé de compétences de la classe au format PDF",
 
   "evaluation.search.by.enseignements" : "Vue par enseignements",
