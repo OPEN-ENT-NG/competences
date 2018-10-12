@@ -61,6 +61,34 @@ public class Utils {
         }));
     }
 
+    /**
+     * get all groups of each idClasse
+     * @param eb eventbus
+     * @param idsClasses array idsClasse
+     * @param handler r
+     */
+    public static void getGroupesClasse(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, JsonArray>> handler){
+        JsonObject action = new JsonObject()
+                .put("action", "classe.getGroupesClasse")
+                .put("idClasses", idsClasses);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+
+                if ("ok".equals(body.getString("status"))) {
+                    JsonArray queryResult = body.getJsonArray("results");
+
+                    if ( queryResult !=  null ) {
+                        handler.handle(new Either.Right<String, JsonArray>(queryResult));
+                    }
+                } else {
+                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                    log.error("getGroupesClasse : " + body.getString("message"));
+                }
+            }
+        }));
+    }
 
     public static void getIdElevesClassesGroupes(EventBus eb, final String  idGroupe,
                                                  final int idPeriode,

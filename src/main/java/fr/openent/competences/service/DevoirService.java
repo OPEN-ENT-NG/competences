@@ -187,5 +187,5 @@ public interface DevoirService extends CrudService {
      * @param id_eleve
      * @param handler
      */
-    public void getMatiereTeacherGroupesForOneEleveByPeriode(String id_eleve, Handler<Either<String,JsonArray>> handler);
+    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, Handler<Either<String,JsonArray>> handler);
 }

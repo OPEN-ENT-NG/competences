@@ -12,6 +12,7 @@ import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.openent.competences.service.impl.DefaultElementProgramme;
 import fr.openent.competences.service.impl.DefaultNoteService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.webutils.Either;
@@ -19,15 +20,14 @@ import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
-import io.vertx.core.json.Json;
+
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
+
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,57 +58,37 @@ public class BilanPeriodiqueController extends ControllerHelper{
                 final String idEleve = request.params().get("idEleve");
                 final String idClasse = request.params().get("idClasse");
 
-                //On récupère les matières de l'élève avec les enseignants de chaque matière et les id_groupe de l'élève
-                devoirService.getMatiereTeacherGroupesForOneEleveByPeriode(idEleve, new Handler<Either<String, JsonArray>>() {
+
+                //On récupère les matières de l'élève avec les enseignants de chaque matière
+                devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, new Handler<Either<String, JsonArray>>() {
                     @Override
                     public void handle(Either<String, JsonArray> response) {
                         if( response.isRight() ){
                             JsonArray responseArray = response.right().getValue();
                             if( responseArray != null && responseArray.size() > 0 ){
-                                //1-get idsMatière of a student with idsTeacher(owner) and idgroup
-                                Map<String,JsonObject> idsMatieresIdsTeachersidsGroups = new HashMap<>();
+                                //1-get idsMatière of a student with idsTeacher(owner)
+                                Map<String,JsonObject> idsMatieresIdsTeachers = new HashMap<>();
                                 JsonArray idsMatieres = new fr.wseduc.webutils.collections.JsonArray();
                                 JsonArray idsTeachers = new fr.wseduc.webutils.collections.JsonArray();
 
                                 for(int i = 0; i < responseArray.size(); i++) {
                                     JsonObject responseObject = responseArray.getJsonObject(i);
 
-                                    if(!idsMatieresIdsTeachersidsGroups.containsKey( responseObject.getString("id_matiere"))){
+                                    if(!idsMatieresIdsTeachers.containsKey( responseObject.getString("id_matiere"))){
                                         idsMatieres.add(responseObject.getString("id_matiere"));
                                         if(!idsTeachers.contains(responseObject.getString("owner"))) {
                                             idsTeachers.add(responseObject.getString("owner"));
                                         }
                                         JsonArray teachers= new fr.wseduc.webutils.collections.JsonArray()
                                                 .add( responseObject.getString("owner"));
-                                        JsonArray groupsEleve = new fr.wseduc.webutils.collections.JsonArray()
-                                                .add(responseObject.getString("id_groupe"));
 
-                                        JsonObject teachersGroups = new JsonObject().put("teachers",teachers)
-                                                .put("groupsEleve", groupsEleve);
-                                        idsMatieresIdsTeachersidsGroups.put( responseObject.getString("id_matiere"),teachersGroups);
+                                        idsMatieresIdsTeachers.put( responseObject.getString("id_matiere"),new JsonObject().put("teachers",teachers));
                                     }else{//on récupère le JsonObject de la cle idmatiere en cours
-
-                                        JsonArray teachers = idsMatieresIdsTeachersidsGroups
+                                        JsonArray teachers = idsMatieresIdsTeachers
                                                 .get( responseObject.getString("id_matiere")).getJsonArray("teachers");
-                                        JsonArray groupsEleve = idsMatieresIdsTeachersidsGroups
-                                                .get( responseObject.getString("id_matiere")).getJsonArray("groupsEleve");
 
-                                        if(!teachers.contains(responseObject.getString("owner"))){
-                                            teachers.add(responseObject.getString("owner"));
-                                            //idsTeachers.add(responseObject.getString("owner"));
-
-                                            if(!idsTeachers.contains(responseObject.getString("owner"))) {
-                                                idsTeachers.add(responseObject.getString("owner"));
-                                            }
-
-                                            if(!groupsEleve.contains(responseObject.getString("id_groupe"))){
-                                                groupsEleve.add(responseObject.getString("id_groupe"));
-
-                                            }
-                                        }else if(!groupsEleve.contains(responseObject.getString("id_groupe"))){
-                                            groupsEleve.add(responseObject.getString("id_groupe"));
-
-                                        }
+                                        teachers.add(responseObject.getString("owner"));
+                                        idsTeachers.add(responseObject.getString("owner"));
                                     }
                                 }
                                 //2-get subject's Name
@@ -122,58 +102,81 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                             Map<String, String> idsMatLibelle = responseMatiere.right().getValue();
 
                                             //3-get user's lastName and firstName
-
                                             Utils.getLastNameFirstNameUser(eb, idsTeachers, new Handler<Either<String, Map<String, JsonObject>>>() {
                                                 @Override
                                                 public void handle( Either<String, Map<String, JsonObject>> responseTeacherInfo ) {
                                                     if(responseTeacherInfo.isRight()){
-
                                                         Map<String, JsonObject> teachersInfos = responseTeacherInfo.right().getValue();
-                                                        final JsonArray results = new fr.wseduc.webutils.collections.JsonArray();
-                                                        final AtomicInteger compteurMatiere = new AtomicInteger(idsMatieresIdsTeachersidsGroups.size());
-                                                        //4-for each subject build the result
-                                                        //idMAtTeachersGroups = map<idMat,JsonObject(JsonArray(Teachers),JsonArray(Groups)>
-                                                        for( Map.Entry<String,JsonObject> idMAtTeachersGroups : idsMatieresIdsTeachersidsGroups.entrySet() ){
-                                                            final JsonObject result = new JsonObject();
-                                                            String idMatiere = idMAtTeachersGroups.getKey();
-                                                            JsonObject teachersGroups = idMAtTeachersGroups.getValue();
-                                                            JsonArray idsTeachers = teachersGroups.getJsonArray("teachers");
-                                                            JsonArray idsGroupsEleve = teachersGroups.getJsonArray("groupsEleve");
-                                                            //5-add subject
-                                                            result.put("id_matiere",idMatiere).put("libelle",idsMatLibelle.get(idMatiere));
-                                                            //6-add teachers infos
-                                                            if(idsTeachers != null ){
-                                                                JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
-                                                                for ( Object idTeacher: idsTeachers ){
-                                                                   teachers.add(teachersInfos.get(idTeacher));
-                                                                }
-                                                                result.put("teachers",teachers );
-                                                            }
+                                                        //on récupère les groups de la classe
+                                                        Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
+                                                            @Override
+                                                            public void handle(Either<String, JsonArray> responseQuerry) {
+                                                                //List qui contient la idClasse + tous les ids groupes de la classe
+                                                                JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
 
-                                                            //7-addElementProgramme
-                                                            elementProgramme.getElementProgrammeClasses(idPeriode, idMatiere, idsGroupsEleve, new Handler<Either<String, JsonArray>>() {
-                                                                @Override
-                                                                public void handle(Either<String, JsonArray> responseEltProg) {
-                                                                    if(responseEltProg.isRight()){
-                                                                        JsonArray eltsProg = responseEltProg.right().getValue();
-                                                                        //on récupère tous les élts du programme de tous les classes et groupes de élèves
+                                                                if( responseQuerry.isRight()) {
+                                                                    JsonArray idClasseGroups = responseQuerry.right().getValue();
+                                                                    if(idClasseGroups != null){
+                                                                        idsGroups.add(idClasseGroups.getJsonObject(0).getString("id_classe"));
+                                                                        idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
+                                                                    }
 
-                                                                        if(eltsProg != null ){
-                                                                            result.put("elementProgramme", eltsProg);
+                                                                    final JsonArray results = new fr.wseduc.webutils.collections.JsonArray();
+                                                                    final AtomicInteger compteurMatiere = new AtomicInteger(idsMatieresIdsTeachers.size());
+                                                                    //4-for each subject build the result
+                                                                    //idMAtTeachersGroups = map<idMat,JsonObject(JsonArray(Teachers),JsonArray(Groups)>
+                                                                    for (Map.Entry<String, JsonObject> idMAtTeachersGroups : idsMatieresIdsTeachers.entrySet()) {
+                                                                        final JsonObject result = new JsonObject();
+                                                                        String idMatiere = idMAtTeachersGroups.getKey();
+                                                                        JsonObject teachersObject = idMAtTeachersGroups.getValue();
+                                                                        JsonArray idsTeachers = teachersObject.getJsonArray("teachers");
+                                                                        //5-add subject
+                                                                        result.put("id_matiere", idMatiere).put("libelleMatiere", idsMatLibelle.get(idMatiere));
+                                                                        //6-add teachers infos
+                                                                        if (idsTeachers != null) {
+                                                                            JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
+                                                                            for (Object idTeacher : idsTeachers) {
+                                                                                teachers.add(teachersInfos.get(idTeacher));
+                                                                            }
+                                                                            result.put("teachers", teachers);
                                                                         }
-                                                                    //8-addAppréciation //moyenneFinale//positionnementModifié(pour une mat)
-                                                                        addMoyenneFinaleAppreciationPositionnementEleve(idEleve, idMatiere, idPeriode,
-                                                                                                            idClasse,idsGroupsEleve,idEtablissement, request, result, results, compteurMatiere);
+
+                                                                        //7-addElementProgramme
+                                                                        elementProgramme.getElementProgrammeClasses(idPeriode, idMatiere, idsGroups, new Handler<Either<String, JsonArray>>() {
+                                                                            @Override
+                                                                            public void handle(Either<String, JsonArray> responseEltProg) {
+                                                                                if (responseEltProg.isRight()) {
+                                                                                    JsonArray eltsProg = responseEltProg.right().getValue();
+                                                                                    //on récupère tous les élts du programme de tous les classes et groupes de élèves
+                                                                                    String elementsProg = new String();
+                                                                                    if (eltsProg != null && eltsProg.size() > 0) {
+                                                                                        for (int i = 0; i < eltsProg.size(); i++) {
+                                                                                            if (elementsProg.isEmpty()) {
+                                                                                                elementsProg = eltsProg.getJsonObject(i).getString("texte");
+                                                                                            } else {
+                                                                                                elementsProg += " " + eltsProg.getJsonObject(i).getString("texte");
+                                                                                            }
+
+                                                                                        }
+                                                                                    }
+
+                                                                                    result.put("elementsProgramme", elementsProg);
+                                                                                    //8-addAppréciation //moyenneFinale//positionnementModifié(pour une mat)
+                                                                                    addMoyenneFinaleAppreciationPositionnementEleve(idEleve, idMatiere, idPeriode,
+                                                                                            idClasse, idsGroups, idEtablissement, request, result, results, compteurMatiere);
 
 
-                                                                    }else {
-                                                                        JsonObject error = (new JsonObject()).put("error",
-                                                                                (String) responseEltProg.left().getValue());
-                                                                        Renders.renderJson(request, error, 400);
+                                                                                } else {
+                                                                                    JsonObject error = (new JsonObject()).put("error",
+                                                                                            (String) responseEltProg.left().getValue());
+                                                                                    Renders.renderJson(request, error, 400);
+                                                                                }
+                                                                            }
+                                                                        });
                                                                     }
                                                                 }
-                                                            });
-                                                        }
+                                                            }
+                                                        });
                                                     }else{
                                                         log.error("bilanPeriodiqueController ");
                                                         log.error("getUsers lastName and firstName 's teacher :" + responseTeacherInfo.left().getValue());
@@ -206,7 +209,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                                                   final String idMatiere,
                                                                   final Long idPeriode,
                                                                   final String idClasse,
-                                                                  final JsonArray idsGroupsEleve,
+                                                                  final JsonArray idsGroups,
                                                                   final String idEtablissement,
                                                                   final HttpServerRequest request,
                                                                   final JsonObject result,
@@ -219,76 +222,37 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
                 if(response.isRight()){
                     JsonArray allAppMoyPosi = response.right().getValue();
-                    JsonArray appreciations = new fr.wseduc.webutils.collections.JsonArray();
-                    JsonArray moyenneFinale = new fr.wseduc.webutils.collections.JsonArray();
-                    JsonArray positionnement = new fr.wseduc.webutils.collections.JsonArray();
-                   // List<Double> moyennesFinales = new ArrayList<>();
+                    String appreciation = new String();
 
                     if( allAppMoyPosi != null ){
 
                         for(int i = 0; i < allAppMoyPosi.size(); i++){
                             JsonObject appMoyPosi = allAppMoyPosi.getJsonObject(i);
+
                             if(appMoyPosi.getString("appreciation_matiere_periode") != null ) {
-                                appreciations.add(new JsonObject().put("id_classe", appMoyPosi.getString("id_classe_appreciation"))
-                                        .put("idPeriode",idPeriode)
-                                        .put("id_eleve",idEleve)
-                                        .put("id_matiere",idMatiere)
-                                        .put("appreciation", appMoyPosi.getString("appreciation_matiere_periode"))
-                                        .put("id_classe",appMoyPosi.getString("id_classe_appreciation")));
+                                if(appreciation.isEmpty()){
+                                    appreciation = appMoyPosi.getString("appreciation_matiere_periode");
+                                }else{
+                                    appreciation += " " + appMoyPosi.getString("appreciation_matiere_periode");
+                                }
                             }
+                            //on récupère la moyenne finale de l'élève pour sa classe principale = idClasse passé en paramètre
 
                             if( appMoyPosi.getDouble("moyenne_finale") != null) {
                                 if(appMoyPosi.getString("id_classe_moyfinale").equals(idClasse)) {
-                                    moyenneFinale.add(new JsonObject().put("idPeriode", idPeriode)
-                                            .put("id_eleve", idEleve)
-                                            .put("id_matiere", idMatiere)
-                                            .put("moyenne_finale",appMoyPosi.getDouble("moyenne_finale" )));
-                                    //option 2 faire la moyenne des moyennes finale
-                                    //moyennesFinales.add(appMoyPosi.getDouble("moyenne_finale"));
+                                    result.put("moyenne_finale",appMoyPosi.getDouble("moyenne_finale" ));
                                 }
                             }
                             //Pour le positionnement on ne peut en avoir qu'un par matière
                             //le positionnement n'est pas enregistré par classe
                             if(appMoyPosi.getDouble("positionnement_final") != null){
-                                 if( positionnement.isEmpty()) {
-                                     positionnement.add(new JsonObject().put("idPeriode", idPeriode)
-                                             .put("id_eleve", idEleve)
-                                             .put("id_matiere", idMatiere)
-                                             .put("value", appMoyPosi.getDouble("positionnement_final")));
-                                 }
+                                result.put("positionnement_final", appMoyPosi.getDouble("positionnement_final"));
+
                             }
                         }
-                        //option 2 faire la moyenne des moyennes finales et l'ajouter à result
-                       /* if(moyennesFinales.size() > 1){
-                            Double sumMoyFinale = new Double(0);
-
-                           for ( Double moyFinale : moyennesFinales ){
-                               sumMoyFinale += moyFinale;
-                           }
-                            Double moyDesMoysFinales = sumMoyFinale / moyennesFinales.size();
-                            DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("fr", "FR"));
-                            symbols.setDecimalSeparator('.');
-
-                            DecimalFormat df = new DecimalFormat("##.##", symbols);
-
-                            moyenneFinale.add(new JsonObject().put("idPeriode",idPeriode)
-                                    .put("id_eleve",idEleve)
-                                    .put("id_matiere",idMatiere)
-                                    .put("moyenne_finale", Double.valueOf(df.format(moyDesMoysFinales))));
-
-                        }else if(moyennesFinales != null && moyennesFinales.size() != 0 ){
-                            moyenneFinale.add(new JsonObject().put("idPeriode",idPeriode)
-                            .put("id_eleve",idEleve)
-                            .put("id_matiere",idMatiere)
-                            .put("moyenne_finale", moyennesFinales.get(moyennesFinales.size()-1)));
-                        }*/
-
                     }
-                    result.put("appreciations",appreciations)
-                            .put("moyenne_finale",moyenneFinale)
-                            .put("positionnement_final",positionnement);
-
-                    addMoyEleveMoyClassePositionnementAuto(idEleve, idMatiere, idClasse, idsGroupsEleve,
+                    result.put("appreciation",appreciation);
+                    addMoyEleveMoyClassePositionnementAuto(idEleve, idMatiere, idClasse, idsGroups,
                             idEtablissement, request, result, results, compteurMatiere);
                 }else{
                     JsonObject error = ( new JsonObject() ).put( "error", (String) response.left().getValue());
@@ -303,14 +267,14 @@ public class BilanPeriodiqueController extends ControllerHelper{
     private void addMoyEleveMoyClassePositionnementAuto(final String idEleve,
                                                         final String idMatiere,
                                                         final String idClasse,
-                                                        final JsonArray idsGroupsEleve,
+                                                        final JsonArray idsGroups,
                                                         final String idEtablissement,
                                                         final HttpServerRequest request,
                                                         final JsonObject result,
                                                         final JsonArray results,
                                                         final AtomicInteger compteurMatiere ){
 
-        noteService.getNoteElevePeriode(null, idEtablissement, idsGroupsEleve, idMatiere, null, new Handler<Either<String, JsonArray>>() {
+        noteService.getNoteElevePeriode(null, idEtablissement, idsGroups, idMatiere, null, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> response) {
 
@@ -338,6 +302,9 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                                 noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
                                                 compteurMatiere.decrementAndGet();
                                                 results.add(result);
+                                                if(compteurMatiere.intValue() == 0){
+                                                    Renders.renderJson(request, results);
+                                                }
 
                                             } else {
                                                 JsonObject error = new JsonObject().put("error", response.left().getValue());
@@ -351,9 +318,9 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                     result.put("moyennesClasse", new fr.wseduc.webutils.collections.JsonArray());
                                     compteurMatiere.decrementAndGet();
                                     results.add(result);
-                                }
-                               if(compteurMatiere.intValue() == 0){
-                                    Renders.renderJson(request, results);
+                                    if(compteurMatiere.intValue() == 0){
+                                        Renders.renderJson(request, results);
+                                    }
                                 }
                             }else{
                                 JsonObject error = new JsonObject().put("error", response.left().getValue());

@@ -1,11 +1,11 @@
 import {_, http, idiom as lang, Model} from 'entcore';
-import {Classe, Eleve, evaluations, Structure} from "./index";
+import {Classe, Eleve, evaluations, Structure, SuivisDesAcquis} from "./index";
 import {Defaultcolors} from "../eval_niveau_comp";
 
 declare  let Chart: any;
 
 export class ElementBilanPeriodique extends Model {
-    suiviAcquis : object;
+    suivisAcquis : SuivisDesAcquis;
     projet : object;
     vieScolaire : object;
     graphique : object;
@@ -35,6 +35,7 @@ export class ElementBilanPeriodique extends Model {
         this.classe = pClasse;
         this.eleve = pEleve;
         this.idPeriode = pIdPeriode;
+        this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id, this.idPeriode );
     }
 
     moyenneNiveau (competencesNotes) : number {

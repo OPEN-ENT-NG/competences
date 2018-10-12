@@ -20,6 +20,8 @@
   "level.items": "Niveaux items",
   "level.legend": "Légende niveaux",
   "hours":" heure(s)",
+  "appreciation":"Appréciations",
+  "matieres": "Matières",
 
   "competences.title": "Competences",
   "competences.notify.saved": "La donnée a été sauvegardée",
@@ -451,5 +453,8 @@
   "transition.bilan.annee.classe": "Bilan Année classe : ",
   "competences.competence.niveau.final.save.err":"Erreur lors de la sauvegarde du niveau final",
   "competences.no.student.selected": "Aucun élève sélectionné",
-  "bilan.periodique.appreciationCPE.placeholder": "Appreciation CPE"
+  "bilan.periodique.appreciationCPE.placeholder": "Appreciation CPE",
+  "bilan.perodique.elements.programme.travailles": "Eléments du programme travaillés",
+  "bilan.periodique.suivis.des.acquis.error.get": "Erreur lors de la récupération des acquis",
+  "bilan.periodique.suivis.des.acquis.error.save.positionnement": "Erreur lors de la sauvegarde du positionnement"
 }

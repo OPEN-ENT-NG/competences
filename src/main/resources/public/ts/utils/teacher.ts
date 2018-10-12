@@ -11,3 +11,4 @@ export * from './functions/scrollTo';
 export * from './functions/bfc';
 export * from './functions/mirorOnScroll';
 export * from './functions/sortCollection';
+export * from './functions/utilsNN';

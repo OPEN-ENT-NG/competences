@@ -3179,7 +3179,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let classe = evaluations.structure.classes.findWhere({id: $scope.selected.devoirs.list[0].id_groupe});
                 return !classe.remplacement;
             } catch (e) {
-                return false;
+
             }
         };
 
