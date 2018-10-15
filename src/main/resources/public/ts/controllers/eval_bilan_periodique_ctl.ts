@@ -201,7 +201,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.openHistoric = function () {
             $scope.opened.historic = true;
-        }
+        };
 
 
         /**
@@ -326,11 +326,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
             utils.safeApply($scope);
         };
-        }
-
-                            ///// Suivis Des Acquis//////
-
-
     }
 
 

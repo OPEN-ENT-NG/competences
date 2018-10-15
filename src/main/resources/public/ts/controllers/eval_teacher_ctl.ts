@@ -158,7 +158,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.devoir.date_publication = new Date(devoirTmp.date_publication);
                     $scope.devoir.id_etablissement = devoirTmp.id_etablissement;
                     $scope.devoir.diviseur = devoirTmp.diviseur;
-                    $scope.devoir.coefficient = parseInt(devoirTmp.coefficient);
+                    $scope.devoir.coefficient = parseFloat(devoirTmp.coefficient);
                     $scope.devoir.date = new Date(devoirTmp.date);
                     $scope.devoir.ramener_sur = devoirTmp.ramener_sur;
                     $scope.devoir.is_evaluated = devoirTmp.is_evaluated;
@@ -2055,7 +2055,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             }
             else {
-                $scope.devoir.coefficient = parseInt($scope.devoir.coefficient);
+                $scope.devoir.coefficient = parseFloat($scope.devoir.coefficient);
                 if (evaluations.competencesDevoir !== undefined) {
                     $scope.devoir.competencesAdd = [];
                     $scope.devoir.competencesRem = [];

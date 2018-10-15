@@ -319,7 +319,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         // le pourcentage d'avancement n'est pas conservé lors de la duplication d'un devoir
         o.put("percent", 0);
         try {
-            o.put("coefficient", Long.parseLong(o.getString("coefficient")));
+            o.put("coefficient", Double.valueOf(o.getString("coefficient")));
         } catch (ClassCastException e) {
             log.error("An error occured when casting devoir object to duplication format.");
             log.error(e);

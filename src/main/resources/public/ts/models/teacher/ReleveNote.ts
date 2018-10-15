@@ -605,10 +605,10 @@ export class ReleveNote extends  Model implements IModel {
         _.forEach(notes, (n) => {
             if (n.valeur !== null) {
                 // si on a une moyenne finale, on la prend
-                let real_note = (parseInt(n.valeur) * parseInt(n.coefficient) * 20 / parseInt(n.diviseur));
-                let val_to_add = (n.moyenne !== null) ? (n.moyenne * parseInt(n.coefficient)) : real_note;
+                let real_note = (parseFloat(n.valeur) * parseFloat(n.coefficient) * 20 / parseFloat(n.diviseur));
+                let val_to_add = (n.moyenne !== null) ? (n.moyenne * parseFloat(n.coefficient)) : real_note;
                 sum += val_to_add;
-                sumCoef += parseInt(n.coefficient);
+                sumCoef += parseFloat(n.coefficient);
             }
         });
         if (sumCoef > 0) {
