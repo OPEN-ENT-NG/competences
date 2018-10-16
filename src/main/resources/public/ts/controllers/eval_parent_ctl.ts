@@ -166,7 +166,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.selectedEleve = $scope.eleve;
             eleve.classe = new Classe({id: eleve.idClasse});
             await eleve.classe.sync();
-            await evaluations.devoirs.sync( eleve.idStructure, eleve.id, undefined );
+            await evaluations.devoirs.sync( eleve.idStructure, eleve.id, eleve.idClasse );
             $scope.search.periode = evaluations.periode;
             $scope.devoirs = evaluations.devoirs;
             $scope.matieres = evaluations.matieres;
