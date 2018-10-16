@@ -22,7 +22,7 @@
     "axios": "0.16.2",
     "chart.js": "^2.7.2",
     "core-js": "2.4.1",
-    "entcore": "~3.0.0-dev.1",
+    "entcore": "^2.3.0-dev.36",
     "entcore-toolkit": "^1.0.1",
     "gulp": "3.9.1",
     "gulp-clean": "^0.3.2",
