@@ -349,7 +349,11 @@ export class Utils {
                             return evaluation.owner !== model.me.userId; });
 
                         if (mine === undefined) {
-                            competence.mineCompetencesEvaluations = [];
+                            if(competence.mineCompetencesEvaluations === undefined
+                            || competence.mineCompetencesEvaluations === null) {
+                                competence.mineCompetencesEvaluations = [];
+                            }
+
                             competence.mineCompetencesEvaluations.push(new CompetenceNote({
                                 evaluation: -1,
                                 id_competence: competence.id,
@@ -359,7 +363,11 @@ export class Utils {
                         }
 
                         if (others.length === 0) {
-                            competence.competencesEvaluations = [];
+                            if(competence.competencesEvaluations === undefined
+                                || competence.competencesEvaluations === null) {
+                                competence.competencesEvaluations = [];
+                            }
+
                             competence.competencesEvaluations.push(new CompetenceNote({
                                 evaluation: -1,
                                 id_competence: competence.id,

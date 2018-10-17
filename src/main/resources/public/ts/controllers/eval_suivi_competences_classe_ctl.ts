@@ -230,7 +230,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          };
 
          $scope.getMaxEvaluations = function (idEleve) {
-             if ($scope.detailCompetence === undefined) {
+             if ($scope.detailCompetence === undefined
+             ||$scope.detailCompetence === null) {
                  return;
              }
              if ($scope.suiviFilter === undefined) $scope.initFilterMine();
