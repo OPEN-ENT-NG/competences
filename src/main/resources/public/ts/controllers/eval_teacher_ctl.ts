@@ -568,14 +568,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return Utils.isChefEtab(classe);
         };
 
-        $scope.canUpdateBFCSynthese = () => {
-            return Utils.canUpdateBFCSynthese();
-        };
-
-        $scope.canUpdateAppreciations = () => {
-            return Utils.canUpdateAppreciations();
-        };
-
         $scope.evaluations = evaluations;
         $scope.competencesSearchKeyWord = "";
         $scope.devoirs = evaluations.devoirs;
@@ -3547,7 +3539,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.isEndSaisie = function() {
             let classe = ($scope.releveNote !== undefined)? $scope.releveNote.classe : undefined;
-            if ($scope.isChefEtab(classe)) {
+            if (Utils.isChefEtab(classe)) {
                 return false;
             }
             else {

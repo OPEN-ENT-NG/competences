@@ -236,7 +236,7 @@ public class NoteController extends ControllerHelper {
                 final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
 
 
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, null,
                         new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {
@@ -549,7 +549,7 @@ public class NoteController extends ControllerHelper {
                         final String texte = resource.getString("texte");
                         final String idEtablissement = resource.getString("idEtablissement");
                         // Vérification de l'accès à la matière
-                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,null,
                                 new Handler<Boolean>() {
                                     @Override
                                     public void handle(final Boolean hasAccessToMatiere) {
@@ -608,9 +608,11 @@ public class NoteController extends ControllerHelper {
                         final String table = resource.getString("colonne");
                         final Long idPeriode = resource.getLong("idPeriode");
                         final String idEtablissement = resource.getString("idEtablissement");
+                        final Boolean isBilanPeriodique = (resource.getBoolean("isBilanPeriodique")!=null)?
+                                resource.getBoolean("isBilanPeriodique") : null;
 
                         // Vérification de l'accès à la matière
-                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,isBilanPeriodique,
                                 new Handler<Boolean>() {
                                     @Override
                                     public void handle(final Boolean hasAccessToMatiere) {
@@ -676,7 +678,7 @@ public class NoteController extends ControllerHelper {
                 final String idEleve = request.params().get("idEleve");
                 final Integer typeClasse = null;
 
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, null,
                         new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {
@@ -718,30 +720,6 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-   /* private void setResultMoyClasse(JsonArray idEleves, String idMatiere, String idClasse, final HashMap<Long,
-            HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse, final JsonObject result, final HttpServerRequest request){
-
-        notesService.getColonneReleve(idEleves, null, idMatiere, idClasse, "moyenne",
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            JsonArray moyFinalesEleves = event.right().getValue();
-                            notesService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
-
-
-
-                            Renders.renderJson(request, result);
-
-                        } else {
-                            JsonObject error = (new JsonObject()).put("error",
-                                    (String) event.left().getValue());
-                            Renders.renderJson(request, error, 400);
-                        }
-                    }
-                });
-    }*/
-
 
     @Get("/releve/annee/classe")
     @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")
@@ -761,7 +739,7 @@ public class NoteController extends ControllerHelper {
                         .put("action", "classe.getElevesClasses")
                         .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, null,
                         new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {

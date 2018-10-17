@@ -24,8 +24,11 @@ export class Utils {
         }
     }
 
-    static canUpdateAppreciations () {
-        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations);
+    static async canUpdateAppreciations (classe) {
+        let isHeadTeacher =  await this.isHeadTeacher(classe);
+        let isChefEtab = await this.isChefEtab(classe);
+        let hasWorkflow = model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations);
+        return (isHeadTeacher || isChefEtab) && hasWorkflow
     }
 
     static canUpdateBFCSynthese () {

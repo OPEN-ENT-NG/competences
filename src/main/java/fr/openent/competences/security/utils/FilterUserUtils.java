@@ -197,54 +197,58 @@ public class FilterUserUtils {
         }
     }
 
-    public void validateMatiere(final HttpServerRequest request, final String idEtablissement, final String idMatiere, final Handler<Boolean> handler) {
+    public void validateMatiere(final HttpServerRequest request, final String idEtablissement, final String idMatiere, final Boolean isBilanPeriodique, final Handler<Boolean> handler) {
+        //dans le bilanPériodique le PP peut mettre une appréciation ou un positionnement sur une matière qui n'est pas la sienne
+        if(isBilanPeriodique){
+           handler.handle(true);
+        }else if(isBilanPeriodique == null) {
+            UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+                @Override
+                public void handle(UserInfos user) {
 
-            @Override
-            public void handle(UserInfos user) {
+                    JsonObject action = new JsonObject()
+                            .put("action", "matiere.getMatieresForUser")
+                            .put("userType", user.getType())
+                            .put("idUser", user.getUserId())
+                            .put("idStructure", idEtablissement)
+                            .put("onlyId", true);
 
-                JsonObject action = new JsonObject()
-                        .put("action", "matiere.getMatieresForUser")
-                        .put("userType", user.getType())
-                        .put("idUser", user.getUserId())
-                        .put("idStructure", idEtablissement)
-                        .put("onlyId", true);
+                    if (null == eb) {
+                        handler.handle(false);
+                    } else {
+                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                            @Override
+                            public void handle(Message<JsonObject> message) {
 
-                if (null == eb) {
-                    handler.handle(false);
-                } else {
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                        @Override
-                        public void handle(Message<JsonObject> message) {
-
-                            JsonObject body = message.body();
-                            JsonArray listIdsMatieres = body.getJsonArray("results");
-                            JsonArray listReswithIdMatieres;
-                            if (null != listIdsMatieres) {
-                                if (listIdsMatieres.getValue(0) instanceof String) {
-                                    listReswithIdMatieres = null;
+                                JsonObject body = message.body();
+                                JsonArray listIdsMatieres = body.getJsonArray("results");
+                                JsonArray listReswithIdMatieres;
+                                if (null != listIdsMatieres) {
+                                    if (listIdsMatieres.getValue(0) instanceof String) {
+                                        listReswithIdMatieres = null;
+                                    } else {
+                                        listReswithIdMatieres = ((JsonObject) listIdsMatieres.getJsonObject(0))
+                                                .getJsonArray("res");
+                                    }
+                                    if (!(listIdsMatieres != null &&
+                                            (listIdsMatieres.contains(idMatiere)
+                                                    || (listReswithIdMatieres != null
+                                                    && listReswithIdMatieres.contains(idMatiere))))) {
+                                        handler.handle(false);
+                                    } else {
+                                        handler.handle(true);
+                                    }
                                 } else {
-                                    listReswithIdMatieres = ((JsonObject) listIdsMatieres.getJsonObject(0))
-                                            .getJsonArray("res");
-                                }
-                                if (!(listIdsMatieres != null &&
-                                        (listIdsMatieres.contains(idMatiere)
-                                                || (listReswithIdMatieres != null
-                                                && listReswithIdMatieres.contains(idMatiere))))) {
                                     handler.handle(false);
-                                } else {
-                                    handler.handle(true);
                                 }
-                            } else {
-                                handler.handle(false);
                             }
-                        }
-                    }));
+                        }));
 
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     public static void validateHeadTeacherWithClasses(UserInfos user, JsonArray idsClasse,

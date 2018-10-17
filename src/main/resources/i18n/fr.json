@@ -143,7 +143,7 @@
   "evaluations.releve.positionnement.min": "Pos.",
   "evaluations.releve.appreciation.classe":"Appréciation classe",
   "evaluations.releve.appreciation.classe.placeholder":"Saisir ici l'appréciation classe",
-  "evaluations.releve.appreciation.classe.max.length":"La saisie est limitée à 300 caractères",
+  "evaluations.releve.appreciation.classe.max.length":"La saisie est limitée à 300 caractères. L'appréciation n'a pas été enregistré",
   "evaluations.releve.appreciation.classe.save.error":"Une erreur est survenue lors de l'enregistrement de l'appréciation",
   "evaluations.eleve.cycle.get.error":"Une erreur est survenue lors de la récupération des cycles de l'élève",
   "evaluations.theme.get.error":"Une erreur est survenue lors de la récupération des thèmes",
@@ -456,5 +456,8 @@
   "bilan.periodique.appreciationCPE.placeholder": "Appreciation CPE",
   "bilan.perodique.elements.programme.travailles": "Eléments du programme travaillés",
   "bilan.periodique.suivis.des.acquis.error.get": "Erreur lors de la récupération des acquis",
-  "bilan.periodique.suivis.des.acquis.error.save.positionnement": "Erreur lors de la sauvegarde du positionnement"
+  "bilan.periodique.suivis.des.acquis.error.save.positionnement": "Erreur lors de la sauvegarde du positionnement",
+  "bilan.periodique.moyenne.generale.eleve": "Moyenne générale de l'élève",
+  "bilan.periodique.moyenne.generale.classe": "Moyenne générale de la classe",
+  "no.bilan.periodique":"Aucun bilan périodique pour l'élève sélectionné"
 }

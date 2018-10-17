@@ -59,7 +59,8 @@ export class SuiviDesAcquis  {
                 let _data = _.extend(this.toJson(),{
                     appreciation_matiere_periode: this.appreciation,
                     colonne: 'appreciation_matiere_periode',
-                    delete: this.appreciation === ""
+                    delete: this.appreciation === "",
+                    isBilanPeriodique: true
                 });
 
                 try{
@@ -69,7 +70,7 @@ export class SuiviDesAcquis  {
                     console.log(e);
                 }
             }else{
-                notify.error( 'evaluations.releve.appreciation.classe.max.length');
+                notify.error('evaluations.releve.appreciation.classe.max.length');
 
             }
     }
@@ -120,9 +121,7 @@ export class SuivisDesAcquis extends Model{
 
                    let{data} = await http.get( `/competences/competence/notes/bilan/conversion?idEtab=${
                         this.idEtablissement}&idClasse=${this.idClasse}`);
-
                         this.tableConversions.load(data);
-
             }
         });
         return this.tableConversions.sync();
@@ -136,51 +135,60 @@ export class SuivisDesAcquis extends Model{
 
             await this.getConversionTable();
             let { data } = await http.get(`/competences/bilan/periodique/eleve/${this.idEleve}?idEtablissement=${this.idEtablissement}&idClasse=${this.idClasse}&idPeriode=${this.idPeriode}` );
-            this.all = Mix.castArrayAs(SuiviDesAcquis,data);
+            if(data.length > 0) {
+                this.all = Mix.castArrayAs(SuiviDesAcquis, data);
 
-            // pour chaque suiviDesAcquis setter
-            // l'appréciation de toutes les classes et groupes
-            _.each(this.all,(suiviDesAcquis)=>{
-                suiviDesAcquis.idEleve = this.idEleve;
-                suiviDesAcquis.idClasse = this.idClasse;
-                suiviDesAcquis.idEtablissement = this.idEtablissement;
-                suiviDesAcquis.idPeriode = this.idPeriode;
+                // pour chaque suiviDesAcquis setter
+                // l'appréciation de toutes les classes et groupes
+                _.each(this.all, (suiviDesAcquis) => {
+                    suiviDesAcquis.idEleve = this.idEleve;
+                    suiviDesAcquis.idClasse = this.idClasse;
+                    suiviDesAcquis.idEtablissement = this.idEtablissement;
+                    suiviDesAcquis.idPeriode = this.idPeriode;
 
-                // la moyenneEleve
-                if(suiviDesAcquis.moyenne_finale !== null && suiviDesAcquis.moyenne_finale !== undefined){
-                    suiviDesAcquis.moyenneEleve = suiviDesAcquis.moyenne_finale;
-                    moyennesEleveAllMatieres.push(suiviDesAcquis.moyenneEleve);
-                }else {
-                    suiviDesAcquis.moyenneEleve = (_.find(suiviDesAcquis.moyennes,{id : this.idPeriode})!== undefined )?
-                        _.find(suiviDesAcquis.moyennes,{id : this.idPeriode}).moyenne : utils.getNN();
-
-                    if(suiviDesAcquis.moyenneEleve !== utils.getNN()){
+                    // la moyenneEleve
+                    if (suiviDesAcquis.moyenne_finale !== null && suiviDesAcquis.moyenne_finale !== undefined) {
+                        suiviDesAcquis.moyenneEleve = suiviDesAcquis.moyenne_finale;
                         moyennesEleveAllMatieres.push(suiviDesAcquis.moyenneEleve);
+                    } else if (suiviDesAcquis.moyennes !== undefined && suiviDesAcquis.moyennes.length > 0) {
+                        suiviDesAcquis.moyenneEleve = (_.find(suiviDesAcquis.moyennes, {id: this.idPeriode}) !== undefined) ?
+                            _.find(suiviDesAcquis.moyennes, {id: this.idPeriode}).moyenne : utils.getNN();
+
+                        if (suiviDesAcquis.moyenneEleve !== utils.getNN()) {
+                            moyennesEleveAllMatieres.push(suiviDesAcquis.moyenneEleve);
+                        }
+                    } else {
+                        suiviDesAcquis.moyenneEleve = utils.getNN();
                     }
-                }
-                //la moyenneClasse pour la période sélectionnée
-                 suiviDesAcquis.moyenneClasse = (_.find(suiviDesAcquis.moyennesClasse,{id : this.idPeriode}) !== undefined)?
-                     _.find(suiviDesAcquis.moyennesClasse,{id : this.idPeriode}).moyenne : utils.getNN();
+                    //la moyenneClasse pour la période sélectionnée
+                    if (suiviDesAcquis.moyennesClasse !== undefined && suiviDesAcquis.moyennesClasse.length > 0) {
+                        suiviDesAcquis.moyenneClasse = (_.find(suiviDesAcquis.moyennesClasse, {id: this.idPeriode}) !== undefined) ?
+                            _.find(suiviDesAcquis.moyennesClasse, {id: this.idPeriode}).moyenne : utils.getNN();
 
-                if(suiviDesAcquis.moyenneClasse !== utils.getNN()){
-                    moyennesClasseAllMatieres.push(suiviDesAcquis.moyenneClasse);
-                }
-
-                //le positionnement auto
-                let positionnementCalcule = (_.find(suiviDesAcquis.positionnements_auto,{id_periode: this.idPeriode}) !== undefined)?
-                    _.find(suiviDesAcquis.positionnements_auto,{id_periode: this.idPeriode}).moyenne : 0;
-                let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1, this.tableConversions.all);
-                if(suiviDesAcquis.positionnement_final === undefined){
-                    suiviDesAcquis.positionnement_final = (positionnementConverti !== -1)? positionnementConverti : 0;
-                }
-                suiviDesAcquis.positionnement_auto = (positionnementConverti !== -1)? positionnementConverti : 0;
-
-            });
-            this.moyenneGeneraleElve = (moyennesEleveAllMatieres.length === 0)?  utils.getNN() : utils.average(moyennesEleveAllMatieres).toFixed(2);
-            this.moyenneGeneraleClasse = (moyennesClasseAllMatieres.length === 0)?  utils.getNN(): utils.average(moyennesClasseAllMatieres).toFixed(2);
-
+                        if (suiviDesAcquis.moyenneClasse !== utils.getNN()) {
+                            moyennesClasseAllMatieres.push(suiviDesAcquis.moyenneClasse);
+                        }
+                    } else {
+                        suiviDesAcquis.moyenneClasse = utils.getNN();
+                    }
+                    //le positionnement auto
+                    if(suiviDesAcquis.positionnements_auto !== undefined && suiviDesAcquis.positionnements_auto.length > 0) {
+                        let positionnementCalcule = (_.find(suiviDesAcquis.positionnements_auto, {id_periode: this.idPeriode}) !== undefined) ?
+                            _.find(suiviDesAcquis.positionnements_auto, {id_periode: this.idPeriode}).moyenne : 0;
+                        let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1, this.tableConversions.all);
+                        if (suiviDesAcquis.positionnement_final === undefined) {
+                            suiviDesAcquis.positionnement_final = (positionnementConverti !== -1) ? positionnementConverti : 0;
+                        }
+                        suiviDesAcquis.positionnement_auto = (positionnementConverti !== -1) ? positionnementConverti : 0;
+                    }else{
+                        suiviDesAcquis.positionnement_auto = 0;
+                    }
+                });
+                this.moyenneGeneraleElve = (moyennesEleveAllMatieres.length === 0) ? utils.getNN() : utils.average(moyennesEleveAllMatieres).toFixed(2);
+                this.moyenneGeneraleClasse = (moyennesClasseAllMatieres.length === 0) ? utils.getNN() : utils.average(moyennesClasseAllMatieres).toFixed(2);
+            }
         }catch(e){
-            notify.error( 'bilan.periodique.suivis.des.acquis.error' );
+            notify.error('bilan.periodique.suivis.des.acquis.error.get');
             console.log(e)
         }
     }

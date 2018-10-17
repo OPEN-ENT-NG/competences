@@ -44,14 +44,14 @@
                         </div>
                     </div>
                     <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations()"
+                        <textarea ng-show="canUpdateAppreciations"
                            class="eleven input-appreciation"
                            type="text"
                            name="appreciation"
                            ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                            ng-blur="saveAppElement(element, informations.eleve)">
                         </textarea>
-                        <span ng-show="!canUpdateAppreciations()"
+                        <span ng-show="!canUpdateAppreciations"
                               ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
                         </span>
                     </div>
@@ -73,14 +73,14 @@
                         <span ng-repeat="enseignant in element.enseignants">[[enseignant]]</span>
                     </div>
                     <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations()"
+                        <textarea ng-show="canUpdateAppreciations"
                            class="eleven input-appreciation"
                            type="text"
                            name="appreciation"
                            ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                            ng-blur="saveAppElement(element, informations.eleve)">
                         </textarea>
-                        <span ng-show="!canUpdateAppreciations()"
+                        <span ng-show="!canUpdateAppreciations"
                               ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
                         </span>
                     </div>
@@ -101,14 +101,14 @@
                         <span>[[element.theme.libelle]]</span>
                     </div>
                     <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations()"
+                        <textarea ng-show="canUpdateAppreciations"
                                   class="eleven input-appreciation"
                                   type="text"
                                   name="appreciation"
                                   ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
                                   ng-blur="saveAppElement(element, informations.eleve)">
                         </textarea>
-                        <span ng-show="!canUpdateAppreciations()"
+                        <span ng-show="!canUpdateAppreciations"
                               ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
                         </span>
                     </div>

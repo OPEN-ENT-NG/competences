@@ -2,7 +2,7 @@ import {notify, idiom as lang, ng, template} from 'entcore';
 import * as utils from '../utils/teacher';
 import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
-import {Eleve} from "../models/teacher";
+import {Eleve, Utils} from "../models/teacher";
 
 
 declare let _:any;
@@ -24,34 +24,44 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.displayBilanPeriodique = function () {
             if (($scope.search.classe !== '*' && $scope.search.classe !== null && $scope.search.classe !== undefined)
                 && ($scope.search.eleve !== '*' && $scope.search.eleve !== null && $scope.search.eleve !== undefined)
-                &&($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
+                && ($scope.search.periode !== '*') && $scope.search.periode !== null && $scope.search.periode !== undefined) {
                 $scope.critereIsEmpty = false;
             }
             $scope.updateColorAndLetterForSkills();
         };
 
-        $scope.selected = { suiviAcquis: true, projet: false, vieScolaire: false, graphique: false };
+        $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
 
 
         //////            Onglets du bilan périodique            //////
 
         $scope.openSuiviAcquis = async () => {
-            $scope.selected = { suiviAcquis: true, projet: false, vieScolaire: false, graphique: false };
+            $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
             template.close('projet');
             template.close('vie-scolaire');
             template.close('graphique');
-            $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id);
-            await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
+            if(!($scope.search.eleve instanceof Eleve)){
+                $scope.displaySuiviAcquisSelectEleve = false;
+            }else {
+                $scope.displaySuiviAcquisSelectEleve = true;
+                let isChefEtab = await $scope.isChefEtab($scope.search.classe);
+                let isheadteacher = await Utils.isHeadTeacher($scope.search.classe);
+                $scope.isChefEtabOrIsHeadTeacher = isChefEtab || isheadteacher;
+                $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id);
+                await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
+                $scope.displaySuiviAcquis = ($scope.elementBilanPeriodique.suivisAcquis.all.length !== 0);
+            }
             utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
             utils.safeApply($scope);
         };
 
-        $scope.openProjet = function () {
-            $scope.selected = { projet: true };
+        $scope.openProjet = async () => {
+            $scope.selected = {projet: true};
             template.close('suivi-acquis');
             template.close('vie-scolaire');
             template.close('graphique');
+            $scope.canUpdateAppreciations = await Utils.canUpdateAppreciations($scope.search.classe);
             utils.safeApply($scope);
             template.open('projet', 'enseignants/bilan_periodique/display_projets');
             $scope.getElementsBilanBilanPeriodique("isBilanPeriodique");
@@ -60,18 +70,18 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
         $scope.openVieScolaire = async function () {
-            $scope.selected = { vieScolaire: true };
+            $scope.selected = {vieScolaire: true};
             template.close('suivi-acquis');
             template.close('projet');
             template.close('graphique');
-            if(!($scope.search.eleve instanceof  Eleve)) {
-                    $scope.displayViescolaire = false;
+            if (!($scope.search.eleve instanceof Eleve)) {
+                $scope.displayViescolaire = false;
             }
             else {
                 let getEvenements = _.isEmpty($scope.search.eleve.evenements);
                 if (!getEvenements) {
-                  $scope.search.eleve.evenement = _.findWhere($scope.search.eleve.evenements,
-                      {id_periode: $scope.search.periode.id_type});
+                    $scope.search.eleve.evenement = _.findWhere($scope.search.eleve.evenements,
+                        {id_periode: $scope.search.periode.id_type});
                 }
                 else {
                     await $scope.search.eleve.getEvenements();
@@ -160,41 +170,41 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 delete $scope.informations.competencesNotes;
                 $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
             }
-            if(template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
+            if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
                 $scope.openMatiere();
             }
-            if(template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
+            if (template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
                 $scope.openDomaine();
             }
         };
 
         $scope.changeContent = async function () {
             $scope.informations.eleve = $scope.search.eleve;
-            if ( !$scope.critereIsEmpty ) {
-                if(template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
+            if (!$scope.critereIsEmpty) {
+                if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
                     $scope.openMatiere();
                 }
-                if(template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
+                if (template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
                     $scope.openDomaine();
                 }
-                if($scope.selected.suiviAcquis){
+                if ($scope.selected.suiviAcquis) {
                     await $scope.openSuiviAcquis();
                 }
-                if($scope.selected.vieScolaire) {
+                if ($scope.selected.vieScolaire) {
                     await $scope.openVieScolaire();
                 }
             }
-            if($scope.selected.projet) {
+            if ($scope.selected.projet) {
                 await $scope.openProjet();
             }
         };
 
         $scope.deleteStudent = function () {
-                $scope.informations.eleve = '';
-                $scope.critereIsEmpty = true;
-            };
+            $scope.informations.eleve = '';
+            $scope.critereIsEmpty = true;
+        };
 
 
         //////            Lightbox historique            //////
@@ -208,12 +218,12 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
          * Saisir projet   -   Bilan Periodique
          */
 
-        $scope.getElementsBilanBilanPeriodique = async function (param?){
-            if($scope.bilanPeriodique !== undefined ) {
+        $scope.getElementsBilanBilanPeriodique = async function (param?) {
+            if ($scope.bilanPeriodique !== undefined) {
                 delete $scope.bilanPeriodique;
             }
-            if($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
-                && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*"){
+            if ($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
+                && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*") {
 
                 if ($scope.search.classe.periodes.length() === 0) {
                     await $scope.search.classe.periodes.sync();
@@ -245,15 +255,15 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             } else {
                 delete $scope.bilanPeriodique;
             }
-            if(param === "isClassChanging"){
+            if (param === "isClassChanging") {
                 if ($scope.search.classe.periodes.length() === 0) {
                     await $scope.search.classe.periodes.sync();
                 }
                 $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
             }
-            if(param === "isBilanPeriodique"){
+            if (param === "isBilanPeriodique") {
                 _.forEach($scope.bilanPeriodique.appreciations, (appreciation) => {
-                    if($scope.elementsDisplay === undefined) {
+                    if ($scope.elementsDisplay === undefined) {
                         $scope.elementsDisplay = [_.findWhere($scope.bilanPeriodique.elements, {id: appreciation.id_elt_bilan_periodique})];
                     }
                     else if (!_.findWhere($scope.elementsDisplay, {id: appreciation.id_elt_bilan_periodique})) {
@@ -274,7 +284,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
          */
 
         $scope.saveAppElement = function (element, eleve?) {
-            if(eleve){
+            if (eleve) {
                 if (eleve.appreciations !== undefined) {
                     if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
                         if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
@@ -303,13 +313,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.filterElements = (type) => {
             return (item) => {
-                if($scope.selected.AP){
+                if ($scope.selected.AP) {
                     return !item.theme;
                 }
-                else if($scope.selected.parcours){
+                else if ($scope.selected.parcours) {
                     return !item.libelle;
                 }
-                else if($scope.selected.EPI){
+                else if ($scope.selected.EPI) {
                     return item.theme && item.libelle;
                 }
                 else {

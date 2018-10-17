@@ -186,15 +186,20 @@ body.evaluations {
   }
 
   @media screen and (max-device-width:$fat-mobile) {
-  .responsive-table table thead {
-    display: none !important;
-  }
+    .responsive-table table thead {
+      display: none !important;
+    }
+    input[type=text], input[type=password], input[type=search], input[type=tel], input[type=email] {
+      text-align: center !important;
+    }
 
-
-  input[type=text], input[type=password], input[type=search], input[type=tel], input[type=email] {
-    text-align: center !important;
+    .suiviDesAcquis{
+      .selectable-list li{
+        float: none;
+        display: inline;
+      }
+    }
   }
-}
 
   .maitrise-bfc {
     font-weight: normal;
@@ -260,6 +265,7 @@ body.evaluations {
     .testAlignLeft {
       text-align: left !important;
     }
+
   }
 
   .pannel-in-cell {
@@ -3057,11 +3063,11 @@ body.evaluations {
       width: auto !important;
     }
   }
-    @media screen and (max-device-width:$fat-mobile) {
-      .responsive-table table td {
-        width: auto !important;
-      }
+  @media screen and (max-device-width:$fat-mobile) {
+    .responsive-table table td {
+      width: auto !important;
     }
+  }
 
   .deletedStudent {
     color: #E61758 !important;
@@ -3094,6 +3100,47 @@ body.evaluations {
 
   .text-cyan {
     color: $cyan;
+  }
+
+  //suivi des acquis
+  .suiviDesAcquis{
+    line-height: 15px !important;
+    th{
+      padding: 5px 10px !important;
+    }
+    .matiere{
+      font-weight: bold;
+    }
+    span~ul{
+      font-size: 12px;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      list-style-type: none;
+      padding-left: 0px;
+      li{
+        padding-bottom: 0px;
+      }
+    }
+    textarea{
+      height: 75px;
+      resize: none;
+      margin-top: 0px;
+      margin-bottom: 0px;
+      overflow-y: auto;
+      text-align: justify;
+    }
+    .element{
+      text-align: justify;
+      height: 75px;
+      padding-right: 5px;
+      overflow-y: auto;
+    }
+    tfoot td{
+      padding: 10px 0px;
+    }
+    .selectable-list{
+      margin: 0px;
+    }
   }
 
 }

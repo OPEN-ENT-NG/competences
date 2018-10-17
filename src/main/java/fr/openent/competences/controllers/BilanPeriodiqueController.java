@@ -15,6 +15,8 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
+import fr.wseduc.security.ActionType;
+import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
@@ -48,6 +50,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
 
     @Get("/bilan/periodique/eleve/:idEleve")
     @ApiDoc("renvoit tous les éléments pour le bilan périodique d'un élève")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getSuiviDesAcquisEleve(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -65,6 +68,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     public void handle(Either<String, JsonArray> response) {
                         if( response.isRight() ){
                             JsonArray responseArray = response.right().getValue();
+                            final JsonArray results = new fr.wseduc.webutils.collections.JsonArray();
                             if( responseArray != null && responseArray.size() > 0 ){
                                 //1-get idsMatière of a student with idsTeacher(owner)
                                 Map<String,JsonObject> idsMatieresIdsTeachers = new HashMap<>();
@@ -111,7 +115,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                                         Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
                                                             @Override
                                                             public void handle(Either<String, JsonArray> responseQuerry) {
-                                                                //List qui contient la idClasse + tous les ids groupes de la classe
+                                                                //List qui contient idClasse + tous les ids groupes de la classe
                                                                 JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
 
                                                                 if( responseQuerry.isRight()) {
@@ -121,7 +125,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                                                         idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
                                                                     }
 
-                                                                    final JsonArray results = new fr.wseduc.webutils.collections.JsonArray();
+
                                                                     final AtomicInteger compteurMatiere = new AtomicInteger(idsMatieresIdsTeachers.size());
                                                                     //4-for each subject build the result
                                                                     //idMAtTeachersGroups = map<idMat,JsonObject(JsonArray(Teachers),JsonArray(Groups)>
@@ -192,8 +196,9 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                         }
                                     }
                                 });
+                            }else{//si pas d'évaluation on retourne le tableau vide
+                                Renders.renderJson(request, results);
                             }
-
                         }else{
                             JsonObject error = ( new JsonObject() ).put("error",
                                    (String) response.left().getValue());
