@@ -3,11 +3,10 @@
         <label><i18n class="bold">viescolaire.utils.appreciation</i18n></label>
                 <textarea
                         name="appreciation"
-                        class="tewelve"
+                        class="twelve"
                         ng-model="informations.eleve.appreciation_matiere_periode"
                         ng-disabled = "disabledSaisieNNoutPeriode()"
                         ng-blur="saveAppreciationMatierePeriodeEleve(informations.eleve,true);">
-
                 </textarea>
     </div>
     <div class="itemFlex">
@@ -17,8 +16,8 @@
                 is-classe="false" filter="{mine : false}" user="me"
                 map-lettres="mapLettres"
                 map-couleurs="mapCouleurs"
-                maj-proportions="informations.competencesNotes"
-        ></proportion-suivi-competence>
+                maj-proportions="informations.competencesNotes">
+        </proportion-suivi-competence>
         <div ng-if="informations.eleve.competencesNotes == 0">
             <i18n class="italic">evaluations.recap.empty</i18n>
         </div>

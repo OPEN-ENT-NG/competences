@@ -3098,8 +3098,11 @@ body.evaluations {
     justify-content: space-between;
   }
 
-  .text-cyan {
+  .historic {
+    line-height: 52px;
+    margin: 10px;
     color: $cyan;
+    font-weight: bold;
   }
 
   //suivi des acquis

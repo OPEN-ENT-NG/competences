@@ -3,6 +3,7 @@ import * as utils from '../utils/teacher';
 import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
 import {Eleve, Utils} from "../models/teacher";
+import {SyntheseBilanPeriodique} from "../models/teacher/SyntheseBilanPeriodique";
 
 
 declare let _:any;
@@ -128,19 +129,21 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
         };
 
-        $scope.openGraphique = function () {
+        $scope.openGraphique = async function () {
             $scope.selected = { graphique: true };
             template.close('suivi-acquis');
             template.close('projet');
             template.close('vie-scolaire');
-            utils.safeApply($scope);
             $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
+            await $scope.elementBilanPeriodique.syncSyntheseBilanPeriodique();
+            utils.safeApply($scope);
             template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
+            template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
             utils.safeApply($scope);
         };
 
 
-        //////            Onglets de l'onglet graphique            //////
+        //////            Graph de l'onglet graphique            //////
 
         $scope.openMatiere = async function () {
             template.close('graphMatiere');
@@ -176,6 +179,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if (template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
                 $scope.openDomaine();
             }
+            if (template.contains('synthese', 'enseignants/bilan_periodique/display_synthese')) {
+                $scope.openDomaine();
+            }
         };
 
         $scope.changeContent = async function () {
@@ -188,6 +194,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if (template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
                     $scope.openDomaine();
+                }
+                if (template.contains('synthese', 'enseignants/bilan_periodique/display_synthese')) {
+                    await $scope.openGraphique();
                 }
                 if ($scope.selected.suiviAcquis) {
                     await $scope.openSuiviAcquis();

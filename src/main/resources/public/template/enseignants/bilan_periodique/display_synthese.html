@@ -23,15 +23,18 @@
             <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(search.periode)]]
         </h4>
 
-        <span class="text-cyan italic" ng-click="openHistoric()">
+        <span class="historic italic" ng-click="openHistoric()">
             <i18n>history</i18n>
         </span>
     </div>
 
 
-    <textarea class="eleven input-appreciation"
+    <textarea name="synthese"
+              class="twelve input-appreciation"
+              rows="5"
               type="text"
-              name="appreciation">
+              ng-model="elementBilanPeriodique.syntheseBilanPeriodique.synthese"
+              ng-blur="elementBilanPeriodique.syntheseBilanPeriodique.saveSynthese();">
     </textarea>
 
     <lightbox show="opened.historic" on-close="!opened.historic">
@@ -56,12 +59,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="evenement in search.eleve.evenements | orderBy:'ordre'">
+                    <tr ng-repeat="historique in  | orderBy:'ordre'">
                         <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
-                            [[evenement.periode]] </td>
-                        <td class="newsizeTD">
-                            <span>
-                            </span>
+                            [[item.periode]]
                         </td>
                         <td class="newsizeTD" data-label="">
                             <span>
@@ -69,12 +69,14 @@
                         </td>
                         <td class="newsizeTD" data-label="">
                             <span>
-
+                            </span>
+                        </td>
+                        <td class="newsizeTD" data-label="">
+                            <span>
                             </span>
                         </td>
                         <td class="newsizeTD">
                             <span>
-
                             </span>
                         </td>
                     </tr>

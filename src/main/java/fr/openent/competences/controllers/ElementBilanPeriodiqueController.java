@@ -314,7 +314,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Retourne les élèments du bilan périodique
+     * Retourne les éléments du bilan périodique
      * @param request
      */
     @Get("/elementsBilanPeriodique")
@@ -671,7 +671,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Supprimer des élèments du bilan périodique dont les ids sont passés en paramètre
+     * Supprimer des éléments du bilan périodique dont les ids sont passés en paramètre
      * @param request
      */
     @Delete("/elementsBilanPeriodique")
@@ -737,7 +737,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
     }
 
     /**
-     * Retourne les appreciations liées au élèments du bilan périodiques
+     * Retourne les appreciations liées aux éléments du bilan périodique
      * (et à la classe) passés en paramètre
      * @param request
      */

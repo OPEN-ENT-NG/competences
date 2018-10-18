@@ -4,6 +4,8 @@ import com.mongodb.util.JSON;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.service.*;
+import fr.openent.competences.service.impl.*;
 import fr.openent.competences.service.DevoirService;
 import fr.openent.competences.service.ElementProgramme;
 import fr.openent.competences.service.NoteService;
@@ -15,10 +17,12 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
@@ -26,6 +30,8 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+
+import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
@@ -33,19 +39,25 @@ import org.entcore.common.user.UserUtils;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
+
+
 public class BilanPeriodiqueController extends ControllerHelper{
 
     private final NoteService noteService;
     private final UtilsService utilsService;
     private final DevoirService devoirService;
     private final ElementProgramme elementProgramme;
+    private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
+
 
     public BilanPeriodiqueController (EventBus eb){
         this.eb = eb;
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         utilsService = new DefaultUtilsService();
         devoirService = new DefaultDevoirService(eb);
-        elementProgramme = new DefaultElementProgramme() ;
+        elementProgramme = new DefaultElementProgramme();
+        syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
     }
 
     @Get("/bilan/periodique/eleve/:idEleve")
@@ -342,4 +354,78 @@ public class BilanPeriodiqueController extends ControllerHelper{
         });
     }
 
+
+    /**
+     * Créer une synthese avec les données passées en POST
+     * @param request
+     */
+    @Post("/syntheseBilanPeriodique")
+    @ApiDoc("Créer ou mettre à jour une synthèse du bilan périodique d'un élève pour une période donnée")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+//    @ResourceFilter(CreateEvaluationWorkflow.class)
+    public void createOrUpdateSyntheseBilanPeriodique (final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if(user != null){
+                    String validator = pathPrefix + Competences.SCHEMA_SYNTHESE_CREATE;
+                    RequestUtils.bodyToJson(request, validator,
+                            new Handler<JsonObject>() {
+                                @Override
+                                public void handle(JsonObject synthese) {
+                                    final Long idTypePeriode = synthese.getLong("id_typePeriode");
+                                    final String idEleve = synthese.getString("id_eleve");
+                                    syntheseBilanPeriodiqueService.createOrUpdateSyntheseBilanPeriodique(
+                                            idTypePeriode,
+                                            idEleve,
+                                            synthese.getString("synthese"),
+                                            DefaultResponseHandler.defaultResponseHandler(request));
+                                }
+                            });
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+    /**
+     * Récupère les synthèses de l'élève
+     * @param request
+     */
+    @Get("/syntheseBilanPeriodique")
+    @ApiDoc("Récupère la synthèse d'un élève pour une période donnée")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+//    @ResourceFilter(AccessAppreciationClasseFilter.class)
+    public void getSyntheseBilanPeriodique(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(
+                            Long.parseLong(request.params().get("id_typePeriode")),
+                            request.params().get("id_eleve"),
+                            defaultResponseHandler(request));
+                } else {
+                    badRequest(request);
+                }
+            }
+        });
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

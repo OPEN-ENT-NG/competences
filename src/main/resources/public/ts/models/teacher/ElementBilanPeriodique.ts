@@ -1,6 +1,10 @@
-import {_, http, idiom as lang, Model} from 'entcore';
-import {Classe, Eleve, evaluations, Structure, SuivisDesAcquis} from "./index";
+import {_, http, idiom as lang, Model, moment} from 'entcore';
+import {AppreciationClasse, Classe, Eleve, evaluations, Structure, SuivisDesAcquis} from "./index";
 import {Defaultcolors} from "../eval_niveau_comp";
+import {SyntheseBilanPeriodique} from "./SyntheseBilanPeriodique";
+import httpAxios from 'axios';
+import {BilanPeriodique} from "./BilanPeriodique";
+
 
 declare  let Chart: any;
 
@@ -11,13 +15,12 @@ export class ElementBilanPeriodique extends Model {
     graphique : object;
     synchronized: any;
     elementProgramme: any;
-    idClasse: string;
-    idEtablissement: string;
-    idPeriode : number;
+    idTypePeriode : number;
 
     classe: Classe;
     eleve: Eleve;
     structure: Structure;
+    syntheseBilanPeriodique : SyntheseBilanPeriodique;
 
     get api() {
         return {
@@ -29,14 +32,26 @@ export class ElementBilanPeriodique extends Model {
     }
 
 
-    constructor(pClasse, pEleve, pIdPeriode) {
+    constructor(pClasse, pEleve, pIdTypePeriode) {
         super();
         this.structure = evaluations.structure;
         this.classe = pClasse;
         this.eleve = pEleve;
-        this.idPeriode = pIdPeriode;
-        this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id, this.idPeriode );
+        this.idTypePeriode = pIdTypePeriode;
+        this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id, this.idTypePeriode );
     }
+
+
+    async syncSyntheseBilanPeriodique() {
+        return new Promise((resolve, reject) => {
+            if (this.idTypePeriode != null) {
+                this.syntheseBilanPeriodique = new SyntheseBilanPeriodique(this.eleve.id, this.idTypePeriode)
+                this.syntheseBilanPeriodique.sync();
+            }
+            resolve();
+        });
+    }
+
 
     moyenneNiveau (competencesNotes) : number {
         let res  = 0;
@@ -74,8 +89,8 @@ export class ElementBilanPeriodique extends Model {
         return new Promise((resolve, reject) => {
             let uri = (forDomaine === true) ? this.api.GET_DATA_FOR_GRAPH_DOMAINE : this.api.GET_DATA_FOR_GRAPH;
             uri += '&idEleve=' + eleve.id;
-            uri += (this.idPeriode !== null) ? ('&idPeriode=' + this.idPeriode) : '';
-            http().getJson(uri)
+            uri += (this.idTypePeriode !== null) ? ('&idTypePeriode=' + this.idTypePeriode) : '';
+            http().get(uri)
                 .done(async (res) => {
                     this.configCharts(eleve, res, forDomaine);
                     resolve();

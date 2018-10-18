@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id_typePeriode": {
+      "type": "integer"
+    },
+    "id_eleve": {
+      "type" : "string"
+    },
+    "synthese": {
+      "type" : "string"
+    }
+  },
+  "required": [
+    "id_typePeriode",
+    "id_eleve",
+    "synthese"
+  ]
+}
