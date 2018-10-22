@@ -215,7 +215,7 @@ public class AppreciationController extends ControllerHelper {
                 public void handle(Boolean isUpdatable) {
                     //verif date fin de saisie
                     if(isUpdatable) {
-                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, null,
+                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
                                 new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {

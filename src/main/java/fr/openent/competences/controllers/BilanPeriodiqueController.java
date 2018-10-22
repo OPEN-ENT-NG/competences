@@ -96,13 +96,10 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                     }
                                 }
                                 //2-get subject's Name
-
                                 Utils.getLibelleMatiere( eb, idsMatieres, new Handler<Either<String, Map<String, String>>>() {
                                     @Override
                                     public void handle( Either<String, Map<String, String>> responseMatiere ) {
-
                                         if(responseMatiere.isRight()){
-
                                             Map<String, String> idsMatLibelle = responseMatiere.right().getValue();
 
                                             //3-get user's lastName and firstName
@@ -115,16 +112,17 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                                         Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
                                                             @Override
                                                             public void handle(Either<String, JsonArray> responseQuerry) {
-                                                                //List qui contient idClasse + tous les ids groupes de la classe
+                                                                //List qui contient idClasse + tous les ids groupes de la classe s'ils existent
                                                                 JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
-
                                                                 if( responseQuerry.isRight()) {
                                                                     JsonArray idClasseGroups = responseQuerry.right().getValue();
-                                                                    if(idClasseGroups != null){
+                                                                    if(idClasseGroups != null ){
                                                                         idsGroups.add(idClasseGroups.getJsonObject(0).getString("id_classe"));
-                                                                        idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
+                                                                        JsonArray idsGroupOfClasse = idClasseGroups.getJsonObject(0).getJsonArray("id_groupes");
+                                                                        if(idsGroupOfClasse != null && !idsGroupOfClasse.isEmpty()) {
+                                                                            idsGroups.addAll(idsGroupOfClasse);
+                                                                        }
                                                                     }
-
 
                                                                     final AtomicInteger compteurMatiere = new AtomicInteger(idsMatieresIdsTeachers.size());
                                                                     //4-for each subject build the result
@@ -160,7 +158,6 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                                                                             } else {
                                                                                                 elementsProg += " " + eltsProg.getJsonObject(i).getString("texte");
                                                                                             }
-
                                                                                         }
                                                                                     }
 

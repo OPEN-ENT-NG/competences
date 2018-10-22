@@ -236,7 +236,7 @@ public class NoteController extends ControllerHelper {
                 final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
 
 
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, null,
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
                         new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {
@@ -549,7 +549,7 @@ public class NoteController extends ControllerHelper {
                         final String texte = resource.getString("texte");
                         final String idEtablissement = resource.getString("idEtablissement");
                         // Vérification de l'accès à la matière
-                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,null,
+                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,false,
                                 new Handler<Boolean>() {
                                     @Override
                                     public void handle(final Boolean hasAccessToMatiere) {
@@ -609,7 +609,7 @@ public class NoteController extends ControllerHelper {
                         final Long idPeriode = resource.getLong("idPeriode");
                         final String idEtablissement = resource.getString("idEtablissement");
                         final Boolean isBilanPeriodique = (resource.getBoolean("isBilanPeriodique")!=null)?
-                                resource.getBoolean("isBilanPeriodique") : null;
+                                resource.getBoolean("isBilanPeriodique") : false;
 
                         // Vérification de l'accès à la matière
                         new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,isBilanPeriodique,
@@ -678,7 +678,7 @@ public class NoteController extends ControllerHelper {
                 final String idEleve = request.params().get("idEleve");
                 final Integer typeClasse = null;
 
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, null,
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
                         new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {
@@ -739,7 +739,7 @@ public class NoteController extends ControllerHelper {
                         .put("action", "classe.getElevesClasses")
                         .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, null,
+                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
                         new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {
