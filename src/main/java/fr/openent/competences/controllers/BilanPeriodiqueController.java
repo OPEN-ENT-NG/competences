@@ -128,12 +128,14 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                                                 JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
                                                                 if( responseQuerry.isRight()) {
                                                                     JsonArray idClasseGroups = responseQuerry.right().getValue();
-                                                                    if(idClasseGroups != null ){
+                                                                    if(idClasseGroups != null && !idClasseGroups.isEmpty() ){
                                                                         idsGroups.add(idClasseGroups.getJsonObject(0).getString("id_classe"));
                                                                         JsonArray idsGroupOfClasse = idClasseGroups.getJsonObject(0).getJsonArray("id_groupes");
                                                                         if(idsGroupOfClasse != null && !idsGroupOfClasse.isEmpty()) {
                                                                             idsGroups.addAll(idsGroupOfClasse);
                                                                         }
+                                                                    }else{
+                                                                        idsGroups.add(idClasse);
                                                                     }
 
                                                                     final AtomicInteger compteurMatiere = new AtomicInteger(idsMatieresIdsTeachers.size());
