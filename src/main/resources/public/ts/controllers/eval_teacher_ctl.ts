@@ -25,6 +25,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         await model.me.workflow.load(['viescolaire']);
 
+        $scope.buildLoadingMessageStructure = function(libelle) {
+         return lang.translate("viescolaire.structure.load") + " "
+             + libelle + " "
+             + lang.translate("viescolaire.structure.load.end");
+        };
+
         $scope.selectCycleForView = function (location) {
             let idCycle;
             if (location === 'saisieNote') {
@@ -277,6 +283,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 }
                                 utils.safeApply($scope);
                                 $scope.currentDevoir.calculStats(_evals).then(() => {
+                                    // fin message chargement
+                                    $scope.opened.displayMessageLoader = false;
                                     utils.safeApply($scope);
                                 });
                             });
@@ -303,6 +311,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         } else {
                             syncStudents();
                         }
+                    } else {
+                        $scope.opened.displayMessageLoader = false;
                     }
                 }
             },
@@ -561,7 +571,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 suppretionMsg1: false,
                 suppretionMsg2: false,
             },
-            displayStructureLoader: false
+            displayStructureLoader: false,
+            displayMessageLoader: false
         };
 
         $scope.isChefEtab = (classe?) => {
@@ -1686,7 +1697,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Séquence de création d'un devoir
          */
-//TODO Déplacer cette séquence dans la séquence du router
         $scope.createDevoir = async () => {
             if ($location.path() === "/devoir/create") {
                 $scope.devoir = $scope.initDevoir();
@@ -2089,6 +2099,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 utils.safeApply($scope);
             }
+
+            $scope.opened.displayMessageLoader = true;
             $scope.devoir.save($scope.devoir.competencesAdd,
                 $scope.devoir.competencesRem, $scope.devoir.competencesUpdate).then((res) => {
                 evaluations.structure.devoirs.sync().then(() => {
@@ -2102,6 +2114,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
 
                     } else if ($location.path() === "/releve") {
+                        $scope.opened.displayMessageLoader = false;
                         if ($scope.releveNote === undefined || !$scope.releveNote) {
                             $scope.search.classe.id = $scope.devoir.id_groupe;
                             $scope.search.matiere.id = $scope.devoir.id_matiere;
@@ -2215,6 +2228,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     p.idPeriode = $scope.search.periode.id_type;
                 }
 
+                $scope.opened.displayMessageLoader = true;
                 let releve = new ReleveNote(p);
                 releve.sync().then(() => {
                     if (releve.devoirs.all.length !== 0) {
@@ -2232,6 +2246,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         utils.safeApply($scope);
                         $scope.toogleDevoirNote();
                     }
+                    $scope.opened.displayMessageLoader = false;
                     utils.safeApply($scope);
                 });
 

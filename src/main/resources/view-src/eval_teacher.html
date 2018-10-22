@@ -46,7 +46,12 @@
             <li ><a href="#/projets"><i18n>evaluations.saisie.projets.title</i18n></a></li>
         </ul>
     </nav>
-    <structure-loader display="opened.displayStructureLoader" structure-name="structure.libelle"></structure-loader>
+    <structure-loader display="opened.displayStructureLoader"
+                      structure-name="buildLoadingMessageStructure(structure.libelle);">
+    </structure-loader>
+    <message-loader display="opened.displayMessageLoader"
+                      message="'Chargement en cours ...'">
+    </message-loader>
 </portal>
 </body>
 

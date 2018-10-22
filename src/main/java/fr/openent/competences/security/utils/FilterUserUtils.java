@@ -201,7 +201,7 @@ public class FilterUserUtils {
         //dans le bilanPériodique le PP peut mettre une appréciation ou un positionnement sur une matière qui n'est pas la sienne
         if(isBilanPeriodique){
            handler.handle(true);
-        }else if(isBilanPeriodique == null) {
+        }else {
             UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 
                 @Override

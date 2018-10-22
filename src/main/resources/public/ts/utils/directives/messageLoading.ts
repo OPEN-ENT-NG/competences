@@ -1,17 +1,17 @@
 import { ng } from 'entcore';
 
-export let structureLoader = ng.directive('structureLoader', function() {
+export let messageLoader = ng.directive('messageLoader', function() {
     return {
         restrict: 'E',
         transclude: true,
         scope: {
-            structureName: '=',
+            message: '=',
             display: '='
         },
-        template: '<div id="structure-loader" class="overlay" ng-show="display">' +
+        template: '<div id="message-loader" class="overlay" ng-show="display">' +
         '<div>' +
         '<h4 class="content-loader"> ' +
-        '[[structureName]] ' +
+        '[[message]] ' +
         '</h4>' +
         '</div>' +
         '</div>',
