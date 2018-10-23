@@ -62,7 +62,7 @@
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
 
-<div class="criteres card criterion" ng-class="{opened : opened.avis === true}">
+<div ng-show="showAvis" class="criteres card criterion" ng-class="{opened : opened.avis === true}">
     <span class="plus-input" ng-click="openLeftMenu('opened.avis', opened.avis);"></span>
     <div class="header" ng-click="openLeftMenu('opened.avis', opened.avis);">
         <h2><i18n>viescolaire.utils.avis</i18n></h2>

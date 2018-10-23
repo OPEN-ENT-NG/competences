@@ -23,7 +23,7 @@
             <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(search.periode)]]
         </h4>
 
-        <span class="historic italic" ng-click="openHistoric()">
+        <span ng-show="showHistoric" class="historic italic" ng-click="openHistoric()">
             <i18n>history</i18n>
         </span>
     </div>
@@ -59,25 +59,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr ng-repeat="historique in  | orderBy:'ordre'">
+                    <tr ng-repeat="historique in elementBilanPeriodique">
                         <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
-                            [[item.periode]]
+                            [[historique.periode]]
                         </td>
-                        <td class="newsizeTD" data-label="">
-                            <span>
-                            </span>
+                        <td class="newsizeTD" data-label="[[translate('average.min.eleve')]]">
+
                         </td>
-                        <td class="newsizeTD" data-label="">
-                            <span>
-                            </span>
+                        <td class="newsizeTD" data-label="[[translate('average.min.classe')]]">
+
                         </td>
-                        <td class="newsizeTD" data-label="">
-                            <span>
-                            </span>
+                        <td class="newsizeTD" data-label="[[translate('evaluation.synthese.bilan.periodique.title')]]">
+                            [[historique.synthese]]
                         </td>
-                        <td class="newsizeTD">
-                            <span>
-                            </span>
+                        <td class="newsizeTD" data-label="[[translate('evaluations.evaluation.conseil')]]">
+
                         </td>
                     </tr>
                 </tbody>

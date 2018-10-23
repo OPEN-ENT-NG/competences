@@ -19,29 +19,27 @@
 
 package fr.openent.competences.service;
 
-import  fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
-public interface SyntheseBilanPeriodiqueService {
-
+public interface AppreciationCPEService {
     /**
      * Créer ou mettre à jour une synthèse d'un élève pour une période donnée
      * @param idEleve id eleve
-     * @param idTypePeriode id_type periode
-     * @param synthese synthese saisie par le professeur
+     * @param idPeriode id periode
+     * @param appreciation appreciation saisie par le professeur
      * @param handler handler portant le résultat de la requête
      */
-    public void createOrUpdateSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, Handler<Either<String, JsonObject>> handler);
+    public void createOrUpdateAppreciationCPE(String idEleve, Long idPeriode, String appreciation, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupérer une synthèse d'un élève pour une période donnée
      * @param idEleve id élève
-     * @param idTypePeriode id_type période
-     * @param synthese synthese rédigé par le professeur
+     * @param idPeriode id période
+     * @param appreciation appreciation rédigé par le professeur
      * @param handler handler portant le résultat de la requête
      */
-    public void getSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, Handler<Either<String, JsonObject>> handler);
-
+    public void getAppreciationCPE(String idEleve, Long idPeriode, String appreciation, Handler<Either<String, JsonObject>> handler);
 
 }

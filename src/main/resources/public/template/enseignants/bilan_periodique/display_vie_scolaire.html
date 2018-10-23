@@ -61,15 +61,16 @@
     </div>
 
     <div class="twelve">
-        <!-- TODO take the real CPE appreciation -->
          <textarea placeholder="[[translate('bilan.periodique.appreciationCPE.placeholder')]]"
                    rows="5" type="text"
-                   ng-model="search.eleve.appreciationCPE"
+                   ng-model="elementBilanPeriodique.appreciationCPE.appreciation"
                    class="twelve"
                    ng-maxlength="600"
                    maxlength="600"
-                   ng-disabled="true">
-                            </textarea>
+                   ng-disabled="false"
+                   ng-blur="elementBilanPeriodique.appreciationCPE.saveAppreciationCPE();">
+         </textarea>
+
     </div>
 </fieldset>
 <fieldset>
@@ -92,7 +93,7 @@
                 <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
                     [[evenement.periode]] </td>
                 <td class="newsizeTD"
-                    data-label="[[translate('viescolaire.retards')]]" >
+                    data-label="[[translate('viescolaire.retards')]]">
                     <span ng-if="evenement.retard !== undefined">
                         [[evenement.retard]]
                         </span>

@@ -1,12 +1,10 @@
-import {_, Model, moment, notify} from 'entcore';
+import {_, Model, notify} from 'entcore';
 import http from 'axios';
-import {BilanPeriodique} from "./BilanPeriodique";
 
 export class SyntheseBilanPeriodique extends Model {
     id_eleve : string;
     id_typePeriode : number;
     synthese : string;
-    oldSynthese : string;
 
     get api () {
         return {

@@ -4,7 +4,7 @@ import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
 import {Eleve, Utils} from "../models/teacher";
 import {SyntheseBilanPeriodique} from "../models/teacher/SyntheseBilanPeriodique";
-
+import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 
 declare let _:any;
 
@@ -15,8 +15,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         template.close('projet');
         template.close('vie-scolaire');
         template.close('graphique');
+        template.close('graphMatiere');
+        template.close('graphDomaine');
+        template.close('synthese');
         utils.safeApply($scope);
         $scope.critereIsEmpty = true;
+        $scope.showHistoric = false;
+        $scope.showAvis = false;
 
 
         $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
@@ -41,6 +46,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('projet');
             template.close('vie-scolaire');
             template.close('graphique');
+            template.close('graphMatiere');
+            template.close('graphDomaine');
+            template.close('synthese');
             if(!($scope.search.eleve instanceof Eleve)){
                 $scope.displaySuiviAcquisSelectEleve = false;
             }else {
@@ -48,12 +56,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 let isChefEtab = await $scope.isChefEtab($scope.search.classe);
                 let isheadteacher = await Utils.isHeadTeacher($scope.search.classe);
                 $scope.isChefEtabOrIsHeadTeacher = isChefEtab || isheadteacher;
-                $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id);
+                $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id_type);
                 await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
+                await $scope.elementBilanPeriodique.syncSyntheseBilanPeriodique();
                 $scope.displaySuiviAcquis = ($scope.elementBilanPeriodique.suivisAcquis.all.length !== 0);
             }
             utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
+            template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
             utils.safeApply($scope);
         };
 
@@ -62,6 +72,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('suivi-acquis');
             template.close('vie-scolaire');
             template.close('graphique');
+            template.close('graphMatiere');
+            template.close('graphDomaine');
+            template.close('synthese');
             $scope.canUpdateAppreciations = await Utils.canUpdateAppreciations($scope.search.classe);
             utils.safeApply($scope);
             template.open('projet', 'enseignants/bilan_periodique/display_projets');
@@ -75,6 +88,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('suivi-acquis');
             template.close('projet');
             template.close('graphique');
+            template.close('graphMatiere');
+            template.close('graphDomaine');
+            template.close('synthese');
             if (!($scope.search.eleve instanceof Eleve)) {
                 $scope.displayViescolaire = false;
             }
@@ -121,9 +137,12 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     });
                     $scope.search.eleve.evenements.push(year);
                 }
+                $scope.elementBilanPeriodique.appreciationCPE = new AppreciationCPE($scope.informations.eleve.id, $scope.search.periode.id_type);
+                await $scope.elementBilanPeriodique.appreciationCPE.sync();
+
+                utils.safeApply($scope);
                 $scope.displayViescolaire = true;
             }
-
             utils.safeApply($scope);
             template.open('vie-scolaire', 'enseignants/bilan_periodique/display_vie_scolaire');
             utils.safeApply($scope);
@@ -134,8 +153,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('suivi-acquis');
             template.close('projet');
             template.close('vie-scolaire');
-            $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
-            await $scope.elementBilanPeriodique.syncSyntheseBilanPeriodique();
+            $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id_type);
+
+            $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id, $scope.search.periode.id_type);
+            await $scope.elementBilanPeriodique.syntheseBilanPeriodique.sync();
             utils.safeApply($scope);
             template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
             template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
@@ -188,11 +209,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.informations.eleve = $scope.search.eleve;
             if (!$scope.critereIsEmpty) {
                 if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
-                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
+                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id_type);
                     $scope.openMatiere();
                 }
                 if (template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
-                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id);
+                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve, $scope.search.periode.id_type);
                     $scope.openDomaine();
                 }
                 if (template.contains('synthese', 'enseignants/bilan_periodique/display_synthese')) {

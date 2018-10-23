@@ -1,9 +1,8 @@
-import {_, http, idiom as lang, Model, moment} from 'entcore';
-import {AppreciationClasse, Classe, Eleve, evaluations, Structure, SuivisDesAcquis} from "./index";
+import {_, http, idiom as lang, Model} from 'entcore';
+import {Classe, Eleve, evaluations, Structure, SuivisDesAcquis} from "./index";
 import {Defaultcolors} from "../eval_niveau_comp";
 import {SyntheseBilanPeriodique} from "./SyntheseBilanPeriodique";
-import httpAxios from 'axios';
-import {BilanPeriodique} from "./BilanPeriodique";
+import {AppreciationCPE} from "./AppreciationCPE";
 
 
 declare  let Chart: any;
@@ -21,6 +20,7 @@ export class ElementBilanPeriodique extends Model {
     eleve: Eleve;
     structure: Structure;
     syntheseBilanPeriodique : SyntheseBilanPeriodique;
+    appreciationCPE : AppreciationCPE;
 
     get api() {
         return {
@@ -45,7 +45,7 @@ export class ElementBilanPeriodique extends Model {
     async syncSyntheseBilanPeriodique() {
         return new Promise((resolve, reject) => {
             if (this.idTypePeriode != null) {
-                this.syntheseBilanPeriodique = new SyntheseBilanPeriodique(this.eleve.id, this.idTypePeriode)
+                this.syntheseBilanPeriodique = new SyntheseBilanPeriodique(this.eleve.id, this.idTypePeriode);
                 this.syntheseBilanPeriodique.sync();
             }
             resolve();

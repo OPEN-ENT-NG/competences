@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id_periode": {
+      "type": "integer"
+    },
+    "id_eleve": {
+      "type" : "string"
+    },
+    "appreciation": {
+      "type" : "string"
+    }
+  },
+  "required": [
+    "id_periode",
+    "id_eleve",
+    "appreciation"
+  ]
+}
