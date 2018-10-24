@@ -39,7 +39,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         if(model.me.type === 'PERSRELELEVE'){
             template.open('left-menu','enseignants/bilan_periodique/left-side-parent-bilanperiodique');
             $scope.displayBilanPeriodique();
-            await $scope.openSuiviAcquis();
         }else{
             template.open('left-menu', 'enseignants/bilan_periodique/left-side-bilanperiodique');
             $scope.displayBilanPeriodique();
