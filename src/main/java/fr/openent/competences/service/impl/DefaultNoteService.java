@@ -604,18 +604,25 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         query = "SELECT positionnement.positionnement AS positionnement_final, positionnement.id_classe AS id_classe_posi," +
-                " moyenne_finale.moyenne AS moyenne_finale, moyenne_finale.id_classe AS id_classe_moyfinale," +
-                " appreciation_matiere_periode.appreciation_matiere_periode,  appreciation_matiere_periode.id_classe AS id_classe_appreciation" +
+                " positionnement.id_periode AS id_periode_positionnement,"+
+                " moyenne_finale.moyenne AS moyenne_finale, moyenne_finale.id_classe AS id_classe_moyfinale, moyenne_finale.id_periode AS id_periode_moyenne_finale," +
+                " appreciation_matiere_periode.appreciation_matiere_periode,  appreciation_matiere_periode.id_classe AS id_classe_appreciation," +
+                " appreciation_matiere_periode.id_periode AS id_periode_appreciation"+
                 " FROM notes.positionnement" +
                 " FULL JOIN notes.moyenne_finale ON (positionnement.id_periode = moyenne_finale.id_periode" +
                 " AND positionnement.id_eleve = moyenne_finale.id_eleve AND positionnement.id_matiere = moyenne_finale.id_matiere)" +
                 " FULL JOIN notes.appreciation_matiere_periode ON (positionnement.id_periode = appreciation_matiere_periode.id_periode" +
                 " AND positionnement.id_eleve = appreciation_matiere_periode.id_eleve AND" +
                 " positionnement.id_matiere = appreciation_matiere_periode.id_matiere )" +
-                " WHERE (positionnement.id_periode = ?  OR moyenne_finale.id_periode = ? OR appreciation_matiere_periode.id_periode = ? )" +
-                " AND (positionnement.id_eleve = ? OR moyenne_finale.id_eleve = ? OR appreciation_matiere_periode.id_eleve = ? )" +
-                " AND (positionnement.id_matiere = ? OR moyenne_finale.id_matiere = ? OR appreciation_matiere_periode.id_matiere = ? )";
-        values.add(idPeriode).add(idPeriode).add(idPeriode);
+                " WHERE ";
+        if(idPeriode != null){
+            query += "(positionnement.id_periode = ? OR moyenne_finale.id_periode = ? OR appreciation_matiere_periode.id_periode = ? AND)";
+        }
+        query += " (positionnement.id_eleve = ? OR moyenne_finale.id_eleve = ? OR appreciation_matiere_periode.id_eleve = ? )" +
+                 " AND (positionnement.id_matiere = ? OR moyenne_finale.id_matiere = ? OR appreciation_matiere_periode.id_matiere = ? )";
+       if(idPeriode !=null){
+           values.add(idPeriode).add(idPeriode).add(idPeriode);
+       }
         values.add(idEleve).add(idEleve).add(idEleve);
         values.add(idMatiere).add(idMatiere).add(idMatiere);
 

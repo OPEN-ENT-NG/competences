@@ -32,7 +32,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         //     };
         //     if(Index || Index==0){
         //         _.map($scope.classes.all[Index].periode, function (per) {
-        //             $scope.periodesList.values.push(per);
+        //             $scope.periodesList.values.push(percontainer
+        // );
         //         });
         //     }
         //     if(annee !== false){

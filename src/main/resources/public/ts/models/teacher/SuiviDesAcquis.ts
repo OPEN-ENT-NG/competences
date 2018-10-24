@@ -1,10 +1,9 @@
 import  http  from "axios";
-import {Enseignant, ElementProgramme,  TableConversion,Utils} from "./index";
+import {Enseignant, ElementProgramme, TableConversion, Utils, TypePeriode} from "./index";
 import * as utils from '../../utils/teacher';
 import { Mix } from "entcore-toolkit";
 import {notify, _, Collection, Model, http as httpEntcore} from "entcore";
-
-
+import {Historique} from "../common/Historique";
 
 
 export class SuiviDesAcquis  {
@@ -92,7 +91,13 @@ export class SuiviDesAcquis  {
        }
    }
 
-
+    getPositionnementDefinitif(): any{
+       if(this.positionnement_final === this.positionnement_final){
+           return this.positionnement_auto;
+       }else{
+           return this.positionnement_final;
+       }
+    }
 }
 export class SuivisDesAcquis extends Model{
 
@@ -104,23 +109,27 @@ export class SuivisDesAcquis extends Model{
     idClasse: string;
     idEtablissement: string;
     idPeriode : number;
+    historiques: Historique[];
 
-    constructor (idEleve: string, idClasse: string, idEtablissement: string, idPeriode : number ) {
+    constructor (idEleve: string, idClasse: string, idEtablissement: string, idPeriode : number, typesPeriode : TypePeriode[]) {
         super();
         this.all = [];
         this.idEleve = idEleve;
         this.idClasse =  idClasse;
         this.idEtablissement = idEtablissement;
         this.idPeriode = idPeriode;
+        this.historiques = [];
+        _.each(typesPeriode, (typeP) => {
+            this.historiques.push(new Historique(typeP.id_type));
+        });
+        this.historiques.push(new Historique(null));
 
     }
 
     async getConversionTable(): Promise<any> {
         this.collection(TableConversion, {
             sync: async (): Promise<any> => {
-
-                   let{data} = await http.get( `/competences/competence/notes/bilan/conversion?idEtab=${
-                        this.idEtablissement}&idClasse=${this.idClasse}`);
+                   let{data} = await http.get( `/competences/competence/notes/bilan/conversion?idEtab=${this.idEtablissement}&idClasse=${this.idClasse}`);
                         this.tableConversions.load(data);
             }
         });
@@ -130,8 +139,8 @@ export class SuivisDesAcquis extends Model{
 
         try{
 
-            let moyennesEleveAllMatieres: number[] = [];
-            let moyennesClasseAllMatieres: number[] = [];
+            //let moyennesEleveAllMatieres: number[] = [];
+           // let moyennesClasseAllMatieres: number[] = [];
 
             await this.getConversionTable();
             let { data } = await http.get(`/competences/bilan/periodique/eleve/${this.idEleve}?idEtablissement=${this.idEtablissement}&idClasse=${this.idClasse}&idPeriode=${this.idPeriode}` );
@@ -145,52 +154,87 @@ export class SuivisDesAcquis extends Model{
                     suiviDesAcquis.idClasse = this.idClasse;
                     suiviDesAcquis.idEtablissement = this.idEtablissement;
                     suiviDesAcquis.idPeriode = this.idPeriode;
-
-                    // la moyenneEleve
-                    if (suiviDesAcquis.moyenne_finale !== null && suiviDesAcquis.moyenne_finale !== undefined) {
-                        suiviDesAcquis.moyenneEleve = suiviDesAcquis.moyenne_finale;
-                        moyennesEleveAllMatieres.push(suiviDesAcquis.moyenneEleve);
-                    } else if (suiviDesAcquis.moyennes !== undefined && suiviDesAcquis.moyennes.length > 0) {
-                        suiviDesAcquis.moyenneEleve = (_.find(suiviDesAcquis.moyennes, {id: this.idPeriode}) !== undefined) ?
-                            _.find(suiviDesAcquis.moyennes, {id: this.idPeriode}).moyenne : utils.getNN();
-
-                        if (suiviDesAcquis.moyenneEleve !== utils.getNN()) {
-                            moyennesEleveAllMatieres.push(suiviDesAcquis.moyenneEleve);
-                        }
-                    } else {
-                        suiviDesAcquis.moyenneEleve = utils.getNN();
+                    if(suiviDesAcquis.appreciations !== null && suiviDesAcquis.appreciations !== undefined && _.find(suiviDesAcquis.appreciations,{id_periode: this.idPeriode}) !== undefined){
+                        suiviDesAcquis.appreciation =  _.find(suiviDesAcquis.appreciations,{id_periode: this.idPeriode}).appreciation ;
+                    }else{
+                        suiviDesAcquis.appreciation = "";
                     }
-                    //la moyenneClasse pour la période sélectionnée
-                    if (suiviDesAcquis.moyennesClasse !== undefined && suiviDesAcquis.moyennesClasse.length > 0) {
-                        suiviDesAcquis.moyenneClasse = (_.find(suiviDesAcquis.moyennesClasse, {id: this.idPeriode}) !== undefined) ?
-                            _.find(suiviDesAcquis.moyennesClasse, {id: this.idPeriode}).moyenne : utils.getNN();
 
-                        if (suiviDesAcquis.moyenneClasse !== utils.getNN()) {
-                            moyennesClasseAllMatieres.push(suiviDesAcquis.moyenneClasse);
+                    // la moyenneEleve pour chaque période et chaque matiere
+                    if (suiviDesAcquis.moyennesFinales !== null && suiviDesAcquis.moyennesFinales !== undefined && _.find(suiviDesAcquis.moyennesFinales,{id: this.idPeriode}) !== undefined) {
+                          suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennesFinales,{id: this.idPeriode}).moyenne;
                         }
+                        //moyennesEleveAllMatieres.push(suiviDesAcquis.moyenneEleve);
+                    else if (suiviDesAcquis.moyennes !== null && suiviDesAcquis.moyennes !== undefined &&
+                        _.find(suiviDesAcquis.moyennes, {id: this.idPeriode}) !== undefined) {
+                            suiviDesAcquis.moyenneEleve = _.find(suiviDesAcquis.moyennes, {id: this.idPeriode}).moyenne;
+
+                               // if (suiviDesAcquis.moyenneEleve !== utils.getNN()) {
+                                    //moyennesEleveAllMatieres.push(suiviDesAcquis.moyenneEleve);
+                               // }
+                        } else {
+                            suiviDesAcquis.moyenneEleve = utils.getNN();
+                        }
+                    //la moyenneClasse pour la période sélectionnée et une matiere
+                    if (suiviDesAcquis.moyennesClasse !== null && suiviDesAcquis.moyennesClasse !== undefined &&
+                        _.find(suiviDesAcquis.moyennesClasse, {id: this.idPeriode}) !== undefined) {
+                        suiviDesAcquis.moyenneClasse = _.find(suiviDesAcquis.moyennesClasse, {id: this.idPeriode}).moyenne
+
+                      /*  if (suiviDesAcquis.moyenneClasse !== utils.getNN()) {
+                            //moyennesClasseAllMatieres.push(suiviDesAcquis.moyenneClasse);
+                        }*/
                     } else {
                         suiviDesAcquis.moyenneClasse = utils.getNN();
                     }
                     //le positionnement auto
-                    if(suiviDesAcquis.positionnements_auto !== undefined && suiviDesAcquis.positionnements_auto.length > 0) {
-                        let positionnementCalcule = (_.find(suiviDesAcquis.positionnements_auto, {id_periode: this.idPeriode}) !== undefined) ?
-                            _.find(suiviDesAcquis.positionnements_auto, {id_periode: this.idPeriode}).moyenne : 0;
+                    if( suiviDesAcquis.positionnements_auto !== null && suiviDesAcquis.positionnements_auto !== undefined
+                        && _.find(suiviDesAcquis.positionnements_auto, {id_periode: this.idPeriode}) !== undefined) {
+                        let positionnementCalcule = _.find(suiviDesAcquis.positionnements_auto, {id_periode: this.idPeriode}).moyenne;
                         let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1, this.tableConversions.all);
-                        if (suiviDesAcquis.positionnement_final === undefined) {
+                        if ( suiviDesAcquis.positionnementsFinaux !== null && suiviDesAcquis.positionnementsFinaux !== undefined && suiviDesAcquis.positionnementsFinaux.length > 0) {
+                            if(_.find( suiviDesAcquis.positionnementsFinaux, {id_periode: this.idPeriode}) !== undefined){
+                                suiviDesAcquis.positionnement_final = _.find( suiviDesAcquis.positionnementsFinaux, {id_periode: this.idPeriode}).positionnementFinal;
+                            }else{
+                                suiviDesAcquis.positionnement_final = (positionnementConverti !== -1) ? positionnementConverti : 0;
+                            }
+                        }else{
                             suiviDesAcquis.positionnement_final = (positionnementConverti !== -1) ? positionnementConverti : 0;
                         }
                         suiviDesAcquis.positionnement_auto = (positionnementConverti !== -1) ? positionnementConverti : 0;
                     }else{
                         suiviDesAcquis.positionnement_auto = 0;
                     }
+                     // ajout des moyennes par matiere sur les periodes
+                    _.each(this.historiques, (histo) => {
+                        //ajout de la moyennefinale si elle existe sinon ajout de la moyenne de l'eleve si elle existe pour la periode en cours
+                        if(_.find(suiviDesAcquis.moyennesFinales,{id: histo.id_type}) !== undefined){
+                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennesFinales,{id: histo.id_type}).moyenne);
+                        }else if(_.find(suiviDesAcquis.moyennes,{id: histo.id_type})!== undefined ){
+                            histo.moyEleveAllMatieres.push(_.find(suiviDesAcquis.moyennes,{id: histo.id_type}).moyenne);
+                        }
+                       if(_.find(suiviDesAcquis.moyennesClasse,{id: histo.id_type}) !== undefined){
+                           histo.moyClasseAllMatieres.push(_.find(suiviDesAcquis.moyennesClasse,{id: histo.id_type}).moyenne);
+                       }
+                    });
                 });
-                this.moyenneGeneraleElve = (moyennesEleveAllMatieres.length === 0) ? utils.getNN() : utils.average(moyennesEleveAllMatieres).toFixed(2);
-                this.moyenneGeneraleClasse = (moyennesClasseAllMatieres.length === 0) ? utils.getNN() : utils.average(moyennesClasseAllMatieres).toFixed(2);
+
+                //calcul moyenne pour chaque periode
+                _.each(this.historiques, (histo) => {
+                    histo.moyGeneraleEleve = (histo.moyEleveAllMatieres.length === 0)? utils.getNN() : utils.average(histo.moyEleveAllMatieres).toFixed(2);
+                    histo.moyGeneraleClasse = (histo.moyClasseAllMatieres.length === 0)? utils.getNN() : utils.average(histo.moyClasseAllMatieres).toFixed(2);
+                });
+
             }
+
         }catch(e){
             notify.error('bilan.periodique.suivis.des.acquis.error.get');
             console.log(e)
         }
+
+    }
+
+    getHistoriqueByPeriode (id_periode): Historique {
+        return _.find( this.historiques, {id_type: id_periode});
     }
 
 }

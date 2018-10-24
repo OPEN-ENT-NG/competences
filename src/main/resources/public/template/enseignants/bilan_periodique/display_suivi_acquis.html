@@ -1,10 +1,7 @@
-<div ng-if="!displaySuiviAcquisSelectEleve">
-    <i18n>competences.no.student.selected</i18n>
-</div>
-<div ng-if="!displaySuiviAcquis">
+<div ng-if="elementBilanPeriodique.suivisAcquis.all.length === 0">
     <i18n>no.bilan.periodique</i18n>
 </div>
-<div ng-if="displaySuiviAcquisSelectEleve && displaySuiviAcquis">
+<div ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
     <div class="responsive-table">
         <table class="twelve suiviDesAcquis">
             <thead>
@@ -77,17 +74,16 @@
                         <ul class="selectable-list twelve" ng-if="!isChefEtabOrIsHeadTeacher" >
                             <li class="cell"
                                 style="margin: 0"
-                                ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final, positionnementcalculee: $index === suiviDesAcquis.positionnement_auto}"
+                                ng-class="{ positionnementcalculee: $index === suiviDesAcquis.getPositionnementDefinitif()}"
                                 ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
                                 <label ng-bind-html="$index"></label>
                             </li>
-                                <li class="cell"
-                                    style="margin: 0"
-                                    ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final,
-                                                    positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_auto}"
-                                >
-                                    <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
-                                </li>
+                            <li class="cell"
+                                style="margin: 0"
+                                ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.getPositionnementDefinitif()}"
+                            >
+                                <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
+                            </li>
                         </ul>
 
                     </td>
@@ -100,8 +96,8 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.eleve')]]">[[elementBilanPeriodique.suivisAcquis.moyenneGeneraleElve]]</td>
-                    <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.classe')]]">[[elementBilanPeriodique.suivisAcquis.moyenneGeneraleClasse]]</td>
+                    <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.eleve')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleEleve]]</td>
+                    <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.classe')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleClasse]]</td>
                     <td></td>
                 </tr>
             </tfoot>

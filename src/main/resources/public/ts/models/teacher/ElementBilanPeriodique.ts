@@ -1,5 +1,5 @@
 import {_, http, idiom as lang, Model} from 'entcore';
-import {Classe, Eleve, evaluations, Structure, SuivisDesAcquis} from "./index";
+import {Classe, Eleve, evaluations, Structure, SuivisDesAcquis, TypePeriode} from "./index";
 import {Defaultcolors} from "../eval_niveau_comp";
 import {SyntheseBilanPeriodique} from "./SyntheseBilanPeriodique";
 import {AppreciationCPE} from "./AppreciationCPE";
@@ -15,7 +15,7 @@ export class ElementBilanPeriodique extends Model {
     synchronized: any;
     elementProgramme: any;
     idTypePeriode : number;
-
+    typePeriode : TypePeriode[]
     classe: Classe;
     eleve: Eleve;
     structure: Structure;
@@ -32,13 +32,14 @@ export class ElementBilanPeriodique extends Model {
     }
 
 
-    constructor(pClasse, pEleve, pIdTypePeriode) {
+    constructor(pClasse, pEleve, pIdTypePeriode,pStructure, pTypePeriode) {
         super();
-        this.structure = evaluations.structure;
+        this.structure = pStructure;
         this.classe = pClasse;
         this.eleve = pEleve;
         this.idTypePeriode = pIdTypePeriode;
-        this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id, this.idTypePeriode );
+        this.typePeriode = pTypePeriode;
+        this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id, this.idTypePeriode,this.typePeriode );
     }
 
 

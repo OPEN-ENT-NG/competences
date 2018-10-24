@@ -372,7 +372,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
-
                     $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
                     delete $scope.informations.eleve;
                     utils.safeApply($scope);

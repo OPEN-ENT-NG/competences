@@ -461,5 +461,6 @@
   "bilan.periodique.suivis.des.acquis.error.save.positionnement": "Erreur lors de la sauvegarde du positionnement",
   "bilan.periodique.moyenne.generale.eleve": "Moyenne générale de l'élève",
   "bilan.periodique.moyenne.generale.classe": "Moyenne générale de la classe",
-  "no.bilan.periodique":"Aucun bilan périodique pour l'élève sélectionné"
+  "no.bilan.periodique":"Aucun bilan périodique pour l'élève sélectionné",
+  "evaluations.bilan.periodique.title": "Bilan périodique"
 }

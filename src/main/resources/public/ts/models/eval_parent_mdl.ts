@@ -70,6 +70,41 @@ export class Evaluations extends Model {
     async sync  (): Promise<any> {
         return new Promise(async (resolve) => {
             // await this.classes.sync(model.me.structures[0]);
+
+            let structuresTemp = [];
+           /* this.collection(Structure, {
+                sync : function () {
+                    return new Promise((resolve, reject) => {
+                        http().getJson('/viescolaire/user/structures/actives?module=notes').done(function (idsEtablissementActifs) {
+                            //On récupère tout d'abord la liste des établissements actifs
+                            if(idsEtablissementActifs.length > 0) {
+                                for (let i = 0; i < model.me.structures.length; i++) {
+                                    let isEtablissementActif = (_.findWhere(idsEtablissementActifs, {id_etablissement: model.me.structures[i]}) !== undefined);
+                                    if (isEtablissementActif) {
+                                        let structure = {
+                                            id : model.me.structures[i],
+                                            libelle : model.me.structureNames[i]
+                                        };
+                                        structuresTemp.push(structure);
+                                    }
+                                }
+                                //evaluations.structures.load(structuresTemp);
+                                evaluations.structure = structuresTemp.first();
+
+                                if (evaluations.structure !== undefined){
+                                    resolve();
+                                }
+                            } else {
+                                reject();
+                            }
+
+                        }.bind(this));
+                    })
+                }
+            });*/
+
+
+
             this.collection(Eleve, {
                 sync: async () => {
                     return new Promise((resolve, reject) => {
@@ -361,6 +396,7 @@ export class Evaluations extends Model {
     async updateUsePerso () {
         // Recup du ...
         let s = new Structure({id:  model.me.structures[0]});
+        //let s = evaluations.structure;
         s.usePersoFun(model.me.userId).then(async(res) => {
             this.niveauCompetences = s.niveauCompetences;
             if (res) {
@@ -372,8 +408,6 @@ export class Evaluations extends Model {
         });
     }
 }
-
-
 
 
 export let evaluations = new Evaluations();

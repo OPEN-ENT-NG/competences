@@ -25,10 +25,16 @@ export class Utils {
     }
 
     static async canUpdateAppreciations (classe) {
-        let isHeadTeacher =  await this.isHeadTeacher(classe);
-        let isChefEtab = await this.isChefEtab(classe);
-        let hasWorkflow = model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations);
-        return (isHeadTeacher || isChefEtab) && hasWorkflow
+        if( !model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations) ){
+            return false;
+        }else{
+            //return this.isChefEtab(classe);
+            if(model.me.type === 'ENSEIGNANT') {
+                return this.isHeadTeacher(classe);
+            } else {
+                return true;
+            }
+        }
     }
 
     static canUpdateBFCSynthese () {

@@ -82,6 +82,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 template.open('header', 'parent_enfant/accueil/eval_parent_selectEnfants');
                 template.open('main', 'parent_enfant/liste_devoirs/display_devoir');
                 utils.safeApply($scope);
+            },
+            displayBilanPeriodique: async () => {
+               // $scope.opened.lightbox = false;
+                await $scope.init();
+                template.close('menu');
+                template.close('main');
+                if (evaluations !== undefined ) {
+                    //$scope.cleanRoot();
+                    //$scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+                   // delete $scope.informations.eleve;
+                    utils.safeApply($scope);
+                    template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
+
+                }
             }
         });
 
@@ -174,6 +188,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.setCurrentPeriode();
             await $scope.updateNiveau(evaluations.usePerso);
             await $scope.getCyclesEleve();
+            if($location.path() === "/bilan/periodique"){
+                $scope.informations = {
+                    eleve:$scope.eleve
+                };
+                $scope.search.classe = $scope.eleve.classe;
+                $scope.search.eleve = $scope.eleve;
+                $scope.structure = {
+                    id: model.me.structures[0],
+                    cycle: {
+                        niveauCompetencesArray: evaluations.arrayCompetences
+                    }
+                };
+            }
 
             if ($location.path() === "/competences/eleve") {
                await $scope.initBilan();

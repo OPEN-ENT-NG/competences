@@ -18,9 +18,12 @@
   -->
 <div class="evaluations" ng-controller="EvalBilanPeriodiqueCtl">
 
-    <aside class="two cell twelve-mobile left">
-        <div ng-include="'/competences/public/template/enseignants/bilan_periodique/left-side-bilanperiodique.html'"></div>
+    <aside class="two cell twelve-mobile left" >
+        <container template = "left-menu"></container>
+       <!--
+        <div ng-include="'/competences/public/template/enseignants/bilan_periodique/left-side-bilanperiodique.html'"></div>-->
     </aside>
+
 
         <section class="ten twelve-mobile cell right">
 
@@ -35,13 +38,13 @@
 
                     <div class="content-suivi-eleve twelve-mobile ten card">
 
-                            <div class="twelve suivi-eleve-ctl" sticky offset="64">
-                                <h2 class="align-center">
-                                    <i class="previous cell" ng-click="incrementEleve(-1)"></i>
-                                    [[informations.eleve.lastName]] [[informations.eleve.firstName]]
-                                    <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
-                                </h2>
-                            </div>
+                        <div class="twelve suivi-eleve-ctl" sticky offset="64" ng-hide="me.type === 'PERSRELELEVE'">
+                            <h2 class="align-center">
+                                <i class="previous cell" ng-click="incrementEleve(-1)"></i>
+                                [[informations.eleve.lastName]] [[informations.eleve.firstName]]
+                                <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
+                            </h2>
+                        </div>
 
                         <div class="cell ten twelve-mobile">
                             <h2><i18n>evaluations.bilan.periodique</i18n> [[getI18nPeriode(search.periode)]]</h2>

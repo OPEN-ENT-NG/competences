@@ -11,6 +11,7 @@ import {customSearchFilter} from "./filters/customSearch";
 import {uniqueFilter} from "./utils/filters/unique";
 import {cSkillsBubble} from "./directives/cSkillsBubble";
 import {proportionSuiviCompetence} from "./directives/ProportionSuiviCompetence";
+import {evalBilanPeriodiqueCtl} from './controllers/eval_bilan_periodique_ctl';
 
 
 ng.addRequiredModule('chart.js');
@@ -18,6 +19,7 @@ ng.addRequiredModule('chart.js');
 ng.controllers.push(evaluationsController);
 ng.controllers.push(releveController);
 ng.controllers.push(listController);
+ng.controllers.push(evalBilanPeriodiqueCtl);
 
 // directives
 ng.directives.push(cRoundAvatar);
@@ -37,6 +39,7 @@ routes.define(function($routeProvider) {
         .when('/devoir/:devoirId', {action:'viewDevoir'})
         .when('/releve', {action:'displayReleveNotes'})
         .when('/competences/eleve', {action:'displayBilanDeCompetence'})
+        .when('/bilan/periodique', {action:'displayBilanPeriodique'})
         .otherwise({
             redirectTo : '/'
         });

@@ -77,12 +77,12 @@ public class BilanPeriodiqueController extends ControllerHelper {
                 devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, new Handler<Either<String, JsonArray>>() {
                     @Override
                     public void handle(Either<String, JsonArray> response) {
-                        if (response.isRight()) {
+                        if( response.isRight() ){
                             JsonArray responseArray = response.right().getValue();
                             final JsonArray results = new fr.wseduc.webutils.collections.JsonArray();
-                            if (responseArray != null && responseArray.size() > 0) {
+                            if( responseArray != null && responseArray.size() > 0 ){
                                 //1-get idsMatière of a student with idsTeacher(owner)
-                                Map<String, JsonObject> idsMatieresIdsTeachers = new HashMap<>();
+                                Map<String,JsonObject> idsMatieresIdsTeachers = new HashMap<>();
                                 JsonArray idsMatieres = new fr.wseduc.webutils.collections.JsonArray();
                                 JsonArray idsTeachers = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -100,14 +100,14 @@ public class BilanPeriodiqueController extends ControllerHelper {
                                         idsMatieresIdsTeachers.put(responseObject.getString("id_matiere"), new JsonObject().put("teachers", teachers));
                                     } else {//on récupère le JsonObject de la cle idmatiere en cours
                                         JsonArray teachers = idsMatieresIdsTeachers
-                                                .get(responseObject.getString("id_matiere")).getJsonArray("teachers");
+                                                .get( responseObject.getString("id_matiere")).getJsonArray("teachers");
 
                                         teachers.add(responseObject.getString("owner"));
                                         idsTeachers.add(responseObject.getString("owner"));
                                     }
                                 }
                                 //2-get subject's Name
-                                Utils.getLibelleMatiere(eb, idsMatieres, new Handler<Either<String, Map<String, String>>>() {
+                                Utils.getLibelleMatiere( eb, idsMatieres, new Handler<Either<String, Map<String, String>>>() {
                                     @Override
                                     public void handle(Either<String, Map<String, String>> responseMatiere) {
                                         if (responseMatiere.isRight()) {
@@ -116,8 +116,8 @@ public class BilanPeriodiqueController extends ControllerHelper {
                                             //3-get user's lastName and firstName
                                             Utils.getLastNameFirstNameUser(eb, idsTeachers, new Handler<Either<String, Map<String, JsonObject>>>() {
                                                 @Override
-                                                public void handle(Either<String, Map<String, JsonObject>> responseTeacherInfo) {
-                                                    if (responseTeacherInfo.isRight()) {
+                                                public void handle( Either<String, Map<String, JsonObject>> responseTeacherInfo ) {
+                                                    if(responseTeacherInfo.isRight()){
                                                         Map<String, JsonObject> teachersInfos = responseTeacherInfo.right().getValue();
                                                         //on récupère les groups de la classe
                                                         Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
@@ -195,14 +195,14 @@ public class BilanPeriodiqueController extends ControllerHelper {
                                                         log.error("bilanPeriodiqueController ");
                                                         log.error("getUsers lastName and firstName 's teacher :" + responseTeacherInfo.left().getValue());
                                                         JsonObject error = new JsonObject().put("error", "failed get firstName and lastName 's teachers " + responseTeacherInfo.left().getValue());
-                                                        Renders.renderJson(request, error, 400);
+                                                        Renders.renderJson( request, error, 400);
                                                     }
                                                 }
                                             });
                                         } else {
                                             log.error("matiere.getMatieres : " + responseMatiere.left().getValue());
                                             JsonObject error = new JsonObject().put("error", "failed get name 's subject " + responseMatiere.left().getValue());
-                                            Renders.renderJson(request, error, 400);
+                                            Renders.renderJson( request, error, 400 );
                                         }
                                     }
                                 });
@@ -220,53 +220,77 @@ public class BilanPeriodiqueController extends ControllerHelper {
         });
     }
 
-    private void addMoyenneFinaleAppreciationPositionnementEleve(final String idEleve,
-                                                                 final String idMatiere,
-                                                                 final Long idPeriode,
-                                                                 final String idClasse,
-                                                                 final JsonArray idsGroups,
-                                                                 final String idEtablissement,
-                                                                 final HttpServerRequest request,
-                                                                 final JsonObject result,
-                                                                 final JsonArray results,
-                                                                 final AtomicInteger compteurMatiere) {
+    private void addMoyenneFinaleAppreciationPositionnementEleve( final String idEleve,
+                                                                  final String idMatiere,
+                                                                  final Long idPeriode,
+                                                                  final String idClasse,
+                                                                  final JsonArray idsGroups,
+                                                                  final String idEtablissement,
+                                                                  final HttpServerRequest request,
+                                                                  final JsonObject result,
+                                                                  final JsonArray results,
+                                                                  final AtomicInteger compteurMatiere){
 
-        noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, idPeriode, new Handler<Either<String, JsonArray>>() {
+        noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> response) {
 
-                if (response.isRight()) {
+                if(response.isRight()){
                     JsonArray allAppMoyPosi = response.right().getValue();
-                    String appreciation = new String();
+                    JsonArray appreciations = new fr.wseduc.webutils.collections.JsonArray();
+                    JsonArray moyennesFinales = new fr.wseduc.webutils.collections.JsonArray();
+                    JsonArray positionnements = new fr.wseduc.webutils.collections.JsonArray();
+                    if( allAppMoyPosi != null){
 
-                    if (allAppMoyPosi != null) {
+                        Map<Integer, String> mapIdPeriodeAppreciation = new HashMap<Integer, String>();
 
-                        for (int i = 0; i < allAppMoyPosi.size(); i++) {
+                        for(int i = 0; i < allAppMoyPosi.size(); i++){
                             JsonObject appMoyPosi = allAppMoyPosi.getJsonObject(i);
 
-                            if (appMoyPosi.getString("appreciation_matiere_periode") != null) {
-                                if (appreciation.isEmpty()) {
-                                    appreciation = appMoyPosi.getString("appreciation_matiere_periode");
-                                } else {
-                                    appreciation += " " + appMoyPosi.getString("appreciation_matiere_periode");
+                            if(appMoyPosi.getString("appreciation_matiere_periode") != null ) {
+
+                                if(!mapIdPeriodeAppreciation.containsKey(appMoyPosi.getInteger("id_periode_appreciation"))){
+                                    mapIdPeriodeAppreciation.put(appMoyPosi.getInteger("id_periode_appreciation"),appMoyPosi.getString("appreciation_matiere_periode"));
+                                }else if(mapIdPeriodeAppreciation.containsKey(appMoyPosi.getInteger("id_periode_appreciation"))){
+                                    if(!mapIdPeriodeAppreciation.get(appMoyPosi.getInteger("id_periode_appreciation")).equals(appMoyPosi.getString("appreciation_matiere_periode"))) {
+                                        String appreciation = mapIdPeriodeAppreciation.get(appMoyPosi.getInteger("id_periode_appreciation")) + "\n" + appMoyPosi.getString("appreciation_matiere_periode");
+                                        mapIdPeriodeAppreciation.put(appMoyPosi.getInteger("id_periode_appreciation"), appreciation);
+                                    }
                                 }
                             }
                             //on récupère la moyenne finale de l'élève pour sa classe principale = idClasse passé en paramètre
-
-                            if (appMoyPosi.getDouble("moyenne_finale") != null) {
-                                if (appMoyPosi.getString("id_classe_moyfinale").equals(idClasse)) {
-                                    result.put("moyenne_finale", appMoyPosi.getDouble("moyenne_finale"));
+                            //moyennesFinales
+                            if( appMoyPosi.getString("moyenne_finale") != null) {
+                                JsonObject moyenne_finale = new JsonObject();
+                                if(appMoyPosi.getString("id_classe_moyfinale").equals(idClasse)) {
+                                    moyenne_finale.put("id_periode",appMoyPosi.getInteger("id_periode_moyenne_finale"))
+                                            .put("moyenneFinale",Double.valueOf(appMoyPosi.getString("moyenne_finale")));
+                                    if(!moyennesFinales.contains(moyenne_finale)){
+                                        moyennesFinales.add(moyenne_finale);
+                                    }
                                 }
                             }
                             //Pour le positionnement on ne peut en avoir qu'un par matière
                             //le positionnement n'est pas enregistré par classe
-                            if (appMoyPosi.getDouble("positionnement_final") != null) {
-                                result.put("positionnement_final", appMoyPosi.getDouble("positionnement_final"));
-
+                            if(appMoyPosi.getInteger("positionnement_final") != null){
+                                JsonObject positionnement = new JsonObject();
+                                positionnement.put("id_periode", appMoyPosi.getInteger("id_periode_positionnement"))
+                                        .put("positionnementFinal",appMoyPosi.getInteger("positionnement_final"));
+                                if(!positionnements.contains(positionnement)){
+                                    positionnements.add(positionnement);
+                                }
+                            }
+                        }
+                        if(!mapIdPeriodeAppreciation.isEmpty()) {
+                            for (Map.Entry<Integer, String> idPeriodeApp : mapIdPeriodeAppreciation.entrySet()) {
+                                appreciations.add(new JsonObject().put("id_periode", idPeriodeApp.getKey()).put("appreciation", idPeriodeApp.getValue()));
                             }
                         }
                     }
-                    result.put("appreciation", appreciation);
+
+                    result.put("appreciations",appreciations);
+                    result.put("positionnementsFinaux", positionnements);
+                    result.put("moyennesFinales",moyennesFinales);
                     addMoyEleveMoyClassePositionnementAuto(idEleve, idMatiere, idClasse, idsGroups,
                             idEtablissement, request, result, results, compteurMatiere);
                 } else {
@@ -287,7 +311,7 @@ public class BilanPeriodiqueController extends ControllerHelper {
                                                         final HttpServerRequest request,
                                                         final JsonObject result,
                                                         final JsonArray results,
-                                                        final AtomicInteger compteurMatiere) {
+                                                        final AtomicInteger compteurMatiere ){
 
         noteService.getNoteElevePeriode(null, idEtablissement, idsGroups, idMatiere, null, new Handler<Either<String, JsonArray>>() {
             @Override
