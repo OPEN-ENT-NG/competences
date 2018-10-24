@@ -26,9 +26,9 @@
 </section>
 
 <section ng-if="!displayMessage">
-    <div>
+    <div class="twelve cell border-bottom">
         <h4 ng-class="{'openedElem' : graphMat.opened}"
-            class="margin-top-05em openGraph"
+            class="margin-top-05em chevron"
             data-ng-click="graphMat.opened = !graphMat.opened; openMatiere(false);"
             ng-init="graphMat.opened = true">
             <i18n>evaluations.bilan.by.subject</i18n>
@@ -36,9 +36,9 @@
             <container ng-if="!graphMat.opened" template="graphMatiere"></container>
     </div>
 
-    <div>
+    <div class="twelve cell border-bottom">
         <h4 ng-class="{'openedElem' : graphDom.opened}"
-            class="margin-top-05em openGraph"
+            class="margin-top-05em chevron"
             data-ng-click="graphDom.opened = !graphDom.opened; openDomaine(true);"
             ng-init="graphDom.opened = true">
             <i18n>evaluations.bilan.by.domaine</i18n>

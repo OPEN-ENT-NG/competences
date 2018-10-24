@@ -28,13 +28,28 @@ export class Utils {
         if( !model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations) ){
             return false;
         }else{
-            //return this.isChefEtab(classe);
             if(model.me.type === 'ENSEIGNANT') {
                 return this.isHeadTeacher(classe);
             } else {
                 return true;
             }
         }
+    }
+
+    static async canSaisiSyntheseBilanPeriodique (classe) {
+        if( !model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaisiSyntheseBilanPeriodique) ){
+            return false;
+        } else {
+            if(model.me.type === 'ENSEIGNANT') {
+                return this.isHeadTeacher(classe);
+            } else {
+                return true;
+            }
+        }
+    }
+
+    static async canSaisiAppreciationCPE () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaisiAppreciationCPE);
     }
 
     static canUpdateBFCSynthese () {

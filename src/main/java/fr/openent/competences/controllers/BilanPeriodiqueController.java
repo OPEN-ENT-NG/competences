@@ -387,8 +387,7 @@ public class BilanPeriodiqueController extends ControllerHelper {
      */
     @Post("/syntheseBilanPeriodique")
     @ApiDoc("Créer ou mettre à jour une synthèse du bilan périodique d'un élève pour une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-//    @ResourceFilter(CreateEvaluationWorkflow.class)
+    @SecuredAction(value = "create.synthese.bilan.periodique", type = ActionType.WORKFLOW)
     public void createOrUpdateSyntheseBilanPeriodique(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -449,7 +448,7 @@ public class BilanPeriodiqueController extends ControllerHelper {
      */
     @Post("/appreciation/CPE/bilan/periodique")
     @ApiDoc("Créer ou mettre à jour une appreciation CPE du bilan périodique d'un élève pour une période donnée")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = "create.appreciation.CPE.bilan.periodique", type = ActionType.WORKFLOW)
     public void createOrUpdateAppreciationCPE(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override

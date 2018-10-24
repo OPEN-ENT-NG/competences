@@ -34,7 +34,8 @@
               rows="5"
               type="text"
               ng-model="elementBilanPeriodique.syntheseBilanPeriodique.synthese"
-              ng-blur="elementBilanPeriodique.syntheseBilanPeriodique.saveSynthese();">
+              ng-blur="elementBilanPeriodique.syntheseBilanPeriodique.saveSynthese();"
+              ng-disabled="!canSaisiSyntheseBilanPeriodique">
     </textarea>
 
     <lightbox show="opened.historic" on-close="!opened.historic">

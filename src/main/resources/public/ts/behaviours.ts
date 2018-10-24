@@ -1,6 +1,6 @@
 import {Behaviours} from 'entcore';
 import {visibilitymoyBFC} from './sniplets/visibilitymoyBFC';
-import { itemsCompetences } from './sniplets/itemsCompetences';
+import {itemsCompetences} from './sniplets/itemsCompetences';
 import {linkGroupCycle} from "./sniplets/linkGroupCycle";
 import {visibilityDNB} from "./sniplets/visibilityDNB";
 import {bilanPeriodique} from "./sniplets/bilanPeriodique";
@@ -18,7 +18,9 @@ Behaviours.register('competences', {
             bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createElementBilanPeriodique",
             accessProjets: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationSaisieProjet",
             canUpdateAppreciations: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciation",
-            saveCompetenceNiveauFinal: "fr.openent.competences.controllers.CompetenceNoteController|saveCompetenceNiveauFinal"
+            saveCompetenceNiveauFinal: "fr.openent.competences.controllers.CompetenceNoteController|saveCompetenceNiveauFinal",
+            canSaisiSyntheseBilanPeriodique: "fr.openent.competences.controllers.BilanPeriodiqueController|createOrUpdateSyntheseBilanPeriodique",
+            canSaisiAppreciationCPE: "fr.openent.competences.controllers.BilanPeriodiqueController|createOrUpdateAppreciationCPE"
         },
         resource: {}
     },
