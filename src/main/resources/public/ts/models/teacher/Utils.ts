@@ -41,28 +41,11 @@ export class Utils {
         }
     }
 
-    static async canUpdateAppreciations (classe) {
-        if( !model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateAppreciations) ){
-            return false;
-        }else{
-            if(model.me.type === 'ENSEIGNANT') {
-                return this.isHeadTeacher(classe);
-            } else {
-                return true;
-            }
-        }
-    }
-
-    static async canSaisiSyntheseBilanPeriodique (classe) {
-        if( !model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaisiSyntheseBilanPeriodique) ){
-            return false;
-        } else {
-            if(model.me.type === 'ENSEIGNANT') {
-                return this.isHeadTeacher(classe);
-            } else {
-                return true;
-            }
-        }
+    static async rightsChefEtabHeadTeacherOnBilanPeriodique (classe, nameWorkFlow){
+        return ( model.me.type !== 'ENSEIGNANT' && model.me.
+            hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]))
+            || ( model.me.type === 'ENSEIGNANT' && this.isHeadTeacher(classe) &&  model.me.
+            hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]) && this.isHeadTeacher(classe));
     }
 
     static async canSaisiAppreciationCPE () {

@@ -39,7 +39,7 @@ export class SuiviDesAcquis  {
 
     get api(){
         return{
-            POST_DATA_RELEVE_PERIODIQUE: `/competences/releve/periodique`,
+            POST_DATA_RELEVE_PERIODIQUE: `/competences/bilan/periodique`,
         }
     }
 
@@ -78,7 +78,8 @@ export class SuiviDesAcquis  {
        let _data = _.extend(this.toJson(), {
            colonne: 'positionnement',
            positionnement: positionnement,
-           delete: this.positionnement_final === ""
+           delete: this.positionnement_final === "",
+           isBilanPeriodique: true
        });
        try {
            if (_data.idPeriode !== null) {

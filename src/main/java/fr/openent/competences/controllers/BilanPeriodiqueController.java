@@ -253,7 +253,8 @@ public class BilanPeriodiqueController extends ControllerHelper {
                                     mapIdPeriodeAppreciation.put(appMoyPosi.getInteger("id_periode_appreciation"),appMoyPosi.getString("appreciation_matiere_periode"));
                                 }else if(mapIdPeriodeAppreciation.containsKey(appMoyPosi.getInteger("id_periode_appreciation"))){
                                     if(!mapIdPeriodeAppreciation.get(appMoyPosi.getInteger("id_periode_appreciation")).equals(appMoyPosi.getString("appreciation_matiere_periode"))) {
-                                        String appreciation = mapIdPeriodeAppreciation.get(appMoyPosi.getInteger("id_periode_appreciation")) + "\n" + appMoyPosi.getString("appreciation_matiere_periode");
+                                        String appreciation = mapIdPeriodeAppreciation.get(appMoyPosi.getInteger("id_periode_appreciation"))
+                                                + "\n" + appMoyPosi.getString("appreciation_matiere_periode");
                                         mapIdPeriodeAppreciation.put(appMoyPosi.getInteger("id_periode_appreciation"), appreciation);
                                     }
                                 }
@@ -341,7 +342,7 @@ public class BilanPeriodiqueController extends ControllerHelper {
                                                 noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
                                                 compteurMatiere.decrementAndGet();
                                                 results.add(result);
-                                                if (compteurMatiere.intValue() == 0) {
+                                              if (compteurMatiere.intValue() == 0) {
                                                     Renders.renderJson(request, results);
                                                 }
 

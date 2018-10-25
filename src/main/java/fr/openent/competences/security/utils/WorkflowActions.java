@@ -25,7 +25,8 @@ public enum WorkflowActions {
 	ADMIN_RIGHT ("Viescolaire.view"),
 	CREATE_DISPENSE_DOMAINE_ELEVE ("create.dispense.domaine.eleve"),
 	CREATE_ELEMENT_BILAN_PERIODIQUE ("create.element.bilan.periodique"),
-	SAVE_COMPETENCE_NIVEAU_FINAL ("save.competence.niveau.final");
+	SAVE_COMPETENCE_NIVEAU_FINAL ("save.competence.niveau.final"),
+	SAVE_APPMATIERE_POSITIONNEMENT_BILAN_PERIODIQUE("bilan.periodique.save.appMatiere.positionnement");
 	private final String actionName;
 
 	WorkflowActions(String actionName) {

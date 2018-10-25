@@ -614,7 +614,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 " positionnement.id_matiere = appreciation_matiere_periode.id_matiere )" +
                 " WHERE ";
         if(idPeriode != null){
-            query += "(positionnement.id_periode = ? OR moyenne_finale.id_periode = ? OR appreciation_matiere_periode.id_periode = ? AND)";
+            query += "(positionnement.id_periode = ? OR moyenne_finale.id_periode = ? OR appreciation_matiere_periode.id_periode = ? ) AND";
         }
         query += " (positionnement.id_eleve = ? OR moyenne_finale.id_eleve = ? OR appreciation_matiere_periode.id_eleve = ? )" +
                  " AND (positionnement.id_matiere = ? OR moyenne_finale.id_matiere = ? OR appreciation_matiere_periode.id_matiere = ? )";

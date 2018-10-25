@@ -23,6 +23,7 @@ import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
 import fr.openent.competences.security.AccessReleveFilter;
 import fr.openent.competences.security.CreateEvaluationWorkflow;
+import fr.openent.competences.security.utils.FilterUser;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.ElementProgramme;
@@ -601,65 +602,111 @@ public class NoteController extends ControllerHelper {
                     @Override
                     public void handle(final JsonObject resource) {
                         final String idClasse = resource.getString("idClasse");
-                        final String idMatiere = resource.getString("idMatiere");
-                        final String idEleve = resource.getString("idEleve");
-                        final String table = resource.getString("colonne");
-                        final Long idPeriode = resource.getLong("idPeriode");
-                        final String idEtablissement = resource.getString("idEtablissement");
-                        final Boolean isBilanPeriodique = (resource.getBoolean("isBilanPeriodique")!=null)?
-                                resource.getBoolean("isBilanPeriodique") : false;
 
-                        // Vérification de l'accès à la matière
-                        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,isBilanPeriodique,
+                        saveColonneRelevePeriode(request, user, resource);
+                    }
+                });
+            }
+        });
+    }
+
+    @Post("/bilan/periodique")
+    @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont:"
+            +" - moyenne finale, - appréciation, -positionnement ")
+    @SecuredAction(value="bilan.periodique.save.appMatiere.positionnement",type = ActionType.WORKFLOW)
+    public void saveAppreciationMatiereAndPositionnement(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+
+                RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(final JsonObject resource) {
+                        final String idClasse = resource.getString("idClasse");
+                        FilterUser.isChefEtabAndHeadTeacher(user, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Boolean>() {
+                            @Override
+                            public void handle(Boolean isChefEtabAndHeadTeacher) {
+                                if(isChefEtabAndHeadTeacher){
+                                    saveColonneRelevePeriode(request, user, resource);
+                                }else{
+                                    Renders.unauthorized(request);
+                                }
+
+                            }
+                        });
+
+                    }
+                });
+            }
+        });
+    }
+
+
+
+
+    private void saveColonneRelevePeriode (final HttpServerRequest request, final UserInfos user, final JsonObject resource){
+
+        final String idClasse = resource.getString("idClasse");
+        final String idMatiere = resource.getString("idMatiere");
+        final String idEleve = resource.getString("idEleve");
+        final String table = resource.getString("colonne");
+        final Long idPeriode = resource.getLong("idPeriode");
+        final String idEtablissement = resource.getString("idEtablissement");
+        final Boolean isBilanPeriodique = (resource.getBoolean("isBilanPeriodique")!=null)?
+                resource.getBoolean("isBilanPeriodique") : false;
+
+        // Vérification de l'accès à la matière
+        new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,isBilanPeriodique,
+            new Handler<Boolean>() {
+                @Override
+                public void handle(final Boolean hasAccessToMatiere) {
+                    if (hasAccessToMatiere) {
+                        // Vérification de la date de fin de saisie
+                        new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
+                                idClasse, idPeriode.intValue(),
                                 new Handler<Boolean>() {
                                     @Override
-                                    public void handle(final Boolean hasAccessToMatiere) {
-                                        if (hasAccessToMatiere) {
-                                            // Vérification de la date de fin de saisie
-                                            new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
-                                                    idClasse, idPeriode.intValue(),
-                                                    new Handler<Boolean>() {
-                                                        @Override
-                                                        public void handle(Boolean isUpdatable) {
-                                                            //verif date fin de saisie
-                                                            if (isUpdatable) {
+                                    public void handle(Boolean isUpdatable) {
+                                        //verif date fin de saisie
+                                        if (isUpdatable) {
 
-                                                                if (resource.getBoolean("delete")) {
-                                                                    notesService.deleteColonneReleve(
-                                                                            idEleve,
-                                                                            idPeriode,
-                                                                            idMatiere,
-                                                                            idClasse,
-                                                                            table,
-                                                                            arrayResponseHandler(request));
-                                                                } else {
-                                                                    notesService.setColonneReleve(
-                                                                            idEleve,
-                                                                            idPeriode,
-                                                                            idMatiere,
-                                                                            idClasse,
-                                                                            resource,
-                                                                            table,
-                                                                            arrayResponseHandler(request));
-                                                                }
-                                                            } else {
-                                                                log.error("Not access to API because of end of saisie");
-                                                                unauthorized(request);
-                                                            }
-                                                        }
-                                                    });
+                                            if (resource.getBoolean("delete")) {
+                                                notesService.deleteColonneReleve(
+                                                        idEleve,
+                                                        idPeriode,
+                                                        idMatiere,
+                                                        idClasse,
+                                                        table,
+                                                        arrayResponseHandler(request));
+                                            } else {
+                                                notesService.setColonneReleve(
+                                                        idEleve,
+                                                        idPeriode,
+                                                        idMatiere,
+                                                        idClasse,
+                                                        resource,
+                                                        table,
+                                                        arrayResponseHandler(request));
+                                            }
                                         } else {
-                                            log.error("Not access to Matiere");
+                                            log.error("Not access to API because of end of saisie");
                                             unauthorized(request);
                                         }
                                     }
                                 });
+                    } else {
+                        log.error("Not access to Matiere");
+                        unauthorized(request);
                     }
-                });
+                }
+            });
 
-            }
-        });
+
+
+
+
     }
+
 
     @Get("/releve/informations/eleve/:idEleve")
     @ApiDoc("Renvoit  les moyennes , les moyennes finales pour le relevé de notes")
