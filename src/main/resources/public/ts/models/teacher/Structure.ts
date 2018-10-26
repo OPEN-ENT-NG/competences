@@ -401,11 +401,16 @@ export class Structure extends Model {
                     this.synchronized.niveauCompetences &&
                     this.synchronized.devoirs &&
                     this.synchronized.typePeriodes &&
-                    this.synchronized.detailsUser &&
-                    this.synchronized.classesBilanPeriodique;
+                    this.synchronized.detailsUser;
                 if (Utils.isChefEtab()) {
                     b = b && this.synchronized.enseignants;
                 }
+
+
+                if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
+                    b = b && this.synchronized.classesBilanPeriodique;
+                }
+
                 if (b) {
                     this.isSynchronized = true;
                     resolve();
@@ -429,7 +434,9 @@ export class Structure extends Model {
                 this.getDetailsOfUser().then(isSynced);
             }
             this.typePeriodes.sync().then(isSynced);
-            this.syncClassesBilanPeriodique().then(isSynced);
+            if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
+                this.syncClassesBilanPeriodique().then(isSynced);
+            }
             this.syncTypeSousMatieres().then(isSynced);
         });
     }

@@ -48,6 +48,14 @@ export class Utils {
             hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow[nameWorkFlow]) && this.isHeadTeacher(classe));
     }
 
+    static canSaisieProjet () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.accessProjets);
+    }
+
+    static canCreateElementBilanPeriodique () {
+        return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.bilanPeriodique);
+    }
+
     static async canSaisiAppreciationCPE () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaisiAppreciationCPE);
     }

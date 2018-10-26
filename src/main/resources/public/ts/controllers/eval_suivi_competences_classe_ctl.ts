@@ -381,7 +381,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                  $scope.syncPeriode($scope.search.classe.id);
                  $scope.search.periode = '*';
                  $scope.synchronizeStudents($scope.search.classe.id);
-                 await $scope.selectSuivi('/competences/classe');
+                 await $scope.selectSuivi(true);
                  utils.safeApply($scope);
              }
          };
