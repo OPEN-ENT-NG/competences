@@ -272,6 +272,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+    private void sethasProject( JsonObject project, boolean value) {
+        boolean hasProject = project.getBoolean("hasProject");
+        if(hasProject == false){
+            hasProject = true;
+        }
+    }
+
     @Override
     public void getProjets ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode,
                              Handler<Either<String, JsonObject>> finalHandler) {
@@ -306,11 +313,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 List<String> idElements = new ArrayList<String>();
                                 Map<Long, JsonObject> mapElement = new HashMap<>();
                                 JsonObject epi = new JsonObject().put("libelle",
-                                        getLibelle("enseignements.pratiques.interdisciplinaires"));
+                                        getLibelle("enseignements.pratiques.interdisciplinaires"))
+                                        .put("hasProject", false);
                                 JsonObject ap = new JsonObject().put("libelle",
-                                        getLibelle("accompagnements.personnalises"));
+                                        getLibelle("accompagnements.personnalises"))
+                                        .put("hasProject", false);
                                 JsonObject parcours = new JsonObject().put("libelle",
-                                        getLibelle("parcours.educatifs"));
+                                        getLibelle("parcours.educatifs"))
+                                        .put("hasProject", false);
 
                                 if (elementBilanPeriodique == null) {
                                     finalHandler.handle(new Either.Right<>(null));
@@ -331,6 +341,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 else {
                                                     parcours.getJsonArray("elements").add(element);
                                                 }
+                                                sethasProject(parcours,true);
                                             }
                                             else if (2L == typeElement) {
                                                 element.put("hasLibelle", true);
@@ -340,6 +351,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 else {
                                                     ap.getJsonArray("elements").add(element);
                                                 }
+                                                sethasProject(ap,true);
                                             }
                                             else if (1L == typeElement) {
                                                 element.put("hasLibelle", true);
@@ -349,6 +361,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 else {
                                                     epi.getJsonArray("elements").add(element);
                                                 }
+                                                sethasProject(epi,true);
                                             }
                                         }
                                     }
@@ -385,7 +398,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 });
                                     }
                                     else {
-                                        log.info("NO elements founds for classe " + idClasse);
+                                        log.info(" [getProjets] | NO elements founds for classe " + idClasse);
                                         finalHandler.handle(new Either.Right<>(null));
                                     }
                                 }

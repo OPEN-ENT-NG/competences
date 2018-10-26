@@ -101,9 +101,6 @@
         display: inline-block;
         width: 60%;
         {{/getResponsable}}
-        {{^getResponsable}}
-
-        {{/getResponsable}}
 
         font-size: 14px;
         }
@@ -149,7 +146,6 @@
         .rightCom {
             position: relative;
             right: 5px;
-
             top: -51px;
             text-align: right;
             font-weight: normal;
@@ -161,19 +157,16 @@
             padding-top: 5px;
             width: 67.5% !important;
             min-height: 195px !important;
-
         }
         .rightCommunication {
             margin-top: 0px;
             min-height: 195px !important;
-
         }
         .structure {
             display: inline-block;
             height: 150px;
             font-size: small;
             font-family: "Calibri", sans-serif;
-
         }
         .structure > p {
             margin: 3px;
@@ -184,7 +177,6 @@
             margin-top: 30px;
             margin-left : 1px;
             margin-right : 1px;
-
         }
         .firstProjet {
             width: 35%;
@@ -247,8 +239,8 @@
         {{/getResponsable}}
     </div>
 
-    <h1 color="blue">{{suiviAcquisLibelle}}</h1>
     {{#hasSuiviAcquis}}
+    <h1 color="blue">{{suiviAcquisLibelle}}</h1>
     <table class="suiviDesAcquis paddingFifty">
 
         <tr class="header">
@@ -288,13 +280,15 @@
         </tr>
         {{/suiviAcquis}}
     </table>
+    {{/hasSuiviAcquis}}
+
     <div class="start">
         {{#showProjects}}
         {{#projects}}
+        {{#hasProject}}
         <h4 class="paddingFifty">{{libelle}}</h4>
         <table class="projets paddingFifty">
             {{#elements}}
-
             <tr>
                 <td class="firstProjet left-align">
                     {{#hasLibelle}}
@@ -326,10 +320,9 @@
             </tr>
             {{/elements}}
         </table>
+        {{/hasProject}}
         {{/projects}}
         {{/showProjects}}
-
-        {{/hasSuiviAcquis}}
 
 
         <h1 color= "green"> {{bilanAcquisitionLibelle}}</h1>
