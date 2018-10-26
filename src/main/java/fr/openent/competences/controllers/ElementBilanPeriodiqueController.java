@@ -337,8 +337,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique")
     @ApiDoc("Retourne les élèments du bilan périodique")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getElementBilanPeriodique(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -363,8 +363,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsBilanPeriodique/enseignants")
     @ApiDoc("Retourne les thématiques correspondant au type passé en paramètre")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getEnseignantsElements(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -586,8 +586,8 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
      */
     @Get("/elementsAppreciations")
     @ApiDoc("Retourne les appreciations liées au élèments du bilan périodiques passés en paramètre")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    //@ResourceFilter(AccessElementBilanPeriodiqueFilter.class)
     public void getAppreciations(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
