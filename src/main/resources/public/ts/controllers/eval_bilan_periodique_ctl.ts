@@ -117,49 +117,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             else {
                 await $scope.search.eleve.getEvenements();
-                let year = {
-                    retard: 0,
-                    abs_just: 0,
-                    abs_non_just: 0,
-                    abs_totale_heure: 0,
-                    ordre: 0,
-                    periode: $scope.getI18nPeriode({id: null})
-                };
-                _.forEach($scope.filteredPeriode, (periode) => {
-                    let evenement = _.findWhere($scope.search.eleve.evenements, {id_periode: periode.id_type});
-                    let pushIt = false;
-                    if (evenement === undefined) {
-                        evenement = {id_periode : periode.id_type};
-                        pushIt = true;
-                    }
-                    evenement.periode = $scope.getI18nPeriode(periode);
-                    evenement.ordre = periode.ordre;
-
-                    // initialisation des retards et absences
-                    evenement.retard = (evenement.retard !== undefined) ? evenement.retard : 0;
-                    evenement.abs_just = (evenement.abs_just !== undefined) ? evenement.abs_just : 0;
-                    evenement.abs_non_just = (evenement.abs_non_just !== undefined) ? evenement.abs_non_just : 0;
-                    evenement.abs_totale_heure = (evenement.abs_totale_heure !== undefined) ?
-                        evenement.abs_totale_heure : 0;
-                    evenement.ordre = (evenement.ordre !== undefined) ? evenement.ordre : 0;
-
-                    // Remplissage de la ligne pour l'année
-                    year.retard += evenement.retard;
-                    year.abs_just += evenement.abs_just;
-                    year.abs_non_just += evenement.abs_non_just;
-                    year.abs_totale_heure += evenement.abs_totale_heure;
-                    year.ordre += evenement.ordre;
-
-
-                    if (periode.id_type === $scope.search.periode.id_type) {
-                        $scope.search.eleve.evenement = evenement;
-                    }
-                    if (pushIt) {
-                        $scope.search.eleve.evenements.push(evenement);
-                    }
-                });
-                $scope.search.eleve.evenements.push(year);
-                }
+                $scope.setHistoriqueEvenement();
+            }
             $scope.elementBilanPeriodique.appreciationCPE = new AppreciationCPE($scope.informations.eleve.id,
                 $scope.search.periode.id_type);
             await $scope.elementBilanPeriodique.appreciationCPE.sync();
@@ -168,6 +127,55 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
         };
 
+        $scope.setHistoriqueEvenement = function () {
+            let year = {
+                retard: 0,
+                abs_just: 0,
+                abs_non_just: 0,
+                abs_totale_heure: 0,
+                ordre: 0,
+                periode: $scope.getI18nPeriode({id: null})
+            };
+            if(!_.isEmpty($scope.search.eleve.evenements)) {
+                // On enlève la ligne correspondant à l'année pour la recalculer si on doit la mettre à jour
+                $scope.search.eleve.evenements.pop();
+
+            }
+            _.forEach($scope.filteredPeriode, (periode) => {
+                let evenement = _.findWhere($scope.search.eleve.evenements, {id_periode: periode.id_type});
+                let pushIt = false;
+                if (evenement === undefined) {
+                    evenement = {id_periode : periode.id_type};
+                    pushIt = true;
+                }
+                evenement.periode = $scope.getI18nPeriode(periode);
+                evenement.ordre = periode.ordre;
+
+                // initialisation des retards et absences
+                evenement.retard = (evenement.retard !== undefined) ? evenement.retard : 0;
+                evenement.abs_just = (evenement.abs_just !== undefined) ? evenement.abs_just : 0;
+                evenement.abs_non_just = (evenement.abs_non_just !== undefined) ? evenement.abs_non_just : 0;
+                evenement.abs_totale_heure = (evenement.abs_totale_heure !== undefined) ?
+                    evenement.abs_totale_heure : 0;
+                evenement.ordre = (evenement.ordre !== undefined) ? evenement.ordre : 0;
+
+                // Remplissage de la ligne pour l'année
+                year.retard += evenement.retard;
+                year.abs_just += evenement.abs_just;
+                year.abs_non_just += evenement.abs_non_just;
+                year.abs_totale_heure += evenement.abs_totale_heure;
+                year.ordre += evenement.ordre;
+
+
+                if (periode.id_type === $scope.search.periode.id_type) {
+                    $scope.search.eleve.evenement = evenement;
+                }
+                if (pushIt) {
+                    $scope.search.eleve.evenements.push(evenement);
+                }
+            });
+            $scope.search.eleve.evenements.push(year);
+        }
 
         $scope.openGraphique = async function () {
             $scope.selected = { graphique: true };
@@ -398,7 +406,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
         $scope.setColonne = async function (colonne) {
-          await $scope.search.eleve.setColonne(colonne, $scope.search.periode.id_type);
+            await $scope.search.eleve.setColonne(colonne, $scope.search.periode.id_type);
+            $scope.setHistoriqueEvenement();
+            utils.safeApply($scope);
         };
 
     }
