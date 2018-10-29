@@ -4,56 +4,60 @@
                     <span>
                         <i18n>viescolaire.retards</i18n>:&nbsp;
                     </span>
-            <label  class="bold">
-                <span ng-if="search.eleve.evenement.retard !== undefined">
+        <label  class="bold">
+                <span ng-if="canUpdateRetardAndAbscence">
+                    <input id="retard" type="number" ng-model="search.eleve.evenement.retard"
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('retard')">
+                </span>
+            <span ng-if="!canUpdateRetardAndAbscence">
                     [[ search.eleve.evenement.retard ]]
-                </span>
-                <span ng-if="search.eleve.evenement.retard === undefined">
-                    0
-                </span>
-            </label>
+            </span>
+        </label>
     </div>
     <div class="twelve cell">
                     <span>
                         <i18n>viescolaire.abs.justified</i18n>:&nbsp;
                     </span>
-            <label  class="bold">
-                <span ng-if="search.eleve.evenement.abs_just !== undefined">
+        <label  class="bold">
+                <span  ng-if="canUpdateRetardAndAbscence">
+                    <input id="abs_just" type="number" ng-model="search.eleve.evenement.abs_just"
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_just')">
+                </span>
+            <span ng-if="!canUpdateRetardAndAbscence">
                     [[ search.eleve.evenement.abs_just ]]
-                </span>
-                <span ng-if="search.eleve.evenement.abs_just === undefined">
-                    0
-                </span>
-                <i18n>half.days</i18n>
-            </label>
+            </span>
+            <i18n>half.days</i18n>
+        </label>
     </div>
     <div class="twelve cell">
                     <span>
                         <i18n>viescolaire.abs.not.justified</i18n>:&nbsp;
                     </span>
-            <label  class="bold">
-                 <span ng-if="search.eleve.evenement.abs_non_just !== undefined">
-                    [[ search.eleve.evenement.abs_non_just]]
-                </span>
-                <span ng-if="search.eleve.evenement.abs_non_just === undefined">
-                    0
-                </span>
-                <i18n>half.days</i18n>
-            </label>
+        <label  class="bold">
+            <span ng-if="canUpdateRetardAndAbscence">
+                    <input id="abs_non_just" type="number" ng-model="search.eleve.evenement.abs_non_just"
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_non_just')">
+            </span>
+            <span ng-if="!canUpdateRetardAndAbscence">
+                    [[ search.eleve.evenement.abs_non_just ]]
+            </span>
+            <i18n>half.days</i18n>
+        </label>
     </div>
     <div class="twelve cell">
                     <span>
                         <i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;
                     </span>
-            <label  class="bold">
-                 <span ng-if="search.eleve.evenement.abs_totale_heure !== undefined">
-                    [[ search.eleve.evenement.abs_totale_heure]]
+        <label  class="bold">
+             <span ng-if="canUpdateRetardAndAbscence">
+                    <input id="abs_totale_heure" type="number" ng-model="search.eleve.evenement.abs_totale_heure"
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_totale_heure')">
                 </span>
-                <span ng-if="search.eleve.evenement.abs_totale_heure === undefined">
-                    0
-                </span>
-                <i18n>hours</i18n>
-            </label>
+            <span ng-if="!canUpdateRetardAndAbscence">
+                    [[ search.eleve.evenement.abs_totale_heure ]]
+            </span>
+            <i18n>hours</i18n>
+        </label>
     </div>
 
     <div class="twelve">
@@ -64,7 +68,7 @@
                    ng-maxlength="600"
                    maxlength="600"
                    ng-disabled="!canSaisiAppreciationCPE"
-                   ng-blur="elementBilanPeriodique.appreciationCPE.saveAppreciationCPE();">
+                   ng-disabled="!canUpdateRetardAndAbscence" ng-blur="elementBilanPeriodique.appreciationCPE.saveAppreciationCPE();">
          </textarea>
 
     </div>

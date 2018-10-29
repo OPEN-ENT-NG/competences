@@ -436,6 +436,7 @@
   "viescolaire.utils.appreciation.edit" : "Modifier l'appréciation",
   "viescolaire.utils.appreciation.view" : "Visualiser l'appréciation",
   "viescolaire.retards" : "Retards",
+  "viescolaire.no.column.is.named" : "Désolé, aucune colonne dans la table viesco.absences_et_retards ne se nome: ",
   "viescolaire.abs.justified" : "Abs justiées",
   "viescolaire.abs.not.justified" : "Abs non justifiées",
   "viescolaire.nb.courses.lost" : "Nb heures de cours manquées",

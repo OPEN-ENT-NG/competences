@@ -1,4 +1,4 @@
-import {notify, idiom as lang, ng, template, model} from 'entcore';
+import {notify, idiom as lang, ng, template, model, Behaviours} from 'entcore';
 import * as utils from '../utils/teacher';
 import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
@@ -24,6 +24,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.showAvis = false;
 
         $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
+        $scope.canUpdateRetardAndAbscence = model.me.hasWorkflow(
+            Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbscence);
 
         $scope.displayBilanPeriodique = () => {
             if(model.me.type === 'PERSRELELEVE'){
@@ -133,12 +135,20 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     evenement.periode = $scope.getI18nPeriode(periode);
                     evenement.ordre = periode.ordre;
 
+                    // initialisation des retards et absences
+                    evenement.retard = (evenement.retard !== undefined) ? evenement.retard : 0;
+                    evenement.abs_just = (evenement.abs_just !== undefined) ? evenement.abs_just : 0;
+                    evenement.abs_non_just = (evenement.abs_non_just !== undefined) ? evenement.abs_non_just : 0;
+                    evenement.abs_totale_heure = (evenement.abs_totale_heure !== undefined) ?
+                        evenement.abs_totale_heure : 0;
+                    evenement.ordre = (evenement.ordre !== undefined) ? evenement.ordre : 0;
+
                     // Remplissage de la ligne pour l'année
-                    year.retard += ((evenement.retard !== undefined) ? evenement.retard : 0);
-                    year.abs_just += ((evenement.abs_just !== undefined) ? evenement.abs_just : 0);
-                    year.abs_non_just += ((evenement.abs_non_just !== undefined) ? evenement.abs_non_just : 0);
-                    year.abs_totale_heure += ((evenement.abs_totale_heure !== undefined) ? evenement.abs_totale_heure : 0);
-                    year.ordre += ((evenement.ordre !== undefined) ? evenement.ordre : 0);
+                    year.retard += evenement.retard;
+                    year.abs_just += evenement.abs_just;
+                    year.abs_non_just += evenement.abs_non_just;
+                    year.abs_totale_heure += evenement.abs_totale_heure;
+                    year.ordre += evenement.ordre;
 
 
                     if (periode.id_type === $scope.search.periode.id_type) {
@@ -386,6 +396,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await suiviDesAcquis.savePositionnementEleve(positionnement);
             utils.safeApply($scope);
         };
+
+        $scope.setColonne = async function (colonne) {
+          await $scope.search.eleve.setColonne(colonne, $scope.search.periode.id_type);
+        };
+
     }
 
 

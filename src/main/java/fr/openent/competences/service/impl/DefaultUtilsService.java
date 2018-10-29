@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
@@ -684,6 +685,39 @@ public class DefaultUtilsService  implements UtilsService {
                     }
 
                 }));
+    }
+
+    public void insertEvernement (String idEleve, String colonne, Long idPeriode, Long value,
+                                  Handler<Either<String, JsonArray>> handler) {
+
+        JsonArray valideColonne = new JsonArray().add("abs_totale").add("abs_totale_heure").add("abs_non_just")
+        .add("abs_non_just_heure").add("abs_just").add("abs_just_heure").add("retard");
+        if(! valideColonne.contains(colonne)) {
+            String message = I18n.getInstance().translate("viescolaire.no.column.is.named",
+                    I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+            log.error(" insertEvernement | " + message );
+            handler.handle(new Either.Left<>(message));
+        }
+        else {
+            if (idEleve == null) {
+                String message = " insertEvenement | idEleve is null ";
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
+            }
+            else {
+                StringBuilder query = new StringBuilder()
+                        .append(" INSERT INTO viesco.absences_et_retards( id_periode, id_eleve, ")
+                        .append( colonne + " )")
+                        .append(" VALUES ")
+                        .append(" (?, ?, ?) ")
+                        .append(" ON CONFLICT (id_periode, id_eleve) ")
+                        .append(" DO UPDATE SET " + colonne + "= ? ");
+                JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+                params.add(idPeriode).add(idEleve).add(value).add(value);
+                Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultsHandler(handler));
+            }
+        }
     }
 
 }

@@ -179,8 +179,13 @@ public interface UtilsService {
                                        Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Permet de récupérer les absences et retards d'un élève
-     * @param idEleve identifiant de l'élève
-     * @param eitherHandler handler qui va servir à retrourner le résultat
-     *  */
+     * Ajouter un élement concernant les absences ou retard d'un élève sur une  période donnée
+     * @param idEleve
+     * @param colonne
+     * @param idPeriode
+     * @param value
+     * @param handler
+     */
+    void insertEvernement (String idEleve, String colonne, Long idPeriode, Long value,
+                           Handler<Either<String, JsonArray>> handler);
 }

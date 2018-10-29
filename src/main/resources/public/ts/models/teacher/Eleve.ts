@@ -18,7 +18,6 @@
 import { Model, Collection, _, notify, http as httpCore, moment} from 'entcore';
 import http  from 'axios';
 import { Evaluation, SuiviCompetence } from './index';
-import {Periode} from "./Periode";
 import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
 
 export class Eleve extends Model {
@@ -37,6 +36,7 @@ export class Eleve extends Model {
     deleteDate : any;
     elementBilanPeriodique : ElementBilanPeriodique[];
     evenements : any ;
+    evenement : any;
     selected : boolean;
 
 
@@ -46,6 +46,7 @@ export class Eleve extends Model {
             GET_DATA_FOR_DETAILS_RELEVE: `/competences/releve/informations/eleve/${this.id}`,
             GET_CYCLES : `/competences/cycles/eleve/`,
             GET_RETARDS_AND_ABSENCES: `/competences/eleve/evenements/${this.id}`,
+            POST_RETARDS_OR_ABSENCES: `/competences/eleve/evenements`,
         }
     }
 
@@ -136,5 +137,24 @@ export class Eleve extends Model {
                 }
             });
         }))
+    }
+
+    async setColonne( colonne , idPeriode) {
+        let data = {
+            idEleve: this.id,
+            colonne : colonne,
+            idPeriode: idPeriode,
+            value: this.evenement[colonne]
+        };
+        console.dir(data);
+        try {
+            let res = await http.post(this.api.POST_RETARDS_OR_ABSENCES, data);
+            console.dir(res);
+        }
+        catch (e) {
+            notify.error(e);
+        }
+
+
     }
 }

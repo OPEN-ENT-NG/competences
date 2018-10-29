@@ -220,7 +220,8 @@ public class UtilsController extends ControllerHelper {
             @Override
             public void handle(final JsonObject ressource) {
                 Number id_cycle = ressource.getInteger("id_cycle");
-                final String[] idClasses = (String[]) ressource.getJsonArray("idClasses").getList().toArray(new String[0]);
+                final String[] idClasses = (String[]) ressource.getJsonArray("idClasses")
+                        .getList().toArray(new String[0]);
 
                 utilsService.checkDataOnClasses(idClasses, new Handler<Either<String, JsonArray>>() {
                     @Override
@@ -236,6 +237,21 @@ public class UtilsController extends ControllerHelper {
         });
     }
 
+    @Post("/eleve/evenements")
+    @SecuredAction(value = Competences.CAN_UPDATE_RETARDS_AND_ABSENCES)
+     public  void insertRetardOrAbscence (final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+            @Override
+            public void handle(final JsonObject ressource) {
+                String idEleve = ressource.getString("idEleve");
+                String colonne = ressource.getString("colonne");
+                Long idPeriode = ressource.getLong("idPeriode");
+                Long value = ressource.getLong("value");
+
+                utilsService.insertEvernement(idEleve, colonne, idPeriode, value,arrayResponseHandler(request));
+            }
+        });
+    }
 
 
 }
