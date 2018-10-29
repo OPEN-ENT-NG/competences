@@ -97,6 +97,40 @@ public class BilanPeriodiqueController extends ControllerHelper{
         });
     }
 
+    /**
+     * Créer une synthese avec les données passées en POST
+     *
+     * @param request
+     */
+    @Post("/syntheseBilanPeriodique")
+    @ApiDoc("Créer ou mettre à jour une synthèse du bilan périodique d'un élève pour une période donnée")
+    @SecuredAction(value = "create.synthese.bilan.periodique", type = ActionType.WORKFLOW)
+    public void createOrUpdateSyntheseBilanPeriodique(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    String validator = pathPrefix + Competences.SCHEMA_SYNTHESE_CREATE;
+                    RequestUtils.bodyToJson(request, validator,
+                            new Handler<JsonObject>() {
+                                @Override
+                                public void handle(JsonObject synthese) {
+                                    final Long idTypePeriode = synthese.getLong("id_typePeriode");
+                                    final String idEleve = synthese.getString("id_eleve");
+                                    syntheseBilanPeriodiqueService.createOrUpdateSyntheseBilanPeriodique(
+                                            idTypePeriode,
+                                            idEleve,
+                                            synthese.getString("synthese"),
+                                            DefaultResponseHandler.defaultResponseHandler(request));
+                                }
+                            });
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
 
     /**
      * Créer une appreciation CPE avec les données passées en POST
