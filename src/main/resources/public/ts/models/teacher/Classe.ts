@@ -86,6 +86,7 @@ export class Classe extends Model {
                         _.forEach(data, (_d) => {
                            _d.idClasse = this.id;
                            _d.selected = false;
+                           _d.classeName = this.name;
                         });
                         this.eleves.load(data);
                         for (var i = 0; i < this.eleves.all.length; i++) {

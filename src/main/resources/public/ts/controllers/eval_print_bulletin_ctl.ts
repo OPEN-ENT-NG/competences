@@ -26,17 +26,34 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
 
         $scope.generateBulletin = async function (options){
+            let selectedClasses = _.where($scope.printClasses.all, {selected : true});
+
+            if (_.isEmpty(selectedClasses)) {
+                notify.info('evaluations.choose.classe');
+                return ;
+            }
+            if (!_.isEmpty(selectedClasses) && _.isEmpty($scope.filteredPeriodes)) {
+                notify.info('evaluations.classes.are.not.initialized');
+                return ;
+            }
+
             if($scope.selected === undefined
-                || $scope.selected.periode === undefined || _.isEmpty($scope.filteredPeriodes)) {
+                || $scope.selected.periode === undefined) {
                 notify.info('evaluations.choose.periode');
                 return ;
             }
 
             options.idPeriode = $scope.selected.periode.id_type;
-            options.idStudents = _.pluck(_.where($scope.allElevesClasses, {selected:true}), 'id');
+            options.idStudents = _.pluck(_.filter($scope.allElevesClasses, function (student) {
+                return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
+            }), 'id');
 
-            if (_.isEmpty(options.idStudents)){
+            if (_.where($scope.allElevesClasses, {selected: true}).length === 0) {
                 notify.info('evaluations.choose.student');
+                return ;
+            }
+            if (_.isEmpty(options.idStudents)){
+                notify.info('evaluations.choose.student.for.periode');
                 return ;
             }
             $scope.opened.displayMessageLoader = true;
@@ -47,21 +64,24 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
         };
 
-        $scope.chooseClasse = async function (classe, together?) {
+        $scope.chooseClasse = async function (classe) {
             classe.selected = !classe.selected;
+            $scope.opened.displayMessageLoader = true;
+            utils.safeApply($scope);
             if (classe.synchronized.periodes !== true) {
                 await classe.periodes.sync();
             }
             if (classe.synchronized.eleves !== true) {
                 await classe.eleves.sync();
             }
-            $scope.updateFilters();
+            await $scope.updateFilters();
+            $scope.opened.displayMessageLoader = false;
             utils.safeApply($scope);
         };
 
         $scope.chooseStudent = function (student) {
-          student.selected = !student.selected;
-          utils.safeApply($scope);
+            student.selected = !student.selected;
+            utils.safeApply($scope);
         };
 
         $scope.switchAll =  async function (collection , b, isClasse) {
@@ -69,7 +89,11 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 c.selected = b;
             });
             if(isClasse === true){
-                $scope.updateFilters();
+                $scope.opened.displayMessageLoader = true;
+                utils.safeApply($scope);
+                await $scope.updateFilters();
+                $scope.opened.displayMessageLoader = false;
+                utils.safeApply($scope);
             }
             utils.safeApply($scope);
         };
@@ -86,12 +110,13 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             }
             else {
 
+                // synchronisation de toutes les périodes et les élèves des classes sélectionnées
+                let allPromise = [];
+                _.forEach(selectedClasses, (classe: Classe)=> {
+                    allPromise.push( Promise.all([classe.periodes.sync(), classe.eleves.sync()]));
+                });
 
-                await Promise.all(_.union(_.map(selectedClasses, (classe: Classe)=> {
-                    return [classe.periodes.sync.call(classe), classe.eleves.sync.call(classe)];
-                })));
-
-
+                await Promise.all(allPromise);
                 $scope.allElevesClasses = [];
                 let periodes = [];
 
@@ -104,9 +129,19 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 $scope.filteredPeriodes = [];
                 _.forEach(periodes, (periode) => {
                     if(periode.id_type !== undefined) {
-                        if (_.where($scope.filteredPeriodes, {id_type: periode.id_type}).length === 0) {
-
-                            $scope.filteredPeriodes.push({id_type: periode.id_type, periode: periode});
+                        let periodeToset = _.findWhere($scope.filteredPeriodes, {id_type: periode.id_type});
+                        if (periodeToset === undefined) {
+                            let classe = [];
+                            classe.push(periode.id_classe);
+                            $scope.filteredPeriodes.push(
+                                {
+                                    id_type: periode.id_type,
+                                    periode: periode,
+                                    classes: classe
+                                });
+                        }
+                        else {
+                            periodeToset.classes.push(periode.id_classe);
                         }
                     }
                 });
@@ -116,8 +151,11 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                         id_type: $scope.selected.periode.id_type
                     });
                 }
-
-                utils.safeApply($scope);
+                if (!_.isEmpty($scope.allElevesClasses)) {
+                    $scope.allElevesClasses = _.sortBy($scope.allElevesClasses, function (eleve)  {
+                        return eleve.lastName + ' ' + eleve.firstName;
+                    })
+                }
             }
         };
     }

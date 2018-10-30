@@ -38,6 +38,7 @@ export class Eleve extends Model {
     evenements : any ;
     evenement : any;
     selected : boolean;
+    classeName : string;
 
 
     get api() {

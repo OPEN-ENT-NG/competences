@@ -459,7 +459,7 @@
   "evaluations.export.bulletin.error": "Désolé, l'application à rencontré un problème lors de l'export des bulletins",
   "evaluations.export.bulletin.communication.header.left.first":"Vie scolaire (assiduité, ponctualité ; respect du règlement intérieur ;",
   "evaluations.export.bulletin.communication.header.left.second":"participation à la vie de l’établissement) : ",
-  "evaluations.export.bulletin.communication.header.right.first":"Date,nom et signature",
+  "evaluations.export.bulletin.communication.header.right.first":"Date, nom et signature",
   "evaluations.export.bulletin.communication.header.right.second":"du chef de l'établissement",
   "evaluations.export.bulletin.asbence.just":"Absences justifiées par les responsables légaux ",
   "evaluations.export.bulletin.asbence.not.just":"Absences non justifiées par les responsables légaux ",
@@ -468,8 +468,11 @@
   "evaluations.export.bulletin.element.appreciation.libelle": "Acquisitions, progrès et difficultés éventuelles",
   "evaluations.export.bulletin.visa.libelle":"Visa de la famille",
   "evaluations.export.bulletin.date.name.visa.responsable":"Date, nom et signature des responsables légaux",
+  "evaluations.choose.classe": "Veuillez sélectionner au moins une classe et une période",
+  "evaluations.classes.are.not.initialized": "Désolé, les classes sélectionnée non pas de périodes paramétrées",
   "evaluations.choose.periode": "Veuillez choisir une période",
   "evaluations.choose.student": "Veuillez choisir au moins un élève",
+  "evaluations.choose.student.for.periode": "Désolé, les élèves choisis ne sont pas dans des classes correspondants au type de période choisi",
   "evaluations.export.bulletin.success":"Export réalisé avec succes",
 
 
