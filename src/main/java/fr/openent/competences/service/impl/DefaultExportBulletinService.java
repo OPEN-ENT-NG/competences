@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class DefaultExportBulletinService implements ExportBulletinService{
     private static final Logger log = LoggerFactory.getLogger(DefaultExportBulletinService.class);
@@ -149,9 +148,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     log.error(body.getString("message"));
                                 }
                                 else{
-                                    final String libelle = body.getJsonArray("results").getJsonObject(0)
-                                            .getString("libelle");
-                                    eleve.put("bilanCycle", getLibelle("evaluations.bilan.trimestriel.of") + libelle);
+                                    JsonArray results = body.getJsonArray("results");
+                                    if(results.size() > 0) {
+                                        final String libelle = results.getJsonObject(0)
+                                                .getString("libelle");
+                                        eleve.put("bilanCycle", getLibelle("evaluations.bilan.trimestriel.of")
+                                                + libelle);
+                                    }
+                                    else {
+                                        log.error("[getCycle] | no link to cycle for object  " + idClasse);
+                                    }
                                 }
                                 finalHandler.handle(new Either.Right<>(null));
                             }
@@ -837,13 +843,35 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         for (JsonObject o : eleves) {
             JsonArray responsables = o.getJsonArray("responsables");
             if(responsables == null || responsables.size() == 0) {
+                String keyResponsable = "getResponsable";
+                o.remove(keyResponsable);
+                o.put(keyResponsable, false);
                 sortedJsonArray.add(o);
             }
             else {
-                for (AtomicInteger i = new AtomicInteger(-1);
-                     i.addAndGet(1) < responsables.size(); ){
-                    sortedJsonArray.add(setResponsablesLibelle(JsonObject.mapFrom(o),
-                            responsables.getJsonObject(i.get())));
+                for (int i = 0; i < responsables.size(); i++) {
+                    if (i == 0) {
+                        sortedJsonArray.add(setResponsablesLibelle(JsonObject.mapFrom(o),
+                                responsables.getJsonObject(i)));
+                    } else {
+                        JsonObject responsable = setResponsablesLibelle(JsonObject.mapFrom(o),
+                                responsables.getJsonObject(i));
+                        Boolean isDifferentAddress = false;
+                        for (int j = sortedJsonArray.size() - 1; j > (sortedJsonArray.size() - 1 - i); j--) {
+                            JsonObject responsableToCheck = sortedJsonArray.getJsonObject(j);
+                            java.lang.String addressResponsaleToCheck =
+                                    responsableToCheck.getString("addressePostale");
+                            java.lang.String addressResponsale =
+                                    responsable.getString("addressePostale");
+
+                            if (!addressResponsale.equals(addressResponsaleToCheck)) {
+                                isDifferentAddress = true;
+                            }
+                        }
+                        if (isDifferentAddress) {
+                            sortedJsonArray.add(responsable);
+                        }
+                    }
                 }
             }
         }
@@ -871,11 +899,36 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         String address = responsable.getString("address");
         String city = responsable.getString("city");
         String zipCode = responsable.getString("zipCode");
-        JsonArray responsableLibelle = new JsonArray().add( civilite + " " +  firstName + " " + lastName )
-                .add(address)
-                .add(zipCode + " " + city);
+
+        if (civilite == null) {
+            civilite = " ";
+        }
+
+        JsonArray responsableLibelle = new JsonArray().add( civilite + " " +  firstName + " " + lastName );
+        if (address != null){
+            responsableLibelle.add(address);
+        }
+        else {
+            address = " ";
+        }
+
+
+        if (zipCode == null) {
+            zipCode = " ";
+        }
+
+        if (city == null) {
+            city = zipCode;
+        }
+        else {
+            city = zipCode + " " + city;
+        }
+
+        responsableLibelle.add(city);
+
 
         res.put("responsableLibelle", responsableLibelle);
+        res.put("addressePostale", address + city);
         return res;
     }
 
