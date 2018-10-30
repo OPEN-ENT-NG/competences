@@ -6,6 +6,7 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
@@ -44,7 +46,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 .append(" WHERE id_eleve = ? ");
         JsonArray params = new JsonArray().add(idEleve);
 
-        Sql.getInstance().prepared(query.toString(),params, validResultHandler(eitherHandler));
+        Sql.getInstance()
+                .prepared(query.toString(),params,
+                        new DeliveryOptions()
+                                .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                        validResultHandler(eitherHandler));
     }
 
     @Override

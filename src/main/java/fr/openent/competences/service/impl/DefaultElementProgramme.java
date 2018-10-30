@@ -20,12 +20,14 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.ElementProgramme;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.DeliveryOptions;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultElementProgramme implements ElementProgramme {
@@ -84,7 +86,9 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idPeriode);
         values.add(idMatiere);
 
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                SqlResult.validResultHandler(handler));
     }
 
 

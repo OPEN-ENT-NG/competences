@@ -23,6 +23,7 @@ import fr.openent.competences.security.utils.FilterDevoirUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -1325,6 +1327,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 " ORDER BY devoirs.id_matiere ";
         values.add(id_eleve).add(id_eleve).add(id_eleve);
 
-        Sql.getInstance().prepared(query,values,SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query,values,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                SqlResult.validResultHandler(handler));
     }
 }
