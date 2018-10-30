@@ -27,6 +27,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -40,6 +41,7 @@ import org.entcore.common.user.UserInfos;
 
 import javax.imageio.ImageIO;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.awt.image.BufferedImage;
@@ -1110,6 +1112,8 @@ public class DefaultExportService implements ExportService  {
                                         .put("content", bytes)
                                         .put("baseUrl", baseUrl);
                                 eb.send(_node + "entcore.pdf.generator", actionObject,
+                                        new DeliveryOptions().setSendTimeout(
+                                                TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                                         handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                             @Override
                                             public void handle(Message<JsonObject> reply) {
