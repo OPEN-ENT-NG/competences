@@ -4,6 +4,7 @@ import com.mongodb.util.JSON;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.security.utils.AccessThematiqueBilanPeriodique;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
@@ -21,6 +22,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
+import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.response.DefaultResponseHandler;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -38,13 +40,14 @@ public class BilanPeriodiqueController extends ControllerHelper{
     private final BilanPeriodiqueService bilanPeriodiqueService;
     private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
     private final DefaultAppreciationCPEService appreciationCPEService;
+    private final DefaultAvisConseilService avisConseilService;
 
     public BilanPeriodiqueController (EventBus eb){
         this.eb = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         appreciationCPEService = new DefaultAppreciationCPEService();
-
+        avisConseilService = new DefaultAvisConseilService();
     }
 
     @Get("/bilan/periodique/eleve/:idEleve")
@@ -183,6 +186,96 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     appreciationCPEService.getAppreciationCPE(
                             Long.parseLong(request.params().get("id_periode")),
                             request.params().get("id_eleve"),
+                            defaultResponseHandler(request));
+                } else {
+                    badRequest(request);
+                }
+            }
+        });
+    }
+
+
+    /**
+     * Retourne la liste des avis prédéfinis du conseil de classe du bilan périodique
+     * @param request
+     */
+    @Get("/avis/bilan/periodique")
+    @ApiDoc("Retourne la liste des avis prédéfinis du conseil de classe du bilan périodique")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getLibelleAvis(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if(user != null){
+                    String strTypeAvis = request.params().get("type_avis");
+                    Long longTypeAvis = null;
+                    if (strTypeAvis != null && strTypeAvis != "") {
+                        longTypeAvis = Long.parseLong(request.params().get("type_avis"));
+                    }
+                    avisConseilService.getLibelleAvis(
+                            longTypeAvis,
+                            arrayResponseHandler(request));
+                }else{
+                    unauthorized(request);
+                }
+            }
+        });
+    }
+
+
+    /**
+     * Ajoute un avis du conseil de classe avec les données passées en POST
+     *
+     * @param request
+     */
+    @Post("/avis/conseil")
+    @ApiDoc("Créer ou mettre à jour un avis du bilan périodique d'un élève pour une période donnée")
+    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
+    public void createOrUpdateAvisConseil(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    String validator = pathPrefix + Competences.SCHEMA_AVIS_CONSEIL_BILAN_PERIODIQUE;
+                    RequestUtils.bodyToJson(request, validator,
+                            new Handler<JsonObject>() {
+                                @Override
+                                public void handle(JsonObject idAvisClasse) {
+                                    final Long idPeriode = idAvisClasse.getLong("id_periode");
+                                    final String idEleve = idAvisClasse.getString("id_eleve");
+                                    final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
+                                    avisConseilService.createOrUpdateAvisConseil(
+                                            idEleve,
+                                            idPeriode,
+                                            idAvis,
+                                            DefaultResponseHandler.defaultResponseHandler(request));
+                                }
+                            });
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+
+    /**
+     * Récupère les avis de conseil de classe de l'élève
+     *
+     * @param request
+     */
+    @Get("/avis/conseil")
+    @ApiDoc("Récupère l'avis du bilan périodique d'un élève pour une période donnée")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getAvisConseil(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    avisConseilService.getAvisConseil(
+                            request.params().get("id_eleve"),
+                            Long.parseLong(request.params().get("id_periode")),
                             defaultResponseHandler(request));
                 } else {
                     badRequest(request);

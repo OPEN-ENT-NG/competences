@@ -18,7 +18,7 @@ export class SyntheseBilanPeriodique extends Model {
         this.id_typePeriode = idTypePeriode;
     }
 
-    async sync() {
+    async syncSynthese() {
         try {
             let {data} = await http.get(`/competences/syntheseBilanPeriodique?id_eleve=${this.id_eleve}&id_typePeriode=${this.id_typePeriode}`);
             if(data.synthese !== undefined) {

@@ -56,7 +56,7 @@ export class Utils {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.bilanPeriodique);
     }
 
-    static async canSaisiAppreciationCPE () {
+    static canSaisiAppreciationCPE () {
         return model.me.hasWorkflow(Behaviours.applicationsBehaviours.competences.rights.workflow.canSaisiAppreciationCPE);
     }
 

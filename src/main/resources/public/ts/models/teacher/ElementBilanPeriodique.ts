@@ -20,6 +20,7 @@ import {Classe, Eleve, evaluations, Structure, SuivisDesAcquis, TypePeriode} fro
 import {Defaultcolors} from "../eval_niveau_comp";
 import {SyntheseBilanPeriodique} from "./SyntheseBilanPeriodique";
 import {AppreciationCPE} from "./AppreciationCPE";
+import {AvisConseil} from "./AvisConseil";
 
 
 declare  let Chart: any;
@@ -38,6 +39,7 @@ export class ElementBilanPeriodique extends Model {
     structure: Structure;
     syntheseBilanPeriodique : SyntheseBilanPeriodique;
     appreciationCPE : AppreciationCPE;
+    avisConseil : AvisConseil;
 
     get api() {
         return {
@@ -58,18 +60,6 @@ export class ElementBilanPeriodique extends Model {
         this.typePeriode = pTypePeriode;
         this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id, this.idTypePeriode,this.typePeriode );
     }
-
-
-    async syncSyntheseBilanPeriodique() {
-        return new Promise((resolve, reject) => {
-            if (this.idTypePeriode != null) {
-                this.syntheseBilanPeriodique = new SyntheseBilanPeriodique(this.eleve.id, this.idTypePeriode);
-                this.syntheseBilanPeriodique.sync();
-            }
-            resolve();
-        });
-    }
-
 
     moyenneNiveau (competencesNotes) : number {
         let res  = 0;

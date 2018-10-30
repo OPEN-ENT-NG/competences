@@ -25,6 +25,7 @@ import {
     evaluations
 } from './index';
 import {AppreciationElement} from "./AppreciationElement";
+import {AvisConseil} from "./AvisConseil";
 
 export class BilanPeriodique extends  Model {
     synchronized: any;
@@ -34,6 +35,8 @@ export class BilanPeriodique extends  Model {
     elements: Collection<ElementBilanPeriodique>;
     appreciations : Collection<AppreciationElement>;
     endSaisie : Boolean;
+    avis: string;
+    // avisConseil : AvisConseil;
 
     static get api() {
         return {
@@ -48,6 +51,10 @@ export class BilanPeriodique extends  Model {
     constructor(periode: any, classe: Classe) {
         super();
 
+        this.updateBilanPeriodiqueField(periode, classe);
+    }
+
+    updateBilanPeriodiqueField(periode, classe) {
         this.synchronized = {
             classe: false
         };
@@ -162,9 +169,9 @@ export class BilanPeriodique extends  Model {
         return data;
     }
 
-    async saveAppreciation (periode, element, eleve, classe, param?) {
+    async saveAppreciation (periode, element, eleve, classe, isBilanPeriodique) {
         try {
-            if(param !== "isBilanPeriodique") {
+            if(isBilanPeriodique !== true) {
                 eleve ? await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=eleve", this.toJSON(periode, element, eleve, classe))
                     : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=classe", this.toJSON(periode, element, null, classe));
             } else {
@@ -176,5 +183,17 @@ export class BilanPeriodique extends  Model {
             notify.error('evaluations.appreciation.post.error');
         }
     }
+
+    async getLibelleAvis () {
+        try {
+            let data = await http.get(`/competences/avis/bilan/periodique`);
+            if(data.data !== undefined) {
+                this.avis = data.data;
+            }
+        } catch (e) {
+            notify.error('evaluations.avis.conseil.bilan.periodique.get.error');
+        }
+    };
+
 
 }

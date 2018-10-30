@@ -18,102 +18,106 @@
   -->
 <div class="row">
     <div class="twelve cell">
-        <!--<section>-->
-            <!--<content ng-show="bilanPeriodique === undefined">-->
-                <!--<article class="card twelve-mobile centered card-projet">-->
-                    <!--<i18n>evaluation.bilan.periodique.projet.empty</i18n>-->
-                <!--</article>-->
-            <!--</content>-->
-        <!--</section>-->
+        <section>
+            <content ng-show="bilanPeriodique === undefined">
+                <article class="card twelve-mobile centered card-projet">
+                    <i18n>evaluation.bilan.periodique.projet.empty</i18n>
+                </article>
+            </content>
+        </section>
 
-            <div class="twelve cell border-bottom"
+        <article class="twelve cell"
                  ng-show="bilanPeriodique !== undefined">
-                <h4 ng-class="{'openedElem' : EPI.opened}"
-                    class="margin-top-05em chevron"
-                    ng-click="EPI.opened = !EPI.opened"
-                    ng-init="EPI.opened = true">
-                    <i18n>enseignements.pratiques.interdisciplinaires</i18n>
-                </h4>
-                <div ng-show="!EPI.opened" ng-repeat="element in elementsDisplay | filter:{'type' : 1} track by $index"
-                     class="twelve cell marginFive">
-                    <div class="four cell marginFive itemFlex">
-                        <span>[[element.libelle]]</span>
-                        <span>[[element.theme.libelle]]</span>
-                        <div class="">
-                            <span ng-repeat="enseignant in element.enseignants">[[enseignant]] [[$last ? '' : ', ']]</span>
-                        </div>
-                    </div>
-                    <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations"
-                           class="eleven input-appreciation"
-                           type="text"
-                           name="appreciation"
-                           ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
-                           ng-blur="saveAppElement(element, informations.eleve)">
-                        </textarea>
-                        <span ng-show="!canUpdateAppreciations"
-                              ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
-                        </span>
+            <h3 ng-class="{'openedElem' : EPI.opened}"
+                class="margin-top-05em chevron"
+                ng-click="EPI.opened = !EPI.opened"
+                ng-init="EPI.opened = true">
+                <i18n>enseignements.pratiques.interdisciplinaires</i18n>
+            </h3>
+            <div ng-show="!EPI.opened" ng-repeat="element in elementsDisplay | filter:{'type' : 1} track by $index"
+                 class="twelve cell marginFive">
+                <div class="four cell marginFive itemFlex">
+                    <strong>[[element.libelle]]</strong>
+                    <span>[[element.theme.libelle]]</span>
+                    <div class="italic font-size-13">
+                        <span ng-repeat="enseignant in element.enseignants">[[enseignant]] [[$last ? '' : ', ']]</span>
                     </div>
                 </div>
-            </div>
-
-            <div class="twelve cell border-bottom"
-                 ng-show="bilanPeriodique !== undefined">
-                <h4 ng-class="{'openedElem' : AP.opened}"
-                    class="margin-top-05em chevron"
-                    ng-click="AP.opened = !AP.opened"
-                    ng-init="AP.opened = true">
-                    <i18n>accompagnements.personnalises</i18n>
-                </h4>
-                <div ng-show="!AP.opened" ng-repeat="element in elementsDisplay | filter:{'type': 2} track by $index"
-                     class="twelve cell marginFive">
-                    <div class="four cell marginFive itemFlex">
-                        <span>[[element.libelle]]</span>
-                        <span ng-repeat="enseignant in element.enseignants">[[enseignant]]</span>
-                    </div>
-                    <div class="four cell marginFive">
+                <div class="four cell marginFive">
                         <textarea ng-show="canUpdateAppreciations"
-                           class="eleven input-appreciation"
-                           type="text"
-                           name="appreciation"
-                           ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
-                           ng-blur="saveAppElement(element, informations.eleve)">
-                        </textarea>
-                        <span ng-show="!canUpdateAppreciations"
-                              ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="twelve cell"
-                 ng-show="bilanPeriodique !== undefined">
-                <h4 ng-class="{'openedElem' : parcours.opened}"
-                    class="margin-top-05em chevron"
-                    ng-click="parcours.opened = !parcours.opened"
-                    ng-init="parcours.opened = true">
-                    <i18n>parcours.educatifs</i18n>
-                </h4>
-                <div ng-show="!parcours.opened" ng-repeat="element in elementsDisplay | filter:{'type' : 3} track by $index"
-                     class="twelve cell marginFive">
-                    <div class="four cell marginFive itemFlex">
-                        <span>[[element.theme.libelle]]</span>
-                    </div>
-                    <div class="four cell marginFive">
-                        <textarea ng-show="canUpdateAppreciations"
-                                  class="eleven input-appreciation"
+                                  class="twelve input-appreciation marginTopZero"
+                                  rows="4"
                                   type="text"
                                   name="appreciation"
                                   ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
-                                  ng-blur="saveAppElement(element, informations.eleve)">
+                                  ng-blur="saveAppElement(element, true, informations.eleve)">
                         </textarea>
-                        <span ng-show="!canUpdateAppreciations"
-                              ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
+                    <span ng-show="!canUpdateAppreciations"
+                          ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
                         </span>
-                    </div>
                 </div>
             </div>
+        </article>
+
+        <article class="twelve cell"
+                 ng-show="bilanPeriodique !== undefined">
+            <h3 ng-class="{'openedElem' : AP.opened}"
+                class="margin-top-05em chevron"
+                ng-click="AP.opened = !AP.opened"
+                ng-init="AP.opened = true">
+                <i18n>accompagnements.personnalises</i18n>
+            </h3>
+            <div ng-show="!AP.opened" ng-repeat="element in elementsDisplay | filter:{'type': 2} track by $index"
+                 class="twelve cell marginFive">
+                <div class="four cell marginFive itemFlex">
+                    <strong>[[element.libelle]]</strong>
+                    <span class="italic font-size-13"
+                          ng-repeat="enseignant in element.enseignants">[[enseignant]]</span>
+                </div>
+                <div class="four cell marginFive">
+                        <textarea ng-show="canUpdateAppreciations"
+                                  class="twelve input-appreciation marginTopZero"
+                                  rows="4"
+                                  type="text"
+                                  name="appreciation"
+                                  ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
+                                  ng-blur="saveAppElement(element, true, informations.eleve)">
+                        </textarea>
+                    <span ng-show="!canUpdateAppreciations"
+                          ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
+                        </span>
+                </div>
+            </div>
+        </article>
+
+        <article class="twelve cell"
+                 ng-show="bilanPeriodique !== undefined">
+            <h3 ng-class="{'openedElem' : parcours.opened}"
+                class="margin-top-05em chevron"
+                ng-click="parcours.opened = !parcours.opened"
+                ng-init="parcours.opened = true">
+                <i18n>parcours.educatifs</i18n>
+            </h3>
+            <div ng-show="!parcours.opened" ng-repeat="element in elementsDisplay | filter:{'type' : 3} track by $index"
+                 class="twelve cell marginFive">
+                <div class="four cell marginFive itemFlex">
+                    <strong>[[element.theme.libelle]]</strong>
+                </div>
+                <div class="four cell marginFive">
+                        <textarea ng-show="canUpdateAppreciations"
+                                  class="twelve input-appreciation marginTopZero"
+                                  rows="4"
+                                  type="text"
+                                  name="appreciation"
+                                  ng-model="informations.eleve.appreciations[search.periode.id][element.id]"
+                                  ng-blur="saveAppElement(element, true, informations.eleve)">
+                        </textarea>
+                    <span ng-show="!canUpdateAppreciations"
+                          ng-bind="informations.eleve.appreciations[search.periode.id][element.id]">
+                        </span>
+                </div>
+            </div>
+        </article>
 
     </div>
 </div>

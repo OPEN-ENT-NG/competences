@@ -1,6 +1,7 @@
-<fieldset>
-    <legend><i18n>competences.on.periode</i18n></legend>
-    <div class="twelve cell">
+<article class="twelve cell">
+    <fieldset>
+        <legend><i18n>competences.on.periode</i18n></legend>
+        <div class="twelve cell">
                     <span>
                         <i18n>viescolaire.retards</i18n>:&nbsp;
                     </span>
@@ -28,8 +29,8 @@
             </span>
             <i18n>half.days</i18n>
         </label>
-    </div>
-    <div class="twelve cell">
+        </div>
+        <div class="twelve cell">
                     <span>
                         <i18n>viescolaire.abs.not.justified</i18n>:&nbsp;
                     </span>
@@ -43,8 +44,8 @@
             </span>
             <i18n>half.days</i18n>
         </label>
-    </div>
-    <div class="twelve cell">
+        </div>
+        <div class="twelve cell">
                     <span>
                         <i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;
                     </span>
@@ -58,9 +59,9 @@
             </span>
             <i18n>hours</i18n>
         </label>
-    </div>
+        </div>
 
-    <div class="twelve">
+        <div class="twelve">
          <textarea placeholder="[[translate('bilan.periodique.appreciationCPE.placeholder')]]"
                    rows="5" type="text"
                    ng-model="elementBilanPeriodique.appreciationCPE.appreciation"
@@ -71,66 +72,67 @@
                    ng-disabled="!canUpdateRetardAndAbscence" ng-blur="elementBilanPeriodique.appreciationCPE.saveAppreciationCPE();">
          </textarea>
 
-    </div>
-</fieldset>
-<fieldset>
-    <legend><i18n>history</i18n></legend>
-    <div class="responsive-table">
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend><i18n>history</i18n></legend>
+        <div class="responsive-table">
 
-        <table>
-            <thead>
+            <table>
+                <thead>
 
-            <tr>
-                <th class="titleCenter"><i18n>viescolaire.utils.periode</i18n></th>
-                <th class="titleCenter"><i18n>viescolaire.retards</i18n></th>
-                <th class="titleCenter"><i18n>viescolaire.abs.justified</i18n></th>
-                <th class="titleCenter"><i18n>viescolaire.abs.not.justified</i18n></th>
-                <th class="titleCenter"><i18n>viescolaire.nb.courses.lost</i18n></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-repeat="evenement in search.eleve.evenements | orderBy:'ordre' ">
-                <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
-                    [[evenement.periode]] </td>
-                <td class="newsizeTD"
-                    data-label="[[translate('viescolaire.retards')]]">
+                <tr>
+                    <th class="titleCenter"><i18n>viescolaire.utils.periode</i18n></th>
+                    <th class="titleCenter"><i18n>viescolaire.retards</i18n></th>
+                    <th class="titleCenter"><i18n>viescolaire.abs.justified</i18n></th>
+                    <th class="titleCenter"><i18n>viescolaire.abs.not.justified</i18n></th>
+                    <th class="titleCenter"><i18n>viescolaire.nb.courses.lost</i18n></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="evenement in search.eleve.evenements | orderBy:'ordre' ">
+                    <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
+                        [[evenement.periode]] </td>
+                    <td class="newsizeTD"
+                        data-label="[[translate('viescolaire.retards')]]">
                     <span ng-if="evenement.retard !== undefined">
                         [[evenement.retard]]
                         </span>
-                    <span ng-if ="evenement.retard === undefined">
+                        <span ng-if ="evenement.retard === undefined">
                         [[0]]
                     </span>
-                </td>
-                <td class="newsizeTD" data-label="[[translate('viescolaire.abs.justified')]]" >
+                    </td>
+                    <td class="newsizeTD" data-label="[[translate('viescolaire.abs.justified')]]" >
                      <span ng-if="evenement.abs_just !== undefined">
                         [[evenement.abs_just]]
                         </span>
-                    <span ng-if ="evenement.abs_just === undefined">
+                        <span ng-if ="evenement.abs_just === undefined">
                         [[0]]
                     </span>
-                    <i18n>half.days</i18n>
-                </td>
-                <td class="newsizeTD" data-label="[[translate('viescolaire.abs.not.justified')]]" >
+                        <i18n>half.days</i18n>
+                    </td>
+                    <td class="newsizeTD" data-label="[[translate('viescolaire.abs.not.justified')]]" >
                     <span ng-if="evenement.abs_non_just !== undefined">
                         [[evenement.abs_non_just]]
                         </span>
-                    <span ng-if ="evenement.abs_non_just === undefined">
+                        <span ng-if ="evenement.abs_non_just === undefined">
                         [[0]]
                     </span>
-                    <i18n>half.days</i18n></td>
-                <td class="newsizeTD" data-label="[[translate('viescolaire.nb.courses.lost')]]" >
+                        <i18n>half.days</i18n></td>
+                    <td class="newsizeTD" data-label="[[translate('viescolaire.nb.courses.lost')]]" >
                     <span ng-if="evenement.abs_totale_heure !== undefined">
                         [[evenement.abs_totale_heure]]
                         </span>
-                    <span ng-if ="evenement.abs_totale_heure === undefined">
+                        <span ng-if ="evenement.abs_totale_heure === undefined">
                         [[0]]
                     </span>
-                    <i18n>hours</i18n>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                        <i18n>hours</i18n>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
 
-    </div>
+        </div>
 
-</fieldset>
+    </fieldset>
+</article>

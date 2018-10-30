@@ -1,10 +1,16 @@
-<div ng-if="elementBilanPeriodique.suivisAcquis.all.length === 0">
-    <i18n>no.bilan.periodique</i18n>
-</div>
-<div ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
-    <div class="responsive-table">
-        <table class="twelve suiviDesAcquis">
-            <thead>
+<section ng-if="elementBilanPeriodique.suivisAcquis.all.length === 0">
+    <content>
+        <article class="card twelve-mobile centered card-projet">
+            <i18n>no.bilan.periodique</i18n>
+        </article>
+    </content>
+</section>
+
+<article class="twelve cell">
+    <div ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
+        <div class="responsive-table">
+            <table class="twelve suiviDesAcquis">
+                <thead>
                 <tr>
                     <th class="two"><i18n>matieres</i18n></th>
                     <th class="four"><i18n>bilan.perodique.elements.programme.travailles</i18n></th>
@@ -13,8 +19,8 @@
                     <th class="one center"><i18n>average.class</i18n></th>
                     <th class="one center"><i18n>evaluations.releve.positionnement</i18n></th>
                 </tr>
-            </thead>
-            <tbody>
+                </thead>
+                <tbody>
                 <tr ng-repeat="suiviDesAcquis in elementBilanPeriodique.suivisAcquis.all | orderBy: 'libelleMatiere'">
                     <td>
                         <span class="matiere">[[suiviDesAcquis.libelleMatiere]]</span>
@@ -51,7 +57,7 @@
                         </span>
                     </td>
                     <td class="center" tooltip="[[getLibellePositionnement(suiviDesAcquis.positionnement_auto)]]"
-                    data-label="[[translate('evaluations.releve.positionnement')]]">
+                        data-label="[[translate('evaluations.releve.positionnement')]]">
                         <ul class="selectable-list twelve" ng-if="canSaveAppMatierePosiBilanPeriodique" >
 
                             <li class="cell"
@@ -91,8 +97,8 @@
 
                 </tr>
 
-            </tbody>
-            <tfoot>
+                </tbody>
+                <tfoot>
                 <tr>
                     <td></td>
                     <td></td>
@@ -101,10 +107,12 @@
                     <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.classe')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleClasse]]</td>
                     <td></td>
                 </tr>
-            </tfoot>
-        </table>
+                </tfoot>
+            </table>
+        </div>
+        <section>
+            <container template="synthese"></container>
+        </section>
     </div>
-    <section>
-        <container template="synthese"></container>
-    </section>
-</div>
+
+</article>

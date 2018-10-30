@@ -37,7 +37,7 @@
                     <label class="select">
                         <select ng-model="search.periode"
                                 ng-change="getElementsBilanBilanPeriodique()"
-                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:notYear() | orderBy:'-type'">  <!--| customClassPeriodeFilters:search-->
+                                ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:notYear() | orderBy:'-type'">
                             <option disabled value="" class="header-opt">[[translate('viescolaire.utils.periode')]]
                             </option>
                         </select>
@@ -146,7 +146,7 @@
                                                     <input type="text" class="eleven input-appreciation"
                                                            name="appreciation"
                                                            ng-model="eleve.appreciations[search.periode.id][element.id]"
-                                                           ng-blur="saveAppElement(element, eleve)"
+                                                           ng-blur="saveAppElement(element, false, eleve)"
                                                            ng-disabled="bilanPeriodique.endSaisie && !hasRight()"
                                                            ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
                                                 </div>
@@ -166,7 +166,7 @@
                                       class="twelve"
                                       ng-maxlength="600"
                                       maxlength="600"
-                                      ng-blur="saveAppElement(element)"
+                                      ng-blur="saveAppElement(element, false)"
                                       name="appreciationClasse"
                                       ng-disabled="bilanPeriodique.endSaisie && !hasRight()">
                             </textarea>

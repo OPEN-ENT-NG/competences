@@ -77,6 +77,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_PARCOURS_BILAN_PERIODIQUE = "eval_createParcoursBilanPeriodique";
     public static final String SCHEMA_SYNTHESE_CREATE = "eval_createSynthese";
     public static final String SCHEMA_APPRECIATION_CPE_CREATE = "eval_createAppreciationCPE";
+    public static final String SCHEMA_AVIS_CONSEIL_BILAN_PERIODIQUE = "eval_createAvisConseil";
 
     public static final String SCHEMA_APPRECIATIONS_CLASSE = "eval_createOrUpdateAppreciationClasse";
 

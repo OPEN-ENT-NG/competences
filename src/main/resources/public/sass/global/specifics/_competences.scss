@@ -1003,6 +1003,9 @@ body.evaluations {
         content: "\e841";
       }
     }
+    &.openedAvis {
+      height: auto;
+    }
   }
 
   .appreciationTextarea{
@@ -3092,10 +3095,16 @@ body.evaluations {
 
   //  Bilan périodique
 
+      //  Left side
+
+  .select-avis-padding {
+    padding: 10px 0;
+  }
+
       //  Onglet projet
 
-  .border-bottom {
-    border-bottom: 0.1em solid #555555;
+  .font-size-13 {
+    font-size: 13px !important;
   }
 
   .display-flex-space-between {

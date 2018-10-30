@@ -1,4 +1,4 @@
-import {_, Model, notify} from 'entcore';
+import {Model, notify} from 'entcore';
 import http from 'axios';
 
 export class AppreciationCPE extends Model {
@@ -18,7 +18,7 @@ export class AppreciationCPE extends Model {
         this.id_periode = idPeriode;
     }
 
-    async sync() {
+    async syncAppreciationCPE () {
         try {
             let {data} = await http.get(`/competences/appreciation/CPE/bilan/periodique?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}`);
             if(data.appreciation !== undefined) {
@@ -43,7 +43,7 @@ export class AppreciationCPE extends Model {
                 await http.post(this.api.DATA_APPRECIATION, this.toJSON());
             }
         } catch (e) {
-            notify.error('evaluations.appreciations.get.error');
+            notify.error('evaluations.appreciations.save.error');
         }
     }
 

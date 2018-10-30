@@ -62,10 +62,29 @@
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
 
-<div ng-show="showAvis" class="criteres card criterion" ng-class="{opened : opened.avis === true}">
+<div class="criteres card criterion" ng-class="{openedAvis : opened.avis === true}">
     <span class="plus-input" ng-click="openLeftMenu('opened.avis', opened.avis);"></span>
     <div class="header" ng-click="openLeftMenu('opened.avis', opened.avis);">
         <h2><i18n>viescolaire.utils.avis</i18n></h2>
     </div>
+    <section class="select-avis-padding">
+        <label class="select">
+            <select ng-model="search.idAvisClasse"
+                    ng-options="avis.id as avis.libelle for avis in bilanPeriodique.avis | filter:filterAvis(1)"
+                    ng-change="elementBilanPeriodique.avisConseil.saveAvisConseil(search.idAvisClasse);"
+                    ng-disabled="false">
+                <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
+            </select>
+        </label>
+    </section>
+    <section ng-show="showAvisOrientation">
+        <label class="select">
+            <select ng-model="search.idAvisOrientation"
+                    ng-options="avis.id as avis.libelle for avis in bilanPeriodique.avis | filter:filterAvis(2)"
+                    ng-disabled="false">
+                <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
+            </select>
+        </label>
+    </section>
 
 </div>
