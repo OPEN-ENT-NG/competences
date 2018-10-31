@@ -1005,6 +1005,9 @@ body.evaluations {
     }
     &.openedAvis {
       height: auto;
+      .plus-input::after {
+        content: "\e841";
+      }
     }
   }
 

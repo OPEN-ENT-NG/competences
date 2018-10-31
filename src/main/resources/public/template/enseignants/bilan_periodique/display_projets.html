@@ -20,14 +20,13 @@
     <div class="twelve cell">
         <section>
             <content ng-show="bilanPeriodique === undefined">
-                <article class="card twelve-mobile centered card-projet">
+                <article class="card twelve-mobile centered">
                     <i18n>evaluation.bilan.periodique.projet.empty</i18n>
                 </article>
             </content>
         </section>
 
-        <article class="twelve cell"
-                 ng-show="bilanPeriodique !== undefined">
+        <article class="twelve cell" ng-show="bilanPeriodique !== undefined">
             <h3 ng-class="{'openedElem' : EPI.opened}"
                 class="margin-top-05em chevron"
                 ng-click="EPI.opened = !EPI.opened"

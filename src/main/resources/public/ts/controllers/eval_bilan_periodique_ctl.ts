@@ -37,8 +37,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     && ($scope.search.periode !== '*' && $scope.search.periode !== null && $scope.search.periode !== undefined));
             }
             $scope.updateColorAndLetterForSkills();
-            $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
-            await $scope.bilanPeriodique.getLibelleAvis();
         };
 
         if(model.me.type === 'PERSRELELEVE'){
@@ -57,6 +55,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
         $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
+
 
         //////            Onglets du bilan périodique            //////
 
@@ -78,15 +77,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                     "canSaisiSyntheseBilanPeriodique" ) && finSaisieBilan;
             }
-            $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
-                $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
+
             await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id, $scope.search.periode.id_type);
             await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();
-            $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id, $scope.search.periode.id_type);
-            await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
-            $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
-
+            // $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id, $scope.search.periode.id_type);
+            // await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
+            // await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
+            // $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
             utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
             template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
@@ -201,7 +199,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('suivi-acquis');
             template.close('projet');
             template.close('vie-scolaire');
-            $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
+
             $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                 "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id, $scope.search.periode.id_type);
@@ -269,18 +267,30 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     $scope.openDomaine();
                 }
                 if ((template.contains('synthese', 'enseignants/bilan_periodique/display_synthese')) && ($scope.selected.graphique)) {
+                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                        $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
                     await $scope.openGraphique();
                 }
                 if ($scope.selected.suiviAcquis) {
+                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                        $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
                     await $scope.openSuiviAcquis();
                 }
                 if ($scope.selected.vieScolaire) {
                     await $scope.openVieScolaire();
                 }
+
+                if ($scope.selected.projet) {
+                    await $scope.openProjet();
+                }
+
+                $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id, $scope.search.periode.id_type);
+                await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
+                await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
+                $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
+                utils.safeApply($scope);
             }
-            if ($scope.selected.projet) {
-                await $scope.openProjet();
-            }
+
         };
 
         $scope.deleteStudent = function () {
@@ -311,6 +321,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
          */
 
         $scope.getElementsBilanBilanPeriodique = async function (param?) {
+            if($scope.bilanPeriodique !== undefined ) {
+                delete $scope.bilanPeriodique;
+            }
             if ($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
                 && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*") {
 
@@ -321,7 +334,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 let _p = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
                 if (_p) {
                     if (!$scope.bilanPeriodique || param === "isClassChanging") {
-                        $scope.bilanPeriodique.updateBilanPeriodiqueField($scope.search.periode, $scope.search.classe);
+                        $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
                     }
 
                     if (param === "isClassChanging" || $scope.bilanPeriodique.elements === undefined) {

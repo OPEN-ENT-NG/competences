@@ -35,8 +35,6 @@ export class BilanPeriodique extends  Model {
     elements: Collection<ElementBilanPeriodique>;
     appreciations : Collection<AppreciationElement>;
     endSaisie : Boolean;
-    avis: string;
-    // avisConseil : AvisConseil;
 
     static get api() {
         return {
@@ -183,17 +181,5 @@ export class BilanPeriodique extends  Model {
             notify.error('evaluations.appreciation.post.error');
         }
     }
-
-    async getLibelleAvis () {
-        try {
-            let data = await http.get(`/competences/avis/bilan/periodique`);
-            if(data.data !== undefined) {
-                this.avis = data.data;
-            }
-        } catch (e) {
-            notify.error('evaluations.avis.conseil.bilan.periodique.get.error');
-        }
-    };
-
 
 }

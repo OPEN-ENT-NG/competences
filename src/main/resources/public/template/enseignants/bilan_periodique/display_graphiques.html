@@ -17,15 +17,15 @@
   ~
   -->
 
-<section ng-if="displayMessage">
-    <content>
-        <article class="card twelve-mobile centered card-projet">
-            <i18n>evaluation.bilan.periodique.graphique.empty</i18n>
-        </article>
-    </content>
-</section>
+<!--<section ng-show="elementBilanPeriodique.eleve.configMixedChart.labels.length === 0">-->
+     <!--<content>-->
+         <!--<article class="card twelve-mobile centered">-->
+             <!--<i18n>evaluation.bilan.periodique.graphique.empty</i18n>-->
+         <!--</article>-->
+     <!--</content>-->
+ <!--</section>-->
 
-<section ng-if="!displayMessage">
+<section>
     <article class="twelve cell">
         <h3 ng-class="{'openedElem' : graphMat.opened}"
             class="margin-top-05em chevron"

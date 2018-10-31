@@ -5,6 +5,8 @@ export class AvisConseil extends Model {
     id_eleve : string;
     id_periode : number;
     id_avis_conseil_bilan : number;
+    avis: string;
+    // avis: [];
 
     get api () {
         return {
@@ -16,6 +18,17 @@ export class AvisConseil extends Model {
         super();
         this.id_eleve = idEleve;
         this.id_periode = idPeriode;
+    }
+
+    async getLibelleAvis () {
+        try {
+            let data = await http.get(`/competences/avis/bilan/periodique`);
+            if(data.data !== undefined) {
+                this.avis = data.data;
+            }
+        } catch (e) {
+            notify.error('evaluations.avis.conseil.bilan.periodique.get.error');
+        }
     }
 
     async syncAvisConseil () {

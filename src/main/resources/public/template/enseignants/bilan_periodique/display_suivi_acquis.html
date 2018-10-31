@@ -1,38 +1,37 @@
 <section ng-if="elementBilanPeriodique.suivisAcquis.all.length === 0">
     <content>
-        <article class="card twelve-mobile centered card-projet">
+        <article class="card twelve-mobile centered">
             <i18n>no.bilan.periodique</i18n>
         </article>
     </content>
 </section>
 
-<article class="twelve cell">
-    <div ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
-        <div class="responsive-table">
-            <table class="twelve suiviDesAcquis">
-                <thead>
-                <tr>
-                    <th class="two"><i18n>matieres</i18n></th>
-                    <th class="four"><i18n>bilan.perodique.elements.programme.travailles</i18n></th>
-                    <th class="five"><i18n>appreciation</i18n></th>
-                    <th class="one center"><i18n>average.student</i18n></th>
-                    <th class="one center"><i18n>average.class</i18n></th>
-                    <th class="one center"><i18n>evaluations.releve.positionnement</i18n></th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr ng-repeat="suiviDesAcquis in elementBilanPeriodique.suivisAcquis.all | orderBy: 'libelleMatiere'">
-                    <td>
-                        <span class="matiere">[[suiviDesAcquis.libelleMatiere]]</span>
-                        <ul>
-                            <li ng-repeat="teacher in suiviDesAcquis.teachers">[[teacher.firstName]] [[teacher.name]]</li>
-                        </ul>
-                    </td>
-                    <td data-label="[[translate('bilan.perodique.elements.programme.travailles')]]">
-                        <div class ="twelve element">[[suiviDesAcquis.elementsProgramme]] </div>
-                    </td>
-                    <td data-label="[[translate('appreciation')]]">
-                        <ng-form name="appreciationMatiereForm">
+<article class="twelve cell" ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
+    <div class="responsive-table">
+        <table class="twelve suiviDesAcquis">
+            <thead>
+            <tr>
+                <th class="two"><i18n>matieres</i18n></th>
+                <th class="four"><i18n>bilan.perodique.elements.programme.travailles</i18n></th>
+                <th class="five"><i18n>appreciation</i18n></th>
+                <th class="one center"><i18n>average.student</i18n></th>
+                <th class="one center"><i18n>average.class</i18n></th>
+                <th class="one center"><i18n>evaluations.releve.positionnement</i18n></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="suiviDesAcquis in elementBilanPeriodique.suivisAcquis.all | orderBy: 'libelleMatiere'">
+                <td>
+                    <span class="matiere">[[suiviDesAcquis.libelleMatiere]]</span>
+                    <ul>
+                        <li ng-repeat="teacher in suiviDesAcquis.teachers">[[teacher.firstName]] [[teacher.name]]</li>
+                    </ul>
+                </td>
+                <td data-label="[[translate('bilan.perodique.elements.programme.travailles')]]">
+                    <div class ="twelve element">[[suiviDesAcquis.elementsProgramme]] </div>
+                </td>
+                <td data-label="[[translate('appreciation')]]">
+                    <ng-form name="appreciationMatiereForm">
                             <textarea name="appreciation"
                                       type ="text"
                                       ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
@@ -41,78 +40,79 @@
                                       ng-blur="suiviDesAcquis.saveAppreciationMatierePeriodeEleve()"
                                       ng-disabled="!canSaveAppMatierePosiBilanPeriodique">
                             </textarea>
-                            <div ng-if="appreciationMatiereForm.appreciation.$error.maxlength" class="warning">
-                                <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
-                            </div>
-                        </ng-form>
-                    </td>
-                    <td class="center" data-label="[[translate('average.student')]]">
+                        <div ng-if="appreciationMatiereForm.appreciation.$error.maxlength" class="warning">
+                            <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
+                        </div>
+                    </ng-form>
+                </td>
+                <td class="center" data-label="[[translate('average.student')]]">
                         <span>
                             [[suiviDesAcquis.moyenneEleve]]
                         </span>
-                    </td>
-                    <td class="center" data-label="[[translate('average.class')]]">
+                </td>
+                <td class="center" data-label="[[translate('average.class')]]">
                         <span>
                             [[suiviDesAcquis.moyenneClasse]]
                         </span>
-                    </td>
-                    <td class="center" tooltip="[[getLibellePositionnement(suiviDesAcquis.positionnement_auto)]]"
-                        data-label="[[translate('evaluations.releve.positionnement')]]">
-                        <ul class="selectable-list twelve" ng-if="canSaveAppMatierePosiBilanPeriodique" >
+                </td>
+                <td class="center" tooltip="[[getLibellePositionnement(suiviDesAcquis.positionnement_auto)]]"
+                    data-label="[[translate('evaluations.releve.positionnement')]]">
+                    <ul class="selectable-list twelve" ng-if="canSaveAppMatierePosiBilanPeriodique" >
 
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final,
+                        <li class="cell"
+                            style="margin: 0"
+                            ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final,
                                     positionnementcalculee: $index === suiviDesAcquis.positionnement_auto}"
-                                data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
-                                ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
-                                <label ng-bind-html="$index"></label>
-                            </li>
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final,
+                            data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
+                            ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                            <label ng-bind-html="$index"></label>
+                        </li>
+                        <li class="cell"
+                            style="margin: 0"
+                            ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final,
                                                 positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_auto}"
-                                data-ng-click="savePositionnementEleve(suiviDesAcquis, structure.cycle.niveauCompetencesArray.length);"
-                            >
-                                <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
-                            </li>
+                            data-ng-click="savePositionnementEleve(suiviDesAcquis, structure.cycle.niveauCompetencesArray.length);"
+                        >
+                            <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
+                        </li>
 
-                        </ul>
-                        <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique" >
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ positionnementcalculee: $index === suiviDesAcquis.getPositionnementDefinitif()}"
-                                ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
-                                <label ng-bind-html="$index"></label>
-                            </li>
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.getPositionnementDefinitif()}"
-                            >
-                                <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
-                            </li>
-                        </ul>
+                    </ul>
+                    <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique" >
+                        <li class="cell"
+                            style="margin: 0"
+                            ng-class="{ positionnementcalculee: $index === suiviDesAcquis.getPositionnementDefinitif()}"
+                            ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                            <label ng-bind-html="$index"></label>
+                        </li>
+                        <li class="cell"
+                            style="margin: 0"
+                            ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.getPositionnementDefinitif()}"
+                        >
+                            <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
+                        </li>
+                    </ul>
 
-                    </td>
+                </td>
 
-                </tr>
+            </tr>
 
-                </tbody>
-                <tfoot>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.eleve')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleEleve]]</td>
-                    <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.classe')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleClasse]]</td>
-                    <td></td>
-                </tr>
-                </tfoot>
-            </table>
-        </div>
-        <section>
-            <container template="synthese"></container>
-        </section>
+            </tbody>
+            <tfoot>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.eleve')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleEleve]]</td>
+                <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.classe')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleClasse]]</td>
+                <td></td>
+            </tr>
+            </tfoot>
+        </table>
     </div>
-
 </article>
+
+    <section>
+        <container template="synthese"></container>
+    </section>
+
+
