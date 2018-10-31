@@ -1,4 +1,4 @@
-import {notify, idiom as lang, ng, template, model, Behaviours} from 'entcore';
+import {notify, idiom as lang, ng, template, model, Behaviours, moment} from 'entcore';
 import * as utils from '../utils/teacher';
 import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
@@ -6,7 +6,6 @@ import {Eleve, evaluations, Utils} from "../models/teacher";
 import {SyntheseBilanPeriodique} from "../models/teacher/SyntheseBilanPeriodique";
 import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 import {AvisConseil} from "../models/teacher/AvisConseil";
-
 import http from "axios";
 
 declare let _:any;
@@ -22,14 +21,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         template.close('graphDomaine');
         template.close('synthese');
         utils.safeApply($scope);
+
+        let finSaisieBilan : boolean;
         $scope.critereIsEmpty = true;
         $scope.showHistoric = false;
         $scope.showAvisOrientation = false;
 
         $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
-        $scope.canUpdateRetardAndAbscence = model.me.hasWorkflow(
-            Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbscence);
-
         $scope.displayBilanPeriodique = async() => {
             if(model.me.type === 'PERSRELELEVE'){
                 $scope.critereIsEmpty = !($scope.search.periode !== '*' && $scope.search.periode !== null && $scope.search.periode !== undefined);
@@ -70,13 +68,15 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('graphMatiere');
             template.close('graphDomaine');
             template.close('synthese');
-            $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                "canSaisiSyntheseBilanPeriodique" );
+
             if(model.me.type === 'PERSRELELEVE'){
-                $scope.saveAppMatierePosiBilanPeriodique = false;
+                $scope.canSaveAppMatierePosiBilanPeriodique = false;
+                $scope.canSaisiSyntheseBilanPeriodique = false;
             }else{
                 $scope.canSaveAppMatierePosiBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                    "canSaveAppMatierePosiBilanPeriodique");
+                    "canSaveAppMatierePosiBilanPeriodique") && finSaisieBilan;
+                $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
+                    "canSaisiSyntheseBilanPeriodique" ) && finSaisieBilan;
             }
             $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                 $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
@@ -102,7 +102,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('graphDomaine');
             template.close('synthese');
             $scope.canUpdateAppreciations = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                "canUpdateAppreciations");
+                "canUpdateAppreciations") && finSaisieBilan;
             utils.safeApply($scope);
             template.open('projet', 'enseignants/bilan_periodique/display_projets');
             $scope.getElementsBilanBilanPeriodique("isBilanPeriodique");
@@ -118,7 +118,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('graphMatiere');
             template.close('graphDomaine');
             template.close('synthese');
-            $scope.canSaisiAppreciationCPE = Utils.canSaisiAppreciationCPE();
+            $scope.canUpdateRetardAndAbscence = model.me.hasWorkflow(
+                Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbscence) && finSaisieBilan;
+
+            $scope.canSaisiAppreciationCPE = Utils.canSaisiAppreciationCPE() && finSaisieBilan;
             let getEvenements = _.isEmpty($scope.search.eleve.evenements);
             if (!getEvenements) {
                 $scope.search.eleve.evenement = _.findWhere($scope.search.eleve.evenements,
@@ -200,7 +203,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('vie-scolaire');
             $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
             $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                "canSaisiSyntheseBilanPeriodique");
+                "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id, $scope.search.periode.id_type);
             await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();
             utils.safeApply($scope);
@@ -251,6 +254,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.changeContent = async function () {
             $scope.informations.eleve = $scope.search.eleve;
             if (!$scope.critereIsEmpty) {
+                finSaisieBilan = !_.find($scope.search.classe.periodes.all, {id_type : $scope.search.periode.id_type}).publication_bulletin;
                 if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve,
                         $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
