@@ -146,7 +146,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 ordre: 0,
                 periode: $scope.getI18nPeriode({id: null})
             };
-            if(!_.isEmpty($scope.search.eleve.evenements)) {
+            if(!_.isEmpty($scope.search.eleve.evenements)
+                && ($scope.search.eleve.evenements.length > $scope.filteredPeriode.length)) {
                 // On enlève la ligne correspondant à l'année pour la recalculer si on doit la mettre à jour
                 $scope.search.eleve.evenements.pop();
 
