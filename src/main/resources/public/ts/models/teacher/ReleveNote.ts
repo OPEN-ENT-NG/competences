@@ -611,7 +611,7 @@ export class ReleveNote extends  Model implements IModel {
             summ++;
         });
 
-        return (summ === 0) ? 0 : parseFloat(Math.round(res / summ).toFixed(2));
+        return (summ === 0) ? 0 : parseFloat((res / summ).toFixed(2));
     }
 
     moyenneNote(notes): number {
