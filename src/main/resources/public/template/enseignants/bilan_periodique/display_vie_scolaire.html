@@ -91,9 +91,9 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="evenement in search.eleve.evenements | orderBy:'ordre' ">
-                    <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]">
+                    <td class="width-td-20" data-label="[[translate('viescolaire.utils.periode')]]">
                         [[evenement.periode]] </td>
-                    <td class="newsizeTD"
+                    <td class="width-td-0"
                         data-label="[[translate('viescolaire.retards')]]">
                     <span ng-if="evenement.retard !== undefined">
                         [[evenement.retard]]
@@ -102,7 +102,7 @@
                         [[0]]
                     </span>
                     </td>
-                    <td class="newsizeTD" data-label="[[translate('viescolaire.abs.justified')]]" >
+                    <td class="width-td-0" data-label="[[translate('viescolaire.abs.justified')]]" >
                      <span ng-if="evenement.abs_just !== undefined">
                         [[evenement.abs_just]]
                         </span>
@@ -111,7 +111,7 @@
                     </span>
                         <i18n>half.days</i18n>
                     </td>
-                    <td class="newsizeTD" data-label="[[translate('viescolaire.abs.not.justified')]]" >
+                    <td class="width-td-0" data-label="[[translate('viescolaire.abs.not.justified')]]" >
                     <span ng-if="evenement.abs_non_just !== undefined">
                         [[evenement.abs_non_just]]
                         </span>
@@ -119,7 +119,7 @@
                         [[0]]
                     </span>
                         <i18n>half.days</i18n></td>
-                    <td class="newsizeTD" data-label="[[translate('viescolaire.nb.courses.lost')]]" >
+                    <td class="width-td-0" data-label="[[translate('viescolaire.nb.courses.lost')]]" >
                     <span ng-if="evenement.abs_totale_heure !== undefined">
                         [[evenement.abs_totale_heure]]
                         </span>

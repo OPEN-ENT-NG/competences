@@ -32,19 +32,15 @@
 
             <content ng-if="!critereIsEmpty" class="twelve twelve-mobile cell right">
 
-                    <div class="content-suivi-eleve twelve-mobile ten">
+                    <div class="content-suivi-eleve twelve-mobile">
 
-                        <article class="twelve" sticky offset="64" ng-hide="me.type === 'PERSRELELEVE'">
+                        <article class="twelve" style="width: auto; margin-top: 5px;" sticky offset="64" ng-hide="me.type === 'PERSRELELEVE'">
                             <h2 class="align-center">
                                 <i class="previous cell" ng-click="incrementEleve(-1)"></i>
                                 [[informations.eleve.lastName]] [[informations.eleve.firstName]]
                                 <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
                             </h2>
                         </article>
-
-                        <!--<div class="cell ten twelve-mobile">-->
-                            <!--<h2><i18n>evaluations.bilan.periodique</i18n> [[getI18nPeriode(search.periode)]]</h2>-->
-                        <!--</div>-->
 
                         <div class="twelve tabs vertical-spacing-twice heading-tabs">
                             <header ng-class="{selected : selected.suiviAcquis}"

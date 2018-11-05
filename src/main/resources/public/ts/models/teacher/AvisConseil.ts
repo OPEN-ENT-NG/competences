@@ -51,13 +51,17 @@ export class AvisConseil extends Model {
     }
 
     async saveAvisConseil (idAvisClasse) {
-        this.id_avis_conseil_bilan = idAvisClasse.id;
-        if (this.id_avis_conseil_bilan !== undefined) {
+        this.id_avis_conseil_bilan = idAvisClasse;
+        if (this.id_avis_conseil_bilan !== undefined && this.id_avis_conseil_bilan !== null) {
             try {
                 await http.post(this.api.POST_AVIS_CONSEIL, this.toJSON());
             } catch (e) {
                 notify.error('evaluations.avis.conseil.bilan.periodique.save.error');
             }
+        }
+        else {
+            this.id_avis_conseil_bilan = -1;
+            await http.delete(`/competences/avis/conseil?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}`);
         }
     }
 

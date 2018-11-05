@@ -4,10 +4,12 @@ import com.mongodb.util.JSON;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.security.AccessAppreciationFilter;
 import fr.openent.competences.security.utils.AccessThematiqueBilanPeriodique;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
+import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
@@ -252,6 +254,26 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                 }
                             });
                 } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+    @Delete("/avis/conseil")
+    @ApiDoc("Supprimer un avis du conseil de classe")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    public void deleteAvisConseil(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if(user != null){
+                    avisConseilService.deleteAvisConseil(
+                            Long.parseLong(request.params().get("id_periode")),
+                            request.params().get("id_eleve"),
+                            defaultResponseHandler(request));
+                }else {
                     log.debug("User not found in session.");
                     Renders.unauthorized(request);
                 }

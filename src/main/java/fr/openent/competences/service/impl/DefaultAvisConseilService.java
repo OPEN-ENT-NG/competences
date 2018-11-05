@@ -36,6 +36,20 @@ public class DefaultAvisConseilService {
             Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
         }
 
+    public void deleteAvisConseil (Long idTypePeriode, String idEleve, Handler<Either<String, JsonObject>> handler){
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "";
+
+        query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".avis_conseil_de_classe " +
+                " WHERE id_eleve = ?" +
+                " AND id_periode = ? ";
+        params.add(idEleve)
+                .add(idTypePeriode);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
     public void getAvisConseil (String idEleve, Long idPeriode, Handler<Either<String, JsonObject>> handler) {
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();

@@ -347,6 +347,7 @@ body.evaluations {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
         border:none;
+        border-bottom: 1px solid #ccc
       }
       .tableReleveStats {
         box-shadow: 0 0 0px 0 grey !important;
@@ -3051,21 +3052,25 @@ body.evaluations {
   }
 
 
-  .newsizeTD {
+  .width-td-0 {
     width: 0% !important;
     text-align: center !important;
   }
 
-  .differentSizeTD {
+  .width-td-20 {
     width: 20% !important;
     text-align: center !important;
+  }
+
+  .responsive-table.width-td-10 table td {
+    width: 10% !important;
   }
 
   .titleCenter {
     text-align: center !important;
   }
 
-  .aligndiff {
+  .text-align-left {
     text-align: left !important;
   }
 
@@ -3123,6 +3128,7 @@ body.evaluations {
   }
 
   //suivi des acquis
+
   .suiviDesAcquis{
     th{
       padding: 5px 10px !important;
@@ -3147,6 +3153,7 @@ body.evaluations {
       margin-bottom: 0px;
       overflow-y: auto;
       text-align: justify;
+      padding: 7px;
     }
     .element{
       text-align: justify;
@@ -3160,6 +3167,10 @@ body.evaluations {
     .selectable-list{
       margin: 0px;
     }
+  }
+
+  .margin-zero {
+    margin: 0;
   }
 
 }

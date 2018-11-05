@@ -23,7 +23,9 @@
     </div>
     <section ng-if="evaluations.structures.all.length > 1">
         <label class="select">
-            <select ng-model="evaluations.structure" ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"  ng-change="switchEtablissementSuivi();"></select>
+            <select ng-model="evaluations.structure"
+                    ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
+                    ng-change="switchEtablissementSuivi();"></select>
         </label>
     </section>
     <section>
@@ -71,9 +73,8 @@
         <label class="select">
             <select ng-model="search.idAvisClasse"
                     ng-options="avis.id as avis.libelle for avis in elementBilanPeriodique.avisConseil.avis | filter:filterAvis(1)"
-                    ng-change="elementBilanPeriodique.avisConseil.saveAvisConseil(search.idAvisClasse);"
-                    ng-disabled="false">
-                <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
+                    ng-change="elementBilanPeriodique.avisConseil.saveAvisConseil(search.idAvisClasse);">
+                <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
             </select>
         </label>
     </section>

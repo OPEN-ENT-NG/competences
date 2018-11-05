@@ -3694,7 +3694,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (texte !== undefined) {
                 if (texte.length <= $scope.MAX_CHAR_APPRECIATION_LENGTH) {
                     $scope.releveNote.saveElementProgramme(texte).then(() => {
-                        $scope.getReleve();
+                        $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
+                        template.close('lightboxContainer');
+                        utils.safeApply($scope);
+                        template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
                     });
                     $scope.opened.lightbox = false;
                 }

@@ -109,7 +109,7 @@ routes.define(function($routeProvider){
         .when('/remplacements/list',{action:'listRemplacements'})
         .when('/remplacement/create',{action:'createRemplacements'})
         .when('/projets',{action:'displayEpiApParcours'})
-        .when('/bilanperiodique',{action:'displayBilanPeriodique'})
+        .when('/conseil/de/classe',{action:'displayBilanPeriodique'})
         .when('/export',{action:'export'})
         .when('/disabled', {action : 'disabled'})
         .when('/bulletin', {action : 'bulletin'})

@@ -29,17 +29,17 @@
         </thead>
         <tbody>
         <tr ng-repeat="historique in informations.eleve.historiques">
-            <td class="differentSizeTD" data-label="[[translate('viescolaire.utils.periode')]]"> [[historique.periode]] </td>
-            <td class="newsizeTD" ng-class="{changedAverage: historique.moyenneFinale !== ''}"
+            <td class="width-td-20" data-label="[[translate('viescolaire.utils.periode')]]"> [[historique.periode]] </td>
+            <td class="width-td-0" ng-class="{changedAverage: historique.moyenneFinale !== ''}"
                 data-label="[[translate('student')]]" >
                 [[(historique.moyenneFinale !== "")? historique.moyenneFinale : historique.moyenne]]
             </td>
-            <td class="newsizeTD" data-label="[[translate('viescolaire.utils.classe')]]" >[[historique.moyenneClasse]] </td>
-            <td class="newsizeTD" data-label="[[translate('evaluations.releve.positionnement')]]"
+            <td class="width-td-0" data-label="[[translate('viescolaire.utils.classe')]]" >[[historique.moyenneClasse]] </td>
+            <td class="width-td-0" data-label="[[translate('evaluations.releve.positionnement')]]"
                 ng-class="{changedAverage: historique.positionnementFinal !== ''}">
                 [[(historique.positionnementFinal !== "")? historique.positionnementFinal : historique.positionnement]]
             </td>
-            <td class="newsizeTD aligndiff" data-label="[[translate('viescolaire.utils.appreciation')]]" > [[historique.appreciation]] </td>
+            <td class="width-td-0 text-align-left" data-label="[[translate('viescolaire.utils.appreciation')]]" > [[historique.appreciation]] </td>
         </tr>
         </tbody>
     </table>
