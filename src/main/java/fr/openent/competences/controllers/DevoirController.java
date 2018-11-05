@@ -642,6 +642,61 @@ public class DevoirController extends ControllerHelper {
         }
     }
 
+    @Get("/devoirs/service")
+    @ApiDoc("Récupère la liste des devoirs liés à un service")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getDevoirsService(HttpServerRequest request) {
+
+        String idEnseignant = null, idMatiere = null, idGroupe = null;
+
+        if (request.params().contains("id_groupe")) {
+            idGroupe = request.getParam("id_groupe");
+        }
+        if (request.params().contains("id_matiere")) {
+            idMatiere = request.getParam("id_matiere");
+            }
+        if (request.params().contains("id_enseignant")) {
+            idEnseignant = request.getParam("id_enseignant");
+        }
+
+        if(idGroupe != null && idMatiere != null && idEnseignant != null) {
+            devoirsService.listDevoirsService(idEnseignant, idMatiere, idGroupe,
+                    arrayResponseHandler(request));
+        } else {
+            badRequest(request);
+        }
+    }
+
+    @Put("/devoirs/service")
+    @ApiDoc("Mets à jour les devoirs liés à un service")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void updateDevoirsService(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject entries) {
+                if(entries.containsKey("id_devoirs") && entries.containsKey("id_matiere")) {
+                    devoirsService.updateDevoirsService(entries.getJsonArray("id_devoirs"), entries.getString("id_matiere"), arrayResponseHandler(request));
+                } else {
+                    badRequest(request);
+                }
+            }
+        });
+    }
+
+    @Put("/devoirs/delete")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessEvaluationFilter.class)
+    @ApiDoc("Supprime des devoir")
+    public void removeMultiple(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, entries -> {
+            if (!entries.containsKey("id_devoirs")) {
+                badRequest(request);
+            } else {
+                devoirsService.delete(entries.getJsonArray("id_devoirs"), notEmptyResponseHandler(request));
+            }
+        });
+    }
+
     // Methode permettant de calculer le nombre de note(s)
     private void updatePercentageWithNotes (final List<String>  idEleves, final long idDevoir, final UserInfos user,
                                             final String  idGroupe,

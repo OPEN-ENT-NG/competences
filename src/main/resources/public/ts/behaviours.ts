@@ -21,6 +21,7 @@ import {itemsCompetences} from './sniplets/itemsCompetences';
 import {linkGroupCycle} from "./sniplets/linkGroupCycle";
 import {visibilityDNB} from "./sniplets/visibilityDNB";
 import {bilanPeriodique} from "./sniplets/bilanPeriodique";
+import {paramServices} from './sniplets/paramServices'
 
 Behaviours.register('competences', {
     rights: {
@@ -36,11 +37,12 @@ Behaviours.register('competences', {
             canUpdateRetardAndAbscence:'fr.openent.competences.controllers.UtilsController|insertRetardOrAbscence',
             bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createElementBilanPeriodique",
             accessProjets: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationSaisieProjet",
-            canUpdateAppreciations: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciation",
+            canUpdateAppreciations: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationBilanPeriodique",
             saveCompetenceNiveauFinal: "fr.openent.competences.controllers.CompetenceNoteController|saveCompetenceNiveauFinal",
             canSaisiSyntheseBilanPeriodique: "fr.openent.competences.controllers.BilanPeriodiqueController|createOrUpdateSyntheseBilanPeriodique",
             canSaisiAppreciationCPE: "fr.openent.competences.controllers.BilanPeriodiqueController|createOrUpdateAppreciationCPE",
-            canSaveAppMatierePosiBilanPeriodique: "fr.openent.competences.controllers.NoteController|saveAppreciationMatiereAndPositionnement"
+            canSaveAppMatierePosiBilanPeriodique: "fr.openent.competences.controllers.NoteController|saveAppreciationMatiereAndPositionnement",
+            paramServices: "fr.openent.competences.controllers.ServicesConfigurationController|createService"
         },
         resource: {}
     },
@@ -50,6 +52,7 @@ Behaviours.register('competences', {
         visibilityDNB: visibilityDNB,
         itemsCompetences: itemsCompetences,
         linkGroupCycle: linkGroupCycle,
-        epi_ap_parcours: bilanPeriodique
+        epi_ap_parcours: bilanPeriodique,
+        paramServices : paramServices
     }
 });

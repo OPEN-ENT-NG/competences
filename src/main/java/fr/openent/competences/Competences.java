@@ -29,7 +29,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.eventbus.DeliveryOptions;
 
-import java.math.BigInteger;
+import io.vertx.core.eventbus.DeliveryOptions;
 
 public class Competences extends BaseServer {
 
@@ -58,6 +58,8 @@ public class Competences extends BaseServer {
     public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
     public static final String CYCLE_TABLE = "cycle";
     public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
+    public static final String SERVICES_TABLE = "services";
+    public static final String MODALITES_TABLE = "modalites";
     public static final String REL_DEVOIRS_GROUPES = "rel_devoirs_groupes";
     public static final String COMPETENCES_DEVOIRS = "competences_devoirs";
     public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
@@ -96,6 +98,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_NOTES_UPDATE = "eval_updateNote";
     public static final String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
     public static final String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
+    public static final String SCHEMA_SERVICE = "eval_service";
     public static final String DEVOIR_TABLE = "devoirs";
     public static final String TRANSITION_TABLE = "transition";
     public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
@@ -107,6 +110,7 @@ public class Competences extends BaseServer {
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
     public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
+    public static final String PARAM_SERVICES_RIGHT = "competences.paramServices";
     public static final String CAN_UPDATE_BFC_SYNTHESE_RIGHT = "competences.canUpdateBFCSynthese";
     public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
     public static final String CAN_UPDATE_RETARDS_AND_ABSENCES = "competences.canUpdateRetardsAndAbsences";
@@ -151,11 +155,13 @@ public class Competences extends BaseServer {
         final EventBus eb = getEventBus(vertx);
 
 		addController(new CompetencesController());
-		addController(new AnnotationController());
+        addController(new ServicesController());
+        addController(new AnnotationController());
 		addController(new AppreciationController());
 		addController(new BFCController(eb));
 		addController(new CompetenceController(eb));
 		addController(new CompetenceNoteController(eb));
+		addController(new ModaliteController());
 
 
         // devoir controller

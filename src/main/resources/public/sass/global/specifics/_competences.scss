@@ -282,7 +282,6 @@ body.evaluations {
     .testAlignLeft {
       text-align: left !important;
     }
-
   }
 
   .pannel-in-cell {
@@ -3333,4 +3332,63 @@ body.evaluations {
     margin-right: 15px;
   }
 
+  &.paramServices {
+
+    .selectable-list {
+      width: 80%;
+      height: 100%;
+      margin: auto;
+    }
+
+    .serviceList {
+      height: 50px;
+
+      & > * {
+        vertical-align: middle;
+        display: inline-block;
+      }
+
+      & > label:not(.select) {
+        text-align: center
+      }
+    }
+
+    .delete {
+      @include fonticon;
+      font-size: 15px;
+      color: $red;
+      font-weight: 300;
+      opacity: 0.8;
+      border: none;
+      background-color: inherit;
+      &::after {
+        content: '\e866';
+      }
+    }
+
+    .lightboxCreate, .lightboxUpdate {
+      margin: 20px;
+    }
+
+    .lightboxCreate > .row:last-child > * {
+      display: inline-block;
+    }
+
+    .lightboxUpdate > .row > * {
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .filterButton {
+
+      & > * {
+        margin : 0 10px 15px;
+      }
+
+      & > input {
+        font-size: 1em;
+        font-style: italic;
+      }
+    }
+  }
 }

@@ -362,7 +362,7 @@ public class DefaultUtilsService  implements UtilsService {
             if (list.getValue(i) instanceof JsonObject) {
                 recipient.add(list.getJsonObject(i));
             } else {
-                    recipient.add(list.getValue(i));
+                recipient.add(list.getValue(i));
             }
         }
 
@@ -691,27 +691,25 @@ public class DefaultUtilsService  implements UtilsService {
                 }));
     }
 
-    public void insertEvernement (String idEleve, String colonne, Long idPeriode, Long value,
-                                  Handler<Either<String, JsonArray>> handler) {
+    public void insertEvernement(String idEleve, String colonne, Long idPeriode, Long value,
+                                 Handler<Either<String, JsonArray>> handler) {
 
         JsonArray valideColonne = new JsonArray().add("abs_totale").add("abs_totale_heure").add("abs_non_just")
-        .add("abs_non_just_heure").add("abs_just").add("abs_just_heure").add("retard");
-        if(! valideColonne.contains(colonne)) {
+                .add("abs_non_just_heure").add("abs_just").add("abs_just_heure").add("retard");
+        if (!valideColonne.contains(colonne)) {
             String message = I18n.getInstance().translate("viescolaire.no.column.is.named",
                     I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-            log.error(" insertEvernement | " + message );
+            log.error(" insertEvernement | " + message);
             handler.handle(new Either.Left<>(message));
-        }
-        else {
+        } else {
             if (idEleve == null) {
                 String message = " insertEvenement | idEleve is null ";
                 log.error(message);
                 handler.handle(new Either.Left<>(message));
-            }
-            else {
+            } else {
                 StringBuilder query = new StringBuilder()
                         .append(" INSERT INTO viesco.absences_et_retards( id_periode, id_eleve, ")
-                        .append( colonne + " )")
+                        .append(colonne + " )")
                         .append(" VALUES ")
                         .append(" (?, ?, ?) ")
                         .append(" ON CONFLICT (id_periode, id_eleve) ")
@@ -843,5 +841,72 @@ public class DefaultUtilsService  implements UtilsService {
             }
             return sortedJsonArray;
         }
+    }
+
+    public JsonObject findWhere(JsonArray collection, JsonObject oCriteria) {
+
+        Integer matchNeeded = oCriteria.size();
+        Integer matchFound = 0;
+
+        for (Object o : collection) {
+            JsonObject object = (JsonObject) o;
+            for (Map.Entry<String, Object> criteriaValue : oCriteria.getMap().entrySet()) {
+                if (object.containsKey(criteriaValue.getKey()) && object.getValue(criteriaValue.getKey()).equals(criteriaValue.getValue())) {
+                    matchFound++;
+                    if (matchFound.equals(matchNeeded)) {
+                        return object;
+                    }
+                }
+            }
+            matchFound = 0;
+        }
+        return null;
+    }
+
+    public JsonArray where(JsonArray collection, JsonObject oCriteria) {
+        JsonArray loopCollection = new JsonArray(new ArrayList(collection.getList()));
+        JsonArray result = new JsonArray();
+        JsonObject found;
+
+        do {
+            found = findWhere(loopCollection, oCriteria);
+            if(found != null) {
+                loopCollection.remove(found);
+                result.add(found);
+            }
+        }
+        while(found != null);
+
+        return result;
+    }
+
+    public JsonArray pluck(JsonArray collection, String key) {
+        JsonArray result = new JsonArray();
+
+        for(Object o : collection) {
+            JsonObject castedO = (JsonObject) o;
+            if(castedO.containsKey(key)) {
+                result.add(castedO.getValue(key));
+            }
+        }
+
+        return result;
+    }
+
+    public JsonArray flatten(JsonArray collection, String keyToFlatten) {
+        JsonArray result = new JsonArray();
+        for (Object o : collection) {
+            JsonObject castedO = (JsonObject) o;
+            if (castedO.containsKey(keyToFlatten)) {
+                JsonArray arrayToFlatten = castedO.getJsonArray(keyToFlatten);
+                for (Object item : arrayToFlatten) {
+                    JsonObject newObject = new JsonObject(new HashMap<>(castedO.getMap()));
+                    newObject.remove(keyToFlatten);
+                    newObject.put(keyToFlatten, item);
+                    result.add(newObject);
+                }
+            }
+        }
+        return result;
     }
 }

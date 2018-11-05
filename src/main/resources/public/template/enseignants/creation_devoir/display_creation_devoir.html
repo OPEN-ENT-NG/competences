@@ -77,7 +77,10 @@
 
                                     <div class="three cell twelve-mobile">
                                         <label class="select twelve-mobile" ng-class="{disabled : matieresFiltered.length == 0}">
-                                            <select ng-model="devoir.id_matiere" ng-disabled="matieresFiltered.length == 0" ng-disabled="devoir.idEtablissement === undefined" ng-change="selectedMatiere(devoir)">
+                                            <select ng-model="devoir.id_matiere"
+                                                    ng-disabled="matieresFiltered.length == 0"
+                                                    ng-disabled="devoir.idEtablissement === undefined"
+                                                    ng-change="selectedMatiere(devoir)">
                                                 <option ng-repeat="matiere in matieresFiltered = (matieres.all | getMatiereClasse:devoir.id_groupe:classes:search) | unique:'name'" ng-selected="matiere.id === devoir.id_matiere" value="[[matiere.id]]">[[matiere.name]]</option>
                                             </select>
                                         </label>

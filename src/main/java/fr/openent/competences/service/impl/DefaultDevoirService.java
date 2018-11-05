@@ -1329,4 +1329,42 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
     }
+
+    @Override
+    public void listDevoirsService(String idEnseignant, String idMatiere, String idGroupe, Handler<Either<String,JsonArray>> handler) {
+        String query = "SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe" +
+                " FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs" +
+                " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel_devoirs_groupes" +
+                " ON devoirs.id = rel_devoirs_groupes.id_devoir" +
+                " WHERE owner=? AND id_matiere=? AND id_groupe = ?";
+
+        JsonArray values = new JsonArray().add(idEnseignant).add(idMatiere).add(idGroupe);
+
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void updateDevoirsService(JsonArray ids, String idMatiere, Handler<Either<String, JsonArray>> handler) {
+        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE
+                + " SET id_matiere = ? WHERE id IN " + Sql.listPrepared(ids.getList());
+
+        JsonArray values = new JsonArray().add(idMatiere);
+        for(Object o : ids) {
+            values.add(o);
+        }
+
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void delete(JsonArray ids, Handler<Either<String, JsonObject>> handler) {
+        String query = "DELETE FROM " + this.resourceTable + " WHERE id IN " + Sql.listPrepared(ids.getList());
+        JsonArray values = new JsonArray();
+
+        for(Object o: ids) {
+            values.add(o);
+        }
+
+        Sql.getInstance().prepared(query, values, SqlResult.validRowsResultHandler(handler));
+    }
 }

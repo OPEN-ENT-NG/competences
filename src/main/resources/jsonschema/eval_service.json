@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "id_matiere": {
+      "type": "string"
+    },
+    "id_enseignant": {
+      "type": "string"
+    },
+    "id_groupe": {
+      "type": "string"
+    },
+    "id_etablissement": {
+      "type": "string"
+    },
+    "name_matiere": {
+      "type": "string"
+    },
+    "modalite": {
+      "type": "string"
+    },
+    "evaluable": {
+      "type": "boolean"
+    },
+    "order": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "id_matiere",
+    "id_enseignant",
+    "id_groupe"
+  ]
+}

@@ -20,8 +20,10 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.NoteService;
+import fr.openent.competences.service.ServicesService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultNoteService;
+import fr.openent.competences.service.impl.DefaultServicesService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.webutils.Either;
@@ -38,10 +40,12 @@ public class EventBusController extends ControllerHelper {
 
     private UtilsService utilsService;
     private NoteService noteService;
+    private ServicesService servicesService;
 
     public EventBusController() {
         utilsService = new DefaultUtilsService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
+        servicesService = new DefaultServicesService();
     }
 
     @BusAddress("competences")
@@ -66,6 +70,10 @@ public class EventBusController extends ControllerHelper {
             break;
             case "note": {
                 noteBusService(method, message);
+            }
+            break;
+            case "service": {
+                serviceBusService(method, message);
             }
             break;
         }
@@ -113,6 +121,37 @@ public class EventBusController extends ControllerHelper {
                         convertJsonArrayToStringArray(idEleves),
                         convertJsonArrayToLongArray(idDevoirs),
                         getJsonArrayBusResultHandler(message));
+            }
+            break;
+            default: {
+                message.reply(getErrorReply("Method not found"));
+            }
+        }
+    }
+
+    private void serviceBusService(String method, Message<JsonObject> message) {
+        switch (method) {
+            case "getServices": {
+                String idStructure = message.body().getString("idStructure");
+                JsonArray aIdEnseignant = message.body().getJsonArray("aIdEnseignant");
+                JsonArray aIdMatiere = message.body().getJsonArray("aIdMatiere");
+                JsonArray aIdGroupe = message.body().getJsonArray("aIdGroupe");
+
+                JsonObject oService = new JsonObject().put("evaluable", true);
+
+                if(aIdGroupe != null) {
+                    oService.put("id_groupe", aIdGroupe);
+                }
+
+                if(aIdEnseignant != null) {
+                    oService.put("id_enseignant", aIdEnseignant);
+                }
+
+                if(aIdMatiere != null) {
+                    oService.put("id_matiere", aIdMatiere);
+                }
+
+                servicesService.getServices(idStructure, oService, getJsonArrayBusResultHandler(message));
             }
             break;
             default: {

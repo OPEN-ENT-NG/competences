@@ -1,0 +1,193 @@
+<div class="evaluations-sniplet paramServices">
+    <div id="structure-loader" class="overlay" ng-show="displayMessageLoader">
+        <div>
+            <h4 class="content-loader">Chargement en cours...</h4>
+        </div>
+    </div>
+
+    <div class="twelve twelve-mobile">
+
+        <h3>
+            <i18n>evaluation.service.title</i18n>
+        </h3>
+
+        <div class="twelve cell filterButton twelve-mobile">
+            <input type="text" ng-model="search" placeholder="" class="nine">
+            <button class="right-magnet two" ng-click="openCreateLightbox()">
+                <i18n>evaluation.service.lightboxes.create</i18n>
+            </button>
+        </div>
+
+        <div class="twelve tabs vertical-spacing-twice heading-tabs">
+            <header class="horizontal-spacing-twice"
+                    ng-repeat="header in headers"
+                    ng-class="{selected: header.isSelected}"
+                    ng-click="updateFilterEvaluable(header)">
+                <div  class="horizontal-spacing">
+                    <span>[[translate(header.name)]]</span>
+                </div>
+            </header>
+        </div>
+
+        <div class="row">
+            <div class="two cell">
+                <ul class="selectable-list">
+                    <li ng-repeat="type in typeGroupes"
+                        ng-class="{selected : type.isSelected}"
+                        ng-click="type.isSelected = !type.isSelected">
+                        <span>[[translate(type.name)]]</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="ten cell">
+                <div class="row">
+                    <h4 class="[[columns.delete.size]] cell-indent cell">[[translate(columns.delete.name)]]</h4>
+                    <h4 class="[[columns.matiere.size]] cell-indent cell">[[translate(columns.matiere.name)]]</h4>
+                    <h4 class="[[columns.classe.size]] cell-indent cell">[[translate(columns.classe.name)]]</h4>
+                    <h4 class="[[columns.enseignant.size]] cell-indent cell">[[translate(columns.enseignant.name)]]</h4>
+                    <h4 class="[[columns.modalite.size]] cell-indent cell">[[translate(columns.modalite.name)]]</h4>
+                    <h4 class="[[columns.evaluable.size]] cell-indent cell">[[translate(columns.evaluable.name)]]</h4>
+                </div>
+
+                <div ng-repeat="service in (filteredItems = ( services | filter:filterEvaluable(headers) | filter:filterGroupe(columns.classe.data, typeGroupes) | filter:filterSearch(search))) track by $index " class="row serviceList">
+                    <label class="one checkbox">
+                        <i class="delete"
+                           ng-if="service.isManual"
+                           ng-click="deleteService(service)"></i>
+                        &nbsp;
+                    </label>
+                    <span class="[[columns.matiere.size]] ellipsis">[[service.nom_matiere]]</span>
+                    <span class="[[columns.classe.size]] ellipsis">[[service.nom_groupe]]</span>
+                    <span class="[[columns.enseignant.size]] ellipsis">[[service.nom_enseignant]]</span>
+                    <label class="select one">
+                        <select ng-model="service.modalite"
+                                ng-options="modalite for modalite in columns.modalite.data"
+                                ng-change="service.updateServiceModalite()"></select>
+                    </label>
+                    <label class="one checkbox">
+                        <input type="checkbox"
+                               ng-click="switchEvaluableService(service)"
+                               ng-model="service.evaluable"/>
+                        <span></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <lightbox show="lightboxes.create" on-close="lightboxes.create = false">
+        <h3>
+            <i18n>evaluation.service.lightboxes.create</i18n>
+        </h3>
+
+        <div class="lightboxCreate">
+            <div class="row">
+                <h4>
+                    <i18n>evaluation.service.columns.matiere</i18n>
+                </h4>
+                <label class="select">
+                    <select ng-model="service.id_matiere"
+                            ng-options="matiere.id as matiere.name for matiere in columns.matiere.data | orderBy:matiere.name">
+                    </select>
+                </label>
+            </div>
+
+            <div class="row">
+                <h4>
+                    <i18n>evaluation.service.columns.classGroup</i18n>
+                </h4>
+
+                <label class="select">
+                    <select ng-model="service.id_groupe"
+                            ng-options="classe.id as classe.name for classe in columns.classe.data | orderBy:classe.name"></select>
+                </label>
+            </div>
+            <div class="row">
+                <h4>
+                    <i18n>evaluation.service.columns.teacher</i18n>
+                </h4>
+
+                <label class="select">
+                    <select ng-model="service.id_enseignant"
+                            ng-options="enseignant.id as enseignant.displayName for enseignant in columns.enseignant.data | orderBy:enseignant.displayName"></select>
+                </label>
+            </div>
+            <div class="row">
+                <h4>
+                    <i18n>evaluation.service.columns.modalite</i18n>
+                </h4>
+
+
+                <label class="select">
+                    <select ng-model="::service.modalite"
+                            ng-options="modalite for modalite in columns.modalite.data | orderBy:modalite.libelle"></select>
+                </label>
+            </div>
+            <div class="row">
+                <h4>
+                    <i18n>evaluation.service.columns.evaluable</i18n>
+                </h4>
+
+                <label class="checkbox">
+                    <input type="checkbox"
+                           ng-model="::service.evaluable"/>
+                    <span></span>
+                </label>
+            </div>
+        </div>
+
+        <button class="marginFive magnet-right"
+                ng-class="{disabled: checkExist(service)}"
+                ng-click="createService(service)">
+            <i18n>viescolaire.utils.save</i18n>
+        </button>
+        <button ng-click="lightboxes.create = false" class="right-magnet cancel">
+            <i18n>viescolaire.utils.cancel</i18n>
+        </button>
+    </lightbox>
+
+    <lightbox show="lightboxes.switchEval" on-close="lightboxes.switchEval = false">
+        <h3>
+            <i18n>evaluation.service.lightboxes.switchEval</i18n>
+        </h3>
+
+        <div class="lightboxUpdate">
+
+            <h4 style="line-height: 20px">[[error]]</h4>
+
+            <div class="row">
+                <p>
+                    <i18n>evaluations.service.devoir.delete</i18n>
+                </p>
+                <input type="radio" ng-model="updateOrDelete" value="delete">
+            </div>
+
+            <div class="row">
+                <p>
+                    <i18n>evaluations.service.devoir.update</i18n>
+                </p>
+                <input type="radio" ng-model="updateOrDelete" value="update">
+            </div>
+
+            <div class="row" ng-if="updateOrDelete == 'update'">
+                <p style="padding-left: 20px">
+                    <i18n>evaluation.service.columns.matiere</i18n>
+                </p>
+                <label class="select">
+                    <select ng-model="matiere"
+                            ng-options="matiere.id as matiere.name for matiere in columns.matiere.data">
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <button class="marginFive magnet-right"
+                ng-click="doUpdateOrDelete(updateOrDelete, matiere, devoirs, service)">
+            <i18n>viescolaire.utils.save</i18n>
+        </button>
+        <button ng-click="lightboxes.switchEval = false" class="right-magnet cancel">
+            <i18n>viescolaire.utils.cancel</i18n>
+        </button>
+    </lightbox>
+</div>

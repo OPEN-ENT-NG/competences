@@ -311,7 +311,7 @@ export const bilanPeriodique = {
 
         syncMatieresEnseignant: async function (enseignant) {
             try {
-                let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}&isEnseignant=${true}`);
+                let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}`);
                 this.matieres = data.data;
                 utils.safeApply(this);
             } catch (e) {
