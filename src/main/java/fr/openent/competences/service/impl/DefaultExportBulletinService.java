@@ -818,7 +818,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                                         if (positionnementFinal != null) {
                                             matiere.put("positionnement", (positionnementFinal != null) ?
-                                                    (positionnementFinal.getInteger("moyenne")
+                                                    (positionnementFinal.getInteger("positionnementFinal")
                                                             + new Integer(1)) : "");
                                         }
                                         else {
