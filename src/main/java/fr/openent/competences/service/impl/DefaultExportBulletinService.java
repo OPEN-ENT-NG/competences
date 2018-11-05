@@ -30,6 +30,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private BilanPeriodiqueService bilanPeriodiqueService;
     private ElementBilanPeriodiqueService  elementBilanPeriodiqueService;
     private final DefaultAppreciationCPEService appreciationCPEService;
+    private final int MAX_SIZE_LIBELLE = 80;
 
     public DefaultExportBulletinService(EventBus eb) {
         this.eb = eb;
@@ -60,18 +61,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             getLibelle("evaluations.export.bulletin.communication.header.right.first"))
                     .put("communicationHeaderRightSecond",
                             getLibelle("evaluations.export.bulletin.communication.header.right.second"))
-                    .put("moyenneClasseLibelle", getLibelle("viescolaire.classe.moyenne"))
+                    .put("moyenneClasseLibelle", getLibelle("average.min.classe"))
                     .put("suiviElementLibelle",
                             getLibelle("evaluations.export.bulletin.element.programme.libelle"))
                     .put("suiviAcquisitionLibelle",
                             getLibelle("evaluations.export.bulletin.element.appreciation.libelle"))
-                    .put("positionementLibelle", getLibelle("evaluations.releve.positionnement"))
-                    .put("moyenneStudentLibelle", getLibelle("average") + " " + getLibelle("of.student"))
+                    .put("positionementLibelle", getLibelle("evaluations.releve.positionnement.min") + '*')
+                    .put("moyenneStudentLibelle", getLibelle("average.min.eleve"))
                     .put("bilanAcquisitionLibelle", getLibelle("viescolaire.suivi.des.acquis.libelle.export"))
                     .put("familyVisa", getLibelle("evaluations.export.bulletin.visa.libelle"))
                     .put("signature", getLibelle("evaluations.export.bulletin.date.name.visa.responsable"))
                     .put("bornAt", getLibelle("born.on"))
                     .put("classeOf", getLibelle("classe.of"))
+                    .put("footer", "*: " + getLibelle("evaluations.export.bulletin.legendPositionnement"))
 
                     // positionnement des options d'impression
                     .put("getResponsable", params.getBoolean("getResponsable"))
@@ -279,10 +281,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void sethasProject( JsonObject project, boolean value) {
-        boolean hasProject = project.getBoolean("hasProject");
-        if(hasProject == false){
-            hasProject = true;
+
+        if(project.getBoolean("hasProject") == value) {
+            return;
         }
+        else if (project.getBoolean("hasProject") != null) {
+            project.remove("hasProject");
+        }
+        project.put("hasProject", value);
     }
 
     @Override
@@ -722,6 +728,18 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+    private String troncateLibelle(String libelle) {
+
+        if(libelle == null) {
+            libelle = "";
+        }
+        else if (libelle.length() > MAX_SIZE_LIBELLE) {
+            libelle = libelle.substring(0, MAX_SIZE_LIBELLE);
+            libelle += "...";
+        }
+        return libelle;
+    }
+
     @Override
     public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
                                Handler<Either<String, JsonObject>> finalHandler ) {
@@ -797,18 +815,34 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                             + new Integer(1)) : "");
                                         }
                                         else {
-                                            matiere.put("positionnement", (positionnement != null) ?
-                                                    (positionnement.getInteger("moyenne")
-                                                            + new Integer(1)) : "");
+                                            Integer pos = positionnement.getInteger("moyenne");
+                                            String val = "";
+
+                                            if (pos != null && pos != -1) {
+                                                pos += new Integer(1);
+                                                val = pos.toString();
+                                            }
+                                            matiere.put("positionnement", val);
                                         }
+                                        String elementsProgramme = troncateLibelle(
+                                                matiere.getString("elementsProgramme"));
+
+                                        String app = "";
+
+                                        if(appreciation != null) {
+                                        app = troncateLibelle(
+                                                appreciation.getString("appreciation"));
+                                        }
+                                        matiere.put("elementsProgramme", elementsProgramme);
                                         matiere.put("moyenneClasse", (moyenneClasse != null) ?
                                                         moyenneClasse.getValue("moyenne") : "")
-                                                .put("appreciation", (appreciation != null) ?
-                                                         appreciation.getString("appreciation") : "");
+                                                .put("appreciation",app);
 
-                                    }
+                                        }
                                     eleveObject.put("suiviAcquis", suiviAcquis).put("hasSuiviAcquis",
                                             (suiviAcquis.size() > 0));
+
+
                                 }
                                 finalHandler.handle(new Either.Right<>(null));
                             }

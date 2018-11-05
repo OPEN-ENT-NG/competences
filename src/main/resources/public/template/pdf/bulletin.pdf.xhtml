@@ -18,8 +18,8 @@
             page-break-after: always;
         }
         .paddingFifty {
-            padding-left : 40px;
-            padding-right : 40px;
+            padding-left : 20px;
+            padding-right : 20px;
         }
 
         .page:last-child{
@@ -28,13 +28,13 @@
 
         img {
             width: auto;
-            height: 150px;
+            height: 110px;
             margin-bottom: 20px;
             margin-left: -2px;
         }
 
         h1 {
-            margin-top: 30px;
+            margin-top: 20px;
             padding: 5px;
             text-align: center;
             color: #FFFFFF;
@@ -94,14 +94,14 @@
         }
 
         .eleve {
-            padding: 10px;
+            padding: 5px;
             background-color: #e2f3fb;
-            min-height : 100px;
-        font-size: 14px;
+            min-height : 60px;
+            font-size: 14px;
         }
 
         .eleve > div {
-            margin: 5px 3px;
+            margin: 2px 1px;
             text-align: center;
         }
         .responsable {
@@ -111,7 +111,7 @@
             width: 32%;
             float: right;
             font-size: 14px;
-            min-height : 100px;
+            min-height : 60px;
         }
 
         .responsable > div {
@@ -151,21 +151,22 @@
             margin-top: 0%!important;
             padding-top: 5px;
             width: 67.5% !important;
-            min-height: 195px !important;
+            height: 45px !important;
         }
         .rightCommunication {
             margin-top: 0px;
-            min-height: 195px !important;
+            height: 45px !important;
         }
         .structure {
             display: inline-block;
-            height: 150px;
+            height: 90px;
             font-size: small;
             font-family: "Calibri", sans-serif;
         }
         .structure > p {
-            margin: 3px;
+            margin: 4px;
             margin-left : 5px;
+            margin-top : 0px;
         }
         @page{
             size : A4 ;
@@ -189,6 +190,16 @@
             padding-left: 2px;
             padding-right: 2px;
         }
+        .onePadding {
+            padding: 1px !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .emptyClass {
+            padding-top: 1px;
+            padding-bottom: 1px;
+            padding-right: 2px;
+        }
     </style>
 </head>
 <body>
@@ -196,7 +207,7 @@
 {{#eleves}}
 <div class="page">
 
-    <div style= "height: 180px;" class="paddingFifty">
+    <div style= "height: 130px;" class="paddingFifty">
         <img style="float:left;" src="img/education_nationale.png" alt="Logo"/>
         <div class="structure">
             {{#structureLibelle}}
@@ -224,7 +235,6 @@
                 {{/headTeachers}}
             </div>
             <div style="font-size: small;">{{classeOf}} {{classeName}}</div>
-            <br/>
         </div>
         {{/getResponsable}}
         {{#getResponsable}}
@@ -235,11 +245,10 @@
             <div style="font-size: small;">{{bornAt}} {{birthDateLibelle}}</div>
             <div style="font-size: small;">   {{headTeacherLibelle}}
                 {{#headTeachers}}
-                {{civility}} &nbsp; {{name}} <br/>
+                {{civility}} &nbsp; {{name}}
                 {{/headTeachers}}
             </div>
             <div style="font-size: small;">{{classeOf}} {{classeName}}</div>
-            <br/>
         </div>
         <div class="responsable">
             {{#responsableLibelle}}
@@ -270,31 +279,33 @@
 
         {{#suiviAcquis}}
         <tr>
-            <td class="left-align">
-                <p>{{libelleMatiere}}</p>
+            <td class="left-align emptyClass">
+                <span style="font-size: small; font-weight: bold">{{libelleMatiere}}</span><br/>
                 {{#teachers}}
-                <p style="color: black; font-size: smaller;">{{name}}</p>
+                <span style="color: black; font-size: smaller;">.{{name}}</span>
                 {{/teachers}}
             </td>
-            <td class="secondSuivi">{{elementsProgramme}}</td>
-            <td class="thirdSuivi">{{appreciation}}</td>
+            <td style="text-align: left;" class="secondSuivi onePadding">{{elementsProgramme}}</td>
+            <td style="text-align: left;" class="thirdSuivi onePadding">{{appreciation}}</td>
             {{#getMoyenneEleve}}
-            <td class="fourthSuivi">{{moyenneEleve}}</td>
+            <td style="font-size: smaller; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td class="fifthSuivi">{{moyenneClasse}}</td>
+            <td style="font-size: smaller;" class="fifthSuivi onePadding">{{moyenneClasse}}</td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td class="sixthSuivi">{{positionnement}}</td>
+            <td style="font-size: smaller; font-weight: bold" class="sixthSuivi onePadding">{{positionnement}}</td>
             {{/getPositionnement}}
         </tr>
         {{/suiviAcquis}}
     </table>
+    <span class="paddingFifty" style="font-size: xx-small ;position: absolute;top: 1034px;"> {{footer}}</span>
     {{/hasSuiviAcquis}}
 
     <div class="start">
         {{#showProjects}}
         {{#projects}}
+        {{#hasProject}}
         <h4 class="paddingFifty">{{libelle}}</h4>
         <table class="projets paddingFifty">
             {{#elements}}
@@ -329,6 +340,7 @@
             </tr>
             {{/elements}}
         </table>
+        {{/hasProject}}
         {{/projects}}
         {{/showProjects}}
 
@@ -336,7 +348,7 @@
         <h1 color= "green"> {{bilanAcquisitionLibelle}}</h1>
 
         <div class="paddingFifty">
-            <div style="background-color: #eef4d7 !important; min-height: 155px; font-size: small;" class="synthese">
+            <div style="background-color: #eef4d7 !important; min-height: 20px; font-size: small;" class="synthese">
                 {{syntheseBilanPeriodque}}
             </div>
         </div>

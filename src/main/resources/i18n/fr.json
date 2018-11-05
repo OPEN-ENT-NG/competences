@@ -479,6 +479,7 @@
   "evaluations.choose.student": "Veuillez choisir au moins un élève",
   "evaluations.choose.student.for.periode": "Désolé, les élèves choisis ne sont pas dans des classes correspondants au type de période choisi",
   "evaluations.export.bulletin.success":"Export réalisé avec succes",
+  "evaluations.export.bulletin.legendPositionnement": " 1 : Maîtrise insuffisante - 2 : Maîtrise fragile - 3 : Maîtrise satisfaisante - 4 : Très bonne maîtrise",
 
 
   "add.annotation":"Ajouter une annotation. Sélectionner 'Evaluer' pour enlever l'annotation.",
