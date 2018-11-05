@@ -18,6 +18,7 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
@@ -296,6 +297,7 @@ public class NoteController extends ControllerHelper {
                                             notesService.getCompetencesNotesReleve(
                                                     idEtablissement,
                                                     idClasse,
+                                                    null,
                                                     idMatiere,
                                                     (null != idPeriodeString)? Long.parseLong(idPeriodeString): null,
                                                     null,
@@ -1003,7 +1005,7 @@ public class NoteController extends ControllerHelper {
                                                     HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse) {
         // idClasse et typeClass à null car on récupère le positionnement quelque soit sa classe
         //On récupère le positionnement seulement par rapport à la matière
-        notesService.getCompetencesNotesReleve( idEtablissement,null, idMatiere,null,idEleve,
+        notesService.getCompetencesNotesReleve( idEtablissement,null,null, idMatiere,null,idEleve,
                 null, false,
                 new Handler<Either<String, JsonArray>>() {
                     @Override
@@ -1048,7 +1050,7 @@ public class NoteController extends ControllerHelper {
 
 
 
-    private void getDataGraph(final HttpServerRequest request) {
+    private void getDataGraph(final HttpServerRequest request, JsonArray groupIds) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 
             @Override
@@ -1061,6 +1063,7 @@ public class NoteController extends ControllerHelper {
                 final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
                 // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
                 notesService.getCompetencesNotesReleve(idEtablissement,idClasse,
+                        groupIds != null ? groupIds : null,
                         null,
                         idPeriode,
                         null,
@@ -1124,7 +1127,7 @@ public class NoteController extends ControllerHelper {
     }
 
 
-    private void getDataGraphDomaine(final HttpServerRequest request) {
+    private void getDataGraphDomaine(final HttpServerRequest request, JsonArray groupIds) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 
             @Override
@@ -1136,7 +1139,9 @@ public class NoteController extends ControllerHelper {
                 final String idPeriodeString = request.params().get("idPeriode");
 
                 // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
-                notesService.getCompetencesNotesReleve(idEtablissement, idClasse,
+                notesService.getCompetencesNotesReleve(idEtablissement,
+                        idClasse,
+                        groupIds != null ? groupIds : null,
                         null,
                         (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
                         null,
@@ -1190,7 +1195,34 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     //@ResourceFilter(AccessReleveFilter.class)
     public void getBilanPeriodiqueDataForGraph(final HttpServerRequest request) {
-        getDataGraph(request);
+        final String idClasse = request.params().get("idClasse");
+        Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections
+                        .JsonArray()
+                        .add(idClasse),
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(
+                            Either<String, JsonArray> responseQuerry) {
+                        //List qui contient la idClasse + tous les ids groupes
+                        // de la classe
+                        JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
+
+                        if (!responseQuerry.isRight()) {
+                            String error = responseQuerry.left().getValue();
+                            log.error(error);
+                            badRequest(request, error);
+                        } else {
+                            JsonArray idClasseGroups = responseQuerry.right().getValue();
+                            if (idClasseGroups != null) {
+                                idsGroups.addAll(idClasseGroups.getJsonObject(0)
+                                        .getJsonArray("id_groupes"));
+                            }else{
+                                idsGroups = null; //pas de groups pour la classe passee en parametre
+                            }
+                            getDataGraph(request, idsGroups);
+                        }
+                    }
+                });
     }
 
 
@@ -1199,7 +1231,38 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     //@ResourceFilter(AccessReleveFilter.class)
     public void getBilanPeriodiqueDomaineForGraph(final HttpServerRequest request) {
-        getDataGraphDomaine(request);
+
+        final String idClasse = request.params().get("idClasse");
+        Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections
+                        .JsonArray()
+                        .add(idClasse),
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(
+                            Either<String, JsonArray> responseQuerry) {
+                        //List qui contient la idClasse + tous les ids groupes
+                        // de la classe
+                        JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
+
+                        if (!responseQuerry.isRight()) {
+                            String error = responseQuerry.left().getValue();
+                            log.error(error);
+                            badRequest(request, error);
+                        } else {
+                            JsonArray idClasseGroups = responseQuerry.right().getValue();
+                            if (idClasseGroups != null && idClasseGroups.size()> 0 ) {
+                                idsGroups.addAll(idClasseGroups.getJsonObject(0)
+                                        .getJsonArray("id_groupes"));
+                            }else{
+                                idsGroups = null; //pas de groups pour la classe passee en parametre
+                            }
+                            getDataGraphDomaine(request, idsGroups);
+                        }
+                    }
+                });
+
+
+
     }
 
 
@@ -1213,7 +1276,7 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void getReleveDataForGraph(final HttpServerRequest request) {
-        getDataGraph(request);
+        getDataGraph(request, null);
     }
 
     private JsonArray groupDataByMatiere(JsonArray datas, Map<String,JsonArray> mapDataClasse,
@@ -1362,7 +1425,7 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void getReleveDataDomaineForGraph(final HttpServerRequest request) {
-        getDataGraphDomaine(request);
+        getDataGraphDomaine(request, null);
     }
 
 

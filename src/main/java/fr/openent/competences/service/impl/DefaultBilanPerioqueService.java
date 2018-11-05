@@ -391,7 +391,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             noteService.calculMoyennesEleveByPeriode(response.right().getValue(), result, idEleve,
                                     idsEleves);
                     //calculer le positionnement de l'élève
-                    noteService.getCompetencesNotesReleve(idEtablissement, null, idMatiere, null,
+                    noteService.getCompetencesNotesReleve(idEtablissement, null, null, idMatiere, null,
                             idEleve, null, false, new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> response) {

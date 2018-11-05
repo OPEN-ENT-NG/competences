@@ -116,7 +116,7 @@ public interface NoteService extends CrudService {
      * @param withDomaineInfo renvoit les competences-notes par domaines
      * @param handler handler portant le résultat de la requête
      */
-    void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
+    void getCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds, String matiereId, Long periodeId,
                                    String eleveId, Integer typeClasse, Boolean withDomaineInfo,
                                    Handler<Either<String, JsonArray>> handler);
 

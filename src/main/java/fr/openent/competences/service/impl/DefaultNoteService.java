@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.service.impl.SqlCrudService;
@@ -317,11 +318,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
 
-    public void getCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
+    public void getCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds, String matiereId,
                                           Long periodeId,  String eleveId, Integer typeClasse, Boolean withDomaineInfo,
                                           Handler<Either<String, JsonArray>> handler) {
         if(typeClasse == null){
-            runGetCompetencesNotesReleve(etablissementId,classeId,matiereId,periodeId,eleveId,
+            runGetCompetencesNotesReleve(etablissementId,classeId, groupIds, matiereId,periodeId,eleveId,
                     typeClasse, new ArrayList<String>(), withDomaineInfo, handler);
             return;
 
@@ -340,7 +341,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         idEleves.add(queryResult.getString(i));
                                     }
                                 }
-                                runGetCompetencesNotesReleve(etablissementId, classeId, matiereId, periodeId, eleveId,
+                                runGetCompetencesNotesReleve(etablissementId, classeId, groupIds,  matiereId, periodeId, eleveId,
                                         typeClasse, idEleves, withDomaineInfo, handler);
 
                             } else {
@@ -351,7 +352,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
-    private void runGetCompetencesNotesReleve(String etablissementId, String classeId, String matiereId,
+    private void runGetCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds, String matiereId,
                                               Long periodeId,  String eleveId, Integer typeClasse,
                                               List<String> idEleves,
                                               Boolean withDomaineInfo,
@@ -392,9 +393,17 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes ON ");
 
-        if(classeId != null){
-            query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe = ? )");
-            values.add(classeId);
+        if(classeId != null ){
+            if(groupIds == null) {
+                query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe = ? )");
+                values.add(classeId);
+            } else {
+                groupIds.add(classeId);
+                query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared( UtilsConvert.jsonArrayToStringArr(groupIds)) + " )");
+                for (Object groupeId : groupIds) {
+                    values.add(groupeId);
+                }
+            }
         }else{
             query.append("rel_devoirs_groupes.id_devoir = devoirs.id");
         }

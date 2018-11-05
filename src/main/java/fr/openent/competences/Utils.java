@@ -79,10 +79,10 @@ public class Utils {
     }
 
     /**
-     * get all groups of each idClasse
+     * retourne une classe avec ses groups (ids)
      * @param eb eventbus
-     * @param idsClasses array idsClasse
-     * @param handler r
+     * @param idsClasses array une clase
+     * @param handler response l'id de classe avec ses groups s'ils existent sinon retourne que id de la classe
      */
     public static void getGroupesClasse(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, JsonArray>> handler){
         JsonObject action = new JsonObject()
