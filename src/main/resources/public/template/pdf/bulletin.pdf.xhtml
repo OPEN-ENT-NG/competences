@@ -175,9 +175,20 @@
             margin-right : 1px;
         }
         .firstProjet {
-            width: 35%;
+            width: 40%;
             visibility: visible !important;
             background-color: #E2F0FA;
+            padding-bottom: 1px;
+            padding-top: 1px;
+            max-height: 43px!important;
+            overflow: hidden;
+        }
+        .secondProjet {
+            text-align:left;
+            max-height: 42px!important;
+            overflow: hidden;
+            padding-bottom: 1px;
+            padding-top: 1px;
         }
         .projets tr:nth-child(even) td {
             background-color: #EFF7FC !important;
@@ -200,6 +211,7 @@
             padding-bottom: 1px;
             padding-right: 2px;
         }
+
     </style>
 </head>
 <body>
@@ -318,7 +330,7 @@
                     {{/hasLibelle}}
                     {{#theme}}
                     {{#hasLibelle}}
-                    <span style="font-size: small;">{{libelle}}</span><br/>
+                    <span style="font-size: smaller;">{{libelle}}</span><br/>
                     {{/hasLibelle}}
                     {{^hasLibelle}}
                     <span style="font-size: small; font-weight: bold">{{libelle}}</span><br/>
@@ -326,14 +338,14 @@
                     {{/theme}}
                     {{#intervenantsMatieres}}
 
-                    <span style="color: black; font-size: smaller;">{{#intervenant}}
-                    {{displayName}} &nbsp; -
+                    <span style="color: black; font-size: xx-small !important;">{{#intervenant}}
+                      * {{displayName}}-
                     {{/intervenant}}
                 </span>
-                    <span style="color: black; font-size: smaller;">{{#matiere}}
-                   &nbsp; {{name}}
+                    <span style="color: black; font-size: x-small !important;">{{#matiere}}
+                    {{name}}
                     {{/matiere}}
-                </span>
+                </span><br/>
                     {{/intervenantsMatieres}}
                 </td>
                 <td class="secondProjet">{{commentaire}}</td>
@@ -363,17 +375,8 @@
                                 {{appreciationCPE}}
                             </div>
                             <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
+
+
                             <div class="lefCom" >
                                 {{#evenements}}
                                 <div>
@@ -391,16 +394,7 @@
                             <div class="rightCom">
                                 {{communicationHeaderRightSecond}}
                             </div>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
-                            <br/>
+
                             <br/>
                             <br/>
                         </td>

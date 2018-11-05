@@ -20,7 +20,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -31,6 +30,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private ElementBilanPeriodiqueService  elementBilanPeriodiqueService;
     private final DefaultAppreciationCPEService appreciationCPEService;
     private final int MAX_SIZE_LIBELLE = 80;
+    private final int MAX_SIZE_LIBELLE_PROJECT = 220;
+    private final int MAX_SIZE_APPRECIATION_CPE = 230;
+    private final int MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE = 560;
 
     public DefaultExportBulletinService(EventBus eb) {
         this.eb = eb;
@@ -291,6 +293,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         project.put("hasProject", value);
     }
 
+
     @Override
     public void getProjets ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode,
                              Handler<Either<String, JsonObject>> finalHandler) {
@@ -401,7 +404,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                     String com = app.getString("commentaire");
                                                                     Long idElem = app.getLong(
                                                                             "id_elt_bilan_periodique");
-                                                                    mapElement.get(idElem).put("commentaire",com );
+                                                                    mapElement.get(idElem).put("commentaire",
+                                                                            troncateLibelle(com,
+                                                                                    MAX_SIZE_LIBELLE_PROJECT) );
                                                                 }
                                                             }
                                                         }
@@ -445,7 +450,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 JsonObject synthese = event.right().getValue();
                                 if (synthese != null) {
                                     eleveObject.put("syntheseBilanPeriodque",
-                                            synthese.getString("synthese"));
+                                            troncateLibelle(synthese.getString("synthese"),
+                                                    MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
                                 }
                             }
                             finalHandler.handle(new Either.Right<>(null));
@@ -476,7 +482,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         JsonObject appreciationCPE = event.right().getValue();
                         if (appreciationCPE != null) {
                             eleveObject.put("appreciationCPE",
-                                    appreciationCPE.getString("appreciation"));
+                                    troncateLibelle(appreciationCPE.getString("appreciation"),
+                                            MAX_SIZE_APPRECIATION_CPE));
                         }
                     }
                     finalHandler.handle(new Either.Right<>(null));
@@ -728,13 +735,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
-    private String troncateLibelle(String libelle) {
+    private String troncateLibelle(String libelle, int max ) {
 
         if(libelle == null) {
             libelle = "";
         }
-        else if (libelle.length() > MAX_SIZE_LIBELLE) {
-            libelle = libelle.substring(0, MAX_SIZE_LIBELLE);
+        else if (libelle.length() > max) {
+            libelle = libelle.substring(0, max);
             libelle += "...";
         }
         return libelle;
@@ -825,13 +832,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             matiere.put("positionnement", val);
                                         }
                                         String elementsProgramme = troncateLibelle(
-                                                matiere.getString("elementsProgramme"));
+                                                matiere.getString("elementsProgramme"), MAX_SIZE_LIBELLE);
 
                                         String app = "";
 
                                         if(appreciation != null) {
                                         app = troncateLibelle(
-                                                appreciation.getString("appreciation"));
+                                                appreciation.getString("appreciation"), MAX_SIZE_LIBELLE);
                                         }
                                         matiere.put("elementsProgramme", elementsProgramme);
                                         matiere.put("moyenneClasse", (moyenneClasse != null) ?
