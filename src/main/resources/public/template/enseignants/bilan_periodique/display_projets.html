@@ -39,7 +39,7 @@
                     <strong>[[element.libelle]]</strong>
                     <span>[[element.theme.libelle]]</span>
                     <div class="italic font-size-13">
-                        <span ng-repeat="enseignant in element.enseignants">[[enseignant]] [[$last ? '' : ', ']]</span>
+                        <span ng-repeat="enseignant in element.enseignants track by $index">[[enseignant]] [[$last ? '' : ', ']]</span>
                     </div>
                 </div>
                 <div class="four cell marginFive">
