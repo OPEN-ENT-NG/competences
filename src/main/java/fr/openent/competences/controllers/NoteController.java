@@ -1213,7 +1213,7 @@ public class NoteController extends ControllerHelper {
                             badRequest(request, error);
                         } else {
                             JsonArray idClasseGroups = responseQuerry.right().getValue();
-                            if (idClasseGroups != null) {
+                            if (idClasseGroups != null && idClasseGroups.size()> 0) {
                                 idsGroups.addAll(idClasseGroups.getJsonObject(0)
                                         .getJsonArray("id_groupes"));
                             }else{
