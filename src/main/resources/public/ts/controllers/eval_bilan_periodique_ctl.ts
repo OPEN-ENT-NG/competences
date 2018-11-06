@@ -27,6 +27,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.critereIsEmpty = true;
         $scope.showHistoric = false;
         $scope.showAvisOrientation = false;
+        $scope.opened.avis = true;
 
         $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
         $scope.displayBilanPeriodique = async() => {

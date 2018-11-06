@@ -3615,6 +3615,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.saveMoyenneFinaleEleve = function (eleve,updateHistorique) {
             if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
+                if(eleve.moyenneFinale !== undefined) {
+                    eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
+                }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
                     eleve.moyenneFinale === "" ){

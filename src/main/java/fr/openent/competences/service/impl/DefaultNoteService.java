@@ -505,7 +505,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if("positionnement".equals(colonne)) {
                 idClasse = "";
             }
-            values.add(field.getLong(colonne)).add(idClasse).add(idMatiere)
+            if("moyenne".equals(colonne)) {
+                values.add(field.getValue(colonne)).add(idClasse).add(idMatiere)
+                        .add(field.getValue(colonne));
+            }
+            else values.add(field.getLong(colonne)).add(idClasse).add(idMatiere)
                     .add(field.getLong(colonne));
         }
         else if ("appreciation_matiere_periode".equals(colonne)) {
