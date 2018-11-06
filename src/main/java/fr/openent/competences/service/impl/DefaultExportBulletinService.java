@@ -799,17 +799,24 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         JsonObject positionnementFinal = getObjectForPeriode(
                                                 matiere.getJsonArray("positionnementsFinaux"), idPeriode,
                                                 "id_periode");
-                                        JsonObject appreciation = getObjectForPeriode(
+                                        JsonObject appreciation = null;
+                                        JsonObject res = getObjectForPeriode(
                                                 matiere.getJsonArray("appreciations"), idPeriode,
                                                 "id_periode");
-
+                                        JsonArray appreciationByClasse = null;
+                                        if (res != null) {
+                                            appreciationByClasse = res.getJsonArray("appreciationByClasse");
+                                        }
+                                        if (appreciationByClasse != null && appreciationByClasse.size()> 0) {
+                                            appreciation = appreciationByClasse.getJsonObject(0);
+                                        }
                                         JsonObject moyenneFinale = getObjectForPeriode(
                                                 matiere.getJsonArray("moyennesFinales"), idPeriode,
                                                 "id_periode");
 
                                         if (moyenneFinale != null) {
                                             matiere.put("moyenneEleve", (moyenneFinale != null) ?
-                                                    moyenneFinale.getValue("moyenne") : "");
+                                                    moyenneFinale.getValue("moyenneFinale") : "");
                                         }
                                         else {
                                             matiere.put("moyenneEleve", (moyenneEleve != null) ?
@@ -818,8 +825,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                                         if (positionnementFinal != null) {
                                             matiere.put("positionnement", (positionnementFinal != null) ?
-                                                    (positionnementFinal.getInteger("positionnementFinal")
-                                                            + new Integer(1)) : "");
+                                                    positionnementFinal.getInteger("positionnementFinal") : "");
+
                                         }
                                         else {
                                             Integer pos = positionnement.getInteger("moyenne");

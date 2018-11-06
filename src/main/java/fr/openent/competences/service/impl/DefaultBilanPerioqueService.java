@@ -291,29 +291,28 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     JsonArray positionnements = new fr.wseduc.webutils.collections.JsonArray();
                     if( allAppMoyPosi != null){
 
-                        Map<Integer, String> mapIdPeriodeAppreciation = new HashMap<Integer, String>();
-
+                        Map<Integer, JsonArray> mapIdPeriodeAppreciations = new HashMap<Integer,JsonArray>();
                         for(int i = 0; i < allAppMoyPosi.size(); i++){
                             JsonObject appMoyPosi = allAppMoyPosi.getJsonObject(i);
-
                             if(appMoyPosi.getString("appreciation_matiere_periode") != null ) {
 
-                                if(!mapIdPeriodeAppreciation.containsKey(
+                                if(!mapIdPeriodeAppreciations.containsKey(
                                         appMoyPosi.getInteger("id_periode_appreciation"))){
-                                    mapIdPeriodeAppreciation.put(appMoyPosi.getInteger("id_periode_appreciation"),
-                                            appMoyPosi.getString("appreciation_matiere_periode"));
-                                }
-                                else if(mapIdPeriodeAppreciation
-                                        .containsKey(appMoyPosi.getInteger("id_periode_appreciation"))){
 
-                                    if(!mapIdPeriodeAppreciation
-                                            .get(appMoyPosi.getInteger("id_periode_appreciation"))
-                                            .equals(appMoyPosi.getString("appreciation_matiere_periode"))) {
-                                        String appreciation = mapIdPeriodeAppreciation
-                                                .get(appMoyPosi.getInteger("id_periode_appreciation"))
-                                                + "\n" + appMoyPosi.getString("appreciation_matiere_periode");
-                                        mapIdPeriodeAppreciation.put(
-                                                appMoyPosi.getInteger("id_periode_appreciation"), appreciation);
+                                    mapIdPeriodeAppreciations.put(appMoyPosi.getInteger("id_periode_appreciation"),
+                                            new fr.wseduc.webutils.collections.JsonArray().add(
+                                                    new JsonObject().put("idClasse",appMoyPosi.getString("id_classe_appreciation"))
+                                            .put("appreciation",appMoyPosi.getString("appreciation_matiere_periode"))));
+
+                                }else {
+                                    Integer idPeriode = appMoyPosi.getInteger("id_periode_appreciation");
+                                    JsonArray appreciationsByIdPeriode = mapIdPeriodeAppreciations.get(idPeriode);
+                                    JsonObject appResponse = new JsonObject().put("idClasse",appMoyPosi.getString("id_classe_appreciation"))
+                                            .put("appreciation",appMoyPosi.getString("appreciation_matiere_periode"));
+
+                                    if(!appreciationsByIdPeriode.contains(appResponse)){
+
+                                        mapIdPeriodeAppreciations.put(idPeriode, appreciationsByIdPeriode.add(appResponse) );
                                     }
                                 }
                             }
@@ -348,10 +347,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                 }
                             }
                         }
-                        if(!mapIdPeriodeAppreciation.isEmpty()) {
-                            for (Map.Entry<Integer, String> idPeriodeApp : mapIdPeriodeAppreciation.entrySet()) {
+                        if(!mapIdPeriodeAppreciations.isEmpty()) {
+                            for (Map.Entry<Integer, JsonArray> idPeriodeApp : mapIdPeriodeAppreciations.entrySet()) {
+
                                 appreciations.add(new JsonObject().put("id_periode",
-                                        idPeriodeApp.getKey()).put("appreciation", idPeriodeApp.getValue()));
+                                        idPeriodeApp.getKey()).put("appreciationByClasse", idPeriodeApp.getValue()));
                             }
                         }
                     }

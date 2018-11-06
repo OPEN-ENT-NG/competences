@@ -17,6 +17,7 @@
 
 export * from './Annotation';
 export * from './AppreciationClasse';
+export * from './AppreciationMatiere';
 export * from './BilanFinCycle';
 export * from './Classe';
 export * from './Competence';

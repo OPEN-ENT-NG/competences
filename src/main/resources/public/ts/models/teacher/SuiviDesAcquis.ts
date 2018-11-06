@@ -1,5 +1,5 @@
 import  http  from "axios";
-import {Enseignant, ElementProgramme, TableConversion, Utils, TypePeriode} from "./index";
+import {Enseignant, ElementProgramme, TableConversion, Utils, TypePeriode, AppreciationMatiere} from "./index";
 import * as utils from '../../utils/teacher';
 import { Mix } from "entcore-toolkit";
 import {notify, _, Collection, Model, http as httpEntcore} from "entcore";
@@ -12,7 +12,7 @@ export class SuiviDesAcquis  {
     libelleMatiere : string;
     teachers : Enseignant[];
     elementsProgramme : string;
-    appreciation : string;
+    appreciationByClasse : AppreciationMatiere;
     moyenne_finale : number ;
     positionnement_final : any ;
     moyenneEleve : any;
@@ -47,18 +47,18 @@ export class SuiviDesAcquis  {
         return {
             idEleve: this.idEleve,
             idMatiere: this.id_matiere,
-            idClasse: this.idClasse,
             idEtablissement: this.idEtablissement,
             idPeriode: this.idPeriode
         };
     }
 
     async saveAppreciationMatierePeriodeEleve() {
-            if(this.appreciation !== undefined){
+            if(this.appreciationByClasse !== undefined){
                 let _data = _.extend(this.toJson(),{
-                    appreciation_matiere_periode: this.appreciation,
+                    idClasse: this.appreciationByClasse.idClasse,
+                    appreciation_matiere_periode: this.appreciationByClasse.appreciation,
                     colonne: 'appreciation_matiere_periode',
-                    delete: this.appreciation === "",
+                    delete: this.appreciationByClasse.appreciation === "",
                     isBilanPeriodique: true
                 });
 
@@ -76,6 +76,7 @@ export class SuiviDesAcquis  {
    async savePositionnementEleve(positionnement) {
 
        let _data = _.extend(this.toJson(), {
+           idClasse: this.idClasse,
            colonne: 'positionnement',
            positionnement: positionnement,
            delete: this.positionnement_final === "",
@@ -156,9 +157,9 @@ export class SuivisDesAcquis extends Model{
                     suiviDesAcquis.idEtablissement = this.idEtablissement;
                     suiviDesAcquis.idPeriode = this.idPeriode;
                     if(suiviDesAcquis.appreciations !== null && suiviDesAcquis.appreciations !== undefined && _.find(suiviDesAcquis.appreciations,{id_periode: suiviDesAcquis.idPeriode}) !== undefined){
-                        suiviDesAcquis.appreciation =  _.find(suiviDesAcquis.appreciations,{id_periode: suiviDesAcquis.idPeriode}).appreciation ;
+                        suiviDesAcquis.appreciationByClasse =  _.find(suiviDesAcquis.appreciations,{id_periode: suiviDesAcquis.idPeriode}).appreciationByClasse[0] ;
                     }else{
-                        suiviDesAcquis.appreciation = "";
+                        suiviDesAcquis.appreciationByClasse = new AppreciationMatiere( suiviDesAcquis.idClasse );
                     }
 
                     // la moyenneEleve pour chaque période et chaque matiere
