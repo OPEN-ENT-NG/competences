@@ -31,9 +31,11 @@ import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultElementProgramme implements ElementProgramme {
-
+    private final Sql sql = Sql.getInstance();
+    
     @Override
-    public void setElementProgramme(String userId, Long idPeriode, String idMatiere, String idClasse,String texte, Handler<Either<String, JsonArray>> handler){
+    public void setElementProgramme(String userId, Long idPeriode, String idMatiere, String idClasse,String texte,
+                                    Handler<Either<String, JsonArray>> handler){
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         StringBuilder query = new StringBuilder()
@@ -46,12 +48,13 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idPeriode).add(idMatiere).add(idClasse).add(userId).add(userId).add(texte);
         values.add(userId).add(texte);
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
 
     @Override
-    public void getElementProgramme(Long idPeriode, String idMatiere, String idClasse, Handler<Either<String, JsonObject>> handler){
+    public void getElementProgramme(Long idPeriode, String idMatiere, String idClasse,
+                                    Handler<Either<String, JsonObject>> handler){
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -65,7 +68,7 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idPeriode);
         values.add(idMatiere);
 
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
+        sql.prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -86,7 +89,7 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idPeriode);
         values.add(idMatiere);
 
-        Sql.getInstance().prepared(query.toString(), values,
+        sql.prepared(query.toString(), values,
                 new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));
     }
@@ -96,21 +99,21 @@ public class DefaultElementProgramme implements ElementProgramme {
     public void getDomainesEnseignement(Handler<Either<String, JsonArray>> handler){
         String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".domaine_enseignement ORDER BY libelle";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
     @Override
     public void getSousDomainesEnseignement(Handler<Either<String, JsonArray>> handler){
         String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".sous_domaine_enseignement ORDER BY libelle";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
     @Override
     public void getPropositions(Handler<Either<String, JsonArray>> handler){
         String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".proposition ORDER BY libelle";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
 }

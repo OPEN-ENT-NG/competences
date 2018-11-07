@@ -7,6 +7,7 @@ import fr.openent.competences.service.ExportBulletinService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -14,6 +15,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 import java.text.DateFormat;
@@ -93,26 +95,32 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public void getExportBulletin(final HttpServerRequest request, final AtomicBoolean answered, String idEleve,
                                   Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
                                   Handler<Either<String, JsonObject>> finalHandler){
-        if (!answered.get()) {
-            putLibelleForExport(idEleve, elevesMap, params, finalHandler);
-            getEvenements(idEleve, elevesMap, idPeriode, finalHandler);
-            getSuiviAcquis(idEleve, elevesMap, idPeriode, finalHandler);
-            getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, finalHandler);
-            getStructure(idEleve, elevesMap, finalHandler);
-            getHeadTeachers(idEleve, elevesMap, finalHandler);
-            getLibellePeriode(request, idEleve, elevesMap, idPeriode, finalHandler);
-            getAnneeScolaire(idEleve, elevesMap, idPeriode, finalHandler);
-            getCycle(idEleve,elevesMap,idPeriode,finalHandler);
-            getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
-            if(params.getBoolean("getResponsable")) {
-                getResponsables(idEleve, elevesMap, finalHandler);
+        try {
+
+            if (!answered.get()) {
+                putLibelleForExport(idEleve, elevesMap, params, finalHandler);
+                getEvenements(idEleve, elevesMap, idPeriode, finalHandler);
+                getSuiviAcquis(idEleve, elevesMap, idPeriode, finalHandler);
+                getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, finalHandler);
+                getStructure(idEleve, elevesMap, finalHandler);
+                getHeadTeachers(idEleve, elevesMap, finalHandler);
+                getLibellePeriode(request, idEleve, elevesMap, idPeriode, finalHandler);
+                getAnneeScolaire(idEleve, elevesMap, idPeriode, finalHandler);
+                getCycle(idEleve,elevesMap,idPeriode,finalHandler);
+                getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
+                if(params.getBoolean("getResponsable")) {
+                    getResponsables(idEleve, elevesMap, finalHandler);
+                }
+                if (params.getBoolean("showProjects")) {
+                    getProjets(idEleve, elevesMap, idPeriode, finalHandler);
+                }
             }
-            if (params.getBoolean("showProjects")) {
-                getProjets(idEleve, elevesMap, idPeriode, finalHandler);
+            else {
+                log.error("[getExportBulletin] : Problème de parallelisation Lors de l'export des bulletin ");
             }
         }
-        else {
-            log.error("[getExportBulletin] : Problème de parallelisation Lors de l'export des bulletin ");
+        catch (Exception e) {
+            log.error("getBulletin ", e);
         }
     }
 
@@ -138,6 +146,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         .put("idClasse", idClasse);
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                        new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                                .getInteger("timeout-transaction") * 1000L),
                         handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> message) {
@@ -190,25 +200,29 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("action", "periode.getLibellePeriode")
                     .put("idType", idPeriode)
                     .put("request", jsonRequest);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> message) {
-                    JsonObject body = message.body();
+            // log.info(" +++ [getLibellePeriode] | " + idEleve );
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                    new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                            .getInteger("timeout-transaction") * 1000L),
+                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        @Override
+                        public void handle(Message<JsonObject> message) {
+                            JsonObject body = message.body();
 
-                    if (!"ok".equals(body.getString("status"))) {
-                        if (eleve.getJsonArray("errors") == null) {
-                            eleve.put("errors", new JsonArray());
+                            if (!"ok".equals(body.getString("status"))) {
+                                if (eleve.getJsonArray("errors") == null) {
+                                    eleve.put("errors", new JsonArray());
+                                }
+                                JsonArray errors = eleve.getJsonArray("errors");
+                                errors.add("getLibellePeriode");
+                                log.error(body.getString("message"));
+                            } else {
+                                String periodeName = body.getString("result");
+                                eleve.put("periode", periodeName);
+                            }
+                            finalHandler.handle(new Either.Right<>(null));
                         }
-                        JsonArray errors = eleve.getJsonArray("errors");
-                        errors.add("getLibellePeriode");
-                        log.error(body.getString("message"));
-                    } else {
-                        String periodeName = body.getString("result");
-                        eleve.put("periode", periodeName);
-                    }
-                    finalHandler.handle(new Either.Right<>(null));
-                }
-            }));
+                    }));
         }
     }
 
@@ -234,6 +248,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                        new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                                .getInteger("timeout-transaction") * 1000L),
                         handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> message) {
@@ -317,7 +333,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 }
                                 JsonArray errors = eleveObject.getJsonArray("errors");
                                 errors.add("getProjets");
-                                log.error(event.left().getValue());
+                                log.error("[getProjets] :" + event.left().getValue());
                                 finalHandler.handle(new Either.Right<>(null));
                             }
                             else {
@@ -393,7 +409,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                             }
                                                             JsonArray errors = eleveObject.getJsonArray("errors");
                                                             errors.add("getProjets");
-                                                            log.error(event.left().getValue());
+                                                            log.error("[getProjets] : " + event.left().getValue());
                                                         }
                                                         else {
                                                             JsonArray appreciations = event.right().getValue();
@@ -487,7 +503,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         JsonObject appreciationCPE = event.right().getValue();
                         if (appreciationCPE != null) {
                             String app = troncateLibelle(appreciationCPE.getString("appreciation"),
-                                            MAX_SIZE_APPRECIATION_CPE);
+                                    MAX_SIZE_APPRECIATION_CPE);
                             eleveObject.put("appreciationCPE",app)
                                     .put("appreciationCPEStyle",fontSize(app, MAX_SIZE_APPRECIATION_CPE));
                         }
@@ -511,61 +527,64 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             String idStructure = eleveObject.getString("idEtablissement");
             action.put("action", "structure.getStructure")
                     .put("idStructure", idStructure);
+            // log.info(" +++ [getStructure]: " + idEleve);
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                    new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                            .getInteger("timeout-transaction") * 1000L),
+                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        @Override
+                        public void handle(Message<JsonObject> message) {
+                            JsonObject body = message.body();
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> message) {
-                    JsonObject body = message.body();
 
+                            if (!"ok".equals(body.getString("status"))) {
+                                log.error("[getStructure ] : " + eleveObject.getString("nom") + " failed");
+                                log.error("[getStructure ] : " + body.getString("message"));
 
-                    if (!"ok".equals(body.getString("status"))) {
-                        log.error("[getStructure ] : " + eleveObject.getString("nom") + "failed");
-                        log.error(body.getString("message"));
-
-                        if (eleveObject.getJsonArray("errors") == null) {
-                            eleveObject.put("errors", new JsonArray());
-                        }
-                        JsonArray errors = eleveObject.getJsonArray("errors");
-                        errors.add("getStructure");
-
-                    } else {
-                        JsonObject structure = body.getJsonObject("result");
-                        JsonArray structureLibelle = new JsonArray();
-                        if(structure != null){
-                            structure = structure.getJsonObject("s");
-                            if(structure != null) {
-                                structure = structure.getJsonObject("data");
-                                String academy = structure.getString("academy");
-                                String type = structure.getString("type");
-                                String name = structure.getString("name");
-                                String address = structure.getString("address");
-                                String codePostal = structure.getString("zipCode");
-                                String phone = structure.getString("phone");
-                                String email = structure.getString("email");
-                                String city =  structure.getString("city");
-                                if(academy != null) {structureLibelle.add(new JsonObject().put("academy", academy));}
-                                if(type != null) {structureLibelle.add(new JsonObject().put("type", type));}
-                                if(name != null) {structureLibelle.add(new JsonObject().put("name",name));}
-                                if(address != null) {structureLibelle.add(new JsonObject().put("address", address));}
-                                String town = null;
-                                if(codePostal != null) {
-                                    town = codePostal;
+                                if (eleveObject.getJsonArray("errors") == null) {
+                                    eleveObject.put("errors", new JsonArray());
                                 }
-                                if(city != null) {
-                                    town = (town!=null)? (town + ' ' + city) : city;
+                                JsonArray errors = eleveObject.getJsonArray("errors");
+                                errors.add("getStructure");
+
+                            } else {
+                                JsonObject structure = body.getJsonObject("result");
+                                JsonArray structureLibelle = new JsonArray();
+                                if(structure != null){
+                                    structure = structure.getJsonObject("s");
+                                    if(structure != null) {
+                                        structure = structure.getJsonObject("data");
+                                        String academy = structure.getString("academy");
+                                        String type = structure.getString("type");
+                                        String name = structure.getString("name");
+                                        String address = structure.getString("address");
+                                        String codePostal = structure.getString("zipCode");
+                                        String phone = structure.getString("phone");
+                                        String email = structure.getString("email");
+                                        String city =  structure.getString("city");
+                                        if(academy != null) {structureLibelle.add(new JsonObject().put("academy", academy));}
+                                        if(type != null) {structureLibelle.add(new JsonObject().put("type", type));}
+                                        if(name != null) {structureLibelle.add(new JsonObject().put("name",name));}
+                                        if(address != null) {structureLibelle.add(new JsonObject().put("address", address));}
+                                        String town = null;
+                                        if(codePostal != null) {
+                                            town = codePostal;
+                                        }
+                                        if(city != null) {
+                                            town = (town!=null)? (town + ' ' + city) : city;
+                                        }
+                                        if (town!= null) {
+                                            structureLibelle.add(new JsonObject().put("town",town));
+                                        }
+                                        if(phone != null) {structureLibelle.add(new JsonObject().put("phone", phone));}
+                                        if(email != null) {structureLibelle.add(new JsonObject().put("couriel", email));}
+                                    }
                                 }
-                                if (town!= null) {
-                                    structureLibelle.add(new JsonObject().put("town",town));
-                                }
-                                if(phone != null) {structureLibelle.add(new JsonObject().put("phone", phone));}
-                                if(email != null) {structureLibelle.add(new JsonObject().put("couriel", email));}
+                                eleveObject.put("structureLibelle", structureLibelle);
                             }
+                            finalHandler.handle(new Either.Right<>(null));
                         }
-                        eleveObject.put("structureLibelle", structureLibelle);
-                    }
-                    finalHandler.handle(new Either.Right<>(null));
-                }
-            }));
+                    }));
         }
     }
 
@@ -597,7 +616,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
                                 if (!"ok".equals(body.getString("status"))) {
-                                    log.error("[getHeadTeachers ] : " + eleveObject.getString("nom") + "failed");
+                                    log.error("[getHeadTeachers ] : " + eleveObject.getString("nom") + " failed");
                                     log.error(body.getString("message"));
 
                                     if (eleveObject.getJsonArray("errors") == null) {
@@ -636,28 +655,31 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             JsonObject action = new JsonObject();
             action.put("action", "eleve.getResponsables")
                     .put("idEleve", idEleve);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                @Override
-                public void handle(Message<JsonObject> message) {
-                    JsonObject body = message.body();
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                    new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                            .getInteger("timeout-transaction") * 1000L),
+                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        @Override
+                        public void handle(Message<JsonObject> message) {
+                            JsonObject body = message.body();
 
-                    if (!"ok".equals(body.getString("status"))) {
-                        log.error("[getResponsables ] : " + eleveObject.getString("nom") + "failed");
-                        log.error(body.getString("message"));
+                            if (!"ok".equals(body.getString("status"))) {
+                                log.error("[getResponsables ] : " + eleveObject.getString("nom") + "failed");
+                                log.error("[getResponsables ] : " +  body.getString("message"));
 
-                        if (eleveObject.getJsonArray("errors") == null) {
-                            eleveObject.put("errors", new JsonArray());
+                                if (eleveObject.getJsonArray("errors") == null) {
+                                    eleveObject.put("errors", new JsonArray());
+                                }
+                                JsonArray errors = eleveObject.getJsonArray("errors");
+                                errors.add("getResponsables");
+
+                            } else {
+                                JsonArray responsables = body.getJsonArray("results");
+                                eleveObject.put("responsables", responsables);
+                            }
+                            finalHandler.handle(new Either.Right<>(null));
                         }
-                        JsonArray errors = eleveObject.getJsonArray("errors");
-                        errors.add("getResponsables");
-
-                    } else {
-                        JsonArray responsables = body.getJsonArray("results");
-                        eleveObject.put("responsables", responsables);
-                    }
-                    finalHandler.handle(new Either.Right<>(null));
-                }
-            }));
+                    }));
         }
     }
 
@@ -671,21 +693,34 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             bilanPeriodiqueService.getRetardsAndAbsences(idEleve, new Handler<Either<String, JsonArray>>() {
+                private int count = 1;
+                private boolean answer = false;
+
                 @Override
                 public void handle(Either<String, JsonArray> event) {
 
 
                     if (event.isLeft()) {
+                        String message = event.left().getValue();
+                        log.error("[getEvenements ] : " + eleveObject.getString("idEleve") + " failed " + count);
+                        log.error("[getEvenements ] : " + message);
 
-                        log.error("[getEvenements ] : " + eleveObject.getString("idEleve") + "failed");
-                        log.error(event.left().getValue());
-
-                        if (eleveObject.getJsonArray("errors") == null) {
-                            eleveObject.put("errors", new JsonArray());
+                        if (message.contains("Time")) {
+                            count++;
+                            if (count < elevesMap.size() * 8) {
+                                bilanPeriodiqueService.getRetardsAndAbsences(idEleve, this::handle);
+                                return;
+                            }
+                        }else {
+                            answer = true;
+                            if (eleveObject.getJsonArray("errors") == null) {
+                                eleveObject.put("errors", new JsonArray());
+                            }
+                            JsonArray errors = eleveObject.getJsonArray("errors");
+                            errors.add("getEvenements");
                         }
-                        JsonArray errors = eleveObject.getJsonArray("errors");
-                        errors.add("getEvenements");
                     } else {
+                        answer = true;
                         JsonArray evenements = event.right().getValue();
                         if (eleveObject != null) {
 
@@ -734,8 +769,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                             eleveObject.put("evenements", evenementsArray);
                         }
+                        if(answer) {
+                            finalHandler.handle(new Either.Right<>(null));
+                        }
                     }
-                    finalHandler.handle(new Either.Right<>(null));
                 }
             });
         }
@@ -788,21 +825,35 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             else {
                 bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
                         idClasse, new Handler<Either<String, JsonArray>>() {
+                            private int count = 1;
+                            private boolean answer = false;
+
                             @Override
                             public void handle(Either<String, JsonArray> event) {
 
                                 if (event.isLeft()) {
-
+                                    String message =  event.left().getValue();
                                     log.error("[getSuiviAcquis ] : " + eleveObject.getString("idEleve")
-                                            + "failed");
-                                    log.error(event.left().getValue());
-
-                                    if (eleveObject.getJsonArray("errors") == null) {
-                                        eleveObject.put("errors", new JsonArray());
+                                            + " failed " + count);
+                                    log.error("[getSuiviAcquis ] : " + message);
+                                    if (message.contains("Time")) {
+                                        count ++;
+                                        if (count < elevesMap.size() * 8) {
+                                            bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
+                                                    idClasse,this::handle);
+                                            return;
+                                        }
                                     }
-                                    JsonArray errors = eleveObject.getJsonArray("errors");
-                                    errors.add("getSuiviAcquis");
+                                    else {
+                                        answer = true;
+                                        if (eleveObject.getJsonArray("errors") == null) {
+                                            eleveObject.put("errors", new JsonArray());
+                                        }
+                                        JsonArray errors = eleveObject.getJsonArray("errors");
+                                        errors.add("getSuiviAcquis");
+                                    }
                                 } else {
+                                    answer = true;
                                     JsonArray suiviAcquis = event.right().getValue();
 
                                     for (int i = 0; suiviAcquis != null && i < suiviAcquis.size() ; i++) {
@@ -908,7 +959,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
                                 }
-                                finalHandler.handle(new Either.Right<>(null));
+                                if(answer) {
+                                    finalHandler.handle(new Either.Right<>(null));
+                                }
                             }
                         });
             }

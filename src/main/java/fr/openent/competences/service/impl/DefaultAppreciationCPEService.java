@@ -3,10 +3,13 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
+
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 
 public class DefaultAppreciationCPEService {
     public void createOrUpdateAppreciationCPE (Long idPeriode, String idEleve,  String appreciation, Handler<Either<String, JsonObject>> handler){
@@ -52,6 +55,9 @@ public class DefaultAppreciationCPEService {
         params.add(idEleve);
         params.add(idPeriode);
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, params,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                        .getInteger("timeout-transaction") * 1000L),
+                SqlResult.validUniqueResultHandler(handler));
     }
 }

@@ -22,6 +22,7 @@ import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -31,6 +32,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.util.*;
@@ -88,7 +90,9 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put("action", "classe.getGroupesClasse")
                 .put("idClasses", idsClasses);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -398,7 +402,9 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put("action","matiere.getMatieres")
                 .put("idMatieres", idsMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS,action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS,action,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
@@ -435,7 +441,9 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put("action","eleve.getUsers")
                 .put("idUsers", idsUsers);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
 

@@ -22,6 +22,7 @@ import fr.openent.competences.service.ElementBilanPeriodiqueService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -38,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.mongodb.MongoDbResult.validResultHandler;
@@ -280,7 +282,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .append(" GROUP BY elt_bilan_periodique.id) ");
         params.add(idEtablissement);
 
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                        .getInteger("timeout-transaction") * 1000L),
+                SqlResult.validResultHandler(handler));
     }
 
 
@@ -613,7 +618,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             }
         }
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, params,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                        .getInteger("timeout-transaction") * 1000L),
+                SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -647,7 +655,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
             params.add(idEleve);
         }
 
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, params,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                        .getInteger("timeout-transaction") * 1000L),
+                SqlResult.validResultHandler(handler));
     }
 
     @Override

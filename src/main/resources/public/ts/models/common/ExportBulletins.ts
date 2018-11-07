@@ -21,6 +21,7 @@ export class ExportBulletins {
             threeMoyenneClasse: (options.threeMoyenneClasse === true)? options.threeMoyenneClasse:false ,
             threeMoyenneEleve: (options.threeMoyenneEleve === true)? options.threeMoyenneEleve:false ,
             threePage: (options.threePage === true)? options.threePage:false ,
+            classeName: options.classeName
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode});

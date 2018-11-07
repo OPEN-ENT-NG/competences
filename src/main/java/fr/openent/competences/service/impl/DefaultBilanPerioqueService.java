@@ -12,6 +12,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 
 import java.util.ArrayList;
@@ -29,6 +30,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private final DevoirService devoirService;
     private final ElementProgramme elementProgramme;
     private final EventBus eb;
+    private final Sql sql;
 
     public DefaultBilanPerioqueService (EventBus eb){
         this.eb = eb;
@@ -36,6 +38,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         utilsService = new DefaultUtilsService();
         devoirService = new DefaultDevoirService(eb);
         elementProgramme = new DefaultElementProgramme() ;
+        sql = Sql.getInstance();
     }
 
     @Override
@@ -46,8 +49,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 .append(" WHERE id_eleve = ? ");
         JsonArray params = new JsonArray().add(idEleve);
 
-        Sql.getInstance()
-                .prepared(query.toString(),params,
+        sql.prepared(query.toString(),params,
                         new DeliveryOptions()
                                 .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                         validResultHandler(eitherHandler));

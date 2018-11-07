@@ -23,6 +23,7 @@ import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
@@ -33,6 +34,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.*;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validResultsHandler;
 
@@ -220,7 +222,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(periodeId);
         }
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                validResultHandler(handler));
     }
 
     @Override
@@ -429,7 +433,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(periodeId);
         }
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                validResultHandler(handler));
     }
 
     @Override
@@ -481,7 +487,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         if(null != idPeriode) {
             values.add(idPeriode);
         }
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                validResultHandler(handler));
     }
 
     @Override
@@ -637,7 +645,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         values.add(idEleve).add(idEleve).add(idEleve);
         values.add(idMatiere).add(idMatiere).add(idMatiere);
 
-        Sql.getInstance().prepared( query, values, validResultHandler(handler));
+        Sql.getInstance().prepared( query, values,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                validResultHandler(handler));
     }
 
     public Double calculMoyenneClasseByPeriode(ArrayList<NoteDevoir> allNotes,

@@ -58,7 +58,18 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             }
             $scope.opened.displayMessageLoader = true;
             utils.safeApply($scope);
-            await ExportBulletins.generateBulletins(options);
+            let classes = _.groupBy($scope.allElevesClasses, 'classeName');
+            for ( let key in classes) {
+                let val = classes[key];
+                options.classeName = key;
+                options.idStudents = _.pluck(_.filter(val, function (student) {
+                    return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
+                }), 'id');
+                if(options.idStudents!== undefined && options.idStudents.length > 0){
+                    await ExportBulletins.generateBulletins(options);
+                }
+            }
+
             $scope.opened.displayMessageLoader = false;
             utils.safeApply($scope);
 
