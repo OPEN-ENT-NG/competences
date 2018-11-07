@@ -29,10 +29,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private BilanPeriodiqueService bilanPeriodiqueService;
     private ElementBilanPeriodiqueService  elementBilanPeriodiqueService;
     private final DefaultAppreciationCPEService appreciationCPEService;
-    private final int MAX_SIZE_LIBELLE = 80;
+    private final int MAX_SIZE_LIBELLE = 300;
     private final int MAX_SIZE_LIBELLE_PROJECT = 220;
-    private final int MAX_SIZE_APPRECIATION_CPE = 230;
-    private final int MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE = 560;
+    private final int MAX_SIZE_APPRECIATION_CPE = 600;
+    private final int MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE = 600;
 
     public DefaultExportBulletinService(EventBus eb) {
         this.eb = eb;
@@ -402,11 +402,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                 Long periodeId = app.getLong("id_periode");
                                                                 if(periodeId == idPeriode) {
                                                                     String com = app.getString("commentaire");
+
                                                                     Long idElem = app.getLong(
                                                                             "id_elt_bilan_periodique");
                                                                     mapElement.get(idElem).put("commentaire",
                                                                             troncateLibelle(com,
-                                                                                    MAX_SIZE_LIBELLE_PROJECT) );
+                                                                                    MAX_SIZE_LIBELLE_PROJECT) )
+                                                                            .put("commentaireStyle",
+                                                                                    fontSize(com,MAX_SIZE_LIBELLE));
                                                                 }
                                                             }
                                                         }
@@ -449,9 +452,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             else {
                                 JsonObject synthese = event.right().getValue();
                                 if (synthese != null) {
-                                    eleveObject.put("syntheseBilanPeriodque",
-                                            troncateLibelle(synthese.getString("synthese"),
-                                                    MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
+                                    String syntheseStr = synthese.getString("synthese");
+                                    eleveObject.put("syntheseBilanPeriodque",troncateLibelle(syntheseStr,
+                                            MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
+                                    eleveObject.put("syntheseBilanPeriodqueStyle",fontSize(syntheseStr,
+                                            MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
                                 }
                             }
                             finalHandler.handle(new Either.Right<>(null));
@@ -481,9 +486,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     } else {
                         JsonObject appreciationCPE = event.right().getValue();
                         if (appreciationCPE != null) {
-                            eleveObject.put("appreciationCPE",
-                                    troncateLibelle(appreciationCPE.getString("appreciation"),
-                                            MAX_SIZE_APPRECIATION_CPE));
+                            String app = troncateLibelle(appreciationCPE.getString("appreciation"),
+                                            MAX_SIZE_APPRECIATION_CPE);
+                            eleveObject.put("appreciationCPE",app)
+                                    .put("appreciationCPEStyle",fontSize(app, MAX_SIZE_APPRECIATION_CPE));
                         }
                     }
                     finalHandler.handle(new Either.Right<>(null));
@@ -746,7 +752,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         return libelle;
     }
+    private String fontSize(String libelle, int max ) {
 
+        if(libelle == null) {
+            return  "";
+        }
+        else if (libelle.length() < max/2) {
+            return "font-size: x-small;";
+        }
+        else if (libelle.length() <= max) {
+            return "font-size: xx-small;";
+        }
+        return "";
+    }
     @Override
     public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
                                Handler<Either<String, JsonObject>> finalHandler ) {
@@ -844,15 +862,47 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         String app = "";
 
                                         if(appreciation != null) {
-                                        app = troncateLibelle(
-                                                appreciation.getString("appreciation"), MAX_SIZE_LIBELLE);
+                                            app = troncateLibelle(
+                                                    appreciation.getString("appreciation"), MAX_SIZE_LIBELLE);
                                         }
-                                        matiere.put("elementsProgramme", elementsProgramme);
-                                        matiere.put("moyenneClasse", (moyenneClasse != null) ?
-                                                        moyenneClasse.getValue("moyenne") : "")
-                                                .put("appreciation",app);
+                                        matiere.put("elementsProgramme", elementsProgramme)
+                                                .put("elementsProgrammeStyle", fontSize(elementsProgramme,
+                                                        MAX_SIZE_LIBELLE))
 
+                                                .put("moyenneClasse", (moyenneClasse != null) ?
+                                                        moyenneClasse.getValue("moyenne") : "")
+
+                                                .put("appreciation",app)
+                                                .put("appreciationStyle", fontSize(app, MAX_SIZE_LIBELLE));
+
+                                        JsonArray teachers = matiere.getJsonArray("teachers");
+                                        if (teachers != null && teachers.size() > 0) {
+                                            for(int j=0; j< teachers.size(); j++) {
+                                                JsonObject teacher = teachers.getJsonObject(j);
+                                                String initial = teacher.getString("firstName");
+                                                if( initial == null ) {
+                                                    initial = "";
+                                                }
+                                                else {
+                                                    initial =  String.valueOf(initial.charAt(0));
+                                                }
+                                                teacher.put("initial", initial);
+                                                String name = teacher.getString("name");
+                                                if( name != null ) {
+                                                    if(j == teachers.size() -1) {
+                                                        name += "";
+                                                    }
+                                                    else {
+                                                        name += ",";
+                                                    }
+                                                    teacher.remove("name");
+                                                    teacher.put("name", name);
+                                                }
+
+                                            }
                                         }
+
+                                    }
                                     eleveObject.put("suiviAcquis", suiviAcquis).put("hasSuiviAcquis",
                                             (suiviAcquis.size() > 0));
 

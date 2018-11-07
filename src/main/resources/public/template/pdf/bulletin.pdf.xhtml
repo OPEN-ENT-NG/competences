@@ -108,7 +108,7 @@
             display:inline-block;
             margin-left: 3px;
             padding: 10px;
-            width: 32%;
+            width: 44%;
             float: right;
             font-size: 14px;
             min-height : 60px;
@@ -250,7 +250,7 @@
         </div>
         {{/getResponsable}}
         {{#getResponsable}}
-        <div style="display: inline-block;width: 60%;" class="eleve">
+        <div style="display: inline-block;width: 50%;" class="eleve">
             <div style="font-size: small; font-weight: bold">{{schoolYear}}</div>
             <div style="font-size: small;">{{bilanCycle}}&nbsp;-&nbsp; {{periode}}</div>
             <div style="font-size: 18px; font-weight: bold">{{firstName}} &nbsp; {{lastName}}  </div>
@@ -294,11 +294,11 @@
             <td class="left-align emptyClass">
                 <span style="font-size: small; font-weight: bold">{{libelleMatiere}}</span><br/>
                 {{#teachers}}
-                <span style="color: black; font-size: smaller;">.{{name}}</span>
+                <span style="color: black; font-size: smaller;">{{initial}}.{{name}}</span>
                 {{/teachers}}
             </td>
-            <td style="text-align: left;" class="secondSuivi onePadding">{{elementsProgramme}}</td>
-            <td style="text-align: left;" class="thirdSuivi onePadding">{{appreciation}}</td>
+            <td style="text-align: left; {{elementsProgrammeStyle}}" class="secondSuivi onePadding">{{elementsProgramme}}</td>
+            <td style="text-align: left; {{appreciationStyle}}" class="thirdSuivi onePadding">{{appreciation}}</td>
             {{#getMoyenneEleve}}
             <td style="font-size: smaller; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>
             {{/getMoyenneEleve}}
@@ -348,7 +348,7 @@
                 </span><br/>
                     {{/intervenantsMatieres}}
                 </td>
-                <td class="secondProjet">{{commentaire}}</td>
+                <td class="secondProjet" style="{{commentaireStyle}}">{{commentaire}}</td>
             </tr>
             {{/elements}}
         </table>
@@ -370,7 +370,7 @@
                 <table>
                     <tr>
                         <td class="synthese leftCommunication">
-                            <div  class="lefCom" >
+                            <div  class="lefCom" style="{{appreciationCPEStyle}}">
                                 <br/>
                                 {{appreciationCPE}}
                             </div>
