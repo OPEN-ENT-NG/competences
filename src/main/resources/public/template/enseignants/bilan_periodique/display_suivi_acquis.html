@@ -100,13 +100,15 @@
             </tr>
 
             </tbody>
-            <tfoot>
+            <tfoot ng-if="showMoyGeneral">
             <tr>
                 <td></td>
                 <td></td>
                 <td></td>
                 <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.eleve')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleEleve]]</td>
                 <td class="center" data-label="[[translate('bilan.periodique.moyenne.generale.classe')]]">[[elementBilanPeriodique.suivisAcquis.getHistoriqueByPeriode(search.periode.id_type).moyGeneraleClasse]]</td>
+                <td></td>
+                <td></td>
                 <td></td>
             </tr>
             </tfoot>

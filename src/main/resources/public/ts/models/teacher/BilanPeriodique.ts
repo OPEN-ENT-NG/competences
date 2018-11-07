@@ -48,11 +48,6 @@ export class BilanPeriodique extends  Model {
 
     constructor(periode: any, classe: Classe) {
         super();
-
-        this.updateBilanPeriodiqueField(periode, classe);
-    }
-
-    updateBilanPeriodiqueField(periode, classe) {
         this.synchronized = {
             classe: false
         };
@@ -117,6 +112,11 @@ export class BilanPeriodique extends  Model {
             }
             let data = await http.get(url);
             this.appreciations = data.data;
+
+            _.forEach(this.classe.eleves.all, (eleve) => {
+                eleve.appreciations = [];
+            });
+
 
             _.forEach(elements, (element) => {
                 var elemsApprec = _.where(this.appreciations, {id_elt_bilan_periodique: element.id});

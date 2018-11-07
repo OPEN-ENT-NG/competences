@@ -109,7 +109,8 @@
                             [[element.type === 3 ? element.theme.libelle : element.libelle]]
                         </h2>
                         <div ng-class="{'openedSectionDom' : element.opened}">
-                            <span ng-repeat="enseignant in element.enseignants"
+                            <span ng-repeat="enseignant in sortedEnseignant = (element.enseignants | orderBy) track by $index"
+                                  ng-if="sortedEnseignant[$index -1] != enseignant"
                                   class="marginFive italic">
                                 [[enseignant]]  [[$last ? '' : ', ']]
                             </span>

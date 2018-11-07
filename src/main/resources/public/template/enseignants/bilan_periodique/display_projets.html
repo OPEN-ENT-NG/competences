@@ -72,7 +72,8 @@
                 <div class="four cell marginFive itemFlex">
                     <strong>[[element.libelle]]</strong>
                     <span class="italic font-size-13"
-                          ng-repeat="enseignant in element.enseignants">[[enseignant]]</span>
+                          ng-repeat="enseignant in sortedEnseignant = (element.enseignants | orderBy) track by $index"
+                          ng-if="sortedEnseignant[$index -1] != enseignant">[[enseignant]] [[$last ? '' : ', ']]</span>
                 </div>
                 <div class="four cell marginFive">
                         <textarea ng-show="canUpdateAppreciations"

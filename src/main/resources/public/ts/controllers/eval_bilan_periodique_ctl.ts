@@ -27,6 +27,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.critereIsEmpty = true;
         $scope.showHistoric = false;
         $scope.showAvisOrientation = false;
+        $scope.showMoyGeneral = false;
         $scope.opened.avis = true;
 
         $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
@@ -391,7 +392,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if (eleve.appreciations !== undefined) {
                     if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
                         if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
-                            $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, $scope.search.classe,isBilanPeriodique);
+                            $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, $scope.search.classe, isBilanPeriodique);
                         }
                         else {
                             notify.error(lang.translate("error.char.outbound") +
