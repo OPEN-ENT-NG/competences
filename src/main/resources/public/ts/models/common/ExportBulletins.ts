@@ -1,7 +1,7 @@
 /**
  * Created by anabah on 10/10/2018.
  */
-import {_ , notify} from 'entcore';
+import {_ , notify, idiom as lang} from 'entcore';
 import http from "axios";
 declare let ArrayBufferLike :any;
 
@@ -32,7 +32,8 @@ export class ExportBulletins {
 
     public static async  generateBulletins (options) {
         try {
-            let data = await http.post(`/competences/export/bulletins`, this.toJSON(options), {responseType: 'arraybuffer'});
+            let data = await http.post(`/competences/export/bulletins`, this.toJSON(options),
+                {responseType: 'arraybuffer'});
 
              let blob = new Blob([data.data]);
              let link = document.createElement('a');
@@ -44,9 +45,9 @@ export class ExportBulletins {
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
             }, 100);
-            notify.success('evaluations.export.bulletin.success');
+            notify.success(options.classeName + ' ' + lang.translate('evaluations.export.bulletin.success'));
         } catch (e) {
-            notify.error('evaluations.export.bulletin.error');
+            notify.error(options.classeName + ' ' + lang.translate('evaluations.export.bulletin.error'));
         }
 
     }
