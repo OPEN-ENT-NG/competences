@@ -210,6 +210,9 @@ export class Evaluations extends Model {
                                 if (idPeriode !== undefined) {
                                     uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode;
                                 }
+
+                                uriAnnotations = uriAnnotations + '?idClasse=' + this.eleve.classe.id;
+
                                 http().getJson(uriAnnotations).done((annotations) => {
                                     annotations.forEach(function () {
                                         annotations.forEach(function (annotation) {
