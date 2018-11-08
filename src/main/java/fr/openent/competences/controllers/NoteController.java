@@ -1048,8 +1048,6 @@ public class NoteController extends ControllerHelper {
                 });
     }
 
-
-
     private void getDataGraph(final HttpServerRequest request, JsonArray groupIds) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
 
@@ -1063,7 +1061,7 @@ public class NoteController extends ControllerHelper {
                 final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
                 // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
                 notesService.getCompetencesNotesReleve(idEtablissement,idClasse,
-                        groupIds != null ? groupIds : null,
+                        groupIds,
                         null,
                         idPeriode,
                         null,
@@ -1141,7 +1139,7 @@ public class NoteController extends ControllerHelper {
                 // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
                 notesService.getCompetencesNotesReleve(idEtablissement,
                         idClasse,
-                        groupIds != null ? groupIds : null,
+                        groupIds,
                         null,
                         (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
                         null,
@@ -1183,8 +1181,6 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-
-
     /**
      * Récupère les notes pour le bilan periodique
      *
@@ -1218,38 +1214,21 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     //@ResourceFilter(AccessReleveFilter.class)
     public void getBilanPeriodiqueDomaineForGraph(final HttpServerRequest request) {
-
-        final String idClasse = request.params().get("idClasse");
-        Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections
-                        .JsonArray()
-                        .add(idClasse),
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(
-                            Either<String, JsonArray> responseQuerry) {
-                        //List qui contient la idClasse + tous les ids groupes
-                        // de la classe
-                        JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
-
-                        if (!responseQuerry.isRight()) {
-                            String error = responseQuerry.left().getValue();
-                            log.error(error);
-                            badRequest(request, error);
-                        } else {
-                            JsonArray idClasseGroups = responseQuerry.right().getValue();
-                            if (idClasseGroups != null && idClasseGroups.size()> 0 ) {
-                                idsGroups.addAll(idClasseGroups.getJsonObject(0)
-                                        .getJsonArray("id_groupes"));
-                            }else{
-                                idsGroups = null; //pas de groups pour la classe passee en parametre
-                            }
-                            getDataGraphDomaine(request, idsGroups);
-                        }
-                    }
-                });
-
-
-
+        final String idEleve = request.params().get("idEleve");
+        Utils.getGroupsEleve(eb, idEleve, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle( Either<String, JsonArray> responseQuerry) {
+                if (!responseQuerry.isRight()) {
+                    String error = responseQuerry.left().getValue();
+                    log.error(error);
+                    badRequest(request, error);
+                } else {
+                    JsonArray idGroups = responseQuerry.right().getValue();
+                    //idGroups null si l'eleve n'est pas dans un groupe
+                    getDataGraphDomaine(request, idGroups);
+                }
+            }
+        });
     }
 
 
