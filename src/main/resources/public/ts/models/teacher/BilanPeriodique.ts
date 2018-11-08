@@ -173,8 +173,7 @@ export class BilanPeriodique extends  Model {
                 eleve ? await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=eleve", this.toJSON(periode, element, eleve, classe))
                     : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=classe", this.toJSON(periode, element, null, classe));
             } else {
-                eleve ? await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE + "?type=eleve", this.toJSON(periode, element, eleve, classe))
-                    : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE + "?type=classe", this.toJSON(periode, element, null, classe));
+                 await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE + "?type=eleve-bilanPeriodique", this.toJSON(periode, element, eleve, classe));
             }
 
         } catch (e) {

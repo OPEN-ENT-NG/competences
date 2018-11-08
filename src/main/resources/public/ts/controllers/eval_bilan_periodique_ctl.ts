@@ -132,7 +132,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             $scope.elementBilanPeriodique.appreciationCPE = new AppreciationCPE($scope.informations.eleve.id,
                 $scope.search.periode.id_type);
-            await $scope.elementBilanPeriodique.appreciationCPE.sync();
+            await $scope.elementBilanPeriodique.appreciationCPE.syncAppreciationCPE();
             utils.safeApply($scope);
             template.open('vie-scolaire', 'enseignants/bilan_periodique/display_vie_scolaire');
             utils.safeApply($scope);

@@ -322,6 +322,9 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
             case "eleve" :
                 schema = Competences.SCHEMA_APPRECIATION_ELEVE_CREATE;
                 break;
+            case "eleve-bilanPeriodique" :
+                schema = Competences.SCHEMA_APPRECIATION_ELEVE_CREATE;
+                break;
             case "classe" :
                 schema = Competences.SCHEMA_APPRECIATION_CLASSE_CREATE;
                 break;
@@ -646,7 +649,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                                 resource.getString("id_classe"), new Handler<Boolean>() {
                                                     @Override
                                                     public void handle(final Boolean isValid) {
-                                                        if (isValid) {
+                                                        if (isValid || request.params().get("type").equals("eleve-bilanPeriodique")) {
                                                             new FilterUserUtils(user, eb).validateEleve(resource.getString("id_eleve"),
                                                                     resource.getString("id_classe"), new Handler<Boolean>() {
                                                                         @Override

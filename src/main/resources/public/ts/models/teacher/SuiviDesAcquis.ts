@@ -94,10 +94,10 @@ export class SuiviDesAcquis  {
    }
 
     getPositionnementDefinitif(): any{
-       if(this.positionnement_final === this.positionnement_final){
-           return this.positionnement_auto;
-       }else{
+       if(this.positionnement_final !== this.positionnement_auto){
            return this.positionnement_final;
+       }else{
+           return this.positionnement_auto;
        }
     }
 }
@@ -185,19 +185,22 @@ export class SuivisDesAcquis extends Model{
                         && _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
                         let positionnementCalcule = _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}).moyenne;
                         let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1, this.tableConversions.all);
-                        if ( suiviDesAcquis.positionnementsFinaux !== null && suiviDesAcquis.positionnementsFinaux !== undefined && suiviDesAcquis.positionnementsFinaux.length > 0) {
-                            if(_.find( suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}) !== undefined){
-                                suiviDesAcquis.positionnement_final = _.find( suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}).positionnementFinal;
-                            }else{
-                                suiviDesAcquis.positionnement_final = (positionnementConverti !== -1) ? positionnementConverti : 0;
-                            }
-                        }else{
-                            suiviDesAcquis.positionnement_final = (positionnementConverti !== -1) ? positionnementConverti : 0;
-                        }
                         suiviDesAcquis.positionnement_auto = (positionnementConverti !== -1) ? positionnementConverti : 0;
                     }else{
                         suiviDesAcquis.positionnement_auto = 0;
+
                     }
+                    if ( suiviDesAcquis.positionnementsFinaux !== null && suiviDesAcquis.positionnementsFinaux !== undefined && suiviDesAcquis.positionnementsFinaux.length > 0) {
+                        if(_.find( suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}) !== undefined){
+                            suiviDesAcquis.positionnement_final = _.find( suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}).positionnementFinal;
+                        }else{
+                            suiviDesAcquis.positionnement_final = suiviDesAcquis.positionnement_auto;
+                        }
+                    }else{
+                        suiviDesAcquis.positionnement_final = suiviDesAcquis.positionnement_auto;
+                    }
+
+
                      // ajout des moyennes par matiere sur les periodes
                     _.each(this.historiques, (histo) => {
                         //ajout de la moyennefinale si elle existe sinon ajout de la moyenne de l'eleve si elle existe pour la periode en cours
