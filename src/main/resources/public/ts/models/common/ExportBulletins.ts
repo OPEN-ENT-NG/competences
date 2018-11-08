@@ -11,6 +11,7 @@ export class ExportBulletins {
         let o = {
             idStudents: options.idStudents,
             getResponsable: (options.getResponsable === true)? options.getResponsable:false ,
+            getProgramElements: (options.getProgramElements === true)? options.getProgramElements:false ,
             moyenneClasse: (options.moyenneClasse === true)? options.moyenneClasse:false ,
             moyenneEleve: (options.moyenneEleve === true)? options.moyenneEleve:false ,
             positionnement: (options.positionnement === true)? options.positionnement:false ,
@@ -45,9 +46,9 @@ export class ExportBulletins {
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
             }, 100);
-            notify.success(options.classeName + ' ' + lang.translate('evaluations.export.bulletin.success'));
+            notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
         } catch (e) {
-            notify.error(options.classeName + ' ' + lang.translate('evaluations.export.bulletin.error'));
+            notify.error(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.error'));
         }
 
     }

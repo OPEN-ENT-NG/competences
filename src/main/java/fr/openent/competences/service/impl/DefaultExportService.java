@@ -1023,7 +1023,7 @@ public class DefaultExportService implements ExportService  {
                     String title = params.getString("classeName") + "_" + I18n.getInstance()
                             .translate("evaluations.bulletin",
                                     I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-                    JsonObject resultFinal = new JsonObject(params.getMap()).put("title", title);
+                    JsonObject resultFinal = new JsonObject().put("title", title);
 
                     resultFinal.put("eleves", exportBulletin.sortResultByClasseNameAndNameForBulletin(elevesMap));
                     genererPdf(request, resultFinal,

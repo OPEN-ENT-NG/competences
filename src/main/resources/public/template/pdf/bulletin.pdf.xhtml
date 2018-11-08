@@ -86,7 +86,12 @@
             width: 50%!important;
         }
         .thirdSuivi {
-            width: 50% !important;
+        {{#getProgramElements}}
+        width: 50% !important;
+        {{/getProgramElements}}
+        {{^getProgramElements}}
+        width: 70% !important;
+        {{/getProgramElements}}
         }
 
         .blank_row {
@@ -173,6 +178,7 @@
             margin-top: 30px;
             margin-left : 1px;
             margin-right : 1px;
+
         }
         .firstProjet {
             width: 40%;
@@ -276,7 +282,9 @@
 
         <tr class="header">
             <td class="firstSuivi">&nbsp;</td>
+            {{#getProgramElements}}
             <td class="secondSuivi">{{suiviElementLibelle}}</td>
+            {{/getProgramElements}}
             <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
             {{#getMoyenneEleve}}
             <td class="fourthSuivi">{{moyenneStudentLibelle}}</td>
@@ -297,21 +305,23 @@
                 <span style="color: black; font-size: smaller;">{{initial}}.{{name}}</span>
                 {{/teachers}}
             </td>
+            {{#getProgramElements}}
             <td style="text-align: left; {{elementsProgrammeStyle}}" class="secondSuivi onePadding">{{elementsProgramme}}</td>
+            {{/getProgramElements}}
             <td style="text-align: left; {{appreciationStyle}}" class="thirdSuivi onePadding">{{appreciation}}</td>
             {{#getMoyenneEleve}}
-            <td style="font-size: smaller; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>
+            <td style="font-size: x-small; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td style="font-size: smaller;" class="fifthSuivi onePadding">{{moyenneClasse}}</td>
+            <td style="font-size: x-small;" class="fifthSuivi onePadding">{{moyenneClasse}}</td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td style="font-size: smaller; font-weight: bold" class="sixthSuivi onePadding">{{positionnement}}</td>
+            <td style="font-size: x-small; font-weight: bold" class="sixthSuivi onePadding">{{positionnement}}</td>
             {{/getPositionnement}}
         </tr>
         {{/suiviAcquis}}
     </table>
-    <span class="paddingFifty" style="font-size: xx-small ;position: absolute;top: 1034px;"> {{footer}}</span>
+    <span class="paddingFifty" style="font-size: xx-small ;position: relative;top: 10px;"> {{footer}}</span>
     {{/hasSuiviAcquis}}
 
     <div class="start">

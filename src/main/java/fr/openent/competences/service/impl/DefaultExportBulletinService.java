@@ -85,7 +85,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("getMoyenneEleve", params.getBoolean("moyenneEleve"))
                     .put("getPositionnement", params.getBoolean("positionnement"))
                     .put("showProjects", params.getBoolean("showProjects"))
-                    .put("showFamily", params.getBoolean("showFamily"));
+                    .put("showFamily", params.getBoolean("showFamily"))
+                    .put("getProgramElements", params.getBoolean("getProgramElements"));
 
         }
         finalHandler.handle(new Either.Right<>(null));
