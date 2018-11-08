@@ -99,10 +99,7 @@ public class Utils {
 
                 if ("ok".equals(body.getString("status"))) {
                     JsonArray queryResult = body.getJsonArray("results");
-
-                    if ( queryResult !=  null ) {
-                        handler.handle(new Either.Right<String, JsonArray>(queryResult));
-                    }
+                    handler.handle(new Either.Right<String, JsonArray>(queryResult));
                 } else {
                     handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                     log.error("getGroupesClasse : " + body.getString("message"));
@@ -149,6 +146,47 @@ public class Utils {
                     handler.handle(new Either.Left<String, List<String>>(body.getString("message")));
                     log.error("Error :can not get students of groupe : " + idGroupe);
                 }
+            }
+        }));
+
+    }
+
+    /**
+     * Get eleve group
+     * @param eb EventBus
+     * @param idEleve id Eleve
+     * @param handler response eleve groups
+     */
+
+    public static void getGroupsEleve (EventBus eb, String idEleve, Handler<Either<String, JsonArray>> handler){
+        JsonObject action = new JsonObject()
+                .put("action","eleve.getGroups")
+                .put("idEleve", idEleve);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler (new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+
+                JsonObject body = message.body();
+                if(!"ok".equals(body.getString("status"))){
+                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                    log.error("getGroupsEleve : "+ body.getString("message"));
+                }else{
+                    JsonArray idGroupsObjects = body.getJsonArray("results");
+                    JsonArray idGroupsResult = new fr.wseduc.webutils.collections.JsonArray();
+                    if(idGroupsObjects != null ){
+                        if(idGroupsObjects.isEmpty()){
+                            idGroupsResult = null;
+                        }else{
+                            for(int i = 0; i < idGroupsObjects.size(); i++){
+                                JsonObject objectGroup = idGroupsObjects.getJsonObject(i);
+                                idGroupsResult.add(objectGroup.getString("id_groupe"));
+                            }
+                        }
+                    }
+                    handler.handle(new Either.Right<String, JsonArray>(idGroupsResult));
+                }
+
+
             }
         }));
 

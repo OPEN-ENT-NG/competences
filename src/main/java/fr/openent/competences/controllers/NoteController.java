@@ -1195,31 +1195,18 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     //@ResourceFilter(AccessReleveFilter.class)
     public void getBilanPeriodiqueDataForGraph(final HttpServerRequest request) {
-        final String idClasse = request.params().get("idClasse");
-        Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections
-                        .JsonArray()
-                        .add(idClasse),
-                new Handler<Either<String, JsonArray>>() {
+        final String idEleve = request.params().get("idEleve");
+        Utils.getGroupsEleve(eb, idEleve, new Handler<Either<String, JsonArray>>() {
                     @Override
-                    public void handle(
-                            Either<String, JsonArray> responseQuerry) {
-                        //List qui contient la idClasse + tous les ids groupes
-                        // de la classe
-                        JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
-
+                    public void handle( Either<String, JsonArray> responseQuerry) {
                         if (!responseQuerry.isRight()) {
                             String error = responseQuerry.left().getValue();
                             log.error(error);
                             badRequest(request, error);
                         } else {
-                            JsonArray idClasseGroups = responseQuerry.right().getValue();
-                            if (idClasseGroups != null && idClasseGroups.size()> 0) {
-                                idsGroups.addAll(idClasseGroups.getJsonObject(0)
-                                        .getJsonArray("id_groupes"));
-                            }else{
-                                idsGroups = null; //pas de groups pour la classe passee en parametre
-                            }
-                            getDataGraph(request, idsGroups);
+                            JsonArray idGroups = responseQuerry.right().getValue();
+                            //idGroups null si l'eleve n'est pas dans un groupe
+                            getDataGraph(request, idGroups);
                         }
                     }
                 });

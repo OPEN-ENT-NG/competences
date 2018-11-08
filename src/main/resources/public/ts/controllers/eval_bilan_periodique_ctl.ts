@@ -104,7 +104,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
             template.open('projet', 'enseignants/bilan_periodique/display_projets');
             $scope.getElementsBilanBilanPeriodique("isBilanPeriodique");
-            $scope.isBilanPeriodique = "isBilanPeriodique";
+           // $scope.isBilanPeriodique = "isBilanPeriodique";
             utils.safeApply($scope);
         };
 
