@@ -181,7 +181,7 @@
 
         }
         .firstProjet {
-            width: 40%;
+            width: 35%;
             visibility: visible !important;
             background-color: #E2F0FA;
             padding-bottom: 1px;
@@ -306,9 +306,11 @@
                 {{/teachers}}
             </td>
             {{#getProgramElements}}
-            <td style="text-align: left; {{elementsProgrammeStyle}}" class="secondSuivi onePadding">{{elementsProgramme}}</td>
+            <td style="text-align: left; word-wrap:break-word;{{{elementsProgrammeStyle}}}" class="secondSuivi onePadding">
+                {{elementsProgramme}}</td>
             {{/getProgramElements}}
-            <td style="text-align: left; {{appreciationStyle}}" class="thirdSuivi onePadding">{{appreciation}}</td>
+            <td style="text-align: left;word-wrap:break-word; {{{appreciationStyle}}}" class="thirdSuivi onePadding">
+                {{appreciation}}</td>
             {{#getMoyenneEleve}}
             <td style="font-size: x-small; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>
             {{/getMoyenneEleve}}
@@ -358,7 +360,7 @@
                 </span><br/>
                     {{/intervenantsMatieres}}
                 </td>
-                <td class="secondProjet" style="{{commentaireStyle}}">{{commentaire}}</td>
+                <td class="secondProjet" style="{{{commentaireStyle}}}">{{commentaire}}</td>
             </tr>
             {{/elements}}
         </table>
@@ -381,8 +383,10 @@
                     <tr>
                         <td class="synthese leftCommunication">
                             <div  class="lefCom" style="{{appreciationCPEStyle}}">
-                                <br/>
+                                <span style="font-size: small !important;">{{viescolaireLibelle}}</span>
+                                <span style="font-weight: bold">
                                 {{appreciationCPE}}
+                                </span>
                             </div>
                             <br/>
 
@@ -397,8 +401,7 @@
                         </td>
                         <td  class="synthese rightCommunication">
 
-                            <div style="margin-top: 25px;" class="rightCom">
-                                <br/>
+                            <div style="margin-top: 5px !important;" class="rightCom">
                                 {{communicationHeaderRightFirst}}
                             </div>
                             <div class="rightCom">

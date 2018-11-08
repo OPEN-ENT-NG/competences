@@ -32,7 +32,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private ElementBilanPeriodiqueService  elementBilanPeriodiqueService;
     private final DefaultAppreciationCPEService appreciationCPEService;
     private final int MAX_SIZE_LIBELLE = 300;
-    private final int MAX_SIZE_LIBELLE_PROJECT = 220;
+    private final int MAX_SIZE_LIBELLE_PROJECT = 600;
     private final int MAX_SIZE_APPRECIATION_CPE = 600;
     private final int MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE = 600;
 
@@ -73,6 +73,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("positionementLibelle", getLibelle("evaluations.releve.positionnement.min") + '*')
                     .put("moyenneStudentLibelle", getLibelle("average.min.eleve"))
                     .put("bilanAcquisitionLibelle", getLibelle("viescolaire.suivi.des.acquis.libelle.export"))
+                    .put("viescolaireLibelle", getLibelle("evaluations.export.bulletin.viescolaireLibelle"))
                     .put("familyVisa", getLibelle("evaluations.export.bulletin.visa.libelle"))
                     .put("signature", getLibelle("evaluations.export.bulletin.date.name.visa.responsable"))
                     .put("bornAt", getLibelle("born.on"))
@@ -424,9 +425,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                             "id_elt_bilan_periodique");
                                                                     mapElement.get(idElem).put("commentaire",
                                                                             troncateLibelle(com,
-                                                                                    MAX_SIZE_LIBELLE_PROJECT) )
+                                                                                    MAX_SIZE_LIBELLE_PROJECT))
                                                                             .put("commentaireStyle",
-                                                                                    fontSize(com,MAX_SIZE_LIBELLE));
+                                                                                    fontSizeProject(com,
+                                                                                            MAX_SIZE_LIBELLE_PROJECT));
                                                                 }
                                                             }
                                                         }
@@ -796,10 +798,23 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             return  "";
         }
         else if (libelle.length() < max/2) {
-            return "font-size: x-small;";
+            return "font-size: 10px !important;";
         }
         else if (libelle.length() <= max) {
-            return "font-size: xx-small;";
+            return "font-size: 8.5px !important;";
+        }
+        return "";
+    }
+    private String fontSizeProject(String libelle, int max ) {
+
+        if(libelle == null) {
+            return  "";
+        }
+        else if (libelle.length() < max/2) {
+            return "font-size: 10px !important;";
+        }
+        else if (libelle.length() <= max) {
+            return "font-size: 7.5px !important;";
         }
         return "";
     }

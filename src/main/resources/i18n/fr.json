@@ -474,6 +474,7 @@
   "evaluations.export.bulletin.element.appreciation.libelle": "Acquisitions, progrès et difficultés éventuelles",
   "evaluations.export.bulletin.visa.libelle":"Visa de la famille",
   "evaluations.export.bulletin.date.name.visa.responsable":"Date, nom et signature des responsables légaux",
+  "evaluations.export.bulletin.viescolaireLibelle": "Vie scolaire (assiduité, ponctualité ; respect du règlement intérieur; participation à la vie de l'établisssement): ",
   "evaluations.choose.classe": "Veuillez sélectionner au moins une classe et une période",
   "evaluations.classes.are.not.initialized": "Désolé, les classes sélectionnée non pas de périodes paramétrées",
   "evaluations.choose.periode": "Veuillez choisir une période",
