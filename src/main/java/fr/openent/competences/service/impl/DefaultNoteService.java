@@ -222,8 +222,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(periodeId);
         }
 
-        Sql.getInstance().prepared(query.toString(), values,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        Sql.getInstance().prepared(query.toString(), values,Competences.DELIVERY_OPTIONS,
                 validResultHandler(handler));
     }
 
@@ -433,8 +432,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             values.add(periodeId);
         }
 
-        Sql.getInstance().prepared(query.toString(), values,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        Sql.getInstance().prepared(query.toString(), values,Competences.DELIVERY_OPTIONS,
                 validResultHandler(handler));
     }
 
@@ -645,8 +643,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         values.add(idEleve).add(idEleve).add(idEleve);
         values.add(idMatiere).add(idMatiere).add(idMatiere);
 
-        Sql.getInstance().prepared( query, values,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        Sql.getInstance().prepared( query, values,Competences.DELIVERY_OPTIONS,
                 validResultHandler(handler));
     }
 

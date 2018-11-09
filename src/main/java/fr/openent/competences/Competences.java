@@ -27,6 +27,7 @@ import org.entcore.common.share.impl.SqlShareService;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.eventbus.DeliveryOptions;
 
 import java.math.BigInteger;
 
@@ -116,6 +117,7 @@ public class Competences extends BaseServer {
     public static final Number BFC_AVERAGE_VISIBILITY_NONE = 0;
     public static final Number BFC_AVERAGE_VISIBILITY_FOR_ADMIN_ONLY = 1;
     public static final Number BFC_AVERAGE_VISIBILITY_FOR_ALL = 2;
+    public static  DeliveryOptions DELIVERY_OPTIONS ;
 
     //LSU
     public static final Integer POSITIONNEMENT_ZERO = 0;
@@ -140,7 +142,8 @@ public class Competences extends BaseServer {
         VSCO_SCHEMA = config.getString("vsco-schema");
         LSUN_CONFIG = config.getJsonObject("lsun");
         TRANSITION_CONFIG = config.getJsonObject("transition");
-
+        DELIVERY_OPTIONS = new DeliveryOptions()
+                .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L);
 
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender notification = emailFactory.getSender();

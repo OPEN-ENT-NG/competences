@@ -6,15 +6,14 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 
+import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +38,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         devoirService = new DefaultDevoirService(eb);
         elementProgramme = new DefaultElementProgramme() ;
         sql = Sql.getInstance();
+
     }
 
     @Override
@@ -49,10 +49,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 .append(" WHERE id_eleve = ? ");
         JsonArray params = new JsonArray().add(idEleve);
 
-        sql.prepared(query.toString(),params,
-                        new DeliveryOptions()
-                                .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
-                        validResultHandler(eitherHandler));
+            sql.prepared(query.toString(), params, Competences.DELIVERY_OPTIONS,
+                    validResultHandler(eitherHandler));
     }
 
     @Override

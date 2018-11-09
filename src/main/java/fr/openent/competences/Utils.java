@@ -90,8 +90,7 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put("action", "classe.getGroupesClasse")
                 .put("idClasses", idsClasses);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
@@ -440,8 +439,7 @@ public class Utils {
         JsonObject action = new JsonObject()
                 .put("action","matiere.getMatieres")
                 .put("idMatieres", idsMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS,action,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        eb.send(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
@@ -475,12 +473,12 @@ public class Utils {
 
     }
 
-    public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers, final Handler<Either<String,Map<String,JsonObject>>> handler){
+    public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers,
+                                                final Handler<Either<String,Map<String,JsonObject>>> handler){
         JsonObject action = new JsonObject()
                 .put("action","eleve.getUsers")
                 .put("idUsers", idsUsers);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {

@@ -26,9 +26,9 @@
             page-break-after: avoid;
         }
 
-        img {
+        #education {
             width: auto;
-            height: 110px;
+            height: 90px;
             margin-bottom: 20px;
             margin-left: -2px;
         }
@@ -143,15 +143,7 @@
             font-size: small;
             color: black;
         }
-        .rightCom {
-            position: relative;
-            right: 5px;
-            top: -51px;
-            text-align: right;
-            font-weight: normal;
-            font-size: small;
-            color: black;
-        }
+
         .leftCommunication {
             margin-top: 0%!important;
             padding-top: 5px;
@@ -159,8 +151,10 @@
             height: 45px !important;
         }
         .rightCommunication {
-            margin-top: 0px;
-            height: 45px !important;
+            padding-top : 4px!important;
+            vertical-align: top;
+            background-color: #ffd0a0 !important;
+            text-align: right;
         }
         .structure {
             display: inline-block;
@@ -226,11 +220,11 @@
 <div class="page">
 
     <div style= "height: 130px;" class="paddingFifty">
-        <img style="float:left;" src="img/education_nationale.png" alt="Logo"/>
+        <img id="education" style="float:left;" src="img/education_nationale.png" alt="Logo"/>
         <div class="structure">
             {{#structureLibelle}}
             <p style="font-weight: bold">{{academy}}</p>
-            <p style="font-weight: bold">{{type}}</p>
+
             <p style="font-weight: bold">{{name}}</p>
             <p>{{address}}</p>
             <p>{{town}}</p>
@@ -249,7 +243,7 @@
             <div style="font-size: small;">{{bornAt}} {{birthDateLibelle}}</div>
             <div style="font-size: small;">   {{headTeacherLibelle}}
                 {{#headTeachers}}
-                {{civility}} &nbsp; {{name}} <br/>
+                {{civility}} &nbsp; {{initial}} {{name}} <br/>
                 {{/headTeachers}}
             </div>
             <div style="font-size: small;">{{classeOf}} {{classeName}}</div>
@@ -263,7 +257,7 @@
             <div style="font-size: small;">{{bornAt}} {{birthDateLibelle}}</div>
             <div style="font-size: small;">   {{headTeacherLibelle}}
                 {{#headTeachers}}
-                {{civility}} &nbsp; {{name}}
+                {{civility}}&nbsp; {{initial}} {{name}}
                 {{/headTeachers}}
             </div>
             <div style="font-size: small;">{{classeOf}} {{classeName}}</div>
@@ -327,6 +321,14 @@
     {{/hasSuiviAcquis}}
 
     <div class="start">
+        {{#showBilanPerDomaines}}
+        <h4 class="paddingFifty">{{bilanPerDomainesLibelle}}</h4>
+        {{#hasGraphPerDomaine}}
+        <img src="{{graphPerDomaine}}"
+             style="margin-left: 40px;display: block; width: 700px; height: 218px;"
+             alt="graphPerDomaine"/>
+        {{/hasGraphPerDomaine}}
+        {{/showBilanPerDomaines}}
         {{#showProjects}}
         {{#projects}}
         {{#hasProject}}
@@ -399,14 +401,14 @@
                                 {{/evenements}}
                             </div>
                         </td>
-                        <td  class="synthese rightCommunication">
+                        <td  class="rightCommunication">
 
-                            <div style="margin-top: 5px !important;" class="rightCom">
+                            <span >
                                 {{communicationHeaderRightFirst}}
-                            </div>
-                            <div class="rightCom">
+                            </span> <br/>
+                            <span>
                                 {{communicationHeaderRightSecond}}
-                            </div>
+                            </span>
 
                             <br/>
                             <br/>
@@ -420,7 +422,7 @@
                 <div class="synthese" style="height: 60px; padding: 5px">
                     <span style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">{{familyVisa}}</span>
 
-                    <span style="float: right;margin-left: 5px; margin-top: 0px;font-size: small;">{{signature}}</span>
+                    <span style="float: right;margin-right: 5px; text-align:right;margin-top: 0px;font-size: small;">{{signature}}</span>
                 </div>
 
                 {{/showFamily}}

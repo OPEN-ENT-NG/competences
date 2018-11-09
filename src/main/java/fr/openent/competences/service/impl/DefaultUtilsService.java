@@ -567,7 +567,8 @@ public class DefaultUtilsService  implements UtilsService {
             action.put("action", "periode.getPeriodes")
                     .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override
                 public void handle(Message<JsonObject> message) {
                     JsonObject body = message.body();
@@ -631,7 +632,9 @@ public class DefaultUtilsService  implements UtilsService {
             handler.handle(new Either.Left<>("bad Request"));
             return;
         }
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(
                 new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {

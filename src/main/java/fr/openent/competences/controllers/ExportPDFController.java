@@ -2184,7 +2184,7 @@ public class ExportPDFController extends ControllerHelper {
                                     final Handler<Either<String, JsonObject>> finalHandler
                                             = exportService.getFinalBulletinHandler(request, elevesMap, vertx, config,
                                             answered, params);
-
+                                    JsonObject images = params.getJsonObject("images");
                                     for (int i = 0; i < eleves.size(); i++) {
 
                                         JsonObject eleve = eleves.getJsonObject(i);
@@ -2194,6 +2194,16 @@ public class ExportPDFController extends ControllerHelper {
 
                                             String [] be = birthDate.split("-");
                                             eleve.put("birthDateLibelle",  be[2] + '/' + be[1] + '/' + be[0]);
+                                        }
+                                        if (showBilanPerDomaines) {
+                                            if (images != null) {
+                                                String img = images.getString(eleve.getString("idEleve"));
+                                                Boolean hasGraphPerDomaine = (img != null);
+                                                eleve.put("hasGraphPerDomaine", hasGraphPerDomaine);
+                                                if(hasGraphPerDomaine) {
+                                                    eleve.put("graphPerDomaine", img);
+                                                }
+                                            }
                                         }
                                         elevesMap.put(idEleve, eleve);
 

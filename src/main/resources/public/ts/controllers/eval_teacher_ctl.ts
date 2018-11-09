@@ -501,6 +501,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
             bulletin: () => {
                 template.open('main', 'enseignants//bulletin/print_bulletin');
+                $scope.usePerso = evaluations.structure.usePerso;
+                $scope.updateColorAndLetterForSkills();
                 utils.safeApply($scope);
             }
         };

@@ -1327,8 +1327,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 " ORDER BY devoirs.id_matiere ";
         values.add(id_eleve).add(id_eleve).add(id_eleve);
 
-        sql.prepared(query,values,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
-                SqlResult.validResultHandler(handler));
+        sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
     }
 }

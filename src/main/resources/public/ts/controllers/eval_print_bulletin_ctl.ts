@@ -3,6 +3,11 @@ import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
 import {Classe} from "../models/teacher";
 
+
+declare let $ : any;
+declare let Chart: any;
+
+
 export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
     function ($scope) {
@@ -19,6 +24,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             $scope.filteredPeriodes = [];
             $scope.filterEleves =  [];
             $scope.allElevesClasses = [];
+            $scope.isForBulletin = true;
             $scope.selected = {
                 periode : undefined
             };
@@ -44,9 +50,10 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             }
 
             options.idPeriode = $scope.selected.periode.id_type;
-            options.idStudents = _.pluck(_.filter($scope.allElevesClasses, function (student) {
+            options.students = _.filter($scope.allElevesClasses, function (student) {
                 return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
-            }), 'id');
+            });
+            options.idStudents = _.pluck(options.students, 'id');
 
             if (_.where($scope.allElevesClasses, {selected: true}).length === 0) {
                 notify.info('evaluations.choose.student');
@@ -57,6 +64,12 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 return ;
             }
             $scope.opened.displayMessageLoader = true;
+
+            let disableMessageLoader = ()=> {
+                $scope.opened.displayMessageLoader = false;
+                utils.safeApply($scope);
+            };
+
             utils.safeApply($scope);
             let classes = _.groupBy($scope.allElevesClasses, 'classeName');
             for ( let key in classes) {
@@ -66,12 +79,15 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
                 }), 'id');
                 if(options.idStudents!== undefined && options.idStudents.length > 0){
-                    await ExportBulletins.generateBulletins(options);
+                   try {
+                       await ExportBulletins.generateBulletins(options, $scope);
+                   }
+                   catch (e) {
+                      disableMessageLoader();
+                   }
                 }
             }
-
-            $scope.opened.displayMessageLoader = false;
-            utils.safeApply($scope);
+           disableMessageLoader();
 
         };
 

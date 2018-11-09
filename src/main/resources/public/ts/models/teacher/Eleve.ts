@@ -19,6 +19,7 @@ import { Model, Collection, _, notify, http as httpCore, moment} from 'entcore';
 import http  from 'axios';
 import { Evaluation, SuiviCompetence } from './index';
 import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
+import {ExportBulletins} from "../common/ExportBulletins";
 
 export class Eleve extends Model {
     moyenne: number;

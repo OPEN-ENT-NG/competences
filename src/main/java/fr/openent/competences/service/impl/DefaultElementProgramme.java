@@ -89,8 +89,7 @@ public class DefaultElementProgramme implements ElementProgramme {
         values.add(idPeriode);
         values.add(idMatiere);
 
-        sql.prepared(query.toString(), values,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        sql.prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
                 SqlResult.validResultHandler(handler));
     }
 

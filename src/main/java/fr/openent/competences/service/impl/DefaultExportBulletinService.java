@@ -11,6 +11,7 @@ import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -31,6 +32,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private BilanPeriodiqueService bilanPeriodiqueService;
     private ElementBilanPeriodiqueService  elementBilanPeriodiqueService;
     private final DefaultAppreciationCPEService appreciationCPEService;
+    private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
     private final int MAX_SIZE_LIBELLE = 300;
     private final int MAX_SIZE_LIBELLE_PROJECT = 600;
     private final int MAX_SIZE_APPRECIATION_CPE = 600;
@@ -41,6 +43,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
         elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
         appreciationCPEService = new DefaultAppreciationCPEService();
+        syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
     }
 
 
@@ -48,6 +51,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return I18n.getInstance().translate(key,
                 I18n.DEFAULT_DOMAIN, Locale.FRANCE);
     }
+
 
     @Override
     public void putLibelleForExport(String idEleve, Map<String , JsonObject> elevesMap, JsonObject params,
@@ -79,6 +83,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("bornAt", getLibelle("born.on"))
                     .put("classeOf", getLibelle("classe.of"))
                     .put("footer", "*: " + getLibelle("evaluations.export.bulletin.legendPositionnement"))
+                    .put("bilanPerDomainesLibelle", getLibelle("evaluations.bilan.by.domaine"))
+
 
                     // positionnement des options d'impression
                     .put("getResponsable", params.getBoolean("getResponsable"))
@@ -87,7 +93,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("getPositionnement", params.getBoolean("positionnement"))
                     .put("showProjects", params.getBoolean("showProjects"))
                     .put("showFamily", params.getBoolean("showFamily"))
-                    .put("getProgramElements", params.getBoolean("getProgramElements"));
+                    .put("getProgramElements", params.getBoolean("getProgramElements"))
+                    .put("showBilanPerDomaines", params.getBoolean("showBilanPerDomaines"));
 
         }
         finalHandler.handle(new Either.Right<>(null));
@@ -147,23 +154,41 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         .put("action", "eleve.getCycle")
                         .put("idClasse", idClasse);
 
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                        new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                                .getInteger("timeout-transaction") * 1000L),
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS,
                         handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                            private int count = 1;
+                            private boolean answer = false;
                             @Override
-                            public void handle(Message<JsonObject> message) {
-                                JsonObject body = message.body();
+                            public void handle(Message<JsonObject> result) {
+                                JsonObject body = result.body();
 
                                 if (!"ok".equals(body.getString("status"))) {
-                                    if (eleve.getJsonArray("errors") == null) {
-                                        eleve.put("errors", new JsonArray());
+                                    String message =  body.getString("message");
+                                    log.error("[getCycle] : " + idEleve + " " + message + count);
+
+                                    if (message.contains("Time")) {
+                                        count++;
+                                        if (count < elevesMap.size() * 8) {
+
+                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                    Competences.DELIVERY_OPTIONS,
+                                                    handlerToAsyncHandler(this));
+                                        }
+                                        else {
+                                            answer = true;
+                                        }
                                     }
-                                    JsonArray errors = eleve.getJsonArray("errors");
-                                    errors.add("getCycle");
-                                    log.error(body.getString("message"));
+                                    else {
+                                        answer = true;
+                                        if (eleve.getJsonArray("errors") == null) {
+                                            eleve.put("errors", new JsonArray());
+                                        }
+                                        JsonArray errors = eleve.getJsonArray("errors");
+                                        errors.add("getCycle");
+                                    }
                                 }
                                 else{
+                                    answer = true;
                                     JsonArray results = body.getJsonArray("results");
                                     if(results.size() > 0) {
                                         final String libelle = results.getJsonObject(0)
@@ -175,7 +200,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         log.error("[getCycle] | no link to cycle for object  " + idClasse);
                                     }
                                 }
-                                finalHandler.handle(new Either.Right<>(null));
+                                if(answer) {
+                                    if(count > 1) {
+                                        log.info("[getCycle] : " + idEleve + " success " + count);
+                                    }
+                                    finalHandler.handle(new Either.Right<>(null));
+                                }
                             }
                         }));
             }
@@ -202,27 +232,50 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("action", "periode.getLibellePeriode")
                     .put("idType", idPeriode)
                     .put("request", jsonRequest);
-            // log.info(" +++ [getLibellePeriode] | " + idEleve );
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                    new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                            .getInteger("timeout-transaction") * 1000L),
+
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        private int count = 1;
+                        private boolean answer = false;
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
 
                             if (!"ok".equals(body.getString("status"))) {
-                                if (eleve.getJsonArray("errors") == null) {
-                                    eleve.put("errors", new JsonArray());
+                                String mess =  body.getString("message");
+                                log.error("[ getLibellePeriode ] : " + idEleve + " " + mess + " " + count);
+                                if (mess.contains("Time")) {
+                                    count++;
+                                    if (count < elevesMap.size() * 8) {
+
+                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                Competences.DELIVERY_OPTIONS,
+                                                handlerToAsyncHandler(this));
+                                    }
+                                    else {
+                                        answer = true;
+                                    }
                                 }
-                                JsonArray errors = eleve.getJsonArray("errors");
-                                errors.add("getLibellePeriode");
-                                log.error(body.getString("message"));
+                                else {
+                                    answer = true;
+                                    if (eleve.getJsonArray("errors") == null) {
+                                        eleve.put("errors", new JsonArray());
+                                    }
+                                    JsonArray errors = eleve.getJsonArray("errors");
+                                    errors.add("getLibellePeriode");
+                                }
+
                             } else {
+                                answer = true;
                                 String periodeName = body.getString("result");
                                 eleve.put("periode", periodeName);
                             }
-                            finalHandler.handle(new Either.Right<>(null));
+                            if(answer) {
+                                if (count > 1) {
+                                    log.info("[ getLibellePeriode ] : " + idEleve + " success " + count);
+                                }
+                                finalHandler.handle(new Either.Right<>(null));
+                            }
                         }
                     }));
         }
@@ -249,25 +302,42 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 action.put("action", "periode.getPeriodes")
                         .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                        new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                                .getInteger("timeout-transaction") * 1000L),
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                         handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                            private int count = 1;
+                            private boolean answer = false;
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 JsonObject body = message.body();
                                 JsonArray periodes = body.getJsonArray("result");
-                                JsonArray idAvailableEleve = new JsonArray();
+                                String mess = body.getString("message");
 
                                 if (!"ok".equals(body.getString("status"))) {
-                                    if (eleve.getJsonArray("errors") == null) {
-                                        eleve.put("errors", new JsonArray());
+                                    log.error("[getAnneeScolaire] : " + idEleve + " " + mess + " " + count);
+
+                                    if (mess.contains("Time")) {
+                                        count++;
+                                        if (count < elevesMap.size() * 8) {
+
+                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                    Competences.DELIVERY_OPTIONS,
+                                                    handlerToAsyncHandler(this));
+                                        }
+                                        else {
+                                            answer = true;
+                                        }
                                     }
-                                    JsonArray errors = eleve.getJsonArray("errors");
-                                    errors.add("getLibellePeriode");
-                                    log.error(body.getString("message"));
+                                    else {
+                                        answer = true;
+                                        if (eleve.getJsonArray("errors") == null) {
+                                            eleve.put("errors", new JsonArray());
+                                        }
+                                        JsonArray errors = eleve.getJsonArray("errors");
+                                        errors.add("getAnneeScolaire");
+                                    }
                                 }
                                 else {
+                                    answer = true;
                                     Long debut = null;
                                     Long fin = null;
                                     for (int i = 0; i < periodes.size(); i++) {
@@ -293,7 +363,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 + debut + '-' + fin);
                                     }
                                 }
-                                finalHandler.handle(new Either.Right<>(null));
+                                if (answer) {
+                                    if(count > 1){
+                                        log.info("[getAnneeScolaire] : " + idEleve + " success " + count);
+                                    }
+                                    finalHandler.handle(new Either.Right<>(null));
+                                }
                             }
                         }));
             }
@@ -327,19 +402,41 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
             elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idClasse,
                     idEtablissement, new Handler<Either<String, JsonArray>>() {
+                        private int count = 1;
+                        private boolean answer = false;
                         @Override
                         public void handle(Either<String, JsonArray> event) {
                             if (event.isLeft()) {
-                                if (eleveObject.getJsonArray("errors") == null) {
-                                    eleveObject.put("errors", new JsonArray());
+                                String message = event.left().getValue();
+                                log.error("[getProjets] :" + idEleve + " " + message + " " + count);
+                                if (message.contains("Time")) {
+                                    count++;
+                                    if (count < elevesMap.size() * 8) {
+                                        elementBilanPeriodiqueService.getElementsBilanPeriodique(null,
+                                                idClasse,
+                                                idEtablissement, this);
+                                    }
+                                    else {
+                                        answer = true;
+                                    }
                                 }
-                                JsonArray errors = eleveObject.getJsonArray("errors");
-                                errors.add("getProjets");
-                                log.error("[getProjets] :" + event.left().getValue());
-                                finalHandler.handle(new Either.Right<>(null));
+                                else {
+                                    answer = true;
+                                    if (eleveObject.getJsonArray("errors") == null) {
+                                        eleveObject.put("errors", new JsonArray());
+                                    }
+                                    JsonArray errors = eleveObject.getJsonArray("errors");
+                                    errors.add("getProjets");
+                                }
+                                if(answer){
+                                    finalHandler.handle(new Either.Right<>(null));
+                                }
+
                             }
                             else {
-
+                                if (count > 1 ) {
+                                    log.info("[getProjets] : " + idEleve + " success " + count);
+                                }
                                 List<String> idClasses = new ArrayList<String>();
                                 idClasses.add(idClasse);
                                 JsonArray elementBilanPeriodique = event.right().getValue();
@@ -403,17 +500,38 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         elementBilanPeriodiqueService.getAppreciations(idClasses,
                                                 idPeriode.toString(), idElements, idEleve,
                                                 new Handler<Either<String, JsonArray>>() {
+                                                    private int count = 1;
+                                                    private boolean answer = false;
                                                     @Override
                                                     public void handle(Either<String, JsonArray> event) {
                                                         if (event.isLeft()) {
-                                                            if (eleveObject.getJsonArray("errors") == null) {
-                                                                eleveObject.put("errors", new JsonArray());
+                                                            String message = event.left().getValue();
+                                                            log.error("[getProjets | getAppreciations ] : " +
+                                                                    idEleve + " " + message + " " + count);
+                                                            if (message.contains("Time")) {
+                                                                count++;
+                                                                if (count < elevesMap.size() * 8) {
+                                                                    elementBilanPeriodiqueService
+                                                                            .getAppreciations(idClasses,
+                                                                                    idPeriode.toString(),
+                                                                                    idElements, idEleve, this);
+                                                                }
+                                                                else {
+                                                                    answer = true;
+                                                                }
                                                             }
-                                                            JsonArray errors = eleveObject.getJsonArray("errors");
-                                                            errors.add("getProjets");
-                                                            log.error("[getProjets] : " + event.left().getValue());
+                                                            else {
+                                                                answer = true;
+                                                                if (eleveObject.getJsonArray("errors") == null) {
+                                                                    eleveObject.put("errors", new JsonArray());
+                                                                }
+                                                                JsonArray errors = eleveObject
+                                                                        .getJsonArray("errors");
+                                                                errors.add("getProjets");
+                                                            }
                                                         }
                                                         else {
+                                                            answer = true;
                                                             JsonArray appreciations = event.right().getValue();
                                                             for(int i=0; i< appreciations.size(); i++) {
                                                                 JsonObject app = appreciations.getJsonObject(i);
@@ -432,7 +550,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                 }
                                                             }
                                                         }
-                                                        finalHandler.handle(new Either.Right<>(null));
+                                                        if(answer) {
+                                                            if (count > 1 ) {
+                                                                log.info("[getProjets | getAppreciations ] : "
+                                                                        + idEleve + " success " + count);
+                                                            }
+                                                            finalHandler.handle(new Either.Right<>(null));
+                                                        }
                                                     }
                                                 });
                                     }
@@ -457,18 +581,36 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             finalHandler.handle(new Either.Right<>(null));
         }
         else {
-            new DefaultSyntheseBilanPeriodiqueService().getSyntheseBilanPeriodique(idPeriode, idEleve,
+            syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve,
                     new Handler<Either<String, JsonObject>>() {
+                        private int count = 1;
+                        private boolean answer = false;
                         @Override
                         public void handle(Either<String, JsonObject> event) {
                             if(event.isLeft()){
-                                if (eleveObject.getJsonArray("errors") == null) {
-                                    eleveObject.put("errors", new JsonArray());
+                                String message = event.left().getValue();
+                                log.error("[getSyntheseBilanPeriodique ] : " + idEleve  + " " + message + " " + count);
+                                if (message.contains("Time")) {
+                                    count++;
+                                    if (count < elevesMap.size() * 8) {
+                                        syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve,
+                                                this);
+                                    }
+                                    else {
+                                        answer = true;
+                                    }
                                 }
-                                JsonArray errors = eleveObject.getJsonArray("errors");
-                                errors.add("getSyntheseBilanPeriodique");
+                                else {
+                                    answer = true;
+                                    if (eleveObject.getJsonArray("errors") == null) {
+                                        eleveObject.put("errors", new JsonArray());
+                                    }
+                                    JsonArray errors = eleveObject.getJsonArray("errors");
+                                    errors.add("getSyntheseBilanPeriodique");
+                                }
                             }
                             else {
+                                answer = true;
                                 JsonObject synthese = event.right().getValue();
                                 if (synthese != null) {
                                     String syntheseStr = synthese.getString("synthese");
@@ -478,7 +620,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
                                 }
                             }
-                            finalHandler.handle(new Either.Right<>(null));
+                            if(answer) {
+                                if (count > 1 ) {
+                                    log.info("[getSyntheseBilanPeriodique ] : " + idEleve + " success " + count);
+                                }
+                                finalHandler.handle(new Either.Right<>(null));
+                            }
                         }
                     });
         }
@@ -494,16 +641,34 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             appreciationCPEService.getAppreciationCPE(idPeriode, idEleve, new Handler<Either<String, JsonObject>>() {
+                private int count = 1;
+                private boolean answer = false;
                 @Override
                 public void handle(Either<String, JsonObject> event) {
                     if (event.isLeft()) {
-                        if (eleveObject.getJsonArray("errors") == null) {
-                            eleveObject.put("errors", new JsonArray());
+                        String message = " " + event.left().getValue();
+                        log.error("[getAppreciationCPE ] : " + idEleve + " " + message + " " + count);
+                        if (message.contains("Time")) {
+                            count++;
+                            if (count < elevesMap.size() * 8) {
+                                appreciationCPEService.getAppreciationCPE(idPeriode, idEleve, this);
+                            }
+                            else {
+                                answer = true;
+                            }
                         }
-                        JsonArray errors = eleveObject.getJsonArray("errors");
-                        errors.add("getAppreciationCPE");
+                        else {
+                            answer = true;
+                            if (eleveObject.getJsonArray("errors") == null) {
+                                eleveObject.put("errors", new JsonArray());
+                            }
+                            JsonArray errors = eleveObject.getJsonArray("errors");
+                            errors.add("getAppreciationCPE");
+                        }
                     } else {
+                        answer = true;
                         JsonObject appreciationCPE = event.right().getValue();
+
                         if (appreciationCPE != null) {
                             String app = troncateLibelle(appreciationCPE.getString("appreciation"),
                                     MAX_SIZE_APPRECIATION_CPE);
@@ -511,7 +676,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     .put("appreciationCPEStyle",fontSize(app, MAX_SIZE_APPRECIATION_CPE));
                         }
                     }
-                    finalHandler.handle(new Either.Right<>(null));
+                    if (answer) {
+                        if (count > 1 ) {
+                            log.info("[getAppreciationCPE ] : " + idEleve + " success " + count);
+                        }
+                        finalHandler.handle(new Either.Right<>(null));
+                    }
                 }
             });
         }
@@ -530,27 +700,42 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             String idStructure = eleveObject.getString("idEtablissement");
             action.put("action", "structure.getStructure")
                     .put("idStructure", idStructure);
-            // log.info(" +++ [getStructure]: " + idEleve);
+
             eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                    new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                            .getInteger("timeout-transaction") * 1000L),
+                    Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        private int count = 1;
+                        private boolean answer = false;
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
 
-
                             if (!"ok".equals(body.getString("status"))) {
-                                log.error("[getStructure ] : " + eleveObject.getString("nom") + " failed");
-                                log.error("[getStructure ] : " + body.getString("message"));
+                                String mess = body.getString("message");
+                                log.error("[getStructure ] : " + idEleve + " " + mess + " " + count);
 
-                                if (eleveObject.getJsonArray("errors") == null) {
-                                    eleveObject.put("errors", new JsonArray());
+                                if (mess.contains("Time")) {
+                                    count++;
+                                    if (count < elevesMap.size() * 8) {
+
+                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                Competences.DELIVERY_OPTIONS,
+                                                handlerToAsyncHandler(this));
+                                    }
+                                    else {
+                                        answer = true;
+                                    }
                                 }
-                                JsonArray errors = eleveObject.getJsonArray("errors");
-                                errors.add("getStructure");
-
+                                else {
+                                    answer = true;
+                                    if (eleveObject.getJsonArray("errors") == null) {
+                                        eleveObject.put("errors", new JsonArray());
+                                    }
+                                    JsonArray errors = eleveObject.getJsonArray("errors");
+                                    errors.add("getStructure");
+                                }
                             } else {
+                                answer = true;
                                 JsonObject structure = body.getJsonObject("result");
                                 JsonArray structureLibelle = new JsonArray();
                                 if(structure != null){
@@ -565,10 +750,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         String phone = structure.getString("phone");
                                         String email = structure.getString("email");
                                         String city =  structure.getString("city");
-                                        if(academy != null) {structureLibelle.add(new JsonObject().put("academy", academy));}
-                                        if(type != null) {structureLibelle.add(new JsonObject().put("type", type));}
+                                        if(academy != null) {
+                                            structureLibelle.add(new JsonObject().put("academy", academy));}
+                                        if(type != null) {
+                                            structureLibelle.add(new JsonObject().put("type", type));}
                                         if(name != null) {structureLibelle.add(new JsonObject().put("name",name));}
-                                        if(address != null) {structureLibelle.add(new JsonObject().put("address", address));}
+                                        if(address != null) {
+                                            structureLibelle.add(new JsonObject().put("address", address));}
                                         String town = null;
                                         if(codePostal != null) {
                                             town = codePostal;
@@ -580,12 +768,18 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             structureLibelle.add(new JsonObject().put("town",town));
                                         }
                                         if(phone != null) {structureLibelle.add(new JsonObject().put("phone", phone));}
-                                        if(email != null) {structureLibelle.add(new JsonObject().put("couriel", email));}
+                                        if(email != null) {
+                                            structureLibelle.add(new JsonObject().put("couriel", email));}
                                     }
                                 }
                                 eleveObject.put("structureLibelle", structureLibelle);
                             }
-                            finalHandler.handle(new Either.Right<>(null));
+                            if (answer) {
+                                if (count > 1 ) {
+                                    log.info("[getStructure ] : " + idEleve + " success " + count);
+                                }
+                                finalHandler.handle(new Either.Right<>(null));
+                            }
                         }
                     }));
         }
@@ -611,35 +805,70 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 action.put("action", "classe.getHeadTeachersClasse")
                         .put("idClasse", idClasse);
 
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
-                        new Handler<Message<JsonObject>>() {
-                            @Override
-                            public void handle(Message<JsonObject> message) {
-                                JsonObject body = message.body();
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                        Competences.DELIVERY_OPTIONS,
+                        handlerToAsyncHandler(
+                                new Handler<Message<JsonObject>>() {
+                                    private int count = 1;
+                                    private boolean answer = false;
+                                    @Override
+                                    public void handle(Message<JsonObject> message) {
+                                        JsonObject body = message.body();
 
 
-                                if (!"ok".equals(body.getString("status"))) {
-                                    log.error("[getHeadTeachers ] : " + eleveObject.getString("nom") + " failed");
-                                    log.error(body.getString("message"));
+                                        if (!"ok".equals(body.getString("status"))) {
+                                            String mess = body.getString("message");
+                                            log.error("[getHeadTeachers ] : " + idEleve + " " + mess + " " + count);
 
-                                    if (eleveObject.getJsonArray("errors") == null) {
-                                        eleveObject.put("errors", new JsonArray());
+                                            if (mess.contains("Time")) {
+                                                count++;
+                                                if (count < elevesMap.size() * 8) {
+
+                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                            Competences.DELIVERY_OPTIONS,
+                                                            handlerToAsyncHandler(this));
+                                                }
+                                                else {
+                                                    answer = true;
+                                                }
+                                            }
+                                            else {
+                                                answer = true;
+
+                                                if (eleveObject.getJsonArray("errors") == null) {
+                                                    eleveObject.put("errors", new JsonArray());
+                                                }
+                                                JsonArray errors = eleveObject.getJsonArray("errors");
+                                                errors.add("getHeadTeachers");
+                                            }
+                                        } else {
+                                            answer = true;
+                                            JsonArray headTeachers = body.getJsonArray("results");
+                                            if (headTeachers != null) {
+                                                for(int i=0; i< headTeachers.size(); i++){
+                                                    JsonObject headTeacher =  headTeachers.getJsonObject(i);
+                                                    String firstName = headTeacher.getString("firstName");
+                                                    String initial = "";
+
+                                                    if(firstName != null && firstName.length() > 0) {
+                                                        initial =   String.valueOf(firstName.charAt(0)) + ". ";
+                                                    }
+                                                    headTeacher.put("initial", initial);
+                                                }
+                                                String headTeachersLibelle = getLibelle(
+                                                        (headTeachers.size() > 1) ? "headTeachers" : "headTeacher");
+                                                eleveObject.put("headTeacherLibelle", headTeachersLibelle + " : ")
+                                                        .put("headTeachers", headTeachers);
+                                            }
+                                        }
+                                        if (answer) {
+                                            if (count > 1 ) {
+                                                log.info("[getHeadTeachers] : " + idEleve + " success " + count);
+                                            }
+                                            finalHandler.handle(new Either.Right<>(null));
+                                        }
                                     }
-                                    JsonArray errors = eleveObject.getJsonArray("errors");
-                                    errors.add("getHeadTeachers");
-
-                                } else {
-                                    JsonArray headTeachers = body.getJsonArray("results");
-                                    if (headTeachers != null) {
-                                        String headTeachersLibelle = getLibelle(
-                                                (headTeachers.size() > 1) ? "headTeachers" : "headTeacher");
-                                        eleveObject.put("headTeacherLibelle", headTeachersLibelle + " : ")
-                                                .put("headTeachers", headTeachers);
-                                    }
-                                }
-                                finalHandler.handle(new Either.Right<>(null));
-                            }
-                        }));
+                                }));
             }
         }
     }
@@ -659,28 +888,49 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             action.put("action", "eleve.getResponsables")
                     .put("idEleve", idEleve);
             eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                    new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                            .getInteger("timeout-transaction") * 1000L),
+                    Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        private int count = 1;
+                        private boolean answer = false;
                         @Override
                         public void handle(Message<JsonObject> message) {
                             JsonObject body = message.body();
 
                             if (!"ok".equals(body.getString("status"))) {
-                                log.error("[getResponsables ] : " + eleveObject.getString("nom") + "failed");
-                                log.error("[getResponsables ] : " +  body.getString("message"));
+                                String mess = body.getString("message");
+                                log.error("[getResponsables ] : " + idEleve + " " + mess + " " + count);
 
-                                if (eleveObject.getJsonArray("errors") == null) {
-                                    eleveObject.put("errors", new JsonArray());
+                                if (mess.contains("Time")) {
+                                    count++;
+                                    if (count < elevesMap.size() * 8) {
+
+                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                Competences.DELIVERY_OPTIONS,
+                                                handlerToAsyncHandler(this));
+                                    }
+                                    else {
+                                        answer = true;
+                                    }
                                 }
-                                JsonArray errors = eleveObject.getJsonArray("errors");
-                                errors.add("getResponsables");
-
+                                else {
+                                    answer = true;
+                                    if (eleveObject.getJsonArray("errors") == null) {
+                                        eleveObject.put("errors", new JsonArray());
+                                    }
+                                    JsonArray errors = eleveObject.getJsonArray("errors");
+                                    errors.add("getResponsables");
+                                }
                             } else {
+                                answer = true;
                                 JsonArray responsables = body.getJsonArray("results");
                                 eleveObject.put("responsables", responsables);
                             }
-                            finalHandler.handle(new Either.Right<>(null));
+                            if (answer) {
+                                if (count > 1 ) {
+                                    log.info("[getHeadTeachers] : " + idEleve + " success " + count);
+                                }
+                                finalHandler.handle(new Either.Right<>(null));
+                            }
                         }
                     }));
         }
@@ -705,16 +955,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                     if (event.isLeft()) {
                         String message = event.left().getValue();
-                        log.error("[getEvenements ] : " + eleveObject.getString("idEleve") + " failed " + count);
-                        log.error("[getEvenements ] : " + message);
+                        log.error("[getEvenements ] : " + idEleve + " " + message + count);
 
                         if (message.contains("Time")) {
                             count++;
                             if (count < elevesMap.size() * 8) {
-                                bilanPeriodiqueService.getRetardsAndAbsences(idEleve, this::handle);
-                                return;
+                                bilanPeriodiqueService.getRetardsAndAbsences(idEleve, this);
                             }
-                        }else {
+                            else {
+                                answer = true;
+                            }
+
+                        }
+                        else {
                             answer = true;
                             if (eleveObject.getJsonArray("errors") == null) {
                                 eleveObject.put("errors", new JsonArray());
@@ -722,8 +975,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             JsonArray errors = eleveObject.getJsonArray("errors");
                             errors.add("getEvenements");
                         }
-                    } else {
+                    }
+                    else {
                         answer = true;
+                        if (count > 1 ) {
+                            log.info("[getEvenements ] : "
+                                    + eleveObject.getString("idEleve") + " success " + count);
+                        }
                         JsonArray evenements = event.right().getValue();
                         if (eleveObject != null) {
 
@@ -772,12 +1030,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                             eleveObject.put("evenements", evenementsArray);
                         }
-                        if(answer) {
-                            finalHandler.handle(new Either.Right<>(null));
-                        }
+
+                    }
+                    if (answer) {
+                        finalHandler.handle(new Either.Right<>(null));
                     }
                 }
             });
+
         }
     }
 
@@ -849,16 +1109,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                                 if (event.isLeft()) {
                                     String message =  event.left().getValue();
-                                    log.error("[getSuiviAcquis ] : " + eleveObject.getString("idEleve")
-                                            + " failed " + count);
-                                    log.error("[getSuiviAcquis ] : " + message);
+                                    log.error("[getSuiviAcquis ] : " + idEleve + " " + message + " " + count);
                                     if (message.contains("Time")) {
                                         count ++;
                                         if (count < elevesMap.size() * 8) {
                                             bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
-                                                    idClasse,this::handle);
-                                            return;
+                                                    idClasse,this);
                                         }
+                                        else {
+                                            answer = true;
+                                        }
+
                                     }
                                     else {
                                         answer = true;
@@ -868,8 +1129,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         JsonArray errors = eleveObject.getJsonArray("errors");
                                         errors.add("getSuiviAcquis");
                                     }
-                                } else {
+                                }
+                                else {
                                     answer = true;
+
                                     JsonArray suiviAcquis = event.right().getValue();
 
                                     for (int i = 0; suiviAcquis != null && i < suiviAcquis.size() ; i++) {
@@ -978,6 +1241,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                                 }
                                 if(answer) {
+                                    if (count > 1 ) {
+                                        log.info("[suiviAcquis] : "
+                                                + eleveObject.getString("idEleve") + " success " + count);
+                                    }
                                     finalHandler.handle(new Either.Right<>(null));
                                 }
                             }
