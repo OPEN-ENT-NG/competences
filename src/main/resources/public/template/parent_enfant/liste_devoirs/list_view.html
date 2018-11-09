@@ -103,7 +103,8 @@
                 <td ng-if="devoir.annotation === undefined"
                     data-label="[[translate('viescolaire.evaluation.note')]]"
                     ng-click="goToDevoir(devoir.id)">
-                    <div>[[(devoir.note !== -1) ? devoir.note : "&nbsp;"]]</div>
+                    <div>[[(devoir.note !== -1) ? devoir.note : "&nbsp;"]]
+                        <span ng-show="devoir.note !== -1"> / </span> [[(devoir.note !== -1) ? devoir.diviseur : "&nbsp;"]]</div>
                 </td>
                 <td ng-if="devoir.annotation !== undefined"
                     ng-click="goToDevoir(devoir.id)"

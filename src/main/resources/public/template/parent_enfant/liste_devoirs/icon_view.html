@@ -43,8 +43,8 @@
                     [[devoir.libelle]]
                 </div>
                 <footer>
-                    <div class="devoir-icons-class expandable-content" ng-if="devoir.annotation === undefined">
-                        <i18n>viescolaire.evaluation.note</i18n> : [[devoir.note]]
+                    <div class="devoir-icons-class expandable-content"  ng-if="devoir.annotation === undefined">
+                        <i18n>viescolaire.evaluation.note</i18n> : [[devoir.note]] / [[devoir.diviseur]]
                     </div>
                     <div class="devoir-icons-class expandable-content" ng-if="devoir.annotation !== undefined">
                         <i18n>viescolaire.evaluation.note</i18n> : [[devoir.annotation.libelle_court]]

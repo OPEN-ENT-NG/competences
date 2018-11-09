@@ -82,7 +82,7 @@
                         <div ng-if="devoir.annotation === undefined && devoir.note !== undefined"
                              class="two center cell competence-text-overflow"
                              tooltip="[[devoir.name]] - [[getTeacherDisplayName(devoir.owner)]]">
-                            [[devoir.note]]
+                            [[devoir.note]] / [[devoir.diviseur]]
                         </div>
                         <div ng-if="devoir.annotation === undefined && devoir.note === undefined"
                              class="two center cell competence-text-overflow"

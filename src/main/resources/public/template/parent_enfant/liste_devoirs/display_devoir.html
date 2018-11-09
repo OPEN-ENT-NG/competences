@@ -144,7 +144,10 @@
                     <div>
                         <h2><i18n>viescolaire.evaluation.result</i18n></h2>
                         <div class=" one twelve-mobile" ng-if="currentDevoir.annotation === undefined">
-                            <div>[[(currentDevoir.note && currentDevoir.note !== -1)? currentDevoir.note : "&nbsp;"]]</div>
+                            <div>[[(currentDevoir.note && currentDevoir.note !== -1)? currentDevoir.note : "&nbsp;"]]
+                                <span ng-show="currentDevoir.note !== -1"> / </span>
+                                [[(currentDevoir.diviseur && currentDevoir.note !== -1)? currentDevoir.diviseur : "&nbsp;"]]
+                            </div>
                         </div>
                         <div class="one twelve-mobile" ng-if="currentDevoir.annotation !== undefined">
                             <div tooltip="[[currentDevoir.annotation.libelle]]" class="pointer">
