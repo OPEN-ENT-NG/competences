@@ -416,7 +416,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                                 compteurMatiere.decrementAndGet();
                                                 results.add(result);
                                                 if (compteurMatiere.intValue() == 0) {
-                                                    handler.handle(new Either.Right<>(results));
+                                                    String [] sortedField = new  String[1];
+                                                    sortedField[0] = "libelleMatiere";
+                                                    handler.handle(new Either.Right<>(
+                                                            new DefaultUtilsService().sortArray(results,
+                                                                    sortedField)));
                                                 }
 
                                             } else {
@@ -433,7 +437,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                     compteurMatiere.decrementAndGet();
                                     results.add(result);
                                     if (compteurMatiere.intValue() == 0) {
-                                        handler.handle(new Either.Right<>(results));
+                                        String [] sortedField = new  String[1];
+                                        sortedField[0] = "libelleMatiere";
+                                        handler.handle(new Either.Right<>(
+                                                new DefaultUtilsService().sortArray(results,
+                                                        sortedField)));
                                     }
                                 }
                             } else {

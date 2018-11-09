@@ -914,14 +914,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                                         }
                                         else {
-                                            Integer pos = positionnement.getInteger("moyenne");
-                                            String val = "";
+                                            if(positionnement != null) {
+                                                Integer pos = positionnement.getInteger("moyenne");
+                                                String val = "";
 
-                                            if (pos != null && pos != -1) {
-                                                pos += new Integer(1);
-                                                val = pos.toString();
+                                                if (pos != null && pos != -1) {
+                                                    pos += new Integer(1);
+                                                    val = pos.toString();
+                                                }
+                                                matiere.put("positionnement", val);
                                             }
-                                            matiere.put("positionnement", val);
                                         }
                                         String elementsProgramme = troncateLibelle(
                                                 matiere.getString("elementsProgramme"), MAX_SIZE_LIBELLE);

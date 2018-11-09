@@ -720,4 +720,45 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
+    @Override
+    public JsonArray sortArray(JsonArray jsonArr, String[] sortedField) {
+        JsonArray sortedJsonArray = new JsonArray();
+
+        List<JsonObject> jsonValues = new ArrayList<JsonObject>();
+        if (jsonArr.size() > 0 && ! (jsonArr.getValue(0) instanceof  JsonObject)) {
+            return jsonArr;
+        }
+        else{
+            for (int i = 0; i < jsonArr.size(); i++) {
+                jsonValues.add(jsonArr.getJsonObject(i));
+            }
+            Collections.sort(jsonValues, new Comparator<JsonObject>() {
+
+                @Override
+                public int compare(JsonObject a, JsonObject b) {
+                    String valA = new String();
+                    String valB = new String();
+
+                    try {
+                        for (int i = 0; i < sortedField.length; i++) {
+                            valA += ((String) a.getValue(sortedField[i])).toLowerCase();
+                            valB += ((String) b.getValue(sortedField[i])).toLowerCase();
+                        }
+                    } catch (Exception e) {
+                        //do something
+                        log.error("Pb While Sorting Two Array",e);
+                    }
+
+                    return valA.compareTo(valB);
+                    //if you want to change the sort order, simply use the following:
+                    //return -valA.compareTo(valB);
+                }
+            });
+
+            for (int i = 0; i < jsonArr.size(); i++) {
+                sortedJsonArray.add(jsonValues.get(i));
+            }
+            return sortedJsonArray;
+        }
+    }
 }

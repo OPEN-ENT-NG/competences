@@ -25,9 +25,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -188,4 +186,12 @@ public interface UtilsService {
      */
     void insertEvernement (String idEleve, String colonne, Long idPeriode, Long value,
                            Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *  ORDER jsonArr by sorted field
+     * @param jsonArr
+     * @param sortedField
+     * @return
+     */
+    JsonArray sortArray(JsonArray jsonArr, String[] sortedField);
 }
