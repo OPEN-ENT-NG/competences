@@ -3,9 +3,6 @@
   "type": "object",
   "additionalProperties": true,
   "properties": {
-    "code": {
-      "type": ["string","null"]
-    },
     "libelle": {
       "type" : "string"
     },
@@ -17,7 +14,6 @@
     }
   },
   "required": [
-    "code",
     "libelle"
   ]
 }
