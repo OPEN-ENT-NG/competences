@@ -54,6 +54,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.text.DecimalFormat;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -1874,8 +1875,8 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                         note.put("visu", ((JsonObject) niveau).getString("visu"));
                                                                                                                         note.put("nonEvalue", false);
                                                                                                                         if (isHabilite)
-                                                                                                                            note.put("moyenne", text ? "- " + ((JsonObject) resultNote).getLong("moyenne")
-                                                                                                                                    : "" + ((JsonObject) resultNote).getLong("moyenne"));
+                                                                                                                            note.put("moyenne", text ? "- " + new DecimalFormat("#0.00").format(((JsonObject) resultNote).getDouble("moyenne").doubleValue())
+                                                                                                                                    : "" + new DecimalFormat("#0.00").format(((JsonObject) resultNote).getLong("moyenne").doubleValue()));
 
                                                                                                                         domainesEvalues.add(((JsonObject) note).getInteger("id").intValue());
                                                                                                                         notesEleve.add(note);

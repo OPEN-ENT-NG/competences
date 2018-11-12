@@ -433,11 +433,29 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
 
-        $scope.syncPeriodesBilanPeriodique = async function () {
+        $scope.syncPeriodesBilanPeriodique = async function (classe) {
             if ($scope.search.classe.periodes.all.length === 0) {
                 await $scope.search.classe.periodes.sync();
             }
             $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+            $scope.getCurrentPeriodeBP = function (classe, res) {
+                if($location.path() === '/conseil/de/classe'){
+                    let selectedPeriode = undefined;
+                    if ($scope.search.periode !== undefined) {
+                        selectedPeriode = _.findWhere(classe.periodes.all,
+                            {id_type: $scope.search.periode.id_type});
+                    }
+                    if ($scope.search !== undefined && $scope.search.eleve !== undefined) {
+                        // On choisit la période présélectionnée
+                        $scope.search.periode = selectedPeriode;
+                    }else  if ($scope.displayFromClass === true || $scope.displayFromEleve === true){
+                        $scope.search.periode = selectedPeriode;
+                    }
+                    else {
+                        $scope.search.periode = res;
+                    }
+                }
+            }
             utils.safeApply($scope);
         };
 
