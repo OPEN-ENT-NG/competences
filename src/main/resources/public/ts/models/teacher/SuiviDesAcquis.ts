@@ -149,6 +149,8 @@ export class SuivisDesAcquis extends Model{
             if(data.length > 0) {
                 this.all = Mix.castArrayAs(SuiviDesAcquis, data);
 
+                let suiviDesAcquisToRemove = [];
+
                 // pour chaque suiviDesAcquis setter
                 // l'appréciation de toutes les classes et groupes
                 _.each(this.all, (suiviDesAcquis) => {
@@ -156,6 +158,7 @@ export class SuivisDesAcquis extends Model{
                     suiviDesAcquis.idClasse = this.idClasse;
                     suiviDesAcquis.idEtablissement = this.idEtablissement;
                     suiviDesAcquis.idPeriode = this.idPeriode;
+
                     if(suiviDesAcquis.appreciations !== null && suiviDesAcquis.appreciations !== undefined && _.find(suiviDesAcquis.appreciations,{id_periode: suiviDesAcquis.idPeriode}) !== undefined){
                         suiviDesAcquis.appreciationByClasse =  _.find(suiviDesAcquis.appreciations,{id_periode: suiviDesAcquis.idPeriode}).appreciationByClasse[0] ;
                     }else{
@@ -213,9 +216,18 @@ export class SuivisDesAcquis extends Model{
                            histo.moyClasseAllMatieres.push(_.find(suiviDesAcquis.moyennesClasse,{id: histo.id_type}).moyenne);
                        }
                     });
+
+                    if (suiviDesAcquis.appreciationByClasse.appreciation === "" && suiviDesAcquis.moyenneEleve === "NN" && suiviDesAcquis.moyenneClasse === "NN"
+                    && suiviDesAcquis.positionnement_auto === 0 && suiviDesAcquis.positionnement_final === 0) {
+                        suiviDesAcquisToRemove.push(suiviDesAcquis)
+                    }
+                });
+                    //supprime le suiviDesAcquis si pas de donnée pour l'élève pour la période sélectionnée
+                _.each(suiviDesAcquisToRemove, (suiviDesAcquisToRemove) => {
+                    this.all = _.without(this.all, suiviDesAcquisToRemove);
                 });
 
-                //calcul moyenne pour chaque periode
+                    //calcul moyenne pour chaque periode
                 _.each(this.historiques, (histo) => {
                     histo.moyGeneraleEleve = (histo.moyEleveAllMatieres.length === 0)? utils.getNN() : utils.average(histo.moyEleveAllMatieres).toFixed(2);
                     histo.moyGeneraleClasse = (histo.moyClasseAllMatieres.length === 0)? utils.getNN() : utils.average(histo.moyClasseAllMatieres).toFixed(2);
