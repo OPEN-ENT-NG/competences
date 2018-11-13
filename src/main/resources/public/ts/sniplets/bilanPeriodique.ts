@@ -208,12 +208,49 @@ export const bilanPeriodique = {
 
         /////       Création d'un EPI/AP/Parcours      /////
 
-        createElementBilanPeriodique: async function () {
+        // createThematique: async function (thematique) {
+        //     try {
+        //         let notThemeUnique = bilanPeriodique.that.themes.find(themes => themes.libelle === thematique.libelle);
+        //         // Si le thème est unique on récupère le thème créé
+        //         if (!notThemeUnique) {
+        //             await http.post('/competences/thematique',
+        //                 {libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
+        //             bilanPeriodique.that.getThematique(this.getTypeElement());
+        //             bilanPeriodique.that.showAddtheme = false;
+        //         }
+        //         else {
+        //             // Si le thème n'est pas unique : affichage de la lightbox avec message d'erreur
+        //             bilanPeriodique.that.createTheme = true;
+        //             bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+        //         }
+        //
+        //     } catch (e) {
+        //         notify.error('Problème lors de la création de la thématique');
+        //         console.error('Problème lors de la création de la thématique', e);
+        //         throw e;
+        //     }
+        //     utils.safeApply(this);
+        // },
+
+        createElementBilanPeriodique: async function (thematique) {
             try {
                 if (this.dataELem !== undefined && this.dataELem !== null) {
                     this.dataELem.type = this.getTypeElement();
                     if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
                         this.dataELem.id_theme = this.dataELem.theme.id;
+                        // let themeExist = bilanPeriodique.that.themes.find(themes => themes.libelle === thematique.libelle);
+                        // if (themeExist) {
+                            //             await http.post('/competences/thematique',
+                            //                 {libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
+                            //             bilanPeriodique.that.getThematique(this.getTypeElement());
+                            //             bilanPeriodique.that.showAddtheme = false;
+                            //         }
+                            //         else {
+                            //             // Si le thème n'est pas unique : affichage de la lightbox avec message d'erreur
+                            //             bilanPeriodique.that.createTheme = true;
+                            //             bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                            //         }
+
                     }
                     const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
                     this.elements.push(data);

@@ -2063,7 +2063,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.saveNewDevoir = function () {
             $scope.devoir.date = $scope.getDateFormated($scope.devoir.dateDevoir);
-            $scope.devoir.date_publication = $scope.getDateFormated($scope.devoir.datePublication);
+            $scope.devoir.date_publication = $scope.getDateFormated($scope.devoir.date_publication);
 
             // Pour la création on ne recupere que les id des competences
             if ($location.path() !== "/devoir/" + $scope.devoir.id + "/edit") {
@@ -3124,7 +3124,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let end_datePeriode = current_periode.timestamp_fn;
                 let date_saisie = current_periode.date_fin_saisie;
 
-                $scope.errDatePubli = (moment($scope.devoir.datePublication).diff(
+                $scope.errDatePubli = (moment($scope.devoir.date_publication).diff(
                     moment($scope.devoir.dateDevoir), "days") < 0);
                 $scope.errDateDevoir = !(moment($scope.devoir.dateDevoir).isBetween(
                     moment(start_datePeriode), moment(end_datePeriode), 'days', '[]'));

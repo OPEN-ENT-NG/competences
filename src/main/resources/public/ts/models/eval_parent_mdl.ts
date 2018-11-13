@@ -208,10 +208,11 @@ export class Evaluations extends Model {
                                 // RECUPERATION DES ANNOTATIONS
                                 let uriAnnotations = Evaluations.api.GET_ANNOTATION  + userId;
                                 if (idPeriode !== undefined) {
-                                    uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode;
+                                    uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode + '&idClasse=' + this.eleve.classe.id;
                                 }
-
-                                uriAnnotations = uriAnnotations + '?idClasse=' + this.eleve.classe.id;
+                                else {
+                                    uriAnnotations = uriAnnotations + '?idClasse=' + this.eleve.classe.id;
+                                }
 
                                 http().getJson(uriAnnotations).done((annotations) => {
                                     annotations.forEach(function () {
