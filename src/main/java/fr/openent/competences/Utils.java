@@ -511,4 +511,44 @@ public class Utils {
             }
         }));
     }
+
+    /**
+     * get infoEleve of one class order by lastName
+     * @param eb eventBus
+     * @param idClass idClass
+     * @param handler elveList with idEleve,lastName, firstName, level, classes, className
+     */
+    public static void getEleveClasse(EventBus eb, List<String> idsEleve, final String idClass, final Handler<Either<String, List<Eleve>>> handler){
+        JsonObject action = new JsonObject()
+                .put("action","eleve.getEleveClasse")
+                .put("idClass", idClass);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                List<Eleve> eleves = new ArrayList<Eleve>();
+                if(!"ok".equals(body.getString("status"))){
+                    handler.handle(new Either.Left<>(body.getString("message")));
+                    log.error("getEleveClasse :  " + body.getString("message") );
+                }else{
+                    JsonArray requesteleves = body.getJsonArray("results");
+                    if( requesteleves != null && requesteleves.size() > 0){
+                        for(int i=0 ; i < requesteleves.size(); i++ ){
+                            JsonObject requestEleve = requesteleves.getJsonObject(i);
+                        Eleve eleve = new Eleve(requestEleve.getString("id"),requestEleve.getString("lastName"),
+                                requestEleve.getString("firstName"),idClass,requestEleve.getString("className"));
+                            eleves.add(eleve);
+                         if(idsEleve != null){
+                             idsEleve.add(requestEleve.getString("id"));
+                         }
+                        }
+                    }else{
+                        handler.handle(new Either.Left<>("no Student in this Class " + idClass));
+                        log.error("getEleveClasse : no Student in this Class idClass: " + idClass );
+                    }
+                    handler.handle(new Either.Right<>(eleves));
+                }
+            }
+        }));
+    }
 }

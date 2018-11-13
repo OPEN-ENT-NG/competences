@@ -186,4 +186,13 @@ public interface NoteService extends CrudService {
                                                    final JsonObject result );
 
     void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result);
+
+    /**
+     * get all notes of a student by  matiere ,idGroup
+     * @param idsEleve idsEleve list
+     * @param idPeriode idPeriode
+     * @param handler response
+     */
+    void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, Integer idPeriode, Handler<Either<String,JsonArray>> handler);
+
 }

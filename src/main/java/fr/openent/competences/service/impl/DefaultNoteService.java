@@ -827,4 +827,28 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
+    @Override
+    public void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, Integer idPeriode, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values =new fr.wseduc.webutils.collections.JsonArray();
+
+        String query = "SELECT notes.id_eleve, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe, "+
+              "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, notes.valeur, " +
+              "moyenne_finale.moyenne AS moyenne_finale " +
+              "FROM notes.devoirs INNER JOIN notes.notes "+
+              "ON (devoirs.id = notes.id_devoir AND notes.id_eleve IN ( "+Sql.listPrepared(idsEleve)+" )) " +
+              "LEFT JOIN notes.moyenne_finale ON (devoirs.id_periode = moyenne_finale.id_periode AND " +
+              "notes.id_eleve = moyenne_finale.id_eleve AND devoirs.id_matiere = moyenne_finale.id_matiere) " +
+              "INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir) " +
+              "WHERE devoirs.id_periode = ? AND devoirs.is_evaluated = true " +
+              "ORDER BY notes.id_eleve , devoirs.id_matiere"  ;
+
+        for (String idEleve: idsEleve ) {
+            values.add(idEleve);
+        }
+        values.add(idPeriode);
+
+        Sql.getInstance().prepared(query, values,validResultHandler(handler));
+    }
+
+
 }
