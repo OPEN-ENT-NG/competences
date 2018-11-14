@@ -18,6 +18,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.UtilsService;
 import fr.wseduc.webutils.Either;
@@ -723,15 +724,61 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
+    public void getLibelleMatWithTeacher (JsonArray idsMatiere,
+                                          JsonArray idsTeacher,
+                                          SortedMap<String,Set<String>> mapIdMatiereIdsTeacher,
+                                          Handler<Either<String, Map<String,JsonObject>>> handler){
+        Utils.getLibelleMatiere(eb, idsMatiere,
+                Competences.DELIVERY_OPTIONS, new Handler<Either<String, Map<String, String>>>() {
+            @Override
+            public void handle(Either<String, Map<String, String>> respMat) {
+                if(respMat.isLeft()){
+                    log.error("getLibelleMatWithTeacher : getLibelleMat " + respMat.left().getValue());
+                    handler.handle(new Either.Left<>(respMat.left().getValue()));
+                }else{
+
+                    Utils.getLastNameFirstNameUser(eb, idsTeacher, new Handler<Either<String, Map<String, JsonObject>>>() {
+                        @Override
+                        public void handle(Either<String, Map<String, JsonObject>> respTeacher) {
+                            if (respTeacher.isLeft()) {
+                                log.error("getLibelleMatWithTeacher : getLastNameFirstNameUser " + respMat.left().getValue());
+                                handler.handle(new Either.Left<>(respMat.left().getValue()));
+                            } else {
+                                Map<String,String> mapIdMatLibelle = respMat.right().getValue();
+                                Map<String,JsonObject> mapIdTeacher = respTeacher.right().getValue();
+                                Map<String,JsonObject> matieres = new HashMap<>();
+                                for(Map.Entry<String,Set<String>> setEntry: mapIdMatiereIdsTeacher.entrySet()){
+                                    JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
+
+                                    for(String idTeacher : setEntry.getValue()){
+                                        String displayName = mapIdTeacher.get(idTeacher).getString("firstName").substring(0,1)+".";
+                                        displayName = mapIdTeacher.get(idTeacher).getString("name")+" "+displayName;
+                                        teachers.add(new JsonObject()
+                                                .put("id_teacher",mapIdTeacher.get(idTeacher).getString("id"))
+                                                .put("displayName",(displayName.length() <= 10)? displayName : mapIdTeacher.get(idTeacher).getString("name")));
+                                    }
+                                    matieres.put(setEntry.getKey(),new JsonObject()
+                                    .put("libelle", mapIdMatLibelle.get(setEntry.getKey()))
+                                    .put("teachers", teachers));
+                                    handler.handle(new Either.Right<>(matieres));
+                                }
+                            }
+                        }
+                    });
+                 }
+
+            }
+        });
+    }
+
     @Override
     public JsonArray sortArray(JsonArray jsonArr, String[] sortedField) {
         JsonArray sortedJsonArray = new JsonArray();
 
         List<JsonObject> jsonValues = new ArrayList<JsonObject>();
-        if (jsonArr.size() > 0 && ! (jsonArr.getValue(0) instanceof  JsonObject)) {
+        if (jsonArr.size() > 0 && !(jsonArr.getValue(0) instanceof JsonObject)) {
             return jsonArr;
-        }
-        else{
+        } else {
             for (int i = 0; i < jsonArr.size(); i++) {
                 jsonValues.add(jsonArr.getJsonObject(i));
             }
@@ -749,7 +796,7 @@ public class DefaultUtilsService  implements UtilsService {
                         }
                     } catch (Exception e) {
                         //do something
-                        log.error("Pb While Sorting Two Array",e);
+                        log.error("Pb While Sorting Two Array", e);
                     }
 
                     return valA.compareTo(valB);

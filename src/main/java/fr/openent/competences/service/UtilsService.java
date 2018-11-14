@@ -187,8 +187,14 @@ public interface UtilsService {
     void insertEvernement (String idEleve, String colonne, Long idPeriode, Long value,
                            Handler<Either<String, JsonArray>> handler);
 
+    void getLibelleMatWithTeacher (JsonArray idsMatiere,
+                                          JsonArray idsTeacher,
+                                          SortedMap<String,Set<String>> mapIdMatiereIdsTeacher,
+                                          Handler<Either<String, Map<String,JsonObject>>> handler);
+
     /**
-     *  ORDER jsonArr by sorted field
+     * ORDER jsonArr by sorted field
+     *
      * @param jsonArr
      * @param sortedField
      * @return
