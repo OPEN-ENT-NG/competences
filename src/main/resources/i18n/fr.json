@@ -118,6 +118,7 @@
   "evaluations.export.releveComp" : "Exporter le relevé de compétences au format PDF",
   "evaluations.recapEval" : "Tableau récapitulatif des niveaux acquis par domaine des élèves",
   "evaluations.releveComp.classe" : "Listes récapitulatives des compétences évaluées par domaine ou enseignement des élèves",
+  "evaluations.recapAppreciations.classe" : "Appréciation des professeurs de la classe",
   "evaluations.export.err" : "Impossible d'exporter le fichier PDF",
   "evaluations.export.empty" : "Il n'existe pas de compétences évaluées pour les critères sélectionnés.",
   "evaluations.export.eval.not.found.err" : "Aucune évaluation trouvée",

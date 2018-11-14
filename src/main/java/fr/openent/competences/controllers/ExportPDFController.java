@@ -76,6 +76,7 @@ public class ExportPDFController extends ControllerHelper {
     private BFCService bfcService;
     private DomainesService domaineService;
     private CompetenceNoteService competenceNoteService;
+    private NoteService noteService;
     private CompetencesService competencesService;
     private NiveauDeMaitriseService niveauDeMaitriseService;
     private ExportService exportService;
@@ -89,6 +90,7 @@ public class ExportPDFController extends ControllerHelper {
         bfcService = new DefaultBFCService(eb);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         exportService = new DefaultExportService(eb);
@@ -1678,6 +1680,212 @@ public class ExportPDFController extends ControllerHelper {
             }
         }));
     }
+
+
+    @Get("/recapAppreciations/print/:idClasse/export")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getExportRecapAppreciations(final HttpServerRequest request) {
+        final Boolean text = Boolean.parseBoolean(request.params().get("text"));
+        final Boolean json = Boolean.parseBoolean(request.params().get("json"));
+        final String idClasse = request.params().get("idClasse");
+        final String idStructure = request.params().get("idStructure");
+
+        Long idPeriode = null;
+
+        try {
+            if (request.params().contains("idPeriode")) {
+                idPeriode = Long.parseLong(request.params().get("idPeriode"));
+            }
+        } catch (NumberFormatException err) {
+            badRequest(request, err.getMessage());
+            log.error(err);
+            return;
+        }
+
+        final Long finalIdPeriode = idPeriode;
+
+        // TODO recuperer toutes les notes des eleves de la classe
+        // les stocker par id matiere+groupe
+        // recupérer les libellés de matières
+
+        Utils.getIdElevesClassesGroupes(eb, idClasse, idPeriode.intValue(), 0,
+        new Handler<Either<String, List<String>>>() {
+            @Override
+            public void handle(Either<String, List<String>> eventResultEleves) {
+                if (eventResultEleves.isRight()) {
+                    // Eleves de la classe
+                    List<String> idEleves = eventResultEleves.right().getValue();
+
+                    final AtomicInteger nbMethodeAsync = new AtomicInteger(3);
+
+                    // Notes des eleves de la classe
+                    noteService.getNotesAndMoyFinaleByClasseAndPeriode(idEleves, finalIdPeriode.intValue(),
+                    new Handler<Either<String, JsonArray>>() {
+                        @Override
+                        public void handle(final Either<String, JsonArray> resultNotesEleves) {
+                            if (resultNotesEleves.isRight()) {
+
+                                JsonArray notesElevesArray = resultNotesEleves.right().getValue();
+                                Map<String, JsonObject> recapAppreciationsByIdMatGpe = new HashMap<String, JsonObject>();
+
+                                JsonArray idGroupesArray = new fr.wseduc.webutils.collections.JsonArray();
+                                JsonArray idMatieresArray = new fr.wseduc.webutils.collections.JsonArray();
+                                JsonArray idProfsArray = new fr.wseduc.webutils.collections.JsonArray();
+
+
+                                Map<String, List<NoteDevoir>> notesByEleveMatGpeTemp = new HashMap<>();
+                                Map<String, Double> moyennesByEleveMatGpeTemp = new HashMap<>();
+
+                                for (Object noteEleve: notesElevesArray) {
+                                    JsonObject jsonNoteEleve = ((JsonObject) noteEleve);
+
+                                    String idMatiere = jsonNoteEleve.getString("id_matiere");
+                                    String idGroupe = jsonNoteEleve.getString("id_groupe");
+                                    String idProf = jsonNoteEleve.getString("owner");
+                                    String idEleve = jsonNoteEleve.getString("id_eleve");
+
+                                    String idMatGpe = idMatiere + ";" +idGroupe;
+                                    String idEleveMatGpe = idEleve +";" + idMatGpe;
+
+                                    // stockage des id groupes/classe pour recuperer leur libellé ensuite
+                                    if(!idGroupesArray.contains(idGroupe)){
+                                        idGroupesArray.add(idGroupe);
+                                    }
+                                    // stockage des id matieres pour recuperer leur libellé ensuite
+                                    if(!idMatieresArray.contains(idMatiere)){
+                                        idMatieresArray.add(idMatiere);
+                                    }
+                                    // stockage des id prof pour recuperer leur libellé ensuite
+                                    if(!idProfsArray.contains(idProf)){
+                                        idProfsArray.add(idProf);
+                                    }
+
+
+                                    //Init Map pour le couple matiere/groupe en cours de parcours
+                                    JsonObject jsonRecapMatGpe = recapAppreciationsByIdMatGpe.get(idMatGpe);
+                                    if(jsonRecapMatGpe == null) {
+                                        jsonRecapMatGpe = new JsonObject();
+                                        recapAppreciationsByIdMatGpe.put(idMatGpe, jsonRecapMatGpe);
+                                    }
+
+                                    // Maj des stats
+                                    Double min = jsonRecapMatGpe.getDouble("min"), max = jsonRecapMatGpe.getDouble("max");
+                                    Double currentNote = Double.parseDouble(jsonNoteEleve.getString("valeur"));
+                                    Double currentNoteDiviseur = jsonNoteEleve.getDouble("diviseur");
+                                    Double currentNoteRameneSurVingt = currentNote * 20 / currentNoteDiviseur;
+                                    if(min == null || currentNoteRameneSurVingt<min) {
+                                        jsonRecapMatGpe.put("min", currentNoteRameneSurVingt);
+                                    }
+
+                                    if(max == null || currentNoteRameneSurVingt>max) {
+                                        jsonRecapMatGpe.put("max", currentNoteRameneSurVingt);
+                                    }
+
+                                    // Stockage moyenne finale eleve pour une matiere/groupe
+                                    Double moyenneFinale = null;
+                                    String sMoyenne_Finale = jsonNoteEleve.getString("moyenne_finale");
+                                    if (sMoyenne_Finale != null) {
+                                        moyenneFinale = Double.parseDouble(sMoyenne_Finale);
+                                        moyennesByEleveMatGpeTemp.put(idEleveMatGpe, moyenneFinale);
+                                    }
+
+                                    // Stockage des notes par idEleve;idMatiere;idGroupe
+                                    List<NoteDevoir> listeNotesForEleveMatGpe = notesByEleveMatGpeTemp.get(idEleveMatGpe);
+                                    if(listeNotesForEleveMatGpe == null) {
+                                        listeNotesForEleveMatGpe = new ArrayList<>();
+                                        notesByEleveMatGpeTemp.put(idEleveMatGpe, listeNotesForEleveMatGpe);
+                                    }
+                                    Boolean currentNoteRamenerSur = jsonNoteEleve.getBoolean("ramener_sur");
+                                    Double currentNoteCoefficient =  Double.parseDouble(jsonNoteEleve.getString("coefficient"));
+                                    NoteDevoir note = new NoteDevoir(currentNote, currentNoteDiviseur, currentNoteRamenerSur,  currentNoteCoefficient);
+                                    listeNotesForEleveMatGpe.add(note);
+
+
+                                } // end for
+
+                                // Calcul des moyennes par élève si pas de moyenne finale
+                                Map<String, List<NoteDevoir>> moyennesElevesByMatGpeTemp = new HashMap<>(); // liste des moyennes des eleves rangés map par idMatGpe
+                                notesByEleveMatGpeTemp.forEach((currIdEleveMatGpe, currListeNotes)->{
+                                    Double moyenneFinale = moyennesByEleveMatGpeTemp.get(currIdEleveMatGpe);
+                                    if(moyenneFinale == null) {
+                                        JsonObject moyenneObj = utilsService.calculMoyenneParDiviseur(currListeNotes, false);
+                                        moyenneFinale = moyenneObj.getDouble("moyenne");
+                                        moyennesByEleveMatGpeTemp.put(currIdEleveMatGpe, moyenneFinale);
+                                    }
+
+                                    // stockage de la moyenne de l'eleve pour cette matiere+groupe
+                                    String[] split = currIdEleveMatGpe.split(";");
+                                    String idMatGpe = split[1] + ";" + split[2];
+                                    List<NoteDevoir> moyennesEleve = moyennesElevesByMatGpeTemp.get(idMatGpe);
+                                    if(moyennesEleve == null) {
+                                        moyennesEleve = new ArrayList<>();
+                                        moyennesElevesByMatGpeTemp.put(idMatGpe, moyennesEleve);
+                                    }
+                                    moyennesEleve.add(new NoteDevoir(moyenneFinale, false,  1.0));
+
+                                });
+
+                                // Calcul des moyennes des moyennesEleves par idMatiere+groupe
+                                moyennesElevesByMatGpeTemp.forEach((currIdMatGpe, moyennesEleves)-> {
+                                    JsonObject moyenneDesMoyennesObj = utilsService.calculMoyenne(moyennesEleves, false, null);
+                                    Double moyenneDesMoyennes = moyenneDesMoyennesObj.getDouble("moyenne");
+                                    recapAppreciationsByIdMatGpe.get(currIdMatGpe).put("moyenne", moyenneDesMoyennes);
+                                });
+
+
+                                // Libellés des groupes à partir des id
+                                final JsonObject action = new JsonObject()
+                                        .put("action", "classe.listAllGroupesByIds")
+                                        .put("idClassesAndGroups", idGroupesArray)
+                                        .put("idStructure",idStructure);
+                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                    @Override
+                                    public void handle(Message<JsonObject> message) {
+                                        JsonObject body = message.body();
+                                        if ("ok".equals(body.getString("status"))) {
+                                            JsonArray listClassesGroupes = body.getJsonArray("results");
+                                            Map<String, String> mapGroupes = new HashMap<String, String>();
+                                            if(listClassesGroupes.size() > 0) {
+                                                for (int i = 0; i < listClassesGroupes.size(); i++) {
+                                                    JsonObject vGroupe = listClassesGroupes.getJsonObject(i).getJsonObject("m").getJsonObject("data");
+                                                    mapGroupes.put(vGroupe.getString("id"), vGroupe.getString("name"));
+                                                }
+                                            }
+                                            int val = nbMethodeAsync.getAndDecrement();
+                                            if(val == 0) {
+                                                completeMoustacheJsonAndGeneratePdf();
+                                            }
+
+
+                                        } else {
+                                            log.error("Erreur lors de la récupération des groupes/classes");
+                                            Renders.renderJson(request, new JsonObject()
+                                                    .put("error", "Erreur lors de la récupération des groupes/classes"), 400);
+                                        }
+                                    }
+                                }));
+
+
+                                // TODO libellé des profs par rapport aux id
+                                // TODO libellé des matieres par rapport aux id
+
+
+                            } else {
+                                log.error("Erreur lors de la récupération des notes");
+                                Renders.renderJson(request, new JsonObject()
+                                        .put("error", "Erreur lors de la récupération des notes"), 400);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void completeMoustacheJsonAndGeneratePdf() {
+        log.info("Generation template moustache");
+    }
+
 
     @Get("/recapEval/print/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)

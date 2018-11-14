@@ -395,8 +395,26 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
          $scope.exportRecapEval = (textMod, printSuiviClasse, idPeriode, exportByEnseignement) => {
              switch (printSuiviClasse) {
+                 case 'printRecapAppreciations' : {
+                     let url = "/competences/recapAppreciations/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
+                     if (idPeriode) {
+                         url += "&idPeriode=" + idPeriode;
+                     }
+                     url += "&idStructure=" + $scope.structure.id;
+                     http().getJson(url + "&json=true")
+                         .error((result) => {
+                             $scope.errorResult(result);
+                             utils.safeApply($scope);
+                         })
+                         .done(() => {
+                             delete $scope.recapEval;
+                             $scope.opened.recapEval = false;
+                             location.replace(url);
+                         });
+                     break;
+                 }
                  case 'printRecapEval' : {
-                     let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
+                     let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
                      if (idPeriode) {
                          url += "&idPeriode=" + idPeriode;
                      }
