@@ -192,6 +192,9 @@ public interface UtilsService {
                                           SortedMap<String,Set<String>> mapIdMatiereIdsTeacher,
                                           Handler<Either<String, Map<String,JsonObject>>> handler);
 
+    public void getLibelleMatAndTeacher (Map <String, Set <String> > mapIdMatiereIdsTeacher,
+                             Handler<Either<String, Map<String,JsonObject>>> handler);
+
     /**
      * ORDER jsonArr by sorted field
      *

@@ -86,7 +86,7 @@ public class ExportPDFController extends ControllerHelper {
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
         devoirService = new DefaultDevoirService(eb);
-        utilsService = new DefaultUtilsService();
+        utilsService = new DefaultUtilsService(eb);
         bfcService = new DefaultBFCService(eb);
         domaineService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
@@ -1726,12 +1726,13 @@ public class ExportPDFController extends ControllerHelper {
                             if (resultNotesEleves.isRight()) {
 
                                 JsonArray notesElevesArray = resultNotesEleves.right().getValue();
+
+                                // TODO convertir en JsonObject
                                 Map<String, JsonObject> recapAppreciationsByIdMatGpe = new HashMap<String, JsonObject>();
 
                                 JsonArray idGroupesArray = new fr.wseduc.webutils.collections.JsonArray();
-                                JsonArray idMatieresArray = new fr.wseduc.webutils.collections.JsonArray();
-                                JsonArray idProfsArray = new fr.wseduc.webutils.collections.JsonArray();
 
+                                Map<String, Set <String> > idsTeachersByMatGpe = new HashMap<>();
 
                                 Map<String, List<NoteDevoir>> notesByEleveMatGpeTemp = new HashMap<>();
                                 Map<String, Double> moyennesByEleveMatGpeTemp = new HashMap<>();
@@ -1751,15 +1752,14 @@ public class ExportPDFController extends ControllerHelper {
                                     if(!idGroupesArray.contains(idGroupe)){
                                         idGroupesArray.add(idGroupe);
                                     }
-                                    // stockage des id matieres pour recuperer leur libellé ensuite
-                                    if(!idMatieresArray.contains(idMatiere)){
-                                        idMatieresArray.add(idMatiere);
-                                    }
-                                    // stockage des id prof pour recuperer leur libellé ensuite
-                                    if(!idProfsArray.contains(idProf)){
-                                        idProfsArray.add(idProf);
-                                    }
 
+                                    // Stockage professeur matGpe en cours de parcous
+                                    Set<String> idProfesseurs = idsTeachersByMatGpe.get(idMatGpe);
+                                    if(idProfesseurs == null) {
+                                        idProfesseurs = new HashSet<>();
+                                        idsTeachersByMatGpe.put(idMatGpe, idProfesseurs);
+                                    }
+                                    idProfesseurs.add(idProf);
 
                                     //Init Map pour le couple matiere/groupe en cours de parcours
                                     JsonObject jsonRecapMatGpe = recapAppreciationsByIdMatGpe.get(idMatGpe);
@@ -1805,7 +1805,7 @@ public class ExportPDFController extends ControllerHelper {
 
                                 // Calcul des moyennes par élève si pas de moyenne finale
                                 Map<String, List<NoteDevoir>> moyennesElevesByMatGpeTemp = new HashMap<>(); // liste des moyennes des eleves rangés map par idMatGpe
-                                notesByEleveMatGpeTemp.forEach((currIdEleveMatGpe, currListeNotes)->{
+                                notesByEleveMatGpeTemp.forEach((currIdEleveMatGpe, currListeNotes)-> {
                                     Double moyenneFinale = moyennesByEleveMatGpeTemp.get(currIdEleveMatGpe);
                                     if(moyenneFinale == null) {
                                         JsonObject moyenneObj = utilsService.calculMoyenneParDiviseur(currListeNotes, false);
@@ -1833,29 +1833,35 @@ public class ExportPDFController extends ControllerHelper {
                                 });
 
 
+//                                JsonObject resultAsyncmethods = new JsonObject();
+
+                                // Resultat des méthodes asynchrones
+                                final Map<String, String>[] mapGroupes = new Map[]{new HashMap<String, String>()};
+                                final Map<String, JsonObject>[] mapIdMatLibelleMapEtProf = new Map[]{new HashMap<>()};
+
                                 // Libellés des groupes à partir des id
-                                final JsonObject action = new JsonObject()
+                                final JsonObject[] action = {new JsonObject()
                                         .put("action", "classe.listAllGroupesByIds")
                                         .put("idClassesAndGroups", idGroupesArray)
-                                        .put("idStructure",idStructure);
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                        .put("idStructure", idStructure)};
+                                eb.send(Competences.VIESCO_BUS_ADDRESS, action[0], handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                     @Override
                                     public void handle(Message<JsonObject> message) {
                                         JsonObject body = message.body();
                                         if ("ok".equals(body.getString("status"))) {
                                             JsonArray listClassesGroupes = body.getJsonArray("results");
-                                            Map<String, String> mapGroupes = new HashMap<String, String>();
+                                            mapGroupes[0] = new HashMap<String, String>();
                                             if(listClassesGroupes.size() > 0) {
                                                 for (int i = 0; i < listClassesGroupes.size(); i++) {
                                                     JsonObject vGroupe = listClassesGroupes.getJsonObject(i).getJsonObject("m").getJsonObject("data");
-                                                    mapGroupes.put(vGroupe.getString("id"), vGroupe.getString("name"));
+                                                    mapGroupes[0].put(vGroupe.getString("id"), vGroupe.getString("name"));
                                                 }
                                             }
-                                            int val = nbMethodeAsync.getAndDecrement();
-                                            if(val == 0) {
-                                                completeMoustacheJsonAndGeneratePdf();
-                                            }
+//
 
+                                            if(nbMethodeAsync.decrementAndGet() == 0) {
+                                                completeMoustacheJsonAndGeneratePdf(mapGroupes[0],mapIdMatLibelleMapEtProf[0], recapAppreciationsByIdMatGpe);
+                                            }
 
                                         } else {
                                             log.error("Erreur lors de la récupération des groupes/classes");
@@ -1866,8 +1872,27 @@ public class ExportPDFController extends ControllerHelper {
                                 }));
 
 
-                                // TODO libellé des profs par rapport aux id
-                                // TODO libellé des matieres par rapport aux id
+
+                                // Libellé des professeurs et des matieres par rapport aux id
+                                utilsService.getLibelleMatAndTeacher(idsTeachersByMatGpe, new Handler<Either<String, Map<String, JsonObject>>>() {
+                                    @Override
+                                    public void handle(Either<String, Map<String, JsonObject>> event) {
+
+                                        if(event.isRight()) {
+                                            mapIdMatLibelleMapEtProf[0] = event.right().getValue();
+//                                            resultAsyncmethods.put("mapIdMatLibelleMapEtProf", mapIdMatLibelleMapEtProf[0]);
+
+                                            if(nbMethodeAsync.decrementAndGet() == 0) {
+                                                completeMoustacheJsonAndGeneratePdf(mapGroupes[0], mapIdMatLibelleMapEtProf[0], recapAppreciationsByIdMatGpe);
+                                            }
+
+
+                                        } else {
+
+                                        }
+
+                                    }
+                                });
 
 
                             } else {
@@ -1882,7 +1907,9 @@ public class ExportPDFController extends ControllerHelper {
         });
     }
 
-    private void completeMoustacheJsonAndGeneratePdf() {
+    private void completeMoustacheJsonAndGeneratePdf(Map<String, String> mapGroupe,
+                                                     Map<String, JsonObject> stringJsonObjectMap,
+                                                     Map<String, JsonObject> recapAppreciationsByIdMatGpe) {
         log.info("Generation template moustache");
     }
 

@@ -724,6 +724,79 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
+    public void getLibelleMatAndTeacher (Map <String, Set <String> > mapIdMatiereIdsTeacher,
+                                          Handler<Either<String, Map<String,JsonObject>>> handler){
+
+        JsonArray idsTeacher = new JsonArray();
+        JsonArray idsMatiere = new JsonArray();
+
+        mapIdMatiereIdsTeacher.forEach((currIdMatOrMatGroupe, currIdTeachers) -> {
+            currIdTeachers.forEach(idTeacher -> {
+                if(!idsTeacher.contains(idTeacher)) {
+                    idsTeacher.add(idTeacher);
+                }
+            });
+
+            // mapIdMatiereIdsTeacher peut contenir soit des id matiere soit des idMatiere;idGroupe
+            String[] split = currIdMatOrMatGroupe.split(";");
+            if(split.length == 1 || split.length == 2) {
+                String idMat = split[0];
+                if(!idsMatiere.contains(idMat)) {
+                    idsMatiere.add(idMat);
+                }
+            } else {
+                String erreur = "getLibelleMatAndTeacher : id format for mapIdMatiereIdsTeacher is not supported";
+                log.error(erreur);
+                handler.handle(new Either.Left<>(erreur));
+            }
+        });
+
+
+        Utils.getLibelleMatiere(eb, idsMatiere, new Handler<Either<String, Map<String, String>>>() {
+            @Override
+            public void handle(Either<String, Map<String, String>> respMat) {
+                if(respMat.isLeft()){
+                    log.error("getLibelleMatAndTeacher : getLibelleMat " + respMat.left().getValue());
+                    handler.handle(new Either.Left<>(respMat.left().getValue()));
+                }else{
+                    Utils.getLastNameFirstNameUser(eb, idsTeacher, new Handler<Either<String, Map<String, JsonObject>>>() {
+                        @Override
+                        public void handle(Either<String, Map<String, JsonObject>> respTeacher) {
+                            if (respTeacher.isLeft()) {
+                                log.error("getLibelleMatAndTeacher : getLastNameFirstNameUser " + respMat.left().getValue());
+                                handler.handle(new Either.Left<>(respMat.left().getValue()));
+                            } else {
+                                Map<String,String> mapIdMatLibelle = respMat.right().getValue();
+                                Map<String,JsonObject> mapIdTeacher = respTeacher.right().getValue();
+                                Map<String,JsonObject> mapIdMatLibelleMapEtProf = new HashMap<>();
+                                for(Map.Entry<String,Set<String>> setEntry: mapIdMatiereIdsTeacher.entrySet()){
+                                    JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
+
+                                    for(String idTeacher : setEntry.getValue()){
+                                        String displayName = mapIdTeacher.get(idTeacher).getString("firstName").substring(0,1)+".";
+                                        displayName = mapIdTeacher.get(idTeacher).getString("name")+" "+displayName;
+                                        teachers.add(new JsonObject()
+                                                .put("id_teacher",idTeacher)
+                                                .put("displayName",(displayName.length() <= 10)? displayName : mapIdTeacher.get(idTeacher).getString("name")));
+                                    }
+
+
+                                    // setEntry.getKey() peut contenir soit des id matiere soit des idMatiere;idGroupe
+                                    String idMat = setEntry.getKey().split(";")[0];
+
+                                    mapIdMatLibelleMapEtProf.put(setEntry.getKey(),new JsonObject()
+                                            .put("libelle", mapIdMatLibelle.get(idMat))
+                                            .put("teachers", teachers));
+                                }
+                                handler.handle(new Either.Right<>(mapIdMatLibelleMapEtProf));
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
     public void getLibelleMatWithTeacher (JsonArray idsMatiere,
                                           JsonArray idsTeacher,
                                           SortedMap<String,Set<String>> mapIdMatiereIdsTeacher,
@@ -736,7 +809,6 @@ public class DefaultUtilsService  implements UtilsService {
                     log.error("getLibelleMatWithTeacher : getLibelleMat " + respMat.left().getValue());
                     handler.handle(new Either.Left<>(respMat.left().getValue()));
                 }else{
-
                     Utils.getLastNameFirstNameUser(eb, idsTeacher, new Handler<Either<String, Map<String, JsonObject>>>() {
                         @Override
                         public void handle(Either<String, Map<String, JsonObject>> respTeacher) {
@@ -766,7 +838,6 @@ public class DefaultUtilsService  implements UtilsService {
                         }
                     });
                  }
-
             }
         });
     }
