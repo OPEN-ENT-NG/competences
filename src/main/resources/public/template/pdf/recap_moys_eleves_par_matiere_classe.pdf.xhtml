@@ -1,0 +1,60 @@
+<table>
+    <thead>
+    <tr>
+        <th>
+            <ul>
+                <li> {{libelleMatieres}} </li>
+                <li> {{libelleProfesseurs}} </li>
+                <li>  </li>
+                <li> {{libelleEleves}} </li>
+            </ul>
+        </th>
+        {{#matieres}}
+        <th>
+            {{libelleSubject}}
+            <ul>
+                {{#teachers}}
+                <li>{{name}}</li>
+                {{/teachers}}
+            </ul>
+        </th>
+        {{/matieres}}
+        <th>{{libelleMoy:}}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{#eleves}}
+    <tr>
+        <td>{{name}} </td>
+        {{#moysByMat}}
+        <td>{{moyenneByMat}}</td>
+        {{/moysByMat}}
+        <td>{{moyGeneraleEleve}}</td>
+    </tr>
+    {{/eleves}}
+    </tbody>
+    <tfoot>
+    <tr>
+        <td>{{libelleMoyenne}}</td>
+        {{#matiere}}
+        <td>{{moyenneClasse}}</td>
+        {{/matiere}}
+        <td>{{moyClassAllMat}}</td>
+    </tr>
+    <tr>
+        <td>{{libelleMoyMin}}</td>
+        {{#matiere}}
+        <td>{{moyMinClass}}</td>
+        {{/matiere}}
+        <td>{{moyMinClassAllMat}}</td>
+    </tr>
+    <tr>
+        <td>{{libelleMoyMax}}</td>
+        {{#matiere}}
+        <td>{{moyMaxClass}}</td>
+        {{/matiere}}
+        <td>{{moyMaxClassAllMat}}</td>
+    </tr>
+
+    </tfoot>
+</table>
