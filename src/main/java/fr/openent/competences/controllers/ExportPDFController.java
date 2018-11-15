@@ -1704,9 +1704,9 @@ public class ExportPDFController extends ControllerHelper {
 
         final Long finalIdPeriode = idPeriode;
 
-        // TODO recuperer toutes les notes des eleves de la classe
-        // les stocker par id matiere+groupe
-        // recupérer les libellés de matières
+
+
+
 
         Utils.getIdElevesClassesGroupes(eb, idClasse, idPeriode.intValue(), 0,
         new Handler<Either<String, List<String>>>() {
@@ -1894,6 +1894,9 @@ public class ExportPDFController extends ControllerHelper {
                                     }
                                 });
 
+                                // TODO recuperer appréciations classe
+                                // rajouter param à completeMoustacheJsonAndGeneratePdf avec le resultat
+
 
                             } else {
                                 log.error("Erreur lors de la récupération des notes");
@@ -1908,9 +1911,13 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     private void completeMoustacheJsonAndGeneratePdf(Map<String, String> mapGroupe,
-                                                     Map<String, JsonObject> stringJsonObjectMap,
+                                                     Map<String, JsonObject> mapIdMatLibelleMapEtProf,
                                                      Map<String, JsonObject> recapAppreciationsByIdMatGpe) {
         log.info("Generation template moustache");
+        // TODO mettre les résultats des  mapGroupe, mapIdMatLibelleMapEtProf, appréciations dans recapAppreciationsByIdMatGpe
+        // Puis convertir recapAppreciationsByIdMatGpe en JsonObjet pour générer le PDF
+        // cf. genererPdf DefaultExportService
+
     }
 
 
