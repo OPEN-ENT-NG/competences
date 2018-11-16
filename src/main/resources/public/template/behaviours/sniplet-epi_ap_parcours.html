@@ -207,12 +207,6 @@
 
                                     <li class="twelve skills-list-proposition skills-text-overflow"
                                         ng-show="showAddtheme">
-                                            <!--<input type="text"
-                                                   class="input-code"
-                                                   placeholder="Code"
-                                                   ng-model="thematique.code"
-                                                   ng-disabled="changeThematique"
-                                                   ng-maxlength="50" maxlength="50"/>-->
                                             <input type="text"
                                                    class="input-libelle"
                                                    placeholder="Intitulé"
@@ -376,7 +370,7 @@
             </div>
             <div class="twelve cell twelve-mobile" ng-if="!modifElem">
                 <button class="right-magnet"
-                        ng-click="createElementBilanPeriodique();"
+                        ng-click="createElementBilanPeriodique(dataELem, thematique);"
                         ng-disabled="requiredElement()">
                     <i18n>evaluations.add</i18n>
                 </button>
@@ -450,6 +444,11 @@
         <!--        Impossible de créé un thème       -->
         <p ng-if="createTheme">
             <i18n>evaluation.bilan.periodique.creation.impossible</i18n>
+        </p>
+
+        <!--        Impossible de créé un élément du bilan périodique       -->
+        <p ng-if="createElementBP">
+            <i18n>evaluation.bilan.periodique.already.exist</i18n>
         </p>
 
         <!--        Button de validation / annulation       -->

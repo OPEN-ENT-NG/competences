@@ -45,7 +45,9 @@ export const bilanPeriodique = {
                 ens_mat: []
             };
             this.thematique = {
-                code: "",
+                libelle: ""
+            };
+            this.theme = {
                 libelle: ""
             };
             this.propertyName = 'theme.libelle';
@@ -175,7 +177,6 @@ export const bilanPeriodique = {
             let elements = await this.getElementsOnThematique(theme.id);
             if (elements.length > 0) {
                 bilanPeriodique.that.supprTheme = true;
-
                 bilanPeriodique.that.opened.lightboxConfirmDelete = true;
             } else {
                 await this.deleteThematique(theme);
@@ -208,57 +209,49 @@ export const bilanPeriodique = {
 
         /////       Création d'un EPI/AP/Parcours      /////
 
-        // createThematique: async function (thematique) {
-        //     try {
-        //         let notThemeUnique = bilanPeriodique.that.themes.find(themes => themes.libelle === thematique.libelle);
-        //         // Si le thème est unique on récupère le thème créé
-        //         if (!notThemeUnique) {
-        //             await http.post('/competences/thematique',
-        //                 {libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
-        //             bilanPeriodique.that.getThematique(this.getTypeElement());
-        //             bilanPeriodique.that.showAddtheme = false;
-        //         }
-        //         else {
-        //             // Si le thème n'est pas unique : affichage de la lightbox avec message d'erreur
-        //             bilanPeriodique.that.createTheme = true;
-        //             bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-        //         }
-        //
-        //     } catch (e) {
-        //         notify.error('Problème lors de la création de la thématique');
-        //         console.error('Problème lors de la création de la thématique', e);
-        //         throw e;
-        //     }
-        //     utils.safeApply(this);
-        // },
-
-        createElementBilanPeriodique: async function (thematique) {
+        createElementBilanPeriodique: async function (dataELem) {
             try {
                 if (this.dataELem !== undefined && this.dataELem !== null) {
                     this.dataELem.type = this.getTypeElement();
                     if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
                         this.dataELem.id_theme = this.dataELem.theme.id;
-                        // let themeExist = bilanPeriodique.that.themes.find(themes => themes.libelle === thematique.libelle);
-                        // if (themeExist) {
-                            //             await http.post('/competences/thematique',
-                            //                 {libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
-                            //             bilanPeriodique.that.getThematique(this.getTypeElement());
-                            //             bilanPeriodique.that.showAddtheme = false;
-                            //         }
-                            //         else {
-                            //             // Si le thème n'est pas unique : affichage de la lightbox avec message d'erreur
-                            //             bilanPeriodique.that.createTheme = true;
-                            //             bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                            //         }
-
+                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle);
+                        // Si le libellé est unique on récupère le thème créé
+                        if (!libelleExist) {
+                            const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
+                            this.elements.push(data);
+                            bilanPeriodique.that.showAddtheme = false;
+                            bilanPeriodique.that.opened.lightboxCreatePE = false;
+                            bilanPeriodique.that.openedLightbox = false;
+                            bilanPeriodique.that.emptyLightbox();
+                            bilanPeriodique.that.getElements();
+                        }
+                        else {
+                            // Si le libellé n'est pas unique : affichage de la lightbox avec message d'erreur
+                            bilanPeriodique.that.createElementBP = true;
+                            bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                        }
                     }
-                    const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
-                    this.elements.push(data);
+                    else {
+                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle);
+                        // Si le libellé est unique on récupère le thème créé
+                        if (!libelleExist) {
+                            const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
+                            this.elements.push(data);
+                            bilanPeriodique.that.showAddtheme = false;
+                            bilanPeriodique.that.opened.lightboxCreatePE = false;
+                            bilanPeriodique.that.openedLightbox = false;
+                            bilanPeriodique.that.emptyLightbox();
+                            bilanPeriodique.that.getElements();
+                        }
+                        else {
+                            // Si le libellé n'est pas unique : affichage de la lightbox avec message d'erreur
+                            bilanPeriodique.that.createElementBP = true;
+                            bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                        }
+                        utils.safeApply(bilanPeriodique.that);
+                    }
                 }
-                bilanPeriodique.that.emptyLightbox();
-                bilanPeriodique.that.opened.lightboxCreatePE = false;
-                bilanPeriodique.that.openedLightbox = false;
-                bilanPeriodique.that.getElements();
             } catch (e) {
                 notify.error('Problème lors de la création de l\'élément du bilan périodique');
                 console.error('Problème lors de la création de l\'élément du bilan périodique');
@@ -374,6 +367,7 @@ export const bilanPeriodique = {
                 }
                 if (oldVal === true && newVal === false) {
                     bilanPeriodique.that.createTheme = false;
+                    bilanPeriodique.that.createElementBP = false;
                     bilanPeriodique.that.supprElem = false;
                     bilanPeriodique.that.supprElemAppr = false;
                     bilanPeriodique.that.supprEnseignant = false;
@@ -407,7 +401,6 @@ export const bilanPeriodique = {
                 else {
                     bilanPeriodique.that.supprElem = true;
                     bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                    // await this.deleteElements(elements);
                 }
             }
             utils.safeApply(this);
@@ -649,6 +642,7 @@ export const bilanPeriodique = {
             };
             this.dataELem = bilanPeriodique.that.dataELem;
             bilanPeriodique.that.createTheme = false;
+            bilanPeriodique.that.createElementBP = false;
             bilanPeriodique.that.supprElem = false;
             bilanPeriodique.that.supprElemAppr = false;
             bilanPeriodique.that.supprEnseignant = false;
@@ -666,8 +660,6 @@ export const bilanPeriodique = {
             $("#scrollto").focus();
         },
 
-
-        /////       O,v       /////
 
         sortBy: function (propertyName) {
             bilanPeriodique.that.reverse = (this.propertyName === propertyName) ? !this.reverse : false;
