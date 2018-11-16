@@ -1,60 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+
+<head>
+    <title>Tableau des moyennes par matière des élèves</title>
+    <style type="text/css">
+
+        body {
+            font-family: "Calibri", sans-serif;
+            align-content: center;
+        }
+
+
+        table {
+            width: 100%;
+            font-size: 12px;
+            text-align: center;
+        }
+        table thead th:first-child{
+            width: 10%;
+        }
+        table thead th {
+            width: 5%;
+        }
+
+        table tbody td:first-child {
+            width: 10%;
+            padding-left: 5px;
+            text-align: left;
+        }
+        .bold {
+            font-weight: bold;
+        }
+        @page{
+            size: landscape;
+        }
+        .matProf{
+            font-size: 10px;
+        }
+
+
+    </style>
+</head>
+
+<body>
 <table>
     <thead>
     <tr>
         <th>
-            <ul>
-                <li> {{libelleMatieres}} </li>
-                <li> {{libelleProfesseurs}} </li>
-                <li>  </li>
-                <li> {{libelleEleves}} </li>
-            </ul>
+            <div class="bold">Matières </div>
+            <div class="bold">Enseignants</div>
+            <div>  </div>
+            <div class="bold">Elèves</div>
         </th>
         {{#matieres}}
-        <th>
-            {{libelleSubject}}
-            <ul>
+        <th class="colmatiere">
+            <div>{{libelle}}</div>
                 {{#teachers}}
-                <li>{{name}}</li>
+            <div>{{displayName}}</div>
                 {{/teachers}}
-            </ul>
+
         </th>
         {{/matieres}}
-        <th>{{libelleMoy:}}</th>
+        {{#withOptions}}
+        <th>Moy.</th>
+        {{/withOptions}}
     </tr>
     </thead>
     <tbody>
     {{#eleves}}
     <tr>
-        <td>{{name}} </td>
-        {{#moysByMat}}
+        <td>{{lastName}} {{firstName}}</td>
+        {{#eleveMoyByMat}}
         <td>{{moyenneByMat}}</td>
-        {{/moysByMat}}
+        {{/eleveMoyByMat}}
+        {{#withOptions}}
         <td>{{moyGeneraleEleve}}</td>
+        {{/withOptions}}
     </tr>
     {{/eleves}}
     </tbody>
     <tfoot>
-    <tr>
-        <td>{{libelleMoyenne}}</td>
-        {{#matiere}}
-        <td>{{moyenneClasse}}</td>
-        {{/matiere}}
-        <td>{{moyClassAllMat}}</td>
-    </tr>
-    <tr>
-        <td>{{libelleMoyMin}}</td>
-        {{#matiere}}
-        <td>{{moyMinClass}}</td>
-        {{/matiere}}
-        <td>{{moyMinClassAllMat}}</td>
-    </tr>
-    <tr>
-        <td>{{libelleMoyMax}}</td>
-        {{#matiere}}
-        <td>{{moyMaxClass}}</td>
-        {{/matiere}}
-        <td>{{moyMaxClassAllMat}}</td>
-    </tr>
-
+        <tr>
+            <td class="bold">Moyenne</td>
+            {{#matieres}}
+            <td>{{moyClass}}</td>
+            {{/matieres}}
+            <td>{{moyClassAllMat}}</td>
+        </tr>
+        {{#withOptions}}
+        <tr>
+            <td class="bold">Moyenne Min.</td>
+            {{#matieres}}
+            <td>{{moyMinClass}}</td>
+            {{/matieres}}
+            <td>{{moyMinClassAllMat}}</td>
+        </tr>
+        <tr>
+            <td class="bold">MoyenneMax</td>
+            {{#matieres}}
+            <td>{{moyMaxClass}}</td>
+            {{/matieres}}
+            <td>{{moyMaxClassAllMat}}</td>
+        </tr>
+        {{/withOptions}}
     </tfoot>
 </table>
+</body>
+</html>

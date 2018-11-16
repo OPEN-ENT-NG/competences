@@ -119,6 +119,22 @@ public class Eleve {
     }
 
     /**
+     * get last name of student
+     * @return last name of student
+     */
+    public String getLastName(){
+        return this.lastName;
+    }
+
+    /**
+     *  get first Name of student
+     * @return first Name of student
+     */
+    public String getFirstName(){
+        return this.firstName;
+    }
+
+    /**
      * Initialize la collection de notes par domaine de l'Eleve.
      * Met a jour le booleen isNotesReady afin de notifier que les notes ont ete initialisees,
      * meme si aucunes notes n'a ete trouvee, dans le cas ou l'etudiant n'est pas evalue par exemple.

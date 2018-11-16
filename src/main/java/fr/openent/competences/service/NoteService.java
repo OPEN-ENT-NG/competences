@@ -25,9 +25,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -195,4 +193,26 @@ public interface NoteService extends CrudService {
      */
     void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, Integer idPeriode, Handler<Either<String,JsonArray>> handler);
 
+    /**
+     * get eleve moy By matiere By class
+     * @param idClasse idClasse
+     * @param idPeriode idPeriode
+     * @param mapAllidMatAndidTeachers
+     * @param mapIdMatListMoyByEleve
+     * @param handler response
+     */
+    void getMoysEleveByMat(String idClasse,Integer idPeriode,
+                           SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+                           Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                           Handler<Either<String,JsonObject>> handler);
+
+    /**
+     *
+     * @param mapAllidMatAndidTeachers
+     * @param mapIdMatListMoyByEleve
+     * @param handler
+     */
+    void getMatEvaluatedAndStat(SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+                                Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                                Handler<Either<String,JsonObject>> handler);
 }

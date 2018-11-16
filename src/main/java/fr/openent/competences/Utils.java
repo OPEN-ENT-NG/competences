@@ -25,6 +25,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -34,6 +35,7 @@ import org.entcore.common.neo4j.Neo4jResult;
 
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.getHost;
 
 import java.util.*;
 
@@ -538,15 +540,41 @@ public class Utils {
                         Eleve eleve = new Eleve(requestEleve.getString("id"),requestEleve.getString("lastName"),
                                 requestEleve.getString("firstName"),idClass,requestEleve.getString("className"));
                             eleves.add(eleve);
-                         if(idsEleve != null){
-                             idsEleve.add(requestEleve.getString("id"));
-                         }
+                             if(idsEleve != null){
+                                 idsEleve.add(requestEleve.getString("id"));
+                             }
                         }
                     }else{
                         handler.handle(new Either.Left<>("no Student in this Class " + idClass));
                         log.error("getEleveClasse : no Student in this Class idClass: " + idClass );
                     }
                     handler.handle(new Either.Right<>(eleves));
+                }
+            }
+        }));
+    }
+
+    public static void getLibellePeriode(EventBus eb, HttpServerRequest request,Integer idPeriode, Handler<Either<String,String>> handler){
+
+
+        JsonObject jsonRequest = new JsonObject()
+                .put("headers", new JsonObject()
+                        .put("Accept-Language", request.headers().get("Accept-Language")))
+                .put("Host", getHost(request));
+        JsonObject action = new JsonObject()
+                .put("action", "periode.getLibellePeriode")
+                .put("idType", idPeriode)
+                .put("request", jsonRequest);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+
+                if (!"ok".equals(body.getString("status"))) {
+                    handler.handle(new Either.Left<>("periode not found " + idPeriode));
+                    log.error("getLibellePeriode : periode not found: " + idPeriode);
+                } else {
+                    handler.handle(new Either.Right<>(body.getString("result")));
                 }
             }
         }));
