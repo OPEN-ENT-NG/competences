@@ -37,7 +37,15 @@
             width: auto;
             height: 90px;
             margin-bottom: 20px;
-            margin-left: -2px;
+            margin-left: 4px;
+            float:right;
+            margin-top: 0px;
+        }
+        #imgStruct {
+            width: auto;
+            height: 90px;
+            margin-bottom: 20px;
+            margin-left: 4px;
             float:right;
         }
         h1 {
@@ -239,8 +247,12 @@
             <p>{{email}}</p>
             {{/structureLibelle}}
         </div>
+
+        {{#hasImgStructure}}
+        <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
+        {{/hasImgStructure}}
         {{#hasLevel}}
-        <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="Logo"/>
+        <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
         {{/hasLevel}}
     </div>
 

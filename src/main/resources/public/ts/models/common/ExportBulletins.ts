@@ -3,7 +3,6 @@
  */
 import {_, notify, idiom as lang} from 'entcore';
 import http from "axios";
-import * as jsPDF from "jspdf";
 import {Classe, ElementBilanPeriodique} from "../teacher";
 
 declare let $ : any;
@@ -29,7 +28,11 @@ export class ExportBulletins {
             classeName: options.classeName,
             pdfBlobs: options.pdfBlobs,
             images: options.images,
-            nameCE: (options.nameCE !== undefined)? options.nameCE : ""
+            nameCE: (options.nameCE !== undefined)? options.nameCE : "",
+            imgStructure: (options.imgStructure !== undefined)? options.imgStructure : "",
+            hasImgStructure: (options.imgStructure !== undefined)? true: false,
+            imgSignature: (options.imgSignature !== undefined)? options.imgSignature : ""
+
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode});
@@ -156,11 +159,8 @@ export class ExportBulletins {
                     }
 
                 });
-                let doc = new jsPDF('p', 'pt', 'a4');
                 let image = myChart.toBase64Image();
-                doc.addImage(image, 'png', 10, 10);
                 options.images[student.id] = image;
-                // doc.save(student.lastName + 'api.pdf');
                 resolve();
             }
             catch (e) {

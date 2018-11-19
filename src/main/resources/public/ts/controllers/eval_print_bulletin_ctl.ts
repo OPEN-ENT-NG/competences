@@ -28,6 +28,15 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             $scope.selected = {
                 periode : undefined
             };
+            $("#imgStructure").change(function(){
+                $scope.readURL(this, true);
+            });
+
+            /*
+            $("#imgSignature").change(function(){
+                $scope.readURL(this, false);
+            });
+            */
         };
 
 
@@ -125,6 +134,24 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             utils.safeApply($scope);
         };
 
+        $scope.readURL = function(input, isStructure) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+
+                reader.onload = function (e) {
+                    if(isStructure) {
+                        $('#displayImgStructure').attr('src', reader.result);
+                        $scope.print.imgStructure = reader.result;
+                    }
+                    else{
+                        $('#displayImgSignature').attr('src', reader.result);
+                        $scope.print.imgSignature = reader.result;
+                    }
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
         // Permet de mettre à jour les périodes et les élèves dans les listes en fonction de la classe
         $scope.updateFilters = async function () {
             let selectedClasses = _.where($scope.printClasses.all, {selected : true});

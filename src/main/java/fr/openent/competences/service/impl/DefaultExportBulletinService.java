@@ -95,6 +95,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("showFamily", params.getBoolean("showFamily"))
                     .put("getProgramElements", params.getBoolean("getProgramElements"))
                     .put("showBilanPerDomaines", params.getBoolean("showBilanPerDomaines"))
+                    .put("imgStructure", params.getString("imgStructure"))
+                    .put("hasImgStructure", params.getBoolean("hasImgStructure"))
                     .put("nameCE", params.getString("nameCE"));
 
         }
