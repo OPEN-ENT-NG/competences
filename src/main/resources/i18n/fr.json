@@ -467,6 +467,7 @@
   "evaluations.export.bulletin.communication.header.left.second":"participation à la vie de l’établissement) : ",
   "evaluations.export.bulletin.communication.header.right.first":"Date, nom et signature",
   "evaluations.export.bulletin.communication.header.right.second":"du chef de l'établissement",
+  "evaluations.export.bulletin.nameCE": "Nom du chef ou de son adjoint",
   "evaluations.export.bulletin.asbence.just":"Absences justifiées par les responsables légaux ",
   "evaluations.export.bulletin.asbence.not.just":"Absences non justifiées par les responsables légaux ",
   "evaluations.export.bulletin.asbence.nb.heures":"Nombre d’heures de cours manquées du fait de ses absences, justifiées ou non justifiées",

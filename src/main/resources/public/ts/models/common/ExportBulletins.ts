@@ -28,7 +28,8 @@ export class ExportBulletins {
             threePage: (options.threePage === true)? options.threePage:false ,
             classeName: options.classeName,
             pdfBlobs: options.pdfBlobs,
-            images: options.images
+            images: options.images,
+            nameCE: (options.nameCE !== undefined)? options.nameCE : ""
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode});

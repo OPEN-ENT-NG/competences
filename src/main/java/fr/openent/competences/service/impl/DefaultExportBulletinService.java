@@ -94,7 +94,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("showProjects", params.getBoolean("showProjects"))
                     .put("showFamily", params.getBoolean("showFamily"))
                     .put("getProgramElements", params.getBoolean("getProgramElements"))
-                    .put("showBilanPerDomaines", params.getBoolean("showBilanPerDomaines"));
+                    .put("showBilanPerDomaines", params.getBoolean("showBilanPerDomaines"))
+                    .put("nameCE", params.getString("nameCE"));
 
         }
         finalHandler.handle(new Either.Right<>(null));
