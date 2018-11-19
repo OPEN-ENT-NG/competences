@@ -335,6 +335,7 @@
         <h4 class="paddingFifty">{{libelle}}</h4>
         <table class="projets paddingFifty">
             {{#elements}}
+            {{#hasCommentaire}}
             <tr>
                 <td class="firstProjet left-align">
                     {{#hasLibelle}}
@@ -364,6 +365,7 @@
                 </td>
                 <td class="secondProjet" style="{{{commentaireStyle}}}">{{commentaire}}</td>
             </tr>
+            {{/hasCommentaire}}
             {{/elements}}
         </table>
         {{/hasProject}}

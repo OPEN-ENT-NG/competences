@@ -462,6 +462,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             Long idElement = element.getLong("id");
                                             Long typeElement = element.getLong("type");
                                             idElements.add(idElement.toString());
+                                            element.put("hasCommentaire", false);
                                             mapElement.put(idElement, element);
                                             if (3L == typeElement) {
                                                 element.put("hasLibelle", false);
@@ -471,7 +472,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 else {
                                                     parcours.getJsonArray("elements").add(element);
                                                 }
-                                                sethasProject(parcours,true);
                                             }
                                             else if (2L == typeElement) {
                                                 element.put("hasLibelle", true);
@@ -481,7 +481,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 else {
                                                     ap.getJsonArray("elements").add(element);
                                                 }
-                                                sethasProject(ap,true);
                                             }
                                             else if (1L == typeElement) {
                                                 element.put("hasLibelle", true);
@@ -491,7 +490,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 else {
                                                     epi.getJsonArray("elements").add(element);
                                                 }
-                                                sethasProject(epi,true);
                                             }
                                         }
                                     }
@@ -541,12 +539,27 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                                                                     Long idElem = app.getLong(
                                                                             "id_elt_bilan_periodique");
-                                                                    mapElement.get(idElem).put("commentaire",
-                                                                            troncateLibelle(com,
-                                                                                    MAX_SIZE_LIBELLE_PROJECT))
+                                                                    JsonObject elem = mapElement.get(idElem);
+                                                                    elem.remove("hasCommentaire");
+
+                                                                    elem.put("hasCommentaire", true)
+                                                                            .put("commentaire",
+                                                                                    troncateLibelle(com,
+                                                                                            MAX_SIZE_LIBELLE_PROJECT))
                                                                             .put("commentaireStyle",
                                                                                     fontSizeProject(com,
                                                                                             MAX_SIZE_LIBELLE_PROJECT));
+                                                                    Long typeElem = elem.getLong("type");
+                                                                    if (3L == typeElem) {
+                                                                        sethasProject(parcours,true);
+                                                                    }
+                                                                    else if (2L == typeElem) {
+
+                                                                        sethasProject(ap,true);
+                                                                    }
+                                                                    else if (1L == typeElem) {
+                                                                        sethasProject(epi,true);
+                                                                    }
                                                                 }
                                                             }
                                                         }
