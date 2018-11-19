@@ -38,6 +38,7 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Utils {
 
@@ -105,6 +106,32 @@ public class Utils {
                     handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                     log.error("getGroupesClasse : " + body.getString("message"));
                 }
+            }
+        }));
+    }
+
+    public static void getInfosGroupes(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, Map<String, String>>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "classe.getClassesInfo")
+                .put("idClasses", idsClasses);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+
+            if ("ok".equals(body.getString("status"))) {
+                JsonArray queryResult = body.getJsonArray("results");
+
+                if (queryResult != null) {
+                    Map<String, String> result = queryResult.stream()
+                            .collect(Collectors.toMap(val -> ((JsonObject) val).getString("id") , val -> ((JsonObject) val).getString("name")));
+
+                    handler.handle(new Either.Right<>(result));
+                } else {
+                    handler.handle(new Either.Left<>("getInfosGroupes : empty result"));
+                    log.error("getInfosGroupes : empty result");
+                }
+            } else {
+                handler.handle(new Either.Left<>(body.getString("message")));
+                log.error("getInfosGroupes : " + body.getString("message"));
             }
         }));
     }
@@ -561,6 +588,7 @@ public class Utils {
                 .put("headers", new JsonObject()
                         .put("Accept-Language", request.headers().get("Accept-Language")))
                 .put("Host", getHost(request));
+
         JsonObject action = new JsonObject()
                 .put("action", "periode.getLibellePeriode")
                 .put("idType", idPeriode)

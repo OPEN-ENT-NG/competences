@@ -140,14 +140,21 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     @Override
     public void getNotesParElevesParDevoirs(String[] idEleves, Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
+        getNotesParElevesParDevoirs(idEleves, idDevoirs, null, handler);
+    }
+
+    @Override
+    public void getNotesParElevesParDevoirs(String[] idEleves, Long[] idDevoirs, Integer idPeriode, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        boolean eleves = idEleves.length != 0;
-        boolean devoirs = idDevoirs.length != 0;
+        boolean eleves = idEleves != null && idEleves.length != 0;
+        boolean devoirs = idDevoirs != null && idDevoirs.length != 0;
+        boolean periode = idPeriode != null;
 
-        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur " +
+        query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, grp.id_groupe " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".notes " +
-                "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = notes.id_devoir WHERE devoirs.is_evaluated = true");
+                "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = notes.id_devoir " +
+                "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS grp ON devoirs.id = grp.id_devoir WHERE devoirs.is_evaluated = true ");
 
         if(eleves || devoirs) {
             query.append(" AND ");
@@ -165,6 +172,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 for(Long l : idDevoirs) {
                     values.add(l);
                 }
+            }
+            if(periode && (eleves || devoirs)) {
+                query.append(" AND ");
+            }
+            if(periode) {
+                query.append("devoirs.id_periode = ?");
+                values.add(idPeriode);
             }
         }
 
@@ -833,6 +847,47 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         .put("id_periode", entryPeriode.getKey()));
             }
         }
+    }
+
+
+    @Override
+    public void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses, Handler<Either<String, JsonArray>> handler) {
+
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".moyenne_finale";
+        String condition = "";
+        JsonArray values = new JsonArray();
+
+        if ((idEleves != null && idEleves.length > 0)
+                || (idMatieres != null && idMatieres.length > 0)
+                || (idClasses != null && idClasses.length > 0)
+                || idPeriode != null) {
+            condition += " WHERE ";
+            if (idEleves != null && idEleves.length > 0) {
+                condition += "id_eleve IN " + Sql.listPrepared(idEleves) + " AND ";
+                Arrays.stream(idEleves).forEach(values::add);
+            }
+
+            if (idMatieres != null && idMatieres.length > 0) {
+                condition += "id_matiere IN " + Sql.listPrepared(idMatieres) + " AND ";
+                Arrays.stream(idMatieres).forEach(values::add);
+            }
+
+            if (idClasses != null && idClasses.length > 0) {
+                condition += "id_classe IN " + Sql.listPrepared(idClasses) + " AND ";
+                Arrays.stream(idClasses).forEach(values::add);
+            }
+
+            if (idPeriode != null) {
+                condition += "id_periode = ?";
+                values.add(idPeriode);
+            }
+
+            if (condition.endsWith(" AND ")) {
+                condition = condition.substring(0, condition.length() - 5);
+            }
+        }
+
+        Sql.getInstance().prepared(query + condition, values, validResultHandler(handler));
     }
 
     @Override

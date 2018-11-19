@@ -56,6 +56,8 @@ public interface NoteService extends CrudService {
      */
     void getNotesParElevesParDevoirs(String[] idEleves, Long[] idDevoirs, Handler<Either<String, JsonArray>> handler);
 
+    void getNotesParElevesParDevoirs(String[] idEleves, Long[] idDevoirs, Integer idPeriode, Handler<Either<String, JsonArray>> handler);
+
     /**
      * Mise à jour d'une note
      * @param data Note à mettre à jour
@@ -130,7 +132,7 @@ public interface NoteService extends CrudService {
                              String colonne,   Handler<Either<String, JsonArray>> handler);
 
     void  getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, String idClasse,
-                          String colonne, Handler<Either<String, JsonArray>> handler);
+                           String colonne, Handler<Either<String, JsonArray>> handler);
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe
      * @param idEleve
@@ -180,17 +182,19 @@ public interface NoteService extends CrudService {
      * @param result JsonObject sur lequel est ajouté les moyennes de la classe
      */
     void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
-                                                   final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
-                                                   final JsonObject result );
+                                            final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+                                            final JsonObject result );
 
     void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result);
 
-    /**
-     * get all notes of a student by  matiere ,idGroup
-     * @param idsEleve idsEleve list
-     * @param idPeriode idPeriode
-     * @param handler response
-     */
+    void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses, Handler<Either<String, JsonArray>> handler);
+
+        /**
+         * get all notes of a student by  matiere ,idGroup
+         * @param idsEleve idsEleve list
+         * @param idPeriode idPeriode
+         * @param handler response
+         */
     void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, Integer idPeriode, Handler<Either<String,JsonArray>> handler);
 
     /**

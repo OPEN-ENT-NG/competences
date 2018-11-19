@@ -18,11 +18,11 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
-import org.entcore.common.service.CrudService;
-import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.service.CrudService;
+import org.entcore.common.user.UserInfos;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -35,7 +35,7 @@ public interface AppreciationService extends CrudService {
      * @param user utilisateur
      * @param handler handler portant le résultat de la requête
      */
-    public void createAppreciation(final JsonObject appreciation, final UserInfos user, final Handler<Either<String, JsonObject>> handler);
+    void createAppreciation(final JsonObject appreciation, final UserInfos user, final Handler<Either<String, JsonObject>> handler);
 
     /**
      * Mise à jour d'une appreciation
@@ -43,7 +43,7 @@ public interface AppreciationService extends CrudService {
      * @param user user
      * @param handler handler portant le resultat de la requête
      */
-    public void updateAppreciation(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void updateAppreciation(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Suppression d'une appreciation en bdd
@@ -51,7 +51,7 @@ public interface AppreciationService extends CrudService {
      * @param user user
      * @param handler handler portant le résultat de la requête
      */
-    public void deleteAppreciation(Long idAppreciation, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void deleteAppreciation(Long idAppreciation, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Créer ou mettre à jour une appreciation d'une classe pour une période et matière donnée
@@ -61,14 +61,14 @@ public interface AppreciationService extends CrudService {
      * @param id_matiere id matiere neo
      * @param handler handler portant le résultat de la requête
      */
-    public void createOrUpdateAppreciationClasse(String appreciation, String id_classe, Integer id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler);
+    void createOrUpdateAppreciationClasse(String appreciation, String id_classe, Integer id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupérer une appreciation d'une classe pour une période et matière donnée
-     * @param id_classe id classe neo
+     * @param id_classes id classe neo
      * @param id_periode id periode
-     * @param id_matiere id matiere neo
+     * @param id_matieres id matiere neo
      * @param handler handler portant le résultat de la requête
      */
-    public void getAppreciationClasse(String id_classe, int id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler);
+    void getAppreciationClasse(String[] id_classes, Integer id_periode, String[] id_matieres, Handler<Either<String, JsonArray>> handler);
 }

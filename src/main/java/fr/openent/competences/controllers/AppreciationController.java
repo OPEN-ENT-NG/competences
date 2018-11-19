@@ -49,6 +49,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.notEmptyResponseHandler;
 
@@ -272,9 +273,17 @@ public class AppreciationController extends ControllerHelper {
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    appreciationService.getAppreciationClasse(request.params().get("id_classe"),
+                    appreciationService.getAppreciationClasse(
+                            new String[]{request.params().get("id_classe")},
                             Integer.parseInt(request.params().get("id_periode")),
-                            request.params().get("id_matiere"), defaultResponseHandler(request));
+                            new String[]{request.params().get("id_matiere")}, stringJsonObjectEither -> {
+                                if (stringJsonObjectEither.isRight()) {
+                                    Renders.renderJson(request, stringJsonObjectEither.right().getValue().getJsonObject(0), 200);
+                                } else {
+                                    JsonObject error = (new JsonObject()).put("error", stringJsonObjectEither.left().getValue());
+                                    Renders.renderJson(request, error, 400);
+                                }
+                            });
                 } else {
                     badRequest(request);
                 }

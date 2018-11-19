@@ -35,6 +35,8 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.MultiMap;
 import io.vertx.core.eventbus.EventBus;
@@ -55,6 +57,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.text.DecimalFormat;
+import java.util.stream.Collectors;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -83,6 +86,7 @@ public class ExportPDFController extends ControllerHelper {
     private BfcSyntheseService bfcSynthseService;
     private EleveEnseignementComplementService eleveEnseignementComplementService;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
+    private AppreciationService appreciationService;
 
     public ExportPDFController(EventBus eb, EmailSender notification) {
         devoirService = new DefaultDevoirService(eb);
@@ -97,6 +101,7 @@ public class ExportPDFController extends ControllerHelper {
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
+        appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
     }
 
     /**
@@ -1685,16 +1690,14 @@ public class ExportPDFController extends ControllerHelper {
     @Get("/recapAppreciations/print/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportRecapAppreciations(final HttpServerRequest request) {
-        final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final String idClasse = request.params().get("idClasse");
-        final String idStructure = request.params().get("idStructure");
 
-        Long idPeriode = null;
+        Integer idPeriode = null;
 
         try {
             if (request.params().contains("idPeriode")) {
-                idPeriode = Long.parseLong(request.params().get("idPeriode"));
+                idPeriode = Integer.parseInt(request.params().get("idPeriode"));
             }
         } catch (NumberFormatException err) {
             badRequest(request, err.getMessage());
@@ -1702,222 +1705,247 @@ public class ExportPDFController extends ControllerHelper {
             return;
         }
 
-        final Long finalIdPeriode = idPeriode;
+        Integer finalIdPeriode = idPeriode;
 
+        Set<JsonObject> MatGrp = new HashSet<>();
+        Set<String> idEleves = new HashSet<>();
+        Map<JsonObject, String> teachers = new HashMap<>();
 
+        Future<Map<JsonObject, String>> apprFuture = Future.future();
+        Future<Map<JsonObject, Map<String, List<NoteDevoir>>>> notesFuture = Future.future();
+        Future<Map<JsonObject, Map<String, NoteDevoir>>> moyennesFinalFuture = Future.future();
 
+        Future<Map<String, String>> libMatFuture = Future.future();
+        Future<Map<String, String>> libGrpFuture = Future.future();
+        Future<Map<String, String>> libTeachFuture = Future.future();
 
+        Future<Map<JsonObject, JsonObject>> moyObjectFuture = Future.future();
 
-        Utils.getIdElevesClassesGroupes(eb, idClasse, idPeriode.intValue(), 0,
-        new Handler<Either<String, List<String>>>() {
-            @Override
-            public void handle(Either<String, List<String>> eventResultEleves) {
-                if (eventResultEleves.isRight()) {
-                    // Eleves de la classe
-                    List<String> idEleves = eventResultEleves.right().getValue();
+        JsonObject result = new JsonObject();
 
-                    final AtomicInteger nbMethodeAsync = new AtomicInteger(3);
+        CompositeFuture.all(apprFuture, notesFuture, moyennesFinalFuture).setHandler(compositeFutureAsyncResult -> {
+            if (compositeFutureAsyncResult.succeeded()) {
 
-                    // Notes des eleves de la classe
-                    noteService.getNotesAndMoyFinaleByClasseAndPeriode(idEleves, finalIdPeriode.intValue(),
-                    new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(final Either<String, JsonArray> resultNotesEleves) {
-                            if (resultNotesEleves.isRight()) {
+                Map<JsonObject, String> appr = compositeFutureAsyncResult.result().resultAt(0);
+                Map<JsonObject, Map<String, List<NoteDevoir>>> notes = compositeFutureAsyncResult.result().resultAt(1);
+                Map<JsonObject, Map<String, NoteDevoir>> moyennesFinales = compositeFutureAsyncResult.result().resultAt(2);
 
-                                JsonArray notesElevesArray = resultNotesEleves.right().getValue();
+                Map<JsonObject, JsonObject> moyObjects = MatGrp.stream().collect(Collectors.toMap(val -> val, val -> new JsonObject()));
 
-                                // TODO convertir en JsonObject
-                                Map<String, JsonObject> recapAppreciationsByIdMatGpe = new HashMap<String, JsonObject>();
+                MatGrp.stream().forEach(matGrp -> {
 
-                                JsonArray idGroupesArray = new fr.wseduc.webutils.collections.JsonArray();
+                    List<NoteDevoir> matGrpNotes = new ArrayList<>();
 
-                                Map<String, Set <String> > idsTeachersByMatGpe = new HashMap<>();
+                    JsonObject moyObject = new JsonObject();
 
-                                Map<String, List<NoteDevoir>> notesByEleveMatGpeTemp = new HashMap<>();
-                                Map<String, Double> moyennesByEleveMatGpeTemp = new HashMap<>();
-
-                                for (Object noteEleve: notesElevesArray) {
-                                    JsonObject jsonNoteEleve = ((JsonObject) noteEleve);
-
-                                    String idMatiere = jsonNoteEleve.getString("id_matiere");
-                                    String idGroupe = jsonNoteEleve.getString("id_groupe");
-                                    String idProf = jsonNoteEleve.getString("owner");
-                                    String idEleve = jsonNoteEleve.getString("id_eleve");
-
-                                    String idMatGpe = idMatiere + ";" +idGroupe;
-                                    String idEleveMatGpe = idEleve +";" + idMatGpe;
-
-                                    // stockage des id groupes/classe pour recuperer leur libellé ensuite
-                                    if(!idGroupesArray.contains(idGroupe)){
-                                        idGroupesArray.add(idGroupe);
-                                    }
-
-                                    // Stockage professeur matGpe en cours de parcous
-                                    Set<String> idProfesseurs = idsTeachersByMatGpe.get(idMatGpe);
-                                    if(idProfesseurs == null) {
-                                        idProfesseurs = new HashSet<>();
-                                        idsTeachersByMatGpe.put(idMatGpe, idProfesseurs);
-                                    }
-                                    idProfesseurs.add(idProf);
-
-                                    //Init Map pour le couple matiere/groupe en cours de parcours
-                                    JsonObject jsonRecapMatGpe = recapAppreciationsByIdMatGpe.get(idMatGpe);
-                                    if(jsonRecapMatGpe == null) {
-                                        jsonRecapMatGpe = new JsonObject();
-                                        recapAppreciationsByIdMatGpe.put(idMatGpe, jsonRecapMatGpe);
-                                    }
-
-                                    // Maj des stats
-                                    Double min = jsonRecapMatGpe.getDouble("min"), max = jsonRecapMatGpe.getDouble("max");
-                                    Double currentNote = Double.parseDouble(jsonNoteEleve.getString("valeur"));
-                                    Double currentNoteDiviseur = jsonNoteEleve.getDouble("diviseur");
-                                    Double currentNoteRameneSurVingt = currentNote * 20 / currentNoteDiviseur;
-                                    if(min == null || currentNoteRameneSurVingt<min) {
-                                        jsonRecapMatGpe.put("min", currentNoteRameneSurVingt);
-                                    }
-
-                                    if(max == null || currentNoteRameneSurVingt>max) {
-                                        jsonRecapMatGpe.put("max", currentNoteRameneSurVingt);
-                                    }
-
-                                    // Stockage moyenne finale eleve pour une matiere/groupe
-                                    Double moyenneFinale = null;
-                                    String sMoyenne_Finale = jsonNoteEleve.getString("moyenne_finale");
-                                    if (sMoyenne_Finale != null) {
-                                        moyenneFinale = Double.parseDouble(sMoyenne_Finale);
-                                        moyennesByEleveMatGpeTemp.put(idEleveMatGpe, moyenneFinale);
-                                    }
-
-                                    // Stockage des notes par idEleve;idMatiere;idGroupe
-                                    List<NoteDevoir> listeNotesForEleveMatGpe = notesByEleveMatGpeTemp.get(idEleveMatGpe);
-                                    if(listeNotesForEleveMatGpe == null) {
-                                        listeNotesForEleveMatGpe = new ArrayList<>();
-                                        notesByEleveMatGpeTemp.put(idEleveMatGpe, listeNotesForEleveMatGpe);
-                                    }
-                                    Boolean currentNoteRamenerSur = jsonNoteEleve.getBoolean("ramener_sur");
-                                    Double currentNoteCoefficient =  Double.parseDouble(jsonNoteEleve.getString("coefficient"));
-                                    NoteDevoir note = new NoteDevoir(currentNote, currentNoteDiviseur, currentNoteRamenerSur,  currentNoteCoefficient);
-                                    listeNotesForEleveMatGpe.add(note);
-
-
-                                } // end for
-
-                                // Calcul des moyennes par élève si pas de moyenne finale
-                                Map<String, List<NoteDevoir>> moyennesElevesByMatGpeTemp = new HashMap<>(); // liste des moyennes des eleves rangés map par idMatGpe
-                                notesByEleveMatGpeTemp.forEach((currIdEleveMatGpe, currListeNotes)-> {
-                                    Double moyenneFinale = moyennesByEleveMatGpeTemp.get(currIdEleveMatGpe);
-                                    if(moyenneFinale == null) {
-                                        JsonObject moyenneObj = utilsService.calculMoyenneParDiviseur(currListeNotes, false);
-                                        moyenneFinale = moyenneObj.getDouble("moyenne");
-                                        moyennesByEleveMatGpeTemp.put(currIdEleveMatGpe, moyenneFinale);
-                                    }
-
-                                    // stockage de la moyenne de l'eleve pour cette matiere+groupe
-                                    String[] split = currIdEleveMatGpe.split(";");
-                                    String idMatGpe = split[1] + ";" + split[2];
-                                    List<NoteDevoir> moyennesEleve = moyennesElevesByMatGpeTemp.get(idMatGpe);
-                                    if(moyennesEleve == null) {
-                                        moyennesEleve = new ArrayList<>();
-                                        moyennesElevesByMatGpeTemp.put(idMatGpe, moyennesEleve);
-                                    }
-                                    moyennesEleve.add(new NoteDevoir(moyenneFinale, false,  1.0));
-
-                                });
-
-                                // Calcul des moyennes des moyennesEleves par idMatiere+groupe
-                                moyennesElevesByMatGpeTemp.forEach((currIdMatGpe, moyennesEleves)-> {
-                                    JsonObject moyenneDesMoyennesObj = utilsService.calculMoyenne(moyennesEleves, false, null);
-                                    Double moyenneDesMoyennes = moyenneDesMoyennesObj.getDouble("moyenne");
-                                    recapAppreciationsByIdMatGpe.get(currIdMatGpe).put("moyenne", moyenneDesMoyennes);
-                                });
-
-
-//                                JsonObject resultAsyncmethods = new JsonObject();
-
-                                // Resultat des méthodes asynchrones
-                                final Map<String, String>[] mapGroupes = new Map[]{new HashMap<String, String>()};
-                                final Map<String, JsonObject>[] mapIdMatLibelleMapEtProf = new Map[]{new HashMap<>()};
-
-                                // Libellés des groupes à partir des id
-                                final JsonObject[] action = {new JsonObject()
-                                        .put("action", "classe.listAllGroupesByIds")
-                                        .put("idClassesAndGroups", idGroupesArray)
-                                        .put("idStructure", idStructure)};
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action[0], handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                    @Override
-                                    public void handle(Message<JsonObject> message) {
-                                        JsonObject body = message.body();
-                                        if ("ok".equals(body.getString("status"))) {
-                                            JsonArray listClassesGroupes = body.getJsonArray("results");
-                                            mapGroupes[0] = new HashMap<String, String>();
-                                            if(listClassesGroupes.size() > 0) {
-                                                for (int i = 0; i < listClassesGroupes.size(); i++) {
-                                                    JsonObject vGroupe = listClassesGroupes.getJsonObject(i).getJsonObject("m").getJsonObject("data");
-                                                    mapGroupes[0].put(vGroupe.getString("id"), vGroupe.getString("name"));
-                                                }
-                                            }
-//
-
-                                            if(nbMethodeAsync.decrementAndGet() == 0) {
-                                                completeMoustacheJsonAndGeneratePdf(mapGroupes[0],mapIdMatLibelleMapEtProf[0], recapAppreciationsByIdMatGpe);
-                                            }
-
-                                        } else {
-                                            log.error("Erreur lors de la récupération des groupes/classes");
-                                            Renders.renderJson(request, new JsonObject()
-                                                    .put("error", "Erreur lors de la récupération des groupes/classes"), 400);
-                                        }
-                                    }
-                                }));
-
-
-
-                                // Libellé des professeurs et des matieres par rapport aux id
-                                utilsService.getLibelleMatAndTeacher(idsTeachersByMatGpe, new Handler<Either<String, Map<String, JsonObject>>>() {
-                                    @Override
-                                    public void handle(Either<String, Map<String, JsonObject>> event) {
-
-                                        if(event.isRight()) {
-                                            mapIdMatLibelleMapEtProf[0] = event.right().getValue();
-//                                            resultAsyncmethods.put("mapIdMatLibelleMapEtProf", mapIdMatLibelleMapEtProf[0]);
-
-                                            if(nbMethodeAsync.decrementAndGet() == 0) {
-                                                completeMoustacheJsonAndGeneratePdf(mapGroupes[0], mapIdMatLibelleMapEtProf[0], recapAppreciationsByIdMatGpe);
-                                            }
-
-
-                                        } else {
-
-                                        }
-
-                                    }
-                                });
-
-                                // TODO recuperer appréciations classe
-                                // rajouter param à completeMoustacheJsonAndGeneratePdf avec le resultat
-
-
-                            } else {
-                                log.error("Erreur lors de la récupération des notes");
-                                Renders.renderJson(request, new JsonObject()
-                                        .put("error", "Erreur lors de la récupération des notes"), 400);
-                            }
+                    idEleves.stream().forEach(idEleve -> {
+                        if (moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve)) {
+                            matGrpNotes.add(moyennesFinales.get(matGrp).get(idEleve));
+                        } else if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve)) {
+                            matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null).getDouble("moyenne"), false, new Double(1)));
                         }
                     });
-                }
+
+                    JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null);
+                    moyObject.put("min", resultCalc.getDouble("noteMin"));
+                    moyObject.put("max", resultCalc.getDouble("noteMax"));
+                    moyObject.put("moy", resultCalc.getDouble("moyenne"));
+                    moyObject.put("appr", appr.get(matGrp));
+
+                    moyObjects.put(matGrp, moyObject);
+                });
+
+                moyObjectFuture.complete(moyObjects);
+
+                Utils.getLastNameFirstNameUser(eb, new JsonArray(new ArrayList(teachers.values())), libTeachersEvent -> {
+                    if (libTeachersEvent.isRight()) {
+                        libTeachFuture.complete(libTeachersEvent.right().getValue().entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(val -> val.getKey(), val -> val.getValue().getString("firstName") + " " + val.getValue().getString("name"))));
+                    } else {
+                        log.error(libTeachersEvent.left().getValue());
+                        libTeachFuture.fail(new Throwable(libTeachersEvent.left().getValue()));
+                    }
+                });
+
+                Utils.getLibelleMatiere(eb, new JsonArray(MatGrp.stream().map(matGrp -> matGrp.getString("id_matiere")).collect(Collectors.toList())), libMatEvent -> {
+                    if (libMatEvent.isRight()) {
+                        libMatFuture.complete(libMatEvent.right().getValue());
+                    } else {
+                        log.error(libMatEvent.left().getValue());
+                        libMatFuture.fail(new Throwable(libMatEvent.left().getValue()));
+                    }
+                });
+
+                Utils.getInfosGroupes(eb, new JsonArray(MatGrp.stream().map(matGrp -> matGrp.getString("id_groupe")).collect(Collectors.toList())), libGrpEvent -> {
+                    if (libGrpEvent.isRight()) {
+                        libGrpFuture.complete(libGrpEvent.right().getValue());
+                    } else {
+                        log.error(libGrpEvent.left().getValue());
+                        libGrpFuture.fail(new Throwable(libGrpEvent.left().getValue()));
+                    }
+                });
+            } else {
+                leftToResponse(request, new Either.Left<>(compositeFutureAsyncResult.cause().getMessage()));
             }
         });
-    }
 
-    private void completeMoustacheJsonAndGeneratePdf(Map<String, String> mapGroupe,
-                                                     Map<String, JsonObject> mapIdMatLibelleMapEtProf,
-                                                     Map<String, JsonObject> recapAppreciationsByIdMatGpe) {
-        log.info("Generation template moustache");
-        // TODO mettre les résultats des  mapGroupe, mapIdMatLibelleMapEtProf, appréciations dans recapAppreciationsByIdMatGpe
-        // Puis convertir recapAppreciationsByIdMatGpe en JsonObjet pour générer le PDF
-        // cf. genererPdf DefaultExportService
+        CompositeFuture.all(moyObjectFuture, libMatFuture, libGrpFuture, libTeachFuture).setHandler(allData -> {
+            if (allData.succeeded()) {
 
+                Map<JsonObject, JsonObject> moyObject = allData.result().resultAt(0);
+                Map<String, String> libMatieres = allData.result().resultAt(1);
+                Map<String, String> libGrp = allData.result().resultAt(2);
+                Map<String, String> libTeachers = allData.result().resultAt(3);
+
+                JsonArray data = new JsonArray(
+
+                        moyObject.entrySet().stream().map(entry -> {
+                            JsonObject newMoy = new JsonObject();
+                            newMoy.put("mat", libMatieres.get(entry.getKey().getString("id_matiere")));
+                            newMoy.put("prof", libTeachers.get(teachers.get(entry.getKey())));
+                            newMoy.put("grp", libGrp.get(entry.getKey().getString("id_groupe")));
+                            newMoy.mergeIn(entry.getValue());
+
+                            return newMoy;
+                        }).collect(Collectors.toList()));
+
+                result.put("data", data);
+
+                String fileName = "toto_export_recapitulatif";
+                exportService.genererPdf(request, result,
+                        "export_appreciations-classe.pdf.xhtml", fileName, vertx, config);
+            } else {
+                leftToResponse(request, new Either.Left<>(allData.cause().getMessage()));
+            }
+        });
+
+        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), eventResultGroups -> {
+            if (eventResultGroups.isRight()) {
+                Set<String> idGroups = new HashSet<>();
+                eventResultGroups.right().getValue().stream().forEach(line -> {
+                    idGroups.add(((JsonObject) line).getString("id_classe"));
+                    ((JsonObject) line).getJsonArray("id_groupes").getList().forEach(idGroup -> idGroups.add((String) idGroup));
+                });
+
+                appreciationService.getAppreciationClasse(idGroups.toArray(new String[0]), finalIdPeriode, null, resultAppr -> {
+                    if (resultAppr.isRight()) {
+                        Map<JsonObject, String> appr = new HashMap<>();
+
+                        resultAppr.right().getValue().stream().forEach(line -> {
+                            JsonObject lineObject = (JsonObject) line;
+
+                            JsonObject key = new JsonObject();
+                            key.put("id_matiere", lineObject.getString("id_matiere"));
+                            key.put("id_groupe", lineObject.getString("id_classe"));
+
+                            MatGrp.add(key);
+                            appr.put(key, lineObject.getString("appreciation"));
+                        });
+
+                        apprFuture.complete(appr);
+                    } else {
+                        apprFuture.fail(resultAppr.left().getValue());
+                    }
+                });
+            } else {
+                leftToResponse(request, eventResultGroups.left());
+            }
+        });
+
+        Utils.getIdElevesClassesGroupes(eb, idClasse, idPeriode.intValue(), 0, eventResultEleves -> {
+            if (eventResultEleves.isRight()) {
+
+                idEleves.addAll(eventResultEleves.right().getValue());
+
+                noteService.getNotesParElevesParDevoirs(eventResultEleves.right().getValue().toArray(new String[0]), null, finalIdPeriode,
+                        resultNotesEleves -> {
+                            if (resultNotesEleves.isRight()) {
+
+                                Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
+
+                                resultNotesEleves.right().getValue().stream().forEach(line -> {
+                                    JsonObject lineObject = (JsonObject) line;
+
+                                    JsonObject key = new JsonObject();
+                                    key.put("id_matiere", lineObject.getString("id_matiere"));
+                                    key.put("id_groupe", lineObject.getString("id_groupe"));
+
+                                    MatGrp.add(key);
+
+                                    if (!teachers.containsKey(key)) {
+                                        teachers.put(key, lineObject.getString("owner"));
+                                    }
+
+                                    NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString("valeur")),
+                                            lineObject.getLong("diviseur").doubleValue(),
+                                            lineObject.getBoolean("ramener_sur"),
+                                            Double.parseDouble(lineObject.getString("coefficient")));
+
+                                    if (!notes.containsKey(key)) {
+                                        notes.put(key, new HashMap<>());
+                                    }
+
+                                    if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
+                                        notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
+                                    }
+                                    notes.get(key).get(lineObject.getString("id_eleve")).add(note);
+                                });
+
+                                notesFuture.complete(notes);
+
+                            } else {
+                                leftToResponse(request, resultNotesEleves.left());
+                            }
+                        });
+
+                noteService.getMoyennesFinal(eventResultEleves.right().getValue().toArray(new String[0]), finalIdPeriode, null, null, stringJsonArrayEither -> {
+                    if (stringJsonArrayEither.isRight()) {
+
+                        Map<JsonObject, Map<String, NoteDevoir>> moyFinal = new HashMap<>();
+
+                        stringJsonArrayEither.right().getValue().stream().forEach(line -> {
+                            JsonObject lineObject = (JsonObject) line;
+
+                            JsonObject key = new JsonObject()
+                                    .put("id_groupe", lineObject.getString("id_classe"))
+                                    .put("id_matiere", lineObject.getString("id_matiere"));
+
+                            MatGrp.add(key);
+
+                            if (!moyFinal.containsKey(key)) {
+                                moyFinal.put(key, new HashMap<>());
+                            }
+
+                            moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(lineObject.getDouble("moyenne"), false, new Double(1)));
+                        });
+
+                        moyennesFinalFuture.complete(moyFinal);
+                    } else {
+                        leftToResponse(request, stringJsonArrayEither.left());
+                    }
+                });
+
+            } else {
+                leftToResponse(request, eventResultEleves.left());
+            }
+        });
+
+        Utils.getLibellePeriode(eb, request, finalIdPeriode, stringStringEither -> {
+            if (stringStringEither.isRight()) {
+                result.put("periode", stringStringEither.right().getValue());
+            } else {
+                leftToResponse(request, stringStringEither.left());
+            }
+        });
+
+        Utils.getInfosGroupes(eb, new JsonArray().add(idClasse), stringMapEither -> {
+            if (stringMapEither.isRight()) {
+                result.put("classe", stringMapEither.right().getValue().get(idClasse));
+            } else {
+                leftToResponse(request, stringMapEither.left());
+            }
+        });
     }
 
 
