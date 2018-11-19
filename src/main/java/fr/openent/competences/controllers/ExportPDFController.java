@@ -2195,6 +2195,7 @@ public class ExportPDFController extends ControllerHelper {
                                             String [] be = birthDate.split("-");
                                             eleve.put("birthDateLibelle",  be[2] + '/' + be[1] + '/' + be[0]);
                                         }
+                                        // Rajout de l'image du graphe par domaine
                                         if (showBilanPerDomaines) {
                                             if (images != null) {
                                                 String img = images.getString(eleve.getString("idEleve"));
@@ -2205,6 +2206,26 @@ public class ExportPDFController extends ControllerHelper {
                                                 }
                                             }
                                         }
+
+                                        // Rajout du niveau de l'élève
+                                        String level = eleve.getString("level");
+                                        if(level == null) {
+                                            level = eleve.getString("classeName");
+                                        }
+                                        if(level != null) {
+                                            level = String.valueOf(level.charAt(0));
+                                            try {
+                                                int levelInt = Integer.parseInt(level);
+                                                if(levelInt >= 3 && levelInt <= 6) {
+                                                    eleve.put("level", level);
+                                                    eleve.put("hasLevel", true);
+                                                }
+                                            }
+                                            catch (NumberFormatException e) {
+                                                eleve.put("hasLevel", false);
+                                            }
+                                        }
+
                                         elevesMap.put(idEleve, eleve);
 
                                         JsonArray idManualGroupes = UtilsConvert

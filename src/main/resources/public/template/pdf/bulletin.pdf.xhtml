@@ -31,8 +31,15 @@
             height: 90px;
             margin-bottom: 20px;
             margin-left: -2px;
+            float:left;
         }
-
+        #niveau {
+            width: auto;
+            height: 90px;
+            margin-bottom: 20px;
+            margin-left: -2px;
+            float:right;
+        }
         h1 {
             margin-top: 20px;
             padding: 5px;
@@ -157,10 +164,10 @@
             text-align: right;
         }
         .structure {
-            display: inline-block;
             height: 90px;
             font-size: small;
             font-family: "Calibri", sans-serif;
+            float:left;
         }
         .structure > p {
             margin: 4px;
@@ -220,7 +227,7 @@
 <div class="page">
 
     <div style= "height: 130px;" class="paddingFifty">
-        <img id="education" style="float:left;" src="img/education_nationale.png" alt="Logo"/>
+        <img id="education" src="img/education_nationale.png" alt="Logo"/>
         <div class="structure">
             {{#structureLibelle}}
             <p style="font-weight: bold">{{academy}}</p>
@@ -232,6 +239,9 @@
             <p>{{email}}</p>
             {{/structureLibelle}}
         </div>
+        {{#hasLevel}}
+        <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="Logo"/>
+        {{/hasLevel}}
     </div>
 
     <div class="paddingFifty">
