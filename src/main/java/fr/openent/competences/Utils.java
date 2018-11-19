@@ -464,7 +464,7 @@ public class Utils {
         }) );
 
     }
-    public static void getLibelleMatiere(EventBus eb, final JsonArray idsMatieres, final Handler<Either<String,Map<String,String>>> handler){
+   /* public static void getLibelleMatiere(EventBus eb, final JsonArray idsMatieres, final Handler<Either<String,Map<String,String>>> handler){
         JsonObject action = new JsonObject()
                 .put("action","matiere.getMatieres")
                 .put("idMatieres", idsMatieres);
@@ -500,7 +500,44 @@ public class Utils {
         }));
 
 
+    }*/
+    public static void getLibelleMatiere(EventBus eb, final JsonArray idsMatieres, final Handler<Either<String,Map<String,JsonObject>>> handler){
+        JsonObject action = new JsonObject()
+                .put("action","matiere.getMatieres")
+                .put("idMatieres", idsMatieres);
+        eb.send(Competences.VIESCO_BUS_ADDRESS,action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                Map<String,JsonObject> idsMatLibelle = new HashMap<>();
+
+                if("ok".equals(body.getString("status"))) {
+
+                    JsonArray requestMats = body.getJsonArray("results");
+                    if( requestMats != null && requestMats.size() > 0 ){
+                        for( int i = 0; i < requestMats.size(); i++){
+                            JsonObject requestMat = requestMats.getJsonObject(i);
+
+                            if(!idsMatLibelle.containsKey(requestMat.getString("id"))){
+                                idsMatLibelle.put(requestMat.getString("id"), requestMat);
+                            }
+                        }
+                    }else {
+                        handler.handle(new Either.Left<>(" no subject "));
+                        log.error("getMatieres : no subject");
+                    }
+
+                    handler.handle(new Either.Right<String,Map<String,JsonObject>>(idsMatLibelle));
+                } else {
+                    handler.handle(new Either.Left<String, Map<String,JsonObject>>(body.getString("message")));
+                    log.error("getMatieres : " + body.getString("message"));
+                }
+            }
+        }));
+
+
     }
+
 
     public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers,
                                                 final Handler<Either<String,Map<String,JsonObject>>> handler){

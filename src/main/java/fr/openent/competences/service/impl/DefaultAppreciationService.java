@@ -27,6 +27,10 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.Arrays;
+
+import static org.entcore.common.sql.SqlResult.validResultHandler;
+
 /**
  * Created by anabah on 01/03/2017.
  */
@@ -68,21 +72,24 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
     }
 
     @Override
-    public void getAppreciationClasse(String id_classe, int id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler) {
-        StringBuilder query = new StringBuilder();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+    public void getAppreciationClasse(String[] id_classes, Integer id_periode, String[] id_matieres, Handler<Either<String, JsonArray>> handler) {
 
-        query.append("SELECT * ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".appreciation_classe ")
-                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".appreciation_classe.id_classe = ? ")
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".appreciation_classe.id_periode = ? ")
-                .append("AND "+ Competences.COMPETENCES_SCHEMA +".appreciation_classe.id_matiere = ? ");
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_classe WHERE id_periode = ? ";
 
-        values.add(id_classe);
+        JsonArray values = new JsonArray();
         values.add(id_periode);
-        values.add(id_matiere);
 
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
+        if(id_classes != null && id_classes.length > 0) {
+            query += " AND id_classe IN " + Sql.listPrepared(id_classes);
+            Arrays.stream(id_classes).forEach(values::add);
+        }
+
+        if(id_matieres != null && id_matieres.length > 0) {
+            query += " AND id_matiere IN " + Sql.listPrepared(id_matieres);
+            Arrays.stream(id_matieres).forEach(values::add);
+        }
+
+        Sql.getInstance().prepared(query, values, validResultHandler(handler));
     }
 
 }

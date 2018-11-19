@@ -393,7 +393,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
              utils.safeApply($scope);
          };
 
-         $scope.exportRecapEval = (textMod, printSuiviClasse, idPeriode, exportByEnseignement) => {
+         $scope.exportRecapEval = (textMod, printSuiviClasse, idPeriode, exportByEnseignement,
+                                   withMoyGeneraleByEleve, withMoyMinMaxByMat ) => {
              switch (printSuiviClasse) {
                  case 'printRecapAppreciations' : {
                      let url = "/competences/recapAppreciations/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
@@ -410,6 +411,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                              delete $scope.recapEval;
                              $scope.opened.recapEval = false;
                              location.replace(url);
+                             utils.safeApply($scope);
                          });
                      break;
                  }
@@ -427,6 +429,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                              delete $scope.recapEval;
                              $scope.opened.recapEval = false;
                              location.replace(url);
+                             utils.safeApply($scope);
                          });
                      break;
                  }
@@ -454,6 +457,24 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                              };
                              $scope.opened.releveComp = false;
                              location.replace(url);
+                             utils.safeApply($scope);
+                         });
+                     break;
+                 }
+                 case 'printTabMoys': {
+                     let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id
+                        url += "/" + idPeriode + "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve
+                        url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat+ "&text=" + !textMod;
+                     http().getJson(url)
+                         .error((result) => {
+                             $scope.errorResult(result);
+                             utils.safeApply($scope);
+                         })
+                         .done(() => {
+                             delete $scope.recapEval;
+                             $scope.opened.recapEval = false;
+                             location.replace(url);
+                             utils.safeApply($scope);
                          });
                      break;
                  }

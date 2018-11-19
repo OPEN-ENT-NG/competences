@@ -211,12 +211,12 @@ public interface NoteService extends CrudService {
                            Handler<Either<String,JsonObject>> handler);
 
     /**
-     *
+     * @param
      * @param mapAllidMatAndidTeachers
      * @param mapIdMatListMoyByEleve
      * @param handler
      */
-    void getMatEvaluatedAndStat(SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+    void getMatEvaluatedAndStat( SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                 Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
                                 Handler<Either<String,JsonObject>> handler);
 }

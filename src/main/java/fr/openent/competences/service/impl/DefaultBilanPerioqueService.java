@@ -104,13 +104,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         }
                         //2-get subject's Name
 
-                        Utils.getLibelleMatiere( eb, idsMatieres, new Handler<Either<String, Map<String, String>>>() {
+                        Utils.getLibelleMatiere( eb, idsMatieres, new Handler<Either<String, Map<String, JsonObject>>>() {
                             @Override
-                            public void handle( Either<String, Map<String, String>> responseMatiere ) {
+                            public void handle( Either<String, Map<String, JsonObject>> responseMatiere ) {
 
                                 if(responseMatiere.isRight()){
 
-                                    Map<String, String> idsMatLibelle = responseMatiere.right().getValue();
+                                    Map<String, JsonObject> idsMatLibelle = responseMatiere.right().getValue();
 
                                     //3-get user's lastName and firstName
                                     getUserLastNameAndFirstName(idEtablissement, idPeriode, idEleve,  idClasse,
@@ -134,7 +134,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                               final String idEleve, final String idClasse ,
                                               Map<String,JsonObject> idsMatieresIdsTeachers,
                                               JsonArray idsMatieres,JsonArray idsTeachers,
-                                              Map<String, String> idsMatLibelle,
+                                              Map<String, JsonObject> idsMatLibelle,
                                               EventBus eb,
                                               Handler<Either<String, JsonArray>> handler ){
         Utils.getLastNameFirstNameUser(eb, idsTeachers,
@@ -201,8 +201,10 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                                     JsonArray idsTeachers = teachersObject
                                                             .getJsonArray("teachers");
                                                     //5-add subject
+
                                                     result.put("id_matiere", idMatiere)
-                                                            .put("libelleMatiere", idsMatLibelle.get(idMatiere));
+                                                            .put("libelleMatiere",
+                                                                    idsMatLibelle.get(idMatiere).getString("name"));
 
                                                     //6-add teachers infos
                                                     if (idsTeachers != null) {

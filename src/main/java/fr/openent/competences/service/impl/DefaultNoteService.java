@@ -902,7 +902,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
               "LEFT JOIN notes.moyenne_finale ON (devoirs.id_periode = moyenne_finale.id_periode AND " +
               "notes.id_eleve = moyenne_finale.id_eleve AND devoirs.id_matiere = moyenne_finale.id_matiere) " +
               "INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir) " +
-              "WHERE devoirs.id_periode = ? AND devoirs.is_evaluated = true " +
+              "WHERE ";
+        if(idPeriode != null){
+            query += "devoirs.id_periode = ? AND";
+        }
+        query += " devoirs.is_evaluated = true " +
               "ORDER BY notes.id_eleve , devoirs.id_matiere"  ;
 
         for (String idEleve: idsEleve ) {
@@ -936,7 +940,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 handler.handle(new Either.Left<>("eleves not found"));
                             } else {
                                 // 2- On récupère les notes des eleves
-                                //noteService.getListMoyEleveByMatAndListMoyMatByEleve(JsonObject result,idsEleve,idPeriode)
                                 getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idPeriode, new Handler<Either<String, JsonArray>>() {
                                             @Override
                                             public void handle(Either<String, JsonArray> response) {
@@ -1152,69 +1155,69 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
     @Override
-    public void getMatEvaluatedAndStat(SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+    public void getMatEvaluatedAndStat( SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
                                        Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
                                        Handler<Either<String, JsonObject>> handler) {
-        utilsService.getLibelleMatAndTeacher( mapAllidMatAndidTeachers,
-                new Handler<Either<String, Map<String, JsonObject>>>() {
-                    @Override
-                    public void handle(Either<String, Map<String, JsonObject>> event) {
-                        if (!event.isRight()) {
-                            log.error(event.left().getValue());
-                            handler.handle(new Either.Left(event.left()));
-                        } else {
-                            Map<String, JsonObject> mapRespMatTeacher = event.right().getValue();
-                            JsonArray matieresResult = new fr.wseduc.webutils.collections.JsonArray();
-                            List<NoteDevoir> listMoyClass = new ArrayList<>();
-                            List<NoteDevoir> listMoyMinClass = new ArrayList<>();
-                            List<NoteDevoir> listMoyMaxClass = new ArrayList<>();
+        utilsService.getLibelleMatAndTeacher(mapAllidMatAndidTeachers, new Handler<Either<String, SortedMap<String, JsonObject>>>() {
+            @Override
+            public void handle(Either<String, SortedMap<String, JsonObject>> event) {
+
+                if (!event.isRight()) {
+                    log.error(event.left().getValue());
+                    handler.handle(new Either.Left(event.left()));
+                } else {
+
+                    SortedMap<String, JsonObject> mapRespMatTeacher = event.right().getValue();
+                    JsonArray matieresResult = new fr.wseduc.webutils.collections.JsonArray();
+                    List<NoteDevoir> listMoyClass = new ArrayList<>();
+                    List<NoteDevoir> listMoyMinClass = new ArrayList<>();
+                    List<NoteDevoir> listMoyMaxClass = new ArrayList<>();
 
                             for (Map.Entry<String, Set<String>> mapEntry : mapAllidMatAndidTeachers.entrySet()) {
 
-                                String idMatAllMats = mapEntry.getKey();
-                                JsonObject matiereJson = mapRespMatTeacher.get(idMatAllMats);
-                                matiereJson.put("id_matiere", idMatAllMats);
+                        String idMatAllMats = mapEntry.getKey();
+                        JsonObject matiereJson = (JsonObject) mapRespMatTeacher.get(idMatAllMats);
+                        JsonObject statClass = utilsService
+                                .calculMoyenneParDiviseur(
+                                        mapIdMatListMoyByEleve.get(idMatAllMats),
+                                        true);
+                        matiereJson.put("moyClass", statClass.getDouble("moyenne"));
+                        matiereJson.put("moyMinClass", statClass.getDouble("noteMin"));
+                        matiereJson.put("moyMaxClass", statClass.getDouble("noteMax"));
+                        listMoyClass.add(new NoteDevoir(
+                                statClass.getDouble("moyenne"),
+                                new Double(20),
+                                false, null));
+                        listMoyMinClass.add(new NoteDevoir(
+                                statClass.getDouble("noteMin"),
+                                new Double(20),
+                                false, null));
+                        listMoyMaxClass.add(new NoteDevoir(
+                                statClass.getDouble("noteMax"),
+                                new Double(20),
+                                false, null));
+                        matieresResult.add(matiereJson);
 
-                                JsonObject statClass = utilsService
-                                        .calculMoyenneParDiviseur(
-                                                mapIdMatListMoyByEleve.get(idMatAllMats),
-                                                true);
-                                matiereJson.put("moyClass", statClass.getDouble("moyenne"));
-                                matiereJson.put("moyMinClass", statClass.getDouble("noteMin"));
-                                matiereJson.put("moyMaxClass", statClass.getDouble("noteMax"));
-                                listMoyClass.add(new NoteDevoir(
-                                        statClass.getDouble("moyenne"),
-                                        new Double(20),
-                                        false, null));
-                                listMoyMinClass.add(new NoteDevoir(
-                                        statClass.getDouble("noteMin"),
-                                        new Double(20),
-                                        false, null));
-                                listMoyMaxClass.add(new NoteDevoir(
-                                        statClass.getDouble("noteMax"),
-                                        new Double(20),
-                                        false, null));
-                                matieresResult.add(matiereJson);
-
-                            }
-                            JsonObject resultMatieres = new JsonObject();
-                            resultMatieres.put("matieres", matieresResult);
-                            resultMatieres.put("moyClassAllMat",
-                                    utilsService.calculMoyenneParDiviseur(
-                                            listMoyClass,
-                                            false).getDouble("moyenne"));
-                            resultMatieres.put("moyMinClassAllMat",
-                                    utilsService.calculMoyenneParDiviseur(
-                                            listMoyMinClass,
-                                            false).getDouble("moyenne"));
-                            resultMatieres.put("moyMaxClassAllMat",
-                                    utilsService.calculMoyenneParDiviseur(
-                                            listMoyMaxClass,
-                                            false).getDouble("moyenne"));
-                            resultMatieres.put("nbDeMatieres", matieresResult.size());
-                            handler.handle(new Either.Right<>(resultMatieres));
-                        }
                     }
-                });
+                    JsonObject resultMatieres = new JsonObject();
+                    resultMatieres.put("matieres", matieresResult);
+                    resultMatieres.put("moyClassAllMat",
+                            utilsService.calculMoyenneParDiviseur(
+                                    listMoyClass,
+                                    false).getDouble("moyenne"));
+                    resultMatieres.put("moyMinClassAllMat",
+                            utilsService.calculMoyenneParDiviseur(
+                                    listMoyMinClass,
+                                    false).getDouble("moyenne"));
+                    resultMatieres.put("moyMaxClassAllMat",
+                            utilsService.calculMoyenneParDiviseur(
+                                    listMoyMaxClass,
+                                    false).getDouble("moyenne"));
+                    resultMatieres.put("nbDeMatieres", matieresResult.size());
+
+                    handler.handle(new Either.Right<>(resultMatieres));
+                }
+            }
+        });
     }
 }

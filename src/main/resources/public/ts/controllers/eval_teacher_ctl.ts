@@ -458,7 +458,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.printSuiviClasse = "printRecapEval";
                         $scope.suiviClasse = {
                             textMod: true,
-                            exportByEnseignement: 'false'
+                            exportByEnseignement: 'false',
+                            withMoyGeneraleByEleve: false,
+                            withMoyMinMaxByMat: false
                         };
                         if (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
                             $scope.disabledExportSuiviClasse = true;
@@ -3554,6 +3556,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (option === "printReleveComp")
                 $scope.disabledExportSuiviClasse = $scope.allUnselect || typeof($scope.suiviClasse.periode) === 'undefined';
             if (option === "printRecapEval")
+                $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
+            if(option === "printTabMoys")
                 $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
         };
 
