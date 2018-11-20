@@ -1812,7 +1812,7 @@ public class ExportPDFController extends ControllerHelper {
 
                 result.put("data", data);
 
-                String fileName = "toto_export_recapitulatif";
+                String fileName = result.getString("classe") + "_export_appreciation";
                 exportService.genererPdf(request, result,
                         "export_appreciations-classe.pdf.xhtml", fileName, vertx, config);
             } else {
