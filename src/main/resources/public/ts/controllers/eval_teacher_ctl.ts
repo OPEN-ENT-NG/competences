@@ -599,11 +599,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             displayMessageLoader: false
         };
 
-
-
-
-
-
+        $scope.isChefEtab = (classe?) => {
+            return Utils.isChefEtab(classe);
+        };
 
         $scope.evaluations = evaluations;
         $scope.competencesSearchKeyWord = "";
