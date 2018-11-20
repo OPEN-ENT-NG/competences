@@ -152,6 +152,14 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 reader.readAsDataURL(input.files[0]);
             }
         };
+
+        $scope.checkIfOneStudent = function () {
+            let oneStudentSelected =  _.filter($scope.allElevesClasses, function (student) {
+                return student.selected === true;
+            });
+         return oneStudentSelected !== undefined && oneStudentSelected.length === 1;
+        };
+
         // Permet de mettre à jour les périodes et les élèves dans les listes en fonction de la classe
         $scope.updateFilters = async function () {
             let selectedClasses = _.where($scope.printClasses.all, {selected : true});
