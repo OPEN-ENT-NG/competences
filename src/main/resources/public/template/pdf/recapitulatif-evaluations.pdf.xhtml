@@ -161,31 +161,31 @@
                 {{ nom }}
             </td>
             {{# notes}}
-            {{# text }}
-            {{# isHabilite }}
-            <td class="textCenter">
-                {{ visu }}
-                {{ moyenne }}
-            </td>
-            {{/ isHabilite }}
-            {{^ isHabilite }}
-            <td class="textCenter">
-                {{ visu }}
-            </td>
-            {{/ isHabilite }}
-            {{/ text }}
-            {{^ text }}
-            {{# isHabilite }}
-            <td>
-                <div class="rectangle {{ visu }} textCenter">{{ moyenne }}</div>
-            </td>
-            {{/ isHabilite }}
-            {{^ isHabilite }}
-            <td>
-                <div class="rectangle {{ visu }}"></div>
-            </td>
-            {{/ isHabilite }}
-            {{/ text }}
+                {{# text }}
+                    {{# isHabilite }}
+                        <td class="textCenter">
+                            {{ visu }}
+                            {{ moyenne }}
+                        </td>
+                        {{/ isHabilite }}
+                    {{^ isHabilite }}
+                    <td class="textCenter">
+                        {{ visu }}
+                    </td>
+                    {{/ isHabilite }}
+                    {{/ text }}
+                    {{^ text }}
+                    {{# isHabilite }}
+                    <td>
+                        <div class="rectangle {{ visu }} textCenter">{{ moyenne }}</div>
+                    </td>
+                    {{/ isHabilite }}
+                    {{^ isHabilite }}
+                    <td>
+                        <div class="rectangle {{ visu }}"></div>
+                    </td>
+                    {{/ isHabilite }}
+                {{/ text }}
             {{/ notes}}
         </tr>
         {{/ eleves }}

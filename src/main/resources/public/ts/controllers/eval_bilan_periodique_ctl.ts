@@ -81,7 +81,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                     "canSaisiSyntheseBilanPeriodique" ) && finSaisieBilan;
             }
-
+            $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
             await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id, $scope.search.periode.id_type);
             await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();
@@ -104,7 +104,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
             template.open('projet', 'enseignants/bilan_periodique/display_projets');
             $scope.getElementsBilanBilanPeriodique("isBilanPeriodique");
-           // $scope.isBilanPeriodique = "isBilanPeriodique";
             utils.safeApply($scope);
         };
 

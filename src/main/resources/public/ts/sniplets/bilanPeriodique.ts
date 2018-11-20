@@ -136,7 +136,7 @@ export const bilanPeriodique = {
                 // Si le thème est unique on récupère le thème créé
                 if (!notThemeUnique) {
                     await http.post('/competences/thematique',
-                        {libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
+                        { libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
                      bilanPeriodique.that.getThematique(this.getTypeElement());
                      bilanPeriodique.that.showAddtheme = false;
                 }

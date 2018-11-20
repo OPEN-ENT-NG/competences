@@ -2144,9 +2144,10 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                         note.put("id", ((JsonObject) resultNote).getInteger("idDomaine"));
                                                                                                                         note.put("visu", ((JsonObject) niveau).getString("visu"));
                                                                                                                         note.put("nonEvalue", false);
+                                                                                                                        String moyCalcule = new DecimalFormat("#0.00").format(((JsonObject) resultNote).getDouble("moyenne").doubleValue());
                                                                                                                         if (isHabilite)
-                                                                                                                            note.put("moyenne", text ? "- " + new DecimalFormat("#0.00").format(((JsonObject) resultNote).getDouble("moyenne").doubleValue())
-                                                                                                                                    : "" + new DecimalFormat("#0.00").format(((JsonObject) resultNote).getLong("moyenne").doubleValue()));
+                                                                                                                            note.put("moyenne", text ? "- " + moyCalcule
+                                                                                                                                    : "" + moyCalcule);
 
                                                                                                                         domainesEvalues.add(((JsonObject) note).getInteger("id").intValue());
                                                                                                                         notesEleve.add(note);
