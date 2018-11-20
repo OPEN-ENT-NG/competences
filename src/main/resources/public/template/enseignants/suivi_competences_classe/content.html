@@ -36,11 +36,11 @@
             <input type="radio" ng-change="changePrintSuiviClasse('printReleveComp')"  ng-model="printSuiviClasse" value="printReleveComp">
             <span><i18n>evaluations.releveComp.classe</i18n></span>
         </label>
-        <label ng-show="isChefEtab">
+        <label ng-show="isChefEtabAndHeadTeacher">
             <input type="radio" ng-change="changePrintSuiviClasse('printTabMoys')" ng-model="printSuiviClasse" value="printTabMoys">
             <span><i18n>evaluations.tab.moys</i18n></span>
         </label>
-        <label ng-show="isChefEtab">
+        <label ng-show="isChefEtabAndHeadTeacher">
             <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="printSuiviClasse" value="printRecapAppreciations">
             <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
         </label>

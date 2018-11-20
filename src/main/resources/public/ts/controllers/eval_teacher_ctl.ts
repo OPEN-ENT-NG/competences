@@ -3542,8 +3542,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return moment(date).format("DD/MM/YYYY");
         };
 
-        $scope.openedRecapEval = async () => {
-            $scope.isChefEtab = await Utils.isChefEtab($scope.search.classe);
+        $scope.openedRecapEval =() => {
+            //$scope.isChefEtabAndHeadTeacher = Utils.isChefEtab($scope.search.classe);
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
             $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
