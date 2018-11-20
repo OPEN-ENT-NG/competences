@@ -1917,7 +1917,7 @@ public class ExportPDFController extends ControllerHelper {
                                 moyFinal.put(key, new HashMap<>());
                             }
 
-                            moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(lineObject.getDouble("moyenne"), false, new Double(1)));
+                            moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString("moyenne")), false, new Double(1)));
                         });
 
                         moyennesFinalFuture.complete(moyFinal);
