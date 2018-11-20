@@ -8,6 +8,13 @@
             padding: 10px;
             font-family: "Calibri";
         }
+        @page{
+            size: A4;
+            margin: 5px;
+            padding: 5px;
+
+        }
+
         .head, .head tr, .display-student tr, .display-bulletin, .display-bulletin tr{
             width: 100%;
         }
@@ -22,7 +29,7 @@
         }
         .display-bulletin{
             text-align: center;
-            border-spacing: 0px;
+            border-collapse: collapse;
             margin: 50px 0 30px 0;
         }
         .display-bulletin tr{
@@ -41,39 +48,32 @@
         .align-left{
             text-align: left;
         }
+        .top {
+            border-top: solid 1px #000;
+        }
         .bottom{
             border-bottom: solid 1px #000;
         }
         .left{
             border-left: solid 1px #000;
         }
-        .right-bottom{
+        .right{
             border-right: solid 1px #000;
-            border-bottom: solid 1px #000;
-        }
-        .left-right{
-            border-left: solid 1px #000;
-            border-right: solid 1px #000;
-            border-bottom: solid 1px #000;
-        }
-        .entete-1 td{
-            border-top: solid 1px #000;
-            border-bottom: solid 1px #000;
-        }
-        .entete-2 td{
-            border-bottom: solid 1px #000;
-            border-left: solid 1px #000;
         }
         .note{
             font-weight: bold;
             font-size: 90%;
         }
-        .text-left {
-            text-align: left !important;
-        }
         .width-15 {
             width: 15%;
         }
+        .title {
+            font-size: 13px;
+        }
+        .text {
+            font-size: 12px;
+        }
+
     </style>
     <meta charset="UTF-8" />
 </head>
@@ -86,22 +86,22 @@
 
 <table class="display-bulletin">
     <tr class="greyscale entete-1">
-        <td class="align-left left width-15"><strong>Matières <br />Enseignants</strong></td>
-        <td class="left-right"><strong>Classe/Groupe</strong></td>
-        <td class="right-bottom"><strong>Moy.</strong></td>
-        <td class="right-bottom"><strong>Notes Min.</strong></td>
-        <td class="right-bottom"><strong>Notes Max.</strong></td>
-        <td class="right-bottom"><strong>Appréciations</strong></td>
+        <td class="align-left top bottom left title"><strong>Matières <br />Enseignants</strong></td>
+        <td class="top bottom left title"><strong>Classe/Groupe</strong></td>
+        <td class="top bottom left title"><strong>Moy.</strong></td>
+        <td class="top bottom left title"><strong>Notes Min.</strong></td>
+        <td class="top bottom left title"><strong>Notes Max.</strong></td>
+        <td class="top bottom left right title"><strong>Appréciations</strong></td>
     </tr>
 
     {{#data}}
     <tr>
-        <td class="upper align-left left bottom"><strong> {{mat}} </strong> <br /> {{prof}} </td>
-        <td class="left-right"> {{grp}} </td>
-        <td class="right-bottom"><span class="note"> {{moy}} </span></td>
-        <td class="right-bottom"><span> {{min}} </span></td>
-        <td class="right-bottom"><span> {{max}} </span></td>
-        <td class="right-bottom text-left"><span> {{appr}} </span>
+        <td class="upper align-left bottom left right title"><strong> {{mat}} </strong> <br /> {{prof}} </td>
+        <td class="bottom right text"> {{grp}} </td>
+        <td class="bottom right text"><span class="note"> {{moy}} </span></td>
+        <td class="bottom right text"><span> {{min}} </span></td>
+        <td class="bottom right text"><span> {{max}} </span></td>
+        <td class="bottom right text text-left"><span> {{appr}} </span>
         </td>
     </tr>
     {{/data}}
