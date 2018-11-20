@@ -145,14 +145,18 @@
         {{#matieres}}
         <td>{{moyMinClass}}</td>
         {{/matieres}}
+        {{#withMoyGeneraleByEleve}}
         <td>{{moyMinClassAllMat}}</td>
+        {{/withMoyGeneraleByEleve}}
     </tr>
     <tr>
         <td class="bold">Moyenne Max.</td>
         {{#matieres}}
         <td>{{moyMaxClass}}</td>
         {{/matieres}}
+        {{#withMoyGeneraleByEleve}}
         <td>{{moyMaxClassAllMat}}</td>
+        {{/withMoyGeneraleByEleve}}
     </tr>
     {{/withMoyMinMaxByMat}}
     </tfoot>

@@ -40,10 +40,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         await model.me.workflow.load(['viescolaire']);
 
-        $scope.buildLoadingMessageStructure = function(libelle) {
-         return lang.translate("viescolaire.structure.load") + " "
-             + libelle + " "
-             + lang.translate("viescolaire.structure.load.end");
+        $scope.buildLoadingMessageStructure = function (libelle) {
+            return lang.translate("viescolaire.structure.load") + " "
+                + libelle + " "
+                + lang.translate("viescolaire.structure.load.end");
         };
 
         $scope.selectCycleForView = function (location) {
@@ -77,7 +77,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.getI18nPeriode = (periode: any) => {
             let result = lang.translate("viescolaire.utils.annee");
-            if(periode !== undefined) {
+            if (periode !== undefined) {
 
                 if (periode.libelle !== null && periode.libelle !== undefined) {
 
@@ -209,8 +209,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
-                    _.map($scope.devoirs.all,(devoir)=> {
-                        devoir.nameClass = $scope.getClasseData(devoir.id_groupe,'name');
+                    _.map($scope.devoirs.all, (devoir) => {
+                        devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                     });
 
                     let openTemplates = async () => {
@@ -370,7 +370,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.cleanRoot();
 
                     // Affichage des criteres par défaut quand on arrive sur les EPI AP Parcours
-                    if($scope.bilanPeriodique !== undefined){
+                    if ($scope.bilanPeriodique !== undefined) {
                         $scope.bilanPeriodique = undefined;
                     }
 
@@ -438,7 +438,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             display();
                         });
                     } else {
-                       $scope.syncPeriode($scope.search.classe.id);
+                        $scope.syncPeriode($scope.search.classe.id);
                         display();
                     }
 
@@ -537,10 +537,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         }
 
 
-
         $scope.displayCycles = (periode) => {
-            if(periode !== null && periode !== undefined){
-                if(periode.libelle === "cycle"){
+            if (periode !== null && periode !== undefined) {
+                if (periode.libelle === "cycle") {
                     $scope.displayCycle = true;
                 } else {
                     $scope.displayCycle = false;
@@ -578,7 +577,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             devoirInfo: true,
             lightbox: false,
             lightboxEvalLibre: false,
-            lightboxReleve : false,
+            lightboxReleve: false,
             recapEval: false,
             lightboxs: {
                 updateDevoir: {
@@ -600,9 +599,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             displayMessageLoader: false
         };
 
-        $scope.isChefEtab = (classe?) => {
-            return Utils.isChefEtab(classe);
-        };
+
+
+
+
+
 
         $scope.evaluations = evaluations;
         $scope.competencesSearchKeyWord = "";
@@ -3543,7 +3544,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return moment(date).format("DD/MM/YYYY");
         };
 
-        $scope.openedRecapEval = function () {
+        $scope.openedRecapEval = async () => {
+            $scope.isChefEtab = await Utils.isChefEtab($scope.search.classe);
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
             $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';

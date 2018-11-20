@@ -30,7 +30,7 @@ export class Utils {
                 evaluations.structure.detailsUser.headTeacherManual), classe.externalId);
     }
 
-    static isChefEtab (classe?) {
+    static async isChefEtab  (classe?) {
         let isAdmin = model.me.hasWorkflow(Behaviours.applicationsBehaviours.viescolaire.rights.workflow.adminChefEtab);
         if(classe === undefined || classe === null || classe === "" || classe === "*") {
             return isAdmin;
