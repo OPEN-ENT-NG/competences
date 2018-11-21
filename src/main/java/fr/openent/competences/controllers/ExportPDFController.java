@@ -35,10 +35,7 @@ import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.email.EmailSender;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.MultiMap;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
@@ -1690,7 +1687,6 @@ public class ExportPDFController extends ControllerHelper {
     @Get("/recapAppreciations/print/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportRecapAppreciations(final HttpServerRequest request) {
-        final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final String idClasse = request.params().get("idClasse");
 
         Integer idPeriode = null;
@@ -1785,18 +1781,155 @@ public class ExportPDFController extends ControllerHelper {
                         libGrpFuture.fail(new Throwable(libGrpEvent.left().getValue()));
                     }
                 });
-            } else {
-                leftToResponse(request, new Either.Left<>(compositeFutureAsyncResult.cause().getMessage()));
             }
         });
 
-        CompositeFuture.all(moyObjectFuture, libMatFuture, libGrpFuture, libTeachFuture).setHandler(allData -> {
+        Future<JsonArray> groupesFuture = Future.future();
+        groupesFuture.setHandler(event -> {
+            Set<String> idGroups = new HashSet<>();
+            event.result().stream().forEach(line -> {
+                idGroups.add(((JsonObject) line).getString("id_classe"));
+                ((JsonObject) line).getJsonArray("id_groupes").getList().forEach(idGroup -> idGroups.add((String) idGroup));
+            });
+
+            appreciationService.getAppreciationClasse(idGroups.toArray(new String[0]), finalIdPeriode, null, resultAppr -> {
+                if (resultAppr.isRight()) {
+                    Map<JsonObject, String> appr = new HashMap<>();
+
+                    resultAppr.right().getValue().stream().forEach(line -> {
+                        JsonObject lineObject = (JsonObject) line;
+
+                        JsonObject key = new JsonObject();
+                        key.put("id_matiere", lineObject.getString("id_matiere"));
+                        key.put("id_groupe", lineObject.getString("id_classe"));
+
+                        MatGrp.add(key);
+                        appr.put(key, lineObject.getString("appreciation"));
+                    });
+
+                    apprFuture.complete(appr);
+                } else {
+                    apprFuture.fail(resultAppr.left().getValue());
+                }
+            });
+        });
+
+        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), eventResultGroups -> {
+            if (eventResultGroups.isRight()) {
+                groupesFuture.complete(eventResultGroups.right().getValue());
+            } else {
+                groupesFuture.fail(eventResultGroups.left().getValue());
+            }
+        });
+
+        Future<List<String>> idElevesFuture = Future.future();
+        idElevesFuture.setHandler(event -> {
+            idEleves.addAll(event.result());
+
+            noteService.getNotesParElevesParDevoirs(idEleves.toArray(new String[0]), null, finalIdPeriode,
+                    resultNotesEleves -> {
+                        if (resultNotesEleves.isRight()) {
+
+                            Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
+
+                            resultNotesEleves.right().getValue().stream().forEach(line -> {
+                                JsonObject lineObject = (JsonObject) line;
+
+                                JsonObject key = new JsonObject();
+                                key.put("id_matiere", lineObject.getString("id_matiere"));
+                                key.put("id_groupe", lineObject.getString("id_groupe"));
+
+                                MatGrp.add(key);
+
+                                if (!teachers.containsKey(key)) {
+                                    teachers.put(key, lineObject.getString("owner"));
+                                }
+
+                                NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString("valeur")),
+                                        lineObject.getLong("diviseur").doubleValue(),
+                                        lineObject.getBoolean("ramener_sur"),
+                                        Double.parseDouble(lineObject.getString("coefficient")));
+
+                                if (!notes.containsKey(key)) {
+                                    notes.put(key, new HashMap<>());
+                                }
+
+                                if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
+                                    notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
+                                }
+                                notes.get(key).get(lineObject.getString("id_eleve")).add(note);
+                            });
+
+                            notesFuture.complete(notes);
+
+                        } else {
+                            notesFuture.fail(resultNotesEleves.left().getValue());
+                        }
+                    });
+
+            noteService.getMoyennesFinal(idEleves.toArray(new String[0]), finalIdPeriode, null, null, stringJsonArrayEither -> {
+                if (stringJsonArrayEither.isRight()) {
+
+                    Map<JsonObject, Map<String, NoteDevoir>> moyFinal = new HashMap<>();
+
+                    stringJsonArrayEither.right().getValue().stream().forEach(line -> {
+                        JsonObject lineObject = (JsonObject) line;
+
+                        JsonObject key = new JsonObject()
+                                .put("id_groupe", lineObject.getString("id_classe"))
+                                .put("id_matiere", lineObject.getString("id_matiere"));
+
+                        MatGrp.add(key);
+
+                        if (!moyFinal.containsKey(key)) {
+                            moyFinal.put(key, new HashMap<>());
+                        }
+
+                        moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString("moyenne")), false, new Double(1)));
+                    });
+
+                    moyennesFinalFuture.complete(moyFinal);
+                } else {
+                    moyennesFinalFuture.fail(stringJsonArrayEither.left().getValue());
+                }
+            });
+        });
+
+        Utils.getIdElevesClassesGroupes(eb, idClasse, idPeriode.intValue(), 0, eventResultEleves -> {
+            if (eventResultEleves.isRight()) {
+                idElevesFuture.complete(eventResultEleves.right().getValue());
+            } else {
+                idElevesFuture.fail(eventResultEleves.left().getValue());
+            }
+        });
+
+        Future<String> libellePeriodeFuture = Future.future();
+        Utils.getLibellePeriode(eb, request, finalIdPeriode, stringStringEither -> {
+            if (stringStringEither.isRight()) {
+                libellePeriodeFuture.complete(stringStringEither.right().getValue());
+            } else {
+                libellePeriodeFuture.fail(stringStringEither.left().getValue());
+            }
+        });
+
+        Future<String> libelleClasseFuture = Future.future();
+        Utils.getInfosGroupes(eb, new JsonArray().add(idClasse), stringMapEither -> {
+            if (stringMapEither.isRight()) {
+                libelleClasseFuture.complete(stringMapEither.right().getValue().get(idClasse));
+            } else {
+                libelleClasseFuture.fail(stringMapEither.left().getValue());
+            }
+        });
+
+        CompositeFuture.all(libellePeriodeFuture, libelleClasseFuture, libTeachFuture, libGrpFuture, libMatFuture, moyObjectFuture).setHandler(allData -> {
             if (allData.succeeded()) {
 
-                Map<JsonObject, JsonObject> moyObject = allData.result().resultAt(0);
-                Map<String, String> libMatieres = allData.result().resultAt(1);
-                Map<String, String> libGrp = allData.result().resultAt(2);
-                Map<String, String> libTeachers = allData.result().resultAt(3);
+                String libellePeriode = allData.result().resultAt(0);
+                String libelleClasse = allData.result().resultAt(1);
+                Map<String, String> libTeachers = allData.result().resultAt(2);
+                Map<String, String> libGrp = allData.result().resultAt(3);
+                Map<String, String> libMatieres = allData.result().resultAt(4);
+                Map<JsonObject, JsonObject> moyObject = allData.result().resultAt(5);
 
                 JsonArray data = new JsonArray(
 
@@ -1811,6 +1944,8 @@ public class ExportPDFController extends ControllerHelper {
                         }).collect(Collectors.toList()));
 
                 result.put("data", data);
+                result.put("periode", libellePeriode);
+                result.put("classe", libelleClasse);
 
                 String fileName = result.getString("classe") + "_export_appreciation";
                 exportService.genererPdf(request, result,
@@ -1819,135 +1954,7 @@ public class ExportPDFController extends ControllerHelper {
                 leftToResponse(request, new Either.Left<>(allData.cause().getMessage()));
             }
         });
-
-        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), eventResultGroups -> {
-            if (eventResultGroups.isRight()) {
-                Set<String> idGroups = new HashSet<>();
-                eventResultGroups.right().getValue().stream().forEach(line -> {
-                    idGroups.add(((JsonObject) line).getString("id_classe"));
-                    ((JsonObject) line).getJsonArray("id_groupes").getList().forEach(idGroup -> idGroups.add((String) idGroup));
-                });
-
-                appreciationService.getAppreciationClasse(idGroups.toArray(new String[0]), finalIdPeriode, null, resultAppr -> {
-                    if (resultAppr.isRight()) {
-                        Map<JsonObject, String> appr = new HashMap<>();
-
-                        resultAppr.right().getValue().stream().forEach(line -> {
-                            JsonObject lineObject = (JsonObject) line;
-
-                            JsonObject key = new JsonObject();
-                            key.put("id_matiere", lineObject.getString("id_matiere"));
-                            key.put("id_groupe", lineObject.getString("id_classe"));
-
-                            MatGrp.add(key);
-                            appr.put(key, lineObject.getString("appreciation"));
-                        });
-
-                        apprFuture.complete(appr);
-                    } else {
-                        apprFuture.fail(resultAppr.left().getValue());
-                    }
-                });
-            } else {
-                leftToResponse(request, eventResultGroups.left());
-            }
-        });
-
-        Utils.getIdElevesClassesGroupes(eb, idClasse, idPeriode.intValue(), 0, eventResultEleves -> {
-            if (eventResultEleves.isRight()) {
-
-                idEleves.addAll(eventResultEleves.right().getValue());
-
-                noteService.getNotesParElevesParDevoirs(eventResultEleves.right().getValue().toArray(new String[0]), null, finalIdPeriode,
-                        resultNotesEleves -> {
-                            if (resultNotesEleves.isRight()) {
-
-                                Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
-
-                                resultNotesEleves.right().getValue().stream().forEach(line -> {
-                                    JsonObject lineObject = (JsonObject) line;
-
-                                    JsonObject key = new JsonObject();
-                                    key.put("id_matiere", lineObject.getString("id_matiere"));
-                                    key.put("id_groupe", lineObject.getString("id_groupe"));
-
-                                    MatGrp.add(key);
-
-                                    if (!teachers.containsKey(key)) {
-                                        teachers.put(key, lineObject.getString("owner"));
-                                    }
-
-                                    NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString("valeur")),
-                                            lineObject.getLong("diviseur").doubleValue(),
-                                            lineObject.getBoolean("ramener_sur"),
-                                            Double.parseDouble(lineObject.getString("coefficient")));
-
-                                    if (!notes.containsKey(key)) {
-                                        notes.put(key, new HashMap<>());
-                                    }
-
-                                    if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
-                                        notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
-                                    }
-                                    notes.get(key).get(lineObject.getString("id_eleve")).add(note);
-                                });
-
-                                notesFuture.complete(notes);
-
-                            } else {
-                                leftToResponse(request, resultNotesEleves.left());
-                            }
-                        });
-
-                noteService.getMoyennesFinal(eventResultEleves.right().getValue().toArray(new String[0]), finalIdPeriode, null, null, stringJsonArrayEither -> {
-                    if (stringJsonArrayEither.isRight()) {
-
-                        Map<JsonObject, Map<String, NoteDevoir>> moyFinal = new HashMap<>();
-
-                        stringJsonArrayEither.right().getValue().stream().forEach(line -> {
-                            JsonObject lineObject = (JsonObject) line;
-
-                            JsonObject key = new JsonObject()
-                                    .put("id_groupe", lineObject.getString("id_classe"))
-                                    .put("id_matiere", lineObject.getString("id_matiere"));
-
-                            MatGrp.add(key);
-
-                            if (!moyFinal.containsKey(key)) {
-                                moyFinal.put(key, new HashMap<>());
-                            }
-
-                            moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString("moyenne")), false, new Double(1)));
-                        });
-
-                        moyennesFinalFuture.complete(moyFinal);
-                    } else {
-                        leftToResponse(request, stringJsonArrayEither.left());
-                    }
-                });
-
-            } else {
-                leftToResponse(request, eventResultEleves.left());
-            }
-        });
-
-        Utils.getLibellePeriode(eb, request, finalIdPeriode, stringStringEither -> {
-            if (stringStringEither.isRight()) {
-                result.put("periode", stringStringEither.right().getValue());
-            } else {
-                leftToResponse(request, stringStringEither.left());
-            }
-        });
-
-        Utils.getInfosGroupes(eb, new JsonArray().add(idClasse), stringMapEither -> {
-            if (stringMapEither.isRight()) {
-                result.put("classe", stringMapEither.right().getValue().get(idClasse));
-            } else {
-                leftToResponse(request, stringMapEither.left());
-            }
-        });
     }
-
 
     @Get("/recapEval/print/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
@@ -2536,7 +2543,7 @@ public class ExportPDFController extends ControllerHelper {
                     final Integer idPeriode;
                     try {
                         idPeriode = (request.params().get("idPeriode") != null)?
-                        Integer.valueOf(request.params().get("idPeriode")):null;
+                                Integer.valueOf(request.params().get("idPeriode")):null;
                     } catch (NumberFormatException err) {
                         badRequest(request, err.getMessage());
                         log.error(err);
@@ -2549,81 +2556,81 @@ public class ExportPDFController extends ControllerHelper {
                     noteService.getMoysEleveByMat(idClasse, idPeriode,
                             mapAllidMatAndidTeachers,
                             mapIdMatListMoyByEleve ,
-                                    new Handler<Either<String, JsonObject>>() {
-                        @Override
-                        public void handle(Either<String, JsonObject> event) {
+                            new Handler<Either<String, JsonObject>>() {
+                                @Override
+                                public void handle(Either<String, JsonObject> event) {
 
-                            if(!event.isRight()){
-                                leftToResponse(request, event.left());
-                                log.error(event.left());
-                            }else {
-                                JsonObject resultEleves = event.right().getValue();
+                                    if(!event.isRight()){
+                                        leftToResponse(request, event.left());
+                                        log.error(event.left());
+                                    }else {
+                                        JsonObject resultEleves = event.right().getValue();
 
-                                    noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, new Handler<Either<String, JsonObject>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonObject> event) {
+                                        noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, new Handler<Either<String, JsonObject>>() {
+                                            @Override
+                                            public void handle(Either<String, JsonObject> event) {
 
-                                            if(!event.isRight()) {
-                                                leftToResponse(request, event.left());
-                                            }else {
+                                                if(!event.isRight()) {
+                                                    leftToResponse(request, event.left());
+                                                }else {
 
-                                                JsonObject resultMatieres = event.right().getValue();
+                                                    JsonObject resultMatieres = event.right().getValue();
 
-                                                resultEleves.getMap().putAll(resultMatieres.getMap());
-                                                JsonObject result = new JsonObject(resultEleves.getMap());
+                                                    resultEleves.getMap().putAll(resultMatieres.getMap());
+                                                    JsonObject result = new JsonObject(resultEleves.getMap());
 
-                                                if(idPeriode != null) {
-
-
-                                                    Utils.getLibellePeriode(eb, request, idPeriode, new Handler<Either<String, String>>() {
-                                                        @Override
-                                                        public void handle(Either<String, String> event) {
-                                                            if (!event.isRight()) {
-                                                                leftToResponse(request, event.left());
-                                                            } else {
-                                                                String libellePeriode = event.right().getValue();
-
-                                                                result.put("periode", libellePeriode);
+                                                    if(idPeriode != null) {
 
 
-                                                                String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClass");
-                                                                result.put("nameClass", prefix);
-                                                                prefix += "_" + libellePeriode;
-                                                                result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
-                                                                result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
-                                                                result.put("text", text);
-                                                                exportService.genererPdf(request,
-                                                                        result,
-                                                                        "recap_moys_eleves_par_matiere_classe.pdf.xhtml",
-                                                                        prefix,
-                                                                        vertx,
-                                                                        config);
+                                                        Utils.getLibellePeriode(eb, request, idPeriode, new Handler<Either<String, String>>() {
+                                                            @Override
+                                                            public void handle(Either<String, String> event) {
+                                                                if (!event.isRight()) {
+                                                                    leftToResponse(request, event.left());
+                                                                } else {
+                                                                    String libellePeriode = event.right().getValue();
 
+                                                                    result.put("periode", libellePeriode);
+
+
+                                                                    String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClass");
+                                                                    result.put("nameClass", prefix);
+                                                                    prefix += "_" + libellePeriode;
+                                                                    result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
+                                                                    result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
+                                                                    result.put("text", text);
+                                                                    exportService.genererPdf(request,
+                                                                            result,
+                                                                            "recap_moys_eleves_par_matiere_classe.pdf.xhtml",
+                                                                            prefix,
+                                                                            vertx,
+                                                                            config);
+
+                                                                }
                                                             }
-                                                        }
-                                                    });
-                                                }else{
-                                                    result.put("periode", "Année");
-                                                    String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClass");
-                                                    result.put("nameClass", prefix);
-                                                    prefix += "_" + "Année";
-                                                    result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
-                                                    result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
-                                                    result.put("text", text);
-                                                    exportService.genererPdf(request,
-                                                            result,
-                                                            "recap_moys_eleves_par_matiere_classe.pdf.xhtml",
-                                                            prefix,
-                                                            vertx,
-                                                            config);
+                                                        });
+                                                    }else{
+                                                        result.put("periode", "Année");
+                                                        String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClass");
+                                                        result.put("nameClass", prefix);
+                                                        prefix += "_" + "Année";
+                                                        result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
+                                                        result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
+                                                        result.put("text", text);
+                                                        exportService.genererPdf(request,
+                                                                result,
+                                                                "recap_moys_eleves_par_matiere_classe.pdf.xhtml",
+                                                                prefix,
+                                                                vertx,
+                                                                config);
 
+                                                    }
                                                 }
                                             }
-                                        }
-                                    });
-                            }
-                        }
-                    });
+                                        });
+                                    }
+                                }
+                            });
 
                 }
             }
