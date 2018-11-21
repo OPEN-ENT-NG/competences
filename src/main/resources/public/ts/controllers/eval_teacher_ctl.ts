@@ -3542,7 +3542,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return moment(date).format("DD/MM/YYYY");
         };
 
-        $scope.openedRecapEval =() => {
+        $scope.openedRecapEval = () => {
             //$scope.isChefEtabAndHeadTeacher = Utils.isChefEtab($scope.search.classe);
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
