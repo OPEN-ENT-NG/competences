@@ -175,7 +175,8 @@
                     <i18n>evaluation.service.columns.matiere</i18n>
                 </p>
                 <label class="select">
-                    <select ng-model="matiere"
+                    <select ng-model="matiereSelected"
+                            ng-change="setMatiere(matiereSelected)"
                             ng-options="matiere.id as matiere.name for matiere in columns.matiere.data">
                     </select>
                 </label>
@@ -183,7 +184,7 @@
         </div>
 
         <button class="marginFive magnet-right"
-                ng-click="doUpdateOrDelete(updateOrDelete, matiere, devoirs, service)">
+                ng-click="doUpdateOrDelete(updateOrDelete, devoirs, service)">
             <i18n>viescolaire.utils.save</i18n>
         </button>
         <button ng-click="lightboxes.switchEval = false" class="right-magnet cancel">

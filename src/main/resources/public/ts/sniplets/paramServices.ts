@@ -142,6 +142,7 @@ export const paramServices = {
             this.idStructure = this.source.idStructure;
             this.services = [];
             this.search = "";
+            this.matiereSelected = "";
 
             this.headers = {
                 all: {name:"all", value: null, isSelected: true},
@@ -243,7 +244,6 @@ export const paramServices = {
                     callback();
                 } else {
                     paramServices.that.service = service;
-                    paramServices.that.matiere = service.id_matiere;
                     paramServices.that.devoirs = data;
                     paramServices.that.callback = callback;
                     paramServices.that.error = paramServices.that.translate("evaluations.service.devoir.error").replace("[nbDevoir]", paramServices.that.devoirs.length);
@@ -265,15 +265,16 @@ export const paramServices = {
             paramServices.that.checkDevoirsService(service, () => service.deleteService());
         },
 
-        doUpdateOrDelete: function (updateOrDelete, matiere, devoirs, service) {
+        doUpdateOrDelete: function (updateOrDelete, devoirs, service) {
             let id_devoirs = _.pluck(devoirs, "id");
             switch (updateOrDelete){
                 case "update": {
-                    if(matiere) {
+                    if(paramServices.that.matiereSelected) {
+                        let matiere = paramServices.that.matiereSelected;
                         service.updateDevoirsService(id_devoirs, matiere).then(() => {
                             let nom_matiere = _.findWhere(paramServices.that.columns.matiere.data, {id : matiere}).name;
                             let newService = new paramServices.that.Service({...service.toJson(), id_matiere: matiere,
-                                nom_matiere: nom_matiere});
+                                nom_matiere: nom_matiere, evaluable: true});
                             newService.createService();
                             paramServices.that.services.push(newService);
                             paramServices.that.callback();
@@ -291,6 +292,10 @@ export const paramServices = {
                     });
                 }
             }
+        },
+
+        setMatiere: function(matiere) {
+            paramServices.that.matiereSelected = matiere;
         },
 
         openCreateLightbox: function () {
