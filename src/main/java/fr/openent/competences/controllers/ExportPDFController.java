@@ -1743,9 +1743,15 @@ public class ExportPDFController extends ControllerHelper {
                     });
 
                     JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null);
-                    moyObject.put("min", resultCalc.getDouble("noteMin"));
-                    moyObject.put("max", resultCalc.getDouble("noteMax"));
-                    moyObject.put("moy", resultCalc.getDouble("moyenne"));
+                   if(resultCalc.getDouble("noteMin") > resultCalc.getDouble("moyenne")) {
+                       moyObject.put("min", "");
+                       moyObject.put("max", "");
+                       moyObject.put("moy", "");
+                   } else {
+                       moyObject.put("min", resultCalc.getDouble("noteMin"));
+                       moyObject.put("max", resultCalc.getDouble("noteMax"));
+                       moyObject.put("moy", resultCalc.getDouble("moyenne"));
+                   }
                     moyObject.put("appr", appr.get(matGrp));
 
                     moyObjects.put(matGrp, moyObject);
@@ -1786,7 +1792,7 @@ public class ExportPDFController extends ControllerHelper {
 
         Future<JsonArray> groupesFuture = Future.future();
         groupesFuture.setHandler(event -> {
-            Set<String> idGroups = new HashSet<>();
+            Set<String> idGroups = new HashSet<>(Collections.singleton(idClasse));
             event.result().stream().forEach(line -> {
                 idGroups.add(((JsonObject) line).getString("id_classe"));
                 ((JsonObject) line).getJsonArray("id_groupes").getList().forEach(idGroup -> idGroups.add((String) idGroup));
