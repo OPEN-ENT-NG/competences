@@ -1759,34 +1759,46 @@ public class ExportPDFController extends ControllerHelper {
 
                 moyObjectFuture.complete(moyObjects);
 
-                Utils.getLastNameFirstNameUser(eb, new JsonArray(new ArrayList(teachers.values())), libTeachersEvent -> {
-                    if (libTeachersEvent.isRight()) {
-                        libTeachFuture.complete(libTeachersEvent.right().getValue().entrySet()
-                                .stream()
-                                .collect(Collectors.toMap(val -> val.getKey(), val -> val.getValue().getString("firstName") + " " + val.getValue().getString("name"))));
-                    } else {
-                        log.error(libTeachersEvent.left().getValue());
-                        libTeachFuture.fail(new Throwable(libTeachersEvent.left().getValue()));
-                    }
-                });
+                if(teachers.values().size() == 0) {
+                    libTeachFuture.complete(new HashMap<>());
+                } else {
+                    Utils.getLastNameFirstNameUser(eb, new JsonArray(new ArrayList(teachers.values())), libTeachersEvent -> {
+                        if (libTeachersEvent.isRight()) {
+                            libTeachFuture.complete(libTeachersEvent.right().getValue().entrySet()
+                                    .stream()
+                                    .collect(Collectors.toMap(val -> val.getKey(), val -> val.getValue().getString("firstName") + " " + val.getValue().getString("name"))));
+                        } else {
+                            log.error(libTeachersEvent.left().getValue());
+                            libTeachFuture.fail(new Throwable(libTeachersEvent.left().getValue()));
+                        }
+                    });
+                }
 
-                Utils.getLibelleMatiere(eb, new JsonArray(MatGrp.stream().map(matGrp -> matGrp.getString("id_matiere")).collect(Collectors.toList())), libMatEvent -> {
-                    if (libMatEvent.isRight()) {
-                        libMatFuture.complete(libMatEvent.right().getValue().entrySet().stream().collect(Collectors.toMap(val -> val.getKey(), val -> val.getValue().getString("name"))));
-                    } else {
-                        log.error(libMatEvent.left().getValue());
-                        libMatFuture.fail(new Throwable(libMatEvent.left().getValue()));
-                    }
-                });
+                if (MatGrp.size() == 0) {
+                    libMatFuture.complete(new HashMap<>());
+                } else {
+                    Utils.getLibelleMatiere(eb, new JsonArray(MatGrp.stream().map(matGrp -> matGrp.getString("id_matiere")).collect(Collectors.toList())), libMatEvent -> {
+                        if (libMatEvent.isRight()) {
+                            libMatFuture.complete(libMatEvent.right().getValue().entrySet().stream().collect(Collectors.toMap(val -> val.getKey(), val -> val.getValue().getString("name"))));
+                        } else {
+                            log.error(libMatEvent.left().getValue());
+                            libMatFuture.fail(new Throwable(libMatEvent.left().getValue()));
+                        }
+                    });
+                }
 
-                Utils.getInfosGroupes(eb, new JsonArray(MatGrp.stream().map(matGrp -> matGrp.getString("id_groupe")).collect(Collectors.toList())), libGrpEvent -> {
-                    if (libGrpEvent.isRight()) {
-                        libGrpFuture.complete(libGrpEvent.right().getValue());
-                    } else {
-                        log.error(libGrpEvent.left().getValue());
-                        libGrpFuture.fail(new Throwable(libGrpEvent.left().getValue()));
-                    }
-                });
+                if (MatGrp.size() == 0) {
+                    libGrpFuture.complete(new HashMap<>());
+                } else {
+                    Utils.getInfosGroupes(eb, new JsonArray(MatGrp.stream().map(matGrp -> matGrp.getString("id_groupe")).collect(Collectors.toList())), libGrpEvent -> {
+                        if (libGrpEvent.isRight()) {
+                            libGrpFuture.complete(libGrpEvent.right().getValue());
+                        } else {
+                            log.error(libGrpEvent.left().getValue());
+                            libGrpFuture.fail(new Throwable(libGrpEvent.left().getValue()));
+                        }
+                    });
+                }
             }
         });
 
