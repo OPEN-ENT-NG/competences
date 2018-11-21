@@ -157,7 +157,11 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             let oneStudentSelected =  _.filter($scope.allElevesClasses, function (student) {
                 return student.selected === true;
             });
-         return oneStudentSelected !== undefined && oneStudentSelected.length === 1;
+            let show = oneStudentSelected !== undefined && oneStudentSelected.length === 1;
+            if(!show) {
+                $scope.print.showBilanPerDomaines = false;
+            }
+            return show;
         };
 
         // Permet de mettre à jour les périodes et les élèves dans les listes en fonction de la classe
