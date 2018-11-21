@@ -773,9 +773,17 @@ public class DefaultUtilsService  implements UtilsService {
                                 for(Map.Entry<String,Set<String>> setEntry: mapIdMatiereIdsTeacher.entrySet()){
                                     JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
                                     JsonObject matiere = mapIdMatLibelle.get(setEntry.getKey());
-                                    String codeMatiere = matiere.getJsonObject("data").getJsonObject("data").getString("code");
+                                    String source = matiere.getJsonObject("data").getJsonObject("data").getString("source");
+                                    if(!"AAF".equals(source)){
+                                        String codeMatiere = matiere.getJsonObject("data").getJsonObject("data").getString("code");
+                                        matiere.put("name",codeMatiere);
+                                    }
+
+                                    String nameMat = matiere.getString("name").replace("."," ");
+                                    String _nameMat = nameMat.replace("-", " ");
+
+                                    matiere.put("name", _nameMat);
                                     matiere.remove("data");
-                                    matiere.put("code",codeMatiere);
 
                                     for(String idTeacher : setEntry.getValue()){
                                         String displayName = mapIdTeacher.get(idTeacher).getString("firstName").substring(0,1)+".";

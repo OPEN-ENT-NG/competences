@@ -40,8 +40,12 @@
         td, th {
             max-width:70px;
             border: solid 1px black;
-            //word-wrap: break-word;
+        }
+        td{
             vertical-align: middle;
+        }
+        th{
+            word-wrap: break-word;
         }
         .bold {
             font-weight: bold;
@@ -55,15 +59,11 @@
 
         .mat{
             font-size: 10px;
-            vertical-align: text-top !important;
-
         }
         .prof{
             max-width:70px;
             font-size: 10px;
-            vertical-align: text-top !important;
             text-align: center;
-           // word-wrap: break-word;
         }
         .left{
             text-align: left;
@@ -97,14 +97,14 @@
     <thead id="repeated-top">
     <tr>
         <th>
-            <div class="bold right">Matières <br/>
+            <div class="right">Matières <br/>
                 Enseignants</div><br/>
 
-            <div class="bold left">Elèves</div>
+            <div class="left">Elèves</div>
         </th>
         {{#matieres}}
         <th style="vertical-align: top" >
-            <div class="mat">{{code}}</div>
+            <div class="mat">{{name}}</div>
             {{#teachers}}
             <span class="prof">{{displayName}}</span>
             {{/teachers}}
@@ -131,7 +131,7 @@
     </tbody>
     <tfoot>
     <tr>
-        <td class="bold">Moyenne</td>
+        <td><strong>Moyenne</strong></td>
         {{#matieres}}
         <td>{{moyClass}}</td>
         {{/matieres}}
@@ -141,7 +141,7 @@
     </tr>
     {{#withMoyMinMaxByMat}}
     <tr>
-        <td class="bold">Moyenne Min.</td>
+        <td><strong>Moyenne Min.</strong></td>
         {{#matieres}}
         <td>{{moyMinClass}}</td>
         {{/matieres}}
@@ -150,7 +150,7 @@
         {{/withMoyGeneraleByEleve}}
     </tr>
     <tr>
-        <td class="bold">Moyenne Max.</td>
+        <td><strong>Moyenne Max.</strong></td>
         {{#matieres}}
         <td>{{moyMaxClass}}</td>
         {{/matieres}}
