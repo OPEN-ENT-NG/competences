@@ -1688,6 +1688,7 @@ public class ExportPDFController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportRecapAppreciations(final HttpServerRequest request) {
         final String idClasse = request.params().get("idClasse");
+        final Boolean json = Boolean.parseBoolean(request.params().get("json"));
 
         Integer idPeriode = null;
 
@@ -1704,7 +1705,6 @@ public class ExportPDFController extends ControllerHelper {
         Integer finalIdPeriode = idPeriode;
 
         Set<JsonObject> MatGrp = new HashSet<>();
-        Set<String> idEleves = new HashSet<>();
         Map<JsonObject, String> teachers = new HashMap<>();
 
         Future<Map<JsonObject, String>> apprFuture = Future.future();
@@ -1718,6 +1718,127 @@ public class ExportPDFController extends ControllerHelper {
         Future<Map<JsonObject, JsonObject>> moyObjectFuture = Future.future();
 
         JsonObject result = new JsonObject();
+
+        Future<JsonArray> idGroupesFuture = Future.future();
+        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), eventResultGroups -> {
+            if (eventResultGroups.isRight()) {
+                idGroupesFuture.complete(eventResultGroups.right().getValue());
+            } else {
+                idGroupesFuture.fail(eventResultGroups.left().getValue());
+            }
+        });
+
+        Future<List<String>> idElevesFuture = Future.future();
+        Utils.getIdElevesClassesGroupes(eb, idClasse, finalIdPeriode, 0, eventResultEleves -> {
+            if (eventResultEleves.isRight()) {
+                idElevesFuture.complete(eventResultEleves.right().getValue());
+            } else {
+                idElevesFuture.fail(eventResultEleves.left().getValue());
+            }
+        });
+
+        CompositeFuture.all(idElevesFuture, idGroupesFuture).setHandler(event -> {
+            if(event.succeeded()) {
+                Set<String> idGroups = new HashSet<>(Collections.singleton(idClasse));
+                idGroupesFuture.result().stream().forEach(line -> {
+                    idGroups.add(((JsonObject) line).getString("id_classe"));
+                    ((JsonObject) line).getJsonArray("id_groupes").getList().forEach(idGroup -> idGroups.add((String) idGroup));
+                });
+
+                appreciationService.getAppreciationClasse(idGroups.toArray(new String[0]), finalIdPeriode, null, resultAppr -> {
+                    if (resultAppr.isRight()) {
+                        Map<JsonObject, String> appr = new HashMap<>();
+
+                        resultAppr.right().getValue().stream().forEach(line -> {
+                            JsonObject lineObject = (JsonObject) line;
+
+                            JsonObject key = new JsonObject();
+                            key.put("id_matiere", lineObject.getString("id_matiere"));
+                            key.put("id_groupe", lineObject.getString("id_classe"));
+
+                            MatGrp.add(key);
+                            appr.put(key, lineObject.getString("appreciation"));
+                        });
+
+                        apprFuture.complete(appr);
+                    } else {
+                        apprFuture.fail(resultAppr.left().getValue());
+                    }
+                });
+
+                noteService.getNotesParElevesParDevoirs(idElevesFuture.result().toArray(new String[0]), idGroups.toArray(new String[0]), null, finalIdPeriode,
+                        resultNotesEleves -> {
+                            if (resultNotesEleves.isRight()) {
+
+                                Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
+
+                                resultNotesEleves.right().getValue().stream().forEach(line -> {
+                                    JsonObject lineObject = (JsonObject) line;
+
+                                    JsonObject key = new JsonObject();
+                                    key.put("id_matiere", lineObject.getString("id_matiere"));
+                                    key.put("id_groupe", lineObject.getString("id_groupe"));
+
+                                    MatGrp.add(key);
+
+                                    if (!teachers.containsKey(key)) {
+                                        teachers.put(key, lineObject.getString("owner"));
+                                    }
+
+                                    NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString("valeur")),
+                                            lineObject.getLong("diviseur").doubleValue(),
+                                            lineObject.getBoolean("ramener_sur"),
+                                            Double.parseDouble(lineObject.getString("coefficient")));
+
+                                    if (!notes.containsKey(key)) {
+                                        notes.put(key, new HashMap<>());
+                                    }
+
+                                    if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
+                                        notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
+                                    }
+                                    notes.get(key).get(lineObject.getString("id_eleve")).add(note);
+                                });
+
+                                notesFuture.complete(notes);
+
+                            } else {
+                                notesFuture.fail(resultNotesEleves.left().getValue());
+                            }
+                        });
+
+                noteService.getMoyennesFinal(idElevesFuture.result().toArray(new String[0]), finalIdPeriode, null, idGroups.toArray(new String[0]), stringJsonArrayEither -> {
+                    if (stringJsonArrayEither.isRight()) {
+
+                        Map<JsonObject, Map<String, NoteDevoir>> moyFinal = new HashMap<>();
+
+                        stringJsonArrayEither.right().getValue().stream().forEach(line -> {
+                            JsonObject lineObject = (JsonObject) line;
+
+                            JsonObject key = new JsonObject()
+                                    .put("id_groupe", lineObject.getString("id_classe"))
+                                    .put("id_matiere", lineObject.getString("id_matiere"));
+
+                            MatGrp.add(key);
+
+                            if (!moyFinal.containsKey(key)) {
+                                moyFinal.put(key, new HashMap<>());
+                            }
+
+                            moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString("moyenne")), false, new Double(1)));
+                        });
+
+                        moyennesFinalFuture.complete(moyFinal);
+                    } else {
+                        moyennesFinalFuture.fail(stringJsonArrayEither.left().getValue());
+                    }
+                });
+            } else {
+                apprFuture.fail(event.cause());
+                notesFuture.fail(event.cause());
+                moyennesFinalFuture.fail(event.cause());
+            }
+        });
 
         CompositeFuture.all(apprFuture, notesFuture, moyennesFinalFuture).setHandler(compositeFutureAsyncResult -> {
             if (compositeFutureAsyncResult.succeeded()) {
@@ -1734,7 +1855,7 @@ public class ExportPDFController extends ControllerHelper {
 
                     JsonObject moyObject = new JsonObject();
 
-                    idEleves.stream().forEach(idEleve -> {
+                    idElevesFuture.result().stream().forEach(idEleve -> {
                         if (moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve)) {
                             matGrpNotes.add(moyennesFinales.get(matGrp).get(idEleve));
                         } else if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve)) {
@@ -1743,15 +1864,15 @@ public class ExportPDFController extends ControllerHelper {
                     });
 
                     JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null);
-                   if(resultCalc.getDouble("noteMin") > resultCalc.getDouble("moyenne")) {
-                       moyObject.put("min", "");
-                       moyObject.put("max", "");
-                       moyObject.put("moy", "");
-                   } else {
-                       moyObject.put("min", resultCalc.getDouble("noteMin"));
-                       moyObject.put("max", resultCalc.getDouble("noteMax"));
-                       moyObject.put("moy", resultCalc.getDouble("moyenne"));
-                   }
+                    if (resultCalc.getDouble("noteMin") > resultCalc.getDouble("moyenne")) {
+                        moyObject.put("min", "");
+                        moyObject.put("max", "");
+                        moyObject.put("moy", "");
+                    } else {
+                        moyObject.put("min", resultCalc.getDouble("noteMin"));
+                        moyObject.put("max", resultCalc.getDouble("noteMax"));
+                        moyObject.put("moy", resultCalc.getDouble("moyenne"));
+                    }
                     moyObject.put("appr", appr.get(matGrp));
 
                     moyObjects.put(matGrp, moyObject);
@@ -1759,7 +1880,7 @@ public class ExportPDFController extends ControllerHelper {
 
                 moyObjectFuture.complete(moyObjects);
 
-                if(teachers.values().size() == 0) {
+                if (teachers.values().size() == 0) {
                     libTeachFuture.complete(new HashMap<>());
                 } else {
                     Utils.getLastNameFirstNameUser(eb, new JsonArray(new ArrayList(teachers.values())), libTeachersEvent -> {
@@ -1799,125 +1920,11 @@ public class ExportPDFController extends ControllerHelper {
                         }
                     });
                 }
-            }
-        });
-
-        Future<JsonArray> groupesFuture = Future.future();
-        groupesFuture.setHandler(event -> {
-            Set<String> idGroups = new HashSet<>(Collections.singleton(idClasse));
-            event.result().stream().forEach(line -> {
-                idGroups.add(((JsonObject) line).getString("id_classe"));
-                ((JsonObject) line).getJsonArray("id_groupes").getList().forEach(idGroup -> idGroups.add((String) idGroup));
-            });
-
-            appreciationService.getAppreciationClasse(idGroups.toArray(new String[0]), finalIdPeriode, null, resultAppr -> {
-                if (resultAppr.isRight()) {
-                    Map<JsonObject, String> appr = new HashMap<>();
-
-                    resultAppr.right().getValue().stream().forEach(line -> {
-                        JsonObject lineObject = (JsonObject) line;
-
-                        JsonObject key = new JsonObject();
-                        key.put("id_matiere", lineObject.getString("id_matiere"));
-                        key.put("id_groupe", lineObject.getString("id_classe"));
-
-                        MatGrp.add(key);
-                        appr.put(key, lineObject.getString("appreciation"));
-                    });
-
-                    apprFuture.complete(appr);
-                } else {
-                    apprFuture.fail(resultAppr.left().getValue());
-                }
-            });
-        });
-
-        Utils.getGroupesClasse(eb, new JsonArray().add(idClasse), eventResultGroups -> {
-            if (eventResultGroups.isRight()) {
-                groupesFuture.complete(eventResultGroups.right().getValue());
             } else {
-                groupesFuture.fail(eventResultGroups.left().getValue());
-            }
-        });
-
-        Future<List<String>> idElevesFuture = Future.future();
-        idElevesFuture.setHandler(event -> {
-            idEleves.addAll(event.result());
-
-            noteService.getNotesParElevesParDevoirs(idEleves.toArray(new String[0]), null, finalIdPeriode,
-                    resultNotesEleves -> {
-                        if (resultNotesEleves.isRight()) {
-
-                            Map<JsonObject, Map<String, List<NoteDevoir>>> notes = new HashMap<>();
-
-                            resultNotesEleves.right().getValue().stream().forEach(line -> {
-                                JsonObject lineObject = (JsonObject) line;
-
-                                JsonObject key = new JsonObject();
-                                key.put("id_matiere", lineObject.getString("id_matiere"));
-                                key.put("id_groupe", lineObject.getString("id_groupe"));
-
-                                MatGrp.add(key);
-
-                                if (!teachers.containsKey(key)) {
-                                    teachers.put(key, lineObject.getString("owner"));
-                                }
-
-                                NoteDevoir note = new NoteDevoir(Double.parseDouble(lineObject.getString("valeur")),
-                                        lineObject.getLong("diviseur").doubleValue(),
-                                        lineObject.getBoolean("ramener_sur"),
-                                        Double.parseDouble(lineObject.getString("coefficient")));
-
-                                if (!notes.containsKey(key)) {
-                                    notes.put(key, new HashMap<>());
-                                }
-
-                                if (!notes.get(key).containsKey(lineObject.getString("id_eleve"))) {
-                                    notes.get(key).put(lineObject.getString("id_eleve"), new ArrayList<>());
-                                }
-                                notes.get(key).get(lineObject.getString("id_eleve")).add(note);
-                            });
-
-                            notesFuture.complete(notes);
-
-                        } else {
-                            notesFuture.fail(resultNotesEleves.left().getValue());
-                        }
-                    });
-
-            noteService.getMoyennesFinal(idEleves.toArray(new String[0]), finalIdPeriode, null, null, stringJsonArrayEither -> {
-                if (stringJsonArrayEither.isRight()) {
-
-                    Map<JsonObject, Map<String, NoteDevoir>> moyFinal = new HashMap<>();
-
-                    stringJsonArrayEither.right().getValue().stream().forEach(line -> {
-                        JsonObject lineObject = (JsonObject) line;
-
-                        JsonObject key = new JsonObject()
-                                .put("id_groupe", lineObject.getString("id_classe"))
-                                .put("id_matiere", lineObject.getString("id_matiere"));
-
-                        MatGrp.add(key);
-
-                        if (!moyFinal.containsKey(key)) {
-                            moyFinal.put(key, new HashMap<>());
-                        }
-
-                        moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString("moyenne")), false, new Double(1)));
-                    });
-
-                    moyennesFinalFuture.complete(moyFinal);
-                } else {
-                    moyennesFinalFuture.fail(stringJsonArrayEither.left().getValue());
-                }
-            });
-        });
-
-        Utils.getIdElevesClassesGroupes(eb, idClasse, finalIdPeriode, 0, eventResultEleves -> {
-            if (eventResultEleves.isRight()) {
-                idElevesFuture.complete(eventResultEleves.right().getValue());
-            } else {
-                idElevesFuture.fail(eventResultEleves.left().getValue());
+                moyObjectFuture.fail(compositeFutureAsyncResult.cause());
+                libTeachFuture.fail(compositeFutureAsyncResult.cause());
+                libMatFuture.fail(compositeFutureAsyncResult.cause());
+                libGrpFuture.fail(compositeFutureAsyncResult.cause());
             }
         });
 
@@ -1945,7 +1952,6 @@ public class ExportPDFController extends ControllerHelper {
 
         CompositeFuture.all(libellePeriodeFuture, libelleClasseFuture, libTeachFuture, libGrpFuture, libMatFuture, moyObjectFuture).setHandler(allData -> {
             if (allData.succeeded()) {
-
                 String libellePeriode = allData.result().resultAt(0);
                 String libelleClasse = allData.result().resultAt(1);
                 Map<String, String> libTeachers = allData.result().resultAt(2);
@@ -1969,9 +1975,13 @@ public class ExportPDFController extends ControllerHelper {
                 result.put("periode", libellePeriode);
                 result.put("classe", libelleClasse);
 
-                String fileName = result.getString("classe") + "_export_appreciation";
-                exportService.genererPdf(request, result,
-                        "export_appreciations-classe.pdf.xhtml", fileName, vertx, config);
+                if(json) {
+                    Renders.renderJson(request, result);
+                } else {
+                    String fileName = result.getString("classe") + "_export_appreciation";
+                    exportService.genererPdf(request, result,
+                            "export_appreciations-classe.pdf.xhtml", fileName, vertx, config);
+                }
             } else {
                 leftToResponse(request, new Either.Left<>(allData.cause().getMessage()));
             }

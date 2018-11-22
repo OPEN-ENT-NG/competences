@@ -145,44 +145,47 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     @Override
     public void getNotesParElevesParDevoirs(String[] idEleves, Long[] idDevoirs, Integer idPeriode, Handler<Either<String, JsonArray>> handler) {
+        getNotesParElevesParDevoirs (idEleves, null, idDevoirs, idPeriode, handler);
+    }
+
+    @Override
+    public void getNotesParElevesParDevoirs(String[] idEleves, String[] idGroupes, Long[] idDevoirs, Integer idPeriode, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         boolean eleves = idEleves != null && idEleves.length != 0;
+        boolean groupes = idGroupes != null && idGroupes.length != 0;
         boolean devoirs = idDevoirs != null && idDevoirs.length != 0;
         boolean periode = idPeriode != null;
 
         query.append("SELECT notes.id_devoir, notes.id_eleve, notes.valeur, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, devoirs.owner, devoirs.id_matiere, grp.id_groupe " +
                 "FROM " + Competences.COMPETENCES_SCHEMA + ".notes " +
                 "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id = notes.id_devoir " +
-                "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS grp ON devoirs.id = grp.id_devoir WHERE devoirs.is_evaluated = true ");
+                "LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS grp ON devoirs.id = grp.id_devoir WHERE devoirs.is_evaluated = true AND ");
 
-        if(eleves || devoirs) {
-            query.append(" AND ");
             if(eleves) {
-                query.append("notes.id_eleve IN " + Sql.listPrepared(idEleves));
+                query.append("notes.id_eleve IN " + Sql.listPrepared(idEleves) + " AND ");
                 for(String s : idEleves) {
                     values.add(s);
                 }
             }
-            if(eleves && devoirs) {
-                query.append(" AND ");
+            if(groupes) {
+                query.append("grp.id_groupe IN " + Sql.listPrepared(idGroupes) + " AND ");
+                for(String s : idGroupes) {
+                    values.add(s);
+                }
             }
             if(devoirs) {
-                query.append("notes.id_devoir IN " + Sql.listPrepared(idDevoirs));
+                query.append("notes.id_devoir IN " + Sql.listPrepared(idDevoirs) + " AND ");
                 for(Long l : idDevoirs) {
                     values.add(l);
                 }
             }
-            if(periode && (eleves || devoirs)) {
-                query.append(" AND ");
-            }
             if(periode) {
-                query.append("devoirs.id_periode = ?");
+                query.append("devoirs.id_periode = ? AND ");
                 values.add(idPeriode);
             }
-        }
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString().substring(0, query.length() - 5), values, validResultHandler(handler));
     }
 
     @Override

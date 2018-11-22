@@ -58,6 +58,8 @@ public interface NoteService extends CrudService {
 
     void getNotesParElevesParDevoirs(String[] idEleves, Long[] idDevoirs, Integer idPeriode, Handler<Either<String, JsonArray>> handler);
 
+    void getNotesParElevesParDevoirs(String[] idEleves, String[] idGroupes, Long[] idDevoirs, Integer idPeriode, Handler<Either<String, JsonArray>> handler);
+
     /**
      * Mise à jour d'une note
      * @param data Note à mettre à jour
@@ -189,12 +191,12 @@ public interface NoteService extends CrudService {
 
     void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses, Handler<Either<String, JsonArray>> handler);
 
-        /**
-         * get all notes of a student by  matiere ,idGroup
-         * @param idsEleve idsEleve list
-         * @param idPeriode idPeriode
-         * @param handler response
-         */
+    /**
+     * get all notes of a student by  matiere ,idGroup
+     * @param idsEleve idsEleve list
+     * @param idPeriode idPeriode
+     * @param handler response
+     */
     void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, Integer idPeriode, Handler<Either<String,JsonArray>> handler);
 
     /**
@@ -217,6 +219,6 @@ public interface NoteService extends CrudService {
      * @param handler
      */
     void getMatEvaluatedAndStat( SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
-                                Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
-                                Handler<Either<String,JsonObject>> handler);
+                                 Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                                 Handler<Either<String,JsonObject>> handler);
 }
