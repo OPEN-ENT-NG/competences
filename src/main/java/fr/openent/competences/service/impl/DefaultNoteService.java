@@ -912,8 +912,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (String idEleve: idsEleve ) {
             values.add(idEleve);
         }
-        values.add(idPeriode);
-
         Sql.getInstance().prepared(query, values,validResultHandler(handler));
     }
 

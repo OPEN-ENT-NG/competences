@@ -462,9 +462,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                      break;
                  }
                  case 'printTabMoys': {
-                     let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id
-                        url += "/" + idPeriode + "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve
+                     let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id ;
+                        url +=  "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
                         url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat+ "&text=" + !textMod;
+                     if (idPeriode) {
+                         url += "&idPeriode" + idPeriode ;
+                     }
                      http().getJson(url)
                          .error((result) => {
                              $scope.errorResult(result);

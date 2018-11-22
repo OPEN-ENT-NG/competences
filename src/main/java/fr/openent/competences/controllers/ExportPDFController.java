@@ -2543,7 +2543,7 @@ public class ExportPDFController extends ControllerHelper {
             }
         });
     }
-    @Get("/suiviClasse/tableau/moyenne/:idClasse/:idPeriode/export")
+    @Get("/suiviClasse/tableau/moyenne/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void exportBulletinMoyennneOnly(HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
@@ -2558,15 +2558,18 @@ public class ExportPDFController extends ControllerHelper {
                     Boolean withMoyGeneraleByEleve = Boolean.valueOf(request.params().get("withMoyGeneraleByEleve"));
                     Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get("withMoyMinMaxByMat"));
                     Boolean text = Boolean.parseBoolean(request.params().get("text"));
-                    final Integer idPeriode;
+
+                   Integer idPeriode = null;
                     try {
-                        idPeriode = (request.params().get("idPeriode") != null)?
-                                Integer.valueOf(request.params().get("idPeriode")):null;
+                        if (request.params().contains("idPeriode")) {
+                            idPeriode = Integer.parseInt(request.params().get("idPeriode"));
+                        }
                     } catch (NumberFormatException err) {
                         badRequest(request, err.getMessage());
                         log.error(err);
                         return;
                     }
+                    final Integer idPeriodeFinal = idPeriode;
 
                     SortedMap<String, Set<String>> mapAllidMatAndidTeachers = new TreeMap<>();
                     Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve = new LinkedHashMap<>();
@@ -2597,10 +2600,9 @@ public class ExportPDFController extends ControllerHelper {
                                                     resultEleves.getMap().putAll(resultMatieres.getMap());
                                                     JsonObject result = new JsonObject(resultEleves.getMap());
 
-                                                    if(idPeriode != null) {
+                                                    if(idPeriodeFinal != null) {
 
-
-                                                        Utils.getLibellePeriode(eb, request, idPeriode, new Handler<Either<String, String>>() {
+                                                        Utils.getLibellePeriode(eb, request, idPeriodeFinal, new Handler<Either<String, String>>() {
                                                             @Override
                                                             public void handle(Either<String, String> event) {
                                                                 if (!event.isRight()) {

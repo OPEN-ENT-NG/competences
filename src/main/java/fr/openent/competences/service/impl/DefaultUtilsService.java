@@ -777,12 +777,11 @@ public class DefaultUtilsService  implements UtilsService {
                                     if(!"AAF".equals(source)){
                                         String codeMatiere = matiere.getJsonObject("data").getJsonObject("data").getString("code");
                                         matiere.put("name",codeMatiere);
+                                    }else {
+                                        String nameMat = matiere.getString("name").replace(".", " ");
+                                        String _nameMat = nameMat.replace("-", " ");
+                                        matiere.put("name", _nameMat);
                                     }
-
-                                    String nameMat = matiere.getString("name").replace("."," ");
-                                    String _nameMat = nameMat.replace("-", " ");
-
-                                    matiere.put("name", _nameMat);
                                     matiere.remove("data");
 
                                     for(String idTeacher : setEntry.getValue()){
