@@ -74,22 +74,31 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
     @Override
     public void getAppreciationClasse(String[] id_classes, Integer id_periode, String[] id_matieres, Handler<Either<String, JsonArray>> handler) {
 
-        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_classe WHERE id_periode = ? ";
+        Boolean params = (id_classes != null && id_classes.length > 0) || (id_matieres != null && id_matieres.length > 0) || id_periode != null;
 
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_classe  ";
         JsonArray values = new JsonArray();
-        values.add(id_periode);
 
-        if(id_classes != null && id_classes.length > 0) {
-            query += " AND id_classe IN " + Sql.listPrepared(id_classes);
-            Arrays.stream(id_classes).forEach(values::add);
+        if(params) {
+            query += "WHERE ";
+
+            if(id_periode != null) {
+                query += "id_periode = ? AND ";
+                values.add(id_periode);
+            }
+
+            if (id_classes != null && id_classes.length > 0) {
+                query += "id_classe IN " + Sql.listPrepared(id_classes) + " AND ";
+                Arrays.stream(id_classes).forEach(values::add);
+            }
+
+            if (id_matieres != null && id_matieres.length > 0) {
+                query += "id_matiere IN " + Sql.listPrepared(id_matieres) + " AND ";
+                Arrays.stream(id_matieres).forEach(values::add);
+            }
         }
 
-        if(id_matieres != null && id_matieres.length > 0) {
-            query += " AND id_matiere IN " + Sql.listPrepared(id_matieres);
-            Arrays.stream(id_matieres).forEach(values::add);
-        }
-
-        Sql.getInstance().prepared(query, values, validResultHandler(handler));
+        Sql.getInstance().prepared(params ? query.substring(0, query.length() - 5) : query, values, validResultHandler(handler));
     }
 
 }

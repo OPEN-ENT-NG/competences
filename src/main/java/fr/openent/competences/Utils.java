@@ -44,7 +44,7 @@ public class Utils {
 
     protected static final Logger log = LoggerFactory.getLogger(Utils.class);
     protected static  UtilsService utilsService = new DefaultUtilsService();
-    
+
     /**
      * Recupere l'identifiant de la structure a laquelle appartiennent les classes dont l'identifiant est passe en
      * parametre.
@@ -95,19 +95,19 @@ public class Utils {
                 .put("idClasses", idsClasses);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray queryResult = body.getJsonArray("results");
-                    handler.handle(new Either.Right<String, JsonArray>(queryResult));
-                } else {
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                    log.error("getGroupesClasse : " + body.getString("message"));
-                }
-            }
-        }));
+                        if ("ok".equals(body.getString("status"))) {
+                            JsonArray queryResult = body.getJsonArray("results");
+                            handler.handle(new Either.Right<String, JsonArray>(queryResult));
+                        } else {
+                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                            log.error("getGroupesClasse : " + body.getString("message"));
+                        }
+                    }
+                }));
     }
 
     public static void getInfosGroupes(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, Map<String, String>>> handler) {
@@ -137,22 +137,24 @@ public class Utils {
     }
 
     public static void getIdElevesClassesGroupes(EventBus eb, final String  idGroupe,
-                                                 final int idPeriode,
+                                                 final Integer idPeriode,
                                                  final int typeClasse,
                                                  final Handler<Either<String, List<String>>> handler) {
 
         JsonObject action = new JsonObject();
         if(typeClasse == 0) {
             action.put("action", "classe.getEleveClasse")
-                    .put("idClasse", idGroupe)
-                    .put("idPeriode", idPeriode);
+                    .put("idClasse", idGroupe);
+
+            if(idPeriode != null)  action.put("idPeriode", idPeriode);
 
         }
         else if(typeClasse == 1 || typeClasse == 2){
             action.put("action", "groupe.listUsersByGroupeEnseignementId")
                     .put("groupEnseignementId", idGroupe)
-                    .put("profile", "Student")
-                    .put("idPeriode", idPeriode);
+                    .put("profile", "Student");
+
+            if (idPeriode != null) action.put("idPeriode", idPeriode);
         }
 
 
@@ -359,26 +361,26 @@ public class Utils {
 
     private static void getCycleElevesForBfcCycle(final Set<String> classes, final List<Eleve> result,
                                                   final Handler<Either<String, List<Eleve>>> handler) {
-                    utilsService.getCycle(new ArrayList<>(classes), new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isRight()) {
-                                JsonArray queryResult = event.right().getValue();
-                                for (int i = 0; i < queryResult.size(); i++) {
-                                    JsonObject cycle = queryResult.getJsonObject(i);
-                                    for (Eleve eleve : result) {
-                                        if (Objects.equals(eleve.getIdClasse(), cycle.getString("id_groupe"))) {
-                                            eleve.setCycle(cycle.getString("libelle"));
-                                        }
-                                    }
-                                }
-                                handler.handle(new Either.Right<String, List<Eleve>>(result));
-                            } else {
-                                handler.handle(new Either.Left<String, List<Eleve>>(event.left().getValue()));
-                                log.error("getInfoEleve : getCycle : " + event.left().getValue());
+        utilsService.getCycle(new ArrayList<>(classes), new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> event) {
+                if (event.isRight()) {
+                    JsonArray queryResult = event.right().getValue();
+                    for (int i = 0; i < queryResult.size(); i++) {
+                        JsonObject cycle = queryResult.getJsonObject(i);
+                        for (Eleve eleve : result) {
+                            if (Objects.equals(eleve.getIdClasse(), cycle.getString("id_groupe"))) {
+                                eleve.setCycle(cycle.getString("libelle"));
                             }
                         }
-                    });
+                    }
+                    handler.handle(new Either.Right<String, List<Eleve>>(result));
+                } else {
+                    handler.handle(new Either.Left<String, List<Eleve>>(event.left().getValue()));
+                    log.error("getInfoEleve : getCycle : " + event.left().getValue());
+                }
+            }
+        });
 
     }
     /**
@@ -387,7 +389,7 @@ public class Utils {
      * @param idStructure Identifiant de la structure dont on souhaite recuperer les classes.
      * @param handler     Handler contenant la liste des identifiants des classes recuperees.
      */
-   public static void getClassesStruct(EventBus eb, final String idStructure, final Handler<Either<String, List<String>>> handler) {
+    public static void getClassesStruct(EventBus eb, final String idStructure, final Handler<Either<String, List<String>>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "classe.getClasseEtablissement")
                 .put("idEtablissement", idStructure);
@@ -464,43 +466,43 @@ public class Utils {
         }) );
 
     }
-   /* public static void getLibelleMatiere(EventBus eb, final JsonArray idsMatieres, final Handler<Either<String,Map<String,String>>> handler){
-        JsonObject action = new JsonObject()
-                .put("action","matiere.getMatieres")
-                .put("idMatieres", idsMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                Map<String,String> idsMatLibelle = new HashMap<>();
+    /* public static void getLibelleMatiere(EventBus eb, final JsonArray idsMatieres, final Handler<Either<String,Map<String,String>>> handler){
+         JsonObject action = new JsonObject()
+                 .put("action","matiere.getMatieres")
+                 .put("idMatieres", idsMatieres);
+         eb.send(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS,
+                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+             @Override
+             public void handle(Message<JsonObject> message) {
+                 JsonObject body = message.body();
+                 Map<String,String> idsMatLibelle = new HashMap<>();
 
-                if("ok".equals(body.getString("status"))) {
+                 if("ok".equals(body.getString("status"))) {
 
-                    JsonArray requestMats = body.getJsonArray("results");
-                    if( requestMats != null && requestMats.size() > 0 ){
-                        for( int i = 0; i < requestMats.size(); i++){
-                            JsonObject requestMat = requestMats.getJsonObject(i);
+                     JsonArray requestMats = body.getJsonArray("results");
+                     if( requestMats != null && requestMats.size() > 0 ){
+                         for( int i = 0; i < requestMats.size(); i++){
+                             JsonObject requestMat = requestMats.getJsonObject(i);
 
-                            if(!idsMatLibelle.containsKey(requestMat.getString("id"))){
-                               idsMatLibelle.put(requestMat.getString("id"),requestMat.getString("name"));
-                            }
-                        }
-                    }else {
-                        handler.handle(new Either.Left<>(" no subject "));
-                        log.error("getMatieres : no subject");
-                    }
+                             if(!idsMatLibelle.containsKey(requestMat.getString("id"))){
+                                idsMatLibelle.put(requestMat.getString("id"),requestMat.getString("name"));
+                             }
+                         }
+                     }else {
+                         handler.handle(new Either.Left<>(" no subject "));
+                         log.error("getMatieres : no subject");
+                     }
 
-                handler.handle(new Either.Right<String,Map<String,String>>(idsMatLibelle));
-                } else {
-                    handler.handle(new Either.Left<String, Map<String,String>>(body.getString("message")));
-                    log.error("getMatieres : " + body.getString("message"));
-                }
-            }
-        }));
+                 handler.handle(new Either.Right<String,Map<String,String>>(idsMatLibelle));
+                 } else {
+                     handler.handle(new Either.Left<String, Map<String,String>>(body.getString("message")));
+                     log.error("getMatieres : " + body.getString("message"));
+                 }
+             }
+         }));
 
 
-    }*/
+     }*/
     public static void getLibelleMatiere(EventBus eb, final JsonArray idsMatieres, final Handler<Either<String,Map<String,JsonObject>>> handler){
         JsonObject action = new JsonObject()
                 .put("action","matiere.getMatieres")
@@ -522,14 +524,14 @@ public class Utils {
                                 idsMatLibelle.put(requestMat.getString("id"), requestMat);
                             }
                         }
+                        handler.handle(new Either.Right<>(idsMatLibelle));
+
                     }else {
                         handler.handle(new Either.Left<>(" no subject "));
                         log.error("getMatieres : no subject");
                     }
-
-                    handler.handle(new Either.Right<String,Map<String,JsonObject>>(idsMatLibelle));
                 } else {
-                    handler.handle(new Either.Left<String, Map<String,JsonObject>>(body.getString("message")));
+                    handler.handle(new Either.Left<>(body.getString("message")));
                     log.error("getMatieres : " + body.getString("message"));
                 }
             }
@@ -546,36 +548,36 @@ public class Utils {
                 .put("idUsers", idsUsers);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
 
-                JsonObject body = message.body();
-                Map<String, JsonObject> idsUserNamePrenom = new HashMap<>();
+                        JsonObject body = message.body();
+                        Map<String, JsonObject> idsUserNamePrenom = new HashMap<>();
 
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray requestUsers = body.getJsonArray("results");
-                    if(requestUsers != null && requestUsers.size() > 0 ){
+                        if ("ok".equals(body.getString("status"))) {
+                            JsonArray requestUsers = body.getJsonArray("results");
+                            if(requestUsers != null && requestUsers.size() > 0 ){
 
-                        for(int i = 0; i < requestUsers.size(); i++){
-                            JsonObject requestUser = requestUsers.getJsonObject(i);
-                            if(!idsUserNamePrenom.containsKey(requestUser.getString("id"))){
-                                idsUserNamePrenom.put(requestUser.getString("id"),new JsonObject()
-                                        .put("firstName",requestUser.getString("firstName")).put("name",requestUser.getString("name")));
+                                for(int i = 0; i < requestUsers.size(); i++){
+                                    JsonObject requestUser = requestUsers.getJsonObject(i);
+                                    if(!idsUserNamePrenom.containsKey(requestUser.getString("id"))){
+                                        idsUserNamePrenom.put(requestUser.getString("id"),new JsonObject()
+                                                .put("firstName",requestUser.getString("firstName")).put("name",requestUser.getString("name")));
+                                    }
+
+                                }
+                            } else {
+                                handler.handle(new Either.Left<>("no User "));
+                                log.error("getUsers : no User");
                             }
-
+                            handler.handle(new Either.Right<String,Map<String,JsonObject>>(idsUserNamePrenom));
+                        }else {
+                            handler.handle(new Either.Left<String, Map<String,JsonObject>>(body.getString("message")));
+                            log.error("getUsers : " + body.getString("message"));
                         }
-                    } else {
-                    handler.handle(new Either.Left<>("no User "));
-                    log.error("getUsers : no User");
-                    }
-                    handler.handle(new Either.Right<String,Map<String,JsonObject>>(idsUserNamePrenom));
-                }else {
-                    handler.handle(new Either.Left<String, Map<String,JsonObject>>(body.getString("message")));
-                    log.error("getUsers : " + body.getString("message"));
-                }
 
-            }
-        }));
+                    }
+                }));
     }
 
     /**
@@ -601,12 +603,12 @@ public class Utils {
                     if( requesteleves != null && requesteleves.size() > 0){
                         for(int i=0 ; i < requesteleves.size(); i++ ){
                             JsonObject requestEleve = requesteleves.getJsonObject(i);
-                        Eleve eleve = new Eleve(requestEleve.getString("id"),requestEleve.getString("lastName"),
-                                requestEleve.getString("firstName"),idClass,requestEleve.getString("className"));
+                            Eleve eleve = new Eleve(requestEleve.getString("id"),requestEleve.getString("lastName"),
+                                    requestEleve.getString("firstName"),idClass,requestEleve.getString("className"));
                             eleves.add(eleve);
-                             if(idsEleve != null){
-                                 idsEleve.add(requestEleve.getString("id"));
-                             }
+                            if(idsEleve != null){
+                                idsEleve.add(requestEleve.getString("id"));
+                            }
                         }
                     }else{
                         handler.handle(new Either.Left<>("no Student in this Class " + idClass));

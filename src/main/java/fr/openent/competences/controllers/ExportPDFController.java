@@ -1913,7 +1913,7 @@ public class ExportPDFController extends ControllerHelper {
             });
         });
 
-        Utils.getIdElevesClassesGroupes(eb, idClasse, idPeriode.intValue(), 0, eventResultEleves -> {
+        Utils.getIdElevesClassesGroupes(eb, idClasse, finalIdPeriode, 0, eventResultEleves -> {
             if (eventResultEleves.isRight()) {
                 idElevesFuture.complete(eventResultEleves.right().getValue());
             } else {
@@ -1922,13 +1922,17 @@ public class ExportPDFController extends ControllerHelper {
         });
 
         Future<String> libellePeriodeFuture = Future.future();
-        Utils.getLibellePeriode(eb, request, finalIdPeriode, stringStringEither -> {
-            if (stringStringEither.isRight()) {
-                libellePeriodeFuture.complete(stringStringEither.right().getValue());
-            } else {
-                libellePeriodeFuture.fail(stringStringEither.left().getValue());
-            }
-        });
+        if(finalIdPeriode == null) {
+            libellePeriodeFuture.complete("Année");
+        } else {
+            Utils.getLibellePeriode(eb, request, finalIdPeriode, stringStringEither -> {
+                if (stringStringEither.isRight()) {
+                    libellePeriodeFuture.complete(stringStringEither.right().getValue());
+                } else {
+                    libellePeriodeFuture.fail(stringStringEither.left().getValue());
+                }
+            });
+        }
 
         Future<String> libelleClasseFuture = Future.future();
         Utils.getInfosGroupes(eb, new JsonArray().add(idClasse), stringMapEither -> {
