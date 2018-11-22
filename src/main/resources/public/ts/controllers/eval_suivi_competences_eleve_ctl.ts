@@ -958,8 +958,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         Chart.plugins.register({
             afterDatasetsDraw: function (chart, easing) {
-                // Ne pas appliquer la personnalisation sur les graphs du relevé
-                if ($scope.$location.$$path !== '/releve' || $scope.$location.$$path !== '/conseil/de/classe') {
+                // Ne pas appliquer la personnalisation sur les graphs du relevé et sur le conseil de classe
+                if ($scope.$location.$$path !== '/releve' && $scope.$location.$$path !== '/conseil/de/classe') {
                     // To only draw at the end of animation, check for easing === 1
                     let ctx = chart.chart.ctx;
 
