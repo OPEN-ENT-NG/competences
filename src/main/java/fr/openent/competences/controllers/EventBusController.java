@@ -137,7 +137,7 @@ public class EventBusController extends ControllerHelper {
                 JsonArray aIdMatiere = message.body().getJsonArray("aIdMatiere");
                 JsonArray aIdGroupe = message.body().getJsonArray("aIdGroupe");
 
-                JsonObject oService = new JsonObject().put("evaluable", true);
+                JsonObject oService = new JsonObject();
 
                 if(aIdGroupe != null) {
                     oService.put("id_groupe", aIdGroupe);
