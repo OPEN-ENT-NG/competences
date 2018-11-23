@@ -466,7 +466,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         url +=  "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
                         url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat+ "&text=" + !textMod;
                      if (idPeriode) {
-                         url += "&idPeriode" + idPeriode ;
+                         url += "&idPeriode=" + idPeriode ;
                      }
                      http().getJson(url)
                          .error((result) => {
