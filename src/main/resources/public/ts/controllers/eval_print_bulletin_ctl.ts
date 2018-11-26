@@ -11,7 +11,7 @@ declare let Chart: any;
 export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
     function ($scope) {
-        $scope.initBulletin = function ( ) {
+        $scope.initBulletin = async function ( ) {
             $scope.printClasses = {
                 all : _.filter($scope.classes.all, (classe) => {
                     return classe.type_groupe === 0;
@@ -20,7 +20,13 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             _.forEach($scope.printClasses.all, (classe) => {
                 classe.selected = false;
             });
+
             $scope.print = {};
+
+            let infosStructure = await ExportBulletins.getInfosStructure($scope.structure.id);
+            $scope.print.imgStructure = infosStructure.data.imageStucture.path;
+            $scope.print.nameCE = infosStructure.data.nameAndBrad.name;
+            $scope.print.imgSignature = infosStructure.data.nameAndBrad.path;
             $scope.filteredPeriodes = [];
             $scope.filterEleves =  [];
             $scope.allElevesClasses = [];
@@ -28,18 +34,16 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             $scope.selected = {
                 periode : undefined
             };
-            $("#imgStructure").change(function(){
-                $scope.readURL(this, true);
-            });
-
-            /*
-            $("#imgSignature").change(function(){
-                $scope.readURL(this, false);
-            });
-            */
+            utils.safeApply($scope);
+        };
+        $scope.setImageStructure = async () => {
+           await ExportBulletins.setImageStructure($scope.structure.id, $scope.print.imgStructure);
         };
 
-
+        $scope.setInformationsCE = async () => {
+            await ExportBulletins.setInformationsCE($scope.structure.id, $scope.print.imgSignature,
+                $scope.print.nameCE);
+        };
         $scope.generateBulletin = async function (options){
             let selectedClasses = _.where($scope.printClasses.all, {selected : true});
 
@@ -134,24 +138,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             utils.safeApply($scope);
         };
 
-        $scope.readURL = function(input, isStructure) {
-            if (input.files && input.files[0]) {
-                let reader = new FileReader();
-
-                reader.onload = function (e) {
-                    if(isStructure) {
-                        $('#displayImgStructure').attr('src', reader.result);
-                        $scope.print.imgStructure = reader.result;
-                    }
-                    else{
-                        $('#displayImgSignature').attr('src', reader.result);
-                        $scope.print.imgSignature = reader.result;
-                    }
-                };
-
-                reader.readAsDataURL(input.files[0]);
-            }
-        };
 
         $scope.checkIfOneStudent = function () {
             let oneStudentSelected =  _.filter($scope.allElevesClasses, function (student) {

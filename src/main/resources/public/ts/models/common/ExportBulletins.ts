@@ -10,7 +10,7 @@ declare let Chart: any;
 
 export class ExportBulletins {
 
-    static toJSON (options) {
+     toJSON (options) {
         let o = {
             idStudents: options.idStudents,
             getResponsable: (options.getResponsable === true)? options.getResponsable:false ,
@@ -31,8 +31,8 @@ export class ExportBulletins {
             nameCE: (options.nameCE !== undefined)? options.nameCE : "",
             imgStructure: (options.imgStructure !== undefined)? options.imgStructure : "",
             hasImgStructure: (options.imgStructure !== undefined)? true: false,
-            imgSignature: (options.imgSignature !== undefined)? options.imgSignature : ""
-
+            imgSignature: (options.imgSignature !== undefined)? options.imgSignature : "",
+            hasImgSignature: (options.imgSignature !== undefined)? true: false,
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode});
@@ -51,7 +51,7 @@ export class ExportBulletins {
                     await this.createCanvas(options, $scope);
                 }
                 // await this.drawGraph(options);
-                let data = await http.post(`/competences/export/bulletins`, this.toJSON(options),
+                let data = await http.post(`/competences/export/bulletins`, new ExportBulletins().toJSON(options),
                     {responseType: 'arraybuffer'});
 
                 let blob = new Blob([data.data]);
@@ -76,7 +76,7 @@ export class ExportBulletins {
         });
     }
 
-    private static drawGraphPerDomaine($scope, student, options) {
+    private static async drawGraphPerDomaine($scope, student, options) {
         return new Promise(async (resolve, reject) => {
             try {
                 let object = new ElementBilanPeriodique(new Classe({
@@ -198,4 +198,40 @@ export class ExportBulletins {
             }
         });
     }
+
+    public static async setImageStructure (idStructure, path) {
+        try {
+            let data = {idStructure: idStructure, path: path};
+            await http.post(`/competences/image/bulletins/structure`, data);
+        }
+
+        catch (e) {
+            console.log(e);
+        }
+    }
+
+    public static async setInformationsCE (idStructure, path, name) {
+        try {
+            let data = {idStructure: idStructure,
+                path: (path !== undefined)? path : "/img/illustrations/image-default.svg",
+                name: (name !== undefined)? name : "" };
+            await http.post(`/competences/informations/bulletins/ce`, data);
+        }
+
+        catch (e) {
+            console.log(e);
+        }
+    }
+
+    public static async getInfosStructure (idStructure) {
+        try {
+            let dataStructure = await http.get(`/competences/images/and/infos/bulletins/structure/${idStructure}`);
+            return dataStructure;
+        }
+
+        catch (e) {
+            console.log(e);
+        }
+    }
+
 }

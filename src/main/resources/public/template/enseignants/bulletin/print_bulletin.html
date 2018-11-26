@@ -173,69 +173,56 @@
 
                     <fieldset class="eleven">
 
-                        <div class="twelve cell select-file nomargin" drop-files="print.imgStructure">
-                            <div class="hidden-content pull-left">
-                                <input accept="image/*"
-                                       type="file" id="imgStructure"
-                                       ng-change="readImage($this)"
-                                       ng-model="print.imgStructure">
-                                <input type="text" data-display-file="">
-                            </div>
+                        <div class="twelve cell select-file nomargin">
                             <div class="twelve cell">
-                                <div class="two cell">
+                                <div class="four cell">
                             <span>
                              <i18n>evaluations.add.file.structure</i18n>
                              </span>
                                 </div>
                                 <div class="two cell">
-                                    <button class="flat-button file-button button-sm" translate="">
-                                        <i18n>viescolaire.parcourir</i18n>
-                                    </button>
-                                </div>
-                                <div class="six cell">
-                                    <img id="displayImgStructure" style="max-width: 40px;" src="#"
-                                         alt="[[(lang.translate('viescolaire.utils.your.logo'))]]" />
+                                    <image-select style="max-width: 40px;" ng-model="print.imgStructure"
+                                                  ng-change="setImageStructure()"
+                                                  visibility="'public'"
+                                                  default="/img/illustrations/image-default.svg">
+                                    </image-select>
                                 </div>
                             </div>
                         </div>
                         <div class="twelve cell twelve-mobile">
-                            <div class="two cell">
+                            <div class="four cell">
                             <span>
                             <i18n>evaluations.export.bulletin.nameCE</i18n>
                              </span>
                             </div>
-                            <div class="two cell">
+                            <div class="eight cell">
                                 <label class="checkbox">
-                                    <input type="text" ng-model="print.nameCE"/>
+                                    <input type="text" class="ten" ng-blur="setInformationsCE()"
+                                           ng-model="print.nameCE"/>
                                 </label>
                             </div>
                         </div>
-                        <!--
-                        <div class="twelve cell select-file nomargin" drop-files="print.imgSignature">
-                            <div class="hidden-content pull-left">
-                                <input accept="image/*"
-                                       type="file" id="imgSignature"
-                                       ng-model="print.imgSignature">
-                                <input type="text" data-display-file="">
-                            </div>
+
+                        <div class="twelve cell select-file nomargin" >
                             <div class="twelve cell">
-                                <div class="two cell">
+                                <div class="four cell">
                             <span>
                              <i18n>evaluations.add.file.signature</i18n>
                              </span>
+                                    <div>
+                                    <em class="metadata"><i18n>evaluations.export.bulletin.legendSignature</i18n></em>
+                                        </div>
                                 </div>
+
                                 <div class="two cell">
-                                    <button class="flat-button file-button button-sm" translate="">
-                                        <i18n>viescolaire.parcourir</i18n>
-                                    </button>
-                                </div>
-                                <div class="six cell">
-                                    <img id="displayImgSignature" style="max-width: 40px;" src="#"
-                                         alt="[[(lang.translate('viescolaire.utils.your.logo'))]]" />
+                                    <image-select style="max-width: 40px;" ng-model="print.imgSignature"
+                                                  ng-change="setInformationsCE()"
+                                                  visibility="'public'"
+                                                  default="/img/illustrations/image-default.svg">
+                                    </image-select>
                                 </div>
                             </div>
                         </div>
-                        -->
                     </fieldset>
                 </div>
                 <div class="twelve">

@@ -29,7 +29,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.eventbus.DeliveryOptions;
 
-import io.vertx.core.eventbus.DeliveryOptions;
 
 public class Competences extends BaseServer {
 
@@ -114,6 +113,7 @@ public class Competences extends BaseServer {
     public static final String CAN_UPDATE_BFC_SYNTHESE_RIGHT = "competences.canUpdateBFCSynthese";
     public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
     public static final String CAN_UPDATE_RETARDS_AND_ABSENCES = "competences.canUpdateRetardsAndAbsences";
+    public static final String CAN_ACCESS_EXPORT_BULLETIN = "export.bulletins.periodique";
 
     // Constantes
     public static final Integer MAX_NBR_COMPETENCE = 12;
@@ -162,6 +162,7 @@ public class Competences extends BaseServer {
 		addController(new CompetenceController(eb));
 		addController(new CompetenceNoteController(eb));
 		addController(new ModaliteController());
+		addController(new ExportBulletinController(eb));
 
 
         // devoir controller

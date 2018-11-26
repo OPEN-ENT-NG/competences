@@ -48,6 +48,7 @@
             margin-left: 4px;
             float:right;
         }
+
         h1 {
             margin-top: 20px;
             padding: 5px;
@@ -166,10 +167,18 @@
             height: 45px !important;
         }
         .rightCommunication {
-            padding-top : 4px!important;
-            vertical-align: top;
+            padding : 20px!important;
+            vertical-align: middle;
             background-color: #ffd0a0 !important;
             text-align: right;
+            position: relative;
+            heigth :  45px;
+        }
+        #imgSignature {
+            width: 200px;
+            height: auto;
+            position: relative;
+            /*float:right;*/
         }
         .structure {
             height: 90px;
@@ -431,8 +440,10 @@
                                 {{nameCE}}
                             </span>
 
-                            <br/>
-                            <br/>
+                            {{#hasImgSignature}}
+                            <img id="imgSignature" src="{{imgSignature}}" alt="LogoSignature"/>
+                            {{/hasImgSignature}}
+
                         </td>
                     </tr>
                 </table>

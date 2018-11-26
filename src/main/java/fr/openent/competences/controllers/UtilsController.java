@@ -48,6 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
@@ -60,26 +61,26 @@ public class UtilsController extends ControllerHelper {
 
     public UtilsController() {
         utilsService = new DefaultUtilsService();
-        transitionService = new DefaultTransitionService() ;
+        transitionService = new DefaultTransitionService();
     }
-
 
 
     /**
      * Retourne tous les types de devoir par etablissement
+     *
      * @param request
      */
     @Get("/types")
     @ApiDoc("Retourne tous les types de devoir par etablissement")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void view(final HttpServerRequest request){
+    public void view(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos user) {
-                if(user != null){
+                if (user != null) {
                     Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                     utilsService.listTypesDevoirsParEtablissement(request.params().get("idEtablissement"), handler);
-                }else{
+                } else {
                     unauthorized(request);
                 }
             }
@@ -87,20 +88,19 @@ public class UtilsController extends ControllerHelper {
     }
 
 
-
-
     /**
      * Retourne la liste des enfants pour un utilisateur donné
+     *
      * @param request
      */
     @Get("/enfants")
     @ApiDoc("Retourne la liste des enfants pour un utilisateur donné")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getEnfants(final HttpServerRequest request){
+    public void getEnfants(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos user) {
-                if(user != null){
+                if (user != null) {
                     Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                     utilsService.getEnfants(request.params().get("userId"), new Handler<Either<String, JsonArray>>() {
                         @Override
@@ -111,8 +111,8 @@ public class UtilsController extends ControllerHelper {
                                 List<String> vIdClasseList = new ArrayList<String>();
                                 for (int i = 0; i < jsonArrayEnfants.size(); i++) {
                                     JsonObject jsonObjectEnfant = jsonArrayEnfants.getJsonObject(i);
-                                    if(null != jsonObjectEnfant
-                                            && jsonObjectEnfant.containsKey("idClasse")){
+                                    if (null != jsonObjectEnfant
+                                            && jsonObjectEnfant.containsKey("idClasse")) {
                                         String idClasse = jsonObjectEnfant.getString("idClasse");
                                         vIdClasseList.add(idClasse);
                                     }
@@ -124,15 +124,15 @@ public class UtilsController extends ControllerHelper {
                                             JsonArray queryResult = event.right().getValue();
                                             for (int i = 0; i < jsonArrayEnfants.size(); i++) {
                                                 JsonObject jsonObjectEnfant = jsonArrayEnfants.getJsonObject(i);
-                                                if(null != jsonObjectEnfant
-                                                        && jsonObjectEnfant.containsKey("idClasse")){
+                                                if (null != jsonObjectEnfant
+                                                        && jsonObjectEnfant.containsKey("idClasse")) {
                                                     String idClasse = jsonObjectEnfant.getString("idClasse");
                                                     for (int j = 0; j < queryResult.size(); j++) {
                                                         JsonObject jsonObjectClassCycle = queryResult.getJsonObject(j);
-                                                        if(null != jsonObjectClassCycle
+                                                        if (null != jsonObjectClassCycle
                                                                 && jsonObjectClassCycle.containsKey("id_groupe")
-                                                                && jsonObjectClassCycle.getString("id_groupe").equalsIgnoreCase(idClasse)){
-                                                            jsonObjectEnfant.put("id_cycle",jsonObjectClassCycle.getInteger("id_cycle"));
+                                                                && jsonObjectClassCycle.getString("id_groupe").equalsIgnoreCase(idClasse)) {
+                                                            jsonObjectEnfant.put("id_cycle", jsonObjectClassCycle.getInteger("id_cycle"));
                                                             break;
                                                         }
                                                     }
@@ -149,8 +149,9 @@ public class UtilsController extends ControllerHelper {
                                 });
 
                             }
-                        }});
-                }else{
+                        }
+                    });
+                } else {
                     unauthorized(request);
                 }
             }
@@ -158,7 +159,7 @@ public class UtilsController extends ControllerHelper {
     }
 
     @Get("/user/list")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void list(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
@@ -185,7 +186,7 @@ public class UtilsController extends ControllerHelper {
     @ApiDoc("Met à jour le pourcentage réalisé pour chaque devoir")
     public void transition(final HttpServerRequest request) {
         final List<String> structureIds = request.params().getAll("structureId");
-        transitionService.transitionAnnee(eb,structureIds, arrayResponseHandler(request));
+        transitionService.transitionAnnee(eb, structureIds, arrayResponseHandler(request));
     }
 
     @Put("/link/groupes/cycles")
@@ -203,9 +204,9 @@ public class UtilsController extends ControllerHelper {
                         new Handler<Either<String, JsonArray>>() {
                             @Override
                             public void handle(Either<String, JsonArray> event) {
-                                if(event.isRight()){
+                                if (event.isRight()) {
                                     Renders.renderJson(request, event.right().getValue());
-                                }else{
+                                } else {
                                     leftToResponse(request, event.left());
                                 }
                             }
@@ -213,8 +214,9 @@ public class UtilsController extends ControllerHelper {
             }
         });
     }
+
     @Post("/link/check/data/classes")
-    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void checkDataOnClasses(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
@@ -226,9 +228,9 @@ public class UtilsController extends ControllerHelper {
                 utilsService.checkDataOnClasses(idClasses, new Handler<Either<String, JsonArray>>() {
                     @Override
                     public void handle(Either<String, JsonArray> event) {
-                        if(event.isRight()){
+                        if (event.isRight()) {
                             Renders.renderJson(request, event.right().getValue());
-                        }else{
+                        } else {
                             leftToResponse(request, event.left());
                         }
                     }
@@ -239,7 +241,7 @@ public class UtilsController extends ControllerHelper {
 
     @Post("/eleve/evenements")
     @SecuredAction(value = Competences.CAN_UPDATE_RETARDS_AND_ABSENCES)
-     public  void insertRetardOrAbscence (final HttpServerRequest request) {
+    public void insertRetardOrAbscence(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
             @Override
             public void handle(final JsonObject ressource) {
@@ -248,10 +250,9 @@ public class UtilsController extends ControllerHelper {
                 Long idPeriode = ressource.getLong("idPeriode");
                 Long value = ressource.getLong("value");
 
-                utilsService.insertEvernement(idEleve, colonne, idPeriode, value,arrayResponseHandler(request));
+                utilsService.insertEvenement(idEleve, colonne, idPeriode, value, arrayResponseHandler(request));
             }
         });
     }
-
 
 }

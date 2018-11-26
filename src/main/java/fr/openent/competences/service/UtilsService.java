@@ -184,8 +184,32 @@ public interface UtilsService {
      * @param value
      * @param handler
      */
-    void insertEvernement (String idEleve, String colonne, Long idPeriode, Long value,
+    void insertEvenement (String idEleve, String colonne, Long idPeriode, Long value,
                            Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Mettre à jour l'image d'un établissement pour l'export du bulletin
+     * @param idStructure
+     * @param path
+     * @param handler
+     */
+    void setStructureImage (String idStructure, String path, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Met à jour le nom du chef etab ou de son adjoint et l'image de sa signature pour l'export du bulletin
+     * @param idStructure
+     * @param path
+     * @param name
+     * @param handler
+     */
+    void setInformationCE (String idStructure, String path, String name,
+                                  Handler<Either<String, JsonObject>> handler);
+    /**
+     * Récupère les informations de paramétrage pour l'export d'un établissement
+     * @param idStructure
+     * @param handler
+     */
+    void getParametersForExport (String idStructure, Handler<Either<String, JsonObject>> handler);
 
     /**
      *  ORDER jsonArr by sorted field

@@ -2557,6 +2557,7 @@ public class ExportPDFController extends ControllerHelper {
             }
         });
     }
+
     @Get("/suiviClasse/tableau/moyenne/:idClasse/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void exportBulletinMoyennneOnly(HttpServerRequest request){
