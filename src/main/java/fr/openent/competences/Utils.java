@@ -18,7 +18,9 @@
 package fr.openent.competences;
 
 import fr.openent.competences.bean.Eleve;
+import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultMatiereService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
@@ -44,6 +46,7 @@ public class Utils {
 
     protected static final Logger log = LoggerFactory.getLogger(Utils.class);
     protected static  UtilsService utilsService = new DefaultUtilsService();
+    protected static MatiereService matiereService = new DefaultMatiereService();
 
     /**
      * Recupere l'identifiant de la structure a laquelle appartiennent les classes dont l'identifiant est passe en
@@ -484,15 +487,39 @@ public class Utils {
                 if("ok".equals(body.getString("status"))) {
 
                     JsonArray requestMats = body.getJsonArray("results");
-                    if( requestMats != null && requestMats.size() > 0 ){
-                        for( int i = 0; i < requestMats.size(); i++){
-                            JsonObject requestMat = requestMats.getJsonObject(i);
 
-                            if(!idsMatLibelle.containsKey(requestMat.getString("id"))){
-                                idsMatLibelle.put(requestMat.getString("id"), requestMat);
-                            }
-                        }
-                        handler.handle(new Either.Right<>(idsMatLibelle));
+                    if( requestMats != null && requestMats.size() > 0 ){
+                        matiereService.getLibellesCourtsMatieres(new Handler<Either<String, Map<String,String>>>() {
+                             @Override
+                             public void handle(Either<String, Map<String, String>> event) {
+                                 Map mapCodeLibelleCourt = event.right().getValue();
+
+                                 for (int i = 0; i < requestMats.size(); i++) {
+                                     JsonObject requestMat = requestMats.getJsonObject(i);
+
+                                     if (!idsMatLibelle.containsKey(requestMat.getString("id"))) {
+
+                                         String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
+                                         String codeMatiere = requestMat.getJsonObject("data").getJsonObject("data").getString("code");
+
+                                         if (!"AAF".equals(source)) {
+                                             requestMat.put("libelle_court", codeMatiere);
+                                         } else if(!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere) ){
+                                                 requestMat.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
+
+                                             } else {//si le codeMatiere n'est pas dans la table matiere prendre
+                                             // les 5 premiers caracteres du libelle de la matiere
+
+                                                 String nameMat = requestMat.getString("name").substring(0, 4);
+                                                 requestMat.put("libelle_court", nameMat);
+                                             }
+
+                                     }
+                                 idsMatLibelle.put(requestMat.getString("id"), requestMat);
+                                 }
+                                 handler.handle(new Either.Right<>(idsMatLibelle));
+                             }
+                         });
 
                     }else {
                         handler.handle(new Either.Left<>(" no subject "));
@@ -504,8 +531,6 @@ public class Utils {
                 }
             }
         }));
-
-
     }
 
 
