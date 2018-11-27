@@ -60,7 +60,9 @@ export class AppreciationClasse  {
 
     async save () {
         try {
-            await http.post(`/competences/appreciation/classe`, this.toJSON());
+            if(this.appreciation !== undefined){
+             await http.post(`/competences/appreciation/classe`, this.toJSON());
+            }
         } catch (e) {
             notify.error('evaluations.releve.appreciation.classe.save.error');
         }

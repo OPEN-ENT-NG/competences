@@ -278,7 +278,11 @@ public class AppreciationController extends ControllerHelper {
                             Integer.parseInt(request.params().get("id_periode")),
                             new String[]{request.params().get("id_matiere")}, stringJsonObjectEither -> {
                                 if (stringJsonObjectEither.isRight()) {
-                                    Renders.renderJson(request, stringJsonObjectEither.right().getValue().getJsonObject(0), 200);
+                                    if(stringJsonObjectEither.right().getValue().size() > 0) {
+                                        Renders.renderJson(request, stringJsonObjectEither.right().getValue().getJsonObject(0), 200);
+                                    }else{
+                                        Renders.renderJson(request, new JsonObject(), 200);
+                                    }
                                 } else {
                                     JsonObject error = (new JsonObject()).put("error", stringJsonObjectEither.left().getValue());
                                     Renders.renderJson(request, error, 400);
