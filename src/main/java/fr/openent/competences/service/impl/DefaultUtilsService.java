@@ -855,25 +855,38 @@ public class DefaultUtilsService  implements UtilsService {
                                 SortedMap<String,JsonObject> mapIdMatLibelleMapEtProf = new TreeMap<>();
 
                                 for(Map.Entry<String,Set<String>> setEntry: mapIdMatiereIdsTeacher.entrySet()){
-                                    JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
-                                    //matiere = response with libelle,code,libelle_court...
-                                    JsonObject matiere = mapIdMatLibelle.get(setEntry.getKey());
-
-                                    matiere.remove("data");
-
-                                    for(String idTeacher : setEntry.getValue()){
-                                        String displayName = mapIdTeacher.get(idTeacher).getString("firstName").substring(0,1)+".";
-                                        String lastName = mapIdTeacher.get(idTeacher).getString("name").replace("-","\n");
-                                        displayName = lastName + " " + displayName;
-                                        teachers.add(new JsonObject()
-                                                .put("id_teacher",idTeacher)
-                                                .put("displayName",(displayName.length() <= 10)? displayName : lastName));
-                                    }
-                                    matiere.put("teachers", teachers);
-
                                     // setEntry.getKey() peut contenir soit des id matiere soit des idMatiere;idGroupe
                                     String idMat = setEntry.getKey().split(";")[0];
+                                    JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
+                                    JsonObject matiere = new JsonObject();
 
+                                    if( mapIdMatLibelle != null && !mapIdMatLibelle.isEmpty() && mapIdMatLibelle.containsKey(idMat)){
+                                        //matiere = response with libelle,code,libelle_court...
+                                        matiere = mapIdMatLibelle.get(idMat);
+                                        matiere.remove("data");
+
+                                    }else{
+                                        matiere.put("id", idMat).put("name","no libelle").put("libelle_court","no libelle");
+                                        log.error("matiere non retrouvee sans libelle idMatiere : " + idMat);
+                                    }
+
+                                    for(String idTeacher : setEntry.getValue()){
+                                        if(mapIdTeacher != null && !mapIdTeacher.isEmpty() && mapIdTeacher.containsKey(idTeacher)){
+                                            String displayName = mapIdTeacher.get(idTeacher).getString("firstName").substring(0,1)+".";
+                                            String lastName = mapIdTeacher.get(idTeacher).getString("name").replace("-","\n");
+                                            displayName = lastName + " " + displayName;
+                                            teachers.add(new JsonObject()
+                                                    .put("id_teacher",idTeacher)
+                                                    .put("displayName",(displayName.length() <= 10)? displayName : lastName));
+
+                                        }else{
+                                            teachers.add(new JsonObject()
+                                                    .put("id_teacher",idTeacher)
+                                                    .put("displayName","no Name"));
+                                            log.error("enseignant non retrouve idTeacher : " + idTeacher);
+                                        }
+                                    }
+                                    matiere.put("teachers", teachers);
                                     mapIdMatLibelleMapEtProf.put(setEntry.getKey(),matiere);
                                 }
                                 handler.handle(new Either.Right<>(mapIdMatLibelleMapEtProf));
@@ -883,7 +896,6 @@ public class DefaultUtilsService  implements UtilsService {
                 }
             }
         });
-
     }
 
     @Override

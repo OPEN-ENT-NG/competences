@@ -201,17 +201,28 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                                     JsonArray idsTeachers = teachersObject
                                                             .getJsonArray("teachers");
                                                     //5-add subject
-
-                                                    result.put("id_matiere", idMatiere)
-                                                            .put("libelleMatiere",
-                                                                    idsMatLibelle.get(idMatiere).getString("name"));
+                                                    if(idsMatLibelle != null && !idsMatLibelle.isEmpty() && idsMatLibelle.containsKey(idMatiere)){
+                                                        result.put("id_matiere", idMatiere)
+                                                                .put("libelleMatiere",
+                                                                        idsMatLibelle.get(idMatiere).getString("name"));
+                                                    }else{
+                                                        result.put("id_matiere", idMatiere)
+                                                                .put("libelleMatiere", "no libelle");
+                                                        log.error("matiere non retrouve sans libelle idMatiere : " + idMatiere);
+                                                    }
 
                                                     //6-add teachers infos
                                                     if (idsTeachers != null) {
                                                         JsonArray teachers = new fr.wseduc.webutils
                                                                 .collections.JsonArray();
                                                         for (Object idTeacher : idsTeachers) {
-                                                            teachers.add(teachersInfos.get(idTeacher));
+                                                            if(teachersInfos != null && !teachersInfos.isEmpty() && teachersInfos.containsKey(idTeacher)){
+                                                                teachers.add(teachersInfos.get(idTeacher));
+                                                            }else{
+                                                                teachers.add(new JsonObject().put("id", idTeacher)
+                                                                        .put("firstName","no first name").put("name","no name"));
+                                                                log.error("enseignant non retrouve idTeacher : " + idTeacher);
+                                                            }
                                                         }
                                                         result.put("teachers", teachers);
                                                     }
