@@ -17,10 +17,13 @@
 
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.service.ElementBilanPeriodiqueService;
+import fr.openent.competences.service.BilanPeriodiqueService;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.*;
+import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
@@ -30,6 +33,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
+import io.vertx.core.json.Json;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -83,10 +87,12 @@ public class LSUController extends ControllerHelper {
     private EventBus ebController;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
     private final BilanPeriodiqueService bilanPeriodiqueService;
+    private final ElementBilanPeriodiqueService elementBilanPeriodiqueService;
 
     public LSUController(EventBus eb) {
         this.ebController = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
+        elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
         utilsService = new DefaultUtilsService();
         bfcService = new DefaultBFCService(eb);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
@@ -766,7 +772,7 @@ public class LSUController extends ControllerHelper {
                         response.put("data", "success");
                         handler.handle("success");
                     } else {
-                        handler.handle("getBaliseDisciplines discipline noy available ");
+                        handler.handle("getBaliseDisciplines discipline not available ");
                     }
                 }
             }
@@ -812,7 +818,7 @@ public class LSUController extends ControllerHelper {
 
                         Periode periode = objectFactory.createPeriode();
                         periode.setId(currentPeriode.getInteger("id").toString());
-                        periode.setMillesime(currentPeriode.getString("timestamp_fn").substring(0, 4));
+                        periode.setMillesime(currentPeriode.getString("timestamp_dt").substring(0, 4));
                         periode.setIndice(currentPeriode.getInteger("id_type"));
                         periode.setNbPeriodes(periodeList.size());
                         donnees.getPeriodes().getPeriode().add(periode);
@@ -824,6 +830,47 @@ public class LSUController extends ControllerHelper {
             }
         }));
     }
+
+    private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure, final Handler<String> handler) {
+        List<String> idTeachers = new ArrayList<>();
+        elementBilanPeriodiqueService.getElementsBilanPeriodique(null, null, idStructure, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> event) {
+                if (event.isRight()) {
+                    JsonArray elementBilanPeriodique = event.right().getValue();
+                    if (elementBilanPeriodique == null || elementBilanPeriodique.isEmpty()) {
+                        reponseError(event);
+                    }
+
+                    int imax = elementBilanPeriodique.size();
+                    for (int i = 0; i < imax; i++) {
+                        JsonObject element = elementBilanPeriodique.getJsonObject(i);
+                        if (element != null) {
+                            Long idElement = element.getLong("id");
+                            Long typeElement = element.getLong("type");
+                            if (3L == typeElement) { //parcours group
+
+                                log.info("test retour");
+                            } else if (2L == typeElement) { //ap class/group
+
+                                log.info("test retour");
+                            } else if (1L == typeElement) { //epi group
+
+                                log.info("test retour");
+                            }
+                        }
+                    }
+                } else {
+                    reponseError(event);
+                }
+            }
+
+            private void reponseError(Either<String, JsonArray> event) {
+                handler.handle("getApEpiParcoursBalises no data available ");
+            }
+        });
+    }
+
 
     /**
      * permet de completer tous les attributs de la balise BilansPeriodiques et de la setter à donnees
@@ -867,7 +914,7 @@ public class LSUController extends ControllerHelper {
             Eleve currentEleve = eleves.getEleve().get(i);
             for (Integer i2 = 0; i2 < periodes.getPeriode().size(); i2++) {
                 Periode currentPeriode = periodes.getPeriode().get(i2);
-                bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getId()), currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
+                bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getIndice()), currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
                         new Handler<Either<String, JsonArray>>() {
                             @Override
                             public void handle(Either<String, JsonArray> suiviAcquisResponse) {
@@ -876,6 +923,8 @@ public class LSUController extends ControllerHelper {
                                     final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
                                     final BilanPeriodique bilanPeriodique = objectFactory.createBilanPeriodique();
                                     final JsonObject datesCreationVerrou = dateCreationVerrouByClasse.get(currentEleve.getId_Class());
+
+                                    donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
 
                                     bilanPeriodique.setDateVerrou(datesCreationVerrou.getString("date_verrou").substring(0, 19));
                                     bilanPeriodique.setEleveRef(currentEleve);
@@ -905,25 +954,75 @@ public class LSUController extends ControllerHelper {
                                     response.put("error", "bilanPeriodiqueService.getSuiviAcquis : " + suiviAcquisResponse.left().getValue());
                                     bilansPeriodiques.getBilanPeriodique().remove(currentEleve.getIdNeo4j());
                                     getOUt.handle(new Either.Left<String, JsonArray>("bilanPeriodiqueService.getSuiviAcquis : " + suiviAcquisResponse.left().getValue()));
-//                                log.error("bilanPeriodiqueService.getSuiviAcquis : " + suiviAcquisResponse.left().getValue());
                                 }
                             }
 
                             private Acquis addAcquis(JsonObject currentAcquis) {
                                 Acquis aquisEleve = objectFactory.createAcquis();
-                                aquisEleve.setAppreciation(currentAcquis.getString("appreciation"));
-                                int j = 0;
-                                int jMax = donnees.getDisciplines().getDiscipline().size();
-                                boolean found = false;
-                                while ( j < jMax && !found ) {
-                                    Discipline currentSubject = donnees.getDisciplines().getDiscipline().get(j);
-                                    if(currentSubject.getId().equals(currentAcquis.getString("id_matiere"))){
-                                        aquisEleve.setDisciplineRef(currentSubject);
-                                        found = true;
-                                    }
-                                    ++j;
-                                }
+
+                                addAppreciation(currentAcquis, aquisEleve, currentPeriode);
+                                addDiscipline(currentAcquis, aquisEleve);
+                                addElementProgramme(currentAcquis, aquisEleve);
                                 return aquisEleve;
+                            }
+
+                            private void addAppreciation(JsonObject currentAcquis, Acquis aquisEleve, Periode currentPeriode) {
+                                JsonObject app = getObjectForPeriode(currentAcquis.getJsonArray("appreciations"), (long) currentPeriode.getIndice(), "id_periode");
+                                if(app != null && app.containsKey("appreciationByClasse") && app.getJsonArray("appreciationByClasse").size() > 0) {
+                                    int imax = app.getJsonArray("appreciationByClasse").size();
+                                    for(int i = 0; i < imax; i++ ) {
+                                        app = app.getJsonArray("appreciationByClasse").getJsonObject(i);
+                                        if (app.containsKey("appreciation")) {
+                                            String appTmp = app.getString("appreciation");
+                                            if(appTmp != null && !appTmp.isEmpty()){
+                                                aquisEleve.setAppreciation(appTmp);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            private JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
+                                JsonObject res = null;
+                                if (array != null) {
+                                    for (int i = 0; i < array.size(); i++) {
+                                        JsonObject o = array.getJsonObject(i);
+                                        if (o.getLong(key) == idPeriode) {
+                                            res = o;
+                                        }
+                                    }
+                                }
+                                return res;
+                            }
+
+                            private void addDiscipline(JsonObject currentAcquis, Acquis aquisEleve) {
+                                Discipline currentSubj = donnees.getDisciplines().getDiscipline().stream()
+                                        .filter(dis -> dis.getId().equals(currentAcquis.getString("id_matiere")))
+                                        .findFirst()
+                                        .orElse(null);
+                                if (currentSubj != null) {
+                                    aquisEleve.setDisciplineRef(currentSubj);
+                                }
+                            }
+
+                            private void addElementProgramme(JsonObject currentAcquis, Acquis aquisEleve) {
+                                String epLabel = currentAcquis.getString("elementsProgramme");
+                                if(epLabel != null && !epLabel.isEmpty()){
+                                    String epId = generateElementProgrammeId(epLabel);
+
+                                    ElementProgramme ep = donnees.getElementsProgramme().getElementProgramme().stream()
+                                            .filter(cep -> cep.getId().equals(epId))
+                                            .findFirst()
+                                            .orElse(null);
+
+                                    if(ep == null){
+                                        ep = objectFactory.createElementProgramme();
+                                        ep.setId(epId);
+                                        ep.setLibelle(epLabel);
+                                        donnees.getElementsProgramme().getElementProgramme().add(ep);
+                                    }
+                                    aquisEleve.getElementProgrammeRefs().add(ep);
+                                }
                             }
 
                             private void manageTeacherToAcquisAndDonnees(BilanPeriodique.ListeAcquis aquisEleveList, JsonObject currentAcquis, Acquis aquisEleve) {
@@ -931,21 +1030,15 @@ public class LSUController extends ControllerHelper {
                                     JsonArray teachersList = currentAcquis.getJsonArray("teachers");
                                     for (Integer k = 0; k < teachersList.size(); k++) {
 
-                                        Enseignant enseignant = objectFactory.createEnseignant();
+
                                         JsonObject curentTeacher = teachersList.getJsonObject(k);
 
-                                        int l = 0;
-                                        int lMax = donnees.getEnseignants().getEnseignant().size();
-                                        boolean lfound = false;
-                                        while (l < lMax && !lfound) {
-                                            Enseignant tmpEnseignant = donnees.getEnseignants().getEnseignant().get(l);
-                                            if (tmpEnseignant.getId() != null && tmpEnseignant.getId().equals(curentTeacher.getString("id"))) {
-                                                enseignant = tmpEnseignant;
-                                                lfound = true;
-                                            }
-                                            ++l;
-                                        }
-                                        if(!lfound){
+                                        Enseignant enseignant = donnees.getEnseignants().getEnseignant().stream()
+                                                .filter(ens -> ens.getId().equals(curentTeacher.getString("id")))
+                                                .findFirst()
+                                                .orElse(null);
+                                        if(enseignant == null) {
+                                            enseignant = objectFactory.createEnseignant();
                                             enseignant.setId(curentTeacher.getString("id"));
                                             enseignant.setPrenom(curentTeacher.getString("firstName"));
                                             enseignant.setNom(curentTeacher.getString("name"));
@@ -956,11 +1049,18 @@ public class LSUController extends ControllerHelper {
                                 }
                                 aquisEleveList.getAcquis().add(aquisEleve);
                             }
+
+
+
                         });
             }
         }
 
 
+    }
+
+    private String generateElementProgrammeId (String elementsProgramme){
+        return "EP_"+String.valueOf(elementsProgramme.hashCode());
     }
 
     private String getMillesime(){
@@ -1256,9 +1356,19 @@ public class LSUController extends ControllerHelper {
             }
         };
 
-        Handler<String> getDisciplineHandler = event -> {
+        Handler<String> getApEpiParcoursHandler = event -> {
             if (event.equals("success")) {
                 getBaliseEleves(donnees, idsClasse, getElevesHandler);
+
+            } else {
+                leftToResponse(request, new Either.Left<>(event));
+                log.error("getXML : getBaliseDiscipline " + event);
+            }
+        };
+
+        Handler<String> getDisciplineHandler = event -> {
+            if (event.equals("success")) {
+                getApEpiParcoursBalises(donnees, idsClasse, idStructure, getApEpiParcoursHandler);
 
             } else {
                 leftToResponse(request, new Either.Left<>(event));
