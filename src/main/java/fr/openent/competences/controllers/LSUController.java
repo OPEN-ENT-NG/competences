@@ -840,6 +840,7 @@ public class LSUController extends ControllerHelper {
         donnees.setAccPersosGroupes(objectFactory.createDonneesAccPersosGroupes());
         donnees.setAccPersos(objectFactory.createDonneesAccPersos());
 
+        donnees.setParcoursCommuns(objectFactory.createDonneesParcoursCommuns());
 
         elementBilanPeriodiqueService.getElementsBilanPeriodique(null, null, idStructure, new Handler<Either<String, JsonArray>>() {
             @Override
@@ -857,8 +858,8 @@ public class LSUController extends ControllerHelper {
                             Long idElement = element.getLong("id");
                             Long typeElement = element.getLong("type");
                             if (3L == typeElement) { //parcours group
+                                addParcoursGroup(element);
 
-                                log.info("test retour");
                             } else if (2L == typeElement) { //ap class/group
 
                                 log.info("test retour");
@@ -875,50 +876,70 @@ public class LSUController extends ControllerHelper {
                                         && element.getJsonArray("groupes").size() > 0){
 
 
-
-                                    Epi epi = objectFactory.createEpi();
-                                    EpiGroupe epiGroupe = objectFactory.createEpiGroupe();
-                                    JsonObject theme = element.getJsonObject("theme");
-
-                                    epi.setId("EPI_" + theme.getInteger("id"));
-                                    epi.setIntitule(theme.getString("libelle"));
-                                    epi.setDescription(element.getString("description"));
-                                    epi.setThematique(ThematiqueEpi.fromValue(theme.getString("code")));
-
-                                    JsonArray groupes = element.getJsonArray("groupes");
-                                    JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
-                                    EpiGroupe.EnseignantsDisciplines enseignantsDisciplines = objectFactory.createEpiGroupeEnseignantsDisciplines();
-                                    int jmax = intervenantsMatieres.size();
-                                    for (int j = 0; j < jmax; j++) {
-                                        JsonObject currentIntervenantMatiere = intervenantsMatieres.getJsonObject(j);
-                                        Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
-                                        if (currentSubj != null) {
-                                            Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
-                                            if (currentSubj != null) {
-                                                EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
-                                                currentEnseignantDiscipline.setDisciplineRef(currentSubj);
-                                                currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
-                                                enseignantsDisciplines.getEnseignantDiscipline().add(currentEnseignantDiscipline);
-                                                epi.getDisciplineRefs().add(currentSubj);
-                                            }
-                                        }
-                                    }
-                                    epiGroupe.setId("EPI_GROUPE_"+element.getInteger("id"));
-                                    epiGroupe.setEpiRef(epi);
-                                    epiGroupe.setEnseignantsDisciplines(enseignantsDisciplines);
-                                    epiGroupe.setIntitule(element.getString("libelle"));
-
-                                    donnees.getEpis().getEpi().add(epi);
-                                    donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
+                                    addEpiGroup(element);
                                 }
                             }
                         }
-                        handler.handle("success");
                     }
+                    handler.handle("success");
                 }
                 else {
                     handler.handle("getApEpiParcoursBalises no data available ");
                 }
+            }
+
+            private void addParcoursGroup(JsonObject element) {
+                List<Periode> periodes = donnees.getPeriodes().getPeriode();
+                int kmax = periodes.size();
+                for (int k = 0; k < kmax; k++) {
+                    JsonObject theme = element.getJsonObject("theme");
+                    Periode currentPeriode = periodes.get(k);
+                    Donnees.ParcoursCommuns.ParcoursCommun parcoursCommun = objectFactory.createDonneesParcoursCommunsParcoursCommun();
+                    Parcours parcours = objectFactory.createParcours();
+                    parcoursCommun.setPeriodeRef(currentPeriode);
+                    parcoursCommun.setCodeDivision(theme.getString("code"));
+                    parcours.setCode(CodeParcours.fromValue(theme.getString("code")));
+                    parcours.setValue(theme.getString("libelle"));
+                    parcoursCommun.getParcours().add(parcours);
+                    donnees.getParcoursCommuns().getParcoursCommun().add(parcoursCommun);
+                }
+            }
+
+            private void addEpiGroup(JsonObject element) {
+                Epi epi = objectFactory.createEpi();
+                EpiGroupe epiGroupe = objectFactory.createEpiGroupe();
+                JsonObject theme = element.getJsonObject("theme");
+
+                epi.setId("EPI_" + theme.getInteger("id"));
+                epi.setIntitule(theme.getString("libelle"));
+                epi.setDescription(element.getString("description"));
+                epi.setThematique(ThematiqueEpi.fromValue(theme.getString("code")));
+
+                JsonArray groupes = element.getJsonArray("groupes");
+                JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
+                EpiGroupe.EnseignantsDisciplines enseignantsDisciplines = objectFactory.createEpiGroupeEnseignantsDisciplines();
+                int jmax = intervenantsMatieres.size();
+                for (int j = 0; j < jmax; j++) {
+                    JsonObject currentIntervenantMatiere = intervenantsMatieres.getJsonObject(j);
+                    Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
+                    if (currentSubj != null) {
+                        Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
+                        if (currentSubj != null) {
+                            EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
+                            currentEnseignantDiscipline.setDisciplineRef(currentSubj);
+                            currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
+                            enseignantsDisciplines.getEnseignantDiscipline().add(currentEnseignantDiscipline);
+                            epi.getDisciplineRefs().add(currentSubj);
+                        }
+                    }
+                }
+                epiGroupe.setId("EPI_GROUPE_"+element.getInteger("id"));
+                epiGroupe.setEpiRef(epi);
+                epiGroupe.setEnseignantsDisciplines(enseignantsDisciplines);
+                epiGroupe.setIntitule(element.getString("libelle"));
+
+                donnees.getEpis().getEpi().add(epi);
+                donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
             }
 
 
@@ -1366,9 +1387,9 @@ public class LSUController extends ControllerHelper {
 
         Handler<String> getApEpiParcoursHandler = event -> {
             if (event.equals("success")) {
+                log.info("FIN exportLSU : export ");
                 lsunBilans.setDonnees(donnees);
                 returnResponse(request, lsunBilans);
-                log.info("FIN exportLSU : export ");
             } else {
                 leftToResponse(request, new Either.Left<>(event));
                 log.error("getXML : getBaliseDiscipline " + event);
