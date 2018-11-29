@@ -850,18 +850,15 @@ public class LSUController extends ControllerHelper {
                     if (elementBilanPeriodique == null || elementBilanPeriodique.isEmpty()) {
                         handler.handle("getApEpiParcoursBalises no data available ");
                     }
-
                     int imax = elementBilanPeriodique.size();
                     for (int i = 0; i < imax; i++) {
                         JsonObject element = elementBilanPeriodique.getJsonObject(i);
                         if (element != null) {
-                            Long idElement = element.getLong("id");
                             Long typeElement = element.getLong("type");
                             if (3L == typeElement) { //parcours group
                                 addParcoursGroup(element);
                             } else if (2L == typeElement) { //ap class/group
-
-                                log.info("test retour");
+                                addAccGroup(element);
                             } else if (1L == typeElement) { //epi group
                                 addEpiGroup(element);
                             }
@@ -913,9 +910,9 @@ public class LSUController extends ControllerHelper {
                     epi.setDescription(element.getString("description"));
                     epi.setThematique(ThematiqueEpi.fromValue(theme.getString("code")));
 
-                    JsonArray groupes = element.getJsonArray("groupes");
+                    EpiGroupe.EnseignantsDisciplines enseignantsDisciplinesEpi = objectFactory.createEpiGroupeEnseignantsDisciplines();
+
                     JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
-                    EpiGroupe.EnseignantsDisciplines enseignantsDisciplines = objectFactory.createEpiGroupeEnseignantsDisciplines();
                     int jmax = intervenantsMatieres.size();
                     for (int j = 0; j < jmax; j++) {
                         JsonObject currentIntervenantMatiere = intervenantsMatieres.getJsonObject(j);
@@ -926,20 +923,70 @@ public class LSUController extends ControllerHelper {
                                 EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
                                 currentEnseignantDiscipline.setDisciplineRef(currentSubj);
                                 currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
-                                enseignantsDisciplines.getEnseignantDiscipline().add(currentEnseignantDiscipline);
+                                enseignantsDisciplinesEpi.getEnseignantDiscipline().add(currentEnseignantDiscipline);
                                 epi.getDisciplineRefs().add(currentSubj);
                             }
                         }
                     }
-                    epiGroupe.setId("EPI_GROUPE_"+element.getInteger("id"));
+                    epiGroupe.setId("EPI_GROUPE_" + element.getInteger("id"));
                     epiGroupe.setEpiRef(epi);
-                    epiGroupe.setEnseignantsDisciplines(enseignantsDisciplines);
+                    epiGroupe.setEnseignantsDisciplines(enseignantsDisciplinesEpi);
                     epiGroupe.setIntitule(element.getString("libelle"));
 
                     donnees.getEpis().getEpi().add(epi);
                     donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
                 }
             }
+
+
+            private void addAccGroup(JsonObject element) {
+                if (element != null
+                        && !element.isEmpty()
+                        && element.containsKey("id")
+                        && element.containsKey("libelle")
+                        && element.containsKey("description")
+                        && element.containsKey("groupes")
+                        && element.containsKey("intervenantsMatieres")
+                        && element.getJsonArray("intervenantsMatieres").size() > 0
+                        && element.getJsonArray("groupes").size() > 0) {
+
+
+                    AccPerso accPerso = objectFactory.createAccPerso();
+                    AccPersoGroupe accPersoGroupe = objectFactory.createAccPersoGroupe();
+                    JsonObject theme = element.getJsonObject("theme");
+
+                    accPerso.setId("ACC_PERSO_" + element.getInteger("id"));
+                    accPerso.setIntitule(element.getString("libelle"));
+                    accPerso.setDescription(element.getString("description"));
+
+                    AccPersoGroupe.EnseignantsDisciplines enseignantsDisciplinesAcc = objectFactory.createAccPersoGroupeEnseignantsDisciplines();
+
+                    JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
+                    int imax = intervenantsMatieres.size();
+                    for (int i = 0;i  < imax; i++) {
+                        JsonObject currentInterMatiere = intervenantsMatieres.getJsonObject(i);
+                        Discipline currentSubject = getDisciplineInXML(currentInterMatiere.getJsonObject("matiere").getString("id"), donnees);
+                        if (currentSubject != null) {
+                            Enseignant currentEnseignant = getEnseignantInXML(currentInterMatiere.getJsonObject("intervenant").getString("id"), donnees);
+                            if (currentSubject != null) {
+                                EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
+                                currentEnseignantDiscipline.setDisciplineRef(currentSubject);
+                                currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
+                                enseignantsDisciplinesAcc.getEnseignantDiscipline().add(currentEnseignantDiscipline);
+                                accPerso.getDisciplineRefs().add(currentSubject);
+                            }
+                        }
+                    }
+                    accPersoGroupe.setId("EPI_GROUPE_" + element.getInteger("id"));
+                    accPersoGroupe.setAccPersoRef(accPerso);
+                    accPersoGroupe.setEnseignantsDisciplines(enseignantsDisciplinesAcc);
+                    accPersoGroupe.setIntitule(element.getString("libelle"));
+
+                    donnees.getAccPersos().getAccPerso().add(accPerso);
+                    donnees.getAccPersosGroupes().getAccPersoGroupe().add(accPersoGroupe);
+                }
+            }
+
         });
     }
 
