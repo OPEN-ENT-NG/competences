@@ -833,13 +833,21 @@ public class LSUController extends ControllerHelper {
 
     private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure, final Handler<String> handler) {
         List<String> idTeachers = new ArrayList<>();
+
+        donnees.setEpisGroupes(objectFactory.createDonneesEpisGroupes());
+        donnees.setEpis(objectFactory.createDonneesEpis());
+
+        donnees.setAccPersosGroupes(objectFactory.createDonneesAccPersosGroupes());
+        donnees.setAccPersos(objectFactory.createDonneesAccPersos());
+
+
         elementBilanPeriodiqueService.getElementsBilanPeriodique(null, null, idStructure, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 if (event.isRight()) {
                     JsonArray elementBilanPeriodique = event.right().getValue();
                     if (elementBilanPeriodique == null || elementBilanPeriodique.isEmpty()) {
-                        reponseError(event);
+                        handler.handle("getApEpiParcoursBalises no data available ");
                     }
 
                     int imax = elementBilanPeriodique.size();
@@ -855,19 +863,65 @@ public class LSUController extends ControllerHelper {
 
                                 log.info("test retour");
                             } else if (1L == typeElement) { //epi group
+                                if(element != null
+                                        && !element.isEmpty()
+                                        && element.containsKey("id")
+                                        && element.containsKey("libelle")
+                                        && element.containsKey("description")
+                                        && element.containsKey("theme")
+                                        && element.containsKey("groupes")
+                                        && element.containsKey("intervenantsMatieres")
+                                        && element.getJsonArray("intervenantsMatieres").size() > 0
+                                        && element.getJsonArray("groupes").size() > 0){
 
-                                log.info("test retour");
+
+
+                                    Epi epi = objectFactory.createEpi();
+                                    EpiGroupe epiGroupe = objectFactory.createEpiGroupe();
+                                    JsonObject theme = element.getJsonObject("theme");
+
+                                    epi.setId("EPI_" + theme.getInteger("id"));
+                                    epi.setIntitule(theme.getString("libelle"));
+                                    epi.setDescription(element.getString("description"));
+                                    epi.setThematique(ThematiqueEpi.fromValue(theme.getString("code")));
+
+                                    JsonArray groupes = element.getJsonArray("groupes");
+                                    JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
+                                    EpiGroupe.EnseignantsDisciplines enseignantsDisciplines = objectFactory.createEpiGroupeEnseignantsDisciplines();
+                                    int jmax = intervenantsMatieres.size();
+                                    for (int j = 0; j < jmax; j++) {
+                                        JsonObject currentIntervenantMatiere = intervenantsMatieres.getJsonObject(j);
+                                        Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
+                                        if (currentSubj != null) {
+                                            Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
+                                            if (currentSubj != null) {
+                                                EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
+                                                currentEnseignantDiscipline.setDisciplineRef(currentSubj);
+                                                currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
+                                                enseignantsDisciplines.getEnseignantDiscipline().add(currentEnseignantDiscipline);
+                                                epi.getDisciplineRefs().add(currentSubj);
+                                            }
+                                        }
+                                    }
+                                    epiGroupe.setId("EPI_GROUPE_"+element.getInteger("id"));
+                                    epiGroupe.setEpiRef(epi);
+                                    epiGroupe.setEnseignantsDisciplines(enseignantsDisciplines);
+                                    epiGroupe.setIntitule(element.getString("libelle"));
+
+                                    donnees.getEpis().getEpi().add(epi);
+                                    donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
+                                }
                             }
                         }
+                        handler.handle("success");
                     }
-                } else {
-                    reponseError(event);
+                }
+                else {
+                    handler.handle("getApEpiParcoursBalises no data available ");
                 }
             }
 
-            private void reponseError(Either<String, JsonArray> event) {
-                handler.handle("getApEpiParcoursBalises no data available ");
-            }
+
         });
     }
 
@@ -996,10 +1050,7 @@ public class LSUController extends ControllerHelper {
                             }
 
                             private void addDiscipline(JsonObject currentAcquis, Acquis aquisEleve) {
-                                Discipline currentSubj = donnees.getDisciplines().getDiscipline().stream()
-                                        .filter(dis -> dis.getId().equals(currentAcquis.getString("id_matiere")))
-                                        .findFirst()
-                                        .orElse(null);
+                                Discipline currentSubj = getDisciplineInXML(currentAcquis.getString("id_matiere"), donnees);
                                 if (currentSubj != null) {
                                     aquisEleve.setDisciplineRef(currentSubj);
                                 }
@@ -1057,6 +1108,26 @@ public class LSUController extends ControllerHelper {
         }
 
 
+    }
+
+    private Discipline getDisciplineInXML(String id, Donnees donnees) {
+        if (donnees.getDisciplines() == null || donnees.getDisciplines().getDiscipline() == null || donnees.getDisciplines().getDiscipline().size() < 0) {
+            return null;
+        }
+        return donnees.getDisciplines().getDiscipline().stream()
+                .filter(dis -> dis.getId().equals(id))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Enseignant getEnseignantInXML(String id, Donnees donnees) {
+        if (donnees.getEnseignants() == null || donnees.getEnseignants().getEnseignant() == null || donnees.getEnseignants().getEnseignant().size() < 0) {
+            return null;
+        }
+        return donnees.getEnseignants().getEnseignant().stream()
+                .filter(ens -> ens.getId().equals(id))
+                .findFirst()
+                .orElse(null);
     }
 
     private String generateElementProgrammeId (String elementsProgramme){
@@ -1293,21 +1364,26 @@ public class LSUController extends ControllerHelper {
         donnees.setEnseignants(objectFactory.createDonneesEnseignants());
 
 
-        Handler<String> getEnseignantsHandler = event -> {
-            //parcourir données.enseignants et completer au besoin les infos
-            lsunBilans.setDonnees(donnees);
-            //        arrayResponseHandler(request));
-            returnResponse(request, lsunBilans);
+        Handler<String> getApEpiParcoursHandler = event -> {
             if (event.equals("success")) {
-
+                lsunBilans.setDonnees(donnees);
+                returnResponse(request, lsunBilans);
                 log.info("FIN exportLSU : export ");
             } else {
-                //leftToResponse(request, new Either.Left<>(event));
+                leftToResponse(request, new Either.Left<>(event));
                 log.error("getXML : getBaliseDiscipline " + event);
             }
         };
 
 
+        Handler<String> getEnseignantsHandler = event -> {
+            //parcourir données.enseignants et completer au besoin les infos
+            if (event.equals("success")) {
+                getApEpiParcoursBalises(donnees, idsClasse, idStructure, getApEpiParcoursHandler);
+            } else {
+                log.error("getXML : getBaliseDiscipline " + event);
+            }
+        };
 
         Handler<Either.Right<String, JsonObject>> getBilansPeriodiquesHandler = backresponse -> {
 
@@ -1356,20 +1432,10 @@ public class LSUController extends ControllerHelper {
             }
         };
 
-        Handler<String> getApEpiParcoursHandler = event -> {
-            if (event.equals("success")) {
-                getBaliseEleves(donnees, idsClasse, getElevesHandler);
-
-            } else {
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBaliseDiscipline " + event);
-            }
-        };
 
         Handler<String> getDisciplineHandler = event -> {
             if (event.equals("success")) {
-                getApEpiParcoursBalises(donnees, idsClasse, idStructure, getApEpiParcoursHandler);
-
+                getBaliseEleves(donnees, idsClasse, getElevesHandler);
             } else {
                 leftToResponse(request, new Either.Left<>(event));
                 log.error("getXML : getBaliseDiscipline " + event);
