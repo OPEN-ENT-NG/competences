@@ -2479,81 +2479,121 @@ public class ExportPDFController extends ControllerHelper {
                 Boolean threeMoyenneEleve = params.getBoolean("threeMoyenneEleve");
                 Boolean threePage = params.getBoolean("threePage");
 
+                String idClasse = params.getString("idClasse");
+                String idEtablissement = params.getString("idStructure");
+
+
+                Future<JsonArray> tableauDeConversionFuture = Future.future();
+                // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
+                competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse,
+                        new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> tableau) {
+                        if (tableau.isRight()) {
+                            tableauDeConversionFuture.complete(tableau.right().getValue());
+                        } else {
+                            String message = tableau.left().getValue();
+                            tableauDeConversionFuture.fail(message);
+                        }
+                    }
+                });
+
                 JsonObject action = new JsonObject()
                         .put("action", "eleve.getInfoEleve")
                         .put("idEleves", idStudents);
+                Future<JsonArray> elevesFuture = Future.future();
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
                         new Handler<Message<JsonObject>>() {
                             @Override
                             public void handle(Message<JsonObject> message) {
                                 if ("ok".equals(message.body().getString("status"))) {
-                                    final JsonArray eleves = message.body().getJsonArray("results");
+                                    elevesFuture.complete( message.body().getJsonArray("results"));
 
-                                    final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
-                                    final AtomicBoolean answered = new AtomicBoolean();
-                                    final Handler<Either<String, JsonObject>> finalHandler
-                                            = exportService.getFinalBulletinHandler(request, elevesMap, vertx, config,
-                                            answered, params);
-                                    JsonObject images = params.getJsonObject("images");
-                                    for (int i = 0; i < eleves.size(); i++) {
-
-                                        JsonObject eleve = eleves.getJsonObject(i);
-                                        String idEleve = eleve.getString("idEleve");
-                                        String birthDate = eleve.getString("birthDate");
-                                        if(birthDate!= null) {
-
-                                            String [] be = birthDate.split("-");
-                                            eleve.put("birthDateLibelle",  be[2] + '/' + be[1] + '/' + be[0]);
-                                        }
-                                        // Rajout de l'image du graphe par domaine
-                                        if (showBilanPerDomaines) {
-                                            if (images != null) {
-                                                String img = images.getString(eleve.getString("idEleve"));
-                                                Boolean hasGraphPerDomaine = (img != null);
-                                                eleve.put("hasGraphPerDomaine", hasGraphPerDomaine);
-                                                if(hasGraphPerDomaine) {
-                                                    eleve.put("graphPerDomaine", img);
-                                                }
-                                            }
-                                        }
-
-                                        // Rajout du niveau de l'élève
-                                        String level = eleve.getString("level");
-                                        if(level == null) {
-                                            level = eleve.getString("classeName");
-                                        }
-                                        if(level != null) {
-                                            level = String.valueOf(level.charAt(0));
-                                            try {
-                                                int levelInt = Integer.parseInt(level);
-                                                if(levelInt >= 3 && levelInt <= 6) {
-                                                    eleve.put("level", level);
-                                                    eleve.put("hasLevel", true);
-                                                }
-                                            }
-                                            catch (NumberFormatException e) {
-                                                eleve.put("hasLevel", false);
-                                            }
-                                        }
-
-                                        elevesMap.put(idEleve, eleve);
-
-                                        JsonArray idManualGroupes = UtilsConvert
-                                                .strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
-                                        JsonArray idFunctionalGroupes = UtilsConvert
-                                                .strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
-
-                                        JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
-                                                idManualGroupes);
-
-                                        exportService.getExportBulletin(request, answered, idEleve, elevesMap,
-                                                idPeriode, params,
-                                                finalHandler);
-                                    }
-
+                                }
+                                else {
+                                    elevesFuture.fail(message.body().getString("message"));
                                 }
                             }
                         }));
+
+                // Lorsqu'on a le suivi des Acquis et le tableau de conversion, on lance la construction
+                // complète du tableau du suivi des acquis
+                CompositeFuture.all(tableauDeConversionFuture, elevesFuture)
+                        .setHandler( (event -> {
+                            if (event.succeeded()) {
+                                final JsonArray eleves = elevesFuture.result();
+                                final JsonObject classe = new JsonObject().put("tableauDeConversion",
+                                        tableauDeConversionFuture.result());
+
+                                final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
+                                final AtomicBoolean answered = new AtomicBoolean();
+                                final Handler<Either<String, JsonObject>> finalHandler
+                                        = exportService.getFinalBulletinHandler(request, elevesMap, vertx, config,
+                                        eleves.size(),
+                                        answered, params);
+                                JsonObject images = params.getJsonObject("images");
+                                for (int i = 0; i < eleves.size(); i++) {
+
+                                    JsonObject eleve = eleves.getJsonObject(i);
+                                    String idEleve = eleve.getString("idEleve");
+                                    String birthDate = eleve.getString("birthDate");
+                                    if(birthDate!= null) {
+
+                                        String [] be = birthDate.split("-");
+                                        eleve.put("birthDateLibelle",  be[2] + '/' + be[1] + '/' + be[0]);
+                                    }
+                                    // Rajout de l'image du graphe par domaine
+                                    if (showBilanPerDomaines) {
+                                        if (images != null) {
+                                            String img = images.getString(eleve.getString("idEleve"));
+                                            Boolean hasGraphPerDomaine = (img != null);
+                                            eleve.put("hasGraphPerDomaine", hasGraphPerDomaine);
+                                            if(hasGraphPerDomaine) {
+                                                eleve.put("graphPerDomaine", img);
+                                            }
+                                        }
+                                    }
+
+                                    // Rajout du niveau de l'élève
+                                    String level = eleve.getString("level");
+                                    if(level == null) {
+                                        level = eleve.getString("classeName");
+                                    }
+                                    if(level != null) {
+                                        level = String.valueOf(level.charAt(0));
+                                        try {
+                                            int levelInt = Integer.parseInt(level);
+                                            if(levelInt >= 3 && levelInt <= 6) {
+                                                eleve.put("level", level);
+                                                eleve.put("hasLevel", true);
+                                            }
+                                        }
+                                        catch (NumberFormatException e) {
+                                            eleve.put("hasLevel", false);
+                                        }
+                                    }
+
+                                    elevesMap.put(idEleve, eleve);
+
+                                    JsonArray idManualGroupes = UtilsConvert
+                                            .strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
+                                    JsonArray idFunctionalGroupes = UtilsConvert
+                                            .strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
+
+                                    JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
+                                            idManualGroupes);
+
+                                    exportService.getExportBulletin(request, answered, idEleve, elevesMap,
+                                            idPeriode, params, classe,
+                                            finalHandler);
+                                }
+                            }
+                            else {
+                                Renders.notFound(request, event.cause().getMessage());
+                            }
+                        }
+                        ));
+
             }
         });
     }
@@ -2574,7 +2614,7 @@ public class ExportPDFController extends ControllerHelper {
                     Boolean withMoyMinMaxByMat = Boolean.valueOf(request.params().get("withMoyMinMaxByMat"));
                     Boolean text = Boolean.parseBoolean(request.params().get("text"));
 
-                   Integer idPeriode = null;
+                    Integer idPeriode = null;
                     try {
                         if (request.params().contains("idPeriode")) {
                             idPeriode = Integer.parseInt(request.params().get("idPeriode"));

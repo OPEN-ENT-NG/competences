@@ -26,12 +26,14 @@ public interface ExportBulletinService {
      * @param idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode
+     * @param classe
      * @param params
      * @param finalHandler
      */
     void getExportBulletin(final HttpServerRequest request,
                            final AtomicBoolean answered, String idEleve,
                            Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
+                           final JsonObject classe,
                            Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -57,9 +59,11 @@ public interface ExportBulletinService {
      * @param idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode
+     * @param classe
      * @param finalHandler
      */
     void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
+                        final JsonObject classe,
                         Handler<Either<String, JsonObject>> finalHandler );
     /**
      *  - Ordonne les élèves par classe et  par nom

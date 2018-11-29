@@ -26,6 +26,8 @@ export class ExportBulletins {
             threeMoyenneEleve: (options.threeMoyenneEleve === true)? options.threeMoyenneEleve:false ,
             threePage: (options.threePage === true)? options.threePage:false ,
             classeName: options.classeName,
+            idClasse: options.idClasse,
+            idStructure: options.idStructure,
             pdfBlobs: options.pdfBlobs,
             images: options.images,
             nameCE: (options.nameCE !== undefined)? options.nameCE : "",

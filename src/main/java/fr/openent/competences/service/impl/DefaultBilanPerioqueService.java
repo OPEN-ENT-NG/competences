@@ -260,6 +260,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                                                                 responseEltProg.left().getValue();
                                                                         log.error(error);
                                                                         handler.handle(new Either.Left<>(error));
+                                                                        return;
                                                                     }
                                                                 }
                                                             });

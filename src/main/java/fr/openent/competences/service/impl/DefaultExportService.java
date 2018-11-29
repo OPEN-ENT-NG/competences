@@ -979,8 +979,10 @@ public class DefaultExportService implements ExportService  {
     @Override
     public void getExportBulletin(final HttpServerRequest request, final AtomicBoolean answered, String idEleve,
                                   Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
+                                  final JsonObject classe,
                                   Handler<Either<String, JsonObject>> finalHandler){
-        exportBulletin.getExportBulletin(request, answered,idEleve,elevesMap,idPeriode,params,finalHandler);
+        exportBulletin.getExportBulletin(request, answered,idEleve,elevesMap,idPeriode,params,
+                classe, finalHandler);
     }
 
 
@@ -991,6 +993,7 @@ public class DefaultExportService implements ExportService  {
     public Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
                                                                         Map<String, JsonObject> elevesMap,
                                                                         Vertx vertx, JsonObject config,
+                                                                        final int nbrEleves,
                                                                         final AtomicBoolean answered,
                                                                         JsonObject params) {
         final AtomicInteger elevesDone = new AtomicInteger();
@@ -1018,18 +1021,20 @@ public class DefaultExportService implements ExportService  {
         return new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
-                if (elevesDone.addAndGet(1) == (elevesMap.size()* nbServicesFinal.get())) {
-                    answered.set(true);
-                    String title = params.getString("classeName") + "_" + I18n.getInstance()
-                            .translate("evaluations.bulletin",
-                                    I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-                    JsonObject resultFinal = new JsonObject()
-                            .put("getProgramElements", params.getBoolean("getProgramElements"))
-                            .put("title", title);
+                if (event.isRight()) {
+                    if (elevesDone.addAndGet(1) == (nbrEleves * nbServicesFinal.get())) {
+                        answered.set(true);
+                        String title = params.getString("classeName") + "_" + I18n.getInstance()
+                                .translate("evaluations.bulletin",
+                                        I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+                        JsonObject resultFinal = new JsonObject()
+                                .put("getProgramElements", params.getBoolean("getProgramElements"))
+                                .put("title", title);
 
-                    resultFinal.put("eleves", exportBulletin.sortResultByClasseNameAndNameForBulletin(elevesMap));
-                    genererPdf(request, resultFinal,
-                            "bulletin.pdf.xhtml", title, vertx, config);
+                        resultFinal.put("eleves", exportBulletin.sortResultByClasseNameAndNameForBulletin(elevesMap));
+                        genererPdf(request, resultFinal,
+                                "bulletin.pdf.xhtml", title, vertx, config);
+                    }
                 }
             }
         };

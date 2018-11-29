@@ -88,6 +88,10 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             for ( let key in classes) {
                 let val = classes[key];
                 options.classeName = key;
+                options.idStructure = $scope.structure.id;
+                if (val !== undefined && val.length > 0 ) {
+                    options.idClasse = val[0].idClasse;
+                }
                 options.idStudents = _.pluck(_.filter(val, function (student) {
                     return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
                 }), 'id');
