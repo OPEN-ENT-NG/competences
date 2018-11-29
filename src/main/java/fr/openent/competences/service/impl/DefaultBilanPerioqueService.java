@@ -324,7 +324,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             //moyennesFinales
                             if( appMoyPosi.getString("moyenne_finale") != null) {
                                 JsonObject moyenne_finale = new JsonObject();
-                                if(appMoyPosi.getString("id_classe_moyfinale").equals(idClasse)) {
+                                //if(appMoyPosi.getString("id_classe_moyfinale").equals(idClasse)) {
+                                // dans le contexte d'un matiere on est sensé n'avoir qu'une moyenne finale
+                                // qui est soit sur un groupe soit sur une classe
                                     moyenne_finale.put("id_periode",
                                             appMoyPosi.getInteger("id_periode_moyenne_finale"))
 
@@ -333,7 +335,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                     if(!moyennesFinales.contains(moyenne_finale)){
                                         moyennesFinales.add(moyenne_finale);
                                     }
-                                }
+                                //}
                             }
                             //Pour le positionnement on ne peut en avoir qu'un par matière
                             //le positionnement n'est pas enregistré par classe
