@@ -154,5 +154,6 @@ public interface ExportBulletinService {
      * @param idPeriode idType of the periode
      * @param finalHandler response
      */
-    void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, Handler<Either<String, JsonObject>> finalHandler);
+    void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode,
+                        Handler<Either<String, JsonObject>> finalHandler);
 }

@@ -249,7 +249,7 @@
             {{#structureLibelle}}
             <p style="font-weight: bold">{{academy}}</p>
 
-            <p style="font-weight: bold">{{name}}</p>
+            <p style="font-weight: bold">{{nameStructure}}</p>
             <p>{{address}}</p>
             <p>{{town}}</p>
             <p>{{phone}}</p>
@@ -323,6 +323,7 @@
         </tr>
 
         {{#suiviAcquis}}
+        {{#printMatiere}}
         <tr>
             <td class="left-align emptyClass">
                 <span style="font-size: small; font-weight: bold">{{libelleMatiere}}</span><br/>
@@ -346,6 +347,7 @@
             <td style="font-size: x-small; font-weight: bold" class="sixthSuivi onePadding">{{positionnement}}</td>
             {{/getPositionnement}}
         </tr>
+        {{/printMatiere}}
         {{/suiviAcquis}}
     </table>
     <span class="paddingFifty" style="font-size: xx-small ;position: relative;top: 10px;"> {{footer}}</span>
