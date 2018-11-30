@@ -1022,7 +1022,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         count ++;
                                         bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
                                                 idClasse,this);
-
                                     }
                                     else {
                                         if (eleveObject.getJsonArray("errors") == null) {
@@ -1282,22 +1281,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     /**
      * A partir d'un positionnement calculé pos, retourne  le positionnement réel avec l'échelle de conversion
-     * @param pos
+     * @param moyenne
      * @param tableauDeconversion
      * @return
      */
-    private int getPositionnementValue(Float pos, JsonArray tableauDeconversion) {
+    private int getPositionnementValue(Float moyenne, JsonArray tableauDeconversion) {
         int value =-1;
 
-        for (Object ligne : tableauDeconversion) {
-            Float valmin = ((JsonObject)ligne).getFloat("valmin");
-            Float valmax = ((JsonObject)ligne).getFloat("valmax");
-            if (valmin <= pos && valmax > pos) {
-                value = ((JsonObject)ligne).getInteger("ordre");
-                break;
+        for (int i = 0; i< tableauDeconversion.size(); i++) {
+            JsonObject ligne = tableauDeconversion.getJsonObject(i);
+            Float valmin = ligne.getFloat("valmin");
+            Float valmax = ligne.getFloat("valmax");
+            int ordre = ligne.getInteger("ordre");
+
+            if((valmin <= moyenne && valmax > moyenne) && ordre != tableauDeconversion.size()){
+                value = ordre;
+            }else if((valmin <= moyenne && valmax >= moyenne) && ordre == tableauDeconversion.size() ){
+                value = ordre;
             }
         }
-
         return  value;
     }
 
