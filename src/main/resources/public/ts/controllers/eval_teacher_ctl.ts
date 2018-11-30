@@ -27,6 +27,7 @@ import {
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
+import {getMoyenneForBFC} from "../utils/functions/bfc";
 
 declare let $: any;
 declare let document: any;
@@ -3604,8 +3605,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.disabledSaisieMoyenne = function () {
-            if ($scope.search.periode.id === null || $scope.search.periode === "*"
-                || ($scope.releveNote !== undefined && $scope.releveNote.isNN)) {
+            if ($scope.search.periode.id === null || $scope.search.periode === "*") {
                 return true;
             }
             else {
@@ -3623,33 +3623,41 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.saveMoyenneFinaleEleve = function (eleve,updateHistorique) {
-            if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
-                if(eleve.moyenneFinale !== undefined) {
-                    eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
-                }
-                let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
-                if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                    eleve.moyenneFinale === "" ){
-                    if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) && eleve.moyenneFinale !== "") {
-                        eleve.oldMoyenneFinale = eleve.moyenneFinale;
-                        $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
-                            eleve.moyenneFinaleIsSet = true;
-                            if (updateHistorique) {
-                                $scope.updateHistorique(eleve, 'moyenneFinale');
+                    if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
+                        if(eleve.moyenneFinale !== undefined) {
+                            eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
+                        }
+                        let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
+                        if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
+                            eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
+                            if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.moyenneFinale !== "") {
+                                if (eleve.moyenneFinale === "" && eleve.moyenne === "") {
+                                    eleve.moyenneFinale = "";
+                                }
+                                else if (eleve.moyenneFinale === "" && eleve.moyenne !== undefined) {
+                                    eleve.moyenneFinale = eleve.moyenne;
+                                }
+                                $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
+                                    eleve.moyenneFinaleIsSet = true;
+                                    if (updateHistorique) {
+                                        $scope.updateHistorique(eleve, 'moyenneFinale');
+                                    }
+                                    utils.safeApply($scope);
+                                });
+                                utils.safeApply($scope);
                             }
-                            utils.safeApply($scope);
-                        });
-                        utils.safeApply($scope);
-                    }eleve.moyenneFinale = eleve.oldMoyenneFinale;
-                }
-                else {
-                    notify.error(lang.translate("error.average.outbound"));
-                    eleve.moyenneFinale = eleve.oldMoyenneFinale;
-                }
-            }else{
-                eleve.moyenneFinale = eleve.oldMoyenneFinale;
-            }
-            utils.safeApply($scope);
+                            else {
+                                eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                            }
+                        }
+                        else {
+                            notify.error(lang.translate("error.average.outbound"));
+                            eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                        }
+                    }else{
+                        eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                    }
+                    utils.safeApply($scope);
         };
 
         $scope.savePositionnementEleve = function (eleve, positionnement) {

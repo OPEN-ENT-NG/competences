@@ -382,14 +382,16 @@ export class ReleveNote extends  Model implements IModel {
                 // chargement de la  moyenne finale de l'élève
                 let _eleve = _.findWhere(_moyennesFinales, {id_eleve: eleve.id});
                 if (_eleve !== undefined && _eleve.moyenne !== null) {
-                    if (this.hasEvaluatedDevoirs) {
-                        eleve.moyenneFinale = _eleve.moyenne;
-                    }
-                    else {
+                    eleve.moyenneFinale = _eleve.moyenne;
+
+                    // if (this.hasEvaluatedDevoirs) {
+                    //     eleve.moyenneFinale = _eleve.moyenne;
+                    // }
+                    // else {
                         // suppression de la moyenne finale lorsqu'il n'y a pas de devoir avec l'évaluation numérique
-                        eleve.moyenneFinale = "";
-                        this.saveAppreciationMatierePeriodeEleve(eleve);
-                    }
+                        // eleve.moyenneFinale = "";
+                        // this.saveAppreciationMatierePeriodeEleve(eleve);
+                    // }
 
                 }
                 // load appreciation
@@ -478,7 +480,7 @@ export class ReleveNote extends  Model implements IModel {
                 idEleve: eleve.id,
                 colonne: 'moyenne',
                 moyenne: parseFloat(eleve.moyenneFinale),
-                delete: eleve.moyenneFinale === ""
+                delete: eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"
             });
 
             http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data)
