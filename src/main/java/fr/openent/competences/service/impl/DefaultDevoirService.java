@@ -1316,15 +1316,32 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String query = "SELECT DISTINCT devoirs.id_matiere, devoirs.owner" +
-                " FROM "+ Competences.COMPETENCES_SCHEMA + ".devoirs"+
-                " LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs ON (devoirs.id = rel_annotations_devoirs.id_devoir)"+
-                " LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".notes ON (notes.id_devoir = devoirs.id) "+
-                " LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".competences_notes ON (competences_notes.id_devoir =devoirs.id)"+
-                " LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ON (rel_devoirs_groupes.id_devoir = devoirs.id)"+
-                " WHERE rel_annotations_devoirs.id_eleve = ? OR notes.id_eleve = ? OR competences_notes.id_eleve = ? "+
-                " AND devoirs.eval_lib_historise = false"+
-                " ORDER BY devoirs.id_matiere ";
+
+        String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner " +
+                " FROM "+ Competences.COMPETENCES_SCHEMA + ".devoirs";
+
+        String footerQuery = " WHERE devoirs.eval_lib_historise = false ";
+
+        String query = "SELECT * " +
+                " FROM (" +
+                headQuery +
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs " +
+                " ON (devoirs.id = rel_annotations_devoirs.id_devoir AND rel_annotations_devoirs.id_eleve = ?) " +
+                footerQuery +
+
+                " UNION " + headQuery +
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".notes " +
+                " ON (notes.id_devoir = devoirs.id AND notes.id_eleve = ? ) " +
+                footerQuery +
+
+                " UNION " + headQuery +
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".competences_notes " +
+                " ON (competences_notes.id_devoir = devoirs.id AND competences_notes.id_eleve = ?) "+
+                footerQuery +
+
+                " ) AS res " +
+                " ORDER BY res.id_matiere ";
+
         values.add(id_eleve).add(id_eleve).add(id_eleve);
 
         sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
