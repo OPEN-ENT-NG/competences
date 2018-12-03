@@ -1036,7 +1036,7 @@ public class LSUController extends ControllerHelper {
                 if(periodesAdded.containsKey(currentPeriode.getId())
                         && periodesAdded.getJsonObject(currentPeriode.getId()).containsKey("id_classe")
                         && currentEleve.getId_Class().equals(periodesAdded.getJsonObject(currentPeriode.getId()).getString("id_classe"))) {
-
+                    JsonObject periodeJSon = periodesAdded.getJsonObject(currentPeriode.getId());
                     bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getIndice()), currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
@@ -1054,14 +1054,34 @@ public class LSUController extends ControllerHelper {
                                         addResponsable(bilanPeriodique);
                                         addListeAcquis(suiviAcquis, bilanPeriodique);
 
-                                        bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getId(), new Handler<Either<String, JsonArray>>() {
-                                            @Override
-                                            public void handle(Either<String, JsonArray> event) {
-                                                bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
-                                                response.put("status", 200);
-                                                getOUt.handle(new Either.Right<String, JsonObject>(response));
-                                            }
-                                        });
+                                        elementBilanPeriodiqueService.getAppreciations(Collections.singletonList(periodeJSon.getString("id_classe")),
+                                                periodeJSon.getInteger("id").toString(), Arrays.asList("1", "2", "3"), currentEleve.getIdNeo4j(),
+                                                new Handler<Either<String, JsonArray>>() {
+                                                    @Override
+                                                    public void handle(Either<String, JsonArray> eventApp) {
+
+                                                        if (eventApp.isRight()) {
+                                                            final JsonArray appreciations = eventApp.right().getValue();
+                                                            log.info("Appreciation -------- " + currentEleve.getNom()+"   "+currentEleve.getIdNeo4j());
+                                                            log.info(appreciations.toString());
+                                                            bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getIdNeo4j(), new Handler<Either<String, JsonArray>>() {
+                                                                @Override
+                                                                public void handle(Either<String, JsonArray> eventViesco) {
+
+                                                                    addVieScolairePerso(eventViesco, bilanPeriodique);
+
+                                                                    bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
+                                                                    response.put("status", 200);
+                                                                    getOUt.handle(new Either.Right<String, JsonObject>(response));
+                                                                }
+
+
+
+                                                            });
+                                                        }
+                                                    }
+
+                                                });
 
 
                                     } else {
@@ -1071,6 +1091,27 @@ public class LSUController extends ControllerHelper {
                                     }
                                 }
 
+                                private void addVieScolairePerso(Either<String, JsonArray> eventViesco, BilanPeriodique bilanPeriodique) {
+                                    if (eventViesco.isRight()) {
+                                        final JsonArray vieScoRightValue = eventViesco.right().getValue();
+
+                                        JsonObject viesco = (JsonObject) vieScoRightValue.stream()
+                                                .filter(el -> periodeJSon.getInteger("id_type") == ((JsonObject) el).getInteger("id_periode"))
+                                                .findFirst()
+                                                .orElse(null);
+
+                                        if (viesco != null && viesco.containsKey("id_eleve") && viesco.containsKey("id_eleve")) {
+                                            VieScolaire viescolare = objectFactory.createVieScolaire();
+
+                                            viescolare.setNbAbsInjustifiees(BigInteger.valueOf(viesco.getLong("abs_non_just") != null ? viesco.getLong("abs_non_just") : 0));
+                                            viescolare.setNbAbsJustifiees(BigInteger.valueOf(viesco.getLong("abs_just") != null ? viesco.getLong("abs_just") : 0));
+                                            viescolare.setNbAbsJustifiees(BigInteger.valueOf(viesco.getLong("retard") != null ? viesco.getLong("retard") : 0));
+                                            viescolare.setNbAbsJustifiees(BigInteger.valueOf(viesco.getLong("abs_totale_heure") != null ? viesco.getLong("abs_totale_heure") : 0));
+
+                                            bilanPeriodique.setVieScolaire(viescolare);
+                                        }
+                                    }
+                                }
                                 private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
                                     BilanPeriodique.ListeAcquis aquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
                                     for (Integer i = 0; i < suiviAcquis.size(); i++) {
