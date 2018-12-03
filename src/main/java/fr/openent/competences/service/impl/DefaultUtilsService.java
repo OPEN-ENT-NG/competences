@@ -252,19 +252,19 @@ public class DefaultUtilsService  implements UtilsService {
         for (NoteDevoir noteDevoir : listeNoteDevoirs) {
             Double currNote = noteDevoir.getNote();
             notes += currNote;
-            // Calcul de la note min et max
-            if (statistiques) {
-                if (null == noteMin) {
-                    noteMin = new Double(noteDevoir.getDiviseur());
-                    ;
+                // Calcul de la note min et max
+                if (statistiques) {
+                    if (null == noteMin) {
+                        noteMin = new Double(noteDevoir.getDiviseur());
+                    }
+                    if (currNote > noteMax) {
+                        noteMax = currNote;
+                    }
+                    if (currNote < noteMin) {
+                        noteMin = currNote;
+                    }
                 }
-                if (currNote > noteMax) {
-                    noteMax = currNote;
-                }
-                if (currNote < noteMin) {
-                    noteMin = currNote;
-                }
-            }
+
         }
 
         Double moyenne = ((notes) / (listeNoteDevoirs.size()));
