@@ -215,9 +215,10 @@ export const bilanPeriodique = {
                     this.dataELem.type = this.getTypeElement();
                     if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
                         this.dataELem.id_theme = this.dataELem.theme.id;
-                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle);
-                        // Si le libellé est unique on récupère le thème créé
-                        if (!libelleExist) {
+
+                        let libelleExistOnThematique = this.elements.find(theme => (theme.libelle === dataELem.libelle) && (theme.theme.libelle === dataELem.theme.libelle));
+                        // Si le libellé est unique sur le thème choisi, on récupère le thème créé
+                        if (!libelleExistOnThematique) {
                             const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
                             this.elements.push(data);
                             bilanPeriodique.that.showAddtheme = false;
@@ -227,7 +228,7 @@ export const bilanPeriodique = {
                             bilanPeriodique.that.getElements();
                         }
                         else {
-                            // Si le libellé n'est pas unique : affichage de la lightbox avec message d'erreur
+                            // Si le libellé n'est pas unique sur le thème : affichage de la lightbox avec message d'erreur
                             bilanPeriodique.that.createElementBP = true;
                             bilanPeriodique.that.opened.lightboxConfirmDelete = true;
                         }
@@ -440,22 +441,55 @@ export const bilanPeriodique = {
 
         /////       Modification d'un EPI/AP/Parcours      /////
 
-        updateElement: async function () {
+        updateElement: async function (dataELem) {
             try {
                 if (this.dataELem !== undefined && this.dataELem !== null
                     && this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
                     this.dataELem.id_theme = this.dataELem.theme.id;
-                }
-                if (this.dataELem.description === null
-                    || this.dataELem.description === '') {
-                    delete(this.dataELem.description);
-                }
-                await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
-                bilanPeriodique.that.opened.lightboxCreatePE = false;
-                bilanPeriodique.that.openedLightbox = false;
-                bilanPeriodique.that.getElements();
+                    }
 
-            } catch (e) {
+                    if (this.dataELem.description === null || this.dataELem.description === '') {
+                        delete(this.dataELem.description);
+                    }
+
+                    if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
+                        this.dataELem.id_theme = this.dataELem.theme.id;
+                        let libelleExistOnThematique = this.elements.find(theme => (theme.libelle === dataELem.libelle) && (theme.theme.libelle === dataELem.theme.libelle));
+                        // Si le libellé est unique sur le thème choisi, on récupère le thème créé
+                        if (!libelleExistOnThematique) {
+                            await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
+                            bilanPeriodique.that.showAddtheme = false;
+                            bilanPeriodique.that.opened.lightboxCreatePE = false;
+                            bilanPeriodique.that.openedLightbox = false;
+                            bilanPeriodique.that.emptyLightbox();
+                            bilanPeriodique.that.getElements();
+                        }
+                        else {
+                            // Si le libellé n'est pas unique sur le thème : affichage de la lightbox avec message d'erreur
+                            bilanPeriodique.that.createElementBP = true;
+                            bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                        }
+                    }
+
+                    else {
+                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle);
+                        // Si le libellé est unique on récupère le thème créé
+                        if (!libelleExist) {
+                            await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
+                            bilanPeriodique.that.showAddtheme = false;
+                            bilanPeriodique.that.opened.lightboxCreatePE = false;
+                            bilanPeriodique.that.openedLightbox = false;
+                            bilanPeriodique.that.emptyLightbox();
+                            bilanPeriodique.that.getElements();
+                        }
+                        else {
+                            // Si le libellé n'est pas unique : affichage de la lightbox avec message d'erreur
+                            bilanPeriodique.that.createElementBP = true;
+                            bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                        }
+                        utils.safeApply(bilanPeriodique.that);
+                    }
+            }catch (e) {
                 notify.error('evaluations.elements.update.error');
             }
             utils.safeApply(bilanPeriodique.that);
