@@ -58,7 +58,7 @@
                                    ng-class="{selected:bSelectAllStudents}">
                         </label>
                         <ul class="selectable-list">
-                            <li ng-repeat="eleve in allElevesClasses track by eleve.id"
+                            <li ng-repeat="eleve in allElevesClasses track by $index"
                                 ng-click="chooseStudent(eleve)"
                                 ng-class="{selected : eleve.selected}">[[(eleve.lastName + ' ' + eleve.firstName + ' (' + eleve.classeName + ')' )]]</li>
                         </ul>
