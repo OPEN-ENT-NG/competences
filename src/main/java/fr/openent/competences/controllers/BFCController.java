@@ -86,6 +86,7 @@ public class BFCController extends ControllerHelper {
                         @Override
                         public void handle(JsonObject resource) {
                             bfcService.checkHeadTeacherForBFC(user, resource.getString("id_eleve"),
+                                    resource.getString("id_etablissement"),
                                     new Handler<Boolean>() {
                                         @Override
                                         public void handle(Boolean event) {
@@ -127,6 +128,7 @@ public class BFCController extends ControllerHelper {
                         @Override
                         public void handle(JsonObject resource) {
                             bfcService.checkHeadTeacherForBFC(user, resource.getString("id_eleve"),
+                                    resource.getString("id_etablissement"),
                                     new Handler<Boolean>() {
                                         @Override
                                         public void handle(Boolean event) {
@@ -173,7 +175,9 @@ public class BFCController extends ControllerHelper {
                     }
 
                     String idEleve = request.params().get("idEleve");
-                    bfcService.checkHeadTeacherForBFC(user, idEleve,
+                    String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
+
+                    bfcService.checkHeadTeacherForBFC(user, idEleve, idEtablissement,
                             new Handler<Boolean>() {
                                 @Override
                                 public void handle(Boolean event) {

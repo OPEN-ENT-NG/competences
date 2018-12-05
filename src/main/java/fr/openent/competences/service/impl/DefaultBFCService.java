@@ -712,10 +712,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             }
         });
     }
-    public void checkHeadTeacherForBFC(UserInfos user, String id_eleve,
+    public void checkHeadTeacherForBFC(UserInfos user, String id_eleve, String id_etablissement,
                                 final Handler<Boolean> handler) {
         WorkflowActionUtils.hasHeadTeacherRight(user, null, null, null,
-                new JsonArray().add(id_eleve), eb, new Handler<Either<String, Boolean>>() {
+                new JsonArray().add(id_eleve), eb, id_etablissement, new Handler<Either<String, Boolean>>() {
                     @Override
                     public void handle(Either<String, Boolean> event) {
                         Boolean isHeadTecher;

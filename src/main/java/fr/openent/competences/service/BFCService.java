@@ -129,6 +129,6 @@ public interface BFCService extends CrudService {
     void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,Long idPeriode, final Handler<Either<String, JsonArray>> handler);
 
 
-    void checkHeadTeacherForBFC(UserInfos user, String id_eleve,
+    void checkHeadTeacherForBFC(UserInfos user, String id_eleve, String id_etablissement,
                                 final Handler<Boolean> handler);
 }

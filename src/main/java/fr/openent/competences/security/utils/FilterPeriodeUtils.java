@@ -71,7 +71,7 @@ public class FilterPeriodeUtils {
         }
         else {
             WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse), null,
-                    null, null, null, new Handler<Either<String, Boolean>>() {
+                    null, null, null, null, new Handler<Either<String, Boolean>>() {
                         @Override
                         public void handle(Either<String, Boolean> event) {
                             Boolean isHeadTeacher;

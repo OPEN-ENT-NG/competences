@@ -42,7 +42,7 @@ public class WorkflowActionUtils {
 
 	public static void hasHeadTeacherRight (UserInfos user, JsonArray idsClasse,
                                             JsonArray idsRessource, String table,
-											JsonArray idsEleve, final EventBus eb,
+											JsonArray idsEleve, final EventBus eb, String idStructure,
 										   final Handler<Either<String, Boolean>> handler) {
 
 		if (!hasRight(user, Competences.CAN_UPDATE_BFC_SYNTHESE_RIGHT)) {
@@ -55,7 +55,7 @@ public class WorkflowActionUtils {
 				FilterUserUtils.validateHeadTeacherWithClasses(user, idsClasse, handler);
 			}
 			else if (idsEleve != null) {
-                FilterUserUtils.validateHeadTeacherWithEleves(user,idsEleve,eb,handler);
+                FilterUserUtils.validateHeadTeacherWithEleves(user,idsEleve, eb, idStructure,handler);
 			}
             else if (idsRessource != null) {
                 FilterUserUtils.validateHeadTeacherWithRessources(user, idsRessource, table, handler);

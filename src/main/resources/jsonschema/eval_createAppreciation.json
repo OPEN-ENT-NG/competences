@@ -11,6 +11,9 @@
     },
     "valeur": {
       "type" : "string"
+    },
+    "id_etablissement": {
+      "type" : "string"
     }
   },
   "required": [

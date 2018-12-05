@@ -54,7 +54,8 @@ export class Domaine extends Model {
 
 
     async saveDispenseEleve() {
-        let dispenseDomaineEleve = new DispenseDomaine(this.id,this.id_eleve,this.dispense_eleve);
+        let dispenseDomaineEleve = new DispenseDomaine(this.id,this.id_eleve,this.dispense_eleve,
+            this.id_etablissement);
         try{
         await dispenseDomaineEleve.save();
         }catch(e){

@@ -645,13 +645,18 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                                     public void handle(JsonObject resource) {
                                         List<String> idsElements = new ArrayList<String>();
                                         idsElements.add(resource.getInteger("id_element").toString());
+                                        final String idEleve = resource.getString("id_eleve");
+                                        final String idClasse = resource.getString("id_classe");
+                                        final String idEtablissement = resource.getString("id_etablissement");
+
                                         new FilterUserUtils(user, eb).validateElement(idsElements,
-                                                resource.getString("id_classe"), new Handler<Boolean>() {
+                                                idClasse, new Handler<Boolean>() {
                                                     @Override
                                                     public void handle(final Boolean isValid) {
                                                         if (isValid || request.params().get("type").equals("eleve-bilanPeriodique")) {
-                                                            new FilterUserUtils(user, eb).validateEleve(resource.getString("id_eleve"),
-                                                                    resource.getString("id_classe"), new Handler<Boolean>() {
+                                                            new FilterUserUtils(user, eb).validateEleve(
+                                                                    idEleve,
+                                                                    idClasse, idEtablissement, new Handler<Boolean>() {
                                                                         @Override
                                                                         public void handle(final Boolean isValid) {
                                                                             if (isValid) {

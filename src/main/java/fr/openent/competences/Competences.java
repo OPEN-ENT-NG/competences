@@ -138,6 +138,9 @@ public class Competences extends BaseServer {
     public static final String LIEN_ASSISTANT_FAMILIAL =  "ASSISTANT FAMILIAL";
     public static final String LIEN_GARDE_ENFANT = "GARDE d'ENFANT";
 
+    // Clefs usuelles
+    public static final String ID_ETABLISSEMENT_KEY = "idEtablissement";
+
     @Override
 	public void start() throws Exception {
         super.start();

@@ -59,7 +59,7 @@ public class AccessNoteFilter implements ResourcesProvider {
                         return;
                     }
                     WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idNote),
-                            Competences.NOTES_TABLE, null, null,
+                            Competences.NOTES_TABLE, null, null, null,
                             new Handler<Either<String, Boolean>>() {
                                 @Override
                                 public void handle(Either<String, Boolean> event) {

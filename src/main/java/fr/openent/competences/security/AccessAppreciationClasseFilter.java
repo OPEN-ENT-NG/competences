@@ -58,7 +58,8 @@ public class AccessAppreciationClasseFilter implements ResourcesProvider {
             }
 
             WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(params.get("id_classe")),
-                    null, null, null, null, new Handler<Either<String, Boolean>>() {
+                    null, null, null, null, null,
+                    new Handler<Either<String, Boolean>>() {
                         @Override
                         public void handle(Either<String, Boolean> event) {
                             Boolean isHeadTeacher;

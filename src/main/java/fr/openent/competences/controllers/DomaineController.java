@@ -211,7 +211,7 @@ public class DomaineController extends ControllerHelper {
         return false;
     }
 
-    @Delete("/domaine/dispense/eleve/:idDomaine/:idEleve")
+    @Delete("/domaine/dispense/eleve/:idDomaine/:idEleve/:idEtablissement")
     @ApiDoc("Delete the domaine's exemption for a student")
     @ResourceFilter(CreateDispenseDomaineEleveFilter.class)
     public void deleteDispenseDomaineEleve(final HttpServerRequest request){
@@ -222,8 +222,10 @@ public class DomaineController extends ControllerHelper {
                     try {
                         String idEleve = request.params().get("idEleve");
                         Integer idDomaine = Integer.parseInt(request.params().get("idDomaine"));
+                        String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
                         WorkflowActionUtils.hasHeadTeacherRight(user, null, null,
-                                null, new JsonArray().add(idEleve), eb, new Handler<Either<String, Boolean>>() {
+                                null, new JsonArray().add(idEleve), eb, idEtablissement,
+                                new Handler<Either<String, Boolean>>() {
                                     @Override
                                     public void handle(Either<String, Boolean> event) {
                                         Boolean isHeadTeacher;

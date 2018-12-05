@@ -902,7 +902,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 WorkflowActions.ADMIN_RIGHT.toString())):true;
 
         WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idDevoir),
-                Competences.DEVOIR_TABLE, null, null, new Handler<Either<String, Boolean>>() {
+                Competences.DEVOIR_TABLE, null, null, null, new Handler<Either<String, Boolean>>() {
                     @Override
                     public void handle(Either<String, Boolean> event) {
                         Boolean isHeadTeacher;
@@ -976,7 +976,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 WorkflowActions.ADMIN_RIGHT.toString())):true;
 
         WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idDevoir),
-                Competences.DEVOIR_TABLE, null, null, new Handler<Either<String, Boolean>>() {
+                Competences.DEVOIR_TABLE, null, null, null,
+                new Handler<Either<String, Boolean>>() {
                     @Override
                     public void handle(Either<String, Boolean> event) {
                         Boolean isHeadTeacher;

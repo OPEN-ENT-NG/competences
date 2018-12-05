@@ -187,7 +187,7 @@ public class AppreciationController extends ControllerHelper {
                                     final String idEtablissement = appreciation.getString("idEtablissement");
 
                                     WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
-                                            null,null, null, null,
+                                            null,null, null, null, null,
                                             new Handler<Either<String, Boolean>>() {
                                                 @Override
                                                 public void handle(Either<String, Boolean> event) {

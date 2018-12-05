@@ -24,11 +24,13 @@ export class DispenseDomaine {
     id_domaine : number;
     id_eleve : string;
     dispense : boolean;
+    id_etablissement : string;
 
-    constructor(id_domaine : number,id_eleve: string,dispense_eleve:boolean){
+    constructor(id_domaine : number,id_eleve: string,dispense_eleve:boolean , id_etablissement: string){
         this. id_domaine = id_domaine;
         this.id_eleve = id_eleve;
         this.dispense = dispense_eleve;
+        this.id_etablissement = id_etablissement;
     }
 
     toJson(){
@@ -56,7 +58,8 @@ export class DispenseDomaine {
    }
     async delete(){
         try{
-            await http.delete(`/competences/domaine/dispense/eleve/${this.id_domaine}/${this.id_eleve}`);
+            await http.delete(`/competences/domaine/dispense/eleve/${this.id_domaine}/${
+                this.id_eleve}/${this.id_etablissement}`);
         }catch(e){
             notify.error('evaluations.dispense.domaine.eleve.delete.err');
             this.dispense = true;

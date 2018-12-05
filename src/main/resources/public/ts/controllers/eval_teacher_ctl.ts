@@ -3391,9 +3391,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.exportReleveComp = async (idEleve: String, idPeriode: Number, textMod: Boolean = false, exportByEnseignement: Boolean) => {
+        $scope.exportReleveComp = async (idEleve: String, idPeriode: Number, textMod: Boolean = false,
+                                         exportByEnseignement: Boolean) => {
             let url = "/competences/releveComp/print/export?text=" + textMod;
             url += "&idEleve=" + idEleve;
+            url += "&idEtablissement=" + $scope.structure.id;
+
             for (var m = 0; m < $scope.selected.matieres.length; m++) {
                 url += "&idMatiere=" + $scope.selected.matieres[m];
             }

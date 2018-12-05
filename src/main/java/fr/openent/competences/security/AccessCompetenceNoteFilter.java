@@ -61,7 +61,7 @@ public class AccessCompetenceNoteFilter implements ResourcesProvider {
                             ids_competence_note.add(Long.parseLong(s));
                         }
                         WorkflowActionUtils.hasHeadTeacherRight(user, null, ids_competence_note,
-                                Competences.COMPETENCES_NOTES_TABLE, null, null,
+                                Competences.COMPETENCES_NOTES_TABLE, null, null, null,
                                 new Handler<Either<String, Boolean>>() {
                                     @Override
                                     public void handle(Either<String, Boolean> event) {

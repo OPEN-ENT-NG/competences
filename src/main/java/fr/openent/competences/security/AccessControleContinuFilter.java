@@ -58,7 +58,8 @@ public class AccessControleContinuFilter implements ResourcesProvider{
 
             else {
                 WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(params.get("idClasse")),
-                        null, null, null, null, new Handler<Either<String, Boolean>>() {
+                        null,null, null, null, null,
+                        new Handler<Either<String, Boolean>>() {
                             @Override
                             public void handle(Either<String, Boolean> event) {
                                 Boolean isHeadTeacher;

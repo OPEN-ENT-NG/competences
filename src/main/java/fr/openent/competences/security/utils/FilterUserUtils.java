@@ -158,7 +158,7 @@ public class FilterUserUtils {
         });
     }
 
-    public void validateEleve(String idEleve, String idClasse, Handler<Boolean> handler) {
+    public void validateEleve(String idEleve, String idClasse, String idEtablissement, Handler<Boolean> handler) {
 
         if(idEleve == null){
             handler.handle(true);
@@ -167,6 +167,7 @@ public class FilterUserUtils {
                     .add(idEleve);
             JsonObject action = new JsonObject()
                     .put("action", "eleve.getInfoEleve")
+                    .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
                     .put("idEleves", idsEleves);
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override
@@ -296,7 +297,7 @@ public class FilterUserUtils {
 
 
     public static void validateHeadTeacherWithEleves(UserInfos user, JsonArray idsEleve,
-                                                     EventBus eb,
+                                                     EventBus eb, String idEtablissement,
                                                      Handler<Either<String, Boolean>> handler) {
         if (eb == null || idsEleve == null) {
             log.error("[validateHeadTeacherWithEleves | idNull] : user " + user.getUsername());
@@ -304,6 +305,7 @@ public class FilterUserUtils {
         } else {
             JsonObject action = new JsonObject()
                     .put("action", "eleve.getInfoEleve")
+                    .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
                     .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(idsEleve.getList()));
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                 @Override

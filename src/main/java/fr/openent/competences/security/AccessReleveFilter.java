@@ -101,7 +101,9 @@ public class AccessReleveFilter implements ResourcesProvider {
             //On check que la classe et l'établissement passé en paramètre soit bien ceux de l'utilisateur
            else {
                 WorkflowActionUtils.hasHeadTeacherRight(user, new JsonArray().add(idClasse),
-                        null, null, null, null, new Handler<Either<String, Boolean>>() {
+                        null, null, null, null, null,
+                        new Handler<Either<String, Boolean>>() {
+
                             @Override
                             public void handle(Either<String, Boolean> event) {
                                 Boolean isHeadTeacher;

@@ -59,7 +59,7 @@ public class AccessAppreciationFilter implements ResourcesProvider {
                         return;
                     }
                     WorkflowActionUtils.hasHeadTeacherRight(user, null, new JsonArray().add(idAppreciation),
-                            Competences.APPRECIATIONS_TABLE, null, null,
+                            Competences.APPRECIATIONS_TABLE, null, null, null,
                             new Handler<Either<String, Boolean>>() {
                                 @Override
                                 public void handle(Either<String, Boolean> event) {

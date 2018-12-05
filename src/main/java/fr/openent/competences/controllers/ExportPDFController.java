@@ -674,7 +674,8 @@ public class ExportPDFController extends ControllerHelper {
                                     if (event.isRight()) {
                                         for (final Map.Entry<String, List<String>> classe : event.right().getValue().entrySet()) {
                                             population.get(idStructure).put(classe.getKey(), null);
-                                            Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
+                                            Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]),
+                                                    idStructure, new Handler<Either<String, List<Eleve>>>() {
                                                 @Override
                                                 public void handle(Either<String, List<Eleve>> event) {
                                                     if (event.isRight()) {
@@ -732,7 +733,8 @@ public class ExportPDFController extends ControllerHelper {
                                     if (event.isRight()) {
                                         for (final Map.Entry<String, List<String>> classe : event.right().getValue().entrySet()) {
                                             population.get(idStructure).put(classe.getKey(), null);
-                                            Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]), new Handler<Either<String, List<Eleve>>>() {
+                                            Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]),
+                                                    idStructure, new Handler<Either<String, List<Eleve>>>() {
                                                 @Override
                                                 public void handle(Either<String, List<Eleve>> event) {
                                                     if (event.isRight()) {
@@ -766,14 +768,16 @@ public class ExportPDFController extends ControllerHelper {
     /**
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul des identifiants d'eleves
      * sont fournis.
-     *
+     * @param idEtablissement Identifiant de l'établissement du modèle
      * @param idEleves Identifiants des eleves dont on souhaite generer le BFC.
      * @param handler  Handler contenant les listes des eleves, indexees par classes.
      */
-    private void getParamEleves(final List<String> idEleves, final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
+    private void getParamEleves(final List<String> idEleves, String idEtablissement,
+                                final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
         final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
 
-        Utils.getInfoEleve(eb, idEleves.toArray(new String[1]), new Handler<Either<String, List<Eleve>>>() {
+        Utils.getInfoEleve(eb, idEleves.toArray(new String[1]), idEtablissement,
+                new Handler<Either<String, List<Eleve>>>() {
             @Override
             public void handle(Either<String, List<Eleve>> event) {
                 if (event.isRight()) {
@@ -810,7 +814,7 @@ public class ExportPDFController extends ControllerHelper {
      * fournit.
      * Appelle  getParamStruct(String,Long, Handler)} si seul l'identifiant de la structure est fourni.
      * Appelle {@link #getParamClasses(List, Long, Handler)} si seuls les identifiants de classes sont fournis.
-     * Appelle {@link #getParamEleves(List, Handler)} si seuls les identifiants d'eleves sont fournis.
+     * Appelle {@link #getParamEleves(List, String, Handler)} si seuls les identifiants d'eleves sont fournis.
      *
      * @param idStructure Identifiant de la structure dont on souhaite generer le BFC.
      * @param idClasses   Identifiants des classes dont on souhaite generer le BFC.
@@ -821,7 +825,7 @@ public class ExportPDFController extends ControllerHelper {
                              final Long idPeriode,
                              final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
 
-        if (idStructure != null) {
+        if (idStructure != null && (idEleves == null || idEleves.isEmpty()) ) {
             getParamStruct(idStructure, idPeriode,
                     new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                         @Override
@@ -849,7 +853,7 @@ public class ExportPDFController extends ControllerHelper {
                         }
                     });
         } else if (!idEleves.isEmpty()) {
-            getParamEleves(idEleves, new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
+            getParamEleves(idEleves, idStructure, new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                 @Override
                 public void handle(Either<String, Map<String, Map<String, List<Eleve>>>> event) {
                     if (event.isRight()) {
@@ -884,10 +888,13 @@ public class ExportPDFController extends ControllerHelper {
         final Long idPeriode =
                 (request.params().get("idPeriode") != null) ? Long.valueOf(request.params().get("idPeriode")) : null;
 
+        // paramètre pour l'export des élèves
+        final String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
+
+
         // Ou exclusif sur la presence des parametres, de facon a s'assurer qu'un seul soit renseigne.
         if (idStructure != null ^ !idClasses.isEmpty() ^ !idEleves.isEmpty()) {
-
-            getParamBFC(idStructure, idClasses, idEleves,
+            getParamBFC((idStructure)!=null? idStructure: idEtablissement, idClasses, idEleves,
                     idPeriode,
                     new Handler<Either<String, Map<String, Map<String, List<Eleve>>>>>() {
                         @Override
@@ -1474,6 +1481,7 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final Boolean isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
         final List<String> listIdMatieres = request.params().getAll("idMatiere");
+        final String idStructure = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
 
         final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < listIdMatieres.size(); i++) {
@@ -1551,7 +1559,9 @@ public class ExportPDFController extends ControllerHelper {
                                 if (finalIdClasse == null) {
                                     JsonObject action = new JsonObject()
                                             .put("action", "eleve.getInfoEleve")
-                                            .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(new String[]{finalIdEleve})));
+                                            .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
+                                            .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(
+                                                    Arrays.asList(new String[]{finalIdEleve})));
 
                                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                         @Override
@@ -1612,8 +1622,11 @@ public class ExportPDFController extends ControllerHelper {
 
                                                 JsonObject action = new JsonObject()
                                                         .put("action", "eleve.getInfoEleve")
-                                                        .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idEleves)));
-                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                                        .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
+                                                        .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(
+                                                                Arrays.asList(idEleves)));
+                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
+                                                        new Handler<Message<JsonObject>>() {
                                                     @Override
                                                     public void handle(Message<JsonObject> message) {
                                                         JsonObject body = message.body();
@@ -2046,7 +2059,8 @@ public class ExportPDFController extends ControllerHelper {
                                                     }
                                                     WorkflowActionUtils.hasHeadTeacherRight(user,
                                                             new JsonArray().add(idClasse), null, null,
-                                                            null, null, new Handler<Either<String, Boolean>>() {
+                                                            null, null, null,
+                                                            new Handler<Either<String, Boolean>>() {
                                                                 @Override
                                                                 public void handle(Either<String, Boolean> event) {
                                                                     Boolean isHeadTeacher;
@@ -2500,6 +2514,7 @@ public class ExportPDFController extends ControllerHelper {
 
                 JsonObject action = new JsonObject()
                         .put("action", "eleve.getInfoEleve")
+                        .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
                         .put("idEleves", idStudents);
                 Future<JsonArray> elevesFuture = Future.future();
                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(

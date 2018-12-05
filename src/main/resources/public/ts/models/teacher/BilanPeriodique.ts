@@ -156,10 +156,11 @@ export class BilanPeriodique extends  Model {
         }
     }
 
-    toJSON(periode, element, eleve, classe){
+    toJSON(periode, element, eleve, classe ,structure){
         let data = {
             id_periode : periode.id,
-            id_element : element.id
+            id_element : element.id,
+            id_etablissement : structure.id
         };
         eleve ? _.extend(data, {id_eleve : eleve.id, appreciation : eleve.appreciations[periode.id][element.id], id_classe : classe.id})
             :  _.extend(data, {appreciation : element.appreciationClasse[periode.id][classe.id], id_classe : classe.id, externalid_classe : classe.externalId});
@@ -170,10 +171,13 @@ export class BilanPeriodique extends  Model {
     async saveAppreciation (periode, element, eleve, classe, isBilanPeriodique) {
         try {
             if(isBilanPeriodique !== true) {
-                eleve ? await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=eleve", this.toJSON(periode, element, eleve, classe))
-                    : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=classe", this.toJSON(periode, element, null, classe));
+                eleve ? await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=eleve",
+                    this.toJSON(periode, element, eleve, classe, this.structure))
+                    : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=classe",
+                    this.toJSON(periode, element, null, classe, this.structure));
             } else {
-                 await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE + "?type=eleve-bilanPeriodique", this.toJSON(periode, element, eleve, classe));
+                 await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE
+                     + "?type=eleve-bilanPeriodique", this.toJSON(periode, element, eleve, classe, this.structure));
             }
 
         } catch (e) {

@@ -133,7 +133,8 @@ public class FilterDevoirUtils  extends ControllerHelper {
                                     final HttpServerRequest resourceRequest) {
         WorkflowActionUtils.hasHeadTeacherRight(user, null,
                 new JsonArray().add(idDevoir),
-                Competences.DEVOIR_TABLE, null, null, new Handler<Either<String, Boolean>>() {
+                Competences.DEVOIR_TABLE, null, null, null,
+                new Handler<Either<String, Boolean>>() {
                     @Override
                     public void handle(Either<String, Boolean> event) {
                         if(event.isLeft()) {

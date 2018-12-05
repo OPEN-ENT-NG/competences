@@ -155,7 +155,9 @@ public class DevoirController extends ControllerHelper {
                                 JsonObject action = new JsonObject()
                                         .put("action", "eleve.isEvaluableOnPeriode")
                                         .put("idEleve", resource.getJsonObject("competenceEvaluee").getString("id_eleve"))
-                                        .put("idPeriode", new Long(resource.getInteger("id_periode")));
+                                        .put("idPeriode", new Long(resource.getInteger("id_periode")))
+                                        .put(Competences.ID_ETABLISSEMENT_KEY,
+                                                resource.getString("id_etablissement"));
 
                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                     @Override

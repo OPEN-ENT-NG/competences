@@ -270,9 +270,11 @@ public class Utils {
      *                 ou un erreur potentiellement survenue.
      * @see Eleve
      */
-    public static void getInfoEleve(EventBus eb, String[] idEleves, final Handler<Either<String, List<Eleve>>> handler) {
+    public static void getInfoEleve(EventBus eb, String[] idEleves, String idEtablissment,
+                                    final Handler<Either<String, List<Eleve>>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "eleve.getInfoEleve")
+                .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissment)
                 .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idEleves)));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
