@@ -1727,7 +1727,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.devoir.id_groupe = $scope.searchOrFirst("classe", $scope.structure.classes.all).id;
                 $scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
                 $scope.devoir.id_matiere = $scope.devoir.matiere.id;
-                $scope.devoir.id_type = $scope.searchOrFirst("type", $scope.structure.types.all).id;
+                // $scope.devoir.id_type = $scope.searchOrFirst("type", $scope.structure.types.all).id;
+                $scope.devoir.id_type = _.findWhere($scope.structure.types.all, {default_type: true}).id;
 
                 if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
                     // atention sur le devoir on stocker l'id_type t non l'id de la sous matiere
