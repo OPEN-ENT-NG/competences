@@ -115,7 +115,7 @@
                                     <div class="nine cell twelve-mobile">
                                         <label class="select four twelve-mobile">
                                             <select ng-if="devoir.id === undefined" ng-model="devoir.id_type" ng-change="initCoef()">
-                                                <option ng-repeat="type in evaluations.types.all" ng-selected="type.default_type === true" value="[[type.id]]">[[type.nom]]</option>
+                                                <option ng-repeat="type in evaluations.types.all" value="[[type.id]]">[[type.nom]]</option>
                                             </select>
                                             <select ng-if="devoir.id !== undefined" ng-model="devoir.id_type" ng-change="initCoef()">
                                                 <option ng-repeat="type in evaluations.types.all" ng-selected="type.id === devoir.id_type" value="[[type.id]]">[[type.nom]]</option>
