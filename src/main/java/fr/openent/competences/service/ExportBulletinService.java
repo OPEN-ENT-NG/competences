@@ -146,4 +146,13 @@ public interface ExportBulletinService {
      void getAnneeScolaire(String idEleve,
                                  Map<String, JsonObject> elevesMap, Long idPeriode,
                                  Handler<Either<String, JsonObject>> finalHandler) ;
+
+    /**
+     *
+     * @param idEleve  idEleve
+     * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+     * @param idPeriode idType of the periode
+     * @param finalHandler response
+     */
+    void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, Handler<Either<String, JsonObject>> finalHandler);
 }

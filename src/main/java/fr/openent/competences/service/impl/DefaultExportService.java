@@ -1009,7 +1009,7 @@ public class DefaultExportService implements ExportService  {
             - Rajoute tous les libelles i18n nécessaires pour le bulletin
             - Récupère l'appréciation CPE
          */
-        int nbServices = 10;
+        int nbServices = 11;
         if(params.getBoolean("getResponsable")){
             ++ nbServices;
         }

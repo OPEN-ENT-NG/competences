@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.service.AvisConseilService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -8,7 +9,8 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-public class DefaultAvisConseilService {
+public class DefaultAvisConseilService implements AvisConseilService {
+
 
     public void getLibelleAvis (Long typeAvis, Handler<Either<String, JsonArray>> handler){
 
@@ -56,6 +58,8 @@ public class DefaultAvisConseilService {
         String query = "";
 
         query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_de_classe " +
+                "INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique " +
+                "ON(avis_conseil_bilan_periodique.id = avis_conseil_de_classe.id_avis_conseil_bilan)  " +
                 "WHERE "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_de_classe.id_eleve = ? " +
                 "AND "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_de_classe.id_periode = ? ";
 
@@ -64,4 +68,6 @@ public class DefaultAvisConseilService {
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
+
+
 }

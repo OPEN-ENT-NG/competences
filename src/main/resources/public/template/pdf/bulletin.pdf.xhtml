@@ -407,7 +407,10 @@
         <h1 color= "green"> {{bilanAcquisitionLibelle}}</h1>
         <div class="paddingFifty">
             <div style="background-color: #eef4d7 !important; min-height: 20px; font-size: small;" class="synthese">
-                {{syntheseBilanPeriodque}}
+                {{syntheseBilanPeriodque}}<br/>
+                {{#hasAvisConseil}}
+                {{avisConseil}}
+                {{/hasAvisConseil}}
             </div>
         </div>
 

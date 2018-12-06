@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.service.AvisConseilService;
 import fr.openent.competences.service.BilanPeriodiqueService;
 import fr.openent.competences.service.ElementBilanPeriodiqueService;
 import fr.openent.competences.service.ExportBulletinService;
@@ -39,6 +40,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private final int MAX_SIZE_LIBELLE_PROJECT = 600;
     private final int MAX_SIZE_APPRECIATION_CPE = 600;
     private final int MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE = 600;
+    private AvisConseilService avisConseilService;
 
     public DefaultExportBulletinService(EventBus eb) {
         this.eb = eb;
@@ -46,6 +48,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
         appreciationCPEService = new DefaultAppreciationCPEService();
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
+        avisConseilService = new DefaultAvisConseilService();
     }
 
 
@@ -124,6 +127,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getAnneeScolaire(idEleve, elevesMap, idPeriode, finalHandler);
                 getCycle(idEleve,elevesMap,idPeriode,finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
+                getAvisConseil(idEleve, elevesMap, idPeriode, finalHandler);
                 if(params.getBoolean("getResponsable")) {
                     getResponsables(idEleve, elevesMap, finalHandler);
                 }
@@ -363,6 +367,44 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                         }));
             }
+        }
+    }
+
+    @Override
+    public void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, Handler<Either<String, JsonObject>> finalHandler) {
+        JsonObject eleveObject = elevesMap.get(idEleve);
+        if (eleveObject == null) {
+            logStudentNotFound(idEleve, "getAvisConseil");
+            finalHandler.handle(new Either.Right<>(null));
+        }else{
+            avisConseilService.getAvisConseil(idEleve, idPeriode, new Handler<Either<String, JsonObject>>() {
+                private int count = 1;
+                @Override
+                public void handle(Either<String, JsonObject> event) {
+                    if(event.isLeft()){
+                        String message = event.left().getValue();
+                        log.error("[getAvisConseil ] : " + idEleve  + " " + message + " " + count);
+                        if (message.contains("Time")) {
+                            count++;
+                            avisConseilService.getAvisConseil(idEleve, idPeriode,this);
+                        }
+                        else {
+                            if (eleveObject.getJsonArray("errors") == null) {
+                                eleveObject.put("errors", new JsonArray());
+                            }
+                            JsonArray errors = eleveObject.getJsonArray("errors");
+                            errors.add("getAvisConseil");
+                            serviceResponseOK(finalHandler, count, idEleve, "getAvisConseil");
+                        }
+                    }else{
+                        JsonObject avisConseil = event.right().getValue();
+                        if(avisConseil != null ) {
+                            eleveObject.put("avisConseil",avisConseil.getString("libelle")).put("hasAvisConseil",true);
+                        }
+                        serviceResponseOK(finalHandler, count, idEleve, "getAvisConseil");
+                    }
+                }
+            });
         }
     }
 
