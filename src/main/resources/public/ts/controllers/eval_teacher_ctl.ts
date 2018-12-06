@@ -2392,14 +2392,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
 
-         $scope.getLibelleDevoir = function (id) {
-         let devoir = $scope.devoirs.findWhere({id : id});
-         if (devoir !== undefined) return devoir.name;
-         };
+         // $scope.getLibelleDevoir = function (id) {
+         // let devoir = $scope.devoirs.findWhere({id : id});
+         // if (devoir !== undefined) return devoir.name;
+         // };
 
-        // $scope.getLibelleDevoir = function (id) {
-        //     if ($scope.mapIdLibelleDevoir !== undefined) return $scope.mapIdLibelleDevoir[parseInt(id)];
-        // };
+        $scope.getLibelleDevoir = function (id) {
+            if ($scope.mapIdLibelleDevoir !== undefined) return $scope.mapIdLibelleDevoir[parseInt(id)];
+        };
 
         /**
          * Récupère la moyenne finale d'un élève ou la moyenne calculée pour une période donnée
