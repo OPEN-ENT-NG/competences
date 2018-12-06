@@ -625,13 +625,25 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 SqlResult.validResultHandler(handler));
     }
 
+    /**
+     *
+     * @param idsClasses
+     * @param idPeriode
+     * @param idElements id des élèments du bilan périodique, si null on ramène tous les ID et on considère que le code thematique est necessaire
+     * @param idEleve
+     * @param handler Handler de retour
+     */
     @Override
     public void getApprecBilanPerEleve (List<String> idsClasses, String idPeriode, List<String> idElements, String idEleve, Handler<Either<String, JsonArray>> handler){
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT DISTINCT " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.* " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve ";
+        String query = "SELECT DISTINCT " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.*, rel_groupe_appreciation_elt_eleve.id_groupe ";
+
+        if (idElements == null) {
+            query += ", thematiqueBP.code ";
+        }
+                query += "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve ";
 
         if(idsClasses != null && idsClasses.size() > 0){
             query += " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve " +
@@ -640,19 +652,27 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 params.add(idsClasses.get(i));
             }
         }
-        query += " WHERE " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
 
-        for (int i = 0; i < idElements.size(); i++) {
-            params.add(idElements.get(i));
+        if(idElements != null) {
+            query += " WHERE " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_elt_bilan_periodique IN " + Sql.listPrepared(idElements);
+            for (int i = 0; i < idElements.size(); i++) {
+                params.add(idElements.get(i));
+            }
+        }
+        else {
+            query += " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".elt_bilan_periodique AS elBP ON elBP.id =  "+ Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_elt_bilan_periodique ";
+            query += " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".thematique_bilan_periodique AS thematiqueBP ON thematiqueBP.id = elBP.id_thematique ";
         }
 
         if(idPeriode != null){
-            query += " AND " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_periode = ? ";
+            query += idElements == null ? " WHERE " : " AND ";
+            query += Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_periode = ? ";
             params.add(idPeriode);
         }
 
         if(idEleve != null){
-            query += " AND " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_eleve = ? ";
+            query += idElements == null && idPeriode == null ? " WHERE " : " AND ";
+            query += Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.id_eleve = ? ";
             params.add(idEleve);
         }
 
