@@ -1250,7 +1250,7 @@ public class NoteController extends ControllerHelper {
         JsonArray result = new JsonArray();
         for (int i=0; i< datas.size(); i++ ) {
             JsonObject data = datas.getJsonObject(i);
-            if (data != null) {
+            if (data != null && data.getBoolean("formative") != null && !data.getBoolean("formative").booleanValue()) {
                 String idMatiere = data.getString("id_matiere");
                 idMatiere = (idMatiere!= null)? idMatiere : "no_id_matiere";
                 if (!mapDataClasse.containsKey(idMatiere)) {
@@ -1405,18 +1405,20 @@ public class NoteController extends ControllerHelper {
         // On groupe Competences-notes par domaine
         for (int i=0; i<compNotes.size(); i++) {
             JsonObject compNote = compNotes.getJsonObject(i);
-            Long idDomaine = compNote.getLong("id_domaine");
-            if (!domainesMap.containsKey(idDomaine)) {
-                domainesMap.put(idDomaine, new JsonObject()
-                        .put("competencesNotes", new JsonArray() )
-                        .put("competencesNotesEleve", new JsonArray()));
-            }
-            JsonObject domaine = domainesMap.get(idDomaine);
-            if(domaine != null) {
-                if (idEleve.equals(compNote.getString("id_eleve"))) {
-                    domaine.getJsonArray("competencesNotesEleve").add(compNote);
+            if(!compNote.getBoolean("formative")) {
+                Long idDomaine = compNote.getLong("id_domaine");
+                if (!domainesMap.containsKey(idDomaine)) {
+                    domainesMap.put(idDomaine, new JsonObject()
+                            .put("competencesNotes", new JsonArray())
+                            .put("competencesNotesEleve", new JsonArray()));
                 }
-                domaine.getJsonArray("competencesNotes").add(compNote);
+                JsonObject domaine = domainesMap.get(idDomaine);
+                if (domaine != null) {
+                    if (idEleve.equals(compNote.getString("id_eleve"))) {
+                        domaine.getJsonArray("competencesNotesEleve").add(compNote);
+                    }
+                    domaine.getJsonArray("competencesNotes").add(compNote);
+                }
             }
         }
         // On Lie les competences-notes groupées aux domaines

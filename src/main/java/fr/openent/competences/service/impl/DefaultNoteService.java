@@ -397,8 +397,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append((withDomaineInfo)? "compDom.id_domaine, " : "")
                 .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
                 .append("null as annotation, ")
-                .append("competence_niveau_final.niveau_final AS niveau_final")
+                .append("competence_niveau_final.niveau_final AS niveau_final, type.formative")
                 .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".devoirs ");
+
+
+        query.append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (devoirs.id_type = type.id) ");
 
         if (null != eleveId) {
             query.append(" LEFT JOIN (SELECT id, id_devoir, id_competence, max(evaluation) ")
@@ -795,6 +798,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 notesByDevoirByPeriode.put(id_periode,
                         new HashMap<Long, ArrayList<NoteDevoir>>());
 
+            }
+
+            // si competence provenant d'un devoir de type formative, alors,
+            // on l'exclue du calcul
+            Boolean isFormative = note.getBoolean("formative");
+            if (isFormative) {
+                continue;
             }
 
             if (note.getLong("evaluation") == null
