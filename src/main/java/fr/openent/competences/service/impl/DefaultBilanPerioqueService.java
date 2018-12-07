@@ -217,7 +217,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                                                 .collections.JsonArray();
                                                         for (Object idTeacher : idsTeachers) {
                                                             if(teachersInfos != null && !teachersInfos.isEmpty() && teachersInfos.containsKey(idTeacher)){
-                                                                teachers.add(teachersInfos.get(idTeacher));
+                                                                teachers.add(teachersInfos.get(idTeacher).put("id", idTeacher));
                                                             }else{
                                                                 teachers.add(new JsonObject().put("id", idTeacher)
                                                                         .put("firstName","no first name").put("name","no name"));
