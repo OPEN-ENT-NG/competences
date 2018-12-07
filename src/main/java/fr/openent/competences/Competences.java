@@ -28,7 +28,10 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.eventbus.DeliveryOptions;
+import org.entcore.common.storage.Storage;
+import org.entcore.common.storage.StorageFactory;
 
+import java.math.BigInteger;
 
 public class Competences extends BaseServer {
 
@@ -157,6 +160,7 @@ public class Competences extends BaseServer {
         EmailSender notification = emailFactory.getSender();
 
         final EventBus eb = getEventBus(vertx);
+        final Storage storage = new StorageFactory(vertx).getStorage();
 
 		addController(new CompetencesController());
         addController(new ServicesController());
@@ -177,13 +181,13 @@ public class Competences extends BaseServer {
         addController(devoirController);
 		addController(new DomaineController(eb));
 		addController(new EnseignementController(eb));
-		addController(new ExportPDFController(eb, notification));
+		addController(new ExportPDFController(eb, notification, storage));
 		addController(new LSUController(eb));
 		addController(new NiveauDeMaitriseController());
 		addController(new NoteController(eb));
 		addController(new RemplacementController());
         addController(new ElementProgrammeController());
-		addController(new UtilsController());
+		addController(new UtilsController(storage));
         addController(new BilanPeriodiqueController(eb));
 
 		addController(new EventBusController());

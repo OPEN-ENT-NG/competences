@@ -36,6 +36,7 @@ import io.vertx.core.eventbus.Message;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 import io.vertx.core.Handler;
@@ -58,16 +59,17 @@ public class UtilsController extends ControllerHelper {
 
     private final UtilsService utilsService;
     private final TransitionService transitionService;
+    private final Storage storage;
 
-    public UtilsController() {
+    public UtilsController( Storage storage) {
         utilsService = new DefaultUtilsService();
         transitionService = new DefaultTransitionService();
+        this.storage = storage;
     }
 
 
     /**
      * Retourne tous les types de devoir par etablissement
-     *
      * @param request
      */
     @Get("/types")
@@ -90,7 +92,6 @@ public class UtilsController extends ControllerHelper {
 
     /**
      * Retourne la liste des enfants pour un utilisateur donné
-     *
      * @param request
      */
     @Get("/enfants")
@@ -254,5 +255,30 @@ public class UtilsController extends ControllerHelper {
             }
         });
     }
+
+    @Post("/graph/img")
+    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    public void postImgForBulletins(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, user -> {
+            this.storage.writeUploadFile(request, uploaded -> {
+                if (!"ok".equals(uploaded.getString("status"))) {
+                    badRequest(request, uploaded.getString("message"));
+                    return;
+                }
+
+                // Vérification du format qui doit-être une image
+                JsonObject metadata = uploaded.getJsonObject("metadata");
+                String contentType = metadata.getString("content-type");
+
+                if (contentType.contains("image")) {
+                    Renders.renderJson(request, uploaded);
+                } else {
+                    badRequest(request, "Format de fichier incorrect");
+}
+
+            });
+        });
+    }
+
 
 }

@@ -44,6 +44,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
@@ -84,8 +85,9 @@ public class ExportPDFController extends ControllerHelper {
     private EleveEnseignementComplementService eleveEnseignementComplementService;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
     private AppreciationService appreciationService;
+    private final Storage storage;
 
-    public ExportPDFController(EventBus eb, EmailSender notification) {
+    public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
         devoirService = new DefaultDevoirService(eb);
         utilsService = new DefaultUtilsService(eb);
         bfcService = new DefaultBFCService(eb);
@@ -94,11 +96,12 @@ public class ExportPDFController extends ControllerHelper {
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE, eb);
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
-        exportService = new DefaultExportService(eb);
+        exportService = new DefaultExportService(eb, storage);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
+        this.storage = storage;
     }
 
     /**

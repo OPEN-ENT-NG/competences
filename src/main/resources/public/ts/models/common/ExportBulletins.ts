@@ -34,10 +34,13 @@ export class ExportBulletins {
             imgStructure: (options.imgStructure !== undefined)? options.imgStructure : "",
             hasImgStructure: (options.imgStructure !== undefined)? true: false,
             imgSignature: (options.imgSignature !== undefined)? options.imgSignature : "",
-            hasImgSignature: (options.imgSignature !== undefined)? true: false,
+            hasImgSignature: (options.imgSignature !== undefined)? true: false
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode});
+        }
+        if(o.showBilanPerDomaines) {
+            _.extend(o, {idImagesFiles : options.idImagesFiles});
         }
         return o;
     }
@@ -49,6 +52,7 @@ export class ExportBulletins {
             try {
 
                 options.images = {};
+                options.idImagesFiles = [];
                 if (options.showBilanPerDomaines === true) {
                     await this.createCanvas(options, $scope);
                 }
@@ -162,7 +166,18 @@ export class ExportBulletins {
 
                 });
                 let image = myChart.toBase64Image();
-                options.images[student.id] = image;
+
+                // let binary = this.fixBinary(atob(image));
+                let blob = new Blob([image], {type: 'image/png'});
+
+                const formData = new FormData();
+                formData.append('file', blob);
+
+                const response = await http.post('/competences/graph/img', formData);
+
+                options.images[student.id] = response.data._id;
+                options.idImagesFiles.push(response.data._id);
+
                 resolve();
             }
             catch (e) {

@@ -37,6 +37,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 
 import javax.imageio.ImageIO;
@@ -78,8 +79,9 @@ public class DefaultExportService implements ExportService  {
     private BFCService bfcService;
     private EventBus eb;
     private DefaultExportBulletinService exportBulletin;
+    private final Storage storage;
 
-    public DefaultExportService(EventBus eb) {
+    public DefaultExportService(EventBus eb, Storage storage) {
         this.eb = eb;
         devoirService = new DefaultDevoirService(eb);
         utilsService = new DefaultUtilsService();
@@ -91,7 +93,8 @@ public class DefaultExportService implements ExportService  {
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         annotationsService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE);
-        exportBulletin = new DefaultExportBulletinService(eb);
+        exportBulletin = new DefaultExportBulletinService(eb, storage);
+        this.storage = storage;
     }
 
     @Override
@@ -1008,6 +1011,7 @@ public class DefaultExportService implements ExportService  {
             - Récupère le cycle de la classe de l'élève
             - Rajoute tous les libelles i18n nécessaires pour le bulletin
             - Récupère l'appréciation CPE
+            - Récupère les images de l'élève
          */
         int nbServices = 11;
         if(params.getBoolean("getResponsable")){
@@ -1015,6 +1019,9 @@ public class DefaultExportService implements ExportService  {
         }
         if (params.getBoolean("showProjects")) {
          ++ nbServices;
+        }
+        if(params.getBoolean("showBilanPerDomaines")) {
+            ++ nbServices;
         }
         final AtomicInteger nbServicesFinal = new AtomicInteger(nbServices);
 
@@ -1032,6 +1039,7 @@ public class DefaultExportService implements ExportService  {
                                 .put("title", title);
 
                         resultFinal.put("eleves", exportBulletin.sortResultByClasseNameAndNameForBulletin(elevesMap));
+                        resultFinal.put("idImagesFiles", params.getJsonArray("idImagesFiles"));
                         genererPdf(request, resultFinal,
                                 "bulletin.pdf.xhtml", title, vertx, config);
                     }
@@ -1211,6 +1219,13 @@ public class DefaultExportService implements ExportService  {
                                                             "attachment; filename=" + prefixPdfName + "_"
                                                                     + dateDebut + ".pdf");
                                                     request.response().end(Buffer.buffer(pdf));
+                                                    JsonArray removesFiles = templateProps.getJsonArray(
+                                                            "idImagesFiles");
+                                                    if (removesFiles != null) {
+                                                        storage.removeFiles(removesFiles, event -> {
+                                                            log.info(" [Remove graph Images] " + event.encode());
+                                                        });
+                                                    }
                                                     log.info(new SimpleDateFormat("HH:mm:ss:S")
                                                             .format(new Date().getTime())
                                                             + " -> Fin Generation PDF du template " + templateName);
