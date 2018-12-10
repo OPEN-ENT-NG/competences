@@ -5,9 +5,12 @@ import fr.openent.competences.service.AvisConseilService;
 import fr.openent.competences.service.BilanPeriodiqueService;
 import fr.openent.competences.service.ElementBilanPeriodiqueService;
 import fr.openent.competences.service.ExportBulletinService;
+import fr.openent.competences.service.DomainesService;
+import fr.openent.competences.service.ExportService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
@@ -21,6 +24,7 @@ import org.entcore.common.storage.Storage;
 import static fr.wseduc.webutils.http.Renders.getHost;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -46,29 +50,40 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String GET_APPRECIATION_CPE_METHOD = "getAppreciationCPE";
     private static final String EXPORT_BULLETIN_METHOD = "export Bulletin";
     private static final String GET_AVIS_CONSEIL_METHOD = "getAvisConseil";
-    private static final String GET_IMAGE_GRAPH_METHOD= "getImageGraph";
+    private static final String GET_IMAGE_GRAPH_METHOD = "getImageGraph";
+    private static final String GET_ARBRE_DOMAINE_METHOD = "getArbreDomaines";
 
 
-    // Keys For JsonObject
+    // Keys Utils
     private static final String PRINT_MATIERE_KEY = "printMatiere";
+    private static final String ID = "id";
+    private static final String ID_PARENT = "id_parent";
     private static final String ID_PERIODE ="id_periode";
     private static final String ID_CLASSE = "idClasse";
     private static final String ID_ELEVE = "idEleve";
+    private static final String ID_ETABLISSEMENT = "idEtablissement";
     private static final String GET_RESPONSABLE = "getResponsable";
     private static final String MOYENNE = "moyenne";
     private static final String MOYENNE_CLASSE = "moyenneClasse";
     private static final String MOYENNE_ELEVE = "moyenneEleve";
     private static final String POSITIONNEMENT = "positionnement";
     private static final String ELEMENTS_PROGRAMME = "elementsProgramme";
+    private static final String EVALUATED = "evaluated";
     private static final String ACTION = "action";
     private static final String STATUS = "status";
     private static final String MESSAGE = "message";
     private static final String RESULT = "result";
     private static final String RESULTS = "results";
     private static final String NAME = "name";
+    private static final String CLASSE_NAME = "classeName";
     private static final String ADDRESSE_POSTALE = "addressePostale";
     private static final String GRAPH_PER_DOMAINE = "graphPerDomaine";
     private static final String LIBELLE = "libelle";
+    private static final String ERROR = "errors";
+    private static final String TIME = "Time";
+    private static final String HAS_PROJECT = "hasProject";
+    private static final String ID_IMAGES_FILES = "idImagesFiles";
+    private static final String IS_DOMAINE_PARENT = "isDomaineParent";
 
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
@@ -93,6 +108,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private final DefaultAppreciationCPEService appreciationCPEService;
     private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
     private AvisConseilService avisConseilService;
+    private DomainesService domainesService;
+    private ExportService exportService;
     private final Storage storage;
 
 
@@ -104,6 +121,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         appreciationCPEService = new DefaultAppreciationCPEService();
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         avisConseilService = new DefaultAvisConseilService();
+        domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
+        exportService = new DefaultExportService(eb, storage);
         this.storage = storage;
     }
 
@@ -194,6 +213,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }
                 if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
                     getImageGraph(idEleve, elevesMap, idPeriode, finalHandler);
+                    getArbreDomaines(idEleve,elevesMap, finalHandler);
                 }
 
                 if (params.getBoolean(SHOW_PROJECTS)) {
@@ -208,6 +228,63 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         catch (Exception e) {
             log.error(EXPORT_BULLETIN_METHOD, e);
         }
+    }
+
+    @Override
+    public Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
+                                                                 Map<String, JsonObject> elevesMap,
+                                                                 Vertx vertx, JsonObject config,
+                                                                 final int nbrEleves,
+                                                                 final AtomicBoolean answered,
+                                                                 JsonObject params) {
+        final AtomicInteger elevesDone = new AtomicInteger();
+    /*
+        - Récupération des retards et absences
+        - Récupération du suivi des acquis
+        - Récupération du libelle de l'établissement
+        - Récupération des professeurs principaux
+        - Récupération de la synthèse du relevé périodique
+        - Récupération du libelle de la période
+        - Récupération de l'année scolaire
+        - Récupère le cycle de la classe de l'élève
+        - Rajoute tous les libelles i18n nécessaires pour le bulletin
+        - Récupère l'appréciation CPE
+        - Récupère les images de l'élève
+        - Récupération de l'arbre des domaines de l'élève
+     */
+        int nbServices = 11;
+        if (params.getBoolean(GET_RESPONSABLE)) {
+            ++nbServices;
+        }
+        if (params.getBoolean(SHOW_PROJECTS)) {
+            ++nbServices;
+        }
+        if (params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
+            nbServices += 2;
+        }
+        final AtomicInteger nbServicesFinal = new AtomicInteger(nbServices);
+
+        return new Handler<Either<String, JsonObject>>() {
+            @Override
+            public void handle(Either<String, JsonObject> event) {
+                if (event.isRight()) {
+                    if (elevesDone.addAndGet(1) == (nbrEleves * nbServicesFinal.get())) {
+                        answered.set(true);
+                        String title = params.getString(CLASSE_NAME) + "_" + I18n.getInstance()
+                                .translate("evaluations.bulletin",
+                                        I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+                        JsonObject resultFinal = new JsonObject()
+                                .put(GET_PROGRAM_ELEMENT, params.getBoolean(GET_PROGRAM_ELEMENT))
+                                .put("title", title);
+
+                        resultFinal.put("eleves", sortResultByClasseNameAndNameForBulletin(elevesMap));
+                        resultFinal.put(ID_IMAGES_FILES, params.getJsonArray(ID_IMAGES_FILES));
+                        exportService.genererPdf(request, resultFinal,
+                                "bulletin.pdf.xhtml", title, vertx, config);
+                    }
+                }
+            }
+        };
     }
 
     @Override
@@ -438,15 +515,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if(event.isLeft()){
                         String message = event.left().getValue();
                         log.error("[getAvisConseil ] : " + idEleve  + " " + message + " " + count);
-                        if (message.contains("Time")) {
+                        if (message.contains(TIME)) {
                             count++;
                             avisConseilService.getAvisConseil(idEleve, idPeriode,this);
                         }
                         else {
-                            if (eleveObject.getJsonArray("errors") == null) {
-                                eleveObject.put("errors", new JsonArray());
+                            if (eleveObject.getJsonArray(ERROR) == null) {
+                                eleveObject.put(ERROR, new JsonArray());
                             }
-                            JsonArray errors = eleveObject.getJsonArray("errors");
+                            JsonArray errors = eleveObject.getJsonArray(ERROR);
                             errors.add(GET_AVIS_CONSEIL_METHOD);
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_CONSEIL_METHOD);
                         }
@@ -465,13 +542,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     private void sethasProject( JsonObject project, boolean value) {
 
-        if(project.getBoolean("hasProject") == value) {
+        if(project.getBoolean(HAS_PROJECT) == value) {
             return;
         }
-        else if (project.getBoolean("hasProject") != null) {
-            project.remove("hasProject");
+        else if (project.getBoolean(HAS_PROJECT) != null) {
+            project.remove(HAS_PROJECT);
         }
-        project.put("hasProject", value);
+        project.put(HAS_PROJECT, value);
     }
 
 
@@ -487,7 +564,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         else {
             // gets Projects
             String idClasse = eleveObject.getString(ID_CLASSE);
-            String idEtablissement = eleveObject.getString("idEtablissement");
+            String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT);
 
             elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idClasse,
                     idEtablissement, new Handler<Either<String, JsonArray>>() {
@@ -498,16 +575,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             if (event.isLeft()) {
                                 String message = event.left().getValue();
                                 log.error("["+ GET_PROJECTS_METHOD +"] :" + idEleve + " " + message + " " + count);
-                                if (message.contains("Time") && !answer.get()) {
+                                if (message.contains(TIME) && !answer.get()) {
                                     count++;
                                     elementBilanPeriodiqueService.getElementsBilanPeriodique(null,
                                             idClasse, idEtablissement, this);
                                 }
                                 else {
-                                    if (eleveObject.getJsonArray("errors") == null) {
-                                        eleveObject.put("errors", new JsonArray());
+                                    if (eleveObject.getJsonArray(ERROR) == null) {
+                                        eleveObject.put(ERROR, new JsonArray());
                                     }
-                                    JsonArray errors = eleveObject.getJsonArray("errors");
+                                    JsonArray errors = eleveObject.getJsonArray(ERROR);
                                     errors.add(GET_PROJECTS_METHOD);
                                     serviceResponseOK(answer, finalHandler, count, idEleve, GET_PROJECTS_METHOD);
                                 }
@@ -524,13 +601,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 Map<Long, JsonObject> mapElement = new HashMap<>();
                                 JsonObject epi = new JsonObject().put(LIBELLE,
                                         getLibelle("enseignements.pratiques.interdisciplinaires"))
-                                        .put("hasProject", false);
+                                        .put(HAS_PROJECT, false);
                                 JsonObject ap = new JsonObject().put(LIBELLE,
                                         getLibelle("accompagnements.personnalises"))
-                                        .put("hasProject", false);
+                                        .put(HAS_PROJECT, false);
                                 JsonObject parcours = new JsonObject().put(LIBELLE,
                                         getLibelle("parcours.educatifs"))
-                                        .put("hasProject", false);
+                                        .put(HAS_PROJECT, false);
 
                                 if (elementBilanPeriodique == null) {
                                     serviceResponseOK(answer, finalHandler, count, idEleve, GET_PROJECTS_METHOD);
@@ -587,7 +664,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                             String message = event.left().getValue();
                                                             log.error("[getProjets | getAppreciations ] : " +
                                                                     idEleve + " " + message + " " + count);
-                                                            if (message.contains("Time") && !answer.get()) {
+                                                            if (message.contains(TIME) && !answer.get()) {
                                                                 count++;
                                                                 elementBilanPeriodiqueService
                                                                         .getAppreciations(idClasses,
@@ -595,11 +672,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                                 idElements, idEleve, this);
                                                             }
                                                             else {
-                                                                if (eleveObject.getJsonArray("errors") == null) {
-                                                                    eleveObject.put("errors", new JsonArray());
+                                                                if (eleveObject.getJsonArray(ERROR) == null) {
+                                                                    eleveObject.put(ERROR, new JsonArray());
                                                                 }
                                                                 JsonArray errors = eleveObject
-                                                                        .getJsonArray("errors");
+                                                                        .getJsonArray(ERROR);
                                                                 errors.add(GET_PROJECTS_METHOD);
                                                                 serviceResponseOK(answer,finalHandler,
                                                                         count, idEleve, GET_PROJECTS_METHOD);
@@ -675,16 +752,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             if(event.isLeft()){
                                 String message = event.left().getValue();
                                 log.error("[getSyntheseBilanPeriodique ] : " + idEleve  + " " + message + " " + count);
-                                if (message.contains("Time") && !answer.get()) {
+                                if (message.contains(TIME) && !answer.get()) {
                                     count++;
                                     syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve,
                                             this);
                                 }
                                 else {
-                                    if (eleveObject.getJsonArray("errors") == null) {
-                                        eleveObject.put("errors", new JsonArray());
+                                    if (eleveObject.getJsonArray(ERROR) == null) {
+                                        eleveObject.put(ERROR, new JsonArray());
                                     }
-                                    JsonArray errors = eleveObject.getJsonArray("errors");
+                                    JsonArray errors = eleveObject.getJsonArray(ERROR);
                                     errors.add(GET_SYNTHESE_BILAN_PERIO_METHOD);
                                     serviceResponseOK(answer, finalHandler, count, idEleve,
                                             GET_SYNTHESE_BILAN_PERIO_METHOD);
@@ -725,15 +802,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if (event.isLeft()) {
                         String message = " " + event.left().getValue();
                         log.error("[" + GET_APPRECIATION_CPE_METHOD + "] : " + idEleve + " " + message + " " + count);
-                        if (message.contains("Time") && !answer.get()) {
+                        if (message.contains(TIME) && !answer.get()) {
                             count++;
                             appreciationCPEService.getAppreciationCPE(idPeriode, idEleve, this);
                         }
                         else {
-                            if (eleveObject.getJsonArray("errors") == null) {
-                                eleveObject.put("errors", new JsonArray());
+                            if (eleveObject.getJsonArray(ERROR) == null) {
+                                eleveObject.put(ERROR, new JsonArray());
                             }
-                            JsonArray errors = eleveObject.getJsonArray("errors");
+                            JsonArray errors = eleveObject.getJsonArray(ERROR);
                             errors.add(GET_APPRECIATION_CPE_METHOD);
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_APPRECIATION_CPE_METHOD);
                         }
@@ -763,7 +840,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             JsonObject action = new JsonObject();
-            String idStructure = eleveObject.getString("idEtablissement");
+            String idStructure = eleveObject.getString(ID_ETABLISSEMENT);
             action.put(ACTION, "structure.getStructure")
                     .put("idStructure", idStructure);
 
@@ -779,17 +856,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 String mess = body.getString(MESSAGE);
                                 log.error("["+ GET_STRUCTURE_METHOD + "] : " + idEleve + " " + mess + " " + count);
 
-                                if (mess.contains("Time") && !answer.get()) {
+                                if (mess.contains(TIME) && !answer.get()) {
                                     count++;
                                     eb.send(Competences.VIESCO_BUS_ADDRESS, action,
                                             Competences.DELIVERY_OPTIONS,
                                             handlerToAsyncHandler(this));
                                 }
                                 else {
-                                    if (eleveObject.getJsonArray("errors") == null) {
-                                        eleveObject.put("errors", new JsonArray());
+                                    if (eleveObject.getJsonArray(ERROR) == null) {
+                                        eleveObject.put(ERROR, new JsonArray());
                                     }
-                                    JsonArray errors = eleveObject.getJsonArray("errors");
+                                    JsonArray errors = eleveObject.getJsonArray(ERROR);
                                     errors.add(GET_STRUCTURE_METHOD);
                                     serviceResponseOK(answer, finalHandler, count, idEleve, GET_STRUCTURE_METHOD);
                                 }
@@ -962,16 +1039,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if (event.isLeft()) {
                         String message = event.left().getValue();
 
-                        if (message.contains("Time") && !answer.get()) {
+                        if (message.contains(TIME) && !answer.get()) {
                             count++;
                             bilanPeriodiqueService.getRetardsAndAbsences(idEleve, this);
 
                         }
                         else {
-                            if (eleveObject.getJsonArray("errors") == null) {
-                                eleveObject.put("errors", new JsonArray());
+                            if (eleveObject.getJsonArray(ERROR) == null) {
+                                eleveObject.put(ERROR, new JsonArray());
                             }
-                            JsonArray errors = eleveObject.getJsonArray("errors");
+                            JsonArray errors = eleveObject.getJsonArray(ERROR);
                             errors.add(GET_EVENEMENT_METHOD);
                             serviceResponseOK(answer,finalHandler, count, idEleve, GET_EVENEMENT_METHOD);
                         }
@@ -1074,7 +1151,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             finalHandler.handle(new Either.Right<>(null));
         }
         else {
-            String idEtablissement = eleveObject.getString("idEtablissement");
+            String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT);
             String idClasse = eleveObject.getString(ID_CLASSE);
             if (idClasse == null || idEtablissement == null) {
                 if(idClasse == null) {
@@ -1096,16 +1173,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 if (event.isLeft()) {
                                     String message =  event.left().getValue();
                                     log.error("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message + " " + count);
-                                    if (message.contains("Time") && !answer.get()) {
+                                    if (message.contains(TIME) && !answer.get()) {
                                         count ++;
                                         bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
                                                 idClasse,this);
                                     }
                                     else {
-                                        if (eleveObject.getJsonArray("errors") == null) {
-                                            eleveObject.put("errors", new JsonArray());
+                                        if (eleveObject.getJsonArray(ERROR) == null) {
+                                            eleveObject.put(ERROR, new JsonArray());
                                         }
-                                        JsonArray errors = eleveObject.getJsonArray("errors");
+                                        JsonArray errors = eleveObject.getJsonArray(ERROR);
                                         errors.add(GET_SUIVI_ACQUIS_METHOD);
                                         serviceResponseOK(answer, finalHandler, count, idEleve, GET_SUIVI_ACQUIS_METHOD);
                                         try {
@@ -1142,6 +1219,80 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 }
                             }
                         });
+            }
+        }
+    }
+
+    @Override
+    public void getArbreDomaines(String idEleve, Map<String, JsonObject> elevesMap,
+                                 Handler<Either<String, JsonObject>> finalHandler){
+
+        logBegin(GET_ARBRE_DOMAINE_METHOD, idEleve);
+        JsonObject eleveObject = elevesMap.get(idEleve);
+        if (eleveObject == null) {
+            logStudentNotFound(idEleve, GET_ARBRE_DOMAINE_METHOD);
+            finalHandler.handle(new Either.Right<>(null));
+        }
+        else {
+            String idClasse = eleveObject.getString(ID_CLASSE);
+            if (idClasse == null ) {
+                if (idClasse == null) {
+                    logidClasseNotFound(idEleve, GET_ARBRE_DOMAINE_METHOD);
+                }
+                finalHandler.handle(new Either.Right<>(null));
+            } else {
+
+                domainesService.getArbreDomaines(idClasse, idEleve, null,
+                        new Handler<Either<String, JsonArray>>() {
+                    private int count = 1;
+                    private AtomicBoolean answer = new AtomicBoolean(false);
+
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isLeft()) {
+                            String message = event.left().getValue();
+
+                            if (message.contains(TIME) && !answer.get()) {
+                                count++;
+                                domainesService.getArbreDomaines(idClasse, idEleve, null, this);
+
+                            } else {
+                                if (eleveObject.getJsonArray(ERROR) == null) {
+                                    eleveObject.put(ERROR, new JsonArray());
+                                }
+                                JsonArray errors = eleveObject.getJsonArray(ERROR);
+                                errors.add(GET_ARBRE_DOMAINE_METHOD);
+                                serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
+                            }
+                        } else {
+                            JsonArray domaines = event.right().getValue();
+                            JsonArray domainesToDisplay = new JsonArray();
+
+                            Map<Long,Boolean> idDomaineParent = new HashMap<>();
+                            for (int i=0; i<domaines.size(); i++) {
+                                JsonObject domaine = domaines.getJsonObject(i);
+                                Boolean isEvaluable = domaine.getBoolean(EVALUATED);
+                                Long idParent = domaine.getLong(ID_PARENT);
+                                Boolean isDomaineParent = (idParent == 0L);
+                                domaine.put(IS_DOMAINE_PARENT, isDomaineParent);
+
+                                if (isDomaineParent == true){
+                                    idDomaineParent.put(domaine.getLong(ID), isEvaluable);
+                                }
+                                if (isEvaluable == true) {
+                                    if (isDomaineParent == true) {
+                                        domainesToDisplay.add(domaine);
+                                    }
+                                    else if (idDomaineParent.get(idParent) == false){
+                                            domainesToDisplay.add(domaine);
+                                    }
+                                }
+                            }
+                            eleveObject.put("domaines", domainesToDisplay);
+                            serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
+                        }
+                    }
+                });
             }
         }
     }
@@ -1277,8 +1428,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         List<JsonObject> eleves = new ArrayList<>(mapEleves.values());
         Collections.sort(eleves, new Comparator<JsonObject>() {
-            private static final String KEY_NAME = "nom";
-            private static final String KEY_CLASSE_NAME = "classeName";
+            private static final String KEY_NAME = NAME;
+            private static final String KEY_CLASSE_NAME = CLASSE_NAME;
 
             @Override
             public int compare(JsonObject a, JsonObject b) {
@@ -1484,17 +1635,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                          Handler currentHandler, Handler finalHandler, JsonObject eleve,
                                          String method) {
 
-        if (mess.contains("Time") && !answer.get()) {
+        if (mess.contains(TIME) && !answer.get()) {
             count++;
             eb.send(Competences.VIESCO_BUS_ADDRESS, action,
                     Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(currentHandler));
         }
         else {
-            if (eleve.getJsonArray("errors") == null) {
-                eleve.put("errors", new JsonArray());
+            if (eleve.getJsonArray(ERROR) == null) {
+                eleve.put(ERROR, new JsonArray());
             }
-            JsonArray errors = eleve.getJsonArray("errors");
+            JsonArray errors = eleve.getJsonArray(ERROR);
             errors.add(method);
             serviceResponseOK(answer, finalHandler, count, idEleve, method);
         }

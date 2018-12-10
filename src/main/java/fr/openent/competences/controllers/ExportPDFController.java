@@ -85,6 +85,7 @@ public class ExportPDFController extends ControllerHelper {
     private EleveEnseignementComplementService eleveEnseignementComplementService;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
     private AppreciationService appreciationService;
+    private ExportBulletinService exportBulletinService;
     private final Storage storage;
 
     public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
@@ -97,6 +98,7 @@ public class ExportPDFController extends ControllerHelper {
         competencesService = new DefaultCompetencesService(eb);
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         exportService = new DefaultExportService(eb, storage);
+        exportBulletinService = new DefaultExportBulletinService(eb, storage);
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
@@ -2546,7 +2548,8 @@ public class ExportPDFController extends ControllerHelper {
                                 final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
                                 final AtomicBoolean answered = new AtomicBoolean();
                                 final Handler<Either<String, JsonObject>> finalHandler
-                                        = exportService.getFinalBulletinHandler(request, elevesMap, vertx, config,
+                                        = exportBulletinService.getFinalBulletinHandler(request, elevesMap, vertx,
+                                        config,
                                         eleves.size(),
                                         answered, params);
                                 JsonObject images = params.getJsonObject("images");
@@ -2601,7 +2604,7 @@ public class ExportPDFController extends ControllerHelper {
                                     JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
                                             idManualGroupes);
 
-                                    exportService.getExportBulletin(request, answered, idEleve, elevesMap,
+                                    exportBulletinService.getExportBulletin(request, answered, idEleve, elevesMap,
                                             idPeriode, params, classe,
                                             finalHandler);
                                 }

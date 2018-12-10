@@ -87,6 +87,7 @@ export class Classe extends Model {
                            _d.idClasse = this.id;
                            _d.selected = false;
                            _d.classeName = this.name;
+                           _d.id_cycle = this.id_cycle;
                         });
                         this.eleves.load(data);
                         for (var i = 0; i < this.eleves.all.length; i++) {

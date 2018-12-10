@@ -110,6 +110,11 @@
         {{/getProgramElements}}
         }
 
+        .domaines {
+            font-size: 10px;
+            font-style: italic;
+        }
+
         .blank_row {
             height: 20px !important;
         }
@@ -370,6 +375,17 @@
         <img src="{{graphPerDomaine}}"
              style="margin-left: 40px;display: block; width: 700px; height: 218px;"
              alt="graphPerDomaine"/>
+        <div class="domaines paddingFifty">
+            {{# domaines }}
+            {{# isDomaineParent }}
+            <br/>
+            {{#evaluated}}{{ codification }} {{ libelle }}{{/evaluated}}
+            {{/ isDomaineParent }}
+            {{^ isDomaineParent }}
+            {{#evaluated}} /{{ codification }} {{ libelle }} {{/evaluated}}
+            {{/ isDomaineParent }}
+            {{/ domaines }}
+        </div>
         {{/hasGraphPerDomaine}}
         {{/showBilanPerDomaines}}
         {{#showProjects}}

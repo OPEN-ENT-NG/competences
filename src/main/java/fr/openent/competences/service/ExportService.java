@@ -42,18 +42,6 @@ public interface ExportService {
     void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement,
                             final Handler<Either<String, JsonArray>> handler);
 
-    void getExportBulletin(final HttpServerRequest request, final AtomicBoolean answered, String idEleve,
-                           Map<String, JsonObject> elevesMap, Long IdPeriode,JsonObject params,
-                           final JsonObject classe,
-                           Handler<Either<String, JsonObject>> finalHandler);
-
-    Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
-                                                                 Map<String, JsonObject> elevesMap,
-                                                                 Vertx vertx, JsonObject config,
-                                                                 final int nbrEleves,
-                                                                 final AtomicBoolean answered,
-                                                                 JsonObject params);
-
     void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
                     final String prefixPdfName, Vertx vertx, JsonObject config);
 }

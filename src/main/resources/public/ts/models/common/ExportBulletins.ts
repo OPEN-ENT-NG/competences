@@ -51,12 +51,15 @@ export class ExportBulletins {
         return new Promise( async (resolve, reject) => {
             try {
 
-                options.images = {};
-                options.idImagesFiles = [];
+                options.images = {}; // contiendra les id des images par élève
+                options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
+
                 if (options.showBilanPerDomaines === true) {
+                    // Si on choisit de déssiner les graphes
                     await this.createCanvas(options, $scope);
                 }
-                // await this.drawGraph(options);
+
+                // lancement de l'export et récupération du fichier généré
                 let data = await http.post(`/competences/export/bulletins`, new ExportBulletins().toJSON(options),
                     {responseType: 'arraybuffer'});
 
@@ -81,6 +84,11 @@ export class ExportBulletins {
             }
         });
     }
+
+    // - Récupère les informations nécessaires à la construction du graphe d'un élève
+    // - construit le graph en Front
+    // - upload l'image obtenue dans le FileSystem
+    // - stocke l'id de l'image dans options.images: Map<idStudent, idFile> et options.idImagesFiles: array[idFiles].
 
     private static async drawGraphPerDomaine($scope, student, options) {
         return new Promise(async (resolve, reject) => {
@@ -167,7 +175,6 @@ export class ExportBulletins {
                 });
                 let image = myChart.toBase64Image();
 
-                // let binary = this.fixBinary(atob(image));
                 let blob = new Blob([image], {type: 'image/png'});
 
                 const formData = new FormData();
@@ -185,6 +192,8 @@ export class ExportBulletins {
             }
         });
     }
+
+
     private static async createCanvas(options, $scope){
         return new Promise(async (resolve, reject) => {
             let students = options.students;

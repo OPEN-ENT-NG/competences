@@ -78,7 +78,6 @@ public class DefaultExportService implements ExportService  {
     private AnnotationService annotationsService;
     private BFCService bfcService;
     private EventBus eb;
-    private DefaultExportBulletinService exportBulletin;
     private final Storage storage;
 
     public DefaultExportService(EventBus eb, Storage storage) {
@@ -93,7 +92,6 @@ public class DefaultExportService implements ExportService  {
         niveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
         enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         annotationsService = new DefaultAnnotationService(Competences.COMPETENCES_SCHEMA, Competences.REL_ANNOTATIONS_DEVOIRS_TABLE);
-        exportBulletin = new DefaultExportBulletinService(eb, storage);
         this.storage = storage;
     }
 
@@ -979,74 +977,6 @@ public class DefaultExportService implements ExportService  {
     }
 
 
-    @Override
-    public void getExportBulletin(final HttpServerRequest request, final AtomicBoolean answered, String idEleve,
-                                  Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
-                                  final JsonObject classe,
-                                  Handler<Either<String, JsonObject>> finalHandler){
-        exportBulletin.getExportBulletin(request, answered,idEleve,elevesMap,idPeriode,params,
-                classe, finalHandler);
-    }
-
-
-
-
-
-    @Override
-    public Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
-                                                                        Map<String, JsonObject> elevesMap,
-                                                                        Vertx vertx, JsonObject config,
-                                                                        final int nbrEleves,
-                                                                        final AtomicBoolean answered,
-                                                                        JsonObject params) {
-        final AtomicInteger elevesDone = new AtomicInteger();
-        /*
-            - Récupération des retards et absences
-            - Récupération du suivi des acquis
-            - Récupération du libelle de l'établissement
-            - Récupération des professeurs principaux
-            - Récupération de la synthèse du relevé périodique
-            - Récupération du libelle de la période
-            - Récupération de l'année scolaire
-            - Récupère le cycle de la classe de l'élève
-            - Rajoute tous les libelles i18n nécessaires pour le bulletin
-            - Récupère l'appréciation CPE
-            - Récupère les images de l'élève
-         */
-        int nbServices = 11;
-        if(params.getBoolean("getResponsable")){
-            ++ nbServices;
-        }
-        if (params.getBoolean("showProjects")) {
-         ++ nbServices;
-        }
-        if(params.getBoolean("showBilanPerDomaines")) {
-            ++ nbServices;
-        }
-        final AtomicInteger nbServicesFinal = new AtomicInteger(nbServices);
-
-        return new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> event) {
-                if (event.isRight()) {
-                    if (elevesDone.addAndGet(1) == (nbrEleves * nbServicesFinal.get())) {
-                        answered.set(true);
-                        String title = params.getString("classeName") + "_" + I18n.getInstance()
-                                .translate("evaluations.bulletin",
-                                        I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-                        JsonObject resultFinal = new JsonObject()
-                                .put("getProgramElements", params.getBoolean("getProgramElements"))
-                                .put("title", title);
-
-                        resultFinal.put("eleves", exportBulletin.sortResultByClasseNameAndNameForBulletin(elevesMap));
-                        resultFinal.put("idImagesFiles", params.getJsonArray("idImagesFiles"));
-                        genererPdf(request, resultFinal,
-                                "bulletin.pdf.xhtml", title, vertx, config);
-                    }
-                }
-            }
-        };
-    }
 
 
     /**

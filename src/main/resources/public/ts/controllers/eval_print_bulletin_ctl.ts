@@ -1,7 +1,8 @@
 import {_, ng, notify} from "entcore";
 import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
-import {Classe} from "../models/teacher";
+import {Classe, evaluations} from "../models/teacher";
+import {Defaultcolors} from "../models/eval_niveau_comp";
 
 
 declare let $ : any;
@@ -11,7 +12,53 @@ declare let Chart: any;
 export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
     function ($scope) {
+
+        let runMessageLoader = () => {
+            $scope.opened.displayMessageLoader = true;
+            utils.safeApply($scope);
+        };
+
+        let stopMessageLoader = () => {
+            $scope.opened.displayMessageLoader = false;
+            utils.safeApply($scope);
+        };
+
+        let selectPersonnalisation = (id_cycle) => {
+
+            if (evaluations.structure.cycle.id_cycle !== id_cycle) {
+                let niveauCompetence;
+                evaluations.structure.cycle = _.findWhere(evaluations.structure.cycles, {
+                    id_cycle: id_cycle
+                });
+                if (evaluations.structure.cycle !== undefined) {
+                    niveauCompetence = evaluations.structure.cycle.niveauCompetencesArray;
+                }
+                else {
+                    evaluations.structure.cycle = evaluations.structure.cycles[0];
+                    niveauCompetence = evaluations.structure.cycle.niveauCompetencesArray;
+
+                }
+                $scope.niveauCompetences = [];
+                $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
+                $scope.mapLettres = {"-1": " "};
+                $scope.selected.colors = {
+                    0: true,
+                };
+                _.forEach(niveauCompetence, function (niv) {
+                    $scope.mapCouleurs[niv.ordre - 1] = niv.couleur;
+                    $scope.mapLettres[niv.ordre - 1] = niv.lettre;
+                    niv.selected = true;
+                    $scope.niveauCompetences.push(niv);
+                    $scope.selected.colors[niv.ordre] = true;
+                });
+            }
+        };
+
+        // Fonction d'initialisation de la vue de l'export des bulletins
         $scope.initBulletin = async function ( ) {
+            runMessageLoader();
+
+            // Initialisation des classes sélectionnables
             $scope.printClasses = {
                 all : _.filter($scope.classes.all, (classe) => {
                     return classe.type_groupe === 0;
@@ -21,12 +68,21 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 classe.selected = false;
             });
 
+
             $scope.print = {};
 
-            let infosStructure = await ExportBulletins.getInfosStructure($scope.structure.id);
-            $scope.print.imgStructure = infosStructure.data.imageStucture.path;
-            $scope.print.nameCE = infosStructure.data.nameAndBrad.name;
-            $scope.print.imgSignature = infosStructure.data.nameAndBrad.path;
+            // Récupération du logo de l'établissement, de la signature et du nom du CE
+            try {
+                let infosStructure = await ExportBulletins.getInfosStructure($scope.structure.id);
+
+                $scope.print.imgStructure = infosStructure.data.imageStucture.path;
+                $scope.print.nameCE = infosStructure.data.nameAndBrad.name;
+                $scope.print.imgSignature = infosStructure.data.nameAndBrad.path;
+            }
+            catch (e) {
+                console.log(e);
+                stopMessageLoader();
+            }
             $scope.filteredPeriodes = [];
             $scope.filterEleves =  [];
             $scope.allElevesClasses = [];
@@ -34,8 +90,9 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             $scope.selected = {
                 periode : undefined
             };
-            utils.safeApply($scope);
+            stopMessageLoader();
         };
+
         $scope.setImageStructure = async () => {
            await ExportBulletins.setImageStructure($scope.structure.id, $scope.print.imgStructure);
         };
@@ -76,14 +133,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 notify.info('evaluations.choose.student.for.periode');
                 return ;
             }
-            $scope.opened.displayMessageLoader = true;
+            runMessageLoader();
 
-            let disableMessageLoader = ()=> {
-                $scope.opened.displayMessageLoader = false;
-                utils.safeApply($scope);
-            };
-
-            utils.safeApply($scope);
             let classes = _.groupBy($scope.allElevesClasses, 'classeName');
             for ( let key in classes) {
                 let val = classes[key];
@@ -91,6 +142,9 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 options.idStructure = $scope.structure.id;
                 if (val !== undefined && val.length > 0 ) {
                     options.idClasse = val[0].idClasse;
+                    if (options.showBilanPerDomaines === true) {
+                        selectPersonnalisation(val[0].id_cycle);
+                    }
                 }
                 options.idStudents = _.pluck(_.filter(val, function (student) {
                     return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
@@ -100,11 +154,11 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                        await ExportBulletins.generateBulletins(options, $scope);
                    }
                    catch (e) {
-                      disableMessageLoader();
+                      stopMessageLoader();
                    }
                 }
             }
-           disableMessageLoader();
+           stopMessageLoader();
 
         };
 
