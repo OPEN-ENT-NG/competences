@@ -70,7 +70,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String GRAPH_PER_DOMAINE = "graphPerDomaine";
     private static final String LIBELLE = "libelle";
 
-    // Parameter Key 
+    // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
     private static final String GET_MOYENNE_ELEVE = "getMoyenneEleve";
     private static final String GET_POSITIONNEMENT = "getPositionnement";
@@ -83,9 +83,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String SHOW_PROJECTS = "showProjects";
     private static final String SHOW_BILAN_PER_DOMAINE = "showBilanPerDomaines";
     private static final String SHOW_FAMILY = "showFamily";
-   
-   
-    
+
+
+
     // Données-membres privées
     private EventBus eb;
     private BilanPeriodiqueService bilanPeriodiqueService;
@@ -1318,9 +1318,54 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     responsableToCheck.getString(ADDRESSE_POSTALE);
                             java.lang.String addressResponsale =
                                     responsable.getString(ADDRESSE_POSTALE);
+                            String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName");
+                            String lastNameResponsable = responsable.getString("responsableLastName");
+                            String civiliteResponsableToCheck = responsableToCheck.getString("civilite");
+                            String civiliteResponsable = responsable.getString("civilite");
+                            String newLastNameResponsableToCheck = new String();
 
                             if (!addressResponsale.equals(addressResponsaleToCheck)) {
                                 isDifferentAddress = true;
+                            }else { //if same adress
+                                //with same lastName
+                                JsonArray responsableNewLibelle = new fr.wseduc.webutils.collections.JsonArray();
+                                JsonArray responsableOldLibelle = responsableToCheck.getJsonArray("responsableLibelle");
+                                if (lastNameResponsable.equals(lastNameResponsableToCheck)) {
+
+                                    if ("M.".equals(civiliteResponsableToCheck)) {
+                                        newLastNameResponsableToCheck = civiliteResponsableToCheck + " et Mme " +
+                                                lastNameResponsableToCheck + " " +
+                                                responsableToCheck.getString("responsableFirstName");
+                                    } else {
+                                        newLastNameResponsableToCheck = civiliteResponsable + " et Mme " +
+                                                lastNameResponsable + " " +
+                                                responsable.getString("responsableFirstName");
+                                    }
+
+                                    responsableNewLibelle.add(newLastNameResponsableToCheck);
+                                    responsableNewLibelle.add(responsableOldLibelle.getValue(1))
+                                            .add(responsableOldLibelle.getValue(2));
+
+
+                                } else {//if same adress with different lastName
+                                    JsonObject responsableWithDifferentName = new JsonObject();
+                                    if( "M.".equals(civiliteResponsableToCheck)) {
+                                       responsableWithDifferentName.put("firstLastName",civiliteResponsableToCheck+" "+ lastNameResponsableToCheck +" et")
+                                                .put("secondLastName", civiliteResponsable+" "+lastNameResponsable)
+                                                .put("adresseResponsable",responsableOldLibelle.getValue(1))
+                                                .put("codePostalRelative",responsableOldLibelle.getValue(2));
+                                    }else{
+                                        responsableWithDifferentName.put("firstLastName",civiliteResponsable+" "+ lastNameResponsable +" et")
+                                                .put("secondLastName", civiliteResponsableToCheck+" "+lastNameResponsableToCheck)
+                                                .put("adresseResponsable",responsableOldLibelle.getValue(1))
+                                                .put("codePostalRelative",responsableOldLibelle.getValue(2));
+                                    }
+
+
+                                    responsableNewLibelle.add(responsableWithDifferentName);
+                                    responsableToCheck.put("relativesHaveTwoNames",true);
+                                }
+                                responsableToCheck.put("responsableLibelle", responsableNewLibelle);
                             }
                         }
                         if (isDifferentAddress) {
@@ -1347,6 +1392,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private JsonObject setResponsablesLibelle(JsonObject o, JsonObject responsable) {
+        Boolean relativesHaveTwoNames = false;
         JsonObject res = new JsonObject(o.getMap());
         String civilite = responsable.getString("civilite");
         String lastName = responsable.getString("lastNameRelative");
@@ -1356,10 +1402,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         String zipCode = responsable.getString("zipCode");
 
         if (civilite == null) {
-            civilite = " ";
+            civilite = "M.";
         }
 
-        JsonArray responsableLibelle = new JsonArray().add( civilite + " " +  firstName + " " + lastName );
+        JsonArray responsableLibelle = new JsonArray().add( civilite + " " + lastName  + " " + firstName );
         if (address != null){
             responsableLibelle.add(address);
         }
@@ -1384,6 +1430,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         res.put("responsableLibelle", responsableLibelle);
         res.put(ADDRESSE_POSTALE, address + city);
+        res.put("responsableLastName", lastName);
+        res.put("civilite",civilite);
+        if("M.".equals(civilite)){
+            res.put("responsableFirstName",firstName);
+        }
+        res.put("relativesHaveTwoNames",relativesHaveTwoNames);
         return res;
     }
 

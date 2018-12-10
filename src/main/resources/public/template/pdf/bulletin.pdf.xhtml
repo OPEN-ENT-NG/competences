@@ -294,9 +294,19 @@
             <div style="font-size: small;">{{classeOf}} {{classeName}}</div>
         </div>
         <div class="responsable">
-            {{#responsableLibelle}}
-            <div>{{.}}</div><br/>
-            {{/responsableLibelle}}
+            {{^relativesHaveTwoNames}}
+                {{#responsableLibelle}}
+                <div>{{.}}</div><br/>
+                {{/responsableLibelle}}
+            {{/relativesHaveTwoNames}}
+            {{#relativesHaveTwoNames}}
+                {{#responsableLibelle}}
+                <div>{{firstLastName}}</div>
+                <div>{{secondLastName}}</div><br/>
+                <div>{{adresseResponsable}}</div><br/>
+                <div>{{codePostalRelative}}</div><br/>
+                {{/responsableLibelle}}
+            {{/relativesHaveTwoNames}}
         </div>
         {{/getResponsable}}
     </div>
