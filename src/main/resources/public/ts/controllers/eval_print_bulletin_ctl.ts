@@ -120,10 +120,10 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             }
 
             options.idPeriode = $scope.selected.periode.id_type;
-            options.students = _.filter($scope.allElevesClasses, function (student) {
+            let students = _.filter($scope.allElevesClasses, function (student) {
                 return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
             });
-            options.idStudents = _.pluck(options.students, 'id');
+            options.idStudents = _.pluck(students, 'id');
 
             if (_.where($scope.allElevesClasses, {selected: true}).length === 0) {
                 notify.info('evaluations.choose.student');
@@ -146,11 +146,13 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                         selectPersonnalisation(val[0].id_cycle);
                     }
                 }
-                options.idStudents = _.pluck(_.filter(val, function (student) {
+                options.students = _.filter(val, function (student) {
                     return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
-                }), 'id');
+                });
+                options.idStudents = _.pluck(options.students, 'id');
                 if(options.idStudents!== undefined && options.idStudents.length > 0){
                    try {
+
                        await ExportBulletins.generateBulletins(options, $scope);
                    }
                    catch (e) {

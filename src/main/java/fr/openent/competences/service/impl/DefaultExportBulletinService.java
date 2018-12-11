@@ -249,8 +249,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         - Récupère le cycle de la classe de l'élève
         - Rajoute tous les libelles i18n nécessaires pour le bulletin
         - Récupère l'appréciation CPE
-        - Récupère les images de l'élève
-        - Récupération de l'arbre des domaines de l'élève
+        - Récupération de l'avis du conseil de l'élève
+
+        - Récupération des Responsable légaux de l'élève (si GET_RESPONSABLE)
+
+        - Récupération des EPI/AP/PARCOURS (si SHOW_PROJECTS)
+
+        - Récupération de l'arbre des domaines de l'élève (si SHOW_BILAN_PER_DOMAINE)
+        - Récupération du Graphe du Bilan par domaine de l'élève (si SHOW_BILAN_PER_DOMAINE)
+
+
      */
         int nbServices = 11;
         if (params.getBoolean(GET_RESPONSABLE)) {
@@ -267,6 +275,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
+                if (answered.get()) {
+                    log.info(" THREAD STELL BUSY ");
+                }
                 if (event.isRight()) {
                     if (elevesDone.addAndGet(1) == (nbrEleves * nbServicesFinal.get())) {
                         answered.set(true);
@@ -283,6 +294,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 "bulletin.pdf.xhtml", title, vertx, config);
                     }
                 }
+
             }
         };
     }

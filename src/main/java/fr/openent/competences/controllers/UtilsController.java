@@ -262,6 +262,7 @@ public class UtilsController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, user -> {
             this.storage.writeUploadFile(request, uploaded -> {
                 if (!"ok".equals(uploaded.getString("status"))) {
+                    log.error(uploaded.encode());
                     badRequest(request, uploaded.getString("message"));
                     return;
                 }

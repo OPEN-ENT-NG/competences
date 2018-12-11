@@ -22,6 +22,7 @@ import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -40,6 +41,7 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -191,37 +193,58 @@ public class Utils {
      * @param handler response eleve groups
      */
 
-    public static void getGroupsEleve (EventBus eb, String idEleve, Handler<Either<String, JsonArray>> handler){
+    public static void getGroupsEleve (EventBus eb, String idEleve, String idEtablissement,
+                                       Handler<Either<String, JsonArray>> handler){
         JsonObject action = new JsonObject()
-                .put("action","eleve.getGroups")
-                .put("idEleve", idEleve);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler (new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
+                .put("action", "eleve.getInfoEleve")
+                .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
+                .put("idEleves", new fr.wseduc.webutils.collections.JsonArray().add(idEleve));
 
-                JsonObject body = message.body();
-                if(!"ok".equals(body.getString("status"))){
-                    handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
-                    log.error("getGroupsEleve : "+ body.getString("message"));
-                }else{
-                    JsonArray idGroupsObjects = body.getJsonArray("results");
-                    JsonArray idGroupsResult = new fr.wseduc.webutils.collections.JsonArray();
-                    if(idGroupsObjects != null ){
-                        if(idGroupsObjects.isEmpty()){
-                            idGroupsResult = null;
-                        }else{
-                            for(int i = 0; i < idGroupsObjects.size(); i++){
-                                JsonObject objectGroup = idGroupsObjects.getJsonObject(i);
-                                idGroupsResult.add(objectGroup.getString("id_groupe"));
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                handlerToAsyncHandler (new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+
+                        JsonObject body = message.body();
+                        if (!"ok".equals(body.getString("status"))) {
+                            handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
+                            log.error("getGroupsEleve : " + body.getString("message"));
+                        } else {
+
+                            JsonArray result = body.getJsonArray("results");
+                            JsonArray idGroupsResult = new JsonArray();
+
+                            if ("ok".equals(body.getString("status"))
+                                    && result.size() > 0) {
+                                for (int i = 0; i < result.size(); i++) {
+                                    JsonObject eleve = body.getJsonArray("results")
+                                            .getJsonObject(i);
+
+                                    final String idClasse =
+                                            eleve.getString("idClasse");
+
+
+                                    JsonObject o = result.getJsonObject(i);
+
+                                    JsonArray idManualGroupes = UtilsConvert
+                                            .strIdGroupesToJsonArray(o.getValue("idManualGroupes"));
+                                    JsonArray idFunctionalGroupes = UtilsConvert
+                                            .strIdGroupesToJsonArray(o.getValue("idGroupes"));
+
+                                    idGroupsResult = utilsService.saUnion(idFunctionalGroupes,
+                                            idManualGroupes);
+                                    idGroupsResult = utilsService.saUnion(idGroupsResult,
+                                            new JsonArray().add(idClasse));
+
+                                }
                             }
+
+                            handler.handle(new Either.Right<String, JsonArray>(idGroupsResult));
+
                         }
                     }
-                    handler.handle(new Either.Right<String, JsonArray>(idGroupsResult));
-                }
-
-
-            }
-        }));
+                }));
 
     }
 
@@ -479,58 +502,58 @@ public class Utils {
                 .put("idMatieres", idsMatieres);
         eb.send(Competences.VIESCO_BUS_ADDRESS,action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                Map<String,JsonObject> idsMatLibelle = new HashMap<>();
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        Map<String,JsonObject> idsMatLibelle = new HashMap<>();
 
-                if("ok".equals(body.getString("status"))) {
+                        if("ok".equals(body.getString("status"))) {
 
-                    JsonArray requestMats = body.getJsonArray("results");
+                            JsonArray requestMats = body.getJsonArray("results");
 
-                    if( requestMats != null && requestMats.size() > 0 ){
-                        matiereService.getLibellesCourtsMatieres(new Handler<Either<String, Map<String,String>>>() {
-                             @Override
-                             public void handle(Either<String, Map<String, String>> event) {
-                                 Map mapCodeLibelleCourt = event.right().getValue();
+                            if( requestMats != null && requestMats.size() > 0 ){
+                                matiereService.getLibellesCourtsMatieres(new Handler<Either<String, Map<String,String>>>() {
+                                    @Override
+                                    public void handle(Either<String, Map<String, String>> event) {
+                                        Map mapCodeLibelleCourt = event.right().getValue();
 
-                                 for (int i = 0; i < requestMats.size(); i++) {
-                                     JsonObject requestMat = requestMats.getJsonObject(i);
+                                        for (int i = 0; i < requestMats.size(); i++) {
+                                            JsonObject requestMat = requestMats.getJsonObject(i);
 
-                                     if (!idsMatLibelle.containsKey(requestMat.getString("id"))) {
+                                            if (!idsMatLibelle.containsKey(requestMat.getString("id"))) {
 
-                                         String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
-                                         String codeMatiere = requestMat.getJsonObject("data").getJsonObject("data").getString("code");
+                                                String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
+                                                String codeMatiere = requestMat.getJsonObject("data").getJsonObject("data").getString("code");
 
-                                         if (!"AAF".equals(source)) {
-                                             requestMat.put("libelle_court", codeMatiere);
-                                         } else if(!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere) ){
-                                                 requestMat.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
+                                                if (!"AAF".equals(source)) {
+                                                    requestMat.put("libelle_court", codeMatiere);
+                                                } else if(!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere) ){
+                                                    requestMat.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
 
-                                             } else {//si le codeMatiere n'est pas dans la table matiere prendre
-                                             // les 5 premiers caracteres du libelle de la matiere
+                                                } else {//si le codeMatiere n'est pas dans la table matiere prendre
+                                                    // les 5 premiers caracteres du libelle de la matiere
 
-                                                 String nameMat = requestMat.getString("name").substring(0, 4);
-                                                 requestMat.put("libelle_court", nameMat);
-                                             }
+                                                    String nameMat = requestMat.getString("name").substring(0, 4);
+                                                    requestMat.put("libelle_court", nameMat);
+                                                }
 
-                                     }
-                                 idsMatLibelle.put(requestMat.getString("id"), requestMat);
-                                 }
-                                 handler.handle(new Either.Right<>(idsMatLibelle));
-                             }
-                         });
+                                            }
+                                            idsMatLibelle.put(requestMat.getString("id"), requestMat);
+                                        }
+                                        handler.handle(new Either.Right<>(idsMatLibelle));
+                                    }
+                                });
 
-                    }else {
-                        handler.handle(new Either.Left<>(" no subject "));
-                        log.error("getMatieres : no subject");
+                            }else {
+                                handler.handle(new Either.Left<>(" no subject "));
+                                log.error("getMatieres : no subject");
+                            }
+                        } else {
+                            handler.handle(new Either.Left<>(body.getString("message")));
+                            log.error("getMatieres : " + body.getString("message"));
+                        }
                     }
-                } else {
-                    handler.handle(new Either.Left<>(body.getString("message")));
-                    log.error("getMatieres : " + body.getString("message"));
-                }
-            }
-        }));
+                }));
     }
 
 

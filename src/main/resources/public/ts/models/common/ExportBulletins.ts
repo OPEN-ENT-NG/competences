@@ -48,9 +48,8 @@ export class ExportBulletins {
 
     public static async  generateBulletins (options, $scope) {
 
-        return new Promise( async (resolve, reject) => {
             try {
-
+                console.log(" DEBUT generateBulletins ====== " + options.classeName);
                 options.images = {}; // contiendra les id des images par élève
                 options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
 
@@ -73,16 +72,15 @@ export class ExportBulletins {
                     document.body.removeChild(link);
                     window.URL.revokeObjectURL(link.href);
                 }, 100);
-                resolve();
                 $('.chart-container').empty();
                 notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
+                console.log(" FIN generateBulletins ====== " + options.classeName);
             } catch (e) {
                 console.dir(e);
                 $('.chart-container').empty();
-                reject();
                 notify.error(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.error'));
+                console.log(" FIN generateBulletins ====== " + options.classeName);
             }
-        });
     }
 
     // - Récupère les informations nécessaires à la construction du graphe d'un élève
@@ -97,8 +95,9 @@ export class ExportBulletins {
                         id: student.idClasse,
                         type_groupe: Classe.type.CLASSE
                     }),
-                    student, null, $scope.structure, null);
-
+                    student, options.idPeriode, $scope.structure, options.idPeriode);
+                if (student.response === undefined) {
+                    student.response = true;
                 await object.getDataForGraph(student, true);
                 let canvas = <HTMLCanvasElement> document.getElementById("myChart"+student.id);
                 let ctx = canvas.getContext('2d');
@@ -174,18 +173,19 @@ export class ExportBulletins {
 
                 });
                 let image = myChart.toBase64Image();
-
                 let blob = new Blob([image], {type: 'image/png'});
 
-                const formData = new FormData();
+                let formData = new FormData();
                 formData.append('file', blob);
 
-                const response = await http.post('/competences/graph/img', formData);
+
+                let response = await http.post('/competences/graph/img', formData);
 
                 options.images[student.id] = response.data._id;
                 options.idImagesFiles.push(response.data._id);
 
-                resolve();
+                    resolve();
+                }
             }
             catch (e) {
                 reject (e);
@@ -201,6 +201,8 @@ export class ExportBulletins {
             try {
 
                 // on lance la creation des images des graphes et on attend
+                console.log(" ------- DEBUT DESSIN GRAPH PAR DOMAINE " + options.classeName);
+
                 let allPromise = [];
                 _.forEach( students, (student) => {
 
@@ -212,10 +214,11 @@ export class ExportBulletins {
                             '   class="chart-bar">' +
                             '</canvas>');
 
-                    allPromise.push( Promise.all( [this.drawGraphPerDomaine($scope, student, options)]));
+                    allPromise.push(this.drawGraphPerDomaine($scope, student, options));
                 });
 
                 await  Promise.all(allPromise);
+                console.log(" ------- FIN GRAPH PAR DOMAINE " + options.classeName);
                 resolve();
             }
             catch (e) {

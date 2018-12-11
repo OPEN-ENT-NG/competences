@@ -659,49 +659,49 @@ public class NoteController extends ControllerHelper {
 
         // Vérification de l'accès à la matière
         new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,isBilanPeriodique,
-            new Handler<Boolean>() {
-                @Override
-                public void handle(final Boolean hasAccessToMatiere) {
-                    if (hasAccessToMatiere) {
-                        // Vérification de la date de fin de saisie
-                        new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
-                                idClasse, idPeriode.intValue(),
-                                new Handler<Boolean>() {
-                                    @Override
-                                    public void handle(Boolean isUpdatable) {
-                                        //verif date fin de saisie
-                                        if (isUpdatable) {
+                new Handler<Boolean>() {
+                    @Override
+                    public void handle(final Boolean hasAccessToMatiere) {
+                        if (hasAccessToMatiere) {
+                            // Vérification de la date de fin de saisie
+                            new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
+                                    idClasse, idPeriode.intValue(),
+                                    new Handler<Boolean>() {
+                                        @Override
+                                        public void handle(Boolean isUpdatable) {
+                                            //verif date fin de saisie
+                                            if (isUpdatable) {
 
-                                            if (resource.getBoolean("delete")) {
-                                                notesService.deleteColonneReleve(
-                                                        idEleve,
-                                                        idPeriode,
-                                                        idMatiere,
-                                                        idClasse,
-                                                        table,
-                                                        arrayResponseHandler(request));
+                                                if (resource.getBoolean("delete")) {
+                                                    notesService.deleteColonneReleve(
+                                                            idEleve,
+                                                            idPeriode,
+                                                            idMatiere,
+                                                            idClasse,
+                                                            table,
+                                                            arrayResponseHandler(request));
+                                                } else {
+                                                    notesService.setColonneReleve(
+                                                            idEleve,
+                                                            idPeriode,
+                                                            idMatiere,
+                                                            idClasse,
+                                                            resource,
+                                                            table,
+                                                            arrayResponseHandler(request));
+                                                }
                                             } else {
-                                                notesService.setColonneReleve(
-                                                        idEleve,
-                                                        idPeriode,
-                                                        idMatiere,
-                                                        idClasse,
-                                                        resource,
-                                                        table,
-                                                        arrayResponseHandler(request));
+                                                log.error("Not access to API because of end of saisie");
+                                                unauthorized(request);
                                             }
-                                        } else {
-                                            log.error("Not access to API because of end of saisie");
-                                            unauthorized(request);
                                         }
-                                    }
-                                });
-                    } else {
-                        log.error("Not access to Matiere");
-                        unauthorized(request);
+                                    });
+                        } else {
+                            log.error("Not access to Matiere");
+                            unauthorized(request);
+                        }
                     }
-                }
-            });
+                });
 
 
 
@@ -738,7 +738,7 @@ public class NoteController extends ControllerHelper {
                                             final JsonObject result = new JsonObject();
                                             JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
                                             HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
-                                                   notesService.calculMoyennesEleveByPeriode(event.right().getValue(), result, idEleve, idEleves);
+                                                    notesService.calculMoyennesEleveByPeriode(event.right().getValue(), result, idEleve, idEleves);
 
                                             addMoyenneFinalAndAppreciationPositionnementEleve(
                                                     idEleve, idClasse,
@@ -1049,136 +1049,124 @@ public class NoteController extends ControllerHelper {
     }
 
     private void getDataGraph(final HttpServerRequest request, JsonArray groupIds) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+        final String idEleve = request.params().get("idEleve");
+        final String idEtablissement = request.params().get("idEtablissement");
+        final String idClasse = request.params().get("idClasse");
+        final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+        final String idPeriodeString = request.params().get("idPeriode");
+        final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
+        // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
+        notesService.getCompetencesNotesReleve(idEtablissement,idClasse,
+                groupIds,
+                null,
+                idPeriode,
+                null,
+                typeClasse,
+                false,
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if(event.isLeft()) {
+                            String message = "[getReleveDataForGraph] error while getCompetencesNotesReleve";
+                            badRequest(request, message);
+                            log.error(message);
+                        }
+                        else {
+                            final JsonArray listCompNotes = event.right().getValue();
+                            // 2. On récupère les Notes de toutes les matières et de tous les élèves
+                            notesService.getNotesReleve(idEtablissement, idClasse, null,
+                                    idPeriode, typeClasse, true,
+                                    new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> event) {
+                                            if(event.isLeft()) {
+                                                String message = "[getReleveDataForGraph] " +
+                                                        "error while getNotesReleve";
+                                                badRequest(request, message);
+                                                log.error(message);
+                                            }
+                                            else {
+                                                final JsonArray listNotes = event.right().getValue();
+                                                Map<String,JsonArray> matieresCompNotes = new HashMap<>();
+                                                Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
+                                                JsonArray idMatieres;
 
-            @Override
-            public void handle(UserInfos user) {
-                final String idEleve = request.params().get("idEleve");
-                final String idEtablissement = request.params().get("idEtablissement");
-                final String idClasse = request.params().get("idClasse");
-                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
-                final String idPeriodeString = request.params().get("idPeriode");
-                final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
-                // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
-                notesService.getCompetencesNotesReleve(idEtablissement,idClasse,
-                        groupIds,
-                        null,
-                        idPeriode,
-                        null,
-                        typeClasse,
-                        false,
-                        new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if(event.isLeft()) {
-                                    String message = "[getReleveDataForGraph] error while getCompetencesNotesReleve";
-                                    badRequest(request, message);
-                                    log.error(message);
-                                }
-                                else {
-                                    final JsonArray listCompNotes = event.right().getValue();
-                                    // 2. On récupère les Notes de toutes les matières et de tous les élèves
-                                    notesService.getNotesReleve(idEtablissement, idClasse, null,
-                                            idPeriode, typeClasse, true,
-                                            new Handler<Either<String, JsonArray>>() {
-                                                @Override
-                                                public void handle(Either<String, JsonArray> event) {
-                                                    if(event.isLeft()) {
-                                                        String message = "[getReleveDataForGraph] " +
-                                                                "error while getNotesReleve";
-                                                        badRequest(request, message);
-                                                        log.error(message);
-                                                    }
-                                                    else {
-                                                        final JsonArray listNotes = event.right().getValue();
-                                                        Map<String,JsonArray> matieresCompNotes = new HashMap<>();
-                                                        Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
-                                                        JsonArray idMatieres;
+                                                // 3. On regroupe  les compétences notes par idMatière
+                                                idMatieres = groupDataByMatiere(listCompNotes,
+                                                        matieresCompNotes,
+                                                        matieresCompNotesEleve, idEleve);
 
-                                                        // 3. On regroupe  les compétences notes par idMatière
-                                                        idMatieres = groupDataByMatiere(listCompNotes,
-                                                                matieresCompNotes,
-                                                                matieresCompNotesEleve, idEleve);
+                                                // 4. On regroupe les notes par idMatière
+                                                Map<String,JsonArray> matieresNotes = new HashMap<>();
+                                                Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
+                                                idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes,
+                                                        matieresNotes,
+                                                        matieresNotesEleve, idEleve), idMatieres);
 
-                                                        // 4. On regroupe les notes par idMatière
-                                                        Map<String,JsonArray> matieresNotes = new HashMap<>();
-                                                        Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
-                                                        idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes,
-                                                                matieresNotes,
-                                                                matieresNotesEleve, idEleve), idMatieres);
-
-                                                        // 5. On récupère tous les libelles des matières de
-                                                        // l'établissement et on fait correspondre aux résultats par
-                                                        // idMatière
-                                                        linkIdSubjectToLibelle(getMaxByItem(matieresCompNotes),
-                                                                getMaxByItem(matieresCompNotesEleve),
-                                                                matieresNotes,
-                                                                matieresNotesEleve, idMatieres, request);
-                                                    }
-                                                }
-                                            });
-                                }
-                            }
-                        });
-            }
-        });
+                                                // 5. On récupère tous les libelles des matières de
+                                                // l'établissement et on fait correspondre aux résultats par
+                                                // idMatière
+                                                linkIdSubjectToLibelle(getMaxByItem(matieresCompNotes),
+                                                        getMaxByItem(matieresCompNotesEleve),
+                                                        matieresNotes,
+                                                        matieresNotesEleve, idMatieres, request);
+                                            }
+                                        }
+                                    });
+                        }
+                    }
+                });
     }
 
 
     private void getDataGraphDomaine(final HttpServerRequest request, JsonArray groupIds) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+        final String idEleve = request.params().get("idEleve");
+        final String idEtablissement = request.params().get("idEtablissement");
+        final String idClasse = request.params().get("idClasse");
+        final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+        final String idPeriodeString = request.params().get("idPeriode");
 
-            @Override
-            public void handle(UserInfos user) {
-                final String idEleve = request.params().get("idEleve");
-                final String idEtablissement = request.params().get("idEtablissement");
-                final String idClasse = request.params().get("idClasse");
-                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
-                final String idPeriodeString = request.params().get("idPeriode");
+        // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
+        notesService.getCompetencesNotesReleve(idEtablissement,
+                idClasse,
+                groupIds,
+                null,
+                (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
+                null,
+                typeClasse,
+                true,
+                new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        if (event.isLeft()) {
+                            String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
+                            badRequest(request, message);
+                            log.error(message);
+                        }
+                        else {
+                            final JsonArray compNotes = event.right().getValue();
+                            // 2. On récupère les domaines du cycle auquel la classe est rattachée
+                            new DefaultDomaineService().getDomaines(idClasse,
+                                    new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> event) {
+                                            if (event.isLeft()) {
+                                                String message = "[DomaineDataForGraph] error while getting domaines";
+                                                badRequest(request, message);
+                                                log.error(message);
+                                            }
+                                            else {
+                                                final JsonArray domaines = event.right().getValue();
 
-                // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
-                notesService.getCompetencesNotesReleve(idEtablissement,
-                        idClasse,
-                        groupIds,
-                        null,
-                        (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
-                        null,
-                        typeClasse,
-                        true,
-                        new Handler<Either<String, JsonArray>>() {
-                            @Override
-                            public void handle(Either<String, JsonArray> event) {
-                                if (event.isLeft()) {
-                                    String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
-                                    badRequest(request, message);
-                                    log.error(message);
-                                }
-                                else {
-                                    final JsonArray compNotes = event.right().getValue();
-                                    // 2. On récupère les domaines du cycle auquel la classe est rattachée
-                                    new DefaultDomaineService().getDomaines(idClasse,
-                                            new Handler<Either<String, JsonArray>>() {
-                                                @Override
-                                                public void handle(Either<String, JsonArray> event) {
-                                                    if (event.isLeft()) {
-                                                        String message = "[DomaineDataForGraph] error while getting domaines";
-                                                        badRequest(request, message);
-                                                        log.error(message);
-                                                    }
-                                                    else {
-                                                        final JsonArray domaines = event.right().getValue();
+                                                Renders.renderJson(request, linkCompNoteToLibelle(domaines,
+                                                        compNotes, idEleve));
+                                            }
 
-                                                        Renders.renderJson(request, linkCompNoteToLibelle(domaines,
-                                                                compNotes, idEleve));
-                                                    }
-
-                                                }
-                                            });
-                                }
-                            }
-                        });
-            }
-        });
+                                        }
+                                    });
+                        }
+                    }
+                });
     }
 
     /**
@@ -1192,20 +1180,21 @@ public class NoteController extends ControllerHelper {
     //@ResourceFilter(AccessReleveFilter.class)
     public void getBilanPeriodiqueDataForGraph(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
-        Utils.getGroupsEleve(eb, idEleve, new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle( Either<String, JsonArray> responseQuerry) {
-                        if (!responseQuerry.isRight()) {
-                            String error = responseQuerry.left().getValue();
-                            log.error(error);
-                            badRequest(request, error);
-                        } else {
-                            JsonArray idGroups = responseQuerry.right().getValue();
-                            //idGroups null si l'eleve n'est pas dans un groupe
-                            getDataGraph(request, idGroups);
-                        }
-                    }
-                });
+        final String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
+        Utils.getGroupsEleve(eb, idEleve, idEtablissement, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle( Either<String, JsonArray> responseQuerry) {
+                if (!responseQuerry.isRight()) {
+                    String error = responseQuerry.left().getValue();
+                    log.error(error);
+                    badRequest(request, error);
+                } else {
+                    JsonArray idGroups = responseQuerry.right().getValue();
+                    //idGroups null si l'eleve n'est pas dans un groupe
+                    getDataGraph(request, idGroups);
+                }
+            }
+        });
     }
 
 
@@ -1215,7 +1204,8 @@ public class NoteController extends ControllerHelper {
     //@ResourceFilter(AccessReleveFilter.class)
     public void getBilanPeriodiqueDomaineForGraph(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
-        Utils.getGroupsEleve(eb, idEleve, new Handler<Either<String, JsonArray>>() {
+        final String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
+        Utils.getGroupsEleve(eb, idEleve, idEtablissement, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle( Either<String, JsonArray> responseQuerry) {
                 if (!responseQuerry.isRight()) {
@@ -1332,7 +1322,7 @@ public class NoteController extends ControllerHelper {
                 }
             }
 
-       }
+        }
         return maxComp;
     }
 
@@ -1397,8 +1387,8 @@ public class NoteController extends ControllerHelper {
 
 
     private JsonArray linkCompNoteToLibelle(JsonArray domaines,
-                                                       JsonArray compNotes,
-                                        String idEleve ) {
+                                            JsonArray compNotes,
+                                            String idEleve ) {
         Map<Long,JsonObject> domainesMap = new HashMap<>();
         JsonArray res = new JsonArray();
 

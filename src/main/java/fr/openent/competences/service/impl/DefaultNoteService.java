@@ -336,7 +336,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             }
 
                             query.append("ORDER BY date ASC ;");
-                            Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+                            Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
+                                    validResultHandler(handler));
                         } else {
                             handler.handle(new Either.Left<>("Error While getting Available student "));
                         }
@@ -369,7 +370,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         idEleves.add(queryResult.getString(i));
                                     }
                                 }
-                                runGetCompetencesNotesReleve(etablissementId, classeId, groupIds,  matiereId, periodeId, eleveId,
+                                runGetCompetencesNotesReleve(etablissementId, classeId, groupIds,  matiereId, periodeId,
+                                        eleveId,
                                         typeClasse, idEleves, withDomaineInfo, handler);
 
                             } else {
