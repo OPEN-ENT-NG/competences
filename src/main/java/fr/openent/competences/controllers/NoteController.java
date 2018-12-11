@@ -1094,14 +1094,14 @@ public class NoteController extends ControllerHelper {
                                                 // 3. On regroupe  les compétences notes par idMatière
                                                 idMatieres = groupDataByMatiere(listCompNotes,
                                                         matieresCompNotes,
-                                                        matieresCompNotesEleve, idEleve);
+                                                        matieresCompNotesEleve, idEleve, true);
 
                                                 // 4. On regroupe les notes par idMatière
                                                 Map<String,JsonArray> matieresNotes = new HashMap<>();
                                                 Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
                                                 idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes,
                                                         matieresNotes,
-                                                        matieresNotesEleve, idEleve), idMatieres);
+                                                        matieresNotesEleve, idEleve, false), idMatieres);
 
                                                 // 5. On récupère tous les libelles des matières de
                                                 // l'établissement et on fait correspondre aux résultats par
@@ -1236,11 +1236,12 @@ public class NoteController extends ControllerHelper {
     }
 
     private JsonArray groupDataByMatiere(JsonArray datas, Map<String,JsonArray> mapDataClasse,
-                                         Map<String,JsonArray> mapDataEleve, String idEleve){
+                                         Map<String,JsonArray> mapDataEleve, String idEleve, boolean checkFormative){
         JsonArray result = new JsonArray();
         for (int i=0; i< datas.size(); i++ ) {
             JsonObject data = datas.getJsonObject(i);
-            if (data != null && data.getBoolean("formative") != null && !data.getBoolean("formative").booleanValue()) {
+            if ( (checkFormative && data != null && data.getBoolean("formative") != null && !data.getBoolean("formative").booleanValue())
+                || !checkFormative) {
                 String idMatiere = data.getString("id_matiere");
                 idMatiere = (idMatiere!= null)? idMatiere : "no_id_matiere";
                 if (!mapDataClasse.containsKey(idMatiere)) {
