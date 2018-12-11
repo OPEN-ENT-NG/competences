@@ -197,7 +197,7 @@ public interface NoteService extends CrudService {
      * @param idPeriode idPeriode
      * @param handler response
      */
-    void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, Integer idPeriode, Handler<Either<String,JsonArray>> handler);
+    void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, JsonArray idsGroups, Integer idPeriode, Handler<Either<String,JsonArray>> handler);
 
     /**
      * get eleve moy By matiere By class
