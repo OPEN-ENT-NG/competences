@@ -11,7 +11,7 @@ declare let Chart: any;
 
 export class ExportBulletins {
 
-     toJSON (options) {
+    toJSON (options) {
         let o = {
             idStudents: options.idStudents,
             getResponsable: (options.getResponsable === true)? options.getResponsable:false ,
@@ -70,40 +70,40 @@ export class ExportBulletins {
     public static async  generateBulletins (options, $scope) {
         let stopwatch = undefined;
         let method = "generateBulletins";
-            try {
+        try {
 
-                this.startDebug(stopwatch, $scope, options, method);
-                options.images = {}; // contiendra les id des images par élève
-                options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
+            this.startDebug(stopwatch, $scope, options, method);
+            options.images = {}; // contiendra les id des images par élève
+            options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
 
-                if (options.showBilanPerDomaines === true) {
-                    // Si on choisit de déssiner les graphes
-                    await this.createCanvas(options, $scope);
-                }
-
-                // lancement de l'export et récupération du fichier généré
-                let data = await http.post(`/competences/export/bulletins`, new ExportBulletins().toJSON(options),
-                    {responseType: 'arraybuffer'});
-
-                let blob = new Blob([data.data]);
-                let link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download =  data.headers['content-disposition'].split('filename=')[1];
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(function() {
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(link.href);
-                }, 100);
-                $('.chart-container').empty();
-                notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
-                this.stopDebug(stopwatch, $scope, options, method);
-            } catch (e) {
-                console.dir(e);
-                $('.chart-container').empty();
-                notify.error(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.error'));
-                this.stopDebug(stopwatch, $scope, options, method);
+            if (options.showBilanPerDomaines === true) {
+                // Si on choisit de déssiner les graphes
+                await this.createCanvas(options, $scope);
             }
+
+            // lancement de l'export et récupération du fichier généré
+            let data = await http.post(`/competences/export/bulletins`, new ExportBulletins().toJSON(options),
+                {responseType: 'arraybuffer'});
+
+            let blob = new Blob([data.data]);
+            let link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download =  data.headers['content-disposition'].split('filename=')[1];
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(function() {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(link.href);
+            }, 100);
+            $('.chart-container').empty();
+            notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
+            this.stopDebug(stopwatch, $scope, options, method);
+        } catch (e) {
+            console.dir(e);
+            $('.chart-container').empty();
+            notify.error(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.error'));
+            this.stopDebug(stopwatch, $scope, options, method);
+        }
     }
 
     // - Récupère les informations nécessaires à la construction du graphe d'un élève
@@ -119,8 +119,6 @@ export class ExportBulletins {
                         type_groupe: Classe.type.CLASSE
                     }),
                     student, options.idPeriode, $scope.structure, options.idPeriode);
-                if (student.response === undefined) {
-                    student.response = true;
                 await object.getDataForGraph(student, true);
                 let datasetsArray = [];
                 if(options.withLevelsStudent){
@@ -212,8 +210,7 @@ export class ExportBulletins {
                 options.images[student.id] = response.data._id;
                 options.idImagesFiles.push(response.data._id);
 
-                    resolve();
-                }
+                resolve();
             }
             catch (e) {
                 reject (e);
