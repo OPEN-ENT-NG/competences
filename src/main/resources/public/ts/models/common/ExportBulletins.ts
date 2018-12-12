@@ -4,6 +4,7 @@
 import {_, notify, idiom as lang} from 'entcore';
 import http from "axios";
 import {Classe, ElementBilanPeriodique} from "../teacher";
+import {Stopwatch} from "./StopWatch";
 
 declare let $ : any;
 declare let Chart: any;
@@ -32,9 +33,9 @@ export class ExportBulletins {
             images: options.images,
             nameCE: (options.nameCE !== undefined)? options.nameCE : "",
             imgStructure: (options.imgStructure !== undefined)? options.imgStructure : "",
-            hasImgStructure: (options.imgStructure !== undefined)? true: false,
+            hasImgStructure: (options.imgStructure !== undefined),
             imgSignature: (options.imgSignature !== undefined)? options.imgSignature : "",
-            hasImgSignature: (options.imgSignature !== undefined)? true: false
+            hasImgSignature: (options.imgSignature !== undefined)
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode});
@@ -45,11 +46,33 @@ export class ExportBulletins {
         return o;
     }
 
+    private static  startDebug (stopwatch, $scope, options, method) {
+        if ($scope.debug === true) {
+            stopwatch = new Stopwatch(
+                document.querySelector('.stopwatch'),
+                document.querySelector('.results'));
+
+            stopwatch.start();
+            console.log(" DEBUT " + method + " ====== " + options.classeName);
+        }
+    }
+
+    private static  stopDebug (stopwatch, $scope, options, method) {
+        if ($scope.debug === true) {
+            if (stopwatch !== undefined) {
+                stopwatch.stop();
+                console.log(" FIN " + method + " ====== " + options.classeName + " " +
+                    stopwatch.format(stopwatch.times));
+            }
+        }
+    }
 
     public static async  generateBulletins (options, $scope) {
-
+        let stopwatch = undefined;
+        let method = "generateBulletins";
             try {
-                console.log(" DEBUT generateBulletins ====== " + options.classeName);
+
+                this.startDebug(stopwatch, $scope, options, method);
                 options.images = {}; // contiendra les id des images par élève
                 options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
 
@@ -74,12 +97,12 @@ export class ExportBulletins {
                 }, 100);
                 $('.chart-container').empty();
                 notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
-                console.log(" FIN generateBulletins ====== " + options.classeName);
+                this.stopDebug(stopwatch, $scope, options, method);
             } catch (e) {
                 console.dir(e);
                 $('.chart-container').empty();
                 notify.error(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.error'));
-                console.log(" FIN generateBulletins ====== " + options.classeName);
+                this.stopDebug(stopwatch, $scope, options, method);
             }
     }
 
@@ -202,11 +225,13 @@ export class ExportBulletins {
     private static async createCanvas(options, $scope){
         return new Promise(async (resolve, reject) => {
             let students = options.students;
+            let stopwatch = undefined;
+            let method = "DESSIN GRAPH PAR DOMAINE";
 
             try {
 
                 // on lance la creation des images des graphes et on attend
-                console.log(" ------- DEBUT DESSIN GRAPH PAR DOMAINE " + options.classeName);
+                this.startDebug(stopwatch, $scope, options, method);
 
                 let allPromise = [];
                 _.forEach( students, (student) => {
@@ -223,11 +248,12 @@ export class ExportBulletins {
                 });
 
                 await  Promise.all(allPromise);
-                console.log(" ------- FIN GRAPH PAR DOMAINE " + options.classeName);
+                this.stopDebug(stopwatch, $scope, options, method);
                 resolve();
             }
             catch (e) {
                 console.log(e);
+                this.stopDebug(stopwatch, $scope, options, method);
                 reject(e);
             }
         });
@@ -259,8 +285,7 @@ export class ExportBulletins {
 
     public static async getInfosStructure (idStructure) {
         try {
-            let dataStructure = await http.get(`/competences/images/and/infos/bulletins/structure/${idStructure}`);
-            return dataStructure;
+            return await http.get(`/competences/images/and/infos/bulletins/structure/${idStructure}`);
         }
 
         catch (e) {

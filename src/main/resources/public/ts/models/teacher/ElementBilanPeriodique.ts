@@ -68,7 +68,6 @@ export class ElementBilanPeriodique extends Model {
 
 
     async getDataForGraph(eleve, forDomaine?) {
-        console.log(" ******** getDataForGraph : " + eleve.id + " " + eleve.classeName);
         await Graph.getDataForGraph(this, eleve, forDomaine);
     }
 

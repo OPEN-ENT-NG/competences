@@ -133,7 +133,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void logBegin(String method, String idEleve) {
-        log.info("------- [" + method + "]: " + idEleve + " DEBUT " );
+        log.debug("------- [" + method + "]: " + idEleve + " DEBUT " );
     }
 
     @Override
@@ -186,7 +186,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(NAME_CE, params.getString(NAME_CE));
 
         }
-        log.info(" -------[" + PUT_LIBELLE_FOR_EXPORT_METHOD +" ]: " + idEleve + " FIN " );
+        log.debug(" -------[" + PUT_LIBELLE_FOR_EXPORT_METHOD +" ]: " + idEleve + " FIN " );
         finalHandler.handle(new Either.Right<>(null));
     }
 
@@ -276,7 +276,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             @Override
             public void handle(Either<String, JsonObject> event) {
                 if (answered.get()) {
-                    log.info(" THREAD STELL BUSY ");
+                    log.debug(" THREAD STELL BUSY ");
                 }
                 if (event.isRight()) {
                     if (elevesDone.addAndGet(1) == (nbrEleves * nbServicesFinal.get())) {
@@ -294,7 +294,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 "bulletin.pdf.xhtml", title, vertx, config);
                     }
                 }
-
+                
             }
         };
     }
@@ -503,7 +503,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 });
             }
             else {
-                log.info("["+ GET_IMAGE_GRAPH_METHOD + "] : File not found ");
+                log.debug("["+ GET_IMAGE_GRAPH_METHOD + "] : File not found ");
                 finalHandler.handle(new Either.Right<>(null));
             }
         }
@@ -604,7 +604,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                             else {
                                 if (count > 1 ) {
-                                    log.info("[getProjets] : " + idEleve + " success " + count);
+                                    log.debug("[getProjets] : " + idEleve + " success " + count);
                                 }
                                 List<String> idClasses = new ArrayList<String>();
                                 idClasses.add(idClasse);
@@ -734,7 +734,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                 });
                                     }
                                     else {
-                                        log.info(" [getProjets] | NO elements founds for classe " + idClasse);
+                                        log.debug(" [getProjets] | NO elements founds for classe " + idClasse);
                                         serviceResponseOK(answer,finalHandler, count, idEleve, GET_PROJECTS_METHOD);
                                     }
                                 }
@@ -1671,12 +1671,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     int count, String idEleve, String method) {
         if (count > 1 ) {
 
-            log.info("[ "+ method + " ] : "
+            log.debug("[ "+ method + " ] : "
                     + idEleve + " success " + count);
         }
         if(!answer.get()) {
             answer.set(true);
-            log.info(" -------[" + method + "]: " + idEleve + " FIN " );
+            log.debug(" -------[" + method + "]: " + idEleve + " FIN " );
             finalHandler.handle(new Either.Right<>(null));
         }
     }
