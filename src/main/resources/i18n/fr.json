@@ -60,6 +60,8 @@
   "show.family": "Afficher visa de la famille",
   "show.projects": "Afficher les projets",
   "show.bilan.per.domaines": "Afficher les bilans par domaine",
+  "show.with.level.student": "Avec les niveaux de l'élève",
+  "show.with.level.class": "Avec les niveaux de la classe",
   "choose.graphes": "Choix graphes",
 
   "group.Teacher": "Tous les enseignants du groupe {0}.",

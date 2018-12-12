@@ -99,38 +99,43 @@ export class ExportBulletins {
                 if (student.response === undefined) {
                     student.response = true;
                 await object.getDataForGraph(student, true);
+                let datasetsArray = [];
+                if(options.withLevelsStudent){
+                    datasetsArray.push(student.configMixedChartDomaine.averageStudent,);
+                }
+                if(options.withLevelsClass){
+                    datasetsArray.push(student.configMixedChartDomaine.averageClass,);
+                }
+                datasetsArray.push({
+                    label: $scope.niveauCompetences[3].libelle,
+                    backgroundColor: $scope.niveauCompetences[3].couleur,
+                    stack: 'Stack 0',
+                    data: student.configMixedChartDomaine.datasets.data_set1,
+                }, {
+                    label: $scope.niveauCompetences[2].libelle,
+                    backgroundColor: $scope.niveauCompetences[2].couleur,
+                    stack: 'Stack 0',
+                    data: student.configMixedChartDomaine.datasets.data_set2,
+                }, {
+                    label: $scope.niveauCompetences[1].libelle,
+                    backgroundColor: $scope.niveauCompetences[1].couleur,
+                    stack: 'Stack 0',
+                    data: student.configMixedChartDomaine.datasets.data_set3,
+                }, {
+                    label: $scope.niveauCompetences[0].libelle,
+                    backgroundColor: $scope.niveauCompetences[0].couleur,
+                    stack: 'Stack 0',
+                    data: student.configMixedChartDomaine.datasets.data_set4,
+                });
+
+
                 let canvas = <HTMLCanvasElement> document.getElementById("myChart"+student.id);
                 let ctx = canvas.getContext('2d');
                 let myChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: student.configMixedChartDomaine.labels,
-                        datasets: [
-                            student.configMixedChartDomaine.averageStudent,
-                            student.configMixedChartDomaine.averageClass,
-                            {
-                                label: $scope.niveauCompetences[3].libelle,
-                                backgroundColor: $scope.niveauCompetences[3].couleur,
-                                stack: 'Stack 0',
-                                data: student.configMixedChartDomaine.datasets.data_set1,
-                            }, {
-                                label: $scope.niveauCompetences[2].libelle,
-                                backgroundColor: $scope.niveauCompetences[2].couleur,
-                                stack: 'Stack 0',
-                                data: student.configMixedChartDomaine.datasets.data_set2,
-                            }, {
-                                label: $scope.niveauCompetences[1].libelle,
-                                backgroundColor: $scope.niveauCompetences[1].couleur,
-                                stack: 'Stack 0',
-                                data: student.configMixedChartDomaine.datasets.data_set3,
-                            }, {
-                                label: $scope.niveauCompetences[0].libelle,
-                                backgroundColor: $scope.niveauCompetences[0].couleur,
-                                stack: 'Stack 0',
-                                data: student.configMixedChartDomaine.datasets.data_set4,
-                            }
-                        ]
-
+                        datasets: datasetsArray
                     },
                     options: {
                         animation: { duration: 0 },

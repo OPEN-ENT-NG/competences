@@ -97,7 +97,7 @@
                             <i18n>average.student</i18n>
                         </span></label>
                         </div>
-                        <div class="four cell twelve-mobile">
+                        <div class="three cell twelve-mobile">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.moyenneClasse"/><span>
                             <i18n>average.class</i18n>
@@ -120,18 +120,32 @@
                             <i18n>show.family</i18n>
                         </span></label>
                         </div>
-                        <div class="four cell twelve-mobile">
+                        <div class="four cell twelve-mobile" >
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.showProjects"/><span>
                             <i18n>show.projects</i18n>
                         </span></label>
                         </div>
                         <!-- Bilan par domaine -->
-                        <div class="four cell twelve-mobile">
+                        <div class="three cell twelve-mobile" ng-show="checkIfOneStudent()">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.showBilanPerDomaines"/><span>
                             <i18n>show.bilan.per.domaines</i18n>
                         </span></label>
+                        </div>
+                        <div ng-if="print.showBilanPerDomaines" class="five cell twelve-mobile">
+                            <div class="six cell">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.withLevelsStudent"/><span>
+                                <i18n>show.with.level.student</i18n>
+                            </span></label>
+                            </div>
+                            <div class="six cell">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.withLevelsClass"/><span>
+                                <i18n>show.with.level.class</i18n>
+                            </span></label>
+                            </div>
                         </div>
                     </fieldset>
 
