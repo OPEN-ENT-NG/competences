@@ -2689,7 +2689,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                     result.put("periode", libellePeriode);
 
 
-                                                                    String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClass");
+                                                                    String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClasse");
                                                                     result.put("nameClass", prefix);
                                                                     prefix += "_" + libellePeriode;
                                                                     result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
