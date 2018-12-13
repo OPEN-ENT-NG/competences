@@ -945,7 +945,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
 
         List<String> idsEleve = new ArrayList();
-        Utils.getEleveClasse(eb, idsEleve, idClasse, new Handler<Either<String, List<Eleve>>>() {
+
+        Utils.getEleveClasse(eb, idsEleve, idClasse, idPeriode, new Handler<Either<String, List<Eleve>>>() {
                     @Override
                     public void handle(Either<String, List<Eleve>> responseListEleve) {
 
@@ -959,7 +960,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             if (idsEleve.size() == 0) {
                                 handler.handle(new Either.Left<>("eleves not found"));
                             } else {
-
                                 //on récupère les groups de la classe
                                 Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections
                                                 .JsonArray()
@@ -971,23 +971,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                 //List qui contient la idClasse + tous les ids groupes
                                                 // de la classe
                                                 JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
+                                                final String nameClasse;
 
                                                 if (responseQuerry.isLeft()) {
                                                     String error = responseQuerry.left().getValue();
                                                     log.error(error);
                                                     handler.handle(new Either.Left<>(error));
                                                 } else {
-
                                                     JsonArray idClasseGroups = responseQuerry.right().getValue();
 
                                                     if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
                                                         idsGroups.add(idClasse);
                                                     } else {
-                                                        idsGroups.add(idClasseGroups.getJsonObject(0)
-                                                                .getString("id_classe"));
+                                                        idsGroups.add( idClasseGroups.getJsonObject(0)
+                                                                .getString("id_classe") );
                                                         idsGroups.addAll(idClasseGroups.getJsonObject(0)
                                                                 .getJsonArray("id_groupes"));
-
+                                                        nameClasse = idClasseGroups.getJsonObject(0)
+                                                                .getString("name_classe");
 
                                                         // 2- On récupère les notes des eleves
                                                         getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, new Handler<Either<String, JsonArray>>() {
@@ -1113,7 +1114,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                     eleveJsonO.put("id_eleve", eleve.getIdEleve())
                                                                                             .put("lastName", eleve.getLastName())
                                                                                             .put("firstName", eleve.getFirstName())
-                                                                                            .put("nameClass", eleve.getNomClasse());
+                                                                                            .put("nameClasse", nameClasse);
 
                                                                                     if (mapIdEleveIdMatMoy.containsKey(eleve.getIdEleve())) {
                                                                                         Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(eleve.getIdEleve());

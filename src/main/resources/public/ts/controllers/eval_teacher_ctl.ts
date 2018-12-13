@@ -2458,9 +2458,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             evaluation.competenceNotes.all[i].evaluation = -1;
                         }
                         evaluation.oldId_annotation = evaluation.id_annotation;
-                        $scope.calculStatsDevoir();
-                        evaluation.valid = true;
-                        utils.safeApply($scope);
+                        if (evaluation.valeur === "NN") {
+                            $scope.calculerMoyenneEleve(eleve, $scope.releveNote.devoirs.all);
+                            $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
+                        }
+                        else {
+                            $scope.calculStatsDevoir();
+                            evaluation.valid = true;
+                            utils.safeApply($scope);
+                        }
                     });
                 }
             }
@@ -2700,6 +2706,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.calculerMoyenneEleve = function (eleve, devoirs) {
             eleve.getMoyenne(devoirs).then(() => {
                 if(!eleve.moyenneFinaleIsSet){
+                    if (eleve.moyenne === 0) {
+                        eleve.moyenne = "";
+                    }
                     eleve.moyenneFinale = eleve.moyenne;
                 }
                 utils.safeApply($scope);
