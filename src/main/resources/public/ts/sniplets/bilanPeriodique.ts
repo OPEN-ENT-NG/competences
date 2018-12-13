@@ -454,7 +454,8 @@ export const bilanPeriodique = {
 
                     if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
                         this.dataELem.id_theme = this.dataELem.theme.id;
-                        let libelleExistOnThematique = this.elements.find(theme => (theme.libelle === dataELem.libelle) && (theme.theme.libelle === dataELem.theme.libelle));
+                        let libelleExistOnThematique = this.elements.find(theme => (theme.libelle === dataELem.libelle)
+                            && (theme.theme.libelle === dataELem.theme.libelle) && theme.id !== dataELem.id);
                         // Si le libellé est unique sur le thème choisi, on récupère le thème créé
                         if (!libelleExistOnThematique) {
                             await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
@@ -472,7 +473,7 @@ export const bilanPeriodique = {
                     }
 
                     else {
-                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle);
+                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle  && theme.id !== dataELem.id);
                         // Si le libellé est unique on récupère le thème créé
                         if (!libelleExist) {
                             await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
