@@ -30,4 +30,7 @@ export class Periode extends Model{
     date_conseil_classe: Date;
     publication_bulletin: boolean;
 
+    toString = function() {
+        return String(this.id_type);
+    }
 }

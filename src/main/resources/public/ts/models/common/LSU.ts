@@ -18,43 +18,40 @@
 /**
  * Created by agnes.lapeyronnie on 19/09/2017.
  */
-import { Collection, _ } from 'entcore';
+import http from 'axios';
 import { Responsable, Classe } from '../teacher';
+import {Periode} from './Periode';
 
 export class LSU {
-    responsables : Collection<Responsable>;
+    responsables: Array<Responsable>;
+    periodes_type: any[];
     classes : Array<Classe>;//sans les groupes
-    structureId : string;
+    idStructure : string;
 
 
-    constructor (structureId : string, classes : Array<Classe>, responsables : Collection<Responsable>){
-        this.structureId = structureId ;
+    constructor (structureId : string, classes : Array<Classe>, responsables : Array<Responsable>){
+        this.idStructure = structureId ;
         this.classes = classes;
-        this.responsables =_.clone(responsables) ;
-
+        this.responsables =responsables ;
+        this.periodes_type = [
+            {label: 'trimestre 1', id_type: 3},
+            {label: 'trimestre 2', id_type: 4},
+            {label: 'trimestre 3', id_type: 5}
+            ];
     }
 
-    export () {
-        let url = "/competences/exportLSU/lsu?idStructure=" + this.structureId;
-
-            for(var i=0; i<this.classes.length;i++) {
-                if(this.classes[i].selected){
-                    url += "&idClasse=" + this.classes[i].id;
-                }
-            }
-
-          /*  _.each(_.where(this.classes.all, {selected: true}), (classe) => {
-                    url += "&idClasse=" + this.classes.all[i].id;
-
-            });*/
-
-            for(let i=0 ; i < this.responsables.all.length ; i++){
-                if(this.responsables.all[i].selected){
-                url+="&idResponsable=" + this.responsables.all[i].id;
-                }
-            }
-
-        location.replace(url);
+    async export(params: any): Promise<any> {
+        return await new Promise((resolve, reject) => {
+            http.post('/competences/exportLSU/lsu', params, {responseType: 'arraybuffer'})
+                .then(function (data) {
+                    if (resolve && typeof(resolve) === 'function') {
+                        resolve(data);
+                    }
+                })
+                .catch(function (data) {
+                    reject(data);
+                });
+        });
     }
 
 }

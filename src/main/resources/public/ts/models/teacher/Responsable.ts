@@ -20,7 +20,11 @@ import { Model } from 'entcore';
 export class Responsable extends Model {
     id: string;
     externalId : string;
-    displayName : string;
+    displayName: string;
+    name: string;
     selected : boolean;
 
+    toString() {
+        return this.displayName;
+    }
 }

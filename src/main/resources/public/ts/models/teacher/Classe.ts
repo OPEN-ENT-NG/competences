@@ -38,6 +38,10 @@ export class Classe extends Model {
         periodes:  boolean
     };
 
+    toString() {
+        return this.name;
+    }
+
     public static  libelle = {
         CLASSE:'Classe',
         GROUPE: "Groupe d'enseignement",

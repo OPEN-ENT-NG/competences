@@ -17,6 +17,7 @@
 
 package fr.openent.competences.controllers;
 
+import com.mongodb.util.JSON;
 import fr.openent.competences.service.ElementBilanPeriodiqueService;
 import fr.openent.competences.service.BilanPeriodiqueService;
 
@@ -28,11 +29,13 @@ import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
+import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
@@ -50,6 +53,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.xml.sax.SAXException;
+import sun.rmi.server.InactiveGroupException;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -70,6 +74,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -101,6 +106,329 @@ public class LSUController extends ControllerHelper {
         eleveEnsCpl = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA,Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
     }
+
+
+    /**
+     * Methode qui contruit le xml pour le LSU
+     *
+     * @param request contient la list des idsClasse et des idsResponsable ainsi que idStructure sur laquelle sont les responsables
+     */
+    @Post("/exportLSU/lsu")
+    @ApiDoc("Export data to LSUN xml format")
+    @SecuredAction("competences.lsun.export")
+    public void getXML(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+            @Override
+            public void handle(JsonObject entries) {
+                if (entries.containsKey("type")) {
+                    if ("1".equals(entries.getString("type"))) {
+                        bilanFinCycleExport(request, entries);
+                    } else {
+                        bilanPeriodiqueExport(request, entries);
+                    }
+                } else {
+                    badRequest(request, "No valid params");
+                    return;
+                }
+            }
+        });
+    }
+
+    /**
+     * méthode qui récupère les responsables de direction à partir de idStructure
+     *
+     * @param request
+     */
+    @Get("/responsablesDirection")
+    @ApiDoc("Retourne les responsables de direction de l'établissement passé en paramètre")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getResponsablesDirection(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(UserInfos user) {
+                if (user != null && request.params().contains("idStructure")) {
+                    JsonObject action = new JsonObject()
+                            .put("action", "user.getResponsablesDirection")
+                            .put("idStructure", request.params().get("idStructure"));
+                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                        @Override
+                        public void handle(Message<JsonObject> message) {
+                            JsonObject body = message.body();
+                            if ("ok".equals(body.getString("status"))) {
+                                Renders.renderJson(request, body.getJsonArray("results"));
+                            } else {
+                                JsonObject error = new JsonObject()
+                                        .put("error", body.getString("message"));
+                                Renders.renderJson(request, error, 400);
+                            }
+                        }
+                    }));
+                } else {
+                    badRequest(request);
+                }
+            }
+        });
+    }
+
+
+    private void bilanFinCycleExport(HttpServerRequest request, JsonObject entries) {
+        if (!entries.containsKey("idStructure")
+                || !entries.containsKey("classes")
+                || !entries.containsKey("responsables")) {
+            badRequest(request, "bilanFinCycleExport - No valid params");
+            return;
+        }
+        //instancier le lsunBilans qui sera composé de entete,donnees et version
+        final LsunBilans lsunBilans = objectFactory.createLsunBilans();
+        //donnees composée de responsables-etab, eleves et bilans-cycle
+        final Donnees donnees = objectFactory.createDonnees();
+        final String idStructure = entries.getString("idStructure");
+        log.info("idStructure = " + idStructure);
+        final List<String> idsClasse = getIdsList(entries.getJsonArray("classes"));
+        final List<String> idsResponsable = getIdsList(entries.getJsonArray("responsables"));
+
+        lsunBilans.setSchemaVersion("3.0");
+        log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
+        if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
+            getBaliseEntete(lsunBilans, idStructure, new Handler<String>() {
+                @Override
+                public void handle(String event) {
+                    if (event.equals("success")) {
+
+                        getBaliseResponsables(donnees, idsResponsable, new Handler<String>() {
+                            @Override
+                            public void handle(String event) {
+                                if (event.equals("success")) {
+
+                                    getBaliseEleves(donnees, idsClasse, new Handler<String>() {
+                                        @Override
+                                        public void handle(final String event) {
+                                            if (event.equals("success")) {
+                                                Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse, new Handler<Either<String, Map<String, JsonObject>>>() {
+                                                    @Override
+                                                    public void handle(Either<String, Map<String, JsonObject>> resultsQuery) {
+                                                        if (resultsQuery.isRight()) {
+                                                            Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
+
+                                                            getBaliseBilansCycle(donnees, idsClasse, idStructure, dateCreationVerrouByClasse, new Handler<Either<String, JsonArray>>() {
+                                                                @Override
+                                                                public void handle(Either<String, JsonArray> reponseErreursJsonArray) {
+                                                                    if (reponseErreursJsonArray.isRight()) {
+
+                                                                        if (donnees.getBilansCycle() != null && donnees.getBilansCycle().getBilanCycle().size() != 0) {
+                                                                            lsunBilans.setDonnees(donnees);
+                                                                            returnResponse(request, lsunBilans);
+                                                                        } else {
+                                                                            JsonArray listErreurs = reponseErreursJsonArray.right().getValue();
+                                                                            if (listErreurs.size() > 0) {
+                                                                                JsonArray affichageDesELeves = new fr.wseduc.webutils.collections.JsonArray();
+                                                                                for (int i = 0; i < listErreurs.size(); i++) {
+                                                                                    JsonObject affichageEleve = new JsonObject();
+                                                                                    JsonObject erreurOneEleve = listErreurs.getJsonObject(i);
+                                                                                    affichageEleve.put("nom", erreurOneEleve.getString("nom"))
+                                                                                            .put("prenom", erreurOneEleve.getString("prenom"))
+                                                                                            .put("classe", erreurOneEleve.getString("classe"));
+                                                                                    affichageDesELeves.add(affichageEleve);
+                                                                                }
+                                                                                Renders.renderJson(request, affichageDesELeves);
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            });
+                                                        } else {
+                                                            leftToResponse(request, new Either.Left<String, JsonArray>("getXML : getDatesCreationVerrouByClasses " + resultsQuery.left().getValue()));
+                                                            log.error("getXML : getDatesCreationVerrouByClasses " + resultsQuery);
+                                                        }
+                                                    }
+                                                });
+
+                                            } else {
+                                                leftToResponse(request, new Either.Left<>(event));
+                                                log.error("getXML : getBaliseEleves " + event);
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    leftToResponse(request, new Either.Left<>(event));
+                                    log.error("getXML : getBaliseResponsable " + event);
+                                }
+                            }
+                        });
+                    } else {
+                        leftToResponse(request, new Either.Left<>(event));
+                        log.error("getXML : getBaliseEntete " + event);
+
+                    }
+                }
+            });
+        } else {
+            badRequest(request);
+        }
+        log.info("FIN exportLSU : export ");
+    }
+
+
+    /**
+     * Methode qui contruit le xml pour le LSU
+     *
+     * @param request contient la list des idsClasse et des idsResponsable ainsi que idStructure sur laquelle sont les responsables
+     * @param entries
+     */
+    private void bilanPeriodiqueExport(final HttpServerRequest request, JsonObject entries) {
+
+        if (!entries.containsKey("idStructure")
+                || !entries.containsKey("classes")
+                || !entries.containsKey("responsables")
+                || !entries.containsKey("periodes_type")) {
+            badRequest(request, "bilanPeriodiqueExport - No valid params");
+            return;
+        }
+
+        final String idStructure = entries.getString("idStructure");//"a1b2a3fb-35b3-4e3e-8c2e-6991b5ec2887";
+        final List<String> idsClasse = getIdsList(entries.getJsonArray("classes"));//Arrays.asList("63af9677-280b-4853-b7cd-c61440fa61cc", "12dd23cb-b32f-4b28-842f-04d08e372ccf");//3Aeme 5Ceme
+        final List<String> idsResponsable = getIdsList(entries.getJsonArray("responsables"));//Arrays.asList("92ecac5a-c563-4c28-8a9f-1c5d8ad89bd2");//ce.fouquet
+        final List<Integer> idsTypePeriodes = new ArrayList<Integer>();
+        JsonArray dataPeriodesType = entries.getJsonArray("periodes_type");
+        for (int i = 0; i < dataPeriodesType.size(); i++) {
+            idsTypePeriodes.add(dataPeriodesType.getJsonObject(i).getInteger("id_type"));
+        }
+
+        final LsunBilans lsunBilans = objectFactory.createLsunBilans();//instancier le lsunBilans qui sera composé de entete,donnees et version
+        //donnees composée de responsables-etab, eleves et bilans-cycle
+        final Donnees donnees = objectFactory.createDonnees();
+        final JsonObject periodesAdded = new JsonObject();
+        final JsonObject epiGroupAdded = new JsonObject();
+        final JsonObject accGroupAdded = new JsonObject();
+        donnees.setEnseignants(objectFactory.createDonneesEnseignants());
+
+
+        Handler<Either.Right<String, JsonObject>> getBilansPeriodiquesHandler = backresponse -> {
+
+            JsonObject data = backresponse.right().getValue();
+            if (data.getInteger("status") == 200) {
+                log.info("FIN exportLSU : export ");
+                lsunBilans.setDonnees(donnees);
+                returnResponse(request, lsunBilans);
+            } else {
+                log.error("getXML : getBaliseBilansPeriodiquesAndEnseignants " + data.getString("error"));
+                badRequest(request, "getXML : getBaliseBilansPeriodiquesAndEnseignants " + backresponse);
+            }
+        };
+
+        Handler<Either<String, Map<String, JsonObject>>> getDatesCreationVerrouByClassesHandler = resultsQuery -> {
+            if (resultsQuery.isRight()) {
+                Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
+                this.getBaliseBilansPeriodiquesAndEnseignants(donnees, idStructure, periodesAdded, dateCreationVerrouByClasse, epiGroupAdded, accGroupAdded, getBilansPeriodiquesHandler);
+
+
+            } else {
+                log.error("getXML : getDatesCreationVerrouByClasses " + resultsQuery);
+                badRequest(request, "getXML : getDatesCreationVerrouByClasses " + resultsQuery);
+            }
+        };
+
+        Handler<String> getApEpiParcoursHandler = event -> {
+            if (event.equals("success")) {
+                Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse, getDatesCreationVerrouByClassesHandler);
+
+            } else {
+                log.error("getXML : getApEpiParcoursBalises " + event);
+                badRequest(request, "getXML : getApEpiParcoursBalises "+ event);
+            }
+        };
+
+        Future<JsonObject> getEnseignantsFuture = Future.future();
+        Handler<String> getEnseignantsHandler = event -> {
+            if (event.equals("success")) {
+                getEnseignantsFuture.complete();
+            } else {
+                getEnseignantsFuture.complete();
+                leftToResponse(request, new Either.Left<>(event));
+                log.error("getXML : getBaliseEnseignants " + event);
+            }
+        };
+        getBaliseEnseignants(donnees, idStructure, idsClasse, getEnseignantsHandler);
+
+
+        Future<JsonObject> getPeriodesFuture = Future.future();
+        Handler<String> getPeriodesHandler = event -> {
+            if (event.equals("success")) {
+                getPeriodesFuture.complete();
+            } else {
+                getPeriodesFuture.fail("can't generate Balises Periodes Future");
+                log.error("getXML : getBalisePeriode " + event);
+            }
+        };
+        getBalisePeriodes(donnees, idsTypePeriodes, periodesAdded, idStructure, idsClasse, getPeriodesHandler);
+
+        Future<JsonObject> getElevesFuture = Future.future();
+        Handler<String> getElevesHandler = event -> {
+            if (event.equals("success")) {
+                getElevesFuture.complete();
+            } else {
+                getElevesFuture.fail("can't generate Balises Eleves Future");
+                log.error("getXML : getBaliseEleves " + event);
+            }
+        };
+        getBaliseEleves(donnees, idsClasse, getElevesHandler);
+
+
+        Future<JsonObject> getDisciplineFuture = Future.future();
+        Handler<String> getDisciplineHandler = event -> {
+            if (event.equals("success")) {
+                getDisciplineFuture.complete();
+            } else {
+                getDisciplineFuture.fail("can't generate Balises Disciplines Future");
+                log.error("getXML : getBaliseDiscipline " + event);
+            }
+        };
+        getBaliseDisciplines(donnees, idStructure, getDisciplineHandler);
+
+
+        Future<JsonObject> getResponsableFuture = Future.future();
+        Handler<String> getResponsableHandler = event -> {
+            if (event.equals("success")) {
+                getResponsableFuture.complete();
+            } else {
+                getResponsableFuture.fail("can't generate Balises Responsables Future");
+                log.error("getXML : getBaliseResponsable " + event);
+            }
+        };
+        getBaliseResponsables(donnees, idsResponsable, getResponsableHandler);
+
+        Future<JsonObject> getEnteteFuture = Future.future();
+        Handler<String> getEnteteHandler = event -> {
+            if (event.equals("success")) {
+                getEnteteFuture.complete();
+            } else {
+                getEnteteFuture.fail("can't generate Balises Entete Future");
+                log.error("getXML : getBaliseEntete " + event);
+            }
+        };
+        getBaliseEntete(lsunBilans, idStructure, getEnteteHandler);
+
+
+        lsunBilans.setSchemaVersion("3.0");
+        log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
+        if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
+            CompositeFuture.all(getEnteteFuture, getResponsableFuture, getDisciplineFuture, getElevesFuture, getPeriodesFuture, getEnseignantsFuture).setHandler(
+                    event -> {
+                        if (event.succeeded()) {
+                            getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, accGroupAdded, getApEpiParcoursHandler);
+                        }
+                        else{
+                            badRequest(request, event.cause().getMessage());
+
+                        }
+                    });
+        } else {
+            badRequest(request, "Classes or Responsable are empty.");
+        }
+    }
+
+
+
 
     /**
      * complete la balise entete et la set a lsunBilans
@@ -216,7 +544,6 @@ public class LSUController extends ControllerHelper {
                                     }else {
                                         handler.handle(e.getMessage());
                                         log.error(" method getBaliseEleve : creationEleve " + e.getMessage());
-
                                     }
                                 }
                             }else {
@@ -225,7 +552,6 @@ public class LSUController extends ControllerHelper {
                                         + o.getString("firstName"));
 
                             }
-
                         } else {
                             eleve = eleves.getEleveById(idEleve);
                         }
@@ -745,7 +1071,6 @@ public class LSUController extends ControllerHelper {
         });
     }
 
-
     private void getBaliseDisciplines(final Donnees donnees, final String idStructure, final Handler<String> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "matiere.getMatieresForUser")
@@ -753,11 +1078,10 @@ public class LSUController extends ControllerHelper {
                 .put("idUser", "null")
                 .put("idStructure", idStructure)
                 .put("onlyId", false);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if ("ok".equals(body.getString("status"))) {
+                try {
                     JsonArray listSubject = body.getJsonArray("results");
                     donnees.setDisciplines(objectFactory.createDonneesDisciplines());
                     if (listSubject != null && !listSubject.isEmpty()) {
@@ -765,46 +1089,28 @@ public class LSUController extends ControllerHelper {
                             JsonObject currentSubject = (JsonObject) item;
                             Discipline discipline = objectFactory.createDiscipline();
                             discipline.setCode(currentSubject.getString("externalId"));
-                            discipline.setId(currentSubject.getString("id"));
+                            discipline.setId("DIS_" + currentSubject.getString("id"));
                             discipline.setLibelle(currentSubject.getString("name"));
+                            discipline.setModaliteElection(ModaliteElection.fromValue("O"));
                             donnees.getDisciplines().getDiscipline().add(discipline);
                         });
                         JsonObject response = new JsonObject();
                         response.put("status", "success");
                         response.put("data", "success");
                         handler.handle("success");
-                    } else {
-                        handler.handle("getBaliseDisciplines discipline not available ");
                     }
+                }catch(Throwable e){
+                    handler.handle("method getBaliseResponsable : " + e.getMessage());
+                    log.error("method getBaliseResponsable : " + e.getMessage());
                 }
+            } else {
+                log.error("method getBaliseDisciplines discipline : error eb matiere.getMatieresForUser ko, idStructure: "+ idStructure);
+                handler.handle("getBaliseDisciplines discipline : error eb matiere.getMatieresForUser ko");
             }
         }));
     }
 
-    private void getBaliseEnseignants(final Donnees donnees, final String idStructure, final Handler<String> handler) {
-        List<String> idTeachers = new ArrayList<>();
-        JsonObject action = new JsonObject()
-                .put("action", "user.getUsers")
-                .put("idUsers", idTeachers);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray listTeacher = body.getJsonArray("results");
-                    handler.handle("success");
-                    /*if (listTeacher != null && !listTeacher.isEmpty()) {
-                        handler.handle("success");
-                    } else {
-                        handler.handle("getBaliseEnseignants Enseignants not available ");
-                    }*/
-                }
-            }
-        }));
-    }
-
-
-    private void getBalisePeriodes(final Donnees donnees, final Integer wantedPeriode, final JsonObject periodesAdded, final String idStructure, final List<String> idClasse, final Handler<String> handler) {
+    private void getBalisePeriodes(final Donnees donnees, final List<Integer> wantedPeriodes, final JsonObject periodesAdded, final String idStructure, final List<String> idClasse, final Handler<String> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "periode.getPeriodes")
                 .put("idGroupes", idClasse)
@@ -812,26 +1118,85 @@ public class LSUController extends ControllerHelper {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
             if ("ok".equals(body.getString("status"))) {
-                JsonArray periodeList = body.getJsonArray("result");
-                donnees.setPeriodes(objectFactory.createDonneesPeriodes());
-                periodeList.forEach(item -> {
-                    JsonObject currentPeriode = (JsonObject) item;
-                    if(wantedPeriode.equals(currentPeriode.getInteger("id_type"))){
-                        periodesAdded.put(currentPeriode.getInteger("id").toString(), currentPeriode);
-                        Periode periode = objectFactory.createPeriode();
-                        periode.setId(currentPeriode.getInteger("id").toString());
-                        periode.setMillesime(currentPeriode.getString("timestamp_dt").substring(0, 4));
-                        periode.setIndice(currentPeriode.getInteger("id_type"));
-                        periode.setNbPeriodes(periodeList.size());
-                        donnees.getPeriodes().getPeriode().add(periode);
-                    }
-                });
+                try {
+                    JsonArray periodeList = body.getJsonArray("result");
+                    donnees.setPeriodes(objectFactory.createDonneesPeriodes());
+                    periodeList.forEach(item -> {
+                        JsonObject currentPeriode = (JsonObject) item;
 
-                handler.handle("success");
-
+                        Integer targetPeriode = wantedPeriodes.stream()
+                                .filter(el -> el.equals(currentPeriode.getInteger("id_type")))
+                                .findFirst()
+                                .orElse(null);
+                        if(targetPeriode != null){
+                            periodesAdded.put("P_"+currentPeriode.getInteger("id").toString(), currentPeriode);
+                            Periode periode = objectFactory.createPeriode();
+                            periode.setId("P_"+currentPeriode.getInteger("id").toString());
+                            periode.setMillesime(currentPeriode.getString("timestamp_dt").substring(0, 4));
+                            periode.setIndice(currentPeriode.getInteger("id_type"));
+                            periode.setNbPeriodes(periodeList.size());
+                            donnees.getPeriodes().getPeriode().add(periode);
+                        }
+                    });
+                    handler.handle("success");
+                }
+                catch(Throwable e){
+                    handler.handle("method getBalisePeriodes : " + e.getMessage());
+                    log.error("method getBalisePeriodes : " + e.getMessage());
+                }
+            }
+            else {
+                log.error("method getBalisePeriodes : error eb periode.getPeriodes ko");
+                handler.handle("getBalisePeriodes : error eb periode.getPeriodes ko");
             }
         }));
     }
+
+    private void getBaliseEnseignants(final Donnees donnees, final String structureId, List<String> idsClasse, final Handler<String> handler) {
+        final List<Future> futureMyResponse1Lst = new ArrayList<>();
+
+
+        for(int i=0; i < idsClasse.size(); i++){
+            Future<JsonObject> resp1FutureComposite = Future.future();
+            futureMyResponse1Lst.add(resp1FutureComposite);
+            JsonArray types = new JsonArray().add("Teacher");
+            JsonObject action = new JsonObject()
+                    .put("action", "user.getUsersByTypeClassAndStructure")
+                    .put("structureId", structureId)
+                    .put("classId", idsClasse.get(i))
+                    .put("types", types);
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                @Override
+                public void handle(Message<JsonObject> message) {
+                    JsonObject body = message.body();
+                    if ("ok".equals(body.getString("status"))) {
+                        JsonArray teachersList = body.getJsonArray("results");
+                        for (Integer k = 0; k < teachersList.size(); k++) {
+                            addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
+                        }
+                        resp1FutureComposite.complete();
+                    }
+                }
+            }));
+        }
+        CompositeFuture.all(futureMyResponse1Lst).setHandler(
+            event -> handler.handle("success"));
+    }
+
+    private Enseignant addorFindTeacherBalise(Donnees donnees, JsonObject enseignant){
+        Enseignant existing = getEnseignantInXML(enseignant.getString("id"), donnees);
+        if (existing == null) {
+            existing = objectFactory.createEnseignant();
+            existing.setId("ENS_" + enseignant.getString("id"));
+            existing.setPrenom(enseignant.getString("firstName"));
+            existing.setNom(enseignant.getString("name"));
+            existing.setType(fromValue("epp"));
+            existing.setIdSts(new BigInteger(20, new Random()));
+            log.info(existing.getIdSts() + "  enseignant Id sts");
+            donnees.getEnseignants().getEnseignant().add(existing);
+        }
+        return existing;
+    };
 
     private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure, JsonObject epiGroupAdded, JsonObject accGroupAdded, final Handler<String> handler) {
         List<String> idTeachers = new ArrayList<>();
@@ -921,7 +1286,7 @@ public class LSUController extends ControllerHelper {
                         Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
                         if (currentSubj != null) {
                             Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
-                            if (currentSubj != null) {
+                            if (currentEnseignant != null) {
                                 EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
                                 currentEnseignantDiscipline.setDisciplineRef(currentSubj);
                                 currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
@@ -974,7 +1339,7 @@ public class LSUController extends ControllerHelper {
                         Discipline currentSubject = getDisciplineInXML(currentInterMatiere.getJsonObject("matiere").getString("id"), donnees);
                         if (currentSubject != null) {
                             Enseignant currentEnseignant = getEnseignantInXML(currentInterMatiere.getJsonObject("intervenant").getString("id"), donnees);
-                            if (currentSubject != null) {
+                            if (currentEnseignant != null) {
                                 EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
                                 currentEnseignantDiscipline.setDisciplineRef(currentSubject);
                                 currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
@@ -1024,40 +1389,41 @@ public class LSUController extends ControllerHelper {
         final AtomicInteger nbEleveCompteur = new AtomicInteger(0);
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
         listErreursEleves = new fr.wseduc.webutils.collections.JsonArray();
-        final Integer[] originalSize = {0};
+        final AtomicInteger originalSize = new AtomicInteger();
 
 
 
         Handler getOut = new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> suiviAcquisResponse) {
-                originalSize[0]--;
-                if (originalSize[0] == 0) {
+                originalSize.getAndDecrement();
+                if (originalSize.get() == 0) {
                     log.info("Get OUTTTTT " + bilansPeriodiques.getBilanPeriodique().size() + "  ==  " + eleves.getEleve().size());
                     donnees.setBilansPeriodiques(bilansPeriodiques);
                     handler.handle(new Either.Right<String, JsonObject>(suiviAcquisResponse.right().getValue()));
                 } else {
-                    //log.info("waiting all child done");
+                    log.info("waiting all child done");
                 }
             }
         };
 
+        if( !(eleves.getEleve().size() > 0) || !(periodes.getPeriode().size() > 0)){
+            handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("error", "getBaliseBilansPeriodiquesAndEnseignants : Eleves or Periodes are empty")));
+            return;
+        }
         //For each eleve create his periodic bilan
         for (Integer i = 0; i < eleves.getEleve().size(); i++) {
             Eleve currentEleve = eleves.getEleve().get(i);
             for (Integer i2 = 0; i2 < periodes.getPeriode().size(); i2++) {
+                originalSize.getAndIncrement();
                 Periode currentPeriode = periodes.getPeriode().get(i2);
                 if(periodesAdded.containsKey(currentPeriode.getId())
                         && periodesAdded.getJsonObject(currentPeriode.getId()).containsKey("id_classe")
                         && currentEleve.getId_Class().equals(periodesAdded.getJsonObject(currentPeriode.getId()).getString("id_classe"))) {
-                    originalSize[0]++;
                     JsonObject periodeJSon = periodesAdded.getJsonObject(currentPeriode.getId());
-
                     Future<JsonObject> getRetardsAndAbsencesFuture = Future.future();
                     Future<JsonObject> getAppreciationsFuture = Future.future();
                     Future<JsonObject> getSuiviAcquisFuture = Future.future();
-
-
                     CompositeFuture.all(getRetardsAndAbsencesFuture, getAppreciationsFuture, getSuiviAcquisFuture).setHandler(
                             event -> {
                                 JsonObject response = new JsonObject();
@@ -1166,8 +1532,6 @@ public class LSUController extends ControllerHelper {
                                     getAppreciationsFuture.complete();
                                 }
                             });
-
-
 
                     bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getIndice()), currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
                             new Handler<Either<String, JsonArray>>() {
@@ -1283,35 +1647,21 @@ public class LSUController extends ControllerHelper {
                                     if(currentAcquis.containsKey("teachers") && !currentAcquis.getJsonArray("teachers").isEmpty()){
                                         JsonArray teachersList = currentAcquis.getJsonArray("teachers");
                                         for (Integer k = 0; k < teachersList.size(); k++) {
-
-
-                                            JsonObject curentTeacher = teachersList.getJsonObject(k);
-
-                                            Enseignant enseignant = donnees.getEnseignants().getEnseignant().stream()
-                                                    .filter(ens -> ens.getId().equals(curentTeacher.getString("id")))
-                                                    .findFirst()
-                                                    .orElse(null);
-                                            if(enseignant == null) {
-                                                enseignant = objectFactory.createEnseignant();
-                                                enseignant.setId(curentTeacher.getString("id"));
-                                                enseignant.setPrenom(curentTeacher.getString("firstName"));
-                                                enseignant.setNom(curentTeacher.getString("name"));
-                                                donnees.getEnseignants().getEnseignant().add(enseignant);
-                                            }
+                                            Enseignant enseignant = addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
                                             aquisEleve.getEnseignantRefs().add(enseignant);
                                         }
                                     }
                                     aquisEleveList.getAcquis().add(aquisEleve);
                                 }
-
-
-
                             });
+                }
+                else {
+                    JsonObject response = new JsonObject();
+                    response.put("status", 400);
+                    getOut.handle(new Either.Right<String, JsonObject>(response));
                 }
             }
         }
-
-
     }
 
     private Discipline getDisciplineInXML(String id, Donnees donnees) {
@@ -1319,7 +1669,7 @@ public class LSUController extends ControllerHelper {
             return null;
         }
         return donnees.getDisciplines().getDiscipline().stream()
-                .filter(dis -> dis.getId().equals(id))
+                .filter(dis -> dis.getId().equals("DIS_"+id))
                 .findFirst()
                 .orElse(null);
     }
@@ -1329,7 +1679,7 @@ public class LSUController extends ControllerHelper {
             return null;
         }
         return donnees.getEnseignants().getEnseignant().stream()
-                .filter(ens -> ens.getId().equals(id))
+                .filter(ens -> ens.getId().equals("ENS_" +id))
                 .findFirst()
                 .orElse(null);
     }
@@ -1392,6 +1742,7 @@ public class LSUController extends ControllerHelper {
                         log.info("method returnResponse avant la validation");
                         Validator validator = schema.newValidator();
                         Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
+                        log.info("validator");
                         //validator.validate(xmlFile);
                     } catch (SAXException | IOException e) {
                         log.error("Validation : Export LSU en erreur",e);
@@ -1414,290 +1765,12 @@ public class LSUController extends ControllerHelper {
         }
     }
 
-    /**
-     * Methode qui contruit le xml pour le LSU
-     * @param request contient la list des idsClasse et des idsResponsable ainsi que idStructure sur laquelle sont les responsables
-     */
-    @Get("/exportLSU/lsu")
-    @ApiDoc("Export data to LSUN xml format")
-    @SecuredAction("competences.lsun.export")
-    public void getXML(final HttpServerRequest request) {
-        //instancier le lsunBilans qui sera composé de entete,donnees et version
-        final LsunBilans lsunBilans = objectFactory.createLsunBilans();
-        //donnees composée de responsables-etab, eleves et bilans-cycle
-        final Donnees donnees = objectFactory.createDonnees();
-        final String idStructure = request.params().get("idStructure");
-        log.info("idStructure = " + idStructure);
-        final List<String> idsClasse = request.params().getAll("idClasse");
-        final List<String> idsResponsable = request.params().getAll("idResponsable");
-
-        lsunBilans.setSchemaVersion("3.0");
-        log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
-        if(!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
-            getBaliseEntete(lsunBilans, idStructure, new Handler<String>() {
-                @Override
-                public void handle(String event) {
-                    if (event.equals("success")) {
-
-                        getBaliseResponsables(donnees, idsResponsable, new Handler<String>() {
-                            @Override
-                            public void handle(String event) {
-                                if (event.equals("success")) {
-
-                                    getBaliseEleves(donnees, idsClasse, new Handler<String>() {
-                                        @Override
-                                        public void handle(final String event) {
-                                            if (event.equals("success")) {
-                                                Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse, new Handler<Either<String, Map<String,JsonObject>>>() {
-                                                    @Override
-                                                    public void handle(Either<String,  Map<String,JsonObject>> resultsQuery) {
-                                                        if(resultsQuery.isRight()) {
-                                                            Map<String,JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
-
-                                                            getBaliseBilansCycle(donnees, idsClasse, idStructure, dateCreationVerrouByClasse, new Handler<Either<String, JsonArray>>() {
-                                                                @Override
-                                                                public void handle(Either<String, JsonArray> reponseErreursJsonArray) {
-                                                                    if (reponseErreursJsonArray.isRight()) {
-
-                                                                        if (donnees.getBilansCycle() != null && donnees.getBilansCycle().getBilanCycle().size() != 0) {
-                                                                            lsunBilans.setDonnees(donnees);
-                                                                            returnResponse(request, lsunBilans);
-                                                                        } else {
-                                                                            JsonArray listErreurs = reponseErreursJsonArray.right().getValue();
-                                                                            if (listErreurs.size() > 0) {
-                                                                                JsonArray affichageDesELeves = new fr.wseduc.webutils.collections.JsonArray();
-                                                                                for (int i = 0; i < listErreurs.size(); i++) {
-                                                                                    JsonObject affichageEleve = new JsonObject();
-                                                                                    JsonObject erreurOneEleve = listErreurs.getJsonObject(i);
-                                                                                    affichageEleve.put("nom", erreurOneEleve.getString("nom"))
-                                                                                            .put("prenom", erreurOneEleve.getString("prenom"))
-                                                                                            .put("classe", erreurOneEleve.getString("classe"));
-                                                                                    affichageDesELeves.add(affichageEleve);
-                                                                                }
-                                                                                Renders.renderJson(request, affichageDesELeves);
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            });
-                                                        }else{
-                                                            leftToResponse(request, new Either.Left<String, JsonArray>( "getXML : getDatesCreationVerrouByClasses " + resultsQuery.left().getValue()));
-                                                            log.error("getXML : getDatesCreationVerrouByClasses "+ resultsQuery);
-                                                        }
-                                                    }
-                                                });
-
-                                            } else {
-                                                leftToResponse(request, new Either.Left<>(event));
-                                                log.error("getXML : getBaliseEleves " + event);
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    leftToResponse(request, new Either.Left<>(event));
-                                    log.error("getXML : getBaliseResponsable " + event);
-                                }
-                            }
-                        });
-                    } else {
-                        leftToResponse(request, new Either.Left<>(event));
-                        log.error("getXML : getBaliseEntete " + event);
-
-                    }
-                }
-            });
-        }else{
-            badRequest(request);
+    private List<String> getIdsList(JsonArray arr){
+        List<String> list = new ArrayList<String>();
+        for (int i = 0; i < arr.size(); i++) {
+            list.add(arr.getJsonObject(i).getString("id"));
         }
-        log.info("FIN exportLSU : export " );
-
-    }
-
-    /**
-     * méthode qui récupère les responsables de direction à partir de idStructure
-     * @param request
-     */
-    @Get("/responsablesDirection")
-    @ApiDoc("Retourne les responsables de direction de l'établissement passé en paramètre")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void getResponsablesDirection(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(UserInfos user) {
-                if (user != null && request.params().contains("idStructure")) {
-                    JsonObject action = new JsonObject()
-                            .put("action", "user.getResponsablesDirection")
-                            .put("idStructure", request.params().get("idStructure"));
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                        @Override
-                        public void handle(Message<JsonObject> message) {
-                            JsonObject body = message.body();
-                            if ("ok".equals(body.getString("status"))) {
-                                Renders.renderJson(request, body.getJsonArray("results"));
-                            } else {
-                                JsonObject error = new JsonObject()
-                                        .put("error", body.getString("message"));
-                                Renders.renderJson(request, error, 400);
-                            }
-                        }
-                    }));
-                } else {
-                    badRequest(request);
-                }
-            }
-        });
-
-    }
-
-
-    /**
-     * Methode qui contruit le xml pour le LSU
-     *
-     * @param request contient la list des idsClasse et des idsResponsable ainsi que idStructure sur laquelle sont les responsables
-     */
-    @Get("/exportLSUGlobal")
-    public void getSendGlobalLSU(final HttpServerRequest request) {
-        //instancier le lsunBilans qui sera composé de entete,donnees et version
-        final LsunBilans lsunBilans = objectFactory.createLsunBilans();
-        //donnees composée de responsables-etab, eleves et bilans-cycle
-        final Donnees donnees = objectFactory.createDonnees();
-        final String idStructure = "a1b2a3fb-35b3-4e3e-8c2e-6991b5ec2887";
-        final List<String> idsClasse = Arrays.asList("63af9677-280b-4853-b7cd-c61440fa61cc", "12dd23cb-b32f-4b28-842f-04d08e372ccf");//3Aeme 5Ceme
-        final List<String> idsResponsable = Arrays.asList("92ecac5a-c563-4c28-8a9f-1c5d8ad89bd2");//ce.fouquet
-        final Integer idPeriode = 3; //premier trismestre
-        final JsonObject periodesAdded = new JsonObject();
-        final JsonObject epiGroupAdded = new JsonObject();
-        final JsonObject accGroupAdded = new JsonObject();
-        donnees.setEnseignants(objectFactory.createDonneesEnseignants());
-
-
-        Handler<Either.Right<String, JsonObject>> getBilansPeriodiquesHandler = backresponse -> {
-
-            JsonObject data = backresponse.right().getValue();
-            if (data.getInteger("status") == 200) {
-                log.info("FIN exportLSU : export ");
-                lsunBilans.setDonnees(donnees);
-                returnResponse(request, lsunBilans);
-            } else {
-                leftToResponse(request, new Either.Left<>(data.getString("error")));
-                log.error("getXML : getBaliseDiscipline " + data.getString("error"));
-            }
-        };
-
-        Handler<Either<String, Map<String, JsonObject>>> getDatesCreationVerrouByClassesHandler = resultsQuery -> {
-            if (resultsQuery.isRight()) {
-                Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
-                this.getBaliseBilansPeriodiquesAndEnseignants(donnees, idStructure, periodesAdded, dateCreationVerrouByClasse, epiGroupAdded, accGroupAdded, getBilansPeriodiquesHandler);
-
-
-            } else {
-                leftToResponse(request, new Either.Left<String, JsonArray>("getXML : getDatesCreationVerrouByClasses " + resultsQuery.left().getValue()));
-                log.error("getXML : getDatesCreationVerrouByClasses " + resultsQuery);
-            }
-        };
-
-        Handler<String> getApEpiParcoursHandler = event -> {
-            if (event.equals("success")) {
-                Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse,  getDatesCreationVerrouByClassesHandler);
-
-            } else {
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getApEpiParcoursBalises " + event);
-            }
-        };
-
-        Future<JsonObject> getEnseignantsFuture = Future.future();
-        Handler<String> getEnseignantsHandler = event -> {
-            //parcourir données.enseignants et completer au besoin les infos
-            if (event.equals("success")) {
-                getEnseignantsFuture.complete();
-            } else {
-                getEnseignantsFuture.complete();
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBaliseEnseignants " + event);
-            }
-        };
-        getBaliseEnseignants(donnees, idStructure, getEnseignantsHandler);
-
-        Future<JsonObject> getPeriodesFuture = Future.future();
-        Handler<String> getPeriodesHandler = event -> {
-            if (event.equals("success")) {
-                getPeriodesFuture.complete();
-            } else {
-                getPeriodesFuture.complete();
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBalisePeriode " + event);
-            }
-        };
-        getBalisePeriodes(donnees, idPeriode, periodesAdded, idStructure, idsClasse, getPeriodesHandler);
-
-        Future<JsonObject> getElevesFuture = Future.future();
-        Handler<String> getElevesHandler = event -> {
-            if (event.equals("success")) {
-                getElevesFuture.complete();
-            } else {
-                getElevesFuture.complete();
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBaliseEleves " + event);
-            }
-        };
-        getBaliseEleves(donnees, idsClasse, getElevesHandler);
-
-
-        Future<JsonObject> getDisciplineFuture = Future.future();
-        Handler<String> getDisciplineHandler = event -> {
-            if (event.equals("success")) {
-                getDisciplineFuture.complete();
-            } else {
-                getDisciplineFuture.complete();
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBaliseDiscipline " + event);
-            }
-        };
-        getBaliseDisciplines(donnees, idStructure, getDisciplineHandler);
-
-
-        Future<JsonObject> getResponsableFuture = Future.future();
-        Handler<String> getResponsableHandler = event -> {
-            if (event.equals("success")) {
-                getResponsableFuture.complete();
-            } else {
-                getResponsableFuture.complete();
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBaliseResponsable " + event);
-            }
-        };
-        getBaliseResponsables(donnees, idsResponsable, getResponsableHandler);
-
-        Future<JsonObject> getEnteteeFuture = Future.future();
-        Handler<String> getEnteteHandler = event -> {
-            if (event.equals("success")) {
-                getEnteteeFuture.complete();
-            } else {
-                getEnteteeFuture.complete();
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBaliseEntete " + event);
-            }
-        };
-        getBaliseEntete(lsunBilans, idStructure, getEnteteHandler);
-
-
-        lsunBilans.setSchemaVersion("3.0");
-        log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
-        if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
-
-            CompositeFuture.all(getEnteteeFuture, getResponsableFuture, getDisciplineFuture, getElevesFuture, getPeriodesFuture, getEnseignantsFuture).setHandler(
-                    event -> {
-                        getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, accGroupAdded, getApEpiParcoursHandler);
-                    });
-        } else {
-            badRequest(request);
-        }
-
-
-
-
-
+        return list;
     }
 }
 

@@ -16,53 +16,108 @@
   -->
 
 <div ng-controller="ExportController" class="ng-scope">
-    <div class="row">
-        <div class="two cell height-two">
-            <div class="lsu">
-                <div ng-if="evaluations.structures.all.length > 1">
-                    <h4>Choix de la structure</h4>
-                    <div>
-                        <select ng-model="lsu.idStructure"
-                                ng-options="structure.id as structure.libelle for structure in evaluations.structures.all"
-                                ng-change="getResponsables()">
-                        </select>
+    <article class="row lsu">
+        <div class="twelve">
+            <div class="row">
+                <h3>Choix de l'export</h3>
+                <div class="three cell horizontal-spacing vertical-spacing">
+                    <div ng-if="evaluations.structures.all.length > 1" class="row display-inline-block">
+                        <label class="ten small" >Choix de la structure
+                            <select ng-model="lsu.idStructure"
+                                    ng-options="structure.id as structure.libelle for structure in evaluations.structures.all"
+                                    ng-change="getResponsables()">
+                            </select>
+                        </label>
                     </div>
                 </div>
-                <div class="filtre filtre-classe" ng-class="{opened : pOFilterCtrl.bOFClasse}">
-                    <h4  ng-click="pOFilterCtrl.bOFClasse=!pOFilterCtrl.bOFClasse">Classes
-                        <span class="plus-input"></span>
-                    </h4>
-                    <label class="chip multiselect right-magnet margin-left">
-                        <span><i18n>viescolaire.utils.all.none</i18n></span>
-                        <input type="checkbox" ng-model="bSelectAllClasses" ng-change="switchAllClasses(lsu.classes)"
-                               ng-class="{selected:bSelectAllClasses}">
+                <div class="three cell horizontal-spacing vertical-spacing">
+                    <label>
+                        <input type="radio" ng-model="params.type" ng-value="1">
+                        Bilan de fin de cycle
+                    </label><br/>
+                    <label>
+                        <input type="radio" ng-model="params.type" value="2">
+                        Bilan Périodique
                     </label>
-                    <ul class="selectable-list">
-                        <li ng-repeat="classe in lsu.classes|orderBy : 'name'"
-                            ng-click="classe.selected = !classe.selected"
-                            ng-class="{selected : classe.selected}">[[classe.name]]</li>
-                    </ul>
                 </div>
-                <div class="filtre filtre-responsable" ng-class="{opened : pOFilterCtrl.bOFResponsable}">
-                    <h4  ng-click="pOFilterCtrl.bOFResponsable=!pOFilterCtrl.bOFResponsable">Responsables
-                        <span class="plus-input"></span>
-                    </h4>
-                    <label class="chip multiselect right-magnet margin-leftt">
-                        <span><i18n>viescolaire.utils.all.none</i18n></span>
-                        <input type="checkbox" ng-model="bSelectAllResponsables" ng-change="switchAllResponsables(lsu.responsables)"
-                               ng-class="{selected:bSelectAllResponsables}">
-                    </label>
-                    <ul class="selectable-list">
-                        <li ng-repeat="responsable in lsu.responsables.all|orderBy : 'name'"
-                            ng-click="responsable.selected = !responsable.selected"
-                            ng-class="{selected : responsable.selected}">[[responsable.displayName]]</li>
-                    </ul>
+            </div>
+            <div class="row">
+
+            <h3>Données à exporter</h3>
+                <div class="three cell horizontal-spacing vertical-spacing">
+                    <div class="row display-inline-block">
+                        <label class="ten small">
+                            <multi-combo
+                                    class="twelve"
+                                    title="Selection de classe(s)"
+                                    id="classes-list"
+                                    combo-model="lsu.classes"
+                                    search-on="name"
+                                    order-by="name"
+                                    filtered-model="params.classes"
+                                    labels="comboLabels"
+                            ></multi-combo>
+                            <div class="select-blocks">
+                                <div ng-repeat="classe in params.classes"
+                                     ng-click="dropComboModel(classe, params.classes)">
+                                    [[classe.name]]
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                 </div>
-                <button ng-click="exportLSU()" ng-disabled="controleExportLSU()">
-                    <i18n>evaluation.lsu.export.button</i18n>
-                </button>
+                <div class="one cell">
+                </div>
+                <div class="three cell horizontal-spacing vertical-spacing">
+                    <div class="row display-inline-block">
+                        <label class="ten small">
+                            <multi-combo
+                                    class="twelve"
+                                    title="Selection de responsable(s)"
+                                    id="responsables-list"
+                                    combo-model="lsu.responsables"
+                                    search-on="displayName"
+                                    order-by="displayName"
+                                    filtered-model="params.responsables"
+                                    labels="comboLabels"
+                            ></multi-combo>
+                            <div class="select-blocks">
+                                <div ng-repeat="responsable in params.responsables"
+                                     ng-click="dropComboModel(responsable, params.responsables)">
+                                    [[responsable.displayName]]
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="three cell horizontal-spacing vertical-spacing" ng-if="params.type == 2">
+                    <div class="row display-inline-block">
+                        <label class="checkbox ten" ng-repeat="periode in lsu.periodes_type">
+                            <input type="checkbox"
+                                   name="params.periodes_type[]"
+                                   value="[[periode]]"
+                                   ng-checked="selection.indexOf(periode) > -1"
+                                   ng-click="toggleperiode(periode)"
+                            ><span>
+                        [[periode.label]]</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="three cell horizontal-spacing vertical-spacing" ng-if="params.type == 2">
+                    <div class="row display-inline-block">
+                        <label class="ten small">
+                            Fichier Sts:
+                            <input type="file" ng-model="params.stsFile">
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </article>
+
+    <button type="button" ng-click="exportLSU()" ng-disabled="controleExportLSU() || inProgress">
+        <i18n>evaluation.lsu.export.button</i18n>
+    </button>
+</div>
 </div>
 
