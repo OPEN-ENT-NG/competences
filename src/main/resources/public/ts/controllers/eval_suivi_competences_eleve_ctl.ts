@@ -133,6 +133,10 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             return Utils.canSaveCompetenceNiveauFinal();
         };
 
+        $scope.canUpdateBFCSynthese = () => {
+            return Utils.canUpdateBFCSynthese();
+        };
+
         /**
          * Initialise d'une évaluation libre.
          */
