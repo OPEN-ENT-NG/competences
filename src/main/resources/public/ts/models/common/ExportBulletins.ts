@@ -46,7 +46,8 @@ export class ExportBulletins {
         return o;
     }
 
-    private static  startDebug (stopwatch, $scope, options, method) {
+    private static startDebug ($scope, options, method) {
+        let stopwatch = undefined;
         if ($scope.debug === true) {
             stopwatch = new Stopwatch(
                 document.querySelector('.stopwatch'),
@@ -55,6 +56,7 @@ export class ExportBulletins {
             stopwatch.start();
             console.log(" DEBUT " + method + " ====== " + options.classeName);
         }
+        return stopwatch;
     }
 
     private static  stopDebug (stopwatch, $scope, options, method) {
@@ -68,11 +70,9 @@ export class ExportBulletins {
     }
 
     public static async  generateBulletins (options, $scope) {
-        let stopwatch = undefined;
         let method = "generateBulletins";
+        let stopwatch = this.startDebug( $scope, options, method);
         try {
-
-            this.startDebug(stopwatch, $scope, options, method);
             options.images = {}; // contiendra les id des images par élève
             options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
 
@@ -222,13 +222,11 @@ export class ExportBulletins {
     private static async createCanvas(options, $scope){
         return new Promise(async (resolve, reject) => {
             let students = options.students;
-            let stopwatch = undefined;
             let method = "DESSIN GRAPH PAR DOMAINE";
-
+            let stopwatch = ExportBulletins.startDebug($scope, options, method);
             try {
 
                 // on lance la creation des images des graphes et on attend
-                this.startDebug(stopwatch, $scope, options, method);
 
                 let allPromise = [];
                 _.forEach( students, (student) => {
