@@ -17,7 +17,6 @@
 
 package fr.openent.competences.controllers;
 
-import com.mongodb.util.JSON;
 import fr.openent.competences.service.ElementBilanPeriodiqueService;
 import fr.openent.competences.service.BilanPeriodiqueService;
 
@@ -38,7 +37,6 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.json.Json;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -53,7 +51,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.xml.sax.SAXException;
-import sun.rmi.server.InactiveGroupException;
 
 import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
@@ -1154,9 +1151,7 @@ public class LSUController extends ControllerHelper {
 
     private void getBaliseEnseignants(final Donnees donnees, final String structureId, List<String> idsClasse, final Handler<String> handler) {
         final List<Future> futureMyResponse1Lst = new ArrayList<>();
-
-
-        for(int i=0; i < idsClasse.size(); i++){
+        for (int i = 0; i < idsClasse.size(); i++) {
             Future<JsonObject> resp1FutureComposite = Future.future();
             futureMyResponse1Lst.add(resp1FutureComposite);
             JsonArray types = new JsonArray().add("Teacher");
@@ -1180,7 +1175,28 @@ public class LSUController extends ControllerHelper {
             }));
         }
         CompositeFuture.all(futureMyResponse1Lst).setHandler(
-            event -> handler.handle("success"));
+                event -> handler.handle("success"));
+    }
+
+
+    private void getBaliseEnseignantFromId(final Donnees donnees, String idEnseignant, final Handler<String> handler) {
+        JsonArray ids = new JsonArray().add(idEnseignant);
+        JsonObject action = new JsonObject()
+                .put("action", "user.getUsers")
+                .put("idUsers", ids);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() == 1 ) {
+                    JsonArray teachersList = body.getJsonArray("results");
+                    for (Integer k = 0; k < teachersList.size(); k++) {
+                        addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
+                    }
+                    handler.handle("success");
+                }
+            }
+        }));
     }
 
     private Enseignant addorFindTeacherBalise(Donnees donnees, JsonObject enseignant){
@@ -1189,7 +1205,12 @@ public class LSUController extends ControllerHelper {
             existing = objectFactory.createEnseignant();
             existing.setId("ENS_" + enseignant.getString("id"));
             existing.setPrenom(enseignant.getString("firstName"));
-            existing.setNom(enseignant.getString("name"));
+            if(enseignant.getString("lastName") != null){
+                existing.setNom(enseignant.getString("lastName"));
+            }
+            else if(enseignant.getString("name") != null) {
+                existing.setNom(enseignant.getString("name"));
+            }
             existing.setType(fromValue("epp"));
             existing.setIdSts(new BigInteger(20, new Random()));
             log.info(existing.getIdSts() + "  enseignant Id sts");
@@ -1281,31 +1302,29 @@ public class LSUController extends ControllerHelper {
 
                     JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
                     int jmax = intervenantsMatieres.size();
-                    for (int j = 0; j < jmax; j++) {
-                        JsonObject currentIntervenantMatiere = intervenantsMatieres.getJsonObject(j);
-                        Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
-                        if (currentSubj != null) {
-                            Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
-                            if (currentEnseignant != null) {
-                                EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
-                                currentEnseignantDiscipline.setDisciplineRef(currentSubj);
-                                currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
-                                enseignantsDisciplinesEpi.getEnseignantDiscipline().add(currentEnseignantDiscipline);
-                                epi.getDisciplineRefs().add(currentSubj);
-                            }
-                        }
-                    }
-                    epiGroupe.setId("EPI_GROUPE_" + element.getInteger("id"));
-                    epiGroupe.setEpiRef(epi);
-                    epiGroupe.setEnseignantsDisciplines(enseignantsDisciplinesEpi);
-                    epiGroupe.setIntitule(element.getString("libelle"));
+                    final List<Future> futureMyResponse1Lst = new ArrayList<>();
 
-                    for (int i = 0; i < element.getJsonArray("groupes").size(); i++) {
-                        JsonObject currentClass = element.getJsonArray("groupes").getJsonObject(i);
-                        epiGroupAdded.put(currentClass.getString("id"),epiGroupe.getId());
+                    for (int j = 0; j < jmax; j++) {
+                        final Future<JsonObject> resp1FutureComposite = Future.future();
+                        futureMyResponse1Lst.add(resp1FutureComposite);
+                        addEnseignantDiscipline(intervenantsMatieres.getJsonObject(j), enseignantsDisciplinesEpi.getEnseignantDiscipline(), epi.getDisciplineRefs(), donnees, resp1FutureComposite);
                     }
-                    donnees.getEpis().getEpi().add(epi);
-                    donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
+                    CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
+                        epiGroupe.setId("EPI_GROUPE_" + element.getInteger("id"));
+                        epiGroupe.setEpiRef(epi);
+                        epiGroupe.setEnseignantsDisciplines(enseignantsDisciplinesEpi);
+                        epiGroupe.setIntitule(element.getString("libelle"));
+
+                        for (int i = 0; i < element.getJsonArray("groupes").size(); i++) {
+                            JsonObject currentClass = element.getJsonArray("groupes").getJsonObject(i);
+                            epiGroupAdded.put(currentClass.getString("id"), epiGroupe.getId());
+                        }
+                        donnees.getEpis().getEpi().add(epi);
+                        donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
+                    });
+
+
+
                 }
             }
 
@@ -1334,36 +1353,66 @@ public class LSUController extends ControllerHelper {
 
                     JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
                     int imax = intervenantsMatieres.size();
-                    for (int i = 0;i  < imax; i++) {
-                        JsonObject currentInterMatiere = intervenantsMatieres.getJsonObject(i);
-                        Discipline currentSubject = getDisciplineInXML(currentInterMatiere.getJsonObject("matiere").getString("id"), donnees);
-                        if (currentSubject != null) {
-                            Enseignant currentEnseignant = getEnseignantInXML(currentInterMatiere.getJsonObject("intervenant").getString("id"), donnees);
-                            if (currentEnseignant != null) {
-                                EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
-                                currentEnseignantDiscipline.setDisciplineRef(currentSubject);
-                                currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
-                                enseignantsDisciplinesAcc.getEnseignantDiscipline().add(currentEnseignantDiscipline);
-                                accPerso.getDisciplineRefs().add(currentSubject);
-                            }
+                    final List<Future> futureMyResponse1Lst = new ArrayList<>();
+
+                    for (int i = 0; i < imax; i++) {
+                        final Future<JsonObject> resp1FutureComposite = Future.future();
+                        futureMyResponse1Lst.add(resp1FutureComposite);
+                        addEnseignantDiscipline(intervenantsMatieres.getJsonObject(i), enseignantsDisciplinesAcc.getEnseignantDiscipline(), accPerso.getDisciplineRefs(), donnees, resp1FutureComposite);
+                    }
+
+                    CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
+                        accPersoGroupe.setId("ACC_GROUPE_" + element.getInteger("id"));
+                        accPersoGroupe.setAccPersoRef(accPerso);
+                        accPersoGroupe.setEnseignantsDisciplines(enseignantsDisciplinesAcc);
+                        accPersoGroupe.setIntitule(element.getString("libelle"));
+
+                        for (int i = 0; i < element.getJsonArray("groupes").size(); i++) {
+                            JsonObject currentClass = element.getJsonArray("groupes").getJsonObject(i);
+                            accGroupAdded.put(currentClass.getString("id"), accPersoGroupe.getId());
                         }
-                    }
-                    accPersoGroupe.setId("ACC_GROUPE_" + element.getInteger("id"));
-                    accPersoGroupe.setAccPersoRef(accPerso);
-                    accPersoGroupe.setEnseignantsDisciplines(enseignantsDisciplinesAcc);
-                    accPersoGroupe.setIntitule(element.getString("libelle"));
 
-                    for (int i = 0; i < element.getJsonArray("groupes").size(); i++) {
-                        JsonObject currentClass = element.getJsonArray("groupes").getJsonObject(i);
-                        accGroupAdded.put(currentClass.getString("id"), accPersoGroupe.getId());
-                    }
-
-                    donnees.getAccPersos().getAccPerso().add(accPerso);
-                    donnees.getAccPersosGroupes().getAccPersoGroupe().add(accPersoGroupe);
+                        donnees.getAccPersos().getAccPerso().add(accPerso);
+                        donnees.getAccPersosGroupes().getAccPersoGroupe().add(accPersoGroupe);
+                    });
                 }
             }
 
         });
+    }
+
+    private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere, List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs, final Donnees donnees, final Future<JsonObject> resp1FutureComposite) {
+        Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
+        if (currentSubj != null) {
+            Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
+            if (currentEnseignant == null) {
+                getBaliseEnseignantFromId(donnees, currentIntervenantMatiere.getJsonObject("intervenant").getString("id"),
+                        (String event) -> {
+                            if (event.equals("success")) {
+                                Enseignant newEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
+                                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1FutureComposite, currentSubj, newEnseignant);
+                            }
+                        });
+            }else {
+                finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1FutureComposite, currentSubj, currentEnseignant);
+            }
+        } else {
+            resp1FutureComposite.complete();
+        }
+    }
+
+    private void finalInsertAddEnseignantDiscipline(List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs, final Future<JsonObject> resp1FutureComposite, Discipline currentSubj, Enseignant currentEnseignant) {
+        if (currentEnseignant != null) {
+            EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
+            currentEnseignantDiscipline.setDisciplineRef(currentSubj);
+            currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
+            enseignantDiscipline.add(currentEnseignantDiscipline);
+            disciplineRefs.add(currentSubj);
+            resp1FutureComposite.complete();
+        }
+        else {
+            resp1FutureComposite.complete();
+        }
     }
 
 
