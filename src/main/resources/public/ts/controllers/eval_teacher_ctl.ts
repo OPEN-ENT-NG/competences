@@ -3182,8 +3182,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
             }
             let date_fin_saisie = _.findWhere(classe.periodes.all, {id_type: devoir.id_periode}).date_fin_saisie;
-
-            return moment().isAfter(date_fin_saisie, "days") &&  !Utils.isHeadTeacher(classe);
+            let isHeadTeacherOfClass =  await  Utils.isHeadTeacher(classe);
+            return moment().isAfter(date_fin_saisie, "days") &&  !isHeadTeacherOfClass;
         };
 
         $scope.getPeriodeAnnee = () => {
