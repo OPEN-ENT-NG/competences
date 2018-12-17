@@ -3791,11 +3791,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.initDataLightBoxEleve = async function () {
             if ($scope.informations.eleve.evaluations.extended !== true) {
                 _.forEach($scope.informations.eleve.evaluations.all, (evaluation) => {
-                    _.extend(evaluation, $scope.releveNote.devoirs.findWhere({id: evaluation.id_devoir}));
-                    _.extend(evaluation, {
-                        competencesNotes:
-                            _.where($scope.informations.eleve.competencesNotes, {id_devoir: evaluation.id_devoir})
+                    let devoirs = $scope.releveNote.devoirs.findWhere({id: evaluation.id_devoir});
+                    let competencesNotes = _.extend(devoirs, {
+                        competencesNotes:_.where($scope.informations.eleve.competencesNotes,
+                            {id_devoir: evaluation.id_devoir})
                     });
+                    evaluation = _.extend(competencesNotes, evaluation);
                 });
                 $scope.informations.eleve.historiques = [];
                 try {
