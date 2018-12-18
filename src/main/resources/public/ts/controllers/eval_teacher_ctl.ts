@@ -2523,11 +2523,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.saveNoteDevoirEleve = function (evaluation, $event, eleve) {
             if (evaluation !== undefined && ((evaluation.valeur !== evaluation.oldValeur) || (evaluation.oldAppreciation !== evaluation.appreciation))) {
-
-                if(evaluation.valeur !== undefined) {
+                if (evaluation.valeur !== undefined) {
                     evaluation.valeur = evaluation.valeur.replace(",",".");
                 }
-
+                if (evaluation.valeur === "") {
+                    evaluation.valeur = utils.getNN();
+                }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if (evaluation.data !== undefined && evaluation.data.id_appreciation !== undefined && evaluation.id_appreciation === undefined) {
                     evaluation.id_appreciation = evaluation.data.id_appreciation;
@@ -2705,9 +2706,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.calculerMoyenneEleve = function (eleve, devoirs) {
             eleve.getMoyenne(devoirs).then(() => {
                 if(!eleve.moyenneFinaleIsSet){
-                    if (eleve.moyenne === 0) {
-                        eleve.moyenne = "";
-                    }
                     eleve.moyenneFinale = eleve.moyenne;
                 }
                 utils.safeApply($scope);
@@ -3632,12 +3630,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.saveMoyenneFinaleEleve = function (eleve,updateHistorique) {
             if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
-                if(eleve.moyenneFinale !== undefined) {
+                if(eleve.moyenneFinale !== undefined && typeof eleve.moyenneFinale.replace === 'function') {
                     eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                    eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
+                    eleve.moyenneFinale === ""){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.moyenneFinale !== "") {
                         if (eleve.moyenneFinale === "" && eleve.moyenne === "") {
                             eleve.moyenneFinale = "";
@@ -3658,7 +3656,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     }
                 }
-                else {
+                else if ((eleve.oldMoyenneFinale !== "NN") || (eleve.moyenne !== "NN")) {
                     notify.error(lang.translate("error.average.outbound"));
                     eleve.moyenneFinale = eleve.oldMoyenneFinale;
                 }

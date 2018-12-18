@@ -228,7 +228,8 @@ public class DefaultUtilsService  implements UtilsService {
         }
         if (null == moyenne)
             moyenne = 0.0;
-        JsonObject r = new JsonObject().put("moyenne", moyenne);
+        JsonObject r = new JsonObject().put("moyenne", moyenne)
+                .put("hasNote", listeNoteDevoirs.size() > 0);
         if (statistiques) {
             r.put("noteMax", noteMax).put("noteMin", noteMin);
         }

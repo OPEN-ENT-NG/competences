@@ -474,7 +474,7 @@
   "evaluations.page.one": "Page 1",
   "evaluations.page.two": "Page 2",
   "evaluations.page.three.optionnal": "Page 3 (optionnelle)",
-  "evaluations.export.bulletin.error": "Désolé, l'application à rencontré un problème lors de l'export des bulletins",
+  "evaluations.export.bulletin.error": "Désolé, l'application a rencontré un problème lors de l'export des bulletins",
   "evaluations.export.bulletin.communication.header.left.first":"Vie scolaire (assiduité, ponctualité ; respect du règlement intérieur ;",
   "evaluations.export.bulletin.communication.header.left.second":"participation à la vie de l’établissement) : ",
   "evaluations.export.bulletin.communication.header.right.first":"Date, nom et signature",
