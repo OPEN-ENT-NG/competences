@@ -27,7 +27,6 @@ import {
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
-import {getMoyenneForBFC} from "../utils/functions/bfc";
 
 declare let $: any;
 declare let document: any;
@@ -668,8 +667,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.search.periode = (selectedPeriode !== undefined)? selectedPeriode : year;
                 }else  if ($scope.displayFromClass === true || $scope.displayFromEleve === true){
                     $scope.search.periode = (selectedPeriode !== undefined)? selectedPeriode : year;
-                    }
-                    else {
+                }
+                else {
                     $scope.search.periode = res;
                 }
             } /*else {//sinon dans les autres vue search.periode est l'objet TypePeriode et si on veut initialiaser search.periode à la période en cours il faudra faire
@@ -689,7 +688,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
                     $scope.getCurrentPeriode(classe).then(function (res) {
-                       setSearchPeriode(classe, res);
+                        setSearchPeriode(classe, res);
                         if ($location.path() === '/devoir/create' ||
                             ($scope.devoir !== undefined
                                 && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
@@ -711,12 +710,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 else {
                     let cycle = _.findWhere(classe.periodes.all, {libelle: "cycle"});
-                   classe.periodes.all = _.without(classe.periodes.all, cycle);
+                    classe.periodes.all = _.without(classe.periodes.all, cycle);
                 }
 
                 $scope.getCurrentPeriode(classe).then(function (res) {
                     setSearchPeriode(classe,res);
-                $scope.displayCycles($scope.search.periode);
+                    $scope.displayCycles($scope.search.periode);
                     if (($location.path() === '/devoir/create') ||
                         ($scope.devoir !== undefined
                             && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
@@ -2076,7 +2075,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     for (let i = 0; i < evaluations.competencesDevoir.length; i++) {
 
-                            $scope.devoir.competences.push(evaluations.competencesDevoir[i].id);
+                        $scope.devoir.competences.push(evaluations.competencesDevoir[i].id);
 
                     }
                 }
@@ -2176,9 +2175,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             } else if (psMenu === "opened.criteres") {
                 $scope.opened.criteres = pbAfficherMenu;
             } else if (psMenu === "opened.legend") {
-                    $scope.opened.legend = pbAfficherMenu;
+                $scope.opened.legend = pbAfficherMenu;
             } else if (psMenu === "opened.avis") {
-                    $scope.opened.avis = pbAfficherMenu;
+                $scope.opened.avis = pbAfficherMenu;
             } else {
                 console.error("Parametre psMenu inconnu : psMenu=" + psMenu);
             }
@@ -2393,10 +2392,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
 
-         // $scope.getLibelleDevoir = function (id) {
-         // let devoir = $scope.devoirs.findWhere({id : id});
-         // if (devoir !== undefined) return devoir.name;
-         // };
+        // $scope.getLibelleDevoir = function (id) {
+        // let devoir = $scope.devoirs.findWhere({id : id});
+        // if (devoir !== undefined) return devoir.name;
+        // };
 
         $scope.getLibelleDevoir = function (id) {
             if ($scope.mapIdLibelleDevoir !== undefined) return $scope.mapIdLibelleDevoir[parseInt(id)];
@@ -2438,7 +2437,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.getLibellePositionnement = function (positionnementCalcule) {
             return lang.translate("evaluations.positionnement.calculee") + " : " + positionnementCalcule;
         };
-            /**
+        /**
          * Séquence d'enregistrement d'une annotation
          * @param evaluation évaluation à enregistrer
          * @param $event evenement déclenchant
@@ -3417,7 +3416,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 url += "&idClasse=" + $scope.search.classe.id;
             }
 
-           ($scope.search.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
+            ($scope.search.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
 
             url += "&byEnseignement=" + exportByEnseignement;
             await http().getJson(url + "&json=true")
@@ -3618,7 +3617,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 return true;
             }
             else {
-               return $scope.isEndSaisie();
+                return $scope.isEndSaisie();
             }
         };
 
@@ -3632,41 +3631,41 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.saveMoyenneFinaleEleve = function (eleve,updateHistorique) {
-                    if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
-                        if(eleve.moyenneFinale !== undefined) {
-                            eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
+            if (eleve.moyenneFinale !== undefined && eleve.moyenneFinale !== null) {
+                if(eleve.moyenneFinale !== undefined) {
+                    eleve.moyenneFinale = eleve.moyenneFinale.replace(",",".");
+                }
+                let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
+                if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
+                    eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
+                    if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.moyenneFinale !== "") {
+                        if (eleve.moyenneFinale === "" && eleve.moyenne === "") {
+                            eleve.moyenneFinale = "";
                         }
-                        let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
-                        if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                            eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
-                            if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.moyenneFinale !== "") {
-                                if (eleve.moyenneFinale === "" && eleve.moyenne === "") {
-                                    eleve.moyenneFinale = "";
-                                }
-                                else if (eleve.moyenneFinale === "" && eleve.moyenne !== undefined) {
-                                    eleve.moyenneFinale = eleve.moyenne;
-                                }
-                                $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
-                                    eleve.moyenneFinaleIsSet = true;
-                                    if (updateHistorique) {
-                                        $scope.updateHistorique(eleve, 'moyenneFinale');
-                                    }
-                                    utils.safeApply($scope);
-                                });
-                                utils.safeApply($scope);
+                        else if (eleve.moyenneFinale === "" && eleve.moyenne !== undefined) {
+                            eleve.moyenneFinale = eleve.moyenne;
+                        }
+                        $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
+                            eleve.moyenneFinaleIsSet = true;
+                            if (updateHistorique) {
+                                $scope.updateHistorique(eleve, 'moyenneFinale');
                             }
-                            else {
-                                eleve.moyenneFinale = eleve.oldMoyenneFinale;
-                            }
-                        }
-                        else {
-                            notify.error(lang.translate("error.average.outbound"));
-                            eleve.moyenneFinale = eleve.oldMoyenneFinale;
-                        }
-                    }else{
+                            utils.safeApply($scope);
+                        });
+                        utils.safeApply($scope);
+                    }
+                    else {
                         eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     }
-                    utils.safeApply($scope);
+                }
+                else {
+                    notify.error(lang.translate("error.average.outbound"));
+                    eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                }
+            }else{
+                eleve.moyenneFinale = eleve.oldMoyenneFinale;
+            }
+            utils.safeApply($scope);
         };
 
         $scope.savePositionnementEleve = function (eleve, positionnement) {
@@ -3749,16 +3748,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return $scope.isEndSaisie();
                 }
             };
-                $scope.releveNote.syncDomainesEnseignement().then(() => {
-                    $scope.releveNote.syncSousDomainesEnseignement().then(() => {
-                        $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
-                        $scope.aideSaisie.cycle = null;
-                        $scope.aideSaisie.domaineEnseignement = null;
-                        template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
-                        $scope.opened.lightbox = true;
-                        utils.safeApply($scope);
-                    });
+            $scope.releveNote.syncDomainesEnseignement().then(() => {
+                $scope.releveNote.syncSousDomainesEnseignement().then(() => {
+                    $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
+                    $scope.aideSaisie.cycle = null;
+                    $scope.aideSaisie.domaineEnseignement = null;
+                    template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
+                    $scope.opened.lightbox = true;
+                    utils.safeApply($scope);
                 });
+            });
 
         }
 
@@ -3791,13 +3790,23 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.initDataLightBoxEleve = async function () {
             if ($scope.informations.eleve.evaluations.extended !== true) {
                 _.forEach($scope.informations.eleve.evaluations.all, (evaluation) => {
-                    let devoirs = $scope.releveNote.devoirs.findWhere({id: evaluation.id_devoir});
-                    let competencesNotes = _.extend(devoirs, {
-                        competencesNotes:_.where($scope.informations.eleve.competencesNotes,
-                            {id_devoir: evaluation.id_devoir})
+                    // On Clone (copie par valeur) les devoirs  et les competencesNotes ici, pour ne pas dénaturer
+                    // les objects lors de l'utilisation de la fonction extend
+
+                    let devoirs = [];
+                    _.forEach( _.findWhere($scope.releveNote.devoirs.all,{id: evaluation.id_devoir}), (devoir) => {
+                        devoirs.push(utils.clone(devoir));
                     });
+                    let competencesNotes = [];
+                    _.forEach(_.where($scope.informations.eleve.competencesNotes,
+                        {id_devoir: evaluation.id_devoir}), (competencesNote) => {
+                            competencesNotes.push(utils.clone(competencesNote))
+                        });
+
+                    competencesNotes = _.extend(devoirs, {competencesNotes:competencesNotes});
                     evaluation = _.extend(competencesNotes, evaluation);
                 });
+
                 $scope.informations.eleve.historiques = [];
                 try {
                     await $scope.informations.eleve.getDetails($scope.releveNote.idEtablissement,
@@ -4089,12 +4098,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * tableau listeEvaluations
          */
         $scope.isMaxEvaluation = function (listeEvaluations) {
-           return Utils.isMaxEvaluation(listeEvaluations,$scope);
+            return Utils.isMaxEvaluation(listeEvaluations,$scope);
         };
 
 
         $scope.hasMaxNotFormative = function (MaCompetence) {
-           return Utils.hasMaxNotFormative(MaCompetence, $scope);
+            return Utils.hasMaxNotFormative(MaCompetence, $scope);
         };
 
 
@@ -4104,7 +4113,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
          */
         $scope.notEvalutationOwner = function (listeEvaluations) {
-           return Utils.hasMaxNotFormative(listeEvaluations, $scope);
+            return Utils.hasMaxNotFormative(listeEvaluations, $scope);
         };
 
         $scope.FilterNotEvaluated = function (MaCompetence) {
