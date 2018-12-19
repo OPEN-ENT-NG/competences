@@ -48,7 +48,12 @@ export class Matiere extends Model {
 
                 http().getJson(this.api.calculMoyenne + id_eleve + "/moyenne?" + idDevoirsURL).done(function (res) {
                     if (!res.error) {
-                        this.moyenne = res.moyenne;
+                        if (!res.hasNote) {
+                            this.moyenne = "NN";
+                        }
+                        else {
+                            this.moyenne = res.moyenne;
+                        }
                     } else {
                         this.moyenne = "";
                     }

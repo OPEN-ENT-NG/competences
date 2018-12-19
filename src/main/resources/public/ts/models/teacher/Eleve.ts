@@ -19,7 +19,6 @@ import { Model, Collection, _, notify, http as httpCore, moment} from 'entcore';
 import http  from 'axios';
 import { Evaluation, SuiviCompetence } from './index';
 import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
-import * as utils from '../../utils/teacher';
 import {ExportBulletins} from "../common/ExportBulletins";
 
 export class Eleve extends Model {
@@ -76,7 +75,7 @@ export class Eleve extends Model {
                 httpCore().getJson(this.api.GET_MOYENNE + idDevoirsURL).done(function (res) {
                     if (!res.error) {
                         if (!res.hasNote) {
-                            this.moyenne = "";
+                            this.moyenne = "NN";
                         }
                         else {
                             this.moyenne = res.moyenne;
