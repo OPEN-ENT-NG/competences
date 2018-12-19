@@ -426,13 +426,11 @@ export class Structure extends Model {
                 this.niveauCompetences.sync(useDefautTheme).then(isSynced);
             });
             this.syncDevoirs().then(isSynced);
+            this.getDetailsOfUser().then(isSynced);
             if (Utils.isChefEtab()) {
-                this.synchronized.detailsUser = true;
                 this.syncEnseignants().then(isSynced);
             }
-            else {
-                this.getDetailsOfUser().then(isSynced);
-            }
+
             this.typePeriodes.sync().then(isSynced);
             if (Utils.canCreateElementBilanPeriodique() || Utils.canSaisieProjet()) {
                 this.syncClassesBilanPeriodique().then(isSynced);
