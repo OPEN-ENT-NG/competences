@@ -20,6 +20,9 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.bean.StatClass;
+import fr.openent.competences.bean.StatEleve;
+import fr.openent.competences.bean.StatMat;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
 import fr.openent.competences.security.AccessReleveFilter;
@@ -362,6 +365,7 @@ public class NoteController extends ControllerHelper {
                                                 idPeriode,
                                                 typeClasse,
                                                 false,
+                                                null,
                                                 handler);
                                     } else {
                                         notesService.getNotesReleve(idEtablissement,
@@ -370,6 +374,7 @@ public class NoteController extends ControllerHelper {
                                                 null,
                                                 typeClasse,
                                                 false,
+                                                null,
                                                 handler);
                                     }
                                 }
@@ -702,11 +707,6 @@ public class NoteController extends ControllerHelper {
                         }
                     }
                 });
-
-
-
-
-
     }
 
 
@@ -1075,7 +1075,7 @@ public class NoteController extends ControllerHelper {
                             final JsonArray listCompNotes = event.right().getValue();
                             // 2. On récupère les Notes de toutes les matières et de tous les élèves
                             notesService.getNotesReleve(idEtablissement, idClasse, null,
-                                    idPeriode, typeClasse, true,
+                                    idPeriode, typeClasse, true, groupIds,
                                     new Handler<Either<String, JsonArray>>() {
                                         @Override
                                         public void handle(Either<String, JsonArray> event) {
@@ -1103,13 +1103,17 @@ public class NoteController extends ControllerHelper {
                                                         matieresNotes,
                                                         matieresNotesEleve, idEleve, false), idMatieres);
 
+                                                StatMat statMat = new StatMat();
+                                                statMat.setMapIdMatStatclass(listNotes);
+                                                Map<String, StatClass> mapMatieresStatClasseAndEleve =
+                                                        statMat.getMapIdMatStatclass();
                                                 // 5. On récupère tous les libelles des matières de
                                                 // l'établissement et on fait correspondre aux résultats par
                                                 // idMatière
-                                                linkIdSubjectToLibelle(getMaxByItem(matieresCompNotes),
+                                                linkIdSubjectToLibelle(idEleve, getMaxByItem(matieresCompNotes),
                                                         getMaxByItem(matieresCompNotesEleve),
                                                         matieresNotes,
-                                                        matieresNotesEleve, idMatieres, request);
+                                                        matieresNotesEleve, mapMatieresStatClasseAndEleve, idMatieres, request);
                                             }
                                         }
                                     });
@@ -1250,7 +1254,7 @@ public class NoteController extends ControllerHelper {
                     result.add(idMatiere);
                 }
                 mapDataClasse.get(idMatiere).add(data);
-                if(idEleve.equals(data.getString("id_eleve"))) {
+                if(idEleve.equals(data.getString("id_eleve")) || idEleve.equals(data.getString("id_eleve_moyenne_finale")) ) {
                     mapDataEleve.get(idMatiere).add(data);
                 }
             }
@@ -1327,11 +1331,11 @@ public class NoteController extends ControllerHelper {
         return maxComp;
     }
 
-
-    private void linkIdSubjectToLibelle(Map<String,JsonArray> matieresCompNotes,
-                                        Map<String,JsonArray> matieresCompNotesEleve,
-                                        Map<String,JsonArray> matieresNotes,
-                                        Map<String,JsonArray> matieresNotesEleve,
+    private void linkIdSubjectToLibelle(String idEleve, Map<String, JsonArray> matieresCompNotes,
+                                        Map<String, JsonArray> matieresCompNotesEleve,
+                                        Map<String, JsonArray> matieresNotes,
+                                        Map<String, JsonArray> matieresNotesEleve,
+                                        Map<String, StatClass> mapMatieresStatClasseAndEleve,
                                         JsonArray idMatieres, final HttpServerRequest request) {
 
         JsonObject action = new JsonObject()
@@ -1349,12 +1353,21 @@ public class NoteController extends ControllerHelper {
                     final JsonArray matieres = body.getJsonArray("results");
                     for (int i = 0 ; i < matieres.size(); i++) {
                         JsonObject matiere = matieres.getJsonObject(i);
+                        Double classAverage = null;
+                        Double averageStudent = null;
+                        StatClass statClasse = mapMatieresStatClasseAndEleve.get(matiere.getString("id"));
+                        if(statClasse != null) {
+                            classAverage = statClasse.getAverageClass();
+                            averageStudent = statClasse.getMoyenneEleve(idEleve);
+                        }
                         matiere.put("competencesNotes",  matieresCompNotes
                                 .get(matiere.getString("id")))
                                 .put("competencesNotesEleve", matieresCompNotesEleve
                                         .get(matiere.getString("id")))
                                 .put("notes", matieresNotes.get(matiere.getString("id")))
-                                .put("notesEleve", matieresNotesEleve.get(matiere.getString("id")));
+                                .put("notesEleve", matieresNotesEleve.get(matiere.getString("id")))
+                                .put("studentAverage",averageStudent)
+                                .put("classAverage", classAverage);
 
                     }
                     matieres.add(

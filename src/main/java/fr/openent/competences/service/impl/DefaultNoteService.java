@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.bean.StatClass;
 import fr.openent.competences.controllers.ExportPDFController;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
@@ -254,7 +255,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     @Override
     public void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId,
-                               Integer typeClasse, Boolean withMoyenneFinale,
+                               Integer typeClasse, Boolean withMoyenneFinale, JsonArray idsGroup,
                                Handler<Either<String, JsonArray>> handler) {
 
         new DefaultUtilsService(this.eb).studentIdAvailableForPeriode(classeId,periodeId, typeClasse,
@@ -277,32 +278,33 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
                                     " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve, " +
                                     " devoirs.is_evaluated, null as annotation, devoirs.id_matiere " +
-                                    ((withMoyenneFinale)? ", moyenne_finale.moyenne " : " ") +
+                                    ((withMoyenneFinale)? ", moyenne_finale.id_eleve as id_eleve_moyenne_finale, moyenne_finale.moyenne " : " ") +
                                     " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                                     " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".notes " +
-                                    " ON (devoirs.id = notes.id_devoir AND " +
-                                    " notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")" +
+                                    " ON (devoirs.id = notes.id_devoir  " +
+                                    (( null != idsGroup)? ")" : " AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")") +
                                     " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ON " +
-                                    " (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ?)" +
-                                       ((withMoyenneFinale)?("LEFT JOIN notes.moyenne_finale " +
-                                                    " ON (devoirs.id_periode = moyenne_finale.id_periode " +
-                                               " AND  notes.id_eleve = moyenne_finale.id_eleve " +
-                                               " AND devoirs.id_matiere = moyenne_finale.id_matiere " +
-                                               " AND moyenne_finale.id_classe = ?) ") : " " )+
+                                    " (rel_devoirs_groupes.id_devoir = devoirs.id AND "+
+                                    ((null != idsGroup)? "rel_devoirs_groupes.id_groupe IN "+Sql.listPrepared(idsGroup.getList())+")" : "rel_devoirs_groupes.id_groupe = ?)") +
+                                    ((withMoyenneFinale)?("LEFT JOIN notes.moyenne_finale " +
+                                            " ON (devoirs.id_periode = moyenne_finale.id_periode " +
+                                            " AND devoirs.id_matiere = moyenne_finale.id_matiere " +
+                                            ((null != idsGroup)? "" : " AND  moyenne_finale.id_eleve IN " +  Sql.listPrepared(idEleves) )+
+                                            ((null != idsGroup)? " AND moyenne_finale.id_classe IN "+ Sql.listPrepared(idsGroup.getList())+ ")":
+                                                    " AND moyenne_finale.id_classe = ?) ")) : " " )+
                                     " WHERE devoirs.id_etablissement = ? " +
                                     ((matiereId != null)?" AND devoirs.id_matiere = ? ": " "));
-                            for (String eleve : idEleves) {
-                                values.add(eleve);
-                            }
 
-                            values.add(classeId);
+                            setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
+
+
                             if (withMoyenneFinale) {
-                                values.add(classeId);
+                                setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
                             }
                             values.add(etablissementId);
 
                             if (matiereId != null) {
-                                    values.add(matiereId);
+                                values.add(matiereId);
                             }
 
                             if (periodeId != null) {
@@ -314,20 +316,21 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     " devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, " +
                                     " rel_annotations_devoirs.id_eleve, devoirs.is_evaluated, " +
                                     " rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere " +
-                                    ((withMoyenneFinale)? ", null as moyenne" : " " )+
+                                    ((withMoyenneFinale)? " , null as id_eleve_moyenne_finale , null as moyenne" : " " )+
                                     " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
                                     " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs " +
-                                    " ON (devoirs.id = rel_annotations_devoirs.id_devoir  AND " +
-                                    " rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(idEleves) + ")" +
+                                    " ON (devoirs.id = rel_annotations_devoirs.id_devoir " +
+                                            ((null != idsGroup)? ")": " AND rel_annotations_devoirs.id_eleve IN " +
+                                                    Sql.listPrepared(idEleves) + ")")+
                                     " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
-                                    " ON (rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe = ?) " +
+                                    " ON (rel_devoirs_groupes.id_devoir = devoirs.id " +
+                                            ((null != idsGroup)? "AND rel_devoirs_groupes.id_groupe IN "
+                                                    +Sql.listPrepared(idsGroup.getList())+")": "AND rel_devoirs_groupes.id_groupe = ?) ")+
                                     " WHERE devoirs.id_etablissement = ? " +
                                     ((matiereId != null)?" AND devoirs.id_matiere = ? ": ""));
-                            for (String eleve : idEleves) {
-                                values.add(eleve);
-                            }
-                            values.add(classeId).add(etablissementId);
 
+                            setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
+                            values.add(etablissementId);
                             if (matiereId != null) {
                                 values.add(matiereId);
                             }
@@ -345,6 +348,19 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                 });
 
+    }
+
+    private void setParamGetNotesReleve(JsonArray idsGroup,List<String> idEleves,String classeId,JsonArray values){
+        if(null == idsGroup){
+            for (String eleve : idEleves) {
+                values.add(eleve);
+            }
+            values.add(classeId);
+        }else {
+            for (int i = 0; i < idsGroup.size(); i++) {
+                values.add(idsGroup.getString(i));
+            }
+        }
     }
 
 

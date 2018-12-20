@@ -18,6 +18,7 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.bean.StatClass;
 import fr.wseduc.webutils.Either;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.user.UserInfos;
@@ -105,7 +106,7 @@ public interface NoteService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     void getNotesReleve(String etablissementId, String classeId, String matiereId, Long periodeId, Integer typeClasse,
-                        Boolean withMoyenneFinale,Handler<Either<String, JsonArray>> handler);
+                        Boolean withMoyenneFinale,JsonArray idsGroup,Handler<Either<String, JsonArray>> handler);
 
 
     /**

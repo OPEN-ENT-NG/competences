@@ -34,7 +34,7 @@ export class Graph extends Model{
         return (summ === 0) ? 0 : parseFloat((res / summ).toFixed(2));
     }
 
-   static moyenneNote(notes): number {
+  static moyenneNote(notes): number {
         let res = 0;
         let sum = 0;
         let sumCoef = 0;
@@ -167,9 +167,18 @@ export class Graph extends Model{
                     (matiereOrDomaine.name !== undefined) ? matiereOrDomaine.name : matiereOrDomaine.codification);
                 dataStudent.push(this.moyenneNiveau(matiereOrDomaine.competencesNotesEleve));
                 dataClass.push(this.moyenneNiveau(matiereOrDomaine.competencesNotes));
-
-                averageStudent.push(this.moyenneNote(matiereOrDomaine.notesEleve));
-                averageClass.push(this.moyenneNote(matiereOrDomaine.notes));
+                if(matiereOrDomaine.studentAverage !== null){
+                    averageStudent.push(parseFloat(matiereOrDomaine.studentAverage));
+                }else{
+                    averageStudent.push(0);
+                }
+                if(matiereOrDomaine.classAverage !== null){
+                    averageClass.push(parseFloat(matiereOrDomaine.classAverage));
+                }else{
+                    averageClass.push(0);
+                }
+               // averageStudent.push(this.moyenneNote(matiereOrDomaine.notesEleve));
+                //averageClass.push(this.moyenneNote(matiereOrDomaine.notes));
 
                 let nbrCompNotesUnevaluated = _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: -1});
                 nbrCompNotesUnevaluated = (!nbrCompNotesUnevaluated) ? nbrCompNotesUnevaluated.length : 0;
