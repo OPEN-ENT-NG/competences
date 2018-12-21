@@ -3791,18 +3791,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // On Clone (copie par valeur) les devoirs  et les competencesNotes ici, pour ne pas dénaturer
                     // les objects lors de l'utilisation de la fonction extend
 
-                    let devoirs = [];
-                    _.forEach( _.findWhere($scope.releveNote.devoirs.all,{id: evaluation.id_devoir}), (devoir) => {
-                        devoirs.push(utils.clone(devoir));
-                    });
+
+                    let devoirTmp = $scope.releveNote.devoirs.findWhere({id: evaluation.id_devoir});
+                    let devoir = utils.clone(devoirTmp);
+
                     let competencesNotes = [];
                     _.forEach(_.where($scope.informations.eleve.competencesNotes,
                         {id_devoir: evaluation.id_devoir}), (competencesNote) => {
                             competencesNotes.push(utils.clone(competencesNote))
                         });
 
-                    competencesNotes = _.extend(devoirs, {competencesNotes:competencesNotes});
-                    evaluation = _.extend(competencesNotes, evaluation);
+                    _.extend(devoir, {competencesNotes:competencesNotes});
+                    _.extend(evaluation, devoir);
                 });
 
                 $scope.informations.eleve.historiques = [];
