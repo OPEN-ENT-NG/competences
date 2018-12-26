@@ -413,6 +413,7 @@ public class LSUController extends ControllerHelper {
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             CompositeFuture.all(getEnteteFuture, getResponsableFuture, getDisciplineFuture, getElevesFuture, getPeriodesFuture, getEnseignantsFuture).setHandler(
                     event -> {
+                        log.info("out future 1");
                         if (event.succeeded()) {
                             getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, accGroupAdded, getApEpiParcoursHandler);
                         }
@@ -1215,7 +1216,7 @@ public class LSUController extends ControllerHelper {
             }
             existing.setType(fromValue("epp"));
             existing.setIdSts(new BigInteger(20, new Random()));
-            log.info(existing.getIdSts() + "  enseignant Id sts");
+            //log.info(existing.getIdSts() + "  enseignant Id sts");
             donnees.getEnseignants().getEnseignant().add(existing);
         }
         return existing;
@@ -1453,7 +1454,7 @@ public class LSUController extends ControllerHelper {
                     donnees.setBilansPeriodiques(bilansPeriodiques);
                     handler.handle(new Either.Right<String, JsonObject>(suiviAcquisResponse.right().getValue()));
                 } else {
-                    log.info("waiting all child done");
+                    //log.info("waiting all child done");
                 }
             }
         };
@@ -1496,7 +1497,14 @@ public class LSUController extends ControllerHelper {
 
                     syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(periodeJSon.getLong("id_type"), currentEleve.getIdNeo4j(),
                             eventSynthese -> {
-                                log.info("syntheseBilanPeriodiqueService");
+                                String synthese = "null";
+                                if (eventSynthese.isRight()) {
+                                    final JsonObject rightValue = eventSynthese.right().getValue();
+                                    if( (rightValue != null) && rightValue.containsKey("synthese") && !rightValue.getString("synthese").isEmpty()){
+                                        synthese = rightValue.getString("synthese");
+                                    }
+                                }
+                                bilanPeriodique.setAcquisConseils(synthese);
                                 getSyntheseFuture.complete();
                             });
 
@@ -1511,25 +1519,33 @@ public class LSUController extends ControllerHelper {
 
                         private void addVieScolairePerso(Either<String, JsonArray> eventViesco, BilanPeriodique bilanPeriodique) {
                             if (eventViesco.isRight()) {
-                                final JsonArray vieScoRightValue = eventViesco.right().getValue();
+                                VieScolaire viescolare = objectFactory.createVieScolaire();
+                                viescolare.setNbAbsInjustifiees(BigInteger.valueOf(0L));
+                                viescolare.setNbAbsJustifiees(BigInteger.valueOf(0L));
+                                viescolare.setNbRetards(BigInteger.valueOf(0L));
+                                viescolare.setNbHeuresManquees(BigInteger.valueOf(0L));
 
+                                final JsonArray vieScoRightValue = eventViesco.right().getValue();
                                 JsonObject viesco = (JsonObject) vieScoRightValue.stream()
                                         .filter(el -> periodeJSon.getInteger("id_type") == ((JsonObject) el).getInteger("id_periode"))
                                         .findFirst()
                                         .orElse(null);
 
-                                if (viesco != null && viesco.containsKey("id_eleve") && viesco.containsKey("id_eleve")) {
-                                    VieScolaire viescolare = objectFactory.createVieScolaire();
-                                    viescolare.setNbAbsInjustifiees(BigInteger.valueOf(viesco.getLong("abs_non_just") != null ? viesco.getLong("abs_non_just") : 0L));
-                                    viescolare.setNbAbsJustifiees(BigInteger.valueOf(viesco.getLong("abs_just") != null ? viesco.getLong("abs_just") : 0L));
-                                    viescolare.setNbRetards(BigInteger.valueOf(viesco.getLong("retard") != null ? viesco.getLong("retard") : 0L));
-                                    viescolare.setNbHeuresManquees(BigInteger.valueOf(viesco.getLong("abs_totale_heure") != null ? viesco.getLong("abs_totale_heure") : 0L));
-                                    bilanPeriodique.setVieScolaire(viescolare);
+                                if (viesco != null && viesco.containsKey("id_eleve")) {
+                                    if (viesco.getLong("abs_non_just") != null) {
+                                        viescolare.setNbAbsInjustifiees(BigInteger.valueOf(viesco.getLong("abs_non_just")));
+                                    }
+                                    if (viesco.getLong("abs_just") != null) {
+                                        viescolare.setNbAbsJustifiees(BigInteger.valueOf(viesco.getLong("abs_just")));
+                                    }
+                                    if (viesco.getLong("retard") != null) {
+                                        viescolare.setNbRetards(BigInteger.valueOf(viesco.getLong("retard")));
+                                    }
+                                    if (viesco.getLong("abs_totale_heure") != null) {
+                                        viescolare.setNbHeuresManquees(BigInteger.valueOf(viesco.getLong("abs_totale_heure")));
+                                    }
                                 }
-                                else {
-                                    response.put("status", 400);
-                                    response.put("message", "VieScolaire do not exist on Bilan periodique balise : eleve : " + currentEleve.getIdNeo4j() + " " + currentEleve.getNom() + " periode : " + currentPeriode.getId());
-                                }
+                                bilanPeriodique.setVieScolaire(viescolare);
                             }
                             else {
                                 response.put("status", 400);
@@ -1635,17 +1651,6 @@ public class LSUController extends ControllerHelper {
                                     getSuiviAcquisFuture.complete();
                                 }
 
-
-                                private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
-                                    BilanPeriodique.ListeAcquis aquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
-                                    for (Integer i = 0; i < suiviAcquis.size(); i++) {
-                                        final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
-                                        Acquis aquisEleve = addAcquis(currentAcquis);
-                                        addMissingTeacherToXml(aquisEleveList, currentAcquis, aquisEleve);
-                                    }
-                                    bilanPeriodique.setListeAcquis(aquisEleveList);
-                                }
-
                                 private void addResponsable(BilanPeriodique bilanPeriodique) {
                                     if (currentEleve.getResponsableList() != null && currentEleve.getResponsableList().size() > 0) {
                                         BilanPeriodique.Responsables responsablesEleve = objectFactory.createBilanPeriodiqueResponsables();
@@ -1659,17 +1664,42 @@ public class LSUController extends ControllerHelper {
                                     bilanPeriodique.setDateVerrou(datesCreationVerrou.getString("date_verrou").substring(0, 19));
                                 }
 
-                                private Acquis addAcquis(JsonObject currentAcquis) {
+                                private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
+                                    BilanPeriodique.ListeAcquis aquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
+                                    for (Integer i = 0; i < suiviAcquis.size(); i++) {
+                                        final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
+                                        Acquis aquisEleve = addListeAcquis_addAcquis(currentAcquis);
+                                        addListeAcquis_addMissingTeacherToXml(aquisEleveList, currentAcquis, aquisEleve);
+                                    }
+                                    bilanPeriodique.setListeAcquis(aquisEleveList);
+                                }
+
+                                private Acquis addListeAcquis_addAcquis(JsonObject currentAcquis) {
                                     Acquis aquisEleve = objectFactory.createAcquis();
 
-                                    addAppreciation(currentAcquis, aquisEleve, currentPeriode);
-                                    addDiscipline(currentAcquis, aquisEleve);
-                                    addElementProgramme(currentAcquis, aquisEleve);
+                                    addAcquis_addAppreciation(currentAcquis, aquisEleve, currentPeriode);
+                                    addAcquis_addDiscipline(currentAcquis, aquisEleve);
+                                    addAcquis_addElementProgramme(currentAcquis, aquisEleve);
                                     return aquisEleve;
                                 }
 
-                                private void addAppreciation(JsonObject currentAcquis, Acquis aquisEleve, Periode currentPeriode) {
-                                    JsonObject app = getObjectForPeriode(currentAcquis.getJsonArray("appreciations"), (long) currentPeriode.getIndice(), "id_periode");
+                                private void addListeAcquis_addMissingTeacherToXml(BilanPeriodique.ListeAcquis aquisEleveList, JsonObject currentAcquis, Acquis aquisEleve) {
+                                    if (currentAcquis.containsKey("teachers") && !currentAcquis.getJsonArray("teachers").isEmpty()) {
+                                        JsonArray teachersList = currentAcquis.getJsonArray("teachers");
+                                        for (Integer k = 0; k < teachersList.size(); k++) {
+                                            Enseignant enseignant = addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
+                                            aquisEleve.getEnseignantRefs().add(enseignant);
+                                        }
+                                    }
+                                    if (aquisEleve.getElementProgrammeRefs().size() > 0
+                                            && aquisEleve.getEnseignantRefs().size() > 0
+                                            && aquisEleve.getDisciplineRef() != null) {
+                                        aquisEleveList.getAcquis().add(aquisEleve);
+                                    }
+                                }
+
+                                private void addAcquis_addAppreciation(JsonObject currentAcquis, Acquis aquisEleve, Periode currentPeriode) {
+                                    JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"), (long) currentPeriode.getIndice(), "id_periode");
                                     if(app != null && app.containsKey("appreciationByClasse") && app.getJsonArray("appreciationByClasse").size() > 0) {
                                         int imax = app.getJsonArray("appreciationByClasse").size();
                                         for(int i = 0; i < imax; i++ ) {
@@ -1684,7 +1714,7 @@ public class LSUController extends ControllerHelper {
                                     }
                                 }
 
-                                private JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
+                                private JsonObject addAppreciation_getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
                                     JsonObject res = null;
                                     if (array != null) {
                                         for (int i = 0; i < array.size(); i++) {
@@ -1697,14 +1727,14 @@ public class LSUController extends ControllerHelper {
                                     return res;
                                 }
 
-                                private void addDiscipline(JsonObject currentAcquis, Acquis aquisEleve) {
+                                private void addAcquis_addDiscipline(JsonObject currentAcquis, Acquis aquisEleve) {
                                     Discipline currentSubj = getDisciplineInXML(currentAcquis.getString("id_matiere"), donnees);
                                     if (currentSubj != null) {
                                         aquisEleve.setDisciplineRef(currentSubj);
                                     }
                                 }
 
-                                private void addElementProgramme(JsonObject currentAcquis, Acquis aquisEleve) {
+                                private void addAcquis_addElementProgramme(JsonObject currentAcquis, Acquis aquisEleve) {
                                     String epLabel = currentAcquis.getString("elementsProgramme");
                                     if(epLabel != null && !epLabel.isEmpty()){
                                         String epId = generateElementProgrammeId(epLabel);
@@ -1722,17 +1752,6 @@ public class LSUController extends ControllerHelper {
                                         }
                                         aquisEleve.getElementProgrammeRefs().add(ep);
                                     }
-                                }
-
-                                private void addMissingTeacherToXml(BilanPeriodique.ListeAcquis aquisEleveList, JsonObject currentAcquis, Acquis aquisEleve) {
-                                    if(currentAcquis.containsKey("teachers") && !currentAcquis.getJsonArray("teachers").isEmpty()){
-                                        JsonArray teachersList = currentAcquis.getJsonArray("teachers");
-                                        for (Integer k = 0; k < teachersList.size(); k++) {
-                                            Enseignant enseignant = addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
-                                            aquisEleve.getEnseignantRefs().add(enseignant);
-                                        }
-                                    }
-                                    aquisEleveList.getAcquis().add(aquisEleve);
                                 }
                             });
                 }
@@ -1842,10 +1861,10 @@ public class LSUController extends ControllerHelper {
                         Validator validator = schema.newValidator();
                         Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
                         log.info("validator");
-                        //validator.validate(xmlFile);
+                        validator.validate(xmlFile);
                     } catch (SAXException | IOException e) {
                         log.error("Validation : Export LSU en erreur",e);
-                        badRequest(request);
+                        request.response().setStatusCode(400).setStatusMessage(e.getMessage()).end();
                         return;
                     }
                     //préparation de la requêteDefaultCompetenceNoteService

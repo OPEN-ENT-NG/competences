@@ -97,7 +97,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
 
             }).catch((error) => {
                 console.log("$scope.lsu.export error");
-                console.log(error);
+                $scope.errorResponse = error.response.statusText;
                 initparams(1);
             });
 
