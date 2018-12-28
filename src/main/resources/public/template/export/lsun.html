@@ -20,8 +20,8 @@
         <div class="twelve">
             <div class="row">
                 <h3>Choix de l'export</h3>
-                <div class="three cell horizontal-spacing vertical-spacing">
-                    <div ng-if="evaluations.structures.all.length > 1" class="row display-inline-block">
+                <div ng-if="evaluations.structures.all.length > 1" class="three cell horizontal-spacing">
+                    <div class="row display-inline-block">
                         <label class="ten small" >Choix de la structure
                             <select ng-model="lsu.idStructure"
                                     ng-options="structure.id as structure.libelle for structure in evaluations.structures.all"
@@ -30,7 +30,7 @@
                         </label>
                     </div>
                 </div>
-                <div class="three cell horizontal-spacing vertical-spacing">
+                <div class="three cell horizontal-spacing">
                     <label>
                         <input type="radio" ng-model="params.type" ng-value="1">
                         Bilan de fin de cycle
@@ -43,8 +43,36 @@
             </div>
             <div class="row">
 
-            <h3>Données à exporter</h3>
-                <div class="three cell horizontal-spacing vertical-spacing">
+                <h3>Données à exporter</h3>
+
+            </div>
+            <div class="row" ng-show="params.type == 2">
+
+                <div class="five cell horizontal-spacing">
+                    <div class="row display-inline-block">
+                        <label class="checkbox ten" ng-repeat="periode in lsu.periodes_type">
+                            <input type="checkbox"
+                                   name="params.periodes_type[]"
+                                   value="[[periode]]"
+                                   ng-checked="selection.indexOf(periode) > -1"
+                                   ng-click="toggleperiode(periode)"
+                            ><span>
+                        [[periode.label]]</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="five cell horizontal-spacing">
+                    <div class="row display-inline-block">
+                        <label class="ten small">
+                            Fichier Sts:
+                            <input type="file" ng-model="params.stsFile"
+                                   onchange="angular.element(this).scope().uploadFile(this.files)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="row vertical-spacing">
+                <div class="five cell horizontal-spacing">
                     <div class="row display-inline-block">
                         <label class="ten small">
                             <multi-combo
@@ -68,7 +96,7 @@
                 </div>
                 <div class="one cell">
                 </div>
-                <div class="three cell horizontal-spacing vertical-spacing">
+                <div class="five cell horizontal-spacing">
                     <div class="row display-inline-block">
                         <label class="ten small">
                             <multi-combo
@@ -90,28 +118,8 @@
                         </label>
                     </div>
                 </div>
-                <div class="three cell horizontal-spacing vertical-spacing" ng-if="params.type == 2">
-                    <div class="row display-inline-block">
-                        <label class="checkbox ten" ng-repeat="periode in lsu.periodes_type">
-                            <input type="checkbox"
-                                   name="params.periodes_type[]"
-                                   value="[[periode]]"
-                                   ng-checked="selection.indexOf(periode) > -1"
-                                   ng-click="toggleperiode(periode)"
-                            ><span>
-                        [[periode.label]]</span>
-                        </label>
-                    </div>
-                </div>
-                <div class="three cell horizontal-spacing vertical-spacing" ng-if="params.type == 2">
-                    <div class="row display-inline-block">
-                        <label class="ten small">
-                            Fichier Sts:
-                            <input type="file" ng-model="params.stsFile">
-                        </label>
-                    </div>
-                </div>
             </div>
+
         </div>
     </article>
     <p class="error" ng-show="errorResponse">[[errorResponse]]</p>

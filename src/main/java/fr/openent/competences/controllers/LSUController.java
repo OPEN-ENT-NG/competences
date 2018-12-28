@@ -279,7 +279,8 @@ public class LSUController extends ControllerHelper {
         if (!entries.containsKey("idStructure")
                 || !entries.containsKey("classes")
                 || !entries.containsKey("responsables")
-                || !entries.containsKey("periodes_type")) {
+                || !entries.containsKey("periodes_type")
+                || !entries.containsKey("stsFile")) {
             badRequest(request, "bilanPeriodiqueExport - No valid params");
             return;
         }
@@ -289,6 +290,7 @@ public class LSUController extends ControllerHelper {
         final List<String> idsResponsable = getIdsList(entries.getJsonArray("responsables"));//Arrays.asList("92ecac5a-c563-4c28-8a9f-1c5d8ad89bd2");//ce.fouquet
         final List<Integer> idsTypePeriodes = new ArrayList<Integer>();
         JsonArray dataPeriodesType = entries.getJsonArray("periodes_type");
+        final JsonArray enseignantFromSts = entries.getJsonArray("stsFile");
         for (int i = 0; i < dataPeriodesType.size(); i++) {
             idsTypePeriodes.add(dataPeriodesType.getJsonObject(i).getInteger("id_type"));
         }
@@ -347,7 +349,7 @@ public class LSUController extends ControllerHelper {
                 log.error("getXML : getBaliseEnseignants " + event);
             }
         };
-        getBaliseEnseignants(donnees, idStructure, idsClasse, getEnseignantsHandler);
+        getBaliseEnseignants(donnees, idStructure, idsClasse, enseignantFromSts, getEnseignantsHandler);
 
 
         Future<JsonObject> getPeriodesFuture = Future.future();
@@ -1152,7 +1154,7 @@ public class LSUController extends ControllerHelper {
         }));
     }
 
-    private void getBaliseEnseignants(final Donnees donnees, final String structureId, List<String> idsClasse, final Handler<String> handler) {
+    private void getBaliseEnseignants(final Donnees donnees, final String structureId, List<String> idsClasse, JsonArray enseignantFromSts, final Handler<String> handler) {
         final List<Future> futureMyResponse1Lst = new ArrayList<>();
         for (int i = 0; i < idsClasse.size(); i++) {
             Future<JsonObject> resp1FutureComposite = Future.future();
@@ -1170,7 +1172,7 @@ public class LSUController extends ControllerHelper {
                     if ("ok".equals(body.getString("status"))) {
                         JsonArray teachersList = body.getJsonArray("results");
                         for (Integer k = 0; k < teachersList.size(); k++) {
-                            addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
+                            addorFindTeacherBalise(donnees, enseignantFromSts, teachersList.getJsonObject(k));
                         }
                         resp1FutureComposite.complete();
                     }
@@ -1194,7 +1196,7 @@ public class LSUController extends ControllerHelper {
                 if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() == 1 ) {
                     JsonArray teachersList = body.getJsonArray("results");
                     for (Integer k = 0; k < teachersList.size(); k++) {
-                        addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
+                        addorFindTeacherBalise(donnees, null, teachersList.getJsonObject(k));
                     }
                     handler.handle("success");
                 }
@@ -1202,7 +1204,7 @@ public class LSUController extends ControllerHelper {
         }));
     }
 
-    private Enseignant addorFindTeacherBalise(Donnees donnees, JsonObject enseignant){
+    private Enseignant addorFindTeacherBalise(Donnees donnees, JsonArray enseignantFromSts, JsonObject enseignant){
         Enseignant existing = getEnseignantInXML(enseignant.getString("id"), donnees);
         if (existing == null) {
             existing = objectFactory.createEnseignant();
@@ -1214,10 +1216,30 @@ public class LSUController extends ControllerHelper {
             else if(enseignant.getString("name") != null) {
                 existing.setNom(enseignant.getString("name"));
             }
+
+            //generate fake sts id to test  need to be removed
             existing.setType(fromValue("epp"));
             existing.setIdSts(new BigInteger(20, new Random()));
-            //log.info(existing.getIdSts() + "  enseignant Id sts");
-            donnees.getEnseignants().getEnseignant().add(existing);
+            //end fake sts
+
+            if(enseignantFromSts != null && enseignantFromSts.size() > 0) {
+                JsonObject enseingantFromSts = (JsonObject) enseignantFromSts.stream()
+                        .filter(
+                                el -> (((JsonObject) el).getString("NOM_USAGE") == enseignant.getString("lastName"))
+                                && ((JsonObject) el).getString("PRENOM") == enseignant.getString("firstName")
+                                && ((JsonObject) el).getString("DATE_NAISSANCE") == enseignant.getString("birthDate")
+                        )
+                        .findFirst()
+                        .orElse(null);
+                if(enseingantFromSts != null && enseingantFromSts.containsKey("ID") && enseingantFromSts.containsKey("TYPE") ){
+                    existing.setIdSts(new BigInteger(enseingantFromSts.getString("ID")));
+                    existing.setType(TypeEnseignant.fromValue(enseingantFromSts.getString("TYPE")));
+                }
+            }
+
+            if(existing.getId()!= null && existing.getIdSts() != null && existing.getIdSts() != null){
+                donnees.getEnseignants().getEnseignant().add(existing);
+            }
         }
         return existing;
     };
@@ -1687,7 +1709,7 @@ public class LSUController extends ControllerHelper {
                                     if (currentAcquis.containsKey("teachers") && !currentAcquis.getJsonArray("teachers").isEmpty()) {
                                         JsonArray teachersList = currentAcquis.getJsonArray("teachers");
                                         for (Integer k = 0; k < teachersList.size(); k++) {
-                                            Enseignant enseignant = addorFindTeacherBalise(donnees, teachersList.getJsonObject(k));
+                                            Enseignant enseignant = addorFindTeacherBalise(donnees, null, teachersList.getJsonObject(k));
                                             aquisEleve.getEnseignantRefs().add(enseignant);
                                         }
                                     }

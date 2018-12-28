@@ -14,22 +14,20 @@
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
-
 /**
  * Created by agnes.lapeyronnie on 15/09/2017.
  */
-import {ng, _, Collection, model} from "entcore";
+import {ng, _} from "entcore";
 import {Classe, LSU, Periode} from '../models/teacher';
-import {Responsable} from '../models/teacher/Responsable';
+import * as utilsJson from '../utils/functions/xmlToJson';
+
 export let exportControleur = ng.controller('ExportController',['$scope',
     function($scope) {
 
-
-      $scope.lsu = new LSU($scope.structure.id, $scope.evaluations.classes.where({type_groupe : Classe.type.CLASSE}),
-          $scope.structure.responsables.all);
+        $scope.lsu = new LSU($scope.structure.id, $scope.evaluations.classes.where({type_groupe : Classe.type.CLASSE}),
+            $scope.structure.responsables.all);
         $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
-
-
+        $scope.errorResponse = null;
         function initparams(type) {
             $scope.inProgress = false;
             $scope.params = {
@@ -61,48 +59,63 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             }
         };
 
-
         // Créer une fonction dans le $scope qui lance la récupération des responsables
         $scope.getResponsables = function () {
             $scope.structure.responsables.sync().then(() => {
-               $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName
+                $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName
             });
         };
         $scope.getResponsables();
-
 
         /**
          * Controle la validité des selections avant l'exportLSU
          */
         $scope.controleExportLSU = function(){
             return !(
-                $scope.params.classes.length > 0 &&
-                $scope.params.responsables.length > 0
+                ($scope.params.type == "1"
+                && $scope.params.classes.length > 0
+                && $scope.params.responsables.length > 0)
+                || ($scope.params.type == "2"
+                    && $scope.params.stsFile
+                    && $scope.params.periodes_type
+                    && $scope.params.classes.length > 0
+                    && $scope.params.responsables.length > 0)
             );
         };
-        $scope.exportLSU = ()=> {
-            $scope.inProgress = true;
-            $scope.lsu.export($scope.params).then((res) => {
-                console.log("$scope.lsu.export res");
-                console.log(res);
 
-                let blob = new Blob([res.data]);
-                let link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = res.headers['content-disposition'].split('filename=')[1];
-                document.body.appendChild(link);
-                link.click();
+        $scope.uploadFile = function (files) {
+            var file = files[0],
+                reader = new FileReader();
+            reader.onload = () => {
+                var text = reader.result;
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(text, "application/xml");
+                let individus = ((((utilsJson.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
+                $scope.params.stsFile = utilsJson.cleanJson(individus);
 
-                initparams(1);
-
-            }).catch((error) => {
-                console.log("$scope.lsu.export error");
-                $scope.errorResponse = error.response.statusText;
-                initparams(1);
-            });
-
+            }
+            reader.readAsText(file);
         };
 
+        $scope.exportLSU = ()=> {
+            $scope.inProgress = true;
+            $scope.params.type = ""+ $scope.params.type;
+            $scope.lsu.export($scope.params)
+                .then((res) => {
+                    let blob = new Blob([res.data]);
+                    let link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = res.headers['content-disposition'].split('filename=')[1];
+                    document.body.appendChild(link);
+                    link.click();
+                    initparams("1");
+                    $scope.errorResponse = null;
+                }).catch((error) => {
+                console.log("$scope.lsu.export error");
+                $scope.errorResponse = error.response.statusText;
+                initparams("1");
+            });
+        };
     }
 ]);
 

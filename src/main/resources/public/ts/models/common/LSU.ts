@@ -19,6 +19,7 @@
  * Created by agnes.lapeyronnie on 19/09/2017.
  */
 import http from 'axios';
+import {angular} from "entcore";
 import { Responsable, Classe } from '../teacher';
 import {Periode} from './Periode';
 
@@ -32,7 +33,7 @@ export class LSU {
     constructor (structureId : string, classes : Array<Classe>, responsables : Array<Responsable>){
         this.idStructure = structureId ;
         this.classes = classes;
-        this.responsables =responsables ;
+        this.responsables = responsables ;
         this.periodes_type = [
             {label: 'trimestre 1', id_type: 3},
             {label: 'trimestre 2', id_type: 4},
@@ -42,7 +43,8 @@ export class LSU {
 
     async export(params: any): Promise<any> {
         return await new Promise((resolve, reject) => {
-            http.post('/competences/exportLSU/lsu', params, {responseType: 'arraybuffer'})
+            http.post('/competences/exportLSU/lsu', params, {
+                responseType: 'arraybuffer'})
                 .then(function (data) {
                     if (resolve && typeof(resolve) === 'function') {
                         resolve(data);
