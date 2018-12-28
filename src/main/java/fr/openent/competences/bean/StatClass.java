@@ -9,13 +9,15 @@ import java.util.List;
 import java.util.Map;
 
 public class StatClass {
-
+    /**
+     * Map idEleve StatEleve
+     */
     private Map<String,StatEleve> mapEleveStat;
     private Double averageClass;
     private UtilsService utilsService;
 
     public StatClass(){
-        if(mapEleveStat == null){
+        if(mapEleveStat == null ){
             mapEleveStat = new HashMap<String, StatEleve>();
         }
         utilsService = new DefaultUtilsService();
@@ -24,7 +26,7 @@ public class StatClass {
     public Double getMoyenneEleve (String idEleve) {
         Double moyEleve = null;
         if(idEleve != null ) {
-            StatEleve statEleve = this.getMapEleveStat().get(idEleve);
+            StatEleve statEleve = this.mapEleveStat.get(idEleve);
 
             if (statEleve != null) {
                 moyEleve = statEleve.getMoyenne();
@@ -34,7 +36,7 @@ public class StatClass {
     }
 
     public void putMapEleveStat(String idEleve,Double moyFinale, NoteDevoir note){
-        if(moyFinale != null) {
+        if(moyFinale != null) {//une moyenne finale par eleve
             if (!this.mapEleveStat.containsKey(idEleve)) {
                 StatEleve statEleve = new StatEleve();
                 statEleve.setMoyenneFinale(moyFinale);

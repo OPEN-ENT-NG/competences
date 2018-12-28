@@ -416,8 +416,36 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                                 JsonArray listNotes = response.right().getValue();
                                 noteService.calculPositionnementAutoByEleveByMatiere(listNotes, result);
+                                //on doit récupérer toutes moyennes finales de la matiere
+                                noteService.getColonneReleve(null, null, idMatiere, idsGroups, "moyenne",
+                                        new Handler<Either<String, JsonArray>>() {
+                                            @Override
+                                            public void handle(Either<String, JsonArray> event) {
+                                                if (event.isRight()) {
+                                                    JsonArray moyFinalesEleves = event.right().getValue();
+                                                    // Calcul des moyennes par période pour la classe
+                                                    noteService.calculAndSetMoyenneClasseByPeriode(idsEleves,moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
+                                                    compteurMatiere.decrementAndGet();
+                                                    results.add(result);
+                                                    if (compteurMatiere.intValue() == 0) {
+                                                        String [] sortedField = new  String[1];
+                                                        sortedField[0] = "libelleMatiere";
+                                                        handler.handle(new Either.Right<>(
+                                                                new DefaultUtilsService().sortArray(results,
+                                                                        sortedField)));
+                                                    }
 
-                                if (idsEleves.size() != 0) {
+                                                } else {
+                                                    String error = response.left().getValue();
+                                                    log.error(error);
+                                                    handler.handle(new Either.Left<>(error));
+                                                }
+                                            }
+                                        });
+
+
+
+                              /*  if (idsEleves.size() != 0) {
                                     //calculer les moyennes de la Classe pour chaque
                                     noteService.getColonneReleve(idsEleves, null, idMatiere, idClasse,
                                             "moyenne", new Handler<Either<String, JsonArray>>() {
@@ -457,7 +485,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                                 new DefaultUtilsService().sortArray(results,
                                                         sortedField)));
                                     }
-                                }
+                                }*/
                             } else {
                                 String error = response.left().getValue();
                                 log.error(error);

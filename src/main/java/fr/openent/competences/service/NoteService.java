@@ -134,7 +134,7 @@ public interface NoteService extends CrudService {
     void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                              String colonne,   Handler<Either<String, JsonArray>> handler);
 
-    void  getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, String idClasse,
+    void  getColonneReleve(JsonArray idEleves, Long idPeriode, String idMatiere, JsonArray idsClasse,
                            String colonne, Handler<Either<String, JsonArray>> handler);
     /**
      * Met à jour la moyennes finale d'un élève pour une période, une matiere et une classe
@@ -170,12 +170,12 @@ public interface NoteService extends CrudService {
     /**
      * calcul la moyenne de la classe pour une période
      * @param allNotes allNotes
-     * @param moyFinalesEleves moyFinalesEleves
+     * @param moyFinalesElevesByPeriode moyFinalesElevesByPeriode
      * @param idPeriode idPeriode
      * @return la moyenne
      */
     Double calculMoyenneClasseByPeriode(ArrayList<NoteDevoir> allNotes,
-                                        JsonArray moyFinalesEleves,
+                                        Map<Long, Map<String, Double>> moyFinalesElevesByPeriode,
                                         Long idPeriode);
 
     /**
@@ -184,7 +184,7 @@ public interface NoteService extends CrudService {
      * @param notesByDevoirByPeriodeClasse map<periode map<periode,liste de devoirs>>
      * @param result JsonObject sur lequel est ajouté les moyennes de la classe
      */
-    void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
+    void calculAndSetMoyenneClasseByPeriode(final JsonArray idsEleve, final JsonArray moyFinalesEleves,
                                             final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                             final JsonObject result );
 

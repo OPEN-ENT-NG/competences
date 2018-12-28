@@ -469,7 +469,7 @@ public class NoteController extends ControllerHelper {
                                                 idEleves,
                                                 idPeriode,
                                                 idMatiere,
-                                                idClasse,
+                                                new JsonArray().add(idClasse),
                                                 "moyenne",
                                                 new Handler<Either<String, JsonArray>>() {
                                                     @Override
@@ -518,7 +518,7 @@ public class NoteController extends ControllerHelper {
                 idEleves,
                 idPeriode,
                 idMatiere,
-                idClasse,
+                new JsonArray().add(idClasse),
                 "appreciation_matiere_periode",
                 new Handler<Either<String, JsonArray>>() {
                     @Override
@@ -882,7 +882,7 @@ public class NoteController extends ControllerHelper {
                                                                 idEleves,
                                                                 null,
                                                                 idMatiere,
-                                                                idClasse,
+                                                                new JsonArray().add(idClasse),
                                                                 "moyenne",
                                                                 new Handler<Either<String, JsonArray>>() {
                                                                     @Override
@@ -935,7 +935,7 @@ public class NoteController extends ControllerHelper {
                 new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
                 null,
                 idMatiere,
-                idClasse,
+                new JsonArray().add(idClasse),
                 "appreciation_matiere_periode",
                 new Handler<Either<String, JsonArray>>() {
                     @Override
@@ -947,7 +947,7 @@ public class NoteController extends ControllerHelper {
                                     new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
                                     null,
                                     idMatiere,
-                                    idClasse,
+                                    new JsonArray().add(idClasse),
                                     "moyenne",
                                     new Handler<Either<String, JsonArray>>() {
                                         @Override
@@ -958,7 +958,7 @@ public class NoteController extends ControllerHelper {
                                                         new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
                                                         null,
                                                         idMatiere,
-                                                        idClasse,
+                                                        new JsonArray().add(idClasse),
                                                         "positionnement", new Handler<Either<String, JsonArray>>() {
                                                             @Override
                                                             public void handle(Either<String, JsonArray> event) {
@@ -972,7 +972,7 @@ public class NoteController extends ControllerHelper {
                                                                     //idClass sera mis à null dans le service qu'appelle cette méthode car on a besoin de idClasse
                                                                     addPositionnementAutoEleve(idEleve, idClasse,
                                                                             idMatiere, idEtablissement,
-                                                                            request,result, IdEleves,notesByDevoirByPeriodeClasse);
+                                                                        request,result, IdEleves,notesByDevoirByPeriodeClasse);
                                                                 } else {
                                                                     JsonObject error = new JsonObject()
                                                                             .put("error",
@@ -1013,9 +1013,27 @@ public class NoteController extends ControllerHelper {
                         if (event.isRight()) {
                             JsonArray listNotes = event.right().getValue();
                             notesService.calculPositionnementAutoByEleveByMatiere(listNotes,result);
+//si idEleves.size()=0 alors aucune note sur les élèves => il faut voir s'il y a des moyennes finales => dans tous les cas on récupère les moyennes finales
+                            notesService.getColonneReleve(null, null, idMatiere,
+                                    new JsonArray().add(idClasse), "moyenne",
+                                    new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> event) {
+                                            if (event.isRight()) {
+                                                JsonArray moyFinalesEleves = event.right().getValue();
+                                                // Calcul des moyennes par période pour la classe
+                                                notesService.calculAndSetMoyenneClasseByPeriode(idEleves,moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
+                                                Renders.renderJson(request, result);
 
-                            // Calcul des moyennes par période pour la classe
-                            if(idEleves.size() != 0) {
+                                            } else {
+                                                JsonObject error = (new JsonObject()).put("error",
+                                                        (String) event.left().getValue());
+                                                Renders.renderJson(request, error, 400);
+                                            }
+                                        }
+                                    });
+
+                           /* if(idEleves.size() != 0) {
 
                                 notesService.getColonneReleve(idEleves, null, idMatiere, idClasse, "moyenne",
                                         new Handler<Either<String, JsonArray>>() {
@@ -1037,7 +1055,7 @@ public class NoteController extends ControllerHelper {
                             }else{
                                 result.put("moyennesClasse",new fr.wseduc.webutils.collections.JsonArray());
                                 Renders.renderJson(request, result);
-                            }
+                            }*/
                         } else {
                             JsonObject error = (new JsonObject()).put("error",
                                     (String) event.left().getValue());
