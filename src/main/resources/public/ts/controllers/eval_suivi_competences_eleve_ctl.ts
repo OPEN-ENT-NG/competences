@@ -21,13 +21,13 @@
 import {ng, template, model, moment, notify, idiom as lang} from "entcore";
 import {
     SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve,
-    Domaine,
+    Domaine,Utils
 } from "../models/teacher";
 import * as utils from "../utils/teacher";
 
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../models/teacher/index";
-import {Utils} from "../models/teacher/Utils";
+//import {Utils} from "../models/teacher/Utils";
 import {Mix} from "entcore-toolkit";
 
 
@@ -107,9 +107,6 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.route = $route;
         $scope.lang = lang;
         $scope.opened.lightboxEvalLibre = false;
-
-
-
         /**
          * show label too long
          */
@@ -321,36 +318,37 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
 
         $scope.switchColorCompetenceNivFinal = async function(competence){
-
-            let niveauCompetenceMin = 0;
-            let niveauCompetenceMax = -1;
-            for (let o in $scope.mapCouleurs) {
-                niveauCompetenceMax++;
-            }
-
-            if (niveauCompetenceMin <= competence.niveauFinalToShowMyEvaluations && competence.niveauFinalToShowMyEvaluations < niveauCompetenceMax - 1) {
-                competence.niveauFinalToShowMyEvaluations = competence.niveauFinalToShowMyEvaluations + 1;
-            } else {
-                competence.niveauFinalToShowMyEvaluations = niveauCompetenceMin;
-            }
-            let myEvaluations = _.filter(competence.competencesEvaluations, function (evaluation) {
-                return evaluation.owner !== undefined && evaluation.owner === model.me.userId && !evaluation.formative;
-            });
-            let competenceNiveauFinal = new CompetenceNote({
-                id_periode: $scope.search.periode.id_type,
-                id_eleve: $scope.search.eleve.id,
-                niveau_final: competence.niveauFinalToShowMyEvaluations,
-                id_competence: competence.id,
-                ids_matieres: _.unique(_.pluck(myEvaluations, 'id_matiere'))
-            });
-
-            _.each(competence.competencesEvaluations, (evaluation) => {
-                if (_.contains(competenceNiveauFinal.ids_matieres, evaluation.id_matiere)) {
-                    evaluation.niveau_final = competence.niveauFinalToShowMyEvaluations;
+            if(!$scope.isEndSaisieNivFinal){
+                let niveauCompetenceMin = 0;
+                let niveauCompetenceMax = -1;
+                for (let o in $scope.mapCouleurs) {
+                    niveauCompetenceMax++;
                 }
-            });
-            await competenceNiveauFinal.saveNiveaufinal();
-            Utils.setMaxCompetenceShow(competence);
+
+                if (niveauCompetenceMin <= competence.niveauFinalToShowMyEvaluations && competence.niveauFinalToShowMyEvaluations < niveauCompetenceMax - 1) {
+                    competence.niveauFinalToShowMyEvaluations = competence.niveauFinalToShowMyEvaluations + 1;
+                } else {
+                    competence.niveauFinalToShowMyEvaluations = niveauCompetenceMin;
+                }
+                let myEvaluations = _.filter(competence.competencesEvaluations, function (evaluation) {
+                    return evaluation.owner !== undefined && evaluation.owner === model.me.userId && !evaluation.formative;
+                });
+                let competenceNiveauFinal = new CompetenceNote({
+                    id_periode: $scope.search.periode.id_type,
+                    id_eleve: $scope.search.eleve.id,
+                    niveau_final: competence.niveauFinalToShowMyEvaluations,
+                    id_competence: competence.id,
+                    ids_matieres: _.unique(_.pluck(myEvaluations, 'id_matiere'))
+                });
+
+                _.each(competence.competencesEvaluations, (evaluation) => {
+                    if (_.contains(competenceNiveauFinal.ids_matieres, evaluation.id_matiere)) {
+                        evaluation.niveau_final = competence.niveauFinalToShowMyEvaluations;
+                    }
+                });
+                await competenceNiveauFinal.saveNiveaufinal();
+                Utils.setMaxCompetenceShow(competence);
+            }
         };
 
         /**

@@ -545,6 +545,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.displayCycle = false;
                 }
             }
+            if( $scope.search.periode.id !== null ) {
+                $scope.isEndSaisieNivFinal = moment($scope.search.periode.date_fin_saisie).isBefore(moment(), "days");
+            }else{
+                $scope.isEndSaisieNivFinal = false;
+            }
         }
 
         $scope.updateOrder = function () {

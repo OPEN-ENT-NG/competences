@@ -25,15 +25,26 @@
             </label>
         </div>
         <i18n>evaluation.suivieleve.filtre.competence</i18n>
+        <section ng-if="canSaveCompetenceNiveauFinal() && search.periode.id !== null && isEndSaisieNivFinal && isMyEvaluations(suiviFilter)"
+                 class="row twelve-mobile ng-scope">
+            <div class="warning">
+                <i18n>evaluations.suivi.eleve.niveau.final.end.saisie.warning</i18n>
+            </div>
+        </section>
     </label>
-    <h2 class="cell six"><dropdown-buttons class="right-magnet">
-        <open class="opener"><i class="download"></i></open>
-        <options>
-            <bt ng-click="openedLigthbox(false)"><i18n>evaluation.suivi.export.button.eleve</i18n></bt>
-            <bt ng-click="openedLigthbox(true)"><i18n>evaluation.suivi.export.button.classe</i18n></bt>
-            <bt ng-if="search.periode.libelle != 'cycle'" ng-click="getReleve()"><i18n>evaluation.suivi.export.button.eleve.releve</i18n></bt>
-        </options>
-    </dropdown-buttons></h2>
+    <h2 class="cell six">
+        <dropdown-buttons class="right-magnet">
+            <open class="opener">
+                <i class="download"></i>
+            </open>
+            <options>
+                <bt ng-click="openedLigthbox(false)"><i18n>evaluation.suivi.export.button.eleve</i18n></bt>
+                <bt ng-click="openedLigthbox(true)"><i18n>evaluation.suivi.export.button.classe</i18n></bt>
+                <bt ng-if="search.periode.libelle != 'cycle'" ng-click="getReleve()"><i18n>evaluation.suivi.export.button.eleve.releve</i18n></bt>
+            </options>
+        </dropdown-buttons>
+    </h2>
+
 </div>
 
 
@@ -74,7 +85,9 @@
                     </span>
                 </div>
                 <div ng-if="isMyEvaluations(suiviFilter) " class="two inline-block align-top">
-                    <div  ng-class="{twelve : search.periode.id === null || !canSaveCompetenceNiveauFinal(), six : search.periode.id !== null}" class=" inline-block align-center " ng-click="openDetailCompetence(competence)">
+                    <div  ng-class="{twelve : search.periode.id === null || !canSaveCompetenceNiveauFinal(),
+                    six : search.periode.id !== null}" class=" inline-block align-center "
+                          ng-click="openDetailCompetence(competence)">
                         <span ng-if="competence.niveauAtteintToShowMyEvaluations !== undefined">
                             <c-skills-bubble text="(mapLettres[competence.niveauAtteintToShowMyEvaluations])"
                                              color="(mapCouleurs[competence.niveauAtteintToShowMyEvaluations])"
@@ -86,7 +99,7 @@
                         </span>
                     </div>
                     <div workflow="competences.saveCompetenceNiveauFinal" ng-if="search.periode.id !== null" class="six inline-block align-center" >
-                        <span ng-if="competence.niveauFinalToShowMyEvaluations !== undefined">
+                        <span ng-if="competence.niveauFinalToShowMyEvaluations !== undefined" ng-disabled = "isEndSaisieNivFinal">
                         <c-skills-bubble text="(mapLettres[competence.niveauFinalToShowMyEvaluations])"
                                          color="(mapCouleurs[competence.niveauFinalToShowMyEvaluations])"
                                          classes="'competence-eval alignVertical'"
@@ -112,7 +125,6 @@
     <div ng-repeat="domaine in domaine.domaines.all" ng-include="'tree_item_renderer.html'">
     </div>
 </script>
-
 <div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve')"
         ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
 </div>

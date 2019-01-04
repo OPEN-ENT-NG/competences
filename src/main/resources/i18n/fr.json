@@ -219,6 +219,7 @@
   "evaluation.suivi.niveau":"Niveau",
   "evaluation.suivi.niveau.atteint":"Atteint",
   "evaluation.suivi.niveau.final":"Final",
+  "evaluations.suivi.eleve.niveau.final.end.saisie.warning":"Les niveaux de compétence ne sont plus modifiables car la date de fin de saisie est dépassée",
   "evaluation.bilan.eleve.empty": "Aucun bilan de compétences élève généré. Vous pouvez en générer un en sélectionnant les critères.",
   "enseignements.pratiques.interdisciplinaires": "Enseignements pratiques interdisciplinaires",
   "accompagnements.personnalises": "Accompagnement personnalisé",
