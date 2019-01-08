@@ -346,7 +346,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         note.put("idDomaine",d.getId());
                         note.put("niveau", bfcEleves.get(eleve).get(d.getId()));
                     if(recapEval){
-                        if(notesCompetencesEleves.get("empty") != null){
+                        if(bfcEleves.get(eleve).containsKey(d.getId())){
                             note.put("moyenne", bfcEleves.get(eleve).get(d.getId()));
                         } else {
                             Double moy = calculMoyenne(d, notesCompetencesEleves, eleve);
