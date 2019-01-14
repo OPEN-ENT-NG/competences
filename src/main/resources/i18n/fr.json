@@ -250,6 +250,7 @@
   "evaluations.mes.evaluations.par.periode.par.matiere": "Toutes mes évaluations par période et par matière",
   "evaluations.test.grade.on":"Note sur",
   "evaluations.no.grade" : "Aucune évaluation trouvée pour",
+  "evaluations.test.undersubject.none" : "Aucune",
   "evaluations.test.is.evaluated":"Activer l'évaluation numérique ?",
   "evaluations.test.grade.publication.date":"Date de publication de l'évaluation",
   "evaluations.test.grade.publication.date.shortlibelle":"Date de publication de la note",

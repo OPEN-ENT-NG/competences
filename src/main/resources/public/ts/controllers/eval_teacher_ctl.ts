@@ -1730,14 +1730,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($location.path() === "/devoir/create") {
                 $scope.devoir = $scope.initDevoir();
                 $scope.devoir.id_groupe = $scope.searchOrFirst("classe", $scope.structure.classes.all).id;
-                $scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
-                $scope.devoir.id_matiere = $scope.devoir.matiere.id;
                 $scope.devoir.id_type = _.findWhere($scope.structure.types.all, {default_type: true}).id;
-
-                if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
-                    // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
-                    $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
-                }
 
                 let currentPeriode = await $scope.getCurrentPeriode(_.findWhere($scope.structure.classes.all, {id: $scope.devoir.id_groupe}));
                 $scope.devoir.id_periode = currentPeriode !== -1 ? currentPeriode.id_type : null;
@@ -1786,6 +1779,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.setClasseMatieres();
                 }
             }
+
             let selectedClasse = _.findWhere($scope.classes.all, {id: $scope.devoir.id_groupe});
             if (selectedClasse !== undefined && selectedClasse.id_cycle !== null) {
                 $scope.structure.enseignements.sync($scope.devoir.id_groupe).then(() => {
@@ -1800,6 +1794,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 });
             }
+
+            // un fois que la classe est déterminée, on peut choisir la 1ère matière par défaut
+            // sur cette classe
+                //$scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
+            $scope.devoir.matiere = $filter('getMatiereClasse')($scope.structure.matieres.all, $scope.devoir.id_groupe, $scope.classes, $scope.search)[0];
+            $scope.devoir.id_matiere = $scope.devoir.matiere.id;
+            if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+                // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
+                $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+            }
+
             if ($scope.devoir.dateDevoir === undefined
                 && $scope.devoir.date !== undefined) {
                 $scope.devoir.dateDevoir = new Date($scope.devoir.date);
@@ -2292,7 +2297,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.selectedMatiere = function (devoir) {
             var matiere = evaluations.matieres.findWhere({id: devoir.id_matiere});
-            if (matiere !== undefined) devoir.matiere = matiere;
+            if (matiere !== undefined) {
+                devoir.matiere = matiere;
+                devoir.id_matiere = matiere.id;
+            }
+
+            // sélection de la 1ère sous matière par défaut
+            if(matiere.sousMatieres !== undefined && matiere.sousMatieres.all.length > 0) {
+                // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
+                devoir.id_sousmatiere = matiere.sousMatieres.all[0].id_type_sousmatiere;
+            }
+
         };
 
         /**
