@@ -710,6 +710,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             notesPeriodeByEleves.get(id_eleve).add(note);
         }
         Double sumMoyClasse = 0.0;
+        Integer nbEleve = notesPeriodeByEleves.size();
         Map<String, Double> moyFinalesPeriode = null;
         if( moyFinalesElevesByPeriode != null && moyFinalesElevesByPeriode.containsKey(idPeriode)) {
             moyFinalesPeriode = moyFinalesElevesByPeriode.get(idPeriode);
@@ -719,6 +720,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 if(!notesPeriodeByEleves.containsKey(moyFinale.getKey())){
                     sumMoyClasse += moyFinale.getValue();
+                    nbEleve ++;
                 }
             }
         }
@@ -739,7 +741,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         .getDouble("moyenne");
             }
         }
-        return (double) Math.round((sumMoyClasse/notesPeriodeByEleves.size()) * 100) / 100;
+        return (double) Math.round((sumMoyClasse/nbEleve) * 100) / 100;
     }
 
     public void calculAndSetMoyenneClasseByPeriode(final JsonArray idEleves, final JsonArray moyFinalesEleves,
