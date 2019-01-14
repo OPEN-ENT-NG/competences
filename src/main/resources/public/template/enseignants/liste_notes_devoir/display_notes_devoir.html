@@ -310,7 +310,7 @@
                                                              end-saisie="currentDevoir.endSaisie"
                                                              model="eleve.evaluation"
                                                              model-attribute="valeur"
-                                                             validation-item-function="saveNoteDevoirEleve(eleve.evaluation, $event, eleve)"
+                                                             validation-item-function="saveNoteDevoirEleve(eleve.evaluation, $event, eleve, true)"
                                                              get-eleve-info="getEleveInfo"
                                                              autofocus="$index === 0 && currentDevoir.is_evaluated"
                                                              error="(eleve.evaluation.valid !== undefined && eleve.evaluation.valid === false)"

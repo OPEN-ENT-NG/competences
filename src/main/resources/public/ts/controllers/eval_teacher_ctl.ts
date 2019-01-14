@@ -2526,12 +2526,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param $event evenement déclenchant
          * @param eleve élève propriétaire de l'évaluation
          */
-        $scope.saveNoteDevoirEleve = function (evaluation, $event, eleve) {
+        $scope.saveNoteDevoirEleve = function (evaluation, $event, eleve, isAnnotaion?) {
             if (evaluation !== undefined && ((evaluation.valeur !== evaluation.oldValeur) || (evaluation.oldAppreciation !== evaluation.appreciation))) {
                 if (evaluation.valeur !== undefined) {
                     evaluation.valeur = evaluation.valeur.replace(",",".");
                 }
-                if (evaluation.valeur === "") {
+                if (evaluation.valeur === "" && !isAnnotaion) {
                     evaluation.valeur = utils.getNN();
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
