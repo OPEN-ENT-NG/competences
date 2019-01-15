@@ -327,7 +327,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         if (o.getString("libelle") == null) {
             o.remove("libelle");
         }
-        if (o.getString("id_sousmatiere") == null) {
+        if (o.getLong("id_sousmatiere") == null) {
             o.remove("id_sousmatiere");
         }
         return o;
