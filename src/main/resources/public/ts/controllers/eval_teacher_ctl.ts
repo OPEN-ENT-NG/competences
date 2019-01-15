@@ -1021,7 +1021,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         let isEndSaisieDevoir = await $scope.checkEndSaisieSeul(devoir);
                         let isHeadTeacher = Utils.isHeadTeacher(
                             _.findWhere(evaluations.structure.classes.all, {id: devoir.id_groupe }));
-                        if (isEndSaisieDevoir || !isHeadTeacher) {
+                        if (isEndSaisieDevoir && !isHeadTeacher) {
                             $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, devoir);
                             devoir.selected = false;
                             $scope.devoirsUncancelable.push(devoir);
@@ -1795,15 +1795,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
 
-            // un fois que la classe est déterminée, on peut choisir la 1ère matière par défaut
-            // sur cette classe
+                // un fois que la classe est déterminée, on peut choisir la 1ère matière par défaut
+                // sur cette classe
                 //$scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
-            $scope.devoir.matiere = $filter('getMatiereClasse')($scope.structure.matieres.all, $scope.devoir.id_groupe, $scope.classes, $scope.search)[0];
-            $scope.devoir.id_matiere = $scope.devoir.matiere.id;
-            if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
-                // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
-                $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
-            }
+                $scope.devoir.matiere = $filter('getMatiereClasse')($scope.structure.matieres.all,
+                    $scope.devoir.id_groupe, $scope.classes, $scope.search)[0];
+                $scope.devoir.id_matiere = $scope.devoir.matiere.id;
+                if ($scope.devoir.matiere.sousMatieres !== undefined
+                    && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+                    // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
+                    $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+                }
 
             if ($scope.devoir.dateDevoir === undefined
                 && $scope.devoir.date !== undefined) {
