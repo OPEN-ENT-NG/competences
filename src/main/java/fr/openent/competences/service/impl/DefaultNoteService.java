@@ -789,7 +789,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             Long idPeriode = notesByPeriode.getKey();
             JsonObject moyennePeriodeClasse = new JsonObject();
-           // calcul de la moyenne de la classe si on des notes pour 1 trimestre
+           // calcul de la moyenne de la classe si on a des notes pour 1 trimestre
             if (idPeriode != null) {
                 moyennePeriodeClasse.put("id", idPeriode);
                 ArrayList<NoteDevoir> allNotes =
