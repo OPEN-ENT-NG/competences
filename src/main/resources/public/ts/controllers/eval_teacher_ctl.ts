@@ -1795,6 +1795,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
 
+            if ($location.path() === "/devoir/create") {
                 // un fois que la classe est déterminée, on peut choisir la 1ère matière par défaut
                 // sur cette classe
                 //$scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
@@ -1806,6 +1807,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
                     $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
                 }
+            }
 
             if ($scope.devoir.dateDevoir === undefined
                 && $scope.devoir.date !== undefined) {
