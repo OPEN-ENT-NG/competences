@@ -2466,8 +2466,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param evaluation évaluation à enregistrer
          * @param $event evenement déclenchant
          * @param eleve élève propriétaire de l'évaluation
+         * @param isAnnotaion sauvegarde depuis un champ de type annotation (evaluation devoir actuellement)
          */
-        $scope.saveAnnotationDevoirEleve = function (evaluation, $event, eleve) {
+        $scope.saveAnnotationDevoirEleve = function (evaluation, $event, eleve, isAnnotaion) {
             if (evaluation.id_annotation !== undefined
                 && evaluation.id_annotation > 0) {
                 if (evaluation.oldId_annotation !== evaluation.id_annotation && evaluation.oldValeur !== evaluation.valeur) {
@@ -2481,7 +2482,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             evaluation.competenceNotes.all[i].evaluation = -1;
                         }
                         evaluation.oldId_annotation = evaluation.id_annotation;
-                        if (evaluation.valeur === "NN") {
+                        if (evaluation.valeur === "NN"  && !isAnnotaion) {
                             $scope.calculerMoyenneEleve(eleve, $scope.releveNote.devoirs.all);
                             $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
                         }
@@ -2544,6 +2545,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param evaluation évaluation à enregistrer
          * @param $event evenement déclenchant
          * @param eleve élève propriétaire de l'évaluation
+         * @param isAnnotaion sauvegarde depuis un champ de type annotation (evaluation devoir actuellement)
          */
         $scope.saveNoteDevoirEleve = function (evaluation, $event, eleve, isAnnotaion?) {
             if (evaluation !== undefined && ((evaluation.valeur !== evaluation.oldValeur) || (evaluation.oldAppreciation !== evaluation.appreciation))) {
@@ -2595,7 +2597,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 $scope.deleteAnnotationDevoir(evaluation, true);
                             } else {
                                 evaluation.id_annotation = annotation.id;
-                                $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve);
+                                $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotaion);
                             }
                         } else {
                             if ((evaluation.oldValeur !== undefined && evaluation.oldValeur !== evaluation.valeur)
