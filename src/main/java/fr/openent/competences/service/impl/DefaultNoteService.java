@@ -273,60 +273,45 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
                             //Construction de la requête
-                            query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
-                                    " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve, " +
-                                    " devoirs.is_evaluated, null as annotation, devoirs.id_matiere " +
-                                    ((withMoyenneFinale)? ", moyenne_finale.id_eleve as id_eleve_moyenne_finale, moyenne_finale.moyenne " : " ") +
-                                    " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                                    " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".notes " +
-                                    " ON (devoirs.id = notes.id_devoir  " +
-                                    (( null != idsGroup)? ")" : " AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")") +
+                            query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient," +
+                                    " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve," +
+                                    " devoirs.is_evaluated, null as annotation, devoirs.id_matiere" +
+                                    " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs" +
+                                    " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".notes" +
+                                    " ON ( devoirs.id = notes.id_devoir  " +
+                                    (( null != idsGroup)? ")" : "AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")") +
                                     " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes ON " +
-                                    " (rel_devoirs_groupes.id_devoir = devoirs.id AND "+
+                                    "(rel_devoirs_groupes.id_devoir = devoirs.id AND "+
                                     ((null != idsGroup)? "rel_devoirs_groupes.id_groupe IN "+Sql.listPrepared(idsGroup.getList())+")" : "rel_devoirs_groupes.id_groupe = ?)") +
-                                    ((withMoyenneFinale)?("LEFT JOIN notes.moyenne_finale " +
-                                            " ON (devoirs.id_periode = moyenne_finale.id_periode " +
-                                            " AND devoirs.id_matiere = moyenne_finale.id_matiere " +
-                                            ((null != idsGroup)? "" : " AND  moyenne_finale.id_eleve IN " +  Sql.listPrepared(idEleves) )+
-                                            ((null != idsGroup)? " AND moyenne_finale.id_classe IN "+ Sql.listPrepared(idsGroup.getList())+ ")":
-                                                    " AND moyenne_finale.id_classe = ?) ")) : " " )+
                                     " WHERE devoirs.id_etablissement = ? " +
                                     ((matiereId != null)?" AND devoirs.id_matiere = ? ": " "));
 
                             setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
-
-
-                            if (withMoyenneFinale) {
-                                setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
-                            }
                             values.add(etablissementId);
 
                             if (matiereId != null) {
                                 values.add(matiereId);
                             }
-
                             if (periodeId != null) {
                                 query.append("AND devoirs.id_periode = ? ");
                                 values.add(periodeId);
                             }
                             query.append(" UNION ");
-                            query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, " +
-                                    " devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, " +
-                                    " rel_annotations_devoirs.id_eleve, devoirs.is_evaluated, " +
-                                    " rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere " +
-                                    ((withMoyenneFinale)? " , null as id_eleve_moyenne_finale , null as moyenne" : " " )+
-                                    " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs " +
-                                    " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs " +
+                            query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient," +
+                                    " devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id," +
+                                    " rel_annotations_devoirs.id_eleve, devoirs.is_evaluated," +
+                                    " rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere" +
+                                    " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs" +
+                                    " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs" +
                                     " ON (devoirs.id = rel_annotations_devoirs.id_devoir " +
                                             ((null != idsGroup)? ")": " AND rel_annotations_devoirs.id_eleve IN " +
                                                     Sql.listPrepared(idEleves) + ")")+
-                                    " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
+                                    " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes" +
                                     " ON (rel_devoirs_groupes.id_devoir = devoirs.id " +
                                             ((null != idsGroup)? "AND rel_devoirs_groupes.id_groupe IN "
                                                     +Sql.listPrepared(idsGroup.getList())+")": "AND rel_devoirs_groupes.id_groupe = ?) ")+
                                     " WHERE devoirs.id_etablissement = ? " +
                                     ((matiereId != null)?" AND devoirs.id_matiere = ? ": ""));
-
                             setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
                             values.add(etablissementId);
                             if (matiereId != null) {
@@ -336,9 +321,33 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 query.append("AND devoirs.id_periode = ? ");
                                 values.add(periodeId);
                             }
+                            query.append("ORDER BY date ASC ");
 
-                            query.append("ORDER BY date ASC ;");
-                            Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
+                            String queryWithMoyF = new String();
+                            if (withMoyenneFinale) {
+
+                                 queryWithMoyF = ("SELECT * FROM ( " + query + ") AS devoirs_notes_annotation " +
+                                        "FULL JOIN ( SELECT moyenne_finale.id_matiere AS id_matiere_moyf, " +
+                                        "moyenne_finale.id_eleve AS id_eleve_moyenne_finale, moyenne_finale.moyenne " +
+                                        "FROM notes.moyenne_finale WHERE "+
+                                        ((null != idsGroup)? "moyenne_finale.id_classe IN "+ Sql.listPrepared(idsGroup.getList()):
+                                         " moyenne_finale.id_eleve IN " +  Sql.listPrepared(idEleves) +
+                                                 " AND moyenne_finale.id_classe = ? " )+
+                                        ((null != periodeId)? "AND moyenne_finale.id_periode = ? " :"") +
+                                        ((null != matiereId)? "AND moyenne_finale.id_matiere = ?" : "") +
+                                        ") AS moyf ON ( moyf.id_eleve_moyenne_finale= devoirs_notes_annotation.id_eleve "+
+                                         "AND moyf.id_matiere_moyf = devoirs_notes_annotation.id_matiere)");
+
+                                setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
+                                if (periodeId != null) {
+                                    values.add(periodeId);
+                                }
+                                if (matiereId != null) {
+                                    values.add(matiereId);
+                                }
+                            }
+
+                            Sql.getInstance().prepared((withMoyenneFinale)? queryWithMoyF : query.toString(), values, Competences.DELIVERY_OPTIONS,
                                     validResultHandler(handler));
                         } else {
                             handler.handle(new Either.Left<>("Error While getting Available student "));

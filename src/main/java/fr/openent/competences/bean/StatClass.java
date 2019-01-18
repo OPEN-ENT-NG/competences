@@ -41,6 +41,10 @@ public class StatClass {
                 StatEleve statEleve = new StatEleve();
                 statEleve.setMoyenneFinale(moyFinale);
                 this.mapEleveStat.put(idEleve, statEleve);
+            }else{
+                if(this.mapEleveStat.get(idEleve).getMoyenneFinale() == null){
+                    this.mapEleveStat.get(idEleve).setMoyenneFinale(moyFinale);
+                }
             }
         }
         if(note != null) {
