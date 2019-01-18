@@ -43,6 +43,8 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -54,7 +56,10 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -972,7 +977,7 @@ public class NoteController extends ControllerHelper {
                                                                     //idClass sera mis à null dans le service qu'appelle cette méthode car on a besoin de idClasse
                                                                     addPositionnementAutoEleve(idEleve, idClasse,
                                                                             idMatiere, idEtablissement,
-                                                                        request,result, IdEleves,notesByDevoirByPeriodeClasse);
+                                                                            request,result, IdEleves,notesByDevoirByPeriodeClasse);
                                                                 } else {
                                                                     JsonObject error = new JsonObject()
                                                                             .put("error",
@@ -1148,47 +1153,47 @@ public class NoteController extends ControllerHelper {
         final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
         final String idPeriodeString = request.params().get("idPeriode");
 
-        // 1. On récupère les CompétencesNotes de toutes les domaines et de tous les élèves
-        notesService.getCompetencesNotesReleve(idEtablissement,
-                idClasse,
-                groupIds,
-                null,
+
+        // 1. On récupère les Compétences-Notes de tous les domaines et de tous les élèves
+        Future<JsonArray> compNotesFuture = Future.future();
+        notesService.getCompetencesNotesReleve(idEtablissement, idClasse, groupIds, null,
                 (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
                 null,
                 typeClasse,
-                true,
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isLeft()) {
-                            String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
-                            badRequest(request, message);
-                            log.error(message);
-                        }
-                        else {
-                            final JsonArray compNotes = event.right().getValue();
-                            // 2. On récupère les domaines du cycle auquel la classe est rattachée
-                            new DefaultDomaineService().getDomaines(idClasse,
-                                    new Handler<Either<String, JsonArray>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonArray> event) {
-                                            if (event.isLeft()) {
-                                                String message = "[DomaineDataForGraph] error while getting domaines";
-                                                badRequest(request, message);
-                                                log.error(message);
-                                            }
-                                            else {
-                                                final JsonArray domaines = event.right().getValue();
-
-                                                Renders.renderJson(request, linkCompNoteToLibelle(domaines,
-                                                        compNotes, idEleve));
-                                            }
-
-                                        }
-                                    });
-                        }
+                true, event -> {
+                    if (event.isLeft()) {
+                        String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
+                        badRequest(request, message);
+                    }
+                    else {
+                        compNotesFuture.complete(event.right().getValue());
                     }
                 });
+
+        // 2. En parallèle, On récupère les domaines du cycle auquel la classe est rattachée
+        Future<JsonArray> domainesCycleFuture = Future.future();
+        new DefaultDomaineService().getDomaines(idClasse, event -> {
+            if (event.isLeft()) {
+                String message = "[DomaineDataForGraph] error while getting domaines";
+                domainesCycleFuture.fail(message);
+            }
+            else {
+                domainesCycleFuture.complete(event.right().getValue());
+            }
+        });
+
+        // 3. On Lie les compétences-Notes à leur libellé
+        CompositeFuture.all(compNotesFuture, domainesCycleFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                Renders.renderJson(request, linkCompNoteToLibelle(domainesCycleFuture.result(),
+                        compNotesFuture.result(), idEleve));
+            } else {
+                String message = event.cause().getMessage();
+                badRequest(request, message);
+                log.error(message);
+            }
+        });
+
     }
 
     /**
@@ -1263,7 +1268,7 @@ public class NoteController extends ControllerHelper {
         for (int i=0; i< datas.size(); i++ ) {
             JsonObject data = datas.getJsonObject(i);
             if ( (checkFormative && data != null && data.getBoolean("formative") != null && !data.getBoolean("formative").booleanValue())
-                || !checkFormative) {
+                    || !checkFormative) {
                 String idMatiere = data.getString("id_matiere");
                 idMatiere = (idMatiere!= null)? idMatiere : "no_id_matiere";
                 if (!mapDataClasse.containsKey(idMatiere)) {

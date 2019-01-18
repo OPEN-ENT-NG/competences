@@ -198,7 +198,7 @@
         }
         @page{
             size : A4 ;
-            margin-top: 30px;
+            margin-top: 20px;
             margin-left : 1px;
             margin-right : 1px;
 
@@ -300,17 +300,17 @@
         </div>
         <div class="responsable">
             {{^relativesHaveTwoNames}}
-                {{#responsableLibelle}}
-                <div>{{.}}</div><br/>
-                {{/responsableLibelle}}
+            {{#responsableLibelle}}
+            <div>{{.}}</div><br/>
+            {{/responsableLibelle}}
             {{/relativesHaveTwoNames}}
             {{#relativesHaveTwoNames}}
-                {{#responsableLibelle}}
-                <div>{{firstLastName}}</div>
-                <div>{{secondLastName}}</div><br/>
-                <div>{{adresseResponsable}}</div><br/>
-                <div>{{codePostalRelative}}</div><br/>
-                {{/responsableLibelle}}
+            {{#responsableLibelle}}
+            <div>{{firstLastName}}</div>
+            <div>{{secondLastName}}</div><br/>
+            <div>{{adresseResponsable}}</div><br/>
+            <div>{{codePostalRelative}}</div><br/>
+            {{/responsableLibelle}}
             {{/relativesHaveTwoNames}}
         </div>
         {{/getResponsable}}
@@ -347,10 +347,15 @@
                 {{/teachers}}
             </td>
             {{#getProgramElements}}
-            <td style="text-align: left; word-wrap:break-word;{{{elementsProgrammeStyle}}}" class="secondSuivi onePadding">
+            {{#display}}
+            <td style="text-align: left; word-wrap:break-word;{{{style}}}" class="secondSuivi onePadding">
+            {{/display}}
                 {{elementsProgramme}}</td>
+
             {{/getProgramElements}}
-            <td style="text-align: left;word-wrap:break-word; {{{appreciationStyle}}}" class="thirdSuivi onePadding">
+            {{#display}}
+            <td style="text-align: left;word-wrap:break-word; {{{style}}}" class="thirdSuivi onePadding">
+                {{/display}}
                 {{appreciation}}</td>
             {{#getMoyenneEleve}}
             <td style="font-size: x-small; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>

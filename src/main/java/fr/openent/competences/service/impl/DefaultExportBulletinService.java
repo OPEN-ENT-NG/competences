@@ -55,6 +55,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
     // Keys Utils
+    private static final String APPRECIATION_KEY = "appreciation";
     private static final String PRINT_MATIERE_KEY = "printMatiere";
     private static final String ID = "id";
     private static final String ID_PARENT = "id_parent";
@@ -219,7 +220,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 if (params.getBoolean(SHOW_PROJECTS)) {
                     getProjets(idEleve, elevesMap, idPeriode, finalHandler);
                 }
-                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, finalHandler);
+                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe,  params.getBoolean(GET_PROGRAM_ELEMENT),
+                        finalHandler);
             }
             else {
                 log.error("[getExportBulletin] : Problème de parallelisation Lors de l'export des bulletin ");
@@ -232,11 +234,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
-                                                                 Map<String, JsonObject> elevesMap,
-                                                                 Vertx vertx, JsonObject config,
-                                                                 final int nbrEleves,
-                                                                 final AtomicBoolean answered,
-                                                                 JsonObject params) {
+                                                                        Map<String, JsonObject> elevesMap,
+                                                                        Vertx vertx, JsonObject config,
+                                                                        final int nbrEleves,
+                                                                        final AtomicBoolean answered,
+                                                                        JsonObject params) {
         final AtomicInteger elevesDone = new AtomicInteger();
     /*
         - Récupération des retards et absences
@@ -294,7 +296,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 "bulletin.pdf.xhtml", title, vertx, config);
                     }
                 }
-                
+
             }
         };
     }
@@ -710,10 +712,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                                                     elem.put("hasCommentaire", true)
                                                                             .put("commentaire",
                                                                                     troncateLibelle(com,
-                                                                                             MAX_SIZE_LIBELLE_PROJECT))
+                                                                                            MAX_SIZE_LIBELLE_PROJECT))
                                                                             .put("commentaireStyle",
                                                                                     fontSizeProject(com,
-                                                                                             MAX_SIZE_LIBELLE_PROJECT));
+                                                                                            MAX_SIZE_LIBELLE_PROJECT));
                                                                     Long typeElem = elem.getLong("type");
                                                                     if (3L == typeElem) {
                                                                         sethasProject(parcours,true);
@@ -784,9 +786,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 if (synthese != null) {
                                     String syntheseStr = synthese.getString("synthese");
                                     eleveObject.put("syntheseBilanPeriodque",troncateLibelle(syntheseStr,
-                                             MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
+                                            MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
                                     eleveObject.put("syntheseBilanPeriodqueStyle",fontSize(syntheseStr,
-                                             MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
+                                            MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));
                                 }
                                 serviceResponseOK(answer, finalHandler, count, idEleve,
                                         GET_SYNTHESE_BILAN_PERIO_METHOD);
@@ -830,8 +832,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         JsonObject appreciationCPE = event.right().getValue();
 
                         if (appreciationCPE != null) {
-                            String app = troncateLibelle(appreciationCPE.getString("appreciation"),
-                                     MAX_SIZE_APPRECIATION_CPE);
+                            String app = troncateLibelle(appreciationCPE.getString(APPRECIATION_KEY),
+                                    MAX_SIZE_APPRECIATION_CPE);
                             eleveObject.put("appreciationCPE",app)
                                     .put("appreciationCPEStyle",fontSize(app,  MAX_SIZE_APPRECIATION_CPE));
                         }
@@ -1151,9 +1153,73 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return "";
     }
 
+    // La taille de la police varie en fonction du nombre de matières affichées, du fait qu'on affiche la colonne des
+    // éléments du programme et aussi du nombre de caractères de l'appréciation ou du libellé des éléments du programme
+    private void setFontSizeOfSuivi (JsonArray subjects, boolean withProgramElement) {
+        String defaultValue = "font-size: auto !important;";
+        String value = defaultValue;
+        JsonObject fontstyle = new JsonObject();
+
+        int nbSubjectOnLimit = 0;
+        int nbSubject = subjects.size();
+        for (int i=0; i < nbSubject; i++) {
+            JsonObject subject = subjects.getJsonObject(i);
+            subject.put("display", fontstyle);
+
+            int maxCaractere;
+            String elementsProgramme = troncateLibelle(subject.getString(ELEMENTS_PROGRAMME), MAX_SIZE_LIBELLE);
+            String appreciation =  troncateLibelle(subject.getString(APPRECIATION_KEY), MAX_SIZE_LIBELLE);
+
+            if (withProgramElement) {
+                maxCaractere = Math.max(elementsProgramme.length(), appreciation.length());
+            }
+            else {
+                maxCaractere = appreciation.length();
+            }
+            if (maxCaractere > (MAX_SIZE_LIBELLE /2 + 24)) {
+                nbSubjectOnLimit ++;
+            }
+        }
+
+        int nbSubjectUnderLimit = nbSubject - nbSubjectOnLimit;
+
+        if ((nbSubjectOnLimit <= 6 && nbSubject <= 6)
+                || (nbSubject <= 6 && withProgramElement)
+                || (!withProgramElement && nbSubjectOnLimit <= 10)) {
+            value = defaultValue;
+        }
+        else {
+            if (7 == nbSubject
+                    || (nbSubject <= 11 && nbSubjectUnderLimit >= nbSubject -1 )) {
+                value = "font-size: 11px !important;";
+            } else {
+                if (8 == nbSubject) {
+                    value = "font-size: 10.124px !important;";
+                } else {
+                    if (9 == nbSubject
+                            || nbSubject <= 13 && nbSubjectOnLimit <= 1) {
+                        value = "font-size: 10px !important;";
+                    } else {
+                        if (nbSubject <= 13 && nbSubjectOnLimit <= 2) {
+                            value = "font-size: 9.5px !important;";
+                        } else {
+                            if (10 == nbSubject) {
+                                value = "font-size: 8.7px !important;";
+                            } else {
+                                value = "font-size: 8.5px !important;";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        fontstyle.put("style", value);
+    }
+
     @Override
     public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
                                final JsonObject classe,
+                               boolean getProgrammeElement,
                                Handler<Either<String, JsonObject>> finalHandler ) {
 
         logBegin(GET_SUIVI_ACQUIS_METHOD, idEleve);
@@ -1184,7 +1250,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             public void handle(Either<String, JsonArray> event) {
                                 if (event.isLeft()) {
                                     String message =  event.left().getValue();
-                                    log.error("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message + " " + count);
+                                    log.error("["+ GET_SUIVI_ACQUIS_METHOD + "] :" + idEleve + " " + message + " "
+                                            + count);
                                     if (message.contains(TIME) && !answer.get()) {
                                         count ++;
                                         bilanPeriodiqueService.getSuiviAcquis(idEtablissement, idPeriode, idEleve,
@@ -1196,7 +1263,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         }
                                         JsonArray errors = eleveObject.getJsonArray(ERROR);
                                         errors.add(GET_SUIVI_ACQUIS_METHOD);
-                                        serviceResponseOK(answer, finalHandler, count, idEleve, GET_SUIVI_ACQUIS_METHOD);
+                                        serviceResponseOK(answer, finalHandler, count, idEleve,
+                                                GET_SUIVI_ACQUIS_METHOD);
                                         try {
                                             finalize();
                                         } catch (Throwable throwable) {
@@ -1220,6 +1288,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         }
 
                                     }
+                                    setFontSizeOfSuivi(res, getProgrammeElement);
+
                                     eleveObject.put("suiviAcquis", res).put("hasSuiviAcquis", res.size() > 0);
 
                                     serviceResponseOK(answer, finalHandler, count, idEleve, GET_SUIVI_ACQUIS_METHOD);
@@ -1256,55 +1326,55 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                 domainesService.getArbreDomaines(idClasse, idEleve, null,
                         new Handler<Either<String, JsonArray>>() {
-                    private int count = 1;
-                    private AtomicBoolean answer = new AtomicBoolean(false);
+                            private int count = 1;
+                            private AtomicBoolean answer = new AtomicBoolean(false);
 
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isLeft()) {
-                            String message = event.left().getValue();
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if (event.isLeft()) {
+                                    String message = event.left().getValue();
 
-                            if (message.contains(TIME) && !answer.get()) {
-                                count++;
-                                domainesService.getArbreDomaines(idClasse, idEleve, null, this);
+                                    if (message.contains(TIME) && !answer.get()) {
+                                        count++;
+                                        domainesService.getArbreDomaines(idClasse, idEleve, null, this);
 
-                            } else {
-                                if (eleveObject.getJsonArray(ERROR) == null) {
-                                    eleveObject.put(ERROR, new JsonArray());
-                                }
-                                JsonArray errors = eleveObject.getJsonArray(ERROR);
-                                errors.add(GET_ARBRE_DOMAINE_METHOD);
-                                serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
-                            }
-                        } else {
-                            JsonArray domaines = event.right().getValue();
-                            JsonArray domainesToDisplay = new JsonArray();
-
-                            Map<Long,Boolean> idDomaineParent = new HashMap<>();
-                            for (int i=0; i<domaines.size(); i++) {
-                                JsonObject domaine = domaines.getJsonObject(i);
-                                Boolean isEvaluable = domaine.getBoolean(EVALUATED);
-                                Long idParent = domaine.getLong(ID_PARENT);
-                                Boolean isDomaineParent = (idParent == 0L);
-                                domaine.put(IS_DOMAINE_PARENT, isDomaineParent);
-
-                                if (isDomaineParent == true){
-                                    idDomaineParent.put(domaine.getLong(ID), isEvaluable);
-                                }
-                                if (isEvaluable == true) {
-                                    if (isDomaineParent == true) {
-                                        domainesToDisplay.add(domaine);
+                                    } else {
+                                        if (eleveObject.getJsonArray(ERROR) == null) {
+                                            eleveObject.put(ERROR, new JsonArray());
+                                        }
+                                        JsonArray errors = eleveObject.getJsonArray(ERROR);
+                                        errors.add(GET_ARBRE_DOMAINE_METHOD);
+                                        serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
                                     }
-                                    else if (idDomaineParent.get(idParent) == false){
-                                            domainesToDisplay.add(domaine);
+                                } else {
+                                    JsonArray domaines = event.right().getValue();
+                                    JsonArray domainesToDisplay = new JsonArray();
+
+                                    Map<Long,Boolean> idDomaineParent = new HashMap<>();
+                                    for (int i=0; i<domaines.size(); i++) {
+                                        JsonObject domaine = domaines.getJsonObject(i);
+                                        Boolean isEvaluable = domaine.getBoolean(EVALUATED);
+                                        Long idParent = domaine.getLong(ID_PARENT);
+                                        Boolean isDomaineParent = (idParent == 0L);
+                                        domaine.put(IS_DOMAINE_PARENT, isDomaineParent);
+
+                                        if (isDomaineParent == true){
+                                            idDomaineParent.put(domaine.getLong(ID), isEvaluable);
+                                        }
+                                        if (isEvaluable == true) {
+                                            if (isDomaineParent == true) {
+                                                domainesToDisplay.add(domaine);
+                                            }
+                                            else if (idDomaineParent.get(idParent) == false){
+                                                domainesToDisplay.add(domaine);
+                                            }
+                                        }
                                     }
+                                    eleveObject.put("domaines", domainesToDisplay);
+                                    serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
                                 }
                             }
-                            eleveObject.put("domaines", domainesToDisplay);
-                            serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
-                        }
-                    }
-                });
+                        });
             }
         }
     }
@@ -1377,8 +1447,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if (posConverti != -1) {
                         val = String.valueOf(posConverti);
                     }
+                    printMatiere = true;
                 }
-                printMatiere = true;
+
                 matiere.put(POSITIONNEMENT, val);
             }
         }
@@ -1389,20 +1460,18 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         if(appreciation != null) {
             app = troncateLibelle(
-                    appreciation.getString("appreciation"), MAX_SIZE_LIBELLE);
+                    appreciation.getString(APPRECIATION_KEY), MAX_SIZE_LIBELLE);
             printMatiere = true;
         }
 
         // Construction des libelles et de leur style.
         matiere.put(ELEMENTS_PROGRAMME, elementsProgramme)
-                .put("elementsProgrammeStyle", fontSize(elementsProgramme,
-                        MAX_SIZE_LIBELLE))
 
                 .put(MOYENNE_CLASSE, (moyenneClasse != null) ?
                         moyenneClasse.getValue(MOYENNE) : "")
 
-                .put("appreciation",app)
-                .put("appreciationStyle", fontSize(app, MAX_SIZE_LIBELLE))
+                .put(APPRECIATION_KEY,app)
+
                 .put(PRINT_MATIERE_KEY, printMatiere);
 
         JsonArray teachers = matiere.getJsonArray("teachers");
@@ -1513,7 +1582,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 } else {//if same adress with different lastName
                                     JsonObject responsableWithDifferentName = new JsonObject();
                                     if( "M.".equals(civiliteResponsableToCheck)) {
-                                       responsableWithDifferentName.put("firstLastName",civiliteResponsableToCheck+" "+ lastNameResponsableToCheck +" et")
+                                        responsableWithDifferentName.put("firstLastName",civiliteResponsableToCheck+" "+ lastNameResponsableToCheck +" et")
                                                 .put("secondLastName", civiliteResponsable+" "+lastNameResponsable)
                                                 .put("adresseResponsable",responsableOldLibelle.getValue(1))
                                                 .put("codePostalRelative",responsableOldLibelle.getValue(2));
