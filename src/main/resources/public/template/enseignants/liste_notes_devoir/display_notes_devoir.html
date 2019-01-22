@@ -105,7 +105,6 @@
 
         <input type="button" ng-click="goTo('/devoir/' + currentDevoir.id + '/edit')" i18n-value="evaluations.test.edit"
                ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
-               ng-if="!isChefEtab()"
                class="right-magnet" ng-class="{'button-edit-devoir' : currentDevoir.competences.all.length > 0,
                                         'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
         <button ng-click="printOption.display =true"

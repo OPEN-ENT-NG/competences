@@ -18,29 +18,33 @@
 package fr.openent.competences.security;
 
 import fr.openent.competences.security.utils.FilterDevoirUtils;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.http.Binding;
 import fr.wseduc.webutils.http.Renders;
-import org.entcore.common.http.BaseServer;
 import org.entcore.common.http.filter.ResourcesProvider;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 
 
 /**
  * Created by ledunoiss on 19/10/2016.
  */
-public class AccessEvaluationFilter implements ResourcesProvider   {
+public class AccessEvaluationFilter implements ResourcesProvider {
 
     @Override
     public void authorize(final HttpServerRequest resourceRequest, Binding binding,
                           final UserInfos user, final Handler<Boolean> handler) {
 
+        boolean isAdmin = WorkflowActionUtils.hasRight(user, WorkflowActions.ADMIN_RIGHT.toString());
+        resourceRequest.pause();
 
-        switch (user.getType()) {
-            case "Teacher" : {
-                resourceRequest.pause();
+        if (isAdmin) {
+            resourceRequest.resume();
+            handler.handle(true);
+        } else {
+            if ("Teacher".equals(user.getType())) {
 
                 if (!resourceRequest.params().contains("idDevoir")) {
                     handler.handle(false);
@@ -48,25 +52,18 @@ public class AccessEvaluationFilter implements ResourcesProvider   {
                 try {
                     final Long idDevoir = Long.parseLong(resourceRequest.params().get("idDevoir"));
 
-                    new FilterDevoirUtils().validateAccessDevoir(idDevoir, user, new Handler<Boolean>() {
-                        @Override
-                        public void handle(Boolean isValid) {
+                    new FilterDevoirUtils().validateAccessDevoir(idDevoir, user, isValid -> {
                             resourceRequest.resume();
                             handler.handle(isValid);
-                        }
                     });
                 } catch (NumberFormatException e) {
                     resourceRequest.resume();
                     Renders.badRequest(resourceRequest, "Error : idNote must be a long object");
                 }
-            }
-            break;
-            case "Personnel" : {
-                handler.handle(true);
-            }
-            break;
-            default : {
+            } else {
+                resourceRequest.resume();
                 handler.handle(false);
+
             }
         }
     }

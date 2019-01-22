@@ -3164,9 +3164,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     moment($scope.devoir.dateDevoir), "days") < 0);
                 $scope.errDateDevoir = !(moment($scope.devoir.dateDevoir).isBetween(
                     moment(start_datePeriode), moment(end_datePeriode), 'days', '[]'));
-                $scope.endSaisie = moment($scope.devoir.dateDevoir).isAfter(
+                $scope.endSaisie = (moment($scope.devoir.dateDevoir).isAfter(
                     moment(date_saisie), 'days', '[') || moment(new Date()).isAfter(
-                    moment(date_saisie), 'days', '[');
+                    moment(date_saisie), 'days', '[')) && !$scope.isChefEtab();
 
                 $scope.devoir.controlledDate = !$scope.errDatePubli && !$scope.errDateDevoir && !$scope.endSaisie;
             }

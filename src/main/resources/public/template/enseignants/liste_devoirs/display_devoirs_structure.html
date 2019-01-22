@@ -122,8 +122,10 @@
 <section class="toggle-buttons" ng-class="{ hide: selected.devoirs.list.length == 0 }">
     <div class="toggle">
         <div class="row">
-            <button ng-show="selected.devoirs.list.length === 1 && !isChefEtab()
-                                && !checkEndSaisie(selected.devoirs.list[0])"
+            <button ng-show="selected.devoirs.list.length === 1 &&
+            ( (!isChefEtab() && !checkEndSaisie(selected.devoirs.list[0]))
+               || isChefEtab()
+            )"
                     class="cell ng-scope"
                     ng-click="goTo('/devoir/' + selected.devoirs.list[0].id + '/edit')">
                 <i18n><span class="no-style">evaluations.test.edit</span></i18n>
