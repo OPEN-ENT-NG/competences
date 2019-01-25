@@ -3665,13 +3665,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.moyenneFinale === ""){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.moyenneFinale !== "") {
 
-                       /* if (eleve.moyenneFinale === "" && eleve.moyenne === "") {
-                            eleve.moyenneFinale = "";
-                        }
-                        else */
                         if(eleve.oldMoyenneFinale != parseFloat(eleve.moyenneFinale)) {
                             $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
                                 eleve.moyenneFinaleIsSet = true;
+                                eleve.oldMoyenneFinale = eleve.moyenneFinale ;
                                 if (updateHistorique) {
                                     $scope.updateHistorique(eleve, 'moyenneFinale');
                                 }
@@ -3690,7 +3687,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
                 else{
-                    if ((eleve.oldMoyenneFinale.toUpperCase() !== "NN") || (eleve.moyenne.toUpperCase() !== "NN")) {
+                    if ((eleve.oldMoyenneFinale !== "NN") || (eleve.moyenne !== "NN")) {
                         notify.error(lang.translate("error.average.outbound"));
                         eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     }
