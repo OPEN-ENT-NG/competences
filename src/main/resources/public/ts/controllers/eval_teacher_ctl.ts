@@ -2586,7 +2586,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         });
                     } else {
                         // On est dans le cas d'une sauvegarde d'une note ou d'annotation
-                        if (evaluation.data.id !== undefined && evaluation.id === undefined) {
+                        if (evaluation.data !== undefined && evaluation.data.id !== undefined && evaluation.id === undefined) {
                             evaluation.id = evaluation.data.id;
                         }
                         let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
@@ -2733,6 +2733,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             eleve.getMoyenne(devoirs).then(() => {
                 if(!eleve.moyenneFinaleIsSet){
                     eleve.moyenneFinale = eleve.moyenne;
+                    eleve.oldMoyenneFinale = eleve.moyenne;
                 }
                 utils.safeApply($scope);
             });
@@ -3663,28 +3664,36 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
                     eleve.moyenneFinale === ""){
                     if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.moyenneFinale !== "") {
-                        if (eleve.moyenneFinale === "" && eleve.moyenne === "") {
+
+                       /* if (eleve.moyenneFinale === "" && eleve.moyenne === "") {
                             eleve.moyenneFinale = "";
                         }
-                        else if (eleve.moyenneFinale === "" && eleve.moyenne !== undefined) {
-                            eleve.moyenneFinale = eleve.moyenne;
-                        }
-                        $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
-                            eleve.moyenneFinaleIsSet = true;
-                            if (updateHistorique) {
-                                $scope.updateHistorique(eleve, 'moyenneFinale');
-                            }
+                        else */
+                        if(eleve.oldMoyenneFinale != parseFloat(eleve.moyenneFinale)) {
+                            $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
+                                eleve.moyenneFinaleIsSet = true;
+                                if (updateHistorique) {
+                                    $scope.updateHistorique(eleve, 'moyenneFinale');
+                                }
+                                if (eleve.moyenneFinale === "" && eleve.moyenne !== undefined) {
+                                    eleve.moyenneFinaleIsSet = false;
+                                    eleve.moyenneFinale = eleve.moyenne;
+                                    eleve.oldMoyenneFinale = eleve.moyenneFinale;
+                                }
+                                utils.safeApply($scope);
+                            });
                             utils.safeApply($scope);
-                        });
-                        utils.safeApply($scope);
+                        }
                     }
                     else {
-                        eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                         eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     }
                 }
-                else if ((eleve.oldMoyenneFinale !== "NN") || (eleve.moyenne !== "NN")) {
-                    notify.error(lang.translate("error.average.outbound"));
-                    eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                else{
+                    if ((eleve.oldMoyenneFinale.toUpperCase() !== "NN") || (eleve.moyenne.toUpperCase() !== "NN")) {
+                        notify.error(lang.translate("error.average.outbound"));
+                        eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                    }
                 }
             }else{
                 eleve.moyenneFinale = eleve.oldMoyenneFinale;

@@ -274,7 +274,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                             //Construction de la requête
                             query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient," +
-                                    " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, notes.id_eleve," +
+                                    " devoirs.diviseur, devoirs.ramener_sur, notes.valeur, notes.id, notes.id_eleve," +
                                     " devoirs.is_evaluated, null as annotation, devoirs.id_matiere" +
                                     " FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs" +
                                     " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + ".notes" +
@@ -336,7 +336,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                         ((null != periodeId)? "AND moyenne_finale.id_periode = ? " :"") +
                                         ((null != matiereId)? "AND moyenne_finale.id_matiere = ?" : "") +
                                         ") AS moyf ON ( moyf.id_eleve_moyenne_finale= devoirs_notes_annotation.id_eleve "+
-                                         "AND moyf.id_matiere_moyf = devoirs_notes_annotation.id_matiere)");
+                                         "AND moyf.id_matiere_moyf = devoirs_notes_annotation.id_matiere" +
+                                         "AND moyenne_finale.id_periode = devoirs_notes_annotation.id_periode )");
 
                                 setParamGetNotesReleve(idsGroup,idEleves,classeId, values);
                                 if (periodeId != null) {
@@ -958,18 +959,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void getNotesAndMoyFinaleByClasseAndPeriode(List<String> idsEleve, JsonArray idsGroups, Integer idPeriode, Handler<Either<String, JsonArray>> handler) {
         JsonArray values =new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT notes.id_eleve AS id_eleve_notes, moyenne_finale.id_eleve AS id_eleve_moyf, devoirs.id, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe, "+
-              "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, notes.valeur, " +
-              "moyenne_finale.moyenne AS moyenne_finale " +
-              "FROM notes.devoirs LEFT JOIN notes.notes "+
-              "ON (devoirs.id = notes.id_devoir AND notes.id_eleve IN  "+Sql.listPrepared(idsEleve)+" ) " +
-              "LEFT JOIN notes.moyenne_finale ON (devoirs.id_periode = moyenne_finale.id_periode AND " +
-              "devoirs.id_matiere = moyenne_finale.id_matiere AND moyenne_finale.id_eleve IN  "+Sql.listPrepared(idsEleve)+" ) " +
-              "INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir AND rel_devoirs_groupes.id_groupe IN "+Sql.listPrepared(idsGroups.getList())+" ) " +
-              "WHERE ";
-        for (String idEleve: idsEleve ) {
-            values.add(idEleve);
-        }
+        String query = "SELECT * FROM "+
+               "(SELECT notes.id_eleve AS id_eleve_notes, devoirs.id, devoirs.id_periode, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe, "+
+              "rel_devoirs_groupes.type_groupe, devoirs.coefficient, devoirs.diviseur, devoirs.ramener_sur, notes.valeur " +
+              "FROM notes.devoirs LEFT JOIN notes.notes ON (devoirs.id = notes.id_devoir AND "+
+              "notes.id_eleve IN  "+Sql.listPrepared(idsEleve)+" ) " +
+              "INNER JOIN notes.rel_devoirs_groupes ON (devoirs.id = rel_devoirs_groupes.id_devoir AND "+
+              "rel_devoirs_groupes.id_groupe IN "+Sql.listPrepared(idsGroups.getList())+" ) " ;
+
         for (String idEleve: idsEleve ) {
             values.add(idEleve);
         }
@@ -977,11 +974,22 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
              values.add(idGroupe);
         }
         if(idPeriode != null){
-            query += "devoirs.id_periode = ?";
+            query += "WHERE devoirs.id_periode = ?";
             values.add(idPeriode);
         }
-        query += " ORDER BY notes.id_eleve , devoirs.id_matiere";
-
+        query += " ORDER BY notes.id_eleve , devoirs.id_matiere ) AS devoirs_notes " +
+                "FULL JOIN ( SELECT moyenne_finale.id_periode AS id_periode_moyf, moyenne_finale.id_eleve AS id_eleve_moyf, "+
+                "moyenne_finale.moyenne AS moyenne_finale, moyenne_finale.id_matiere AS id_mat_moyf " +
+                "FROM notes.moyenne_finale WHERE moyenne_finale.id_eleve IN "+ Sql.listPrepared(idsEleve)+
+                ((idPeriode != null)? " AND moyenne_finale.id_periode = ? )": ")")+" AS moyf "+
+                "ON ( devoirs_notes.id_matiere = moyf.id_mat_moyf AND devoirs_notes.id_eleve_notes = moyf.id_eleve_moyf "+
+                "AND devoirs_notes.id_periode = moyf.id_periode_moyf )";
+        for (String idEleve: idsEleve ) {
+            values.add(idEleve);
+        }
+        if(idPeriode != null){
+            values.add(idPeriode);
+        }
         Sql.getInstance().prepared(query, values,validResultHandler(handler));
     }
 
@@ -995,277 +1003,279 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         List<String> idsEleve = new ArrayList();
 
         Utils.getEleveClasse(eb, idsEleve, idClasse, idPeriode, new Handler<Either<String, List<Eleve>>>() {
-                    @Override
-                    public void handle(Either<String, List<Eleve>> responseListEleve) {
+            @Override
+            public void handle(Either<String, List<Eleve>> responseListEleve) {
 
-                        if (responseListEleve.isLeft()) {
-                            handler.handle(new Either.Left<>("eleves not found"));
-                            log.error(responseListEleve.left().getValue());
+                if (responseListEleve.isLeft()) {
+                    handler.handle(new Either.Left<>("eleves not found"));
+                    log.error(responseListEleve.left().getValue());
 
-                        } else {
-                            List<Eleve> eleves = responseListEleve.right().getValue();
+                } else {
+                    List<Eleve> eleves = responseListEleve.right().getValue();
 
-                            if (idsEleve.size() == 0) {
-                                handler.handle(new Either.Left<>("eleves not found"));
-                            } else {
-                                //on récupère les groups de la classe
-                                Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections
-                                                .JsonArray()
-                                                .add(idClasse),
-                                        new Handler<Either<String, JsonArray>>() {
-                                            @Override
-                                            public void handle(
-                                                    Either<String, JsonArray> responseQuerry) {
-                                                //List qui contient la idClasse + tous les ids groupes
-                                                // de la classe
-                                                JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
-                                                final String nameClasse;
+                    if (idsEleve.size() == 0) {
+                        handler.handle(new Either.Left<>("eleves not found"));
+                    } else {
+                        //get groups of the class
+                        Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections
+                                        .JsonArray()
+                                        .add(idClasse),
+                                new Handler<Either<String, JsonArray>>() {
+                                    @Override
+                                    public void handle(
+                                            Either<String, JsonArray> responseQuerry) {
+                                        JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
+                                        final String nameClasse;
 
-                                                if (responseQuerry.isLeft()) {
-                                                    String error = responseQuerry.left().getValue();
-                                                    log.error(error);
-                                                    handler.handle(new Either.Left<>(error));
-                                                } else {
-                                                    JsonArray idClasseGroups = responseQuerry.right().getValue();
+                                        if (responseQuerry.isLeft()) {
+                                            String error = responseQuerry.left().getValue();
+                                            log.error(error);
+                                            handler.handle(new Either.Left<>(error));
+                                        } else {
+                                            JsonArray idClasseGroups = responseQuerry.right().getValue();
 
-                                                    if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
-                                                        idsGroups.add(idClasse);
-                                                    } else {
-                                                        idsGroups.add( idClasseGroups.getJsonObject(0)
-                                                                .getString("id_classe") );
-                                                        idsGroups.addAll(idClasseGroups.getJsonObject(0)
-                                                                .getJsonArray("id_groupes"));
-                                                        nameClasse = idClasseGroups.getJsonObject(0)
-                                                                .getString("name_classe");
+                                            if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
+                                                idsGroups.add(idClasse);
+                                            } else {
+                                                idsGroups.add( idClasseGroups.getJsonObject(0)
+                                                        .getString("id_classe") );
+                                                idsGroups.addAll(idClasseGroups.getJsonObject(0)
+                                                        .getJsonArray("id_groupes"));
+                                                nameClasse = idClasseGroups.getJsonObject(0)
+                                                        .getString("name_classe");
 
-                                                        // 2- On récupère les notes des eleves
-                                                        getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, new Handler<Either<String, JsonArray>>() {
-                                                                    @Override
-                                                                    public void handle(Either<String, JsonArray> response) {
-                                                                        if (response.isLeft()) {
-                                                                            handler.handle(new Either.Left<>("eval not found"));
-                                                                            log.error(response.left().getValue());
+                                                // 2- get the student's notes
+                                                getNotesAndMoyFinaleByClasseAndPeriode(idsEleve, idsGroups, idPeriode, new Handler<Either<String, JsonArray>>() {
+                                                    @Override
+                                                    public void handle(Either<String, JsonArray> response) {
+                                                        if (response.isLeft()) {
+                                                            handler.handle(new Either.Left<>("eval not found"));
+                                                            log.error(response.left().getValue());
 
+                                                        } else {
+                                                            JsonArray respNotesMoysFinales = response.right().getValue();
+                                                            if (respNotesMoysFinales.size() == 0) {
+                                                                handler.handle(new Either.Left<>("eval not found"));
+                                                            } else {
+                                                                if(idPeriode != null){}
+                                                                Map<String, Map<String, Double>> mapIdEleveIdMatMoy = new HashMap<>();
+                                                                Map<String, Map<String, List<NoteDevoir>>> mapIdEleveIdMatListNotes = new HashMap<>();
+                                                                for (int i = 0; i < respNotesMoysFinales.size(); i++) {
+                                                                    JsonObject respNoteMoyFinale = respNotesMoysFinales.getJsonObject(i);
+
+                                                                    //get the moysFinales => set mapIdEleveIdMatMoy
+                                                                    if (respNoteMoyFinale.getString("moyenne_finale") != null) {
+
+                                                                        if (mapIdEleveIdMatMoy.containsKey(respNoteMoyFinale.getString("id_eleve_moyf"))) {
+                                                                            Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(respNoteMoyFinale.getString("id_eleve_moyf"));
+
+                                                                            if (!mapIdMatMoy.containsKey(respNoteMoyFinale.getString("id_mat_moyf"))) {
+                                                                                mapIdMatMoy.put(respNoteMoyFinale.getString("id_mat_moyf"),
+                                                                                        Double.valueOf(respNoteMoyFinale.getString("moyenne_finale")));
+                                                                            }
                                                                         } else {
-                                                                            JsonArray respNotesMoysFinales = response.right().getValue();
-                                                                            if (respNotesMoysFinales.size() == 0) {
-                                                                                handler.handle(new Either.Left<>("eval not found"));
+                                                                            Map<String, Double> newMapIdMatMoy = new HashMap<>();
+                                                                            newMapIdMatMoy.put(respNoteMoyFinale.getString("id_mat_moyf"),
+                                                                                    Double.valueOf(respNoteMoyFinale.getString("moyenne_finale")));
+                                                                            mapIdEleveIdMatMoy.put(respNoteMoyFinale.getString("id_eleve_moyf"), newMapIdMatMoy);
+                                                                        }
+
+                                                                    } else {//no final average => set mapIdEleveIdMatListNotes
+                                                                        if (respNoteMoyFinale.getString("id_eleve_notes") != null) {
+                                                                            if (mapIdEleveIdMatListNotes.containsKey(respNoteMoyFinale.getString("id_eleve_notes"))) {
+
+                                                                                Map<String, List<NoteDevoir>> mapIdMatListNotes =
+                                                                                        mapIdEleveIdMatListNotes.get(respNoteMoyFinale.getString("id_eleve_notes"));
+                                                                                if (mapIdMatListNotes.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
+
+                                                                                    mapIdMatListNotes.get(respNoteMoyFinale.getString("id_matiere"))
+                                                                                            .add(new NoteDevoir(
+                                                                                                    Double.valueOf(respNoteMoyFinale.getString("valeur")),
+                                                                                                    Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
+                                                                                                    respNoteMoyFinale.getBoolean("ramener_sur"),
+                                                                                                    Double.valueOf(respNoteMoyFinale.getString("coefficient"))));
+
+                                                                                } else {
+                                                                                    List<NoteDevoir> newListNotes = new ArrayList<>();
+                                                                                    newListNotes.add(new NoteDevoir(
+                                                                                            Double.valueOf(respNoteMoyFinale.getString("valeur")),
+                                                                                            Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
+                                                                                            respNoteMoyFinale.getBoolean("ramener_sur"),
+                                                                                            Double.valueOf(respNoteMoyFinale.getString("coefficient"))));
+                                                                                    mapIdMatListNotes.put(
+                                                                                            respNoteMoyFinale.getString("id_matiere"),
+                                                                                            newListNotes);
+                                                                                }
                                                                             } else {
-                                                                                Map<String, Map<String, Double>> mapIdEleveIdMatMoy = new HashMap<>();
-                                                                                Map<String, Map<String, List<NoteDevoir>>> mapIdEleveIdMatListNotes = new HashMap<>();
-
-                                                                                for (int i = 0; i < respNotesMoysFinales.size(); i++) {
-                                                                                    JsonObject respNoteMoyFinale = respNotesMoysFinales.getJsonObject(i);
-                                                                                    //récupérer les moysFinales => set mapIdEleveIdMatMoy
-                                                                                    if (respNoteMoyFinale.getString("moyenne_finale") != null) {
-
-                                                                                        if (mapIdEleveIdMatMoy.containsKey(respNoteMoyFinale.getString("id_eleve_moyf"))) {
-                                                                                            Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(respNoteMoyFinale.getString("id_eleve_moyf"));
-                                                                                            // meme eleve changement de matiere
-                                                                                            if (!mapIdMatMoy.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
-                                                                                                mapIdMatMoy.put(respNoteMoyFinale.getString("id_matiere"),
-                                                                                                        Double.valueOf(respNoteMoyFinale.getString("moyenne_finale")));
-                                                                                            }
-                                                                                        } else {//nouvel eleve
-                                                                                            Map<String, Double> newMapIdMatMoy = new HashMap<>();
-                                                                                            newMapIdMatMoy.put(respNoteMoyFinale.getString("id_matiere"),
-                                                                                                    Double.valueOf(respNoteMoyFinale.getString("moyenne_finale")));
-                                                                                            mapIdEleveIdMatMoy.put(respNoteMoyFinale.getString("id_eleve_moyf"), newMapIdMatMoy);
-                                                                                        }
-
-                                                                                    } else {//pas de moyFinale => set mapIdEleveIdMatListNotes
-                                                                                        if(respNoteMoyFinale.getString("id_eleve_notes")!= null){
-                                                                                            if (mapIdEleveIdMatListNotes.containsKey(respNoteMoyFinale.getString("id_eleve_notes"))) {
-
-                                                                                                Map<String, List<NoteDevoir>> mapIdMatListNotes =
-                                                                                                        mapIdEleveIdMatListNotes.get(respNoteMoyFinale.getString("id_eleve_notes"));
-                                                                                                if (mapIdMatListNotes.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
-
-                                                                                                    mapIdMatListNotes.get(respNoteMoyFinale.getString("id_matiere"))
-                                                                                                            .add(new NoteDevoir(
-                                                                                                                    Double.valueOf(respNoteMoyFinale.getString("valeur")),
-                                                                                                                    Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
-                                                                                                                    respNoteMoyFinale.getBoolean("ramener_sur"),
-                                                                                                                    Double.valueOf(respNoteMoyFinale.getString("coefficient"))));
-
-                                                                                                } else {//nouvelle matière dc nouvelle liste de notes
-                                                                                                    List<NoteDevoir> newListNotes = new ArrayList<>();
-                                                                                                    newListNotes.add(new NoteDevoir(
-                                                                                                            Double.valueOf(respNoteMoyFinale.getString("valeur")),
-                                                                                                            Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
-                                                                                                            respNoteMoyFinale.getBoolean("ramener_sur"),
-                                                                                                            Double.valueOf(respNoteMoyFinale.getString("coefficient"))));
-                                                                                                    mapIdMatListNotes.put(
-                                                                                                            respNoteMoyFinale.getString("id_matiere"),
-                                                                                                            newListNotes);
-                                                                                                }
-                                                                                            } else {//nouvel élève dc nelle map idMat-listnotes
-                                                                                                Map<String, List<NoteDevoir>> newMapIdMatListNotes = new HashMap<>();
-                                                                                                List<NoteDevoir> newListNotes = new ArrayList<>();
-                                                                                                newListNotes.add(new NoteDevoir(
-                                                                                                        Double.valueOf(respNoteMoyFinale.getString("valeur")),
-                                                                                                        Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
-                                                                                                        respNoteMoyFinale.getBoolean("ramener_sur"),
-                                                                                                        Double.valueOf(respNoteMoyFinale.getString("coefficient"))));
-                                                                                                newMapIdMatListNotes.put(
-                                                                                                        respNoteMoyFinale.getString("id_matiere"),
-                                                                                                        newListNotes);
-                                                                                                mapIdEleveIdMatListNotes.put(respNoteMoyFinale.getString("id_eleve_notes"),
-                                                                                                        newMapIdMatListNotes);
-
-                                                                                            }
-                                                                                        }
-
-                                                                                    }
-                                                                                    if (mapAllidMatAndidTeachers.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
-                                                                                        if (!mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
-                                                                                                .contains(respNoteMoyFinale.getString("owner"))) {
-                                                                                            mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
-                                                                                                    .add(respNoteMoyFinale.getString("owner"));
-                                                                                        }
-                                                                                    } else {
-                                                                                        Set<String> listIdsTeacher = new HashSet();
-                                                                                        listIdsTeacher.add(respNoteMoyFinale.getString("owner"));
-                                                                                        mapAllidMatAndidTeachers.put(respNoteMoyFinale.getString("id_matiere"),
-                                                                                                listIdsTeacher);
-                                                                                    }
-
-                                                                                }
-
-                                                                                //3 - calculate average by eleve by mat with mapIdEleveIdMatListNotes and set result in mapIdEleveIdMatMoy
-                                                                                for (Map.Entry<String, Map<String, List<NoteDevoir>>> stringMapEntry : mapIdEleveIdMatListNotes.entrySet()) {
-
-                                                                                    for (Map.Entry<String, List<NoteDevoir>> stringListEntry : stringMapEntry.getValue().entrySet()) {
-
-                                                                                        List<NoteDevoir> noteDevoirList = stringListEntry.getValue();
-                                                                                        Double moy = utilsService.calculMoyenne(noteDevoirList, false, 20).getDouble("moyenne");
-                                                                                        if (mapIdEleveIdMatMoy.containsKey(stringMapEntry.getKey())) {
-                                                                                            mapIdEleveIdMatMoy.get(stringMapEntry.getKey())
-                                                                                                    .put(stringListEntry.getKey(), moy);
-                                                                                        } else {
-                                                                                            Map<String, Double> mapIdMatMoy = new HashMap<>();
-                                                                                            mapIdMatMoy.put(stringListEntry.getKey(), moy);
-                                                                                            mapIdEleveIdMatMoy.put(stringMapEntry.getKey(), mapIdMatMoy);
-                                                                                        }
-                                                                                    }
-                                                                                }
-
-                                                                                //4- il faut parcourir la mapIdMatIdsTeacher pour garder l'ordre des matieres pour tester qu l'élève à bien ttes les matières
-                                                                                JsonArray elevesResult = new fr.wseduc.webutils.collections.JsonArray();
-                                                                                List<NoteDevoir> listMoyGeneraleEleve = new ArrayList<>();
-
-                                                                                // mapIdEleveListMoyByMat /  eleves = Liste<eleve>
-                                                                                for (Eleve eleve : eleves) {
-                                                                                    JsonObject eleveJsonO = new JsonObject();
-                                                                                    JsonArray eleveMoyByMat = new fr.wseduc.webutils.collections.JsonArray();
-
-                                                                                    eleveJsonO.put("id_eleve", eleve.getIdEleve())
-                                                                                            .put("lastName", eleve.getLastName())
-                                                                                            .put("firstName", eleve.getFirstName())
-                                                                                            .put("nameClasse", nameClasse);
-
-                                                                                    if (mapIdEleveIdMatMoy.containsKey(eleve.getIdEleve())) {
-                                                                                        Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(eleve.getIdEleve());
-                                                                                        List<NoteDevoir> listMoysEleve = new ArrayList<>();
-                                                                                        // on parcours les matieres evaluees
-                                                                                        for (Map.Entry<String, Set<String>> setEntry : mapAllidMatAndidTeachers.entrySet()) {
-                                                                                            String idMatOfAllMat = setEntry.getKey();
-                                                                                            //si la mat en cours est ds la map de eleve alors eleve a ete evalue pour cette mat
-                                                                                            if (mapIdMatMoy.containsKey(idMatOfAllMat)) {
-                                                                                                //on récupère la moy de l'élève pour idmat en cours de toutes les matieres
-                                                                                                eleveMoyByMat.add(
-                                                                                                        new JsonObject()
-                                                                                                                .put("id_matiere", idMatOfAllMat)
-                                                                                                                .put("moyenneByMat", mapIdMatMoy.get(idMatOfAllMat)));
-
-                                                                                                listMoysEleve.add(new NoteDevoir(
-                                                                                                        mapIdMatMoy.get(idMatOfAllMat),
-                                                                                                        new Double(20),
-                                                                                                        false,
-                                                                                                        null));
-
-                                                                                                if (mapIdMatListMoyByEleve.containsKey(idMatOfAllMat)) {
-                                                                                                    mapIdMatListMoyByEleve.get(idMatOfAllMat)
-                                                                                                            .add(new NoteDevoir(
-                                                                                                                    mapIdMatMoy.get(idMatOfAllMat),
-                                                                                                                    new Double(20),
-                                                                                                                    false,
-                                                                                                                    null));
-                                                                                                } else {
-                                                                                                    List<NoteDevoir> listMoyEleve = new ArrayList<>();
-                                                                                                    listMoyEleve.add(new NoteDevoir(
-                                                                                                            mapIdMatMoy.get(idMatOfAllMat),
-                                                                                                            new Double(20),
-                                                                                                            false,
-                                                                                                            null));
-                                                                                                    mapIdMatListMoyByEleve.put(idMatOfAllMat, listMoyEleve);
-                                                                                                }
-                                                                                            } else {//sinon l'eleve n'a pas ete evalue pour cette matiere
-                                                                                                eleveMoyByMat.add(
-                                                                                                        new JsonObject()
-                                                                                                                .put("id_matiere", idMatOfAllMat)
-                                                                                                                .put("moyenneByMat", "NN"));
-                                                                                            }
-                                                                                        }
-                                                                                        eleveJsonO.put("eleveMoyByMat", eleveMoyByMat);
-                                                                                        Double moyGeneraleEleve = utilsService.calculMoyenneParDiviseur(
-                                                                                                listMoysEleve,
-                                                                                                false)
-                                                                                                .getDouble("moyenne");
-                                                                                        eleveJsonO.put("moyGeneraleEleve", moyGeneraleEleve);
-                                                                                        //ajouter cette moyG a une liste de moyGeleve pour le calcul moyGClasse
-                                                                                        listMoyGeneraleEleve.add(new NoteDevoir(
-                                                                                                moyGeneraleEleve,
-                                                                                                new Double(20),
-                                                                                                false,
-                                                                                                null));
-                                                                                    } else {//eleve n'a eu aucune evaluation sur aucune matiere dc pour toutes les matieres evaluees il aura NN
-
-                                                                                        for (Map.Entry<String, Set<String>> setEntry : mapAllidMatAndidTeachers.entrySet()) {
-                                                                                            String idMatOfAllMat = setEntry.getKey();
-
-                                                                                            eleveMoyByMat.add(
-                                                                                                    new JsonObject()
-                                                                                                            .put("id_matiere", idMatOfAllMat)
-                                                                                                            .put("moyenneByMat", "NN"));
-                                                                                            eleveJsonO.put("eleveMoyByMat", eleveMoyByMat);
-                                                                                            eleveJsonO.put("moyGeneraleEleve", "NN");
-                                                                                        }
-                                                                                    }
-
-                                                                                    elevesResult.add(eleveJsonO);
-                                                                                }
-                                                                                JsonObject resultMoysElevesByMat = new JsonObject();
-                                                                                if(listMoyGeneraleEleve.size() > 0){
-                                                                                    resultMoysElevesByMat.put("moyClasAllEleves",
-                                                                                            utilsService.calculMoyenneParDiviseur(
-                                                                                                    listMoyGeneraleEleve,
-                                                                                                    false).getDouble("moyenne"));
-                                                                                }else{
-                                                                                    resultMoysElevesByMat.put("moyClasAllEleves","");
-                                                                                }
-                                                                                resultMoysElevesByMat.put("eleves", elevesResult);
-                                                                                resultMoysElevesByMat.put("nbEleves", elevesResult.size());
-                                                                                handler.handle(new Either.Right<>(resultMoysElevesByMat));
+                                                                                Map<String, List<NoteDevoir>> newMapIdMatListNotes = new HashMap<>();
+                                                                                List<NoteDevoir> newListNotes = new ArrayList<>();
+                                                                                newListNotes.add(new NoteDevoir(
+                                                                                        Double.valueOf(respNoteMoyFinale.getString("valeur")),
+                                                                                        Double.valueOf(respNoteMoyFinale.getInteger("diviseur")),
+                                                                                        respNoteMoyFinale.getBoolean("ramener_sur"),
+                                                                                        Double.valueOf(respNoteMoyFinale.getString("coefficient"))));
+                                                                                newMapIdMatListNotes.put(
+                                                                                        respNoteMoyFinale.getString("id_matiere"),
+                                                                                        newListNotes);
+                                                                                mapIdEleveIdMatListNotes.put(respNoteMoyFinale.getString("id_eleve_notes"),
+                                                                                        newMapIdMatListNotes);
                                                                             }
                                                                         }
                                                                     }
+                                                                    if(respNoteMoyFinale.getString("id_matiere") != null){
+                                                                        if ( mapAllidMatAndidTeachers.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
+                                                                            if (!mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
+                                                                                    .contains(respNoteMoyFinale.getString("owner"))) {
+                                                                                mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
+                                                                                        .add(respNoteMoyFinale.getString("owner"));
+                                                                            }
+                                                                        } else {
+                                                                            Set<String> listIdsTeacher = new HashSet();
+                                                                            listIdsTeacher.add(respNoteMoyFinale.getString("owner"));
+                                                                            mapAllidMatAndidTeachers.put(respNoteMoyFinale.getString("id_matiere"),
+                                                                                    listIdsTeacher);
+                                                                        }
+                                                                    }
+
                                                                 }
-                                                        );
 
+                                                                //3 - calculate average by eleve by mat with mapIdEleveIdMatListNotes and set result in mapIdEleveIdMatMoy
+                                                                for (Map.Entry<String, Map<String, List<NoteDevoir>>> mapEleveMat : mapIdEleveIdMatListNotes.entrySet()) {
 
+                                                                    for (Map.Entry<String, List<NoteDevoir>> mapMatListNotes : mapEleveMat.getValue().entrySet()) {
+
+                                                                        List<NoteDevoir> noteDevoirList = mapMatListNotes.getValue();
+                                                                        Double moy = utilsService.calculMoyenne(noteDevoirList, false, 20).getDouble("moyenne");
+                                                                        String idEleve = mapEleveMat.getKey();
+                                                                        // Maybe student is in mapIdEleveIdMatMoy if he has an average on a or several subject
+                                                                        if (mapIdEleveIdMatMoy.containsKey(idEleve)) {
+                                                                            Map<String,Double> mapMatMoy = mapIdEleveIdMatMoy.get(mapEleveMat.getKey());
+                                                                            //if idMat is not in mapMatMoy there is no average
+                                                                            if(!mapMatMoy.containsKey(mapMatListNotes.getKey())){
+                                                                                mapMatMoy.put(mapMatListNotes.getKey(), moy);
+                                                                            }
+                                                                        } else {//The student has no final average on no subject
+                                                                            Map<String, Double> mapIdMatMoy = new HashMap<>();
+                                                                            mapIdMatMoy.put(mapMatListNotes.getKey(), moy);
+                                                                            mapIdEleveIdMatMoy.put(mapEleveMat.getKey(), mapIdMatMoy);
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                //4- browse mapIdMatIdsTeacher to keep the order of subjects and to test if student has an average on all subjects
+                                                                JsonArray elevesResult = new fr.wseduc.webutils.collections.JsonArray();
+                                                                List<NoteDevoir> listMoyGeneraleEleve = new ArrayList<>();
+
+                                                                // mapIdEleveListMoyByMat /  eleves = Liste<eleve>
+                                                                for (Eleve eleve : eleves) {
+                                                                    JsonObject eleveJsonO = new JsonObject();
+                                                                    JsonArray eleveMoyByMat = new fr.wseduc.webutils.collections.JsonArray();
+
+                                                                    eleveJsonO.put("id_eleve", eleve.getIdEleve())
+                                                                            .put("lastName", eleve.getLastName())
+                                                                            .put("firstName", eleve.getFirstName())
+                                                                            .put("nameClasse", nameClasse);
+
+                                                                    if (mapIdEleveIdMatMoy.containsKey(eleve.getIdEleve())) {
+                                                                        Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(eleve.getIdEleve());
+                                                                        List<NoteDevoir> listMoysEleve = new ArrayList<>();
+                                                                        // evaluated subjects
+                                                                        for (Map.Entry<String, Set<String>> setEntry : mapAllidMatAndidTeachers.entrySet()) {
+                                                                            String idMatOfAllMat = setEntry.getKey();
+
+                                                                            if (mapIdMatMoy.containsKey(idMatOfAllMat)) {
+                                                                                //set average student by subject
+                                                                                eleveMoyByMat.add(
+                                                                                        new JsonObject()
+                                                                                                .put("id_matiere", idMatOfAllMat)
+                                                                                                .put("moyenneByMat", mapIdMatMoy.get(idMatOfAllMat)));
+
+                                                                                listMoysEleve.add(new NoteDevoir(
+                                                                                        mapIdMatMoy.get(idMatOfAllMat),
+                                                                                        new Double(20),
+                                                                                        false,
+                                                                                        null));
+
+                                                                                if (mapIdMatListMoyByEleve.containsKey(idMatOfAllMat)) {
+                                                                                    mapIdMatListMoyByEleve.get(idMatOfAllMat)
+                                                                                            .add(new NoteDevoir(
+                                                                                                    mapIdMatMoy.get(idMatOfAllMat),
+                                                                                                    new Double(20),
+                                                                                                    false,
+                                                                                                    null));
+                                                                                } else {
+                                                                                    List<NoteDevoir> listMoyEleve = new ArrayList<>();
+                                                                                    listMoyEleve.add(new NoteDevoir(
+                                                                                            mapIdMatMoy.get(idMatOfAllMat),
+                                                                                            new Double(20),
+                                                                                            false,
+                                                                                            null));
+                                                                                    mapIdMatListMoyByEleve.put(idMatOfAllMat, listMoyEleve);
+                                                                                }
+                                                                            } else {//student has not average for this subject
+                                                                                eleveMoyByMat.add(
+                                                                                        new JsonObject()
+                                                                                                .put("id_matiere", idMatOfAllMat)
+                                                                                                .put("moyenneByMat", "NN"));
+                                                                            }
+                                                                        }
+                                                                        eleveJsonO.put("eleveMoyByMat", eleveMoyByMat);
+                                                                        Double moyGeneraleEleve = utilsService.calculMoyenneParDiviseur(
+                                                                                listMoysEleve,
+                                                                                false)
+                                                                                .getDouble("moyenne");
+                                                                        eleveJsonO.put("moyGeneraleEleve", moyGeneraleEleve);
+                                                                        //ajouter cette moyG a une liste de moyGeleve pour le calcul moyGClasse
+                                                                        listMoyGeneraleEleve.add(new NoteDevoir(
+                                                                                moyGeneraleEleve,
+                                                                                new Double(20),
+                                                                                false,
+                                                                                null));
+                                                                    } else {//student has no note and no final average on no subject => NN on all subject for this student
+
+                                                                        for (Map.Entry<String, Set<String>> setEntry : mapAllidMatAndidTeachers.entrySet()) {
+                                                                            String idMatOfAllMat = setEntry.getKey();
+
+                                                                            eleveMoyByMat.add(
+                                                                                    new JsonObject()
+                                                                                            .put("id_matiere", idMatOfAllMat)
+                                                                                            .put("moyenneByMat", "NN"));
+                                                                            eleveJsonO.put("eleveMoyByMat", eleveMoyByMat);
+                                                                            eleveJsonO.put("moyGeneraleEleve", "NN");
+                                                                        }
+                                                                    }
+
+                                                                    elevesResult.add(eleveJsonO);
+                                                                }
+                                                                JsonObject resultMoysElevesByMat = new JsonObject();
+                                                                if(listMoyGeneraleEleve.size() > 0){
+                                                                    resultMoysElevesByMat.put("moyClasAllEleves",
+                                                                            utilsService.calculMoyenneParDiviseur(
+                                                                                    listMoyGeneraleEleve,
+                                                                                    false).getDouble("moyenne"));
+                                                                }else{
+                                                                    resultMoysElevesByMat.put("moyClasAllEleves","");
+                                                                }
+                                                                resultMoysElevesByMat.put("eleves", elevesResult);
+                                                                resultMoysElevesByMat.put("nbEleves", elevesResult.size());
+                                                                handler.handle(new Either.Right<>(resultMoysElevesByMat));
+                                                            }
+                                                        }
                                                     }
                                                 }
+                                                );
+
+
                                             }
-                                        });
+                                        }
+                                    }
+                                });
 
 
-
-
-                            }
-                        }
                     }
                 }
+            }
+        }
         );
     }
 
