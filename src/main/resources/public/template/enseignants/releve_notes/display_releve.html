@@ -15,6 +15,69 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 <div ng-include="'/competences/public/template/enseignants/informations/display_construction_page.html'"></div>
+<lightbox show="releveNote.synchronized.releve == true && releveNote !== undefined && releveNote.exportOptions.show === true"
+          class="" on-close="releveNote.exportOptions.show = false;">
+    <h2><i18n>evaluations.export.releve</i18n>&nbsp;:</h2>
+    <fieldset>
+        <legend><i18n>viescolaire.utils.options</i18n></legend>
+
+        <div class="four cell twelve-mobile">
+        <label class="checkbox">
+            <input type="checkbox" ng-model="releveNote.exportOptions.averageFinal"/><span>
+                            <i18n>average.final</i18n>
+                        </span></label>
+    </div>
+    <div class="four cell twelve-mobile">
+        <label class="checkbox">
+            <input type="checkbox" ng-model="releveNote.exportOptions.averageAuto"/><span>
+                            <i18n>average.auto</i18n>
+                        </span></label>
+    </div>
+
+    <div class="four cell twelve-mobile">
+        <label class="checkbox">
+            <input type="checkbox" ng-model="releveNote.exportOptions.positionnementFinal"/><span>
+                            <i18n>evaluations.releve.positionnement</i18n>
+                        </span></label>
+    </div>
+    <div class="four cell twelve-mobile">
+        <label class="checkbox">
+            <input type="checkbox" ng-model="releveNote.exportOptions.appreciation"/><span>
+                            <i18n>viescolaire.utils.appreciation</i18n>
+                        </span></label>
+    </div>
+        <div class="four cell twelve-mobile">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.appreciationClasse"/><span>
+                            <i18n>evaluations.releve.appreciation.classe</i18n>
+                        </span></label>
+        </div>
+    </fieldset>
+    <br/>
+    <fieldset>
+        <legend><i18n>evaluations.export.format</i18n></legend>
+
+        <div class="checkbox-grid twelve">
+        <label>
+            <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="pdf">
+            <span>
+                    <i18n>evaluations.pdf</i18n>
+             </span>
+        </label>
+        <label>
+            <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="csv">
+            <i18n>evaluations.csv</i18n>
+        </label>
+    </div>
+    </fieldset>
+    <br/>
+    <div class="row">
+        <button  class ="right-magnet"
+                 ng-click="exportReleve()">
+            <i18n>evaluations.export</i18n>
+        </button>
+    </div>
+</lightbox>
 <div class="row">
     <header>
         <!--<h1 style="float: left;">Relevé de notes</h1>-->
@@ -27,6 +90,13 @@
             </a>
             <a class="button twelve-mobile" href="#/devoirs/list">
                 <i18n>evaluations.test.list</i18n>
+            </a>
+            <a ng-click="releveNote.exportOptions.show =true"
+               ng-if="releveNote !== undefined && search.periode.id !== null"
+               class="button twelve-mobile"
+               tooltip="evaluations.export"
+               ng-click="releveNote.exportOptions.show = true">
+                <i class="download"></i>
             </a>
         </nav>
     </header>
@@ -264,7 +334,7 @@
                                     <i18n>student</i18n>
                                 </th>
                                 <th class="colMoyenne" ng-repeat="periode in filteredPeriode | orderBy:'-type'">
-                                   [[getI18nPeriode(periode)]]
+                                    [[getI18nPeriode(periode)]]
                                 </th>
                                 <th class="colMoyenne">
                                     &nbsp;

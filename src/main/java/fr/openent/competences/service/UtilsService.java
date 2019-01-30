@@ -140,7 +140,7 @@ public interface UtilsService {
      * @param list Tableau à transférer
      * @return Un JsonArray contenant les deux tableau
      */
-     JsonArray saUnion(JsonArray recipient, JsonArray list);
+    JsonArray saUnion(JsonArray recipient, JsonArray list);
 
     /**
      * Ajoute la NoteDevoir passé en paramètre à la collection associée à la clé passée. Si la collection n'existe pas, la crée.
@@ -149,7 +149,7 @@ public interface UtilsService {
      * @param valueToAdd La valeur à ajouter.
      * @param <K> Le type de la clé
      */
-     <K> void addToMap(K key, HashMap<K, ArrayList<NoteDevoir>> map, NoteDevoir valueToAdd);
+    <K,V> void addToMap(K key, HashMap<K, ArrayList<V>> map, V valueToAdd);
 
     /**
      * Récupère le nom de l'entité à qui appartient l'identifiant passé en paramètre.
@@ -158,7 +158,7 @@ public interface UtilsService {
     void getNameEntity(String[] name, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * 
+     *
      * @param idClasses liste des classes à lier
      * @param id_cycle cycle vers lequel on lie les classes
      * @param handler
@@ -185,7 +185,7 @@ public interface UtilsService {
      * @param handler
      */
     void insertEvenement (String idEleve, String colonne, Long idPeriode, Long value,
-                           Handler<Either<String, JsonArray>> handler);
+                          Handler<Either<String, JsonArray>> handler);
 
     /**
      * Mettre à jour l'image d'un établissement pour l'export du bulletin
@@ -203,7 +203,7 @@ public interface UtilsService {
      * @param handler
      */
     void setInformationCE (String idStructure, String path, String name,
-                                  Handler<Either<String, JsonObject>> handler);
+                           Handler<Either<String, JsonObject>> handler);
     /**
      * Récupère les informations de paramétrage pour l'export d'un établissement
      * @param idStructure
@@ -229,4 +229,23 @@ public interface UtilsService {
     JsonArray pluck(JsonArray collection, String key);
 
     JsonArray flatten(JsonArray collection, String keyToFlatten);
+
+    JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key);
+
+    /**
+     * A partir d'un positionnement calculé pos, retourne  le positionnement réel avec l'échelle de conversion
+     * @param moyenne moyenne calculée du positionnement
+     * @param tableauDeconversion tableau de conversion des niveaux du cycle de la classe
+     * @return la valeur convertie grâce à l'échelle
+     */
+     int getPositionnementValue(Float moyenne, JsonArray tableauDeconversion);
+
+    /**
+     * Renvoit la valeur correspondant au positionnement à partir de la moyenne calculée
+     * @param moyenne
+     * @param tableauDeconversion
+     * @param printMatiere
+     * @return
+     */
+    String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere);
 }

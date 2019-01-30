@@ -1,12 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.service.AvisConseilService;
-import fr.openent.competences.service.BilanPeriodiqueService;
-import fr.openent.competences.service.ElementBilanPeriodiqueService;
-import fr.openent.competences.service.ExportBulletinService;
-import fr.openent.competences.service.DomainesService;
-import fr.openent.competences.service.ExportService;
+import fr.openent.competences.service.*;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
@@ -21,6 +16,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.storage.Storage;
 
+import static fr.openent.competences.Competences.CLASSE_NAME_KEY;
+import static fr.openent.competences.Competences.POSITIONNEMENTS_AUTO;
 import static fr.wseduc.webutils.http.Renders.getHost;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -75,8 +72,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String MESSAGE = "message";
     private static final String RESULT = "result";
     private static final String RESULTS = "results";
-    private static final String NAME = "name";
-    private static final String CLASSE_NAME = "classeName";
+    private static final String NAME = Competences.NAME;
+    private static final String CLASSE_NAME = CLASSE_NAME_KEY;
     private static final String ADDRESSE_POSTALE = "addressePostale";
     private static final String GRAPH_PER_DOMAINE = "graphPerDomaine";
     private static final String LIBELLE = "libelle";
@@ -112,7 +109,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private DomainesService domainesService;
     private ExportService exportService;
     private final Storage storage;
-
+    private UtilsService utilsService;
 
 
     public DefaultExportBulletinService(EventBus eb, Storage storage) {
@@ -124,6 +121,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         avisConseilService = new DefaultAvisConseilService();
         domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         exportService = new DefaultExportService(eb, storage);
+        utilsService = new DefaultUtilsService();
+
         this.storage = storage;
     }
 
@@ -1344,7 +1343,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         }
                                         JsonArray errors = eleveObject.getJsonArray(ERROR);
                                         errors.add(GET_ARBRE_DOMAINE_METHOD);
-                                        serviceResponseOK(answer, finalHandler, count, idEleve, GET_ARBRE_DOMAINE_METHOD);
+                                        serviceResponseOK(answer, finalHandler, count, idEleve,
+                                                GET_ARBRE_DOMAINE_METHOD);
                                     }
                                 } else {
                                     JsonArray domaines = event.right().getValue();
@@ -1379,6 +1379,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+    private JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
+        return utilsService.getObjectForPeriode(array, idPeriode, key);
+    }
+
     /**
      *  Calcule et met en forme les colonnes de la matière passée en paramètre
      * @param matiere matière à traiter
@@ -1394,7 +1398,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         JsonObject moyenneClasse = getObjectForPeriode(
                 matiere.getJsonArray("moyennesClasse"), idPeriode, "id");
         JsonObject positionnement = getObjectForPeriode(
-                matiere.getJsonArray("positionnements_auto"), idPeriode,
+                matiere.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode,
                 ID_PERIODE);
         JsonObject positionnementFinal = getObjectForPeriode(
                 matiere.getJsonArray("positionnementsFinaux"), idPeriode,
@@ -1437,19 +1441,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             // Grâce à l'échelle de conversion du cycle de la classe de l'élève
             if(positionnement != null) {
                 Float pos = positionnement.getFloat(MOYENNE);
-                String val = "";
                 JsonArray tableauDeconversion = classe
                         .getJsonArray("tableauDeConversion");
-
-                if (pos != null && pos != -1 && tableauDeconversion != null) {
-                    int posConverti = getPositionnementValue(pos + 1 ,
-                            tableauDeconversion);
-                    if (posConverti != -1) {
-                        val = String.valueOf(posConverti);
-                    }
-                    printMatiere = true;
-                }
-
+                String val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere);
                 matiere.put(POSITIONNEMENT, val);
             }
         }
@@ -1610,18 +1604,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return sortedJsonArray;
     }
 
-    private JsonObject getObjectForPeriode (JsonArray array, Long idPeriode, String key) {
-        JsonObject res = null;
-        if(array != null) {
-            for (int i = 0; i < array.size(); i++) {
-                JsonObject o = array.getJsonObject(i);
-                if (o != null &&  o.getLong(key) != null && o.getLong(key).equals(idPeriode)) {
-                    res = o;
-                }
-            }
-        }
-        return res;
-    }
 
     private JsonObject setResponsablesLibelle(JsonObject o, JsonObject responsable) {
         Boolean relativesHaveTwoNames = false;
@@ -1684,31 +1666,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         log.error("[ " + EXPORT_BULLETIN_METHOD + "| "+ service + "] : " +
                 "eleveObject doesn't contains field idEtablissement "  + idEleve);
     }
-
-    /**
-     * A partir d'un positionnement calculé pos, retourne  le positionnement réel avec l'échelle de conversion
-     * @param moyenne moyenne calculée du positionnement
-     * @param tableauDeconversion tableau de conversion des niveaux du cycle de la classe
-     * @return la valeur convertie grâce à l'échelle
-     */
-    private int getPositionnementValue(Float moyenne, JsonArray tableauDeconversion) {
-        int value =-1;
-
-        for (int i = 0; i< tableauDeconversion.size(); i++) {
-            JsonObject ligne = tableauDeconversion.getJsonObject(i);
-            Float valmin = ligne.getFloat("valmin");
-            Float valmax = ligne.getFloat("valmax");
-            int ordre = ligne.getInteger("ordre");
-
-            if((valmin <= moyenne && valmax > moyenne) && ordre != tableauDeconversion.size()){
-                value = ordre;
-            }else if((valmin <= moyenne && valmax >= moyenne) && ordre == tableauDeconversion.size() ){
-                value = ordre;
-            }
-        }
-        return  value;
-    }
-
 
     // Rappelle l'évent Bus si l'erreur est un timeout sinon renvoit l'erreur
     private void buildErrorReponseForEb (String idEleve,

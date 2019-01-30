@@ -4171,5 +4171,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
+        $scope.exportReleve = async function () {
+            $scope.opened.displayMessageLoader = true;
+            $scope.releveNote.exportOptions.show = false;
+            utils.safeApply($scope);
+            let stopLoading = () => {
+                $scope.opened.displayMessageLoader = false;
+                utils.safeApply($scope);
+            };
+
+            try{
+                await $scope.releveNote.export();
+                stopLoading();
+                notify.success('evaluations.export.bulletin.success');
+            }
+            catch (e) {
+                console.error(e);
+                stopLoading();
+                notify.error(e);
+            }
+
+        };
+
     }
 ]);

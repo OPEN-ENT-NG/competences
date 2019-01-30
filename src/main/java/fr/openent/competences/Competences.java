@@ -144,6 +144,39 @@ public class Competences extends BaseServer {
 
     // Clefs usuelles
     public static final String ID_ETABLISSEMENT_KEY = "idEtablissement";
+    public static final String ID_ELEVE_KEY = "idEleve";
+    public static final String ID_ELEVES_KEY = "idEleves";
+    public static final String ID_CLASSE_KEY = "idClasse";
+    public static final String ID_CLASSES_KEY = "idClasses";
+    public static final String TYPE_CLASSE_KEY = "typeClasse";
+    public static final String ID_PERIODE_KEY = "idPeriode";
+    public static final String ID_MATIERE_KEY = "idMatiere";
+    public static final String CLASSE_NAME_KEY = "classeName";
+    public static final String LAST_NAME_KEY = "lastName";
+    public static final String FIRST_NAME_KEY = "firstName";
+    public static final String DISPLAY_NAME_KEY = "displayName";
+    public static final String COMPETENCES_NOTES_KEY = "competencesNotes";
+    public static final String ELEMENT_PROGRAMME_KEY = "elementProgramme";
+    public static final String LEVEL = "level";
+
+    public static final String NAME = "name";
+    public static final String ID_ELEVE = "id_eleve";
+    public static final String FORMATIVE = "formative";
+    public static final String ID_PERIODE = "id_periode";
+    public static final String ID_MATIERE = "id_matiere";
+    public static final String ACTION = "action";
+    public static final String POSITIONNEMENT = "positionnement";
+    public static final String POSITIONNEMENT_AUTO = "positionnement_auto";
+    public static final String POSITIONNEMENTS_AUTO = "positionnements_auto";
+    public static final String MOYENNE = "moyenne";
+    public static final String MOYENNES = "moyennes";
+    public static final String ELEVES = "eleves";
+    public static final String APPRECIATION_CLASSE = "appreciation_classe";
+    public static final String APPRECIATIONS = "appreciations";
+    public static final String NOTES = "notes";
+    public static final String HAS_NOTE = "hasNote";
+    public static final String NN = "NN";
+
 
     @Override
 	public void start() throws Exception {

@@ -36,6 +36,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
+import static fr.openent.competences.Competences.MOYENNE;
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
@@ -665,4 +666,5 @@ public class Utils {
             }
         }));
     }
+
 }

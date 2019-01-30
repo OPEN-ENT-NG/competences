@@ -27,13 +27,17 @@ export class AppreciationClasse  {
     endSaisie: boolean;
     idEtablissement: string;
 
-    constructor(idClasse:string, idMatiere:string, idPeriode:number, endSaisie:boolean, idEtablissement:string) {
+    constructor(idClasse:string, idMatiere:string, idPeriode:number,
+                endSaisie:boolean, idEtablissement:string, appreciation?:string) {
         // super();
         this.id_classe = idClasse;
         this.id_matiere = idMatiere;
         this.id_periode = idPeriode;
         this.endSaisie = endSaisie;
         this.idEtablissement = idEtablissement;
+        if (appreciation !== undefined) {
+            this.appreciation = appreciation;
+        }
     }
 
     async sync() {

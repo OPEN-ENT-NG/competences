@@ -33,10 +33,8 @@ import fr.openent.competences.security.utils.FilterUserUtils;
 import fr.openent.competences.service.ElementProgramme;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
-import fr.openent.competences.service.impl.DefaultDomaineService;
-import fr.openent.competences.service.impl.DefaultElementProgramme;
-import fr.openent.competences.service.impl.DefaultNoteService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -55,6 +53,8 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+
+import static fr.openent.competences.Competences.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.awt.*;
@@ -236,12 +236,13 @@ public class NoteController extends ControllerHelper {
 
             @Override
             public void handle(UserInfos user) {
-                final String idEleve = request.params().get("idEleve");
-                final String idEtablissement = request.params().get("idEtablissement");
-                final String idClasse = request.params().get("idClasse");
-                final String idMatiere = request.params().get("idMatiere");
-                final String idPeriodeString = request.params().get("idPeriode");
-                final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+
+                final String idEleve = request.params().get(ID_ELEVE_KEY);
+                final String idEtablissement = request.params().get(ID_ETABLISSEMENT_KEY);
+                final String idClasse = request.params().get(ID_CLASSE_KEY);
+                final String idMatiere = request.params().get(ID_MATIERE_KEY);
+                final String idPeriodeString = request.params().get(ID_PERIODE_KEY);
+                final Integer typeClasse = Integer.valueOf(request.params().get(TYPE_CLASSE_KEY));
 
 
                 new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
@@ -249,97 +250,6 @@ public class NoteController extends ControllerHelper {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {
 
-                                Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
-                                    @Override
-                                    public void handle(Either<String, JsonArray> event) {
-                                        if (event.isRight()) {
-                                            final JsonObject result = new JsonObject();
-                                            JsonArray listNotes = event.right().getValue();
-                                            JsonArray listMoyDevoirs = new fr.wseduc.webutils.collections.JsonArray();
-                                            JsonArray listMoyEleves = new fr.wseduc.webutils.collections.JsonArray();
-                                            HashMap<Long, ArrayList<NoteDevoir>> notesByDevoir = new HashMap<>();
-                                            HashMap<String, ArrayList<NoteDevoir>> notesByEleve = new HashMap<>();
-
-                                            for (int i = 0; i < listNotes.size(); i++) {
-
-                                                JsonObject note = listNotes.getJsonObject(i);
-
-                                                if (note.getString("valeur") == null ||
-                                                        !note.getBoolean("is_evaluated")) {
-                                                    continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
-                                                    // elle n'est pas prise en compte dans le calcul de la moyenne
-                                                }
-
-                                                NoteDevoir noteDevoir = new NoteDevoir(
-                                                        Double.valueOf(note.getString("valeur")),
-                                                        Double.valueOf(note.getLong("diviseur")),
-                                                        note.getBoolean("ramener_sur"),
-                                                        Double.valueOf(note.getString("coefficient")));
-
-                                                Long idDevoir = note.getLong("id_devoir");
-                                                utilsService.addToMap(idDevoir, notesByDevoir, noteDevoir);
-
-                                                String idEleve = note.getString("id_eleve");
-                                                utilsService.addToMap(idEleve, notesByEleve, noteDevoir);
-                                            }
-
-                                            for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : notesByDevoir.entrySet()) {
-                                                JsonObject moyenne = utilsService.calculMoyenneParDiviseur(entry.getValue(),
-                                                        true);
-                                                moyenne.put("id", entry.getKey());
-                                                listMoyDevoirs.add(moyenne);
-                                            }
-                                            result.put("devoirs", listMoyDevoirs);
-
-                                            for (Map.Entry<String, ArrayList<NoteDevoir>> entry : notesByEleve
-                                                    .entrySet()) {
-                                                JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(),
-                                                        false, 20);
-                                                moyenne.put("id", entry.getKey());
-                                                listMoyEleves.add(moyenne);
-                                            }
-                                            result.put("eleves", listMoyEleves);
-
-                                            result.put("notes", listNotes);
-
-                                            notesService.getCompetencesNotesReleve(
-                                                    idEtablissement,
-                                                    idClasse,
-                                                    null,
-                                                    idMatiere,
-                                                    (null != idPeriodeString)? Long.parseLong(idPeriodeString): null,
-                                                    null,
-                                                    typeClasse,
-                                                    false,
-                                                    new Handler<Either<String, JsonArray>>() {
-                                                        @Override
-                                                        public void handle(Either<String, JsonArray> event) {
-                                                            if (event.isRight()) {
-                                                                JsonArray listCompNotes = event.right().getValue();
-                                                                result.put("competencesNotes",
-                                                                        listCompNotes);
-                                                                if (null != idPeriodeString) {
-                                                                    addMoyenneFinalAndAppreciation(request, result);
-                                                                } else {
-                                                                    Renders.renderJson(request, result);
-                                                                }
-                                                            } else {
-                                                                Renders.renderJson(request, new JsonObject()
-                                                                                .put("error",
-                                                                                        (String) event.left()
-                                                                                                .getValue()),
-                                                                        400);
-                                                            }
-                                                        }
-                                                    });
-
-                                        } else {
-                                            JsonObject error = (new JsonObject()).put("error",
-                                                    (String) event.left().getValue());
-                                            Renders.renderJson(request, error, 400);
-                                        }
-                                    }
-                                };
                                 Long idPeriode = null;
                                 if (!hasAccessToMatiere) {
                                     unauthorized(request);
@@ -353,35 +263,15 @@ public class NoteController extends ControllerHelper {
                                             return;
                                         }
                                     }
+                                        JsonObject params = new JsonObject().put(ID_ELEVE_KEY, idEleve)
+                                                .put(ID_CLASSE_KEY, idClasse)
+                                                .put(ID_PERIODE_KEY, idPeriode)
+                                                .put(ID_ETABLISSEMENT_KEY, idEtablissement)
+                                                .put(ID_MATIERE_KEY, idMatiere)
+                                                .put(TYPE_CLASSE_KEY, typeClasse);
 
-                                    if (idEleve != null) {
+                                        notesService.exportReleve(params, notEmptyResponseHandler(request));
 
-                                        notesService.getNoteElevePeriode(idEleve,
-                                                idEtablissement,
-                                                new fr.wseduc.webutils.collections.JsonArray().add(idClasse),
-                                                idMatiere,
-                                                idPeriode,
-                                                handler);
-                                    } else if (idPeriode != null) {
-
-                                        notesService.getNotesReleve(idEtablissement,
-                                                idClasse,
-                                                idMatiere,
-                                                idPeriode,
-                                                typeClasse,
-                                                false,
-                                                null,
-                                                handler);
-                                    } else {
-                                        notesService.getNotesReleve(idEtablissement,
-                                                idClasse,
-                                                idMatiere,
-                                                null,
-                                                typeClasse,
-                                                false,
-                                                null,
-                                                handler);
-                                    }
                                 }
                             }
                         });
@@ -389,6 +279,59 @@ public class NoteController extends ControllerHelper {
         });
     }
 
+    @Post("/releve/export")
+    @ApiDoc("Créer une note")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void exportRelevePeriodique(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, param -> {
+            if(param.getString("fileType").equals("pdf")) {
+
+                Future<JsonObject> exportResult = Future.future();
+                notesService.exportReleve(param, event -> {
+                    FormateFutureEvent.formate(exportResult, event);
+                });
+
+                String key = ELEVES;
+                String idStructure = param.getString(ID_ETABLISSEMENT_KEY);
+                Map<String, JsonObject> mapEleve = new HashMap<>();
+                Future<JsonObject> structureFuture = Future.future();
+                mapEleve.put(key, new JsonObject()
+                        .put(ID_ETABLISSEMENT_KEY, idStructure));
+                new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve, event -> {
+                    FormateFutureEvent.formate(structureFuture, event);
+                });
+
+                Future<JsonObject> imageStructureFuture = Future.future();
+                utilsService.getParametersForExport(idStructure, event -> {
+                    FormateFutureEvent.formate(imageStructureFuture, event);
+                });
+                CompositeFuture.all(exportResult, structureFuture, imageStructureFuture).setHandler((event -> {
+                    if (event.succeeded()) {
+                        JsonObject exportJson = exportResult.result();
+
+                        notesService.putLibelleAndParamsForExportReleve(exportJson, param);
+                        JsonObject imgStructure =  imageStructureFuture.result();
+                        if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
+                            exportJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
+                                    .getValue("path"));
+                        }
+                        exportJson.put("structureLibelle", mapEleve.get(key).getValue("structureLibelle"));
+                        new DefaultExportService(eb, null).genererPdf(request, exportJson,
+                                "releve-periodique.pdf.xhtml", exportJson.getString("title"),
+                                vertx, config);
+                    }
+                    else {
+                        log.info(event.cause().getMessage());
+                        badRequest(request);
+                    }
+                }));
+            }
+            else {
+                notesService.exportReleve(param, notEmptyResponseHandler(request));
+            }
+        });
+    }
     @Get("/eleve/:idEleve/moyenne")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @ApiDoc("Retourne la moyenne de l'élève dont l'id est passé en paramètre, sur les devoirs passés en paramètre")

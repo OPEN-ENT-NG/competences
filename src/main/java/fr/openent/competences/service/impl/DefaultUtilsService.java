@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 
+import static fr.openent.competences.Competences.ID_PERIODE_KEY;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -61,7 +62,7 @@ public class DefaultUtilsService  implements UtilsService {
         this.eb = eb;
     }
 
-    public DefaultUtilsService () {
+    public DefaultUtilsService() {
     }
 
 
@@ -253,18 +254,18 @@ public class DefaultUtilsService  implements UtilsService {
         for (NoteDevoir noteDevoir : listeNoteDevoirs) {
             Double currNote = noteDevoir.getNote();
             notes += currNote;
-                // Calcul de la note min et max
-                if (statistiques) {
-                    if (null == noteMin) {
-                        noteMin = new Double(noteDevoir.getDiviseur());
-                    }
-                    if (currNote > noteMax) {
-                        noteMax = currNote;
-                    }
-                    if (currNote < noteMin) {
-                        noteMin = currNote;
-                    }
+            // Calcul de la note min et max
+            if (statistiques) {
+                if (null == noteMin) {
+                    noteMin = new Double(noteDevoir.getDiviseur());
                 }
+                if (currNote > noteMax) {
+                    noteMax = currNote;
+                }
+                if (currNote < noteMin) {
+                    noteMin = currNote;
+                }
+            }
 
         }
 
@@ -374,18 +375,19 @@ public class DefaultUtilsService  implements UtilsService {
     }
 
     @Override
-    public <K> void addToMap(K id, HashMap<K, ArrayList<NoteDevoir>> map, NoteDevoir valueToAdd) {
+    public <K, V> void addToMap(K id, HashMap<K, ArrayList<V>> map, V valueToAdd) {
         if (map.containsKey(id)) {
 
             map.get(id).add(valueToAdd);
 
         } else {
 
-            ArrayList<NoteDevoir> notes = new ArrayList<>();
+            ArrayList<V> notes = new ArrayList<>();
             notes.add(valueToAdd);
             map.put(id, notes);
         }
     }
+
 
     /**
      * Récupère les cycles des classes dans la relation classe_cycle
@@ -443,25 +445,23 @@ public class DefaultUtilsService  implements UtilsService {
 
         neo4j.execute(query.toString(), params, new Handler<Message<JsonObject>>() {
             public void handle(Message<JsonObject> event) {
-                if(!"ok".equals(((JsonObject) event.body()).getString("status"))) {
+                if (!"ok".equals(((JsonObject) event.body()).getString("status"))) {
                     handler.handle(new Either.Left<>("Error While get User in Neo4J "));
-                }
-                else {
+                } else {
 
                     JsonArray rNeo = ((JsonObject) event.body()).getJsonArray("result",
                             new fr.wseduc.webutils.collections.JsonArray());
-                    if(rNeo.size() > 0 ) {
+                    if (rNeo.size() > 0) {
                         handler.handle(new Either.Right<>(rNeo));
-                    }
-                    else {
+                    } else {
                         // Si l'id n'est pas retrouvé dans l'annuaire, on le récupère dans Postgres
                         StringBuilder queryPostgres = new StringBuilder();
                         JsonArray paramsPostgres = new JsonArray();
 
                         queryPostgres.append(" SELECT  personnes_supp.last_name as name ")
                                 .append(" FROM " + Competences.VSCO_SCHEMA + ".personnes_supp")
-                                .append(" WHERE id_user IN "+ Sql.listPrepared(Arrays.asList(name)));
-                        for (int i= 0;i< name.length; i++) {
+                                .append(" WHERE id_user IN " + Sql.listPrepared(Arrays.asList(name)));
+                        for (int i = 0; i < name.length; i++) {
                             paramsPostgres.add(name[i]);
                         }
 
@@ -564,10 +564,9 @@ public class DefaultUtilsService  implements UtilsService {
         // Si on a pas de filtre sur la période, on ne récupère pas les période
         // On va renvoyer tous les id des élèves de la classe ou du groupe d'enseignement
         if (idPeriode == null) {
-            calculAvailableId (idClasse, typeClasse, null,null, null, handler );
+            calculAvailableId(idClasse, typeClasse, null, null, null, handler);
             return;
-        }
-        else {
+        } else {
             JsonObject action = new JsonObject();
             action.put("action", "periode.getPeriodes")
                     .put("idGroupes", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
@@ -620,79 +619,66 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
-    protected void calculAvailableId (String idClasse, Integer typeClasse,Long idPeriode,
-                                      Date dateDebutPeriode, Date dateFinPeriode,
-                                      Handler<Either<String, JsonArray>> handler ) {
-        JsonObject action = new JsonObject();
-        if(typeClasse == 0) {
-            action.put("action", "classe.getEleveClasse")
-                    .put("idClasse", idClasse);
-        }
-        else if(typeClasse == 1 || typeClasse == 2){
-            action.put("action", "groupe.listUsersByGroupeEnseignementId")
-                    .put("groupEnseignementId", idClasse)
-                    .put("profile", "Student");
-        }
-        else {
+    protected void calculAvailableId(String idClasse, Integer typeClasse, Long idPeriode,
+                                     Date dateDebutPeriode, Date dateFinPeriode,
+                                     Handler<Either<String, JsonArray>> handler) {
+        if (!(typeClasse == 0 || typeClasse == 1 || typeClasse == 2)) {
             handler.handle(new Either.Left<>("bad Request"));
             return;
         }
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(
-                        new Handler<Message<JsonObject>>() {
-                            @Override
-                            public void handle(Message<JsonObject> message) {
-                                JsonObject body = message.body();
-                                JsonArray students = body.getJsonArray("results");
-                                JsonArray idAvailableEleve = new JsonArray();
+        studentAvailableForPeriode(idClasse, null, typeClasse,
+                new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        JsonArray students = body.getJsonArray("results");
+                        JsonArray idAvailableEleve = new JsonArray();
 
-                                if ("ok".equals(body.getString("status"))) {
-                                    // Si aucune période n'est sélectionnée, on rajoute tous les élèves
-                                    for (int i = 0; i < students.size(); i++) {
-                                        JsonObject student = (JsonObject)students.getValue(i);
-                                        // Sinon Si l'élève n'est pas Supprimé on l'ajoute
-                                        if (    idPeriode == null ||
-                                                student.getValue("deleteDate") == null ){
-                                            idAvailableEleve.add(student.getString("id"));
+                        if ("ok".equals(body.getString("status"))) {
+                            // Si aucune période n'est sélectionnée, on rajoute tous les élèves
+                            for (int i = 0; i < students.size(); i++) {
+                                JsonObject student = (JsonObject) students.getValue(i);
+                                // Sinon Si l'élève n'est pas Supprimé on l'ajoute
+                                if (idPeriode == null ||
+                                        student.getValue("deleteDate") == null) {
+                                    idAvailableEleve.add(student.getString("id"));
+                                }
+                                // Sinon S'il sa date sa suppression survient avant la fin de
+                                // la période, on l'ajoute aussi
+                                else {
+                                    Date deleteDate = new Date();
+
+                                    if (student.getValue("deleteDate")
+                                            instanceof Number) {
+                                        deleteDate = new Date(student.getLong("deleteDate"));
+                                    } else {
+                                        try {
+
+                                            deleteDate = new SimpleDateFormat("yy-MM-dd")
+                                                    .parse(student.getString("deleteDate").split("T")[0]);
+
+                                        } catch (ParseException e) {
+                                            String messageLog = "PB While read date of deleted Student : "
+                                                    + student.getString("id");
+                                            log.error(messageLog);
                                         }
-                                        // Sinon S'il sa date sa suppression survient avant la fin de
-                                        // la période, on l'ajoute aussi
-                                        else {
-                                            Date deleteDate = new Date();
 
-                                            if (student.getValue("deleteDate")
-                                                    instanceof Number) {
-                                                deleteDate = new Date(student.getLong("deleteDate"));
-                                            }
-                                            else {
-                                                try {
-
-                                                    deleteDate = new SimpleDateFormat("yy-MM-dd")
-                                                            .parse(student.getString("deleteDate").split("T")[0]);
-
-                                                } catch (ParseException e) {
-                                                    String messageLog = "PB While read date of deleted Student : "
-                                                            + student.getString("id");
-                                                    log.error(messageLog);
-                                                }
-
-                                            }
-                                            if ( (deleteDate.after(dateFinPeriode) || deleteDate.equals(dateFinPeriode))
-                                                    ||
-                                                    ((deleteDate.after(dateDebutPeriode)
-                                                            || deleteDate.equals(dateDebutPeriode))
-                                                            && (deleteDate.before(dateFinPeriode)
-                                                            || deleteDate.equals(dateFinPeriode)))) {
-                                                idAvailableEleve.add(student.getString("id"));
-                                            }
-                                        }
+                                    }
+                                    if ((deleteDate.after(dateFinPeriode) || deleteDate.equals(dateFinPeriode))
+                                            ||
+                                            ((deleteDate.after(dateDebutPeriode)
+                                                    || deleteDate.equals(dateDebutPeriode))
+                                                    && (deleteDate.before(dateFinPeriode)
+                                                    || deleteDate.equals(dateFinPeriode)))) {
+                                        idAvailableEleve.add(student.getString("id"));
                                     }
                                 }
-                                handler.handle(new Either.Right<>(idAvailableEleve));
                             }
+                        }
+                        handler.handle(new Either.Right<>(idAvailableEleve));
+                    }
+                });
 
-                        }));
     }
 
     public void insertEvenement(String idEleve, String colonne, Long idPeriode, Long value,
@@ -726,24 +712,25 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
-    private void getStructureImage (String idStructure, Handler<Either<String, JsonObject>> handler) {
+    private void getStructureImage(String idStructure, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
                 .append(" SELECT * FROM " + Competences.VSCO_SCHEMA + ".logo_etablissement ")
                 .append(" WHERE id_etablissement = ? ");
         JsonArray params = new JsonArray().add(idStructure);
 
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler) );
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler));
     }
-    public void getInformationCE (String idStructure, Handler<Either<String, JsonObject>> handler) {
+
+    public void getInformationCE(String idStructure, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
                 .append(" SELECT * FROM " + Competences.VSCO_SCHEMA + ".nom_et_signature_CE ")
                 .append(" WHERE id_etablissement = ? ");
         JsonArray params = new JsonArray().add(idStructure);
 
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler) );
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void setStructureImage (String idStructure, String path, Handler<Either<String, JsonObject>> handler) {
+    public void setStructureImage(String idStructure, String path, Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
                 .append(" INSERT INTO " + Competences.VSCO_SCHEMA + ".logo_etablissement ")
                 .append(" (id_etablissement, path) VALUES ")
@@ -753,11 +740,11 @@ public class DefaultUtilsService  implements UtilsService {
 
         JsonArray params = new JsonArray().add(idStructure).add(path).add(path);
 
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler) );
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void setInformationCE (String idStructure, String path, String name,
-                                   Handler<Either<String, JsonObject>> handler) {
+    public void setInformationCE(String idStructure, String path, String name,
+                                 Handler<Either<String, JsonObject>> handler) {
         StringBuilder query = new StringBuilder()
                 .append(" INSERT INTO " + Competences.VSCO_SCHEMA + ".nom_et_signature_CE ")
                 .append(" (id_etablissement, path, name) VALUES ")
@@ -767,17 +754,16 @@ public class DefaultUtilsService  implements UtilsService {
 
         JsonArray params = new JsonArray().add(idStructure).add(path).add(name).add(path).add(name);
 
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler) );
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
-    public void getParametersForExport (String idStructure, Handler<Either<String, JsonObject>> handler){
+    public void getParametersForExport(String idStructure, Handler<Either<String, JsonObject>> handler) {
         Future<JsonObject> imageStructureFuture = Future.future();
         getStructureImage(idStructure, event -> {
-            if(event.isRight()) {
+            if (event.isRight()) {
                 imageStructureFuture.complete(event.right().getValue());
-            }
-            else {
+            } else {
                 log.error(event.left());
                 imageStructureFuture.complete(new JsonObject());
             }
@@ -785,10 +771,9 @@ public class DefaultUtilsService  implements UtilsService {
 
         Future<JsonObject> infosCEFuture = Future.future();
         getInformationCE(idStructure, event -> {
-            if(event.isRight()) {
+            if (event.isRight()) {
                 infosCEFuture.complete(event.right().getValue());
-            }
-            else {
+            } else {
                 log.error(event.left());
                 infosCEFuture.complete(new JsonObject());
             }
@@ -796,20 +781,20 @@ public class DefaultUtilsService  implements UtilsService {
 
         CompositeFuture.all(infosCEFuture, imageStructureFuture).setHandler(
                 event -> {
-                    if(event.succeeded()) {
+                    if (event.succeeded()) {
                         JsonObject result = new JsonObject();
                         result.put("imageStucture", imageStructureFuture.result());
                         result.put("nameAndBrad", infosCEFuture.result());
                         handler.handle(new Either.Right<>(result));
-                    }
-                    else {
+                    } else {
                         handler.handle(new Either.Left<>(event.cause().getMessage()));
                     }
-        });
+                });
     }
+
     @Override
-    public void getLibelleMatAndTeacher (SortedMap <String, Set <String> > mapIdMatiereIdsTeacher,
-                                         Handler<Either<String, SortedMap<String,JsonObject>>> handler){
+    public void getLibelleMatAndTeacher(SortedMap<String, Set<String>> mapIdMatiereIdsTeacher,
+                                        Handler<Either<String, SortedMap<String, JsonObject>>> handler) {
 
         JsonArray idsTeacher = new JsonArray();
         JsonArray idsMatiere = new JsonArray();
@@ -836,10 +821,10 @@ public class DefaultUtilsService  implements UtilsService {
         });
 
 
-        Utils.getLibelleMatiere(eb, idsMatiere, new Handler<Either<String, Map<String,JsonObject>>>() {
+        Utils.getLibelleMatiere(eb, idsMatiere, new Handler<Either<String, Map<String, JsonObject>>>() {
             @Override
             public void handle(Either<String, Map<String, JsonObject>> respMat) {
-                if(respMat.isLeft()){
+                if (respMat.isLeft()) {
                     log.error("getLibelleMatAndTeacher : getLibelleMat " + respMat.left().getValue());
                     handler.handle(new Either.Left<>(respMat.left().getValue()));
                 } else {
@@ -850,45 +835,45 @@ public class DefaultUtilsService  implements UtilsService {
                                 log.error("getLibelleMatAndTeacher : getLastNameFirstNameUser " + respMat.left().getValue());
                                 handler.handle(new Either.Left<>(respMat.left().getValue()));
                             } else {
-                                Map<String,JsonObject> mapIdMatLibelle = respMat.right().getValue();
-                                Map<String,JsonObject> mapIdTeacher = respTeacher.right().getValue();
+                                Map<String, JsonObject> mapIdMatLibelle = respMat.right().getValue();
+                                Map<String, JsonObject> mapIdTeacher = respTeacher.right().getValue();
 
-                                SortedMap<String,JsonObject> mapIdMatLibelleMapEtProf = new TreeMap<>();
+                                SortedMap<String, JsonObject> mapIdMatLibelleMapEtProf = new TreeMap<>();
 
-                                for(Map.Entry<String,Set<String>> setEntry: mapIdMatiereIdsTeacher.entrySet()){
+                                for (Map.Entry<String, Set<String>> setEntry : mapIdMatiereIdsTeacher.entrySet()) {
                                     // setEntry.getKey() peut contenir soit des id matiere soit des idMatiere;idGroupe
                                     String idMat = setEntry.getKey().split(";")[0];
                                     JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray();
                                     JsonObject matiere = new JsonObject();
 
-                                    if( mapIdMatLibelle != null && !mapIdMatLibelle.isEmpty() && mapIdMatLibelle.containsKey(idMat)){
+                                    if (mapIdMatLibelle != null && !mapIdMatLibelle.isEmpty() && mapIdMatLibelle.containsKey(idMat)) {
                                         //matiere = response with libelle,code,libelle_court...
                                         matiere = mapIdMatLibelle.get(idMat);
                                         matiere.remove("data");
 
-                                    }else{
-                                        matiere.put("id", idMat).put("name","no libelle").put("libelle_court","no libelle");
+                                    } else {
+                                        matiere.put("id", idMat).put("name", "no libelle").put("libelle_court", "no libelle");
                                         log.error("matiere non retrouvee sans libelle idMatiere : " + idMat);
                                     }
 
-                                    for(String idTeacher : setEntry.getValue()){
-                                        if(mapIdTeacher != null && !mapIdTeacher.isEmpty() && mapIdTeacher.containsKey(idTeacher)){
-                                            String displayName = mapIdTeacher.get(idTeacher).getString("firstName").substring(0,1)+".";
-                                            String lastName = mapIdTeacher.get(idTeacher).getString("name").replace("-","\n");
+                                    for (String idTeacher : setEntry.getValue()) {
+                                        if (mapIdTeacher != null && !mapIdTeacher.isEmpty() && mapIdTeacher.containsKey(idTeacher)) {
+                                            String displayName = mapIdTeacher.get(idTeacher).getString("firstName").substring(0, 1) + ".";
+                                            String lastName = mapIdTeacher.get(idTeacher).getString("name").replace("-", "\n");
                                             displayName = lastName + " " + displayName;
                                             teachers.add(new JsonObject()
-                                                    .put("id_teacher",idTeacher)
-                                                    .put("displayName",(displayName.length() <= 10)? displayName : lastName));
+                                                    .put("id_teacher", idTeacher)
+                                                    .put("displayName", (displayName.length() <= 10) ? displayName : lastName));
 
-                                        }else{
+                                        } else {
                                             teachers.add(new JsonObject()
-                                                    .put("id_teacher",idTeacher)
-                                                    .put("displayName","no Name"));
+                                                    .put("id_teacher", idTeacher)
+                                                    .put("displayName", "no Name"));
                                             log.error("enseignant non retrouve idTeacher : " + idTeacher);
                                         }
                                     }
                                     matiere.put("teachers", teachers);
-                                    mapIdMatLibelleMapEtProf.put(setEntry.getKey(),matiere);
+                                    mapIdMatLibelleMapEtProf.put(setEntry.getKey(), matiere);
                                 }
                                 handler.handle(new Either.Right<>(mapIdMatLibelleMapEtProf));
                             }
@@ -967,12 +952,12 @@ public class DefaultUtilsService  implements UtilsService {
 
         do {
             found = findWhere(loopCollection, oCriteria);
-            if(found != null) {
+            if (found != null) {
                 loopCollection.remove(found);
                 result.add(found);
             }
         }
-        while(found != null);
+        while (found != null);
 
         return result;
     }
@@ -980,9 +965,9 @@ public class DefaultUtilsService  implements UtilsService {
     public JsonArray pluck(JsonArray collection, String key) {
         JsonArray result = new JsonArray();
 
-        for(Object o : collection) {
+        for (Object o : collection) {
             JsonObject castedO = (JsonObject) o;
-            if(castedO.containsKey(key)) {
+            if (castedO.containsKey(key)) {
                 result.add(castedO.getValue(key));
             }
         }
@@ -1005,5 +990,70 @@ public class DefaultUtilsService  implements UtilsService {
             }
         }
         return result;
+    }
+
+    public JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
+        JsonObject res = null;
+        if (array != null) {
+            for (int i = 0; i < array.size(); i++) {
+                JsonObject o = array.getJsonObject(i);
+                if (o != null && o.getLong(key) != null && o.getLong(key).equals(idPeriode)) {
+                    res = o;
+                }
+            }
+        }
+        return res;
+    }
+
+    public int getPositionnementValue(Float moyenne, JsonArray tableauDeconversion) {
+        int value = -1;
+
+        for (int i = 0; i < tableauDeconversion.size(); i++) {
+            JsonObject ligne = tableauDeconversion.getJsonObject(i);
+            Float valmin = ligne.getFloat("valmin");
+            Float valmax = ligne.getFloat("valmax");
+            int ordre = ligne.getInteger("ordre");
+
+            if ((valmin <= moyenne && valmax > moyenne) && ordre != tableauDeconversion.size()) {
+                value = ordre;
+            } else if ((valmin <= moyenne && valmax >= moyenne) && ordre == tableauDeconversion.size()) {
+                value = ordre;
+            }
+        }
+        return value;
+    }
+
+    public String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere) {
+        String val = "";
+        if (moyenne != null && moyenne != -1 && tableauDeconversion != null) {
+            int posConverti = getPositionnementValue(moyenne + 1,
+                    tableauDeconversion);
+            if (posConverti != -1) {
+                val = String.valueOf(posConverti);
+            }
+            if(printMatiere != null) {
+                printMatiere = true;
+            }
+        }
+        return val;
+    }
+    public void studentAvailableForPeriode(final String idClasse, final Long idPeriode, final Integer typeClasse,
+                                           Handler<Message<JsonObject>> handler) {
+        JsonObject action = new JsonObject();
+        if (typeClasse == 0) {
+            action.put("action", "classe.getEleveClasse")
+                    .put("idClasse", idClasse);
+        } else if (typeClasse == 1 || typeClasse == 2) {
+            action.put("action", "groupe.listUsersByGroupeEnseignementId")
+                    .put("groupEnseignementId", idClasse)
+                    .put("profile", "Student");
+        }
+        if (idPeriode != null) {
+            action.put(ID_PERIODE_KEY, idPeriode);
+        }
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(handler));
+
     }
 }

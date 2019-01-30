@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
+
+<head>
+    <title>{{title}}</title>
+    <style type="text/css">
+
+        body {
+            font-family: "Calibri", sans-serif;
+            align-content: center;
+            padding: 5px;
+            margin: 0;
+        }
+
+        .page {
+            page-break-after: avoid;
+        }
+
+
+
+        #education {
+            width: auto;
+            height: 90px;
+            margin-bottom: 20px;
+            margin-left: -2px;
+            float:left;
+        }
+        #niveau {
+            width: auto;
+            height: 90px;
+            margin-bottom: 20px;
+            margin-left: 4px;
+            float:right;
+            margin-top: 0px;
+        }
+        #imgStruct {
+            width: auto;
+            height: 90px;
+            margin-bottom: 20px;
+            margin-left: 4px;
+            float:right;
+        }
+
+        h1 {
+            margin-top: 20px;
+            padding: 5px;
+            text-align: center;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 20px;
+            width: 100%;
+            background: #2a9cc8;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.26);
+        }
+
+
+        .first {
+            text-align : left;
+        }
+
+
+        .zui-table {
+            border: solid 1px #dedede;
+            border-collapse: collapse;
+            border-spacing: 0;
+            font: normal 13px Arial, sans-serif;
+            width: 100%;
+        }
+        .zui-table thead td {
+            background-color:  #2a9cc8;
+            border: none;
+            vertical-align:middle;
+            color: #FFFFFF;
+            padding: 7px;
+            text-align: left;
+            text-shadow: 1px 1px 1px #fff;
+            font-size:14px;
+            font-weight:700;
+            height:15px;
+            line-height: 20px;
+        }
+        .zui-table tbody td {
+            padding: 6px;
+            text-shadow: 1px 1px 1px #fff;
+        }
+        tr td {
+            border-left-width: 1px;
+            border-left-style: solid;
+            border-left-color: #dedede;
+            border-right-width: 1px;
+            border-right-style: solid;
+            border-right-color: #dedede;
+        }
+        tbody tr:nth-child(2n) {
+            background-color: #ececec;
+            height: 10px;
+        }
+
+
+        tbody tr:nth-child(2n-1) {
+            background-color: #fff;
+            height: 10px;
+        }
+        .synthese {
+            margin-top: 10px;
+            background-color: #ffd0a0 !important;
+            padding: 10px;
+            visibility: visible !important;
+        }
+        #imgSignature {
+            width: 200px;
+            height: auto;
+            position: relative;
+            /*float:right;*/
+        }
+        .structure {
+            height: 90px;
+            font-size: small;
+            font-family: "Calibri", sans-serif;
+            float:left;
+        }
+        .structure > p {
+            margin: 4px;
+            margin-left : 5px;
+            margin-top : 0px;
+        }
+        @page{
+            size : A4 ;
+            margin-top: 20px;
+            margin-left : 1px;
+            margin-right : 1px;
+
+        }
+        .center{ text-align: center !important;}
+
+        {{#appreciation}}
+        .pretty {
+            font-size: x-small !important;
+        }
+        .zui-table tbody td {
+            padding: 5px !important;
+        }
+        {{/appreciation}}
+    </style>
+</head>
+<body>
+
+
+<div class="page">
+
+    <div style= "height: 95px;" class="paddingFifty">
+        <img id="education" src="img/education_nationale.png" alt="Logo"/>
+        <div class="structure">
+            {{#structureLibelle}}
+            <p style="font-weight: bold">{{academy}}</p>
+
+            <p style="font-weight: bold">{{nameStructure}}</p>
+            <p>{{address}}</p>
+            <p>{{town}}</p>
+            <p>{{phone}}</p>
+            <p>{{email}}</p>
+            {{/structureLibelle}}
+        </div>
+
+        {{#hasImgStructure}}
+        <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
+        {{/hasImgStructure}}
+        {{#hasLevel}}
+        <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
+        {{/hasLevel}}
+    </div>
+
+    <h1>{{exportReleveLibelle}}&nbsp; {{matiere}} &nbsp; {{classeName}}</h1>
+    <table class="zui-table">
+        <thead>
+        <tr>
+            <td class="first">{{displayNameLibelle}}</td>
+            {{#averageAuto}}
+            <td class="pretty center">{{moyenneLibelle}}</td>
+            {{/averageAuto}}
+            {{#averageFinal}}
+            <td class="pretty center">{{moyenneFinaleLibelle}}</td>
+            {{/averageFinal}}
+            {{#positionnementFinal}}
+            <td class="pretty center">{{positionnementFinaleLibelle}}</td>
+            {{/positionnementFinal}}
+            {{#appreciation}}
+            <td class="">{{appreciationLibelle}}</td>
+            {{/appreciation}}
+        </tr>
+        </thead>
+        <tbody>
+        {{#eleves}}
+        <tr>
+            <td class="first">{{displayName}}</td>
+            {{#averageAuto}}
+            <td class="center">{{moyenne}}</td>
+            {{/averageAuto}}
+            {{#averageFinal}}
+            <td class="center">{{moyenneFinale}}</td>
+            {{/averageFinal}}
+            {{#positionnementFinal}}
+            <td class="center">{{positionnement}}</td>
+            {{/positionnementFinal}}
+            {{#appreciation}}
+            <td class="">{{appreciation_matiere_periode}}</td>
+            {{/appreciation}}
+        </tr>
+        {{/eleves}}
+        {{#appreciationClasse}}
+
+        <tr>
+            <td class="first">{{appreciationClasseLibelle}}</td>
+            <td colspan="{{colspan}}">
+                {{#appreciation_classe}}
+
+                {{appreciation}}
+
+                {{/appreciation_classe}}
+            </td>
+        </tr>
+
+        {{/appreciationClasse}}
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

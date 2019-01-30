@@ -21,6 +21,7 @@ import { SousMatiere } from './index';
 export class Matiere extends Model {
     id: any;
     sousMatieres: any;
+    name: string;
 
     constructor () {
         super();

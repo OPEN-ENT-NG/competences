@@ -15,7 +15,8 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, IModel, _, moment, Collection, http, idiom as lang } from 'entcore';
+import {Model, IModel, _, moment, Collection, http, idiom as lang} from 'entcore';
+import httpAxios from 'axios';
 import {
     AppreciationClasse,
     Periode,
@@ -28,9 +29,10 @@ import {
 } from './index';
 import {getNN} from "../../utils/functions/utilsNN";
 import * as utils from "../../utils/teacher";
-import {Defaultcolors} from "../eval_niveau_comp";
 import {Graph} from "../common/Graph";
 declare  let Chart: any;
+
+
 export class ReleveNote extends  Model implements IModel {
     synchronized: any;
     elementProgramme: any;
@@ -51,6 +53,7 @@ export class ReleveNote extends  Model implements IModel {
     _tmp: any;
     isNN: boolean = false;
     openedLightboxEleve: boolean = false;
+    exportOptions : any;
 
     get api() {
         return {
@@ -74,7 +77,9 @@ export class ReleveNote extends  Model implements IModel {
                 this.idClasse}&idMatiere=${this.idMatiere}&typeClasse=${this.classe.type_groupe}`,
             GET_DATA_FOR_GRAPH_DOMAINE: `/competences/releve/datas/graph/domaine?idEtablissement=${
                 this.structure.id}&idClasse=${this.idClasse}&idMatiere=${this.idMatiere}&typeClasse=${
-                this.classe.type_groupe}`
+                this.classe.type_groupe}`,
+
+            EXPORT: `/competences/releve/export`
 
         }
     }
@@ -93,13 +98,16 @@ export class ReleveNote extends  Model implements IModel {
         this.matiere = _.findWhere(evaluations.structure.matieres.all, {id: this.idMatiere});
         let c = _.findWhere(evaluations.structure.classes.all, {id: this.idClasse});
         this.classe = new Classe({id: c.id, name: c.name, type_groupe: c.type_groupe, externalId: c.externalId});
-        let graphData = {
-            idPeriode: this.idPeriode,
-            structure: this.structure,
-            classe: this.classe,
-            idMatiere: this.idMatiere,
-            idClasse : this.idClasse
-        }
+        this.exportOptions = {
+            show : false,
+            fileType: 'pdf',
+
+            appreciation: true,
+            averageFinal: true,
+            averageAuto: true,
+            positionnementFinal: true,
+            appreciationClasse: true
+        };
         this.collection(Devoir, {
             sync: () => {
                 if (evaluations.structure.synchronized.devoirs) {
@@ -170,20 +178,16 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    syncAppreciationClasse() {
-        return new Promise((resolve, reject) => {
-            if (this.idPeriode != null) {
-                let periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
+    syncAppreciationClasse(appreciation) {
+        if (this.idPeriode != null) {
+            let periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
 
-                let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
+            let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
 
-                this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode,
-                    endSaisie, this.structure.id);
+            this.appreciationClasse = new AppreciationClasse(this.idClasse, this.idMatiere, this.idPeriode,
+                endSaisie, this.structure.id, appreciation);
 
-                this.appreciationClasse.sync();
-            }
-            resolve();
-        });
+        }
     }
 
     syncMoyenneAnnee(): Promise<any> {
@@ -357,48 +361,24 @@ export class ReleveNote extends  Model implements IModel {
             if (this.classe.periodes.length() === 0) {
                 await this.classe.periodes.sync();
             }
-            await Promise.all([this.syncEvaluations(), this.syncDevoirs(), this.syncClasse(),
-                this.getConversionTable(), this.syncMoyenneAnnee()]);
-            this.syncAppreciationClasse();
+            await Promise.all([this.syncEvaluations(), this.syncDevoirs()]);
             this.periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
-            this.classe = this.classe.filterEvaluableEleve(this.periode);
-            let _notes, _devoirs, _eleves, _moyennesFinales, _appreciations, _competencesNotes;
+            let _notes, _devoirs, _eleves;
             if (this._tmp) {
                 _notes = this._tmp.notes;
                 _devoirs = this._tmp.devoirs;
                 _eleves = this._tmp.eleves;
-                _moyennesFinales = this._tmp.moyennes;
-                _appreciations = this._tmp.appreciations;
-                _competencesNotes = this._tmp.competencesNotes;
-                this.elementProgramme = this._tmp.elementProgramme;
-            }
+                this.classe.eleves.load(_eleves);
+                if(this.idPeriode !== null ) {
+                    this.elementProgramme = this._tmp.elementProgramme;
+                    this.syncAppreciationClasse(this._tmp.appreciation_classe.appreciation);
+                }
+                this.getConversionTable(this._tmp.tableConversions);
+            };
             this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated: true});
             this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined) ? false : true;
             _.each(this.classe.eleves.all, (eleve) => {
-                // chargement des  competencesNotes de l'élève
-                let competencesNotesEleve = _.where(_competencesNotes, {id_eleve: eleve.id});
-                eleve.competencesNotes = (competencesNotesEleve !== undefined) ? competencesNotesEleve : [];
 
-                // chargement de la  moyenne finale de l'élève
-                let _eleve = _.findWhere(_moyennesFinales, {id_eleve: eleve.id});
-                if (_eleve !== undefined && _eleve.moyenne !== null) {
-                    eleve.moyenneFinale = _eleve.moyenne;
-
-                    // if (this.hasEvaluatedDevoirs) {
-                    //     eleve.moyenneFinale = _eleve.moyenne;
-                    // }
-                    // else {
-                        // suppression de la moyenne finale lorsqu'il n'y a pas de devoir avec l'évaluation numérique
-                        // eleve.moyenneFinale = "";
-                        // this.saveAppreciationMatierePeriodeEleve(eleve);
-                    // }
-
-                }
-                // load appreciation
-                let _eleve_appreciation = _.findWhere(_appreciations, {id_eleve: eleve.id});
-                if (_eleve_appreciation !== undefined && _eleve_appreciation !== null) {
-                    eleve.appreciation_matiere_periode = _eleve_appreciation.appreciation_matiere_periode;
-                }
                 let _evals = [];
                 let _t = _.where(_notes, {id_eleve: eleve.id});
                 _.each(this.devoirs.all, async (devoir) => {
@@ -457,13 +437,13 @@ export class ReleveNote extends  Model implements IModel {
             });
             if (this.hasEvaluatedDevoirs) {
                 _.each(this.classe.eleves.all, (eleve) => {
-                        let e = _.findWhere(_eleves, {id: eleve.id});
-                        if (e !== undefined) {
-                            eleve.moyenne = e.moyenne;
-                        }
-                        else {
-                            eleve.moyenne = getNN();
-                        }
+                    let e = _.findWhere(_eleves, {id: eleve.id});
+                    if (e !== undefined) {
+                        eleve.moyenne = e.moyenne;
+                    }
+                    else {
+                        eleve.moyenne = getNN();
+                    }
                 });
 
             }
@@ -555,18 +535,25 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    getConversionTable(): Promise<any> {
+    getConversionTable(data?): Promise<any> {
         this.collection(TableConversion, {
             sync: async (): Promise<any> => {
                 return new Promise((resolve) => {
-                    http().getJson(this.api.GET_CONVERSION_TABLE).done((data) => {
-
-                        this.tableConversions.load(data);
+                    let exec = (d) => {
+                        this.tableConversions.load(d);
 
                         if (resolve && (typeof (resolve) === 'function')) {
-                            resolve(data);
+                            resolve(d);
                         }
-                    });
+                    };
+                    if(data === undefined) {
+                        http().getJson(this.api.GET_CONVERSION_TABLE).done((data) => {
+                            exec(data);
+                        });
+                    }
+                    else {
+                        exec(data);
+                    }
                 });
             }
         });
@@ -599,7 +586,110 @@ export class ReleveNote extends  Model implements IModel {
     }
 
     getDataForGraph(eleve, forDomaine?): any {
-      return Graph.getDataForGraph(this, eleve, forDomaine);
+        return Graph.getDataForGraph(this, eleve, forDomaine);
     }
 
+    addColumnForExportCsv (line, key): any {
+        if(line[key] === undefined) {
+            line[key] = ' ';
+        }
+        else {
+            if (key === 'appreciation_matiere_periode') {
+                while (!_.isEmpty(line.appreciation_matiere_periode.match('\n'))) {
+                    line.appreciation_matiere_periode =
+                        line.appreciation_matiere_periode.replace('\n',' ');
+                }
+            }
+        }
+    }
+
+    async export  () {
+        return new Promise(async (resolve, reject) => {
+            let parameter = this.toJson();
+            let colspan = _.filter(_.values(this.exportOptions),(val) => { return val === true;}).length;
+            _.extend(parameter, this.exportOptions);
+            _.extend(parameter, {typeClasse: this.classe.type_groupe, classeName: this.classe.name,
+            matiere: this.matiere.name,
+                colspan: colspan -1 });
+            try {
+                let data = await httpAxios.post(this.api.EXPORT, parameter,
+                    {responseType: this.exportOptions.fileType === 'pdf'? 'arraybuffer' : 'json'});
+                console.dir(data);
+                let blob;
+                let link = document.createElement('a');
+                let response = data.data;
+                if(this.exportOptions.fileType === 'csv') {
+
+                    let columnCsv = [];
+                    let format = this.formateHeaderAndColumn();
+                    _.forEach(response.eleves , (line) => {
+                        this.addColumnForExportCsv(line,'displayName');
+                        if(this.exportOptions.averageAuto) {
+                            this.addColumnForExportCsv(line, 'moyenne');
+                        }
+                        if(this.exportOptions.averageFinal) {
+                            this.addColumnForExportCsv(line, 'moyenneFinale');
+                        }
+                        if(this.exportOptions.positionnementFinal) {
+                            this.addColumnForExportCsv(line, 'positionnement');
+                        }
+                        if(this.exportOptions.appreciation) {
+                            this.addColumnForExportCsv(line, 'appreciation_matiere_periode');
+                        }
+                        columnCsv.push(_.pick(line, format.column));
+                    });
+
+
+                    let csvData = Utils.ConvertToCSV(columnCsv,format.header);
+                    if(this.exportOptions.appreciationClasse ){
+                        csvData += (`${lang.translate('evaluations.releve.appreciation.classe')};${
+                            response.appreciation_classe.appreciation}\r\n`);
+                    }
+
+
+                    blob = new Blob([csvData]);
+                    link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download =  `releve_note_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.csv`;
+
+                }
+                else {
+                    blob = new Blob([response]);
+                    link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download =  `releve_note_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.pdf`;
+                }
+                document.body.appendChild(link);
+                link.click();
+                resolve();
+
+            }
+            catch(e) {
+                reject(e);
+            };
+        });
+    }
+
+    formateHeaderAndColumn () : any {
+        let header = `${lang.translate('student')}`;
+        let column = ['displayName'];
+
+        if(this.exportOptions.averageAuto) {
+            header += `; ${lang.translate('average.auto')}`;
+            column.push('moyenne');
+        }
+        if(this.exportOptions.averageFinal) {
+            header +=`; ${lang.translate('average.final')}`;
+            column.push('moyenneFinale');
+        }
+        if(this.exportOptions.positionnementFinal) {
+            header += `; ${lang.translate('evaluations.releve.positionnement')}`;
+            column.push('positionnement');
+        }
+        if(this.exportOptions.appreciation) {
+            header += `; ${lang.translate('viescolaire.utils.appreciation')}`;
+            column.push('appreciation_matiere_periode');
+        }
+        return  {header: header, column: column};
+    }
 }
