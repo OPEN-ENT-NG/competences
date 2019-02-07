@@ -100,6 +100,9 @@ export class SuiviDesAcquis  {
            return this.positionnement_auto;
        }
     }
+    initPositionnement() : any {
+        this.positionnement_final = this.getPositionnementDefinitif();
+    }
 }
 export class SuivisDesAcquis extends Model{
 

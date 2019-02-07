@@ -59,22 +59,22 @@
                             [[suiviDesAcquis.moyenneClasse]]
                         </span>
                 </td>
-                <td class="center" tooltip="[[getLibellePositionnement(suiviDesAcquis.positionnement_auto)]]"
+                <td class="center"
                     data-label="[[translate('evaluations.releve.positionnement')]]">
-                    <ul class="selectable-list twelve" ng-if="canSaveAppMatierePosiBilanPeriodique" >
+                    <ul class="selectable-list twelve"
+                        ng-init="suiviDesAcquis.initPositionnement()"
+                        ng-if="canSaveAppMatierePosiBilanPeriodique" >
 
                         <li class="cell"
                             style="margin: 0"
-                            ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final,
-                                    positionnementcalculee: $index === suiviDesAcquis.positionnement_auto}"
+                            ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final}"
                             data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
                             ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
                             <label ng-bind-html="$index"></label>
                         </li>
                         <li class="cell"
                             style="margin: 0"
-                            ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final,
-                                                positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_auto}"
+                            ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final}"
                             data-ng-click="savePositionnementEleve(suiviDesAcquis, structure.cycle.niveauCompetencesArray.length);"
                         >
                             <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
