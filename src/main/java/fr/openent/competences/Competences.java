@@ -147,6 +147,7 @@ public class Competences extends BaseServer {
     public static final String LIEN_EDUCATEUR = "EDUCATEUR";
     public static final String LIEN_ASSISTANT_FAMILIAL =  "ASSISTANT FAMILIAL";
     public static final String LIEN_GARDE_ENFANT = "GARDE d'ENFANT";
+    public static final String ELEMENT_PROGRAMME_DEFAULT = "Aucun élément travaillé pour cette matière.";
 
     // Clefs usuelles
     public static final String ID_ETABLISSEMENT_KEY = "idEtablissement";

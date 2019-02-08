@@ -25,6 +25,8 @@
 
 package fr.openent.competences.bean.lsun;
 
+import fr.openent.competences.Competences;
+
 import javax.xml.bind.annotation.*;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
@@ -108,6 +110,9 @@ public class ElementProgramme {
      *     
      */
     public void setLibelle(String value) {
+        if(value == null || value.isEmpty()){
+            value = Competences.ELEMENT_PROGRAMME_DEFAULT;
+        }
         this.libelle = value;
     }
 

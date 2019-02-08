@@ -229,6 +229,7 @@ import java.util.Map;
         "elementsProgramme",
         "parcoursCommuns",
         "viesScolairesCommuns",
+        "episThematiques",
         "epis",
         "episGroupes",
         "accPersos",
@@ -251,6 +252,8 @@ public class Donnees {
     protected ParcoursCommuns parcoursCommuns;
     @XmlElement(name = "vies-scolaires-communs")
     protected ViesScolairesCommuns viesScolairesCommuns;
+    @XmlElement(name = "epis-thematiques")
+    protected EpisThematiques episThematiques;
     protected Epis epis;
     @XmlElement(name = "epis-groupes")
     protected EpisGroupes episGroupes;
@@ -455,6 +458,13 @@ public class Donnees {
         this.viesScolairesCommuns = value;
     }
 
+    public EpisThematiques getEpisThematiques(){
+        return episThematiques;
+    }
+
+    public void setEpisThematiques(EpisThematiques value){
+        this.episThematiques = value;
+    }
     /**
      * Gets the value of the epis property.
      *
@@ -1056,6 +1066,16 @@ public class Donnees {
             }
             return mapIdClassIdEleve;
         }
+
+        public List<String> getAllCodeDivision(){
+            List<String> listCodeDivision = new ArrayList<>();
+            for(Eleve eleve : eleve){
+                if(!listCodeDivision.contains(eleve.getCodeDivision())){
+                    listCodeDivision.add(eleve.getCodeDivision());
+                }
+            }
+        return listCodeDivision;
+        }
     }
 
 
@@ -1117,7 +1137,25 @@ public class Donnees {
         }
 
     }
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = "", propOrder = {
+            "epiThematique"
+    })
+    public static class EpisThematiques {
 
+        @XmlElement(name = "epi-thematique", required = true)
+
+        protected List<EpiThematique> epiThematique;
+
+
+        public List<EpiThematique> getEpiThematique() {
+            if (epiThematique == null) {
+                epiThematique = new ArrayList<EpiThematique>();
+            }
+            return this.epiThematique;
+        }
+
+    }
 
     /**
      * <p>Java class for anonymous complex type.
@@ -1306,6 +1344,19 @@ public class Donnees {
                 parcoursCommun = new ArrayList<ParcoursCommun>();
             }
             return this.parcoursCommun;
+        }
+
+        public ParcoursCommun getParcoursCommunInList(Object periode, String codeDivision){
+
+            ParcoursCommun parcoursCommun = null;
+            if(this.parcoursCommun != null) {
+                for (ParcoursCommun pc : this.parcoursCommun) {
+                    if (pc.getCodeDivision().equals(codeDivision) && pc.getPeriodeRef().equals(periode)) {
+                        parcoursCommun = pc;
+                    }
+                }
+            }
+            return parcoursCommun;
         }
 
 

@@ -350,7 +350,7 @@ public class ElementBilanPeriodiqueController extends ControllerHelper {
                     defaultElementBilanPeriodiqueService.getElementsBilanPeriodique(
                             Boolean.parseBoolean(request.params().get("visu"))
                                     ? null : request.params().get("idEnseignant"),
-                            request.params().get("idClasse"),
+                            ( request.params().get("idClasse") != null)? Arrays.asList(request.params().get("idClasse")) : null,
                             request.params().get("idEtablissement"), arrayResponseHandler(request));
 
                 }else{

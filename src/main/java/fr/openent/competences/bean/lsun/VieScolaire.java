@@ -97,7 +97,9 @@ public class VieScolaire {
      *     
      */
     public void setCommentaire(String value) {
-        this.commentaire = value;
+        if(value != null){
+            this.commentaire = value;
+        }
     }
 
     /**

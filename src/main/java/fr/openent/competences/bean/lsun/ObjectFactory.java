@@ -179,6 +179,7 @@ public class ObjectFactory {
         return new Epi();
     }
 
+    public EpiThematique createEpiThematique(){ return new EpiThematique(); }
     /**
      * Create an instance of {@link ModaliteAccompagnement }
      * 
@@ -379,6 +380,13 @@ public class ObjectFactory {
         return new Donnees.ViesScolairesCommuns();
     }
 
+    /**
+     *
+     * Create an instance of {@link Donnees.EpisThematiques }
+     */
+    public Donnees.EpisThematiques createEpisThematiques(){
+        return new Donnees.EpisThematiques();
+    }
     /**
      * Create an instance of {@link Donnees.Epis }
      * 

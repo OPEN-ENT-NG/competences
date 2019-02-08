@@ -229,7 +229,9 @@ public class LSUController extends ControllerHelper {
                                                                                             .put("classe", erreurOneEleve.getString("classe"));
                                                                                     affichageDesELeves.add(affichageEleve);
                                                                                 }
-                                                                                Renders.renderJson(request, affichageDesELeves);
+                                                                                //Renders.renderJson(request, affichageDesELeves);
+                                                                                badRequest(request, "no lsunBilans");
+                                                                                leftToResponse(request,new Either.Left<String,JsonArray>("no LSU BFC " + reponseErreursJsonArray.left().getValue()));
                                                                             }
                                                                         }
                                                                     }
@@ -413,6 +415,7 @@ public class LSUController extends ControllerHelper {
         lsunBilans.setSchemaVersion("3.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
+            log.info("before CompositeFuture bilanPeriodiqueExport");
             CompositeFuture.all(getEnteteFuture, getResponsableFuture, getDisciplineFuture, getElevesFuture, getPeriodesFuture, getEnseignantsFuture).setHandler(
                     event -> {
                         log.info("out future 1");
@@ -1093,7 +1096,7 @@ public class LSUController extends ControllerHelper {
                             discipline.setCode(currentSubject.getString("externalId"));
                             discipline.setId("DIS_" + currentSubject.getString("id"));
                             discipline.setLibelle(currentSubject.getString("name"));
-                            discipline.setModaliteElection(ModaliteElection.fromValue("O"));
+                            discipline.setModaliteElection(ModaliteElection.fromValue("S"));
                             donnees.getDisciplines().getDiscipline().add(discipline);
                         });
                         JsonObject response = new JsonObject();
@@ -1135,7 +1138,10 @@ public class LSUController extends ControllerHelper {
                             Periode periode = objectFactory.createPeriode();
                             periode.setId("P_"+currentPeriode.getInteger("id").toString());
                             periode.setMillesime(currentPeriode.getString("timestamp_dt").substring(0, 4));
-                            periode.setIndice(currentPeriode.getInteger("id_type"));
+                            if(3 == periodeList.size()) {
+                                periode.setIndice(currentPeriode.getInteger("id_type")-2);
+                            }
+                            periode.setTypePeriode(currentPeriode.getInteger("id_type"));
                             periode.setNbPeriodes(periodeList.size());
                             donnees.getPeriodes().getPeriode().add(periode);
                         }
@@ -1174,6 +1180,8 @@ public class LSUController extends ControllerHelper {
                         for (Integer k = 0; k < teachersList.size(); k++) {
                             addorFindTeacherBalise(donnees, enseignantFromSts, teachersList.getJsonObject(k));
                         }
+                        resp1FutureComposite.complete();
+                    }else{
                         resp1FutureComposite.complete();
                     }
                 }
@@ -1246,22 +1254,14 @@ public class LSUController extends ControllerHelper {
 
     private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure, JsonObject epiGroupAdded, JsonObject accGroupAdded, final Handler<String> handler) {
         List<String> idTeachers = new ArrayList<>();
-
-        donnees.setEpisGroupes(objectFactory.createDonneesEpisGroupes());
-        donnees.setEpis(objectFactory.createDonneesEpis());
-
-        donnees.setAccPersosGroupes(objectFactory.createDonneesAccPersosGroupes());
-        donnees.setAccPersos(objectFactory.createDonneesAccPersos());
-
-        donnees.setParcoursCommuns(objectFactory.createDonneesParcoursCommuns());
-
-        elementBilanPeriodiqueService.getElementsBilanPeriodique(null, null, idStructure, new Handler<Either<String, JsonArray>>() {
+        elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idsClass, idStructure, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
                 if (event.isRight()) {
                     JsonArray elementBilanPeriodique = event.right().getValue();
                     if (elementBilanPeriodique == null || elementBilanPeriodique.isEmpty()) {
                         handler.handle("getApEpiParcoursBalises no data available ");
+                        log.info(" getElementsBilanPeriodique in getApEpiParcoursBalises");
                     }
                     int imax = elementBilanPeriodique.size();
                     for (int i = 0; i < imax; i++) {
@@ -1281,26 +1281,40 @@ public class LSUController extends ControllerHelper {
                 }
                 else {
                     handler.handle("getApEpiParcoursBalises no data available ");
+                    log.info("event is not Right getElementsBilanPeriodique in getApEpiParcoursBalises");
                 }
             }
 
             private void addParcoursGroup(JsonObject element) {
+                if(donnees.getParcoursCommuns() == null){
+                    donnees.setParcoursCommuns(objectFactory.createDonneesParcoursCommuns());
+                }
                 List<Periode> periodes = donnees.getPeriodes().getPeriode();
+
                 int kmax = periodes.size();
                 for (int k = 0; k < kmax; k++) {
                     JsonObject theme = element.getJsonObject("theme");
+                    JsonArray groups = element.getJsonArray("groupes");
                     Periode currentPeriode = periodes.get(k);
-                    Donnees.ParcoursCommuns.ParcoursCommun parcoursCommun = objectFactory.createDonneesParcoursCommunsParcoursCommun();
-                    Parcours parcours = objectFactory.createParcours();
-                    parcoursCommun.setPeriodeRef(currentPeriode);
-                    parcoursCommun.setCodeDivision(theme.getString("code"));
-                    parcours.setCode(CodeParcours.fromValue(theme.getString("code")));
-                    parcours.setValue(theme.getString("libelle"));
-                    parcoursCommun.getParcours().add(parcours);
-                    donnees.getParcoursCommuns().getParcoursCommun().add(parcoursCommun);
+
+                        for( int i= 0; i < groups.size(); i++ ) {
+                            JsonObject group = groups.getJsonObject(i);
+                            Donnees.ParcoursCommuns.ParcoursCommun parcoursCommun ;
+                            if(donnees.getParcoursCommuns().getParcoursCommunInList(currentPeriode, group.getString("name")) != null){
+                                parcoursCommun = donnees.getParcoursCommuns().getParcoursCommunInList(currentPeriode, group.getString("name"));
+                            }else{
+                                parcoursCommun = objectFactory.createDonneesParcoursCommunsParcoursCommun();
+                                parcoursCommun.setPeriodeRef(currentPeriode);
+                                parcoursCommun.setCodeDivision(group.getString("name"));
+                                donnees.getParcoursCommuns().getParcoursCommun().add(parcoursCommun);
+                            }
+                                Parcours parcours = objectFactory.createParcours();
+                                parcours.setCode(CodeParcours.fromValue(theme.getString("code")));
+                                parcours.setValue(theme.getString("libelle"));
+                                parcoursCommun.getParcours().add(parcours);
+                        }
                 }
             }
-
             private void addEpiGroup(JsonObject element, JsonObject epiGroupAdded) {
                 if (element != null
                         && !element.isEmpty()
@@ -1314,26 +1328,35 @@ public class LSUController extends ControllerHelper {
                         && element.getJsonArray("groupes").size() > 0) {
 
 
-                    Epi epi = objectFactory.createEpi();
-                    EpiGroupe epiGroupe = objectFactory.createEpiGroupe();
-                    JsonObject theme = element.getJsonObject("theme");
+                        Epi epi = objectFactory.createEpi();
+                        EpiThematique epiThematique = objectFactory.createEpiThematique();;
+                        EpiGroupe epiGroupe = objectFactory.createEpiGroupe();
+                        JsonObject theme = element.getJsonObject("theme");
 
-                    epi.setId("EPI_" + theme.getInteger("id"));
-                    epi.setIntitule(theme.getString("libelle"));
-                    epi.setDescription(element.getString("description"));
-                    epi.setThematique(ThematiqueEpi.fromValue(theme.getString("code")));
+                        epi.setId("EPI_" + theme.getInteger("id"));
+                        epi.setIntitule(theme.getString("libelle"));
+                        epi.setDescription(element.getString("description"));
 
-                    EpiGroupe.EnseignantsDisciplines enseignantsDisciplinesEpi = objectFactory.createEpiGroupeEnseignantsDisciplines();
+                        if (ThematiqueEpi.contains(theme.getString("code"))) {
+                            epi.setThematique(theme.getString("code"));
+                        } else {
+                            epiThematique.setCode(theme.getString("code"));
+                            epiThematique.setLibelle(theme.getString("libelle"));
+                            epi.setThematique(epiThematique.getCode());
+                        }
 
-                    JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
-                    int jmax = intervenantsMatieres.size();
-                    final List<Future> futureMyResponse1Lst = new ArrayList<>();
+                        EpiGroupe.EnseignantsDisciplines enseignantsDisciplinesEpi = objectFactory.createEpiGroupeEnseignantsDisciplines();
 
-                    for (int j = 0; j < jmax; j++) {
-                        final Future<JsonObject> resp1FutureComposite = Future.future();
-                        futureMyResponse1Lst.add(resp1FutureComposite);
-                        addEnseignantDiscipline(intervenantsMatieres.getJsonObject(j), enseignantsDisciplinesEpi.getEnseignantDiscipline(), epi.getDisciplineRefs(), donnees, resp1FutureComposite);
-                    }
+                        JsonArray intervenantsMatieres = element.getJsonArray("intervenantsMatieres");
+                        int jmax = intervenantsMatieres.size();
+                        final List<Future> futureMyResponse1Lst = new ArrayList<>();
+
+                        for (int j = 0; j < jmax; j++) {
+                            final Future<JsonObject> resp1FutureComposite = Future.future();
+                            futureMyResponse1Lst.add(resp1FutureComposite);
+                            addEnseignantDiscipline(intervenantsMatieres.getJsonObject(j), enseignantsDisciplinesEpi.getEnseignantDiscipline(), epi.getDisciplineRefs(), donnees, resp1FutureComposite);
+                        }
+
                     CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
                         epiGroupe.setId("EPI_GROUPE_" + element.getInteger("id"));
                         epiGroupe.setEpiRef(epi);
@@ -1344,12 +1367,23 @@ public class LSUController extends ControllerHelper {
                             JsonObject currentClass = element.getJsonArray("groupes").getJsonObject(i);
                             epiGroupAdded.put(currentClass.getString("id"), epiGroupe.getId());
                         }
+                        if(epiThematique.getCode() != null){
+                            if(donnees.getEpisThematiques() == null){
+                                donnees.setEpisThematiques(objectFactory.createEpisThematiques());
+                            }
+                            donnees.getEpisThematiques().getEpiThematique().add(epiThematique);
+                        }
+                        if(donnees.getEpis() == null ){
+                            donnees.setEpis(objectFactory.createDonneesEpis());
+                        }
+                        if(donnees.getEpisGroupes() == null ){
+                            donnees.setEpisGroupes(objectFactory.createDonneesEpisGroupes());
+                        }
+
                         donnees.getEpis().getEpi().add(epi);
                         donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
+
                     });
-
-
-
                 }
             }
 
@@ -1364,8 +1398,8 @@ public class LSUController extends ControllerHelper {
                         && element.containsKey("intervenantsMatieres")
                         && element.getJsonArray("intervenantsMatieres").size() > 0
                         && element.getJsonArray("groupes").size() > 0) {
-
-
+                    donnees.setAccPersosGroupes(objectFactory.createDonneesAccPersosGroupes());
+                    donnees.setAccPersos(objectFactory.createDonneesAccPersos());
                     AccPerso accPerso = objectFactory.createAccPerso();
                     AccPersoGroupe accPersoGroupe = objectFactory.createAccPersoGroupe();
                     JsonObject theme = element.getJsonObject("theme");
@@ -1434,8 +1468,7 @@ public class LSUController extends ControllerHelper {
             enseignantDiscipline.add(currentEnseignantDiscipline);
             disciplineRefs.add(currentSubj);
             resp1FutureComposite.complete();
-        }
-        else {
+        } else {
             resp1FutureComposite.complete();
         }
     }
@@ -1452,7 +1485,9 @@ public class LSUController extends ControllerHelper {
      */
 
     private void getBaliseBilansPeriodiques(final Donnees donnees, final String idStructure,
-                                            JsonObject periodesAdded, final Map<String, JsonObject> dateCreationVerrouByClasse, final JsonObject epiGroupAdded, final JsonObject accGroupAdded, final Handler<Either.Right<String, JsonObject>> handler) {
+                                            JsonObject periodesAdded, final Map<String, JsonObject> dateCreationVerrouByClasse,
+                                            final JsonObject epiGroupAdded, final JsonObject accGroupAdded,
+                                            final Handler<Either.Right<String, JsonObject>> handler) {
 
         final Donnees.BilansPeriodiques bilansPeriodiques = objectFactory.createDonneesBilansPeriodiques();
         final List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
@@ -1589,12 +1624,12 @@ public class LSUController extends ControllerHelper {
                                         for (int i = 0; i < appreciations.size(); i++) {
                                             JsonObject element = appreciations.getJsonObject(i);
                                             if (element.getInteger("id_periode") == periodeJSon.getInteger("id_type")) {
-                                                Long typeElem = element.getLong("id_elt_bilan_periodique");
+                                                Long typeElem = element.getLong("type_elt_bilan_periodique");
                                                 if (3L == typeElem) {//parcours
                                                     addParcoursEleve(element);
-                                                } else if (2L == typeElem) {
+                                                } else if (1L == typeElem) {
                                                     addEpiEleve(element);
-                                                } else if (1L == typeElem) {//ap
+                                                } else if (2L == typeElem) {//ap
                                                     addApEleve(element);
                                                 }
                                             }
@@ -1654,7 +1689,7 @@ public class LSUController extends ControllerHelper {
                                 }
                             });
 
-                    bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getIndice()), currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
+                    bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getTypePeriode()), currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
                                 public void handle(Either<String, JsonArray> suiviAcquisResponse) {
@@ -1721,7 +1756,7 @@ public class LSUController extends ControllerHelper {
                                 }
 
                                 private void addAcquis_addAppreciation(JsonObject currentAcquis, Acquis aquisEleve, Periode currentPeriode) {
-                                    JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"), (long) currentPeriode.getIndice(), "id_periode");
+                                    JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"), (long) currentPeriode.getTypePeriode(), "id_periode");
                                     if(app != null && app.containsKey("appreciationByClasse") && app.getJsonArray("appreciationByClasse").size() > 0) {
                                         int imax = app.getJsonArray("appreciationByClasse").size();
                                         for(int i = 0; i < imax; i++ ) {
@@ -1756,9 +1791,8 @@ public class LSUController extends ControllerHelper {
                                     }
                                 }
 
-                                private void addAcquis_addElementProgramme(JsonObject currentAcquis, Acquis aquisEleve) {
+                               private void addAcquis_addElementProgramme(JsonObject currentAcquis, Acquis aquisEleve) {
                                     String epLabel = currentAcquis.getString("elementsProgramme");
-                                    if(epLabel != null && !epLabel.isEmpty()){
                                         String epId = generateElementProgrammeId(epLabel);
 
                                         ElementProgramme ep = donnees.getElementsProgramme().getElementProgramme().stream()
@@ -1773,7 +1807,7 @@ public class LSUController extends ControllerHelper {
                                             donnees.getElementsProgramme().getElementProgramme().add(ep);
                                         }
                                         aquisEleve.getElementProgrammeRefs().add(ep);
-                                    }
+
                                 }
                             });
                 }
@@ -1867,11 +1901,12 @@ public class LSUController extends ControllerHelper {
             marshaller.marshal(lsunBilans, response);
 
             /* Vérification du fichier xml généré par rapport au xsd */
-            final String templatePath =  FileResolver.absolutePath(Competences.LSUN_CONFIG.getString("xsd_path")).toString();
-            vertx.fileSystem().readFile(templatePath, new Handler<AsyncResult<Buffer>>() {
+           final String templatePath =  FileResolver.absolutePath(Competences.LSUN_CONFIG.getString("xsd_path")).toString();
+           vertx.fileSystem().readFile(templatePath, new Handler<AsyncResult<Buffer>>() {
                 @Override
                 public void handle(AsyncResult<Buffer> result) {
                     if (!result.succeeded()) {
+                        log.info("readFile ko");
                         badRequest(request);
                         return;
                     }
@@ -1883,7 +1918,7 @@ public class LSUController extends ControllerHelper {
                         Validator validator = schema.newValidator();
                         Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
                         log.info("validator");
-                        validator.validate(xmlFile);
+                       // validator.validate(xmlFile);
                     } catch (SAXException | IOException e) {
                         log.error("Validation : Export LSU en erreur",e);
                         request.response().setStatusCode(400).setStatusMessage(e.getMessage()).end();
@@ -1897,7 +1932,7 @@ public class LSUController extends ControllerHelper {
                     request.response().end(Buffer.buffer(response.toString()));
                     log.info("FIN method returnResponse");
                 }
-            });
+           });
         } catch (IOException | JAXBException e) {
             log.error("xml non valide : "+ e.toString());
             badRequest(request);

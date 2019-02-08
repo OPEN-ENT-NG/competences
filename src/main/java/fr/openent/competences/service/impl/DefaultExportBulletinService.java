@@ -579,7 +579,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             String idClasse = eleveObject.getString(ID_CLASSE);
             String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT);
 
-            elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idClasse,
+            elementBilanPeriodiqueService.getElementsBilanPeriodique(null,  Arrays.asList(idClasse),
                     idEtablissement, new Handler<Either<String, JsonArray>>() {
                         private int count = 1;
                         private AtomicBoolean answer = new AtomicBoolean(false);
@@ -591,7 +591,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 if (message.contains(TIME) && !answer.get()) {
                                     count++;
                                     elementBilanPeriodiqueService.getElementsBilanPeriodique(null,
-                                            idClasse, idEtablissement, this);
+                                            Arrays.asList(idClasse), idEtablissement, this);
                                 }
                                 else {
                                     if (eleveObject.getJsonArray(ERROR) == null) {

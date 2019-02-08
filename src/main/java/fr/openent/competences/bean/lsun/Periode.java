@@ -69,6 +69,8 @@ public class Periode {
     protected int indice;
     @XmlAttribute(name = "nb-periodes", required = true)
     protected int nbPeriodes;
+    @XmlTransient
+    protected int typePeriode;
 
     /**
      * Gets the value of the id property.
@@ -150,4 +152,11 @@ public class Periode {
         this.nbPeriodes = value;
     }
 
+    public int getTypePeriode() {
+        return typePeriode;
+    }
+
+    public void setTypePeriode(int typePeriode) {
+        this.typePeriode = typePeriode;
+    }
 }

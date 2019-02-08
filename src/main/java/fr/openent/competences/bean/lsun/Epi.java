@@ -74,7 +74,7 @@ public class Epi {
     @XmlAttribute(name = "intitule", required = true)
     protected String intitule;
     @XmlAttribute(name = "thematique", required = true)
-    protected ThematiqueEpi thematique;
+    protected String thematique;
     @XmlAttribute(name = "discipline-refs", required = true)
     @XmlIDREF
     protected List<Object> disciplineRefs;
@@ -100,7 +100,9 @@ public class Epi {
      *     
      */
     public void setDescription(String value) {
-        this.description = value;
+        if(value != null){
+            this.description = value;
+        }
     }
 
     /**
@@ -159,7 +161,7 @@ public class Epi {
      *     {@link ThematiqueEpi }
      *     
      */
-    public ThematiqueEpi getThematique() {
+    public String getThematique() {
         return thematique;
     }
 
@@ -171,7 +173,8 @@ public class Epi {
      *     {@link ThematiqueEpi }
      *     
      */
-    public void setThematique(ThematiqueEpi value) {
+    public void setThematique(String value) {
+
         this.thematique = value;
     }
 

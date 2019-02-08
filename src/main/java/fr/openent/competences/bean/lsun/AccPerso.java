@@ -98,7 +98,9 @@ public class AccPerso {
      *     
      */
     public void setDescription(String value) {
-        this.description = value;
+        if(value != null){
+            this.description = value;
+        }
     }
 
     /**

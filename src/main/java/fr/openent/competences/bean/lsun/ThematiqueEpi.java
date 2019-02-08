@@ -71,4 +71,14 @@ public enum ThematiqueEpi {
         return valueOf(v);
     }
 
+    public static boolean contains(String code){
+        for(ThematiqueEpi theme : ThematiqueEpi.values()){
+            if(theme.value().equals(code)){
+                return true;
+            }
+
+        }
+        return false;
+    }
+
 }

@@ -113,7 +113,10 @@ public class Acquis {
      *     
      */
     public void setAppreciation(String value) {
-        this.appreciation = value;
+        if((value != null)){
+            this.appreciation = value;
+        }
+
     }
 
     /**

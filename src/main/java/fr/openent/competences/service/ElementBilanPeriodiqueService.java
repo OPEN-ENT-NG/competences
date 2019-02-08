@@ -62,7 +62,7 @@ public interface ElementBilanPeriodiqueService {
      * @param idEtablissement id établissement
      * @param handler Handler de retour
      */
-   void getElementBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement,
+   void getElementBilanPeriodique (String idEnseignant, List<String> idClasse, String idEtablissement,
                                            Handler<Either<String, JsonArray>> handler);
 
     /**
@@ -72,7 +72,7 @@ public interface ElementBilanPeriodiqueService {
      * @param idEtablissement id établissement
      * @param handler Handler de retour
      */
-    void getElementsBilanPeriodique (String idEnseignant, String idClasse, String idEtablissement,
+    void getElementsBilanPeriodique (String idEnseignant, List<String> idClasse, String idEtablissement,
                                     Handler<Either<String, JsonArray>> handler);
 
     /**
