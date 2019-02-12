@@ -1918,7 +1918,7 @@ public class LSUController extends ControllerHelper {
                         Validator validator = schema.newValidator();
                         Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
                         log.info("validator");
-                       // validator.validate(xmlFile);
+                        validator.validate(xmlFile);
                     } catch (SAXException | IOException e) {
                         log.error("Validation : Export LSU en erreur",e);
                         request.response().setStatusCode(400).setStatusMessage(e.getMessage()).end();

@@ -580,7 +580,9 @@ public class Utils {
                                     JsonObject requestUser = requestUsers.getJsonObject(i);
                                     if(!idsUserNamePrenom.containsKey(requestUser.getString("id"))){
                                         idsUserNamePrenom.put(requestUser.getString("id"),new JsonObject()
-                                                .put("firstName",requestUser.getString("firstName")).put("name",requestUser.getString("name")));
+                                                .put("firstName",requestUser.getString("firstName"))
+                                                .put("name",requestUser.getString("name"))
+                                                .put("id",requestUser.getString("id")));
                                     }
 
                                 }
