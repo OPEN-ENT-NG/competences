@@ -78,6 +78,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 $scope.print.imgStructure = infosStructure.data.imageStucture.path;
                 $scope.print.nameCE = infosStructure.data.nameAndBrad.name;
                 $scope.print.imgSignature = infosStructure.data.nameAndBrad.path;
+
             }
             catch (e) {
                 console.log(e);

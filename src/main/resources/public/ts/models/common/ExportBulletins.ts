@@ -5,6 +5,7 @@ import {_, notify, idiom as lang} from 'entcore';
 import http from "axios";
 import {Classe, ElementBilanPeriodique} from "../teacher";
 import {Stopwatch} from "./StopWatch";
+import {renameSubject} from "../../sniplets/renameSubject";
 
 declare let $ : any;
 declare let Chart: any;

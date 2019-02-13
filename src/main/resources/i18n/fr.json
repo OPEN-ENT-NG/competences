@@ -513,6 +513,8 @@
   "keyboard.button":"Raccourci clavier" ,
   "no.annotation":"Evaluer",
   "evaluations.add":"Ajouter",
+  "evaluations.libelle": "Libelle",
+  "evaluations.screenOrExport": "Ecrans/export",
   "evaluations.add.element.programme.summary": "Rappel des élements du programme travaillés : ",
   "evaluations.recap.item.evaluate": "Récapitulatif de tous les items évalués : ",
   "evaluations.recap.empty": "Il n'y a pas de compétence évaluée sur la période sélectionnée",
@@ -534,8 +536,21 @@
   "bilan.periodique.suivis.des.acquis.error.get": "Erreur lors de la récupération des acquis",
   "bilan.periodique.suivis.des.acquis.error.save.positionnement": "Erreur lors de la sauvegarde du positionnement",
   "bilan.periodique.moyenne.generale.eleve": "Moyenne générale de l'élève",
-  "bilan.periodique.moyenne.generale.eleve": "Moyenne générale de l'élève",
   "bilan.periodique.moyenne.generale.classe": "Moyenne générale de la classe",
   "no.bilan.periodique":"Aucun bilan périodique pour l'élève sélectionné",
-  "evaluations.bilan.periodique.title": "Bilan périodique"
+  "evaluations.bilan.periodique.title": "Bilan périodique",
+  "evaluations.rename.subject.title": "Modification des libelles des matières",
+  "evaluations.rename.subject.description": "",
+  "evaluations.rename.subject.error.get.subjects": "Erreur lors de la récupération des libelles des matières",
+  "evaluations.rename.subject.create.model": "Créer un modèle",
+  "evaluations.rename.subject.create.model.title":"Création d'un modèle",
+  "evaluations.rename.subject.modify.model.title":"Modification d'un modèle",
+  "evaluations.rename.subject.error.save.model": "Erreur lors de la savegarde du modlèle",
+  "evaluations.rename.subject.success.save.model": "Modèle sauvegardé",
+  "evaluations.rename.subject.error.delete.model": "Erreur lors de la suppression du modlèle",
+  "evaluations.rename.subject.success.delete.model": "Modèle supprimé",
+  "evaluations.model": "Modèle ",
+  "evaluations.open.model": "Afficher les libellés ",
+  "evaluations.close.model":"Masquer les libellés "
+
 }

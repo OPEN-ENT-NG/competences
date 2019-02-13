@@ -18,6 +18,7 @@ import org.entcore.common.storage.Storage;
 
 import static fr.openent.competences.Competences.CLASSE_NAME_KEY;
 import static fr.openent.competences.Competences.POSITIONNEMENTS_AUTO;
+import static fr.openent.competences.Utils.getLibelle;
 import static fr.wseduc.webutils.http.Renders.getHost;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -126,11 +127,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         this.storage = storage;
     }
 
-
-    private String getLibelle(String key) {
-        return I18n.getInstance().translate(key,
-                I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-    }
 
     private void logBegin(String method, String idEleve) {
         log.debug("------- [" + method + "]: " + idEleve + " DEBUT " );

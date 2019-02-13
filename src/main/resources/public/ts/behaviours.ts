@@ -22,6 +22,7 @@ import {linkGroupCycle} from "./sniplets/linkGroupCycle";
 import {visibilityDNB} from "./sniplets/visibilityDNB";
 import {bilanPeriodique} from "./sniplets/bilanPeriodique";
 import {paramServices} from './sniplets/paramServices'
+import {renameSubject} from "./sniplets/renameSubject";
 
 Behaviours.register('competences', {
     rights: {
@@ -53,6 +54,7 @@ Behaviours.register('competences', {
         itemsCompetences: itemsCompetences,
         linkGroupCycle: linkGroupCycle,
         epi_ap_parcours: bilanPeriodique,
-        paramServices : paramServices
+        paramServices : paramServices,
+        renameSubject: renameSubject
     }
 });

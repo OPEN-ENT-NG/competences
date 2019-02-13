@@ -1,0 +1,137 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+  ~     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~   This program is free software; you can redistribute it and/or modify
+  ~   it under the terms of the GNU Affero General Public License as
+  ~   published by the Free Software Foundation (version 3 of the License).
+  ~   For the sake of explanation, any module that communicate over native
+  ~   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~   license and could be license under its own terms. This is merely considered
+  ~   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~   This program is distributed in the hope that it will be useful,
+  ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<div class="twelve">
+
+    <h3>
+        <i18n>evaluations.rename.subject.title</i18n>
+
+    </h3>
+    <div class="twelve">
+        <!-- Recherche de competences -->
+        <div class="twelve cell twelve-mobile">
+            <input type="text" ng-model="search.name" placeholder="rechercher un model" style="width: 99%;font-size: 1em;font-style: italic;">
+        </div>
+        <button class="marginFive right-magnet" ng-click="openCreateModel()">
+            <i18n>evaluations.rename.subject.create.model</i18n>
+        </button>
+        <lightbox show="opened.lightboxCreateModel" on-close="!opened.lightboxCreateModel">
+            <p ng-if="newModel.id === undefined"><i18n>evaluations.rename.subject.create.model.title</i18n></p>
+            <p ng-if="newModel.id !== undefined"><i18n>evaluations.rename.subject.modify.model.title</i18n></p>
+            <div class="responsive-table">
+
+                <table>
+                    <thead>
+                    <tr>
+                        <th colspan="3" style="text-align:center" >
+                            <i18n>evaluations.model</i18n>&nbsp;:&nbsp;
+                            <input type="text" ng-model="newModel.title"></th>
+                    </tr>
+                    </thead>
+                    <tbody style="line-height: 5px;">
+                    <tr>
+                        <td class="bold"><i18n>viescolaire.utils.subject</i18n></td>
+                        <td class="bold"><i18n>evaluations.libelle</i18n></td>
+                        <!-- <td><i18n>evaluations.screenOrExport</i18n></td> -->
+                    </tr>
+                    <!--
+                    <tr>
+                        <td>[[model.firstSubject.name]]</td>
+                        <td><input type="text" ng-model="model.firstSubject.libelle"></td>
+                        <td rowspan="[[model.subjects.length]]">
+                            <span ng-repeat="screen in model.screens.all">[[screen.name]]
+                                <input type="checkbox" ng-model="screen.checked"> </span>
+                        </td>
+                    </tr>
+                    -->
+                    <tr ng-repeat="subject in newModel.subjects | orderBy:'name'">
+                        <td>[[subject.name]]</td>
+                        <td><input type="text" ng-model="subject.libelle"></td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+            <button class="marginFive magnet-right"
+                    ng-click="saveModel()">
+                <i18n>viescolaire.utils.save</i18n>
+            </button>
+            <button type="button" ng-click="opened.lightboxCreateModel = false"
+                    class="cancel right-magnet"><i18n>cancel</i18n></button>
+        </lightbox>
+    </div>
+</div>
+<div class="row">
+    <div ng-repeat="model in (filteredModels = (models.all | filter:filterSearch(search) | orderBy:'title'))"
+         ng-init="model.show = false"  class="twelve"
+         style="margin: 30px 0;border: 1px solid #ccc;">
+
+        <table style="margin-bottom: 0px;" class="twelve">
+            <thead>
+            <tr>
+                <th colspan="3" style="text-align:center; color: black;" >
+                    <sapn ng-click="model.show = !model.show"><i18n >evaluations.model</i18n>&nbsp;:&nbsp;[[model.title]]
+                    </sapn>
+                    <dots-menu ng-if="model.id !== undefined" style="text-align: left;">
+                        <opt data-ng-click="openCreateModel(model);">
+                            <i class="pencil"></i>&nbsp;<i18n>item.modify</i18n>
+                        </opt>
+                        <opt data-ng-click="deleteModel(model);">
+                            <i  class="trash"></i>&nbsp;<i18n>item.delete</i18n>
+                        </opt>
+                        <opt  data-ng-click="model.show = !model.show;"
+                              ng-if="model.show">
+                            <i ng-class="{'down-open': !model.show, 'up-open': model.show}">
+                            </i>
+                            &nbsp;<i18n>evaluations.close.model</i18n>
+                        </opt>
+                        <opt  data-ng-click="model.show = !model.show;"
+                              ng-if="!model.show">
+                            <i ng-class="{'down-open': !model.show, 'up-open': model.show}">
+                            </i>
+                            &nbsp;<i18n>evaluations.open.model</i18n>
+                        </opt>
+                    </dots-menu>
+                </th>
+
+            </tr>
+            </thead>
+            <tbody  style="line-height: 5px;" ng-show="model.show">
+            <tr>
+                <td class="bold"><i18n>viescolaire.utils.subject</i18n></td>
+                <td class="bold"><i18n>evaluations.libelle</i18n></td>
+               <!-- <td><i18n>evaluations.screenOrExport</i18n></td> -->
+            </tr>
+            <!--
+            <tr>
+                <td>[[model.firstSubject.name]]</td>
+                <td><input type="text" ng-model="model.firstSubject.libelle"></td>
+                <td rowspan="[[model.subjects.length]]">
+                    <span ng-repeat="screen in model.screens.all">[[screen.name]]
+                        <input type="checkbox" ng-model="screen.checked"> </span>
+                </td>
+            </tr>
+            -->
+            <tr ng-repeat="subject in model.subjects | orderBy:'name'">
+                <td>[[subject.name]]</td>
+                <td>[[subject.libelle]]</td>
+            </tr>
+            </tbody>
+        </table>
+
+    </div>
+</div>

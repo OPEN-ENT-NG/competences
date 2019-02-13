@@ -36,7 +36,9 @@ import java.math.BigInteger;
 public class Competences extends BaseServer {
 
     public static String COMPETENCES_SCHEMA;
+
     public static String VSCO_SCHEMA;
+    public final static String EVAL_SCHEMA = "notes";
 
     public static JsonObject LSUN_CONFIG;
     public static JsonObject TRANSITION_CONFIG;
@@ -71,6 +73,10 @@ public class Competences extends BaseServer {
     public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
     public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
     public static final String MATIERE_TABLE = "matiere";
+    public final static String VSCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
+    public final static String VSCO_MODEL_MATIERE_LIBELLE_TABLE = "model_subject_libelle";
+    public final static String VSCO_MATIERE_TABLE = "matiere";
+
 
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
@@ -176,7 +182,18 @@ public class Competences extends BaseServer {
     public static final String NOTES = "notes";
     public static final String HAS_NOTE = "hasNote";
     public static final String NN = "NN";
-
+    public static String ID_KEY = "id";
+    public static String ID_STRUCTURE_KEY = "idStructure";
+    public static String EXTERNAL_ID_SUBJECT = "external_id_subject";
+    public static String EXTERNAL_ID_KEY = "externalId";
+    public static String TITLE =  "title";
+    public static String LIBELLE =  "libelle";
+    public static String CODE = "code";
+    public static String SUBJECTS = "subjects";
+    public static String STATUS = "status";
+    public static String RESULTS = "results";
+    public static String OK = "ok";
+    public static String MESSAGE = "message";
 
     @Override
 	public void start() throws Exception {
@@ -222,6 +239,7 @@ public class Competences extends BaseServer {
         addController(new ElementProgrammeController());
 		addController(new UtilsController(storage));
         addController(new BilanPeriodiqueController(eb));
+        addController(new MatiereController(eb));
 
 		addController(new EventBusController());
 

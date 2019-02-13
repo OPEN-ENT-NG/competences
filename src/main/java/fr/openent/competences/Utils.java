@@ -24,6 +24,7 @@ import fr.openent.competences.service.impl.DefaultMatiereService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -666,5 +667,8 @@ public class Utils {
             }
         }));
     }
-
+    public static String getLibelle(String key) {
+        return I18n.getInstance().translate(key,
+                I18n.DEFAULT_DOMAIN, Locale.FRANCE);
+    }
 }
