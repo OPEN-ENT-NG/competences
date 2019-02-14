@@ -94,6 +94,12 @@ public class LSUController extends ControllerHelper {
     private final ElementBilanPeriodiqueService elementBilanPeriodiqueService;
     private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
 
+    //ID
+    private static final String EPI_GROUPE = "EPI_GROUPE_";
+    private static final String ACC_GROUPE = "ACC_GROUPE_";
+
+
+
     public LSUController(EventBus eb) {
         this.ebController = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
@@ -321,6 +327,7 @@ public class LSUController extends ControllerHelper {
 
         Handler<Either<String, Map<String, JsonObject>>> getDatesCreationVerrouByClassesHandler = resultsQuery -> {
             if (resultsQuery.isRight()) {
+                log.info("getBaliseBilansPeriodiques");
                 Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
                 this.getBaliseBilansPeriodiques(donnees, idStructure, periodesAdded, dateCreationVerrouByClasse, epiGroupAdded, accGroupAdded, getBilansPeriodiquesHandler);
 
@@ -333,6 +340,7 @@ public class LSUController extends ControllerHelper {
 
         Handler<String> getApEpiParcoursHandler = event -> {
             if (event.equals("success")) {
+                log.info("getDatesCreationVerrouByClasses");
                 Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse, getDatesCreationVerrouByClassesHandler);
 
             } else {
@@ -344,6 +352,7 @@ public class LSUController extends ControllerHelper {
         Future<JsonObject> getEnseignantsFuture = Future.future();
         Handler<String> getEnseignantsHandler = event -> {
             if (event.equals("success")) {
+                log.info("getEnseignantsFuture");
                 getEnseignantsFuture.complete();
             } else {
                 getEnseignantsFuture.complete();
@@ -357,6 +366,7 @@ public class LSUController extends ControllerHelper {
         Future<JsonObject> getPeriodesFuture = Future.future();
         Handler<String> getPeriodesHandler = event -> {
             if (event.equals("success")) {
+                log.info("getPeriodesFuture");
                 getPeriodesFuture.complete();
             } else {
                 getPeriodesFuture.fail("can't generate Balises Periodes Future");
@@ -368,6 +378,7 @@ public class LSUController extends ControllerHelper {
         Future<JsonObject> getElevesFuture = Future.future();
         Handler<String> getElevesHandler = event -> {
             if (event.equals("success")) {
+                log.info("getElevesFuture");
                 getElevesFuture.complete();
             } else {
                 getElevesFuture.fail("can't generate Balises Eleves Future");
@@ -380,6 +391,7 @@ public class LSUController extends ControllerHelper {
         Future<JsonObject> getDisciplineFuture = Future.future();
         Handler<String> getDisciplineHandler = event -> {
             if (event.equals("success")) {
+                log.info("getDisciplineFuture");
                 getDisciplineFuture.complete();
             } else {
                 getDisciplineFuture.fail("can't generate Balises Disciplines Future");
@@ -392,6 +404,7 @@ public class LSUController extends ControllerHelper {
         Future<JsonObject> getResponsableFuture = Future.future();
         Handler<String> getResponsableHandler = event -> {
             if (event.equals("success")) {
+                log.info("getResponsableFututre");
                 getResponsableFuture.complete();
             } else {
                 getResponsableFuture.fail("can't generate Balises Responsables Future");
@@ -403,6 +416,7 @@ public class LSUController extends ControllerHelper {
         Future<JsonObject> getEnteteFuture = Future.future();
         Handler<String> getEnteteHandler = event -> {
             if (event.equals("success")) {
+                log.info("getEnteteFuture");
                 getEnteteFuture.complete();
             } else {
                 getEnteteFuture.fail("can't generate Balises Entete Future");
@@ -418,8 +432,9 @@ public class LSUController extends ControllerHelper {
             log.info("before CompositeFuture bilanPeriodiqueExport");
             CompositeFuture.all(getEnteteFuture, getResponsableFuture, getDisciplineFuture, getElevesFuture, getPeriodesFuture, getEnseignantsFuture).setHandler(
                     event -> {
-                        log.info("out future 1");
+                        log.info("out future 1 ");
                         if (event.succeeded()) {
+                            log.info("getApEpiParcoursBalises");
                             getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, accGroupAdded, getApEpiParcoursHandler);
                         }
                         else{
@@ -1264,20 +1279,26 @@ public class LSUController extends ControllerHelper {
                         log.info(" getElementsBilanPeriodique in getApEpiParcoursBalises");
                     }
                     int imax = elementBilanPeriodique.size();
+                    final List<Future> futuresListApEpiParcours = new ArrayList<>();
+
                     for (int i = 0; i < imax; i++) {
+                        final Future<JsonObject> futureEltBilanPeriodique = Future.future();
+                        futuresListApEpiParcours.add(futureEltBilanPeriodique);
                         JsonObject element = elementBilanPeriodique.getJsonObject(i);
                         if (element != null) {
                             Long typeElement = element.getLong("type");
                             if (3L == typeElement) { //parcours group
-                                addParcoursGroup(element);
+                                addParcoursGroup(element,futureEltBilanPeriodique);
                             } else if (2L == typeElement) { //ap class/group
-                                addAccGroup(element, accGroupAdded);
+                                addAccGroup(element, accGroupAdded,futureEltBilanPeriodique);
                             } else if (1L == typeElement) { //epi group
-                                addEpiGroup(element, epiGroupAdded);
+                                addEpiGroup(element, epiGroupAdded,futureEltBilanPeriodique);
                             }
                         }
                     }
-                    handler.handle("success");
+                    CompositeFuture.all(futuresListApEpiParcours).setHandler(eventFutureApEpiParcours -> {
+                        handler.handle("success");
+                            });
                 }
                 else {
                     handler.handle("getApEpiParcoursBalises no data available ");
@@ -1285,7 +1306,7 @@ public class LSUController extends ControllerHelper {
                 }
             }
 
-            private void addParcoursGroup(JsonObject element) {
+            private void addParcoursGroup(JsonObject element,Future futureEltBilanPeriodique) {
                 if(donnees.getParcoursCommuns() == null){
                     donnees.setParcoursCommuns(objectFactory.createDonneesParcoursCommuns());
                 }
@@ -1296,7 +1317,6 @@ public class LSUController extends ControllerHelper {
                     JsonObject theme = element.getJsonObject("theme");
                     JsonArray groups = element.getJsonArray("groupes");
                     Periode currentPeriode = periodes.get(k);
-
                         for( int i= 0; i < groups.size(); i++ ) {
                             JsonObject group = groups.getJsonObject(i);
                             Donnees.ParcoursCommuns.ParcoursCommun parcoursCommun ;
@@ -1314,8 +1334,9 @@ public class LSUController extends ControllerHelper {
                                 parcoursCommun.getParcours().add(parcours);
                         }
                 }
+                futureEltBilanPeriodique.complete();
             }
-            private void addEpiGroup(JsonObject element, JsonObject epiGroupAdded) {
+            private void addEpiGroup(JsonObject element, JsonObject epiGroupAdded, Future futureEltBilanPeriodique) {
                 if (element != null
                         && !element.isEmpty()
                         && element.containsKey("id")
@@ -1358,7 +1379,7 @@ public class LSUController extends ControllerHelper {
                         }
 
                     CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
-                        epiGroupe.setId("EPI_GROUPE_" + element.getInteger("id"));
+                        epiGroupe.setId(EPI_GROUPE + element.getInteger("id"));
                         epiGroupe.setEpiRef(epi);
                         epiGroupe.setEnseignantsDisciplines(enseignantsDisciplinesEpi);
                         epiGroupe.setIntitule(element.getString("libelle"));
@@ -1382,13 +1403,14 @@ public class LSUController extends ControllerHelper {
 
                         donnees.getEpis().getEpi().add(epi);
                         donnees.getEpisGroupes().getEpiGroupe().add(epiGroupe);
+                        futureEltBilanPeriodique.complete();
 
                     });
                 }
             }
 
 
-            private void addAccGroup(JsonObject element, JsonObject accGroupAdded) {
+            private void addAccGroup(JsonObject element, JsonObject accGroupAdded, Future futureEltBilanPeriodique) {
                 if (element != null
                         && !element.isEmpty()
                         && element.containsKey("id")
@@ -1421,7 +1443,7 @@ public class LSUController extends ControllerHelper {
                     }
 
                     CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
-                        accPersoGroupe.setId("ACC_GROUPE_" + element.getInteger("id"));
+                        accPersoGroupe.setId(ACC_GROUPE + element.getInteger("id"));
                         accPersoGroupe.setAccPersoRef(accPerso);
                         accPersoGroupe.setEnseignantsDisciplines(enseignantsDisciplinesAcc);
                         accPersoGroupe.setIntitule(element.getString("libelle"));
@@ -1433,6 +1455,7 @@ public class LSUController extends ControllerHelper {
 
                         donnees.getAccPersos().getAccPerso().add(accPerso);
                         donnees.getAccPersosGroupes().getAccPersoGroupe().add(accPersoGroupe);
+                        futureEltBilanPeriodique.complete();
                     });
                 }
             }
@@ -1456,6 +1479,7 @@ public class LSUController extends ControllerHelper {
                 finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1FutureComposite, currentSubj, currentEnseignant);
             }
         } else {
+            log.info("addEnseignantDiscipline no completed");
             resp1FutureComposite.complete();
         }
     }
@@ -1639,41 +1663,54 @@ public class LSUController extends ControllerHelper {
                                 }
 
                                 private void addApEleve(JsonObject element) {
-                                    String extGroup = element.getString("id_groupe");
+                                   /* String extGroup = element.getString("id_groupe");
                                     if (accGroupAdded.size() > 0 && extGroup != null && accGroupAdded.containsKey(extGroup)) {
-
                                         AccPersoGroupe accGroupe = donnees.getAccPersosGroupes().getAccPersoGroupe().stream()
                                                 .filter(el -> el.getId().equals(accGroupAdded.getString(extGroup)))
                                                 .findFirst()
-                                                .orElse(null);
-                                        if (accGroupe != null) {
+                                                .orElse(null);*/
+                                   List<AccPersoGroupe> listAccPersoGroupe = donnees.getAccPersosGroupes().getAccPersoGroupe();
+                                   if(listAccPersoGroupe != null && listAccPersoGroupe.size() > 0){
+                                       AccPersoGroupe accGroupe = listAccPersoGroupe.stream()
+                                               .filter( accG -> accG.getId().equals(ACC_GROUPE + element.getInteger("id_elt_bilan_periodique").toString()))
+                                               .findFirst()
+                                               .orElse(null);
+
+                                       if (accGroupe != null) {
                                             AccPersoEleve accEleve = objectFactory.createAccPersoEleve();
                                             accEleve.setCommentaire(element.getString("commentaire"));
                                             accEleve.setAccPersoGroupeRef(accGroupe);
                                             if (bilanPeriodique.getAccPersosEleve() == null || bilanPeriodique.getAccPersosEleve().getAccPersoEleve() == null) {
                                                 bilanPeriodique.setAccPersosEleve(objectFactory.createBilanPeriodiqueAccPersosEleve());
                                             }
-                                            bilanPeriodique.getAccPersosEleve().getAccPersoEleve().add(accEleve);
+                                        bilanPeriodique.getAccPersosEleve().getAccPersoEleve().add(accEleve);
                                         }
                                     }
                                 }
 
                                 private void addEpiEleve(JsonObject element) {
-                                    String extGroup = element.getString("id_groupe");
+                                   /* String extGroup = element.getString("id_groupe");
                                     if (epiGroupAdded.size() > 0 && extGroup != null && epiGroupAdded.containsKey(extGroup)) {
-
-                                        EpiGroupe epiGroupe = donnees.getEpisGroupes().getEpiGroupe().stream()
+                                    EpiGroupe epiGroupe = donnees.getEpisGroupes().getEpiGroupe().stream()
                                                 .filter(el -> el.getId().equals(epiGroupAdded.getString(extGroup)))
                                                 .findFirst()
-                                                .orElse(null);
-                                        if (epiGroupe != null) {//epi
-                                            EpiEleve epiEleve = objectFactory.createEpiEleve();
-                                            epiEleve.setCommentaire(element.getString("commentaire"));
-                                            epiEleve.setEpiGroupeRef(epiGroupe);
-                                            if (bilanPeriodique.getEpisEleve() == null || bilanPeriodique.getEpisEleve().getEpiEleve() == null) {
-                                                bilanPeriodique.setEpisEleve(objectFactory.createBilanPeriodiqueEpisEleve());
+                                                .orElse(null);*/
+                                    if(donnees.getEpisGroupes() != null) {
+                                        List<EpiGroupe> listEpiGroupe = donnees.getEpisGroupes().getEpiGroupe();
+                                        if (listEpiGroupe != null && listEpiGroupe.size() > 0) {
+                                            EpiGroupe epiGroupe = listEpiGroupe.stream()
+                                                    .filter(epiG -> epiG.getId().equals(EPI_GROUPE + element.getInteger("id_elt_bilan_periodique").toString()))
+                                                    .findFirst()
+                                                    .orElse(null);
+                                            if (epiGroupe != null) {//epi
+                                                EpiEleve epiEleve = objectFactory.createEpiEleve();
+                                                epiEleve.setCommentaire(element.getString("commentaire"));
+                                                epiEleve.setEpiGroupeRef(epiGroupe);
+                                                if (bilanPeriodique.getEpisEleve() == null || bilanPeriodique.getEpisEleve().getEpiEleve() == null) {
+                                                    bilanPeriodique.setEpisEleve(objectFactory.createBilanPeriodiqueEpisEleve());
+                                                }
+                                                bilanPeriodique.getEpisEleve().getEpiEleve().add(epiEleve);
                                             }
-                                            bilanPeriodique.getEpisEleve().getEpiEleve().add(epiEleve);
                                         }
                                     }
                                 }
@@ -1918,7 +1955,7 @@ public class LSUController extends ControllerHelper {
                         Validator validator = schema.newValidator();
                         Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
                         log.info("validator");
-                        validator.validate(xmlFile);
+                       // validator.validate(xmlFile);
                     } catch (SAXException | IOException e) {
                         log.error("Validation : Export LSU en erreur",e);
                         request.response().setStatusCode(400).setStatusMessage(e.getMessage()).end();
