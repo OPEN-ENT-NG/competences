@@ -174,11 +174,11 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         return libelle.substring(0, Math.min(3, libelle.length() -1));
     }
 
-    private String getDefaultlibelle(Long code, JsonArray defaultSubject){
-        String libelle = "";
+    private String getDefaultlibelle(String code, JsonArray defaultSubject){
+        String libelle = null;
         for (int i = 0; i< defaultSubject.size(); i++){
             JsonObject subject = defaultSubject.getJsonObject(i);
-            Long codePostgre = subject.getLong(CODE);
+            String codePostgre = subject.getString(CODE);
 
             if(code.equals(codePostgre)) {
                 libelle = subject.getString(LIBELLE_COURT);
@@ -189,13 +189,15 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
     private void setLibelleSubject(JsonObject subject, JsonArray defaultSubject){
         String name = subject.getString(NAME);
-        Object code = subject.getValue(EXTERNAL_ID_KEY);
+        String code = subject.getString(EXTERNAL_ID_KEY);
+        String source = subject.getString("source");
+
         String libelle;
         if(defaultSubject != null) {
-            if (code instanceof Number) {
-                libelle = getDefaultlibelle((Long) code, defaultSubject);
+            if ("AAF".equals(source)) {
+                libelle = getDefaultlibelle(code, defaultSubject);
             } else {
-                libelle = (String) code;
+                libelle = code;
             }
 
             if (libelle == null) {
