@@ -17,7 +17,7 @@
 <div ng-include="'/competences/public/template/enseignants/informations/display_construction_page.html'"></div>
 <lightbox show="releveNote.synchronized.releve == true && releveNote !== undefined && releveNote.exportOptions.show === true"
           class="" on-close="releveNote.exportOptions.show = false;">
-    <h2><i18n>evaluations.export.releve</i18n>&nbsp;:</h2>
+    <h1 class="center"><i18n>evaluations.export.releve</i18n></h1>
     <fieldset>
         <legend><i18n>viescolaire.utils.options</i18n></legend>
 
@@ -43,7 +43,7 @@
     <div class="four cell twelve-mobile">
         <label class="checkbox">
             <input type="checkbox" ng-model="releveNote.exportOptions.appreciation"/><span>
-                            <i18n>viescolaire.utils.appreciation</i18n>
+                            <i18n>evaluations.releve.appreciations.student</i18n>
                         </span></label>
     </div>
         <div class="four cell twelve-mobile">

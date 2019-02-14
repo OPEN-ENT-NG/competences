@@ -21,7 +21,6 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.bean.StatClass;
-import fr.openent.competences.bean.StatEleve;
 import fr.openent.competences.bean.StatMat;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
@@ -57,7 +56,6 @@ import io.vertx.core.json.JsonObject;
 import static fr.openent.competences.Competences.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -270,7 +268,7 @@ public class NoteController extends ControllerHelper {
                                                 .put(ID_MATIERE_KEY, idMatiere)
                                                 .put(TYPE_CLASSE_KEY, typeClasse);
 
-                                        notesService.exportReleve(params, notEmptyResponseHandler(request));
+                                        notesService.getDatasReleve(params, notEmptyResponseHandler(request));
 
                                 }
                             }
@@ -287,8 +285,9 @@ public class NoteController extends ControllerHelper {
         RequestUtils.bodyToJson(request, param -> {
             if(param.getString("fileType").equals("pdf")) {
 
+                // Récupération des données de l'export
                 Future<JsonObject> exportResult = Future.future();
-                notesService.exportReleve(param, event -> {
+                notesService.getDatasReleve(param, event -> {
                     FormateFutureEvent.formate(exportResult, event);
                 });
 
@@ -296,12 +295,14 @@ public class NoteController extends ControllerHelper {
                 String idStructure = param.getString(ID_ETABLISSEMENT_KEY);
                 Map<String, JsonObject> mapEleve = new HashMap<>();
                 Future<JsonObject> structureFuture = Future.future();
-                mapEleve.put(key, new JsonObject()
-                        .put(ID_ETABLISSEMENT_KEY, idStructure));
+                mapEleve.put(key, new JsonObject().put(ID_ETABLISSEMENT_KEY, idStructure));
+
+                // Récupération des informations sur l'établissment
                 new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve, event -> {
                     FormateFutureEvent.formate(structureFuture, event);
                 });
 
+                // Récupération du logo de l'établissment
                 Future<JsonObject> imageStructureFuture = Future.future();
                 utilsService.getParametersForExport(idStructure, event -> {
                     FormateFutureEvent.formate(imageStructureFuture, event);
@@ -328,7 +329,7 @@ public class NoteController extends ControllerHelper {
                 }));
             }
             else {
-                notesService.exportReleve(param, notEmptyResponseHandler(request));
+                notesService.getDatasReleve(param, notEmptyResponseHandler(request));
             }
         });
     }

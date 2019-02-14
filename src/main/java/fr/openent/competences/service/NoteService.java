@@ -228,7 +228,7 @@ public interface NoteService extends CrudService {
      * @param param objet contenant les informations relative au releve
      * @param handler handler portant le résultat de la requête
      */
-    void exportReleve(final JsonObject param, final Handler<Either<String, JsonObject>> handler);
+    void getDatasReleve(final JsonObject param, final Handler<Either<String, JsonObject>> handler);
 
     /**
      * Renseigne les libéllés et paramètre ne nécessaire à ll'xport

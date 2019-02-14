@@ -60,6 +60,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     public final String MOYENNES = "moyennes";
     public final String MOYENNESFINALES = "moyennesFinales";
+    public final String MOYENNEFINALE = "moyenneFinale";
     public final String VALEUR = "valeur";
     public final String DIVISEUR = "diviseur";
     public final String RAMENER_SUR = "ramener_sur";
@@ -1423,11 +1424,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private void putLibelleForExport(JsonObject object) {
         object.put("appreciationClasseLibelle", getLibelle("evaluations.releve.appreciation.classe"));
         object.put("exportReleveLibelle", getLibelle("evaluations.releve.title"));
-        object.put("displayNameLibelle", getLibelle("student"));
+        object.put("displayNameLibelle", getLibelle("students"));
         object.put("moyenneLibelle", getLibelle("average.auto.min"));
         object.put("moyenneFinaleLibelle", getLibelle("average.final.min"));
         object.put("positionnementFinaleLibelle", getLibelle("evaluations.releve.positionnement.min"));
-        object.put("appreciationLibelle", getLibelle("viescolaire.utils.appreciation"));
+        object.put("appreciationLibelle", getLibelle("viescolaire.utils.appreciations"));
         object.put("title",getLibelle("evaluations.export.releve"));
         object.put("appreciationClasseLibelle", getLibelle("evaluations.releve.appreciation.classe"));
 
@@ -1461,7 +1462,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
-    public void exportReleve(final JsonObject params, final Handler<Either<String, JsonObject>> handler){
+    public void getDatasReleve(final JsonObject params, final Handler<Either<String, JsonObject>> handler){
         final String idEtablissement = params.getString(Competences.ID_ETABLISSEMENT_KEY);
         final String idClasse = params.getString(Competences.ID_CLASSE_KEY);
         final String idMatiere = params.getString(Competences.ID_MATIERE_KEY);
@@ -1471,6 +1472,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
         final JsonObject resultHandler = new JsonObject();
         Map<String, JsonObject> elevesMapObject = new HashMap<>();
+        Boolean isExport = (params.getString("fileType") != null);
 
         // Récupération des éléments du programme
         Future<JsonObject> elementProgrammeFuture = Future.future();
@@ -1531,7 +1533,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         resultHandler.put(ELEMENT_PROGRAMME_KEY, elementProgrammeFuture.result());
                         JsonObject appClasse = utilsService.getObjectForPeriode(
                                 appreciationClassFuture.result(), idPeriode, ID_PERIODE);
-                        resultHandler.put(APPRECIATION_CLASSE, (appClasse != null)? appClasse : new JsonObject());
+                        if (appClasse == null) {
+                            appClasse = new JsonObject().put("appreciation", " ");
+                        }
+                        resultHandler.put(APPRECIATION_CLASSE, appClasse);
 
                         // Récupération des moyennes Finales
                         Future<JsonArray> moyennesFinalesFutures = Future.future();
@@ -1617,7 +1622,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 // Calcul des moyennes auto
                                 resultHandler.put(NOTES, notesFuture.result());
                                 calculMoyennesNotesFOrReleve(notesFuture.result(), resultHandler,idPeriode,
-                                        elevesMapObject, hasEvaluatedHomeWork);
+                                        elevesMapObject, hasEvaluatedHomeWork, isExport);
 
                                 // positionne
                                 resultHandler.put(COMPETENCES_NOTES_KEY, compNotesFuture.result());
@@ -1655,7 +1660,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private <T> void calculMoyennesNotesFOrReleve (JsonArray listNotes, JsonObject result, Long idPeriode,
                                                    Map<String, JsonObject> eleveMapObject,
-                                                   Boolean hasEvaluatedHomeWork) {
+                                                   Boolean hasEvaluatedHomeWork, Boolean isExport) {
 
         // Si pour il n'y a pas de devoirs avec évaluation numérique, la moyenne auto est NN
         if (!hasEvaluatedHomeWork) {
@@ -1734,8 +1739,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 moyenne = utilsService.calculMoyenne((ArrayList<NoteDevoir>) entry.getValue(),
                         false, 20);
                 if (eleveMapObject.containsKey(idEleve)) {
-                    eleveMapObject.get(idEleve).put(MOYENNE, moyenne.getDouble(MOYENNE))
-                            .put(HAS_NOTE, moyenne.getBoolean(HAS_NOTE));
+                    Double moy = moyenne.getDouble(MOYENNE);
+                    JsonObject el = eleveMapObject.get(idEleve);
+                    el.put(MOYENNE, moy).put(HAS_NOTE, moyenne.getBoolean(HAS_NOTE));
+                    if(isExport && !el.containsKey(MOYENNEFINALE)){
+                        el.put(MOYENNEFINALE, moy);
+                    }
+
                 }
 
                 moyenne.put("id", idEleve);

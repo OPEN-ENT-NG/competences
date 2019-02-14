@@ -650,14 +650,14 @@ export class ReleveNote extends  Model implements IModel {
                     blob = new Blob([csvData]);
                     link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
-                    link.download =  `releve_note_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.csv`;
+                    link.download =  `releve_periodique_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.csv`;
 
                 }
                 else {
                     blob = new Blob([response]);
                     link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
-                    link.download =  `releve_note_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.pdf`;
+                    link.download =  `releve_periodique_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.pdf`;
                 }
                 document.body.appendChild(link);
                 link.click();
@@ -671,7 +671,7 @@ export class ReleveNote extends  Model implements IModel {
     }
 
     formateHeaderAndColumn () : any {
-        let header = `${lang.translate('student')}`;
+        let header = `${lang.translate('students')}`;
         let column = ['displayName'];
 
         if(this.exportOptions.averageAuto) {
@@ -687,7 +687,7 @@ export class ReleveNote extends  Model implements IModel {
             column.push('positionnement');
         }
         if(this.exportOptions.appreciation) {
-            header += `; ${lang.translate('viescolaire.utils.appreciation')}`;
+            header += `; ${lang.translate('evaluations.releve.appreciations.student')}`;
             column.push('appreciation_matiere_periode');
         }
         return  {header: header, column: column};
