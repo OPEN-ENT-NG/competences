@@ -36,13 +36,17 @@ export class ExportBulletins {
             imgStructure: (options.imgStructure !== undefined)? options.imgStructure : "",
             hasImgStructure: (options.imgStructure !== undefined),
             imgSignature: (options.imgSignature !== undefined)? options.imgSignature : "",
-            hasImgSignature: (options.imgSignature !== undefined)
+            hasImgSignature: (options.imgSignature !== undefined),
+            useModel : (options.useModel !== true)? false : true
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode});
         }
         if(o.showBilanPerDomaines) {
             _.extend(o, {idImagesFiles : options.idImagesFiles});
+        }
+        if(o.useModel === true) {
+            _.extend(o, {idModel : options.idModel});
         }
         return o;
     }

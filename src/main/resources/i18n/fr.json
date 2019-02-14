@@ -420,6 +420,7 @@
   "viescolaire.utils.criterion":"Vos critères",
   "viescolaire.utils.options": "Vos options",
   "viescolaire.utils.parameter": "Vos paramètres",
+  "viescolaire.utils.models": "Vos Modèles de libellé",
   "viescolaire.utils.your.logo": "Votre logo",
   "viescolaire.utils.avis":"Avis",
   "viescolaire.utils.elements.programme":"Eléments du programme",
@@ -551,6 +552,9 @@
   "evaluations.rename.subject.success.delete.model": "Modèle supprimé",
   "evaluations.model": "Modèle ",
   "evaluations.open.model": "Afficher les libellés ",
-  "evaluations.close.model":"Masquer les libellés "
+  "evaluations.close.model":"Masquer les libellés ",
+  "evaluations.choose.model": " Choisir le modèle ",
+  "evaluations.default.model.libelle": "Modèle par défaut",
+  "evaluations.use.model.libelle": "Utiliser un modèle de libellé de matière"
 
 }

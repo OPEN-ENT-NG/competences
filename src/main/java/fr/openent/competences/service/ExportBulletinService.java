@@ -187,6 +187,41 @@ public interface ExportBulletinService {
                                                                         Vertx vertx, JsonObject config,
                                                                         final int nbrEleves,
                                                                         final AtomicBoolean answered,
-                                                                        JsonObject params);
+                                                                            JsonObject params);
 
+    /**
+     * Construit le libelle correspondant à la date de naissance
+     * @param eleve
+     */
+    void setBirthDate(JsonObject eleve);
+
+    /**
+     * Rajoute l'id de l'image correspondant au graph par domaine
+     * @param eleve
+     * @param images
+     */
+    void setIdGraphPerDomaine(JsonObject eleve, JsonObject images);
+
+    /**
+     * Construit le libelle du niveau
+     * @param eleve
+     */
+    void setLevel(JsonObject eleve);
+
+    /**
+     *
+     * @param request
+     * @param answered
+     * @param eleves
+     * @param elevesMap
+     * @param idPeriode
+     * @param params
+     * @param classe
+     * @param showBilanPerDomaines
+     * @param finalHandler
+     */
+    void buildDataForStudent(final HttpServerRequest request, final AtomicBoolean answered, JsonArray eleves,
+                             Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
+                             final JsonObject classe, Boolean showBilanPerDomaines,
+                             Handler<Either<String, JsonObject>> finalHandler);
 }

@@ -194,6 +194,8 @@ public class Competences extends BaseServer {
     public static String RESULTS = "results";
     public static String OK = "ok";
     public static String MESSAGE = "message";
+    public static String LIBELLE_MATIERE = "libelleMatiere";
+
 
     @Override
 	public void start() throws Exception {

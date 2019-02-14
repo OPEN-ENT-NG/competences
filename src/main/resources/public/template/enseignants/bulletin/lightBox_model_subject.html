@@ -1,0 +1,20 @@
+<lightbox show="opened.lightboxModel" on-close="!opened.lightboxModel">
+    <h1 class="center"><i18n>[[currentModel.title]]</i18n></h1>
+    <div class="responsive-table">
+        <table>
+            <thead>
+            <tr>
+                <th class="bold"><i18n>viescolaire.utils.subject</i18n></th>
+                <th class="bold center"><i18n>evaluations.libelle</i18n></th>
+            </tr>
+            </thead>
+            <tbody style="line-height: 5px;">
+
+            <tr ng-repeat="subject in currentModel.subjects | orderBy:'name'">
+                <td>[[subject.name]]</td>
+                <td>[[subject.libelle]]</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</lightbox>

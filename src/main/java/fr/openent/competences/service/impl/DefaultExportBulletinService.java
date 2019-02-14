@@ -2,6 +2,7 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.*;
+import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
@@ -16,8 +17,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.storage.Storage;
 
-import static fr.openent.competences.Competences.CLASSE_NAME_KEY;
-import static fr.openent.competences.Competences.POSITIONNEMENTS_AUTO;
+import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.wseduc.webutils.http.Renders.getHost;
 import java.util.*;
@@ -83,6 +83,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String HAS_PROJECT = "hasProject";
     private static final String ID_IMAGES_FILES = "idImagesFiles";
     private static final String IS_DOMAINE_PARENT = "isDomaineParent";
+    public static final String USE_MODEL_KEY = "useModel";
 
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
@@ -1379,6 +1380,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         return utilsService.getObjectForPeriode(array, idPeriode, key);
     }
 
+    private void setLibelleMatiere(JsonObject matiere, JsonArray models){
+        String idMatiere =  matiere.getString(ID_MATIERE);
+
+        for (int i=0; i<models.size(); i++) {
+            JsonObject libelleSubject = models.getJsonObject(i);
+            String id = libelleSubject.getString("id");
+            if (id.equals(idMatiere)){
+                String libelleMatiere = libelleSubject.getString(LIBELLE);
+                matiere.remove(LIBELLE_MATIERE);
+                matiere.put(LIBELLE_MATIERE, libelleMatiere);
+            }
+        }
+    }
     /**
      *  Calcule et met en forme les colonnes de la matière passée en paramètre
      * @param matiere matière à traiter
@@ -1389,6 +1403,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private  JsonObject buildMatiereForSuiviAcquis (final JsonObject matiere,
                                                     boolean printMatiere, Long idPeriode, final JsonObject classe) {
 
+        JsonArray models = classe.getJsonArray("models");
+        if (models != null && !models.isEmpty()){
+            setLibelleMatiere(matiere, models);
+        }
         JsonObject moyenneEleve = getObjectForPeriode(
                 matiere.getJsonArray("moyennes"), idPeriode, "id");
         JsonObject moyenneClasse = getObjectForPeriode(
@@ -1700,6 +1718,87 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             answer.set(true);
             log.debug(" -------[" + method + "]: " + idEleve + " FIN " );
             finalHandler.handle(new Either.Right<>(null));
+        }
+    }
+
+    public void setBirthDate(JsonObject eleve){
+
+        String birthDate = eleve.getString("birthDate");
+        if(birthDate!= null) {
+
+            String [] be = birthDate.split("-");
+            eleve.put("birthDateLibelle",  be[2] + '/' + be[1] + '/' + be[0]);
+        }
+    }
+
+    public void setIdGraphPerDomaine(JsonObject eleve, JsonObject images){
+        String idEleve = eleve.getString(ID_ELEVE_KEY);
+        if (images != null) {
+            String img = images.getString(idEleve);
+            Boolean hasGraphPerDomaine = (img != null);
+            eleve.put("hasGraphPerDomaine", hasGraphPerDomaine);
+            if(hasGraphPerDomaine) {
+                eleve.put("graphPerDomaine", img);
+            }
+        }
+    }
+
+    public void setLevel(JsonObject eleve) {
+        String level = eleve.getString(LEVEL);
+        if(level == null) {
+            level = eleve.getString("classeName");
+        }
+        if(level != null) {
+            level = String.valueOf(level.charAt(0));
+            try {
+                int levelInt = Integer.parseInt(level);
+                if(levelInt >= 3 && levelInt <= 6) {
+                    eleve.put("level", level);
+                    eleve.put("hasLevel", true);
+                }
+            }
+            catch (NumberFormatException e) {
+                eleve.put("hasLevel", false);
+            }
+        }
+    }
+
+    public void buildDataForStudent(final HttpServerRequest request, final AtomicBoolean answered, JsonArray eleves,
+                                    Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
+                                    final JsonObject classe, Boolean showBilanPerDomaines,
+                                    Handler<Either<String, JsonObject>> finalHandler){
+
+        JsonObject images = params.getJsonObject("images");
+        for (int i = 0; i < eleves.size(); i++) {
+
+            JsonObject eleve = eleves.getJsonObject(i);
+
+            // Mise en forme de la date de naissance
+            String idEleve = eleve.getString(ID_ELEVE_KEY);
+            setBirthDate(eleve);
+
+            // Rajout de l'image du graphe par domaine
+            if (showBilanPerDomaines) {
+                setIdGraphPerDomaine(eleve, images);
+            }
+
+            // Rajout du niveau de l'élève
+            setLevel(eleve);
+
+
+            elevesMap.put(idEleve, eleve);
+
+            JsonArray idManualGroupes = UtilsConvert
+                    .strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
+            JsonArray idFunctionalGroupes = UtilsConvert
+                    .strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
+
+            JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
+                    idManualGroupes);
+
+            getExportBulletin(request, answered, idEleve, elevesMap,
+                    idPeriode, params, classe,
+                    finalHandler);
         }
     }
 }

@@ -3,6 +3,8 @@ import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
 import {Classe, evaluations} from "../models/teacher";
 import {Defaultcolors} from "../models/eval_niveau_comp";
+import {renameSubject} from "../sniplets/renameSubject";
+import http from "axios";
 
 
 declare let $ : any;
@@ -68,7 +70,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 classe.selected = false;
             });
 
-
+            $scope.currentModel = undefined;
             $scope.print = {};
 
             // Récupération du logo de l'établissement, de la signature et du nom du CE
@@ -78,7 +80,10 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 $scope.print.imgStructure = infosStructure.data.imageStucture.path;
                 $scope.print.nameCE = infosStructure.data.nameAndBrad.name;
                 $scope.print.imgSignature = infosStructure.data.nameAndBrad.path;
-
+                let models = await http.get(`/competences/matieres/models/${$scope.structure.id}`);
+                $scope.models = {
+                    all: models.data
+                };
             }
             catch (e) {
                 console.log(e);
@@ -270,6 +275,12 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     })
                 }
             }
+        };
+
+        $scope.openModel = (model) => {
+          $scope.opened.lightboxModel = true;
+          $scope.currentModel = model;
+          utils.safeApply($scope);
         };
     }
 ]);

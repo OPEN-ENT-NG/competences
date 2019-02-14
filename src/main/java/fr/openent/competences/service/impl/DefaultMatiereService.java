@@ -150,14 +150,17 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     private void getLibelleMatierePostgres(String idStructure, Long idModel,
                                            Handler<Either<String, JsonArray>> handler) {
 
-
-        String query =" SELECT * FROM " + modelSubjectLibelleTable +
+        String query =" SELECT title, id_etablissement, id_model, libelle, external_id_subject " +
+                " FROM " + modelSubjectLibelleTable +
                 " INNER JOIN " + subjectLibelleTable +
                 " ON id_model = id  AND  id_etablissement = ? " +
-                ((idModel != null)? "id_model = ? " : "") +
+                ((idModel != null)? " AND id_model = ? " : "") +
                 " ORDER BY  libelle;";
         JsonArray params = new JsonArray();
         params.add(idStructure);
+        if(idModel != null) {
+            params.add(idModel);
+        }
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
 
     }
@@ -211,6 +214,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 String externalIdSubject = defaultSubjectJsonObject.getString(EXTERNAL_ID_SUBJECT);
                 if (externalId.equals(externalIdSubject)) {
                     subject.put(NAME, defaultSubjectJsonObject.getValue(NAME));
+                    subject.put(ID_KEY, defaultSubjectJsonObject.getValue(ID_KEY));
                     break;
                 }
             }
@@ -249,7 +253,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                         JsonArray subjects = subjectNeo.result();
                         JsonArray defaultSubject = libelleCourt.result();
                         JsonArray models = new JsonArray().add(new JsonObject()
-                                .put(TITLE, getLibelle("default"))
+                                .put(TITLE, getLibelle("evaluations.default.model.libelle"))
                                 .put(SUBJECTS, subjects));
 
                         // Construction des libelles par défault
@@ -274,10 +278,13 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                         }
 
                         for (Map.Entry<Long, JsonObject> model: modelsMap.entrySet()) {
-                            JsonArray modelSubJect = model.getValue().getJsonArray(SUBJECTS);
-                            String title = modelSubJect.getJsonObject(0).getString(TITLE);
-                            models.add(new JsonObject().put(TITLE, title).put("id", model.getKey())
-                                    .put(SUBJECTS, modelSubJect));
+                            JsonArray modelSubject = model.getValue().getJsonArray(SUBJECTS);
+                            Long id = model.getKey();
+                            if (idModelToget != null && idModelToget.equals(id)) {
+                                models = new JsonArray().add(modelToJson(id, modelSubject));
+                                break;
+                            }
+                            models.add(modelToJson(id, modelSubject));
                         }
                         handler.handle( new Either.Right<>(models));
                     }
@@ -285,6 +292,11 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         );
     }
 
+    private JsonObject modelToJson ( Long id, JsonArray modelSubject) {
+        String title = modelSubject.getJsonObject(0).getString(TITLE);
+        return new JsonObject().put(TITLE, title).put("id", id)
+                .put(SUBJECTS, modelSubject);
+    }
 
     private void listMatieresEtab(String idStructure, Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()

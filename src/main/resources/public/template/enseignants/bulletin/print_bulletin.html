@@ -1,4 +1,9 @@
 <div class="twelve cell" ng-controller="EvaluationsBulletinsController" >
+
+
+    <!-- LightBox display modlel -->
+    <div ng-include="'/competences/public/template/enseignants/bulletin/lightBox_model_subject.html'"></div>
+
     <div ng-include="'/competences/public/template/enseignants/menu_teacher.html'"></div>
     <div    ng-init="initBulletin()"
             class="ten cell card main-content twelve-mobile">
@@ -85,10 +90,16 @@
                             <i18n>show.responsables</i18n>
                         </span></label>
                         </div>
-                        <div class="eight twelve-mobile">
+                        <div class="four cell twelve-mobile">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.getProgramElements"/><span>
                             <i18n>show.programElements</i18n>
+                        </span></label>
+                        </div>
+                        <div class="four cell twelve-mobile">
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="print.useModel"/><span>
+                            <i18n>evaluations.use.model.libelle</i18n>
                         </span></label>
                         </div>
                         <div class="four cell twelve-mobile">
@@ -97,7 +108,7 @@
                             <i18n>average.student</i18n>
                         </span></label>
                         </div>
-                        <div class="three cell twelve-mobile">
+                        <div class="four cell twelve-mobile">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.moyenneClasse"/><span>
                             <i18n>average.class</i18n>
@@ -224,8 +235,8 @@
                              <i18n>evaluations.add.file.signature</i18n>
                              </span>
                                     <div>
-                                    <em class="metadata"><i18n>evaluations.export.bulletin.legendSignature</i18n></em>
-                                        </div>
+                                        <em class="metadata"><i18n>evaluations.export.bulletin.legendSignature</i18n></em>
+                                    </div>
                                 </div>
 
                                 <div class="two cell">
@@ -239,6 +250,38 @@
                         </div>
                     </fieldset>
                 </div>
+                <div  ng-show="print.useModel === true">
+                    <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
+                        <h2>
+                            <i18n>viescolaire.utils.models</i18n>
+                        </h2>
+                    </div>
+
+                    <fieldset class="eleven">
+                        <ul class="twelve selectable-list">
+                            <li ng-repeat="model in (filteredModels = (models.all | filter:filterSearch(search) | orderBy:'title'))"
+                                    style="margin-bottom: 0px;"  ng-class="{selected: print.idModel === model.id}">
+                                <span
+                                        ng-click="model.show = !model.show"><i18n >evaluations.model</i18n>
+                                    &nbsp;:&nbsp;[[model.title]]
+                                </span>
+                                <dots-menu style="text-align: left;" class="right">
+                                    <opt  data-ng-click="print.idModel = model.id">
+                                        <i class="check">
+                                        </i>
+                                        &nbsp;<i18n>evaluations.choose.model</i18n>
+                                    </opt>
+                                    <opt  data-ng-click="openModel(model)">
+                                        <i class="up-open">
+                                        </i>
+                                        &nbsp;<i18n>evaluations.open.model</i18n>
+                                    </opt>
+                                </dots-menu>
+                            </li>
+                        </ul>
+                    </fieldset>
+                </div>
+
                 <div class="twelve">
                     <button class ="right right-magnet" style="margin-top: 10px; margin-right : 6%"
                             ng-click="generateBulletin(print);">
@@ -267,3 +310,4 @@
 <div class="stopwatch zero"></div>
 <ul class="results zero"></ul>
 </div>
+
