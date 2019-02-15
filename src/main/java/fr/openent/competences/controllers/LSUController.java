@@ -1145,7 +1145,7 @@ public class LSUController extends ControllerHelper {
                         JsonObject currentPeriode = (JsonObject) item;
 
                         Integer targetPeriode = wantedPeriodes.stream()
-                                .filter(el -> el.equals(currentPeriode.getInteger("id_type")))
+                                .filter(el -> el == currentPeriode.getInteger("id_type"))
                                 .findFirst()
                                 .orElse(null);
                         if(targetPeriode != null){
@@ -1153,11 +1153,15 @@ public class LSUController extends ControllerHelper {
                             Periode periode = objectFactory.createPeriode();
                             periode.setId("P_"+currentPeriode.getInteger("id").toString());
                             periode.setMillesime(currentPeriode.getString("timestamp_dt").substring(0, 4));
-                            if(3 == periodeList.size()) {
-                                periode.setIndice(currentPeriode.getInteger("id_type")-2);
-                            }
                             periode.setTypePeriode(currentPeriode.getInteger("id_type"));
-                            periode.setNbPeriodes(periodeList.size());
+                            periode.setNbPeriodes(2);
+                            if(currentPeriode.getInteger("id_type") == 3 ||
+                                    currentPeriode.getInteger("id_type") == 4 ||
+                                    currentPeriode.getInteger("id_type") == 5) {
+                                periode.setIndice(currentPeriode.getInteger("id_type")-2);
+                                periode.setNbPeriodes(3);
+                            }
+
                             donnees.getPeriodes().getPeriode().add(periode);
                         }
                     });
