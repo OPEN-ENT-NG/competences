@@ -687,7 +687,7 @@ export class ReleveNote extends  Model implements IModel {
             column.push('positionnement');
         }
         if(this.exportOptions.appreciation) {
-            header += `; ${lang.translate('evaluations.releve.appreciations.student')}`;
+            header += `; ${lang.translate('viescolaire.utils.appreciations')}`;
             column.push('appreciation_matiere_periode');
         }
         return  {header: header, column: column};

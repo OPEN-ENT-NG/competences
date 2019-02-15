@@ -174,7 +174,7 @@
   "evaluations.releve.appreciation.classe.placeholder":"Saisir ici l'appréciation classe",
   "evaluations.releve.appreciation.classe.max.length":"La saisie est limitée à 300 caractères. L'appréciation n'a pas été enregistré",
   "evaluations.releve.appreciation.classe.save.error":"Une erreur est survenue lors de l'enregistrement de l'appréciation",
-  "evaluations.releve.appreciations.student":"Appréciations élève",
+  "evaluations.releve.appreciations.student":"Appréciation élèves",
   "evaluations.eleve.cycle.get.error":"Une erreur est survenue lors de la récupération des cycles de l'élève",
   "evaluations.theme.get.error":"Une erreur est survenue lors de la récupération des thèmes",
   "evaluations.matiere.get.error":"Une erreur est survenue lors de la récupération des matières",
