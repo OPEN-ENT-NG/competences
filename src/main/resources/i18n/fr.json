@@ -543,6 +543,7 @@
   "bilan.periodique.moyenne.generale.classe": "Moyenne générale de la classe",
   "no.bilan.periodique":"Aucun bilan périodique pour l'élève sélectionné",
   "evaluations.bilan.periodique.title": "Bilan périodique",
+  "evaluations.educatif.project": "Projets éducatifs",
   "evaluations.rename.subject.title": "Modification des libelles des matières",
   "evaluations.rename.subject.description": "",
   "evaluations.rename.subject.error.get.subjects": "Erreur lors de la récupération des libelles des matières",
