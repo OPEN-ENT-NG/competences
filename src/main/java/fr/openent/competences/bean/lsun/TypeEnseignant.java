@@ -52,7 +52,12 @@ public enum TypeEnseignant {
     @XmlEnumValue("epp")
     EPP("epp"),
     @XmlEnumValue("local")
-    LOCAL("local");
+    LOCAL("local"),
+    @XmlEnumValue("dir")
+    DIR("dir"),
+    @XmlEnumValue("autre")
+    AUTRE("autre");
+
     private final String value;
 
     TypeEnseignant(String v) {

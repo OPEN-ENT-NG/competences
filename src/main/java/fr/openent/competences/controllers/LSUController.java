@@ -329,7 +329,7 @@ public class LSUController extends ControllerHelper {
             if (resultsQuery.isRight()) {
                 log.info("getBaliseBilansPeriodiques");
                 Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
-                this.getBaliseBilansPeriodiques(donnees, idStructure, periodesAdded, dateCreationVerrouByClasse, epiGroupAdded, accGroupAdded, getBilansPeriodiquesHandler);
+                this.getBaliseBilansPeriodiques(donnees, idStructure, periodesAdded, dateCreationVerrouByClasse, epiGroupAdded, accGroupAdded,enseignantFromSts, getBilansPeriodiquesHandler);
 
 
             } else {
@@ -435,7 +435,7 @@ public class LSUController extends ControllerHelper {
                         log.info("out future 1 ");
                         if (event.succeeded()) {
                             log.info("getApEpiParcoursBalises");
-                            getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, accGroupAdded, getApEpiParcoursHandler);
+                            getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, accGroupAdded, enseignantFromSts, getApEpiParcoursHandler);
                         }
                         else{
                             badRequest(request, event.cause().getMessage());
@@ -1207,7 +1207,7 @@ public class LSUController extends ControllerHelper {
     }
 
 
-    private void getBaliseEnseignantFromId(final Donnees donnees, String idEnseignant, final Handler<String> handler) {
+    private void getBaliseEnseignantFromId(final Donnees donnees, String idEnseignant,final JsonArray enseignantFromSts, final Handler<String> handler) {
         JsonArray ids = new JsonArray().add(idEnseignant);
         JsonObject action = new JsonObject()
                 .put("action", "user.getUsers")
@@ -1219,7 +1219,7 @@ public class LSUController extends ControllerHelper {
                 if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() == 1 ) {
                     JsonArray teachersList = body.getJsonArray("results");
                     for (Integer k = 0; k < teachersList.size(); k++) {
-                        addorFindTeacherBalise(donnees, null, teachersList.getJsonObject(k));
+                        addorFindTeacherBalise(donnees, enseignantFromSts, teachersList.getJsonObject(k));
                     }
                     handler.handle("success");
                 }
@@ -1227,7 +1227,7 @@ public class LSUController extends ControllerHelper {
         }));
     }
 
-    private Enseignant addorFindTeacherBalise(Donnees donnees, JsonArray enseignantFromSts, JsonObject enseignant){
+    private Enseignant addorFindTeacherBalise(Donnees donnees, final JsonArray enseignantsFromSts, JsonObject enseignant){
         Enseignant existing = getEnseignantInXML(enseignant.getString("id"), donnees);
         if (existing == null) {
             existing = objectFactory.createEnseignant();
@@ -1239,24 +1239,21 @@ public class LSUController extends ControllerHelper {
             else if(enseignant.getString("name") != null) {
                 existing.setNom(enseignant.getString("name"));
             }
-
-            //generate fake sts id to test  need to be removed
-            existing.setType(fromValue("epp"));
+            existing.setType(fromValue("autre"));
             existing.setIdSts(new BigInteger(20, new Random()));
-            //end fake sts
 
-            if(enseignantFromSts != null && enseignantFromSts.size() > 0) {
-                JsonObject enseingantFromSts = (JsonObject) enseignantFromSts.stream()
+            if(enseignantsFromSts != null && enseignantsFromSts.size() > 0) {
+                JsonObject enseigantFromSts = (JsonObject) enseignantsFromSts.stream()
                         .filter(
-                                el -> (((JsonObject) el).getString("NOM_USAGE") == enseignant.getString("lastName"))
-                                && ((JsonObject) el).getString("PRENOM") == enseignant.getString("firstName")
-                                && ((JsonObject) el).getString("DATE_NAISSANCE") == enseignant.getString("birthDate")
+                                el -> (((JsonObject) el).getString("NOM_USAGE").equals(enseignant.getString("lastName")))
+                                        && ((JsonObject) el).getString("PRENOM").equals(enseignant.getString("firstName"))
+                                        && ((JsonObject) el).getString("DATE_NAISSANCE").equals(enseignant.getString("birthDate"))
                         )
                         .findFirst()
                         .orElse(null);
-                if(enseingantFromSts != null && enseingantFromSts.containsKey("ID") && enseingantFromSts.containsKey("TYPE") ){
-                    existing.setIdSts(new BigInteger(enseingantFromSts.getString("ID")));
-                    existing.setType(TypeEnseignant.fromValue(enseingantFromSts.getString("TYPE")));
+                if (enseigantFromSts != null && enseigantFromSts.containsKey("ID") && enseigantFromSts.containsKey("TYPE")) {
+                    existing.setIdSts(new BigInteger(enseigantFromSts.getString("ID")));
+                    existing.setType(TypeEnseignant.fromValue(enseigantFromSts.getString("TYPE")));
                 }
             }
 
@@ -1267,7 +1264,7 @@ public class LSUController extends ControllerHelper {
         return existing;
     };
 
-    private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure, JsonObject epiGroupAdded, JsonObject accGroupAdded, final Handler<String> handler) {
+    private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure, JsonObject epiGroupAdded, JsonObject accGroupAdded,final JsonArray enseignantFromSts, final Handler<String> handler) {
         List<String> idTeachers = new ArrayList<>();
         elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idsClass, idStructure, new Handler<Either<String, JsonArray>>() {
             @Override
@@ -1375,7 +1372,7 @@ public class LSUController extends ControllerHelper {
                         for (int j = 0; j < jmax; j++) {
                             final Future<JsonObject> resp1FutureComposite = Future.future();
                             futureMyResponse1Lst.add(resp1FutureComposite);
-                            addEnseignantDiscipline(intervenantsMatieres.getJsonObject(j), enseignantsDisciplinesEpi.getEnseignantDiscipline(), epi.getDisciplineRefs(), donnees, resp1FutureComposite);
+                            addEnseignantDiscipline(intervenantsMatieres.getJsonObject(j), enseignantsDisciplinesEpi.getEnseignantDiscipline(), epi.getDisciplineRefs(), donnees,enseignantFromSts, resp1FutureComposite);
                         }
 
                     CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
@@ -1439,7 +1436,7 @@ public class LSUController extends ControllerHelper {
                     for (int i = 0; i < imax; i++) {
                         final Future<JsonObject> resp1FutureComposite = Future.future();
                         futureMyResponse1Lst.add(resp1FutureComposite);
-                        addEnseignantDiscipline(intervenantsMatieres.getJsonObject(i), enseignantsDisciplinesAcc.getEnseignantDiscipline(), accPerso.getDisciplineRefs(), donnees, resp1FutureComposite);
+                        addEnseignantDiscipline(intervenantsMatieres.getJsonObject(i), enseignantsDisciplinesAcc.getEnseignantDiscipline(), accPerso.getDisciplineRefs(), donnees,enseignantFromSts, resp1FutureComposite);
                     }
 
                     CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
@@ -1463,12 +1460,12 @@ public class LSUController extends ControllerHelper {
         });
     }
 
-    private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere, List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs, final Donnees donnees, final Future<JsonObject> resp1FutureComposite) {
+    private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere, List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs, final Donnees donnees,final JsonArray enseignantFromSts, final Future<JsonObject> resp1FutureComposite) {
         Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
         if (currentSubj != null) {
             Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
             if (currentEnseignant == null) {
-                getBaliseEnseignantFromId(donnees, currentIntervenantMatiere.getJsonObject("intervenant").getString("id"),
+                getBaliseEnseignantFromId(donnees, currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), enseignantFromSts,
                         (String event) -> {
                             if (event.equals("success")) {
                                 Enseignant newEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
@@ -1511,6 +1508,7 @@ public class LSUController extends ControllerHelper {
     private void getBaliseBilansPeriodiques(final Donnees donnees, final String idStructure,
                                             JsonObject periodesAdded, final Map<String, JsonObject> dateCreationVerrouByClasse,
                                             final JsonObject epiGroupAdded, final JsonObject accGroupAdded,
+                                            final JsonArray enseignantFromSts,
                                             final Handler<Either.Right<String, JsonObject>> handler) {
 
         final Donnees.BilansPeriodiques bilansPeriodiques = objectFactory.createDonneesBilansPeriodiques();
@@ -1608,7 +1606,7 @@ public class LSUController extends ControllerHelper {
 
                                 final JsonArray vieScoRightValue = eventViesco.right().getValue();
                                 JsonObject viesco = (JsonObject) vieScoRightValue.stream()
-                                        .filter(el -> periodeJSon.getInteger("id_type") == ((JsonObject) el).getInteger("id_periode"))
+                                        .filter(el -> periodeJSon.getInteger("id_type").equals(((JsonObject) el).getInteger("id_periode")))
                                         .findFirst()
                                         .orElse(null);
 
@@ -1738,7 +1736,7 @@ public class LSUController extends ControllerHelper {
                                         bilanPeriodique.setPeriodeRef(currentPeriode);
                                         addDateVerrou(bilanPeriodique);
                                         addResponsable(bilanPeriodique);
-                                        addListeAcquis(suiviAcquis, bilanPeriodique);
+                                        addListeAcquis(suiviAcquis,enseignantFromSts, bilanPeriodique);
                                     } else {
                                         bilansPeriodiques.getBilanPeriodique().remove(currentEleve.getIdNeo4j());
                                     }
@@ -1758,12 +1756,12 @@ public class LSUController extends ControllerHelper {
                                     bilanPeriodique.setDateVerrou(datesCreationVerrou.getString("date_verrou").substring(0, 19));
                                 }
 
-                                private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
+                                private void addListeAcquis(JsonArray suiviAcquis, final JsonArray enseignantFromSts, BilanPeriodique bilanPeriodique) {
                                     BilanPeriodique.ListeAcquis aquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
                                     for (Integer i = 0; i < suiviAcquis.size(); i++) {
                                         final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
                                         Acquis aquisEleve = addListeAcquis_addAcquis(currentAcquis);
-                                        addListeAcquis_addMissingTeacherToXml(aquisEleveList, currentAcquis, aquisEleve);
+                                        addListeAcquis_addMissingTeacherToXml(aquisEleveList, currentAcquis,enseignantFromSts, aquisEleve);
                                     }
                                     bilanPeriodique.setListeAcquis(aquisEleveList);
                                 }
@@ -1777,11 +1775,11 @@ public class LSUController extends ControllerHelper {
                                     return aquisEleve;
                                 }
 
-                                private void addListeAcquis_addMissingTeacherToXml(BilanPeriodique.ListeAcquis aquisEleveList, JsonObject currentAcquis, Acquis aquisEleve) {
+                                private void addListeAcquis_addMissingTeacherToXml(BilanPeriodique.ListeAcquis aquisEleveList, JsonObject currentAcquis,final JsonArray enseignantFromSts, Acquis aquisEleve) {
                                     if (currentAcquis.containsKey("teachers") && !currentAcquis.getJsonArray("teachers").isEmpty()) {
                                         JsonArray teachersList = currentAcquis.getJsonArray("teachers");
                                         for (Integer k = 0; k < teachersList.size(); k++) {
-                                            Enseignant enseignant = addorFindTeacherBalise(donnees, null, teachersList.getJsonObject(k));
+                                            Enseignant enseignant = addorFindTeacherBalise(donnees, enseignantFromSts, teachersList.getJsonObject(k));
                                             aquisEleve.getEnseignantRefs().add(enseignant);
                                         }
                                     }
