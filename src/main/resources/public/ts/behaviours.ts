@@ -43,7 +43,8 @@ Behaviours.register('competences', {
             canSaisiSyntheseBilanPeriodique: "fr.openent.competences.controllers.BilanPeriodiqueController|createOrUpdateSyntheseBilanPeriodique",
             canSaisiAppreciationCPE: "fr.openent.competences.controllers.BilanPeriodiqueController|createOrUpdateAppreciationCPE",
             canSaveAppMatierePosiBilanPeriodique: "fr.openent.competences.controllers.NoteController|saveAppreciationMatiereAndPositionnement",
-            paramServices: "fr.openent.competences.controllers.ServicesController|createService"
+            paramServices: "fr.openent.competences.controllers.ServicesController|createService",
+            canCreateDevoir: "fr.openent.competences.controllers.DevoirController|createDevoir"
         },
         resource: {}
     },

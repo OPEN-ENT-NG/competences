@@ -82,10 +82,8 @@
     <header>
         <!--<h1 style="float: left;">Relevé de notes</h1>-->
         <nav class="right-magnet nav-releve">
-            <a class="button noMarginLeft twelve-mobile" ng-show="!isChefEtab()" href="/competences#/devoir/create">
-                <i18n>evaluations.test.new</i18n>
-            </a>
-            <a class="button noMarginLeft twelve-mobile" ng-show="isChefEtab()" ng-click="displayInConstruction();">
+            <a class="button noMarginLeft twelve-mobile" workflow="competences.canCreateDevoir"
+               href="/competences#/devoir/create">
                 <i18n>evaluations.test.new</i18n>
             </a>
             <a class="button twelve-mobile" href="#/devoirs/list">

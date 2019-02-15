@@ -24,8 +24,7 @@
             <i class="show-icons" ng-class="{ selected: template.contains('evaluations', 'enseignants/liste_devoirs/icon_view') }"
                ng-click="template.open('evaluations', 'enseignants/liste_devoirs/icon_view')"></i>
         </div>
-        <button ng-show="!isChefEtab()" class="marginFive" ng-click="goTo('/devoir/create');"><i18n>evaluations.test.new</i18n></button>
-        <button ng-show="isChefEtab()" class="marginFive" ng-click="displayInConstruction();"><i18n>evaluations.test.new</i18n></button>
+        <button workflow="competences.canCreateDevoir" class="marginFive" ng-click="goTo('/devoir/create');"><i18n>evaluations.test.new</i18n></button>
         <div class="microbox-wrapper zero">
             <div class="microbox-content">
                 <i class="close-2x"></i>

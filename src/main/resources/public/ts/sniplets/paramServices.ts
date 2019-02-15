@@ -337,7 +337,8 @@ export const paramServices = {
 
         getClasses: function () {
             try {
-                return http.get(`/viescolaire/classes?idEtablissement=${paramServices.that.idStructure}`)
+                return http.get(`/viescolaire/classes?idEtablissement=${
+                    paramServices.that.idStructure}&forAdmin=true`)
             } catch (e) {
                 notify.error('evaluations.service.error.classe');
             }
