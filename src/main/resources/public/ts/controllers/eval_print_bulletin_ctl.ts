@@ -126,6 +126,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             }
 
             options.idPeriode = $scope.selected.periode.id_type;
+            options.type = $scope.selected.periode.type;
             let students = _.filter($scope.allElevesClasses, function (student) {
                 return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
             });
@@ -254,6 +255,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                             $scope.filteredPeriodes.push(
                                 {
                                     id_type: periode.id_type,
+                                    type: periode.type,
                                     periode: periode,
                                     classes: classe
                                 });

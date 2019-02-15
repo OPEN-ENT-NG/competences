@@ -40,7 +40,7 @@ export class ExportBulletins {
             useModel : (options.useModel !== true)? false : true
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
-            _.extend(o, {idPeriode: options.idPeriode});
+            _.extend(o, {idPeriode: options.idPeriode, typePeriode: options.type});
         }
         if(o.showBilanPerDomaines) {
             _.extend(o, {idImagesFiles : options.idImagesFiles});

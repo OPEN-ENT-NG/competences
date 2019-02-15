@@ -122,9 +122,10 @@ public interface ExportBulletinService {
      * @param idEleve idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idPeriode
+     * @param typePeriode (semestre (2)/trimestre (3))
      * @param finalHandler handler servant à la synchronisation des services
      */
-     void getCycle ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode,
+     void getCycle ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode, Long typePeriode,
                            Handler<Either<String, JsonObject>> finalHandler);
 
     /**

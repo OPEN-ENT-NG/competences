@@ -83,7 +83,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String HAS_PROJECT = "hasProject";
     private static final String ID_IMAGES_FILES = "idImagesFiles";
     private static final String IS_DOMAINE_PARENT = "isDomaineParent";
+
     public static final String USE_MODEL_KEY = "useModel";
+    public static final String TYPE_PERIODE = "typePeriode";
 
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
@@ -202,7 +204,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getHeadTeachers(idEleve, elevesMap, finalHandler);
                 getLibellePeriode(request, idEleve, elevesMap, idPeriode, finalHandler);
                 getAnneeScolaire(idEleve, elevesMap, finalHandler);
-                getCycle(idEleve,elevesMap,idPeriode,finalHandler);
+                getCycle(idEleve,elevesMap,idPeriode, params.getLong(TYPE_PERIODE), finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
                 getAvisConseil(idEleve, elevesMap, idPeriode, finalHandler);
                 if(params.getBoolean(GET_RESPONSABLE)) {
@@ -298,7 +300,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getCycle ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode,
+    public void getCycle ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode, Long typePeriode,
                            Handler<Either<String, JsonObject>> finalHandler) {
         JsonObject eleve = elevesMap.get(idEleve);
         logBegin(GET_CYCLE_METHOD, idEleve);
@@ -338,7 +340,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     if(results.size() > 0) {
                                         final String libelle = results.getJsonObject(0)
                                                 .getString(LIBELLE);
-                                        eleve.put("bilanCycle", getLibelle("evaluations.bilan.trimestriel.of")
+                                        eleve.put("bilanCycle",
+                                                getLibelle("evaluations.bilan.periodique.of." + typePeriode)
                                                 + libelle);
                                     }
                                     else {
@@ -1769,9 +1772,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     Handler<Either<String, JsonObject>> finalHandler){
 
         JsonObject images = params.getJsonObject("images");
+        Long typePeriode = params.getLong(TYPE_PERIODE);
         for (int i = 0; i < eleves.size(); i++) {
 
             JsonObject eleve = eleves.getJsonObject(i);
+            eleve.put(TYPE_PERIODE, typePeriode);
 
             // Mise en forme de la date de naissance
             String idEleve = eleve.getString(ID_ELEVE_KEY);

@@ -200,7 +200,8 @@
 
   "evaluations.conseil.de.classe": "Conseil de classe",
   "evaluations.bilan.periodique": "Bilan périodique",
-  "evaluations.bilan.trimestriel.of": "Bilan trimestriel du ",
+  "evaluations.bilan.periodique.of.3": "Bilan trimestriel du ",
+  "evaluations.bilan.periodique.of.2": "Bilan semestriel du ",
   "evaluations.bilan.by.subject": "Bilan par matière",
   "evaluations.bilan.by.domaine": "Bilan par domaine",
   "evaluation.bilan.periodique.suivi.acquis": "Suivi des acquis",
