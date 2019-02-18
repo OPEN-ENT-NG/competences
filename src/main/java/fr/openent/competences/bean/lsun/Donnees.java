@@ -1537,6 +1537,17 @@ public class Donnees {
             }
             return this.periode;
         }
+        public Periode getOnePeriode(String millesime, Integer indice, Integer nbPeriode){
+            Periode periodeReturned = null;
+            if(this.periode != null && this.periode.size() > 0){
+                for (Periode p : periode){
+                    if(p.getMillesime().equals(millesime) && p.getIndice() == indice && p.getNbPeriodes() == nbPeriode){
+                        periodeReturned = p ;
+                    }
+                }
+            }
+            return periodeReturned;
+        }
 
     }
 

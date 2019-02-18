@@ -1149,20 +1149,38 @@ public class LSUController extends ControllerHelper {
                                 .findFirst()
                                 .orElse(null);
                         if(targetPeriode != null){
-                            periodesAdded.put("P_"+currentPeriode.getInteger("id").toString(), currentPeriode);
+                           /* periodesAdded.put("P_"+currentPeriode.getInteger("id").toString(), currentPeriode);
                             Periode periode = objectFactory.createPeriode();
                             periode.setId("P_"+currentPeriode.getInteger("id").toString());
                             periode.setMillesime(currentPeriode.getString("timestamp_dt").substring(0, 4));
-                            periode.setTypePeriode(currentPeriode.getInteger("id_type"));
-                            periode.setNbPeriodes(2);
+                            periode.setIndice(currentPeriode.getInteger("id_type"));
+                            periode.setNbPeriodes(periodeList.size());
+                            donnees.getPeriodes().getPeriode().add(periode);*/
+
+                            String millesime = currentPeriode.getString("timestamp_dt").substring(0, 4);
+                            Integer indice = new Integer(0);
+                            Integer nbPeriode = new Integer(0);
                             if(currentPeriode.getInteger("id_type") == 3 ||
                                     currentPeriode.getInteger("id_type") == 4 ||
                                     currentPeriode.getInteger("id_type") == 5) {
-                                periode.setIndice(currentPeriode.getInteger("id_type")-2);
-                                periode.setNbPeriodes(3);
+                                indice = currentPeriode.getInteger("id_type")-2;
+                                nbPeriode = 3;
+                            }else{
+                                indice = currentPeriode.getInteger("id_type");
+                                nbPeriode = 2 ;
                             }
 
-                            donnees.getPeriodes().getPeriode().add(periode);
+                            Periode periode = donnees.getPeriodes().getOnePeriode(millesime, indice, nbPeriode);
+
+                            if(periode == null){
+                                periode = objectFactory.createPeriode();
+                                periode.setId("P_" + currentPeriode.getInteger("id").toString());
+                                periode.setMillesime(millesime);
+                                periode.setTypePeriode(currentPeriode.getInteger("id_type"));
+                                periode.setNbPeriodes(nbPeriode);
+                                periode.setIndice(indice);
+                                donnees.getPeriodes().getPeriode().add(periode);
+                            }
                         }
                     });
                     handler.handle("success");
@@ -1525,7 +1543,7 @@ public class LSUController extends ControllerHelper {
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
         listErreursEleves = new fr.wseduc.webutils.collections.JsonArray();
         final AtomicInteger originalSize = new AtomicInteger();
-
+        final AtomicInteger idElementProgramme = new AtomicInteger();
 
 
         Handler getOut = new Handler<Either<String, JsonObject>>() {
@@ -1546,6 +1564,7 @@ public class LSUController extends ControllerHelper {
             handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("error", "getBaliseBilansPeriodiques : Eleves or Periodes are empty")));
             return;
         }
+        donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
         //For each eleve create his periodic bilan
         for (Integer i = 0; i < eleves.getEleve().size(); i++) {
             Eleve currentEleve = eleves.getEleve().get(i);
@@ -1553,10 +1572,10 @@ public class LSUController extends ControllerHelper {
                 originalSize.getAndIncrement();
                 JsonObject response = new JsonObject();
                 Periode currentPeriode = periodes.getPeriode().get(i2);
-                if(periodesAdded.containsKey(currentPeriode.getId())
+                /*if(periodesAdded.containsKey(currentPeriode.getId())
                         && periodesAdded.getJsonObject(currentPeriode.getId()).containsKey("id_classe")
                         && currentEleve.getId_Class().equals(periodesAdded.getJsonObject(currentPeriode.getId()).getString("id_classe"))) {
-                    JsonObject periodeJSon = periodesAdded.getJsonObject(currentPeriode.getId());
+                    JsonObject periodeJSon = periodesAdded.getJsonObject(currentPeriode.getId());*/
                     Future<JsonObject> getRetardsAndAbsencesFuture = Future.future();
                     Future<JsonObject> getAppreciationsFuture = Future.future();
                     Future<JsonObject> getSuiviAcquisFuture = Future.future();
@@ -1578,7 +1597,8 @@ public class LSUController extends ControllerHelper {
                         return;
                     }
 
-                    syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(periodeJSon.getLong("id_type"), currentEleve.getIdNeo4j(),
+                   // syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(periodeJSon.getLong("id_type"), currentEleve.getIdNeo4j(),
+                    syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique((long) currentPeriode.getTypePeriode(), currentEleve.getIdNeo4j(),
                             eventSynthese -> {
                                 String synthese = "null";
                                 if (eventSynthese.isRight()) {
@@ -1609,8 +1629,13 @@ public class LSUController extends ControllerHelper {
                                 viescolare.setNbHeuresManquees(BigInteger.valueOf(0L));
 
                                 final JsonArray vieScoRightValue = eventViesco.right().getValue();
-                                JsonObject viesco = (JsonObject) vieScoRightValue.stream()
+                                /*JsonObject viesco = (JsonObject) vieScoRightValue.stream()
                                         .filter(el -> periodeJSon.getInteger("id_type").equals(((JsonObject) el).getInteger("id_periode")))
+                                        .findFirst()
+                                        .orElse(null);*/
+                                JsonObject viesco = (JsonObject) vieScoRightValue.stream()
+                                        //.filter(el -> periodeJSon.getInteger("id_type").equals(((JsonObject) el).getInteger("id_periode")))
+                                        .filter(el -> currentPeriode.getTypePeriode()==((JsonObject) el).getInteger("id_periode"))
                                         .findFirst()
                                         .orElse(null);
 
@@ -1638,18 +1663,25 @@ public class LSUController extends ControllerHelper {
                         }
                     });
 
-                    elementBilanPeriodiqueService.getApprecBilanPerEleve(Collections.singletonList(periodeJSon.getString("id_classe")),
+                   /* elementBilanPeriodiqueService.getApprecBilanPerEleve(Collections.singletonList(periodeJSon.getString("id_classe")),
                             periodeJSon.getInteger("id_type").toString(), null, currentEleve.getIdNeo4j(),
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
+                                public void handle(Either<String, JsonArray> eventApp) {*/
+                    elementBilanPeriodiqueService.getApprecBilanPerEleve(Collections.singletonList(currentEleve.getId_Class()),
+                            new Integer (currentPeriode.getTypePeriode()).toString(), null, currentEleve.getIdNeo4j(),
+                            new Handler<Either<String, JsonArray>>() {
+                                @Override
                                 public void handle(Either<String, JsonArray> eventApp) {
+
 
                                     if (eventApp.isRight()) {
                                         final JsonArray appreciations = eventApp.right().getValue();
 
                                         for (int i = 0; i < appreciations.size(); i++) {
                                             JsonObject element = appreciations.getJsonObject(i);
-                                            if (element.getInteger("id_periode") == periodeJSon.getInteger("id_type")) {
+                                           // if (element.getInteger("id_periode") == periodeJSon.getInteger("id_type")) {
+                                            if (element.getInteger("id_periode") == currentPeriode.getTypePeriode()) {
                                                 Long typeElem = element.getLong("type_elt_bilan_periodique");
                                                 if (3L == typeElem) {//parcours
                                                     addParcoursEleve(element);
@@ -1735,7 +1767,7 @@ public class LSUController extends ControllerHelper {
                                     if (suiviAcquisResponse.isRight()) {
                                         final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
                                         //init Bilan Periodique
-                                        donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
+                                        //donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
                                         bilanPeriodique.setEleveRef(currentEleve);
                                         bilanPeriodique.setPeriodeRef(currentPeriode);
                                         addDateVerrou(bilanPeriodique);
@@ -1832,29 +1864,30 @@ public class LSUController extends ControllerHelper {
 
                                private void addAcquis_addElementProgramme(JsonObject currentAcquis, Acquis aquisEleve) {
                                     String epLabel = currentAcquis.getString("elementsProgramme");
-                                        String epId = generateElementProgrammeId(epLabel);
+                                   final ElementProgramme newEP = objectFactory.createElementProgramme();
+                                   newEP.setLibelle(epLabel);
 
-                                        ElementProgramme ep = donnees.getElementsProgramme().getElementProgramme().stream()
-                                                .filter(cep -> cep.getId().equals(epId))
+                                    ElementProgramme ep = donnees.getElementsProgramme().getElementProgramme().stream()
+                                                .filter(cep -> cep.getLibelle().equals(newEP.getLibelle()))
                                                 .findFirst()
                                                 .orElse(null);
-
                                         if(ep == null){
-                                            ep = objectFactory.createElementProgramme();
-                                            ep.setId(epId);
-                                            ep.setLibelle(epLabel);
-                                            donnees.getElementsProgramme().getElementProgramme().add(ep);
+                                            String epId = generateElementProgrammeId(idElementProgramme);
+                                            newEP.setId(epId);
+                                            newEP.setLibelle(epLabel);
+                                            donnees.getElementsProgramme().getElementProgramme().add(newEP);
+                                            aquisEleve.getElementProgrammeRefs().add(newEP);
+                                        }else{
+                                            aquisEleve.getElementProgrammeRefs().add(ep);
                                         }
-                                        aquisEleve.getElementProgrammeRefs().add(ep);
-
                                 }
                             });
-                }
+               /* }
                 else {
                     response.put("status", 400);
                     response.put("errorMessage", "");
                     getOut.handle(new Either.Right<String, JsonObject>(response));
-                }
+                }*/
             }
         }
     }
@@ -1897,8 +1930,8 @@ public class LSUController extends ControllerHelper {
                 .orElse(null);
     }
 
-    private String generateElementProgrammeId (String elementsProgramme){
-        return "EP_"+String.valueOf(elementsProgramme.hashCode());
+    private String generateElementProgrammeId ( AtomicInteger idElementProgramme){
+        return "EP_"+String.valueOf(idElementProgramme.incrementAndGet());
     }
 
     private String getMillesime(){
@@ -1957,7 +1990,7 @@ public class LSUController extends ControllerHelper {
                         Validator validator = schema.newValidator();
                         Source xmlFile = new StreamSource(new ByteArrayInputStream(response.toString().getBytes("UTF-8")));
                         log.info("validator");
-                       // validator.validate(xmlFile);
+                        validator.validate(xmlFile);
                     } catch (SAXException | IOException e) {
                         log.error("Validation : Export LSU en erreur",e);
                         request.response().setStatusCode(400).setStatusMessage(e.getMessage()).end();
