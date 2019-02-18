@@ -172,3 +172,11 @@ export let Defaultcolors = {
     orange: '#FF8500',
     unevaluated: '#5f5f5f'
 };
+
+export let DefaultLetters = {
+    3: 'TB',
+    2: 'MS',
+    1: 'MF',
+    0: 'MI',
+    '-1': 'NE'
+};
