@@ -35,10 +35,10 @@ export class EnsCpl extends Model  {
 export class EnsCpls extends Model implements IModel{
     all : EnsCpl[];
 
-     constructor(){
-         super();
-         this.all=[];
-     }
+    constructor(){
+        super();
+        this.all=[];
+    }
     get api() {
         return {
             get: `/competences/ListEnseignementComplement`
@@ -46,8 +46,11 @@ export class EnsCpls extends Model implements IModel{
     }
 
     async sync() {
-        let { data } = await http.get(this.api.get);
-        this.all = Mix.castArrayAs(EnsCpl, data);
+        return new Promise( async (resolve)=> {
+            let { data } = await http.get(this.api.get);
+            this.all = Mix.castArrayAs(EnsCpl, data);
+            resolve();
+        });
     }
 }
 
@@ -73,8 +76,11 @@ export class NiveauEnseignementCpls extends Model {
     }
 
     async sync(){
-        let {data} = await http.get(`/competences/niveaux/enseignement/complement/list`);
-        this.all = Mix.castArrayAs(NiveauEnseignementCpl,data);
+        return new Promise( async (resolve) => {
+            let {data} = await http.get(`/competences/niveaux/enseignement/complement/list`);
+            this.all = Mix.castArrayAs(NiveauEnseignementCpl, data);
+            resolve();
+        });
     }
 }
 
@@ -97,12 +103,12 @@ export class EleveEnseignementCpl extends Model implements IModel{
         this.id_cycle = id_cycle;
         this.niveau = 0;
     }
-     setAttributsEleveEnsCpl (id_enscpl : number,id_niveau : number,niveau_lcr : number, id_langue : number)  {
-            this.id_enscpl = id_enscpl;
-            this.id_niveau = id_niveau;
-            this.id_langue = id_langue;
-            this.niveau_lcr = niveau_lcr;
-            return this;
+    setAttributsEleveEnsCpl (id_enscpl : number,id_niveau : number,niveau_lcr : number, id_langue : number)  {
+        this.id_enscpl = id_enscpl;
+        this.id_niveau = id_niveau;
+        this.id_langue = id_langue;
+        this.niveau_lcr = niveau_lcr;
+        return this;
     }
 
     get api(){
@@ -141,37 +147,21 @@ export class EleveEnseignementCpl extends Model implements IModel{
 
     async save() {
         if(this.id){
-           await this.update();
+            await this.update();
         }else{
             await this.create();
-         }
+        }
     }
 
     async sync(){
-        let url = this.api.get;
-        if(this.id_cycle !== null && this.id_cycle !== undefined){
-            url = url + `&idCycle=${this.id_cycle}`
-        }
-        let { data } = await  http.get(url);
-      Mix.extend(this,Mix.castAs(EleveEnseignementCpl,data));
-
-       /* if(data !== undefined && data.length === 1) {
-            let enseignementComplementEleve = data[0] ;
-            if (enseignementComplementEleve.hasOwnProperty('id')) {
-                let nivEnsCpls = new NiveauEnseignementCpls();
-               await  nivEnsCpls.sync();
-                if (enseignementComplementEleve.id_niveau != 0) {
-                    enseignementComplementEleve.libelle = _.findWhere(nivEnsCpls.all, {niveau: enseignementComplementEleve.niveau}).libelle;
-                }
-                this.updateData(enseignementComplementEleve,false);
+        return new Promise( async (resolve) => {
+            let url = this.api.get;
+            if(this.id_cycle !== null && this.id_cycle !== undefined){
+                url = url + `&idCycle=${this.id_cycle}`
             }
-        }*/
-       /* if(data.hasOwnProperty('id')) {
-            let nivEnsCpls = new NiveauEnseignementCpls(data.id_eleve);
-            if (data.niveau != 0) {
-                data.libelle = _.findWhere(nivEnsCpls.all, {niveau: data.niveau}).libelle;
-            }
-            this.updateData(data);
-        }*/
+            let { data } = await  http.get(url);
+            Mix.extend(this,Mix.castAs(EleveEnseignementCpl,data));
+            resolve(data);
+        });
     }
-  }
+}

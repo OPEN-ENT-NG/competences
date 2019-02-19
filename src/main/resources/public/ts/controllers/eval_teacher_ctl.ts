@@ -27,6 +27,7 @@ import {
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
+import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
 
 declare let $: any;
 declare let document: any;
@@ -46,24 +47,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 + lang.translate("viescolaire.structure.load.end");
         };
 
-        $scope.selectCycleForView = function (location) {
-            let idCycle;
-            if (location === 'saisieNote') {
-                idCycle = $scope.classes.findWhere({id: $scope.currentDevoir.id_groupe}).id_cycle;
-            }
-
-            if (!idCycle && $scope.search.classe !== undefined && $scope.search.classe !== null
-                && $scope.search.classe !== '*') {
-                idCycle = $scope.search.classe.id_cycle;
-            }
-            evaluations.structure.cycle = _.findWhere(evaluations.structure.cycles, {
-                id_cycle: idCycle
-            });
-            if (!evaluations.structure.cycle) {
-                evaluations.structure.cycle = evaluations.structure.cycles[0];
-            }
-            $scope.structure.cycle = evaluations.structure.cycle;
-            return $scope.structure.cycle.niveauCompetencesArray;
+        $scope.selectCycleForView = function (id_cycle?) {
+           return selectCycleForView($scope, $location, id_cycle);
         };
 
 
@@ -251,7 +236,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                     $scope.currentDevoir = _.findWhere(evaluations.structure.devoirs.all, {id: parseInt(params.devoirId)});
                     $scope.usePerso = evaluations.structure.usePerso;
-                    $scope.updateColorAndLetterForSkills('saisieNote');
+                    $scope.updateColorAndLetterForSkills();
                     $scope.updateNiveau($scope.usePerso);
                     if ($scope.printOption === undefined) {
                         $scope.printOption = {
@@ -3325,9 +3310,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $rootScope.chooseTheme();
         };
 
-        $scope.updateColorAndLetterForSkills = function (location) {
+        $scope.updateColorAndLetterForSkills = function () {
 
-            $scope.niveauCompetences = $scope.selectCycleForView(location);
+            $scope.niveauCompetences = $scope.selectCycleForView();
             $scope.currentDevoir.niveauCompetences = $scope.niveauCompetences;
 
             // chargement dynamique des couleurs du niveau de compétences
@@ -3343,25 +3328,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.updateNiveau = function (usePerso) {
-            if (usePerso === 'true') {
-                evaluations.structure.niveauCompetences.sync(false).then(() => {
-                    evaluations.structure.niveauCompetences.first().markUser().then(() => {
-                        $scope.structure.usePerso = 'true';
-                        $scope.updateColorAndLetterForSkills();
-                        //utils.safeApply($scope);
-                    });
-                });
-
-            }
-            else if (usePerso === 'false') {
-                evaluations.structure.niveauCompetences.sync(true).then(() => {
-                    evaluations.structure.niveauCompetences.first().unMarkUser().then(() => {
-                        $scope.structure.usePerso = 'false';
-                        $scope.updateColorAndLetterForSkills();
-                        //utils.safeApply($scope);
-                    });
-                });
-            }
+           updateNiveau(usePerso, $scope);
         };
 
         $scope.togglePanel = function ($event) {

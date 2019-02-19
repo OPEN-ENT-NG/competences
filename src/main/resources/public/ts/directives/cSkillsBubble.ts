@@ -58,6 +58,11 @@ export let cSkillsBubble = ng.directive('cSkillsBubble', function () {
                     utils.safeApply($scope);
                 }
             }, true);
+            $scope.$watch('text', function (newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    utils.safeApply($scope);
+                }
+            });
         }]
     };
 });

@@ -504,6 +504,7 @@ export class Utils {
 
     static hasMaxNotFormative = function (MaCompetence, $scope) {
         let _evalFiltered = MaCompetence.competencesEvaluations;
+
         if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
             _evalFiltered = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
                 if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
@@ -586,5 +587,15 @@ export class Utils {
 
         return str;
     }
+
+    static runMessageLoader = ($scope) => {
+        $scope.opened.displayMessageLoader = true;
+        utils.safeApply($scope);
+    };
+
+    static stopMessageLoader = ($scope) => {
+        $scope.opened.displayMessageLoader = false;
+        utils.safeApply($scope);
+    };
 
 }

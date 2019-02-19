@@ -43,10 +43,9 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
         controller : ['$scope', function ($scope) {
 
             $scope.isClasse = $scope.isClasse !== undefined ? $scope.isClasse : false;
-            $scope.mapProportionLettres = _.mapObject($scope.mapLettres, function (val, key) {
-                    let letter = (val === " ")? DefaultLetters[key]: val;
-                    return letter;
-            });
+
+
+
             /**
              * Listener sur la variable filter. Si modification de la variable, recalcule des proportions
              */
@@ -55,6 +54,24 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                     $scope.calculProportion();
                 }
             }, true);
+
+            /**
+             * Met à jour le text affiché sur les bar de proportion et les tooltips
+             */
+            $scope.majInlineText = () => {
+                $scope.mapProportionLettres = _.mapObject($scope.mapLettres, function (val, key) {
+                    let letter = (val === " ")? DefaultLetters[key]: val;
+                    return letter;
+                });
+            };
+
+            $scope.$watch('mapLettres',  function(newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    $scope.majInlineText();
+                    $scope.calculProportion();
+                    utils.safeApply($scope);
+                }
+            });
 
             $scope.$watch('majProportions', function(newValue, oldValue) {
                 if (newValue !== oldValue) {
@@ -138,7 +155,8 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                 }
             };
 
-           $scope.calculProportion();
+            $scope.majInlineText();
+            $scope.calculProportion();
         }]
     };
 });

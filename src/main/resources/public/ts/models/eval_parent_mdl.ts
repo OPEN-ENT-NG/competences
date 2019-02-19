@@ -67,42 +67,6 @@ export class Evaluations extends Model {
 
     async sync  (): Promise<any> {
         return new Promise(async (resolve) => {
-            // await this.classes.sync(model.me.structures[0]);
-
-            let structuresTemp = [];
-           /* this.collection(Structure, {
-                sync : function () {
-                    return new Promise((resolve, reject) => {
-                        http().getJson('/viescolaire/user/structures/actives?module=notes').done(function (idsEtablissementActifs) {
-                            //On récupère tout d'abord la liste des établissements actifs
-                            if(idsEtablissementActifs.length > 0) {
-                                for (let i = 0; i < model.me.structures.length; i++) {
-                                    let isEtablissementActif = (_.findWhere(idsEtablissementActifs, {id_etablissement: model.me.structures[i]}) !== undefined);
-                                    if (isEtablissementActif) {
-                                        let structure = {
-                                            id : model.me.structures[i],
-                                            libelle : model.me.structureNames[i]
-                                        };
-                                        structuresTemp.push(structure);
-                                    }
-                                }
-                                //evaluations.structures.load(structuresTemp);
-                                evaluations.structure = structuresTemp.first();
-
-                                if (evaluations.structure !== undefined){
-                                    resolve();
-                                }
-                            } else {
-                                reject();
-                            }
-
-                        }.bind(this));
-                    })
-                }
-            });*/
-
-
-
             this.collection(Eleve, {
                 sync: async () => {
                     return new Promise((resolve, reject) => {
@@ -310,43 +274,7 @@ export class Evaluations extends Model {
             });
             this.collection(Enseignement, {
                 sync: async function (idClasse: string, competences, idCycle: string) {
-                    let that = this.composer;
-                    return new Promise((resolve, reject) => {
-                        let uri = Evaluations.api.GET_ENSEIGNEMENT;
-                        if (idClasse !== undefined) {
-                            uri += '?idClasse=' + idClasse;
-                            if (idCycle !== undefined) {
-                                uri += '&idCycle=' + idCycle;
-                            }
-                            http().getJson(uri).done(function (res) {
-                                this.load(res);
-                                this.each(function (enseignement) {
-                                    enseignement.competences.load(enseignement['competences_1']);
-                                    _.map(enseignement.competences.all, function (competence) {
-                                        return competence.composer = enseignement;
-                                    });
-                                    enseignement.competences.each(function (competence) {
-                                        if (competence['competences_2'].length > 0) {
-                                            competence.competences.load(competence['competences_2']);
-                                            _.map(competence.competences.all, function (sousCompetence) {
-                                                sousCompetence.competencesEvaluations = _.where(competences, {
-                                                    id_competence: sousCompetence.id
-                                                });
-                                                return sousCompetence.composer = competence;
-                                            });
-                                        }
-                                        delete competence['competences_2'];
-                                    });
-                                    delete enseignement['competences_1'];
-                                });
-                                if (resolve && typeof (resolve) === 'function') {
-                                    resolve();
-                                }
-                            }.bind(this));
-                        } else {
-                            console.error('idClasse must be defined');
-                        }
-                    });
+                    await Enseignement.loadCompetences(idClasse, competences, idCycle, this);
                 }
             });
             // Synchronisation de la collection d'élèves pour les parents

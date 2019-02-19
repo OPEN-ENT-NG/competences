@@ -1,7 +1,7 @@
 import {_, ng, notify} from "entcore";
 import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
-import {Classe, evaluations} from "../models/teacher";
+import {Classe, evaluations, Utils} from "../models/teacher";
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {renameSubject} from "../sniplets/renameSubject";
 import http from "axios";
@@ -16,43 +16,17 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
     function ($scope) {
 
         let runMessageLoader = () => {
-            $scope.opened.displayMessageLoader = true;
-            utils.safeApply($scope);
+           Utils.runMessageLoader($scope);
         };
 
         let stopMessageLoader = () => {
-            $scope.opened.displayMessageLoader = false;
-            utils.safeApply($scope);
+            Utils.stopMessageLoader($scope);
         };
 
         let selectPersonnalisation = (id_cycle) => {
 
             if (evaluations.structure.cycle.id_cycle !== id_cycle) {
-                let niveauCompetence;
-                evaluations.structure.cycle = _.findWhere(evaluations.structure.cycles, {
-                    id_cycle: id_cycle
-                });
-                if (evaluations.structure.cycle !== undefined) {
-                    niveauCompetence = evaluations.structure.cycle.niveauCompetencesArray;
-                }
-                else {
-                    evaluations.structure.cycle = evaluations.structure.cycles[0];
-                    niveauCompetence = evaluations.structure.cycle.niveauCompetencesArray;
-
-                }
-                $scope.niveauCompetences = [];
-                $scope.mapCouleurs = {"-1": Defaultcolors.unevaluated};
-                $scope.mapLettres = {"-1": " "};
-                $scope.selected.colors = {
-                    0: true,
-                };
-                _.forEach(niveauCompetence, function (niv) {
-                    $scope.mapCouleurs[niv.ordre - 1] = niv.couleur;
-                    $scope.mapLettres[niv.ordre - 1] = niv.lettre;
-                    niv.selected = true;
-                    $scope.niveauCompetences.push(niv);
-                    $scope.selected.colors[niv.ordre] = true;
-                });
+                $scope.niveauCompetences = $scope.selectCycleForView(id_cycle);
             }
         };
 

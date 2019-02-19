@@ -71,7 +71,7 @@
 
 </script>
 
-<div class="content-bilan-eleve">
+<div class="content-bilan-eleve" ng-init="initView()">
     <h2><i18n>evaluations.bilan.eleve.title</i18n></h2>
     <div ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'" ng-init="parent = tree_item_renderer.html">
     </div>

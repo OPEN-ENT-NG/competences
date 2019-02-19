@@ -17,5 +17,5 @@
 <div class="suivi_container" ng-controller="EvalSuiviCompetenceClasseCtl">
     <!-- Panneau de choix des thèmes -->
     <div ng-include="'/competences/public/template/setting.html'"></div>
-    <container template="container"></container>
+    <container ng-init="initController()" template="container"></container>
 </div>

@@ -55,13 +55,13 @@
                     <div class="inputContainer">
                         <section ng-class="{'inputSection1': searchBilan.periode.libelle === 'cycle'}">
                             <p>
-                                <input type="radio" ng-model="searchBilan.parDomaine" value="false">
+                                <input type="radio" ng-change="changeContent();" ng-model="searchBilan.parDomaine" value="false">
                                 <span>
                                     <i18n>evaluation.search.by.enseignements</i18n>
                                 </span>
                             </p>
                             <p>
-                                <input type="radio" ng-model="searchBilan.parDomaine" value="true">
+                                <input type="radio" ng-change="changeContent();" ng-model="searchBilan.parDomaine" value="true">
                                 <span>
                                     <i18n>evaluation.search.by.domaines</i18n>
                                 </span>

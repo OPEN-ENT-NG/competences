@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, Collection, http, _, model } from 'entcore';
+import { Model, Collection, _, model } from 'entcore';
 import {
     CompetenceNote,
     Domaine,
@@ -33,10 +33,13 @@ import {
     BfcSynthese,
     EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls,
 } from './index';
+import {Enseignement} from "../parent_eleve/Enseignement";
+import http from 'axios';
 
 export class SuiviCompetence extends Model {
     competenceNotes: Collection<CompetenceNote>;
     domaines: Collection<Domaine>;
+    enseignements: Collection<Enseignement>;
     periode: Periode;
     classe: Classe;
     cycle: Cycle;
@@ -61,7 +64,7 @@ export class SuiviCompetence extends Model {
         };
     }
     that = this;
-     constructor (eleve: Eleve, periode: any, classe: Classe, cycle: Cycle, isCycle: boolean, structure: Structure) {
+    constructor (eleve: Eleve, periode: any, classe: Classe, cycle: Cycle, isCycle: boolean, structure: Structure) {
         super();
         this.periode = periode;
         this.classe = classe;
@@ -78,60 +81,68 @@ export class SuiviCompetence extends Model {
         let that = this;
         this.collection(TableConversion);
         this.collection(Domaine, {
-            sync: function () {
-                return new Promise((resolve) => {
-                    let url = SuiviCompetence.api.getArbreDomaines + that.classe.id + '&idEleve=' + eleve.id + '&idCycle=' + cycle.id_cycle;
-                    http().getJson(url).done((resDomaines) => {
-                        let url = SuiviCompetence.api.getCompetencesNotes + eleve.id + '?idCycle=' + cycle.id_cycle;
+            sync: () => {
+                return new Promise(async (resolve) => {
+                    let urlGetArbreDomaines = `${SuiviCompetence.api.getArbreDomaines + classe.id}&idEleve=${
+                        eleve.id}&idCycle=${cycle.id_cycle}`;
 
-                        if (periode !== null && periode !== undefined && periode !== '*') {
-                            if (periode.id_type) url += '&idPeriode=' + periode.id_type;
-                        }
-                        if (isCycle !== null && isCycle !== undefined) {
-                            url += '&isCycle=' + isCycle;
-                        }
+                    let response = await Promise.all([http.get(urlGetArbreDomaines),
+                        this.getCompetencesNotes(eleve, periode)]);
 
-                        http().getJson(url).done((resCompetencesNotes) => {
-                            if (resDomaines) {
-                                for (let i = 0; i < resDomaines.length; i++) {
-                                    let domaine = new Domaine(resDomaines[i], eleve.id);
-                                    if ( that.bilanFinDeCycles !== undefined && that.bilanFinDeCycles.all.length > 0 ) {
-                                        let tempBFC = _.findWhere(that.bilanFinDeCycles.all, {id_domaine : domaine.id});
-                                        if (tempBFC !== undefined) {
-                                            domaine.bfc = tempBFC;
-                                        }
-                                    }
-
-                                    domaine.id_chef_etablissement = model.me.userId;
-                                    domaine.id_etablissement = structure.id;
-                                    that.domaines.all.push(domaine);
-                                    Utils.setCompetenceNotes(domaine, resCompetencesNotes, this, null);
+                    let resDomaines = response[0].data;
+                    let resCompetencesNotes = response[1].data;
+                    if (resDomaines) {
+                        for (let i = 0; i < resDomaines.length; i++) {
+                            let domaine = new Domaine(resDomaines[i], eleve.id);
+                            if (this.bilanFinDeCycles !== undefined && this.bilanFinDeCycles.all.length > 0) {
+                                let tempBFC = _.findWhere(this.bilanFinDeCycles.all, {id_domaine: domaine.id});
+                                if (tempBFC !== undefined) {
+                                    domaine.bfc = tempBFC;
                                 }
                             }
-                            if (resolve && typeof (resolve) === 'function') {
-                                resolve();
-                            }
-                        });
-                    });
+                            domaine.id_chef_etablissement = model.me.userId;
+                            domaine.id_etablissement = structure.id;
+                            this.domaines.all.push(domaine);
+                            Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.domaines, null);
+                        }
+                    }
+                    if (resolve && typeof (resolve) === 'function') {
+                        resolve();
+                    }
+                });
+            }
+        });
+        this.collection(BilanFinDeCycle, {
+            sync: function () {
+                return new Promise(async (resolve) => {
+                    let url = `${SuiviCompetence.api.getDomainesBFC + eleve.id}?idEtablissement=${
+                        structure.id}&idCycle=${cycle.id_cycle}`;
+                    let res = await http.get(url);
+                    let resBFC = res.data;
+                    if (resBFC) {
+                        for (let i = 0; i < resBFC.length; i++) {
+                            let BFC = new BilanFinDeCycle(resBFC[i]);
+                            that.bilanFinDeCycles.all.push(BFC);
+                        }
+                    }
+                    if (resolve && typeof (resolve) === 'function') {
+                        resolve();
+                    }
                 });
             }
         });
 
-        this.collection(BilanFinDeCycle, {
-            sync: function () {
-                return new Promise((resolve) => {
-                    let url = SuiviCompetence.api.getDomainesBFC + eleve.id + '?idEtablissement=' + structure.id  + "&idCycle=" +cycle.id_cycle;
-                    http().getJson(url).done((resBFC) => {
-                        if (resBFC) {
-                            for (let i = 0; i < resBFC.length; i++) {
-                                let BFC = new BilanFinDeCycle(resBFC[i]);
-                                that.bilanFinDeCycles.all.push(BFC);
-                            }
-                        }
-                        if (resolve && typeof (resolve) === 'function') {
-                            resolve();
-                        }
-                    });
+        this.collection(Enseignement, {
+            sync: async () => {
+                return new Promise( async (resolve) => {
+                    let response: any = await Promise.all([
+                        Enseignement.getAll(classe.id, classe.id_cycle, this.enseignements),
+                        this.getCompetencesNotes(eleve, periode)
+                    ]);
+                    this.enseignements.load(response[0].data);
+                    let competences = response[1].data;
+                    await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
+                    resolve();
                 });
             }
         });
@@ -163,19 +174,19 @@ export class SuiviCompetence extends Model {
     }
 
     getConversionTable(idetab, idClasse, mapCouleur): Promise<any> {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
             let that = this;
             let uri = SuiviCompetence.api.getCompetenceNoteConverssion + '?idEtab=' + idetab + '&idClasse=' + idClasse;
-            http().getJson(uri).done(function(data) {
-                _.map(data, (_d) => {
-                    _d.couleur = mapCouleur[_d.ordre - 1];
-                });
-                that.tableConversions.load(data);
-
-                if (resolve && (typeof (resolve) === 'function')) {
-                    resolve(data);
-                }
+            let response = await  http.get(uri);
+            let data = response.data;
+            _.map(data, (_d) => {
+                _d.couleur = mapCouleur[_d.ordre - 1];
             });
+            that.tableConversions.load(data);
+
+            if (resolve && (typeof (resolve) === 'function')) {
+                resolve(data);
+            }
         });
     }
 
@@ -194,6 +205,17 @@ export class SuiviCompetence extends Model {
 
         location.replace(uri);
     }
+    async getCompetencesNotes (eleve: Eleve, periode : any): Promise<any> {
+        let url = SuiviCompetence.api.getCompetencesNotes + eleve.id + '?idCycle=' + this.cycle.id_cycle;
+
+        if (periode !== null && periode !== undefined && periode !== '*') {
+            if (periode.id_type) url += '&idPeriode=' + periode.id_type;
+        }
+        if (this.isCycle !== null && this.isCycle !== undefined) {
+            url += '&isCycle=' + this.isCycle;
+        }
+        return http.get(`${url}`);
+    };
 
     sync (): Promise<any> {
         return new Promise((resolve) => {

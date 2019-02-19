@@ -29,7 +29,7 @@
 
 <ul ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
            || route.current.$$route.originalPath.startsWith('/competences/classe')" class="padding-five">
-    <li ng-repeat="niveau in structure.cycle.niveauCompetencesArray ">
+    <li ng-repeat="niveau in niveauCompetences ">
         <c-skills-bubble text="niveau.lettre" color="niveau.couleur"></c-skills-bubble>
         <span>[[niveau.libelle]].</span>
     </li>
@@ -39,7 +39,7 @@
 
 <ul ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
             && route.current.$$route.originalPath.startsWith('/competences/classe')" class="padding-five">
-    <li ng-repeat="niveau in structure.cycle.niveauCompetencesArray ">
+    <li ng-repeat="niveau in niveauCompetences ">
         <c-skills-bubble text="niveau.lettre" color="niveau.couleur"></c-skills-bubble>
         <span>[[niveau.ordre]].</span>
     </li>

@@ -93,6 +93,16 @@
             </div>
         </form>
     </section>
+    <section ng-class="{'inputSection1': search.eleve !== '' && displayCycle}">
+        <p ng-show="showEnseignementChoice()">
+            <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="false">
+            <span><i18n>evaluation.search.by.enseignements</i18n></span>
+        </p>
+        <p>
+            <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="true">
+            <span><i18n>evaluation.search.by.domaines</i18n></span>
+        </p>
+    </section>
 </div>
 <div class="fiche student-info diffpadding cell card twelve criterion" ng-class="{opened : openedStudentInfo === true}"
      ng-if="informations.eleve !== '' && informations.eleve !== undefined && route.current.$$route.originalPath === '/competences/eleve'">
@@ -128,7 +138,7 @@
     <section ng-if="suiviCompetence.ensCplSelected.libelle !== suiviCompetence.ensCpls.all[0].libelle">
         <label class="select" >
             <select  ng-model="suiviCompetence.niveauEnsCplSelected" ng-change="onChangeObjectif()" class= "objectifs-enscpl"
-                    ng-options="niveauEnsCpl as niveauEnsCpl.libelle for niveauEnsCpl in suiviCompetence.niveauEnsCpls.all" >
+                     ng-options="niveauEnsCpl as niveauEnsCpl.libelle for niveauEnsCpl in suiviCompetence.niveauEnsCpls.all" >
                 <option class="header-opt" value="" disabled ><i18n>[[translate('level')]]</i18n></option>
             </select>
         </label>

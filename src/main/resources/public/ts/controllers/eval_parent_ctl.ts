@@ -24,6 +24,7 @@ import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
 import { Classe } from '../models/parent_eleve/Classe';
 import { Defaultcolors } from '../models/eval_niveau_comp';
+import {FilterNotEvaluated, FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluatedEnseignement";
 
 declare let _: any;
 declare let location: any;
@@ -376,16 +377,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         }
 
         $scope.FilterNotEvaluated = function (maCompetence) {
-            var _t = maCompetence.competencesEvaluations;
-            var max = _.max(_t, function (evaluation) {
-                return evaluation.evaluation;
-            });
-            if (typeof max === 'object') {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return FilterNotEvaluated(maCompetence);
         };
 
         $scope.FilterNotEvaluatedDomaine = function (monDomaineCompetence) {
@@ -407,25 +399,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return false;
         };
 
-        $scope.FilterNotEvaluatedConnaissance = function (maConnaissance) {            
-            for (let i = 0; i < maConnaissance.competences.all.length; i++) {
-                let maCompetence = maConnaissance.competences.all[i];
-                if($scope.FilterNotEvaluated(maCompetence)){                   
-                    return true;
-                }
-            };
-            return false;
-        };
-
-
         $scope.FilterNotEvaluatedEnseignement = function (monEnseignement) {
-            for (let i = 0; i < monEnseignement.competences.all.length; i++) {
-                let maConnaissance = monEnseignement.competences.all[i];
-                if($scope.FilterNotEvaluatedConnaissance(maConnaissance)){
-                    return true;
-                }
-            };
-            return false;
+            return FilterNotEvaluatedEnseignement(monEnseignement);
         };
 
         $scope.getCyclesEleve = async () => {
