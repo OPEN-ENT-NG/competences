@@ -235,9 +235,9 @@ public class LSUController extends ControllerHelper {
                                                                                             .put("classe", erreurOneEleve.getString("classe"));
                                                                                     affichageDesELeves.add(affichageEleve);
                                                                                 }
-                                                                                //Renders.renderJson(request, affichageDesELeves);
+                                                                               // Renders.renderJson(request, reponseErreursJsonArray.right().getValue());
                                                                                 badRequest(request, "no lsunBilans");
-                                                                                leftToResponse(request,new Either.Left<String,JsonArray>("no LSU BFC " + reponseErreursJsonArray.left().getValue()));
+                                                                               // leftToResponse(request,new Either.Left<String,JsonArray>("no LSU BFC " + reponseErreursJsonArray.right().getValue()));
                                                                             }
                                                                         }
                                                                     }
@@ -909,6 +909,7 @@ public class LSUController extends ControllerHelper {
     private void getResultsElevesByDomaine( List<String> listIdsEleve, String idClass, String idStructure, Long idCycle, Handler <Either<String,  Map<String, Map<Long, Integer>>>> handler){
         final Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
         final String[] idsEleve = listIdsEleve.toArray(new String[listIdsEleve.size()]);
+
         bfcService.buildBFC(false, idsEleve, idClass, idStructure, null, idCycle, new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(final Either<String, JsonObject> repBuildBFC) {
@@ -919,12 +920,16 @@ public class LSUController extends ControllerHelper {
                         public void handle(Either<String, Map<String, Map<Long, Boolean>>> respDispenseDomaine) {
                             if (respDispenseDomaine.isRight()) {
                                 Map<String, Map<Long, Boolean>> mapIdEleveIdDomainedispense = respDispenseDomaine.right().getValue();
+                                final List<Future> futureDispensesElevesList = new ArrayList<Future>();
                                 for (String idEleve : idsEleve) {
+                                    Future<JsonObject> futureDispenseEleve = Future.future();
+                                    futureDispensesElevesList.add(futureDispenseEleve);
                                     JsonArray resultats = repBuildBFC.right().getValue().getJsonArray(idEleve);
                                     Map<Long, Integer> resultEleves = new HashMap<>();
 
                                     // si pas de resultats, on passe a l'élève suivant
                                     if (resultats == null) {
+                                        futureDispenseEleve.complete();
                                         continue;
                                     }
 
@@ -942,11 +947,13 @@ public class LSUController extends ControllerHelper {
                                                 if (idsDomainesDispense.get(((JsonObject) resultat).getLong("idDomaine"))) {
                                                     resultEleves.put(((JsonObject) resultat).getLong("idDomaine"), Competences.POSITIONNEMENT_ZERO);
                                                     idsDomainesDispense.remove(((JsonObject) resultat).getLong("idDomaine"));
+
                                                 } else {
                                                     resultEleves.put(((JsonObject) resultat).getLong("idDomaine"), ((JsonObject) resultat).getInteger("niveau"));
                                                 }
                                             } else {
                                                 resultEleves.put(((JsonObject) resultat).getLong("idDomaine"), ((JsonObject) resultat).getInteger("niveau"));
+
                                             }
                                         } else {
                                             resultEleves.put(((JsonObject) resultat).getLong("idDomaine"), ((JsonObject) resultat).getInteger("niveau"));
@@ -959,11 +966,14 @@ public class LSUController extends ControllerHelper {
                                                 resultEleves.put(idDomaineDispense.getKey(), Competences.POSITIONNEMENT_ZERO);
                                             }
                                         }
-
                                     }
+
                                     resultatsEleves.put(idEleve, resultEleves);
-                                    handler.handle(new Either.Right<String,Map<String, Map<Long, Integer>>>(resultatsEleves));
+                                    futureDispenseEleve.complete();
                                 }
+                                CompositeFuture.all(futureDispensesElevesList).setHandler(
+                                        event ->  handler.handle(new Either.Right<String,Map<String, Map<Long, Integer>>>(resultatsEleves)));
+
                             }
                         }
                     });
@@ -1015,7 +1025,10 @@ public class LSUController extends ControllerHelper {
                         getResultsElevesByDomaine(listIdEleves, idClass, idStructure,(Long) mapIdClassIdCycle.get(idClass), new Handler<Either<String, Map<String, Map<Long, Integer>>>>() {
                             @Override
                             public void handle(Either<String, Map<String, Map<Long, Integer>>> resultatsEleves) {
+
                                 if(resultatsEleves.isRight()) {
+
+
                                     final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition = resultatsEleves.right().getValue();
                                     getMapCodeDomaineById(idClass, new Handler<Either<String, Map<Long, String>>>() {
                                         @Override

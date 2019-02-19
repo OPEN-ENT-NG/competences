@@ -19,8 +19,8 @@
  */
 import {ng, _} from "entcore";
 import {Classe, LSU, Periode} from '../models/teacher';
-import * as utilsJson from '../utils/functions/xmlToJson';
-
+//import * as utilsJson from '../utils/functions/xmlToJson';
+import * as utils from '../utils/teacher';
 export let exportControleur = ng.controller('ExportController',['$scope',
     function($scope) {
 
@@ -38,6 +38,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 periodes_type: [],
                 stsFile: null
             };
+            utils.safeApply($scope);
         }
         initparams("1");
 
@@ -47,15 +48,18 @@ export let exportControleur = ng.controller('ExportController',['$scope',
 
         $scope.dropComboModel = (el: any, table: any): void => {
             table = _.without(table, el);
+            utils.safeApply($scope);
         };
 
         $scope.toggleperiode = function toggleperiode(periode_type) {
             let idx = $scope.params.periodes_type.indexOf(periode_type);
             if (idx > -1) {
                 $scope.params.periodes_type.splice(idx, 1);
+                utils.safeApply($scope);
             }
             else {
                 $scope.params.periodes_type.push(periode_type);
+                utils.safeApply($scope);
             }
         };
 
@@ -90,8 +94,10 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 var text = reader.result;
                 var parser = new DOMParser();
                 var doc = parser.parseFromString(text, "application/xml");
-                let individus = ((((utilsJson.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
-                $scope.params.stsFile = utilsJson.cleanJson(individus);
+               // let individus = ((((utilsJson.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
+                //$scope.params.stsFile = utilsJson.cleanJson(individus);
+                let individus = ((((utils.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
+                $scope.params.stsFile = utils.cleanJson(individus);
 
             }
             reader.readAsText(file);

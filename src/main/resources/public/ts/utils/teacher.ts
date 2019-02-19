@@ -30,3 +30,4 @@ export * from './functions/mirorOnScroll';
 export * from './functions/sortCollection';
 export * from './functions/utilsNN';
 export * from './functions/clone';
+export * from './functions/xmlToJson';
