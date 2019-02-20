@@ -8,7 +8,7 @@ export let  FilterNotEvaluated = function (maCompetence, display?) {
     return ((typeof max === 'object') || display === true);
 };
 
-let FilterNotEvaluatedConnaissance = function (maConnaissance, display?) {
+export let FilterNotEvaluatedConnaissance = function (maConnaissance, display?) {
     for (let i = 0; i < maConnaissance.competences.all.length; i++) {
         let maCompetence = maConnaissance.competences.all[i];
         if(FilterNotEvaluated(maCompetence, display)){

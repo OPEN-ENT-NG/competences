@@ -33,6 +33,9 @@ export let listController = ng.controller('ListController', [
 
         // Initialisation des variables
         $scope.initListDevoirs = async function () {
+            if (evaluations.devoirs === undefined || evaluations.synchronised !== true) {
+                await $scope.init(true);
+            }
             $scope.propertyName =  'date';
             $scope.reverse = true;
             $scope.sortBy = function(propertyName) {
@@ -56,28 +59,11 @@ export let listController = ng.controller('ListController', [
                 devoir.matiere = $scope.getLibelleMatiere(devoir.id_matiere);
                 return devoir;
             });
-            $scope.search = {
-                eleve: evaluations.eleve,
-                periode: evaluations.periode,
-                classe : null,
-                matiere: $scope.initDefaultMatiere(),
-                enseignant: null,
-                sousmatiere: null,
-                type: null,
-                name: ""
-            };
-            $scope.checkHaveResult = function () {
-                let custom = $filter('customSearchFilters');
-                let filter = $filter('filter');
-                let res =  custom(evaluations.devoirs.all, $scope.search);
-                res = filter(res, $scope.search.name);
 
-                return (res.length > 0);
-            };
             $scope.matieres = evaluations.matieres;
             $scope.enseignants = evaluations.enseignants;
             $scope.translate = lang.translate;
-            if($location.path().split('/')[2] !== "list") {
+            if($location.path().split('/')[2] !== "list" && $location.path() !== '/') {
                 let devoirId = $location.path().split('/')[2];
                 $scope.currentDevoir = _.findWhere(evaluations.devoirs.all, {id: parseInt(devoirId)});
                 if ($scope.currentDevoir !== undefined) {
@@ -101,17 +87,22 @@ export let listController = ng.controller('ListController', [
             }
             utils.safeApply($scope);
         };
-        await $scope.init();
         // Au changement de la période courante par le parent
-        $scope.$on('loadPeriode', async function() {
-            await $scope.initListDevoirs();
-            utils.safeApply($scope);
-        });
+        await $scope.initListDevoirs();
+        utils.safeApply($scope);
 
         $scope.goToDevoir = (idDevoir) => {
             window.location.hash = '#/devoir/' + idDevoir;
         };
 
+        $scope.checkHaveResult = function () {
+            let custom = $filter('customSearchFilters');
+            let filter = $filter('filter');
+            let res =  custom(evaluations.devoirs.all, $scope.search);
+            res = filter(res, $scope.search.name);
+
+            return (res.length > 0);
+        };
         /**
          * Ouvre le détail du devoir correspondant à l'index passé en paramètre
          * @param index index du devoir

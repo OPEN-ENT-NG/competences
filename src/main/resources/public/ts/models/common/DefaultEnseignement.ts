@@ -24,7 +24,8 @@ export class DefaultEnseignement extends Model {
     id;
     competences : Collection<Competence>;
 
-    public static async loadCompetences (idClasse: string, competences, idCycle: string, model: any) {
+    public static async loadCompetences (idClasse: string, competences, idCycle: string, model: any,
+                                         withLoad? : boolean) {
         return new Promise(async (resolve, reject) => {
             if (idClasse === undefined) {
                 console.error('idClasse must be defined');
@@ -33,15 +34,20 @@ export class DefaultEnseignement extends Model {
             else {
                 try {
                     if(_.isEmpty(model.all)) {
-                        await this.getAll(idClasse,idCycle,model);
+                        let enseignements : any = await this.getAll(idClasse,idCycle,model);
+                        if(withLoad === true) {
+                            model.load(enseignements.data);
+                        }
                     }
                     model.each(function (enseignement) {
-                        enseignement.competences.load(enseignement['competences_1']);
+                        if (enseignement['competences_1'] !== undefined) {
+                            enseignement.competences.load(enseignement['competences_1']);
+                        }
                         _.map(enseignement.competences.all, function (competence) {
                             return competence.composer = enseignement;
                         });
                         enseignement.competences.each(function (competence) {
-                            if (competence['competences_2'].length > 0) {
+                            if (competence['competences_2']!== undefined && competence['competences_2'].length > 0) {
                                 competence.competences.load(competence['competences_2']);
                                 _.map(competence.competences.all, function (sousCompetence) {
                                     sousCompetence.competencesEvaluations = _.where(competences, {

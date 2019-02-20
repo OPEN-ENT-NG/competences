@@ -29,7 +29,10 @@ import {Defaultcolors} from "../models/eval_niveau_comp";
 import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../models/teacher/index";
 //import {Utils} from "../models/teacher/Utils";
 import {Mix} from "entcore-toolkit";
-import {FilterNotEvaluated, FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluatedEnseignement";
+import {
+    FilterNotEvaluated, FilterNotEvaluatedConnaissance,
+    FilterNotEvaluatedEnseignement
+} from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 
 
@@ -1032,6 +1035,9 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
         $scope.FilterNotEvaluatedEnseignement = function (monEnseignement) {
             return FilterNotEvaluatedEnseignement(monEnseignement, $scope.selected.grey);
+        };
+        $scope.FilterNotEvaluatedConnaissance = function (maConnaissance) {
+            return FilterNotEvaluatedConnaissance(maConnaissance);
         };
         $scope.initView = async function () {
             if ($scope.searchBilan.parDomaine ===  'false') {

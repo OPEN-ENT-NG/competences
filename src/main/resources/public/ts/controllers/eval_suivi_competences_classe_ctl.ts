@@ -24,7 +24,10 @@ import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import { Defaultcolors } from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
-import {FilterNotEvaluated, FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluatedEnseignement";
+import {
+    FilterNotEvaluated, FilterNotEvaluatedConnaissance,
+    FilterNotEvaluatedEnseignement
+} from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 
 declare let _:any;
@@ -385,6 +388,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         $scope.FilterNotEvaluatedEnseignement = function (monEnseignement) {
             return FilterNotEvaluatedEnseignement(monEnseignement, $scope.Display.EvaluatedCompetences);
+        };
+        $scope.FilterNotEvaluatedConnaissance = function (maConnaissance) {
+            return FilterNotEvaluatedConnaissance(maConnaissance);
         };
         $scope.initController = async () => {
             template.open('container', 'layouts/2_10_layout');

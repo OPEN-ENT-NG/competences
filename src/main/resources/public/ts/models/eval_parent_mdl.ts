@@ -35,6 +35,7 @@ declare let require: any;
 
 export class Evaluations extends Model {
     eleves: Collection<Eleve>;
+    matiere: Matiere;
     matieres: Collection<Matiere>;
     classes: Collection<Classe>;
     enseignants: Collection<Enseignant>;
@@ -47,6 +48,7 @@ export class Evaluations extends Model {
     arrayCompetences: any;
     usePerso: any;
     composer: any;
+    synchronised: boolean = false;
 
     static get api() {
         return {
@@ -273,8 +275,10 @@ export class Evaluations extends Model {
                 }
             });
             this.collection(Enseignement, {
-                sync: async function (idClasse: string, competences, idCycle: string) {
-                    await Enseignement.loadCompetences(idClasse, competences, idCycle, this);
+                sync: async (idClasse: string, competences, idCycle: string) => {
+                    this.enseignements.all = [];
+                    await Enseignement.loadCompetences(idClasse, competences, idCycle, this.enseignements,
+                        true);
                 }
             });
             // Synchronisation de la collection d'élèves pour les parents
@@ -301,6 +305,7 @@ export class Evaluations extends Model {
                 await this.updateUsePerso();
                 resolve();
             }
+            this.synchronised = true;
         });
     }
 

@@ -29,6 +29,7 @@ import {uniqueFilter} from "./utils/filters/unique";
 import {cSkillsBubble} from "./directives/cSkillsBubble";
 import {proportionSuiviCompetence} from "./directives/ProportionSuiviCompetence";
 import {evalBilanPeriodiqueCtl} from './controllers/eval_bilan_periodique_ctl';
+import {messageLoader} from "./utils/directives/messageLoading";
 
 
 ng.addRequiredModule('chart.js');
@@ -43,6 +44,7 @@ ng.directives.push(cRoundAvatar);
 ng.directives.push(cFilAriane);
 ng.directives.push(proportionSuiviCompetence);
 ng.directives.push(cSkillsBubble);
+ng.directives.push(messageLoader);
 
 
 // filters

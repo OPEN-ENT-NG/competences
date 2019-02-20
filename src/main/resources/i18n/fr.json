@@ -559,6 +559,6 @@
   "evaluations.close.model":"Masquer les libellés ",
   "evaluations.choose.model": " Choisir le modèle ",
   "evaluations.default.model.libelle": "Modèle par défaut",
-  "evaluations.use.model.libelle": "Utiliser un modèle de libellé de matière"
-
+  "evaluations.use.model.libelle": "Utiliser un modèle de libellé de matière",
+  "evaluations.loading": "Chargement en cours ..."
 }

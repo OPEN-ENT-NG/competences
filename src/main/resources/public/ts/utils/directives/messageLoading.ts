@@ -5,13 +5,12 @@ export let messageLoader = ng.directive('messageLoader', function() {
         restrict: 'E',
         transclude: true,
         scope: {
-            message: '=',
             display: '='
         },
         template: '<div id="message-loader" class="overlay" ng-show="display">' +
         '<div>' +
         '<h4 class="content-loader"> ' +
-        '[[message]] ' +
+        '<i18n>evaluations.loading</i18n>' +
         '</h4>' +
         '</div>' +
         '</div>',

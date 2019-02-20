@@ -22,6 +22,7 @@
 import { model, ng, idiom as lang, moment } from 'entcore';
 import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
+import {Utils} from "../models/teacher";
 
 declare let _: any;
 
@@ -58,6 +59,7 @@ export let releveController = ng.controller('ReleveController', [
          * @returns {Promise<void>}
          */
         $scope.loadReleveNote = async function() {
+            Utils.runMessageLoader($scope);
             let eleve = $scope.searchReleve.eleve;
             let idPeriode = undefined;
             if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id !== null) {
@@ -70,21 +72,24 @@ export let releveController = ng.controller('ReleveController', [
             $scope.matieres = evaluations.matieres;
             $scope.calculMoyenneMatieres();
             utils.safeApply($scope);
+            Utils.stopMessageLoader($scope);
         };
 
 
         // Impression du releve de l'eleve
-        $scope.getReleve = function() {
+        $scope.getReleve = async function() {
+            Utils.runMessageLoader($scope);
             let type_periode = _.findWhere(evaluations.eleve.classe.typePeriodes.all,
                 {id: $scope.searchReleve.periode.id_type});
             if (type_periode !== undefined) {
-                evaluations.getReleve($scope.searchReleve.periode.id_type,
+                await evaluations.getReleve($scope.searchReleve.periode.id_type,
                     $scope.searchReleve.eleve.id, type_periode.type, type_periode.ordre);
             }
             else {
-                evaluations.getReleve(undefined,
+                await evaluations.getReleve(undefined,
                     $scope.searchReleve.eleve.id, undefined, undefined);
             }
+            Utils.stopMessageLoader($scope);
         };
 
         // Initialisation des variables du relevé

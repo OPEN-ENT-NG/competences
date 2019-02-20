@@ -26,19 +26,20 @@ export let customSearchFilter = ng.filter('customSearchFilters', function(){
     return function(devoirs, searchParams){
         var output = devoirs;
         var tempTable = [];
-        if (searchParams.classe !== '*' && searchParams.classe !== null) {
+        if (searchParams.classe !== '*' && searchParams.classe !== null && searchParams.classe !== undefined) {
             tempTable = _.where(output, {id_groupe : searchParams.classe.id});
             output = tempTable;
         }
-        if (searchParams.matiere !== '*' && searchParams.matiere !== null) {
+        if (searchParams.matiere !== '*' && searchParams.matiere !== null &&  searchParams.matiere !== undefined) {
             tempTable = _.where(output, {id_matiere : searchParams.matiere.id});
             output = tempTable;
         }
-        if (searchParams.sousmatiere !== '*' && searchParams.sousmatiere !== null) {
+        if (searchParams.sousmatiere !== '*' && searchParams.sousmatiere !== null
+            && searchParams.sousmatiere !== undefined) {
             tempTable = _.where(output, {id_sousmatiere : parseInt(searchParams.sousmatiere.id_type_sousmatiere)});
             output = tempTable;
         }
-        if (searchParams.type !== '*' && searchParams.type !== null) {
+        if (searchParams.type !== '*' && searchParams.type !== null && searchParams.type !== undefined) {
             tempTable = _.where(output, {id_type : parseInt(searchParams.type.id)});
             output = tempTable;
         }
@@ -50,7 +51,7 @@ export let customSearchFilter = ng.filter('customSearchFilters', function(){
             tempTable = _.where(output, {id_periode : parseInt(searchParams.periode.id_type )});
             output = tempTable;
         }
-        if (searchParams.name !== "" && searchParams.name !== null) {
+        if (searchParams.name !== "" && searchParams.name !== null && searchParams.name !== undefined) {
             tempTable = _.filter(output, function (devoir){
                 var  reg = new RegExp(searchParams.name.toUpperCase());
                 return devoir.name.toUpperCase().match(reg) !== null;
@@ -58,7 +59,8 @@ export let customSearchFilter = ng.filter('customSearchFilters', function(){
             output = tempTable;
         }
 
-        if (searchParams.enseignant !== undefined && searchParams.enseignant !== '*' && searchParams.enseignant !== null) {
+        if (searchParams.enseignant !== undefined && searchParams.enseignant !== '*'
+            && searchParams.enseignant !== null) {
             tempTable = _.where(output, {owner : searchParams.enseignant.id});
             output = tempTable;
         }
