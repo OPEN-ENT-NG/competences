@@ -1313,9 +1313,11 @@ export let rzslider = ng.directive('rzslider', ['$window', '$timeout', '$documen
                  * correct parameters
                  */
                 getSelectionBarClass: function () {
-                    if (this.range)
-                        return this.options.getSelectionBarClass(this.scope.rzSliderModel, this.scope.rzSliderHigh);
-                    return this.options.getSelectionBarClass(this.scope.rzSliderModel);
+                   if (this.options.getSelectionBarClass !== null) {
+                       if (this.range)
+                           return this.options.getSelectionBarClass(this.scope.rzSliderModel, this.scope.rzSliderHigh);
+                       return this.options.getSelectionBarClass(this.scope.rzSliderModel);
+                   }
                 },
 
                 /**
