@@ -71,6 +71,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 }
                 if ($scope.searchBilan.parDomaine ===  'false') {
                     await $scope.suiviCompetence.enseignements.sync();
+                    $scope.suiviFilter.mine = 'false';
                 }
                 if ($scope.opened.detailCompetenceSuivi) {
                     if ($scope.detailCompetence !== undefined) {
@@ -81,7 +82,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     }
                 }
 
-                // On stocke l'ensemble des élèves de la classe dan une Map
+                // On stocke l'ensemble des élèves de la classe dan une MapsuiviCompetence.enseignements.sync
                 let mapEleves = {};
                 for (let i = 0; i < $scope.search.classe.eleves.all.length; i++) {
                     mapEleves[$scope.search.classe.eleves.all[i].id] = $scope.search.classe.eleves.all[i];
@@ -462,8 +463,14 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         };
 
-        $scope.showEnseignementChoice = () => {
-            return true;
+        $scope.showEnseignementChoice = (parDomaine?) => {
+            if (parDomaine !== undefined){
+
+                return parDomaine === 'false';
+            }
+            else {
+                return true;
+            }
         }
         /** --------------------------------------  Fin définition des fonctions usuelles  --------------        */
 

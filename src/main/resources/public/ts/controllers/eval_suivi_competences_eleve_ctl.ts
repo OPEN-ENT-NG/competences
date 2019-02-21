@@ -197,6 +197,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         utils.safeApply($scope);
                     }
                     else if ($scope.searchBilan.parDomaine ===  'false') {
+                        $scope.suiviFilter.mine = 'false';
                         await $scope.suiviCompetence.enseignements.sync();
                         utils.safeApply($scope);
                     }
@@ -248,6 +249,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         };
 
         $scope.initFilterMine = () => {
+
             $scope.suiviFilter = {
                 mine: (!Utils.isChefEtab()).toString()
             };
@@ -508,6 +510,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                             allPromise.push($scope.suiviCompetence.domaines.sync());
                         }
                         else {
+                            $scope.suiviFilter.mine = 'false';
                             allPromise.push($scope.suiviCompetence.enseignements.sync());
                         }
                         // On lance les synchronisation en paralelle
@@ -1081,9 +1084,14 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 await $scope.changeContent();
             }
         };
-        $scope.showEnseignementChoice = () => {
-            return $scope.template.contains('suivi-competence-content',
-                'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
+        $scope.showEnseignementChoice = (parDomaine?) => {
+            let hideFilterMine = true;
+            if (parDomaine !== undefined){
+
+                hideFilterMine =  (parDomaine === 'false');
+            }
+                return hideFilterMine && $scope.template.contains('suivi-competence-content',
+                    'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
         };
     }
 ]);

@@ -63,16 +63,20 @@
                 </span>
             </label>
         </div>
-        <div  ng-if="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
+              <div ng-if="(!showEnseignementChoice(searchBilan.parDomaine) || $parent.suiviFilter.mine === 'true') &&
+        !template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
             <label>
-                <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
+                <input type="radio"
+                       ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine);
+                       initChartsEval();"
                        ng-model="$parent.suiviFilter.mine" value="true">
                 <span>
                     <i18n>evaluations.test.mine</i18n>
                 </span>
             </label>
         </div>
-        <div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
+        <div ng-if="!showEnseignementChoice(searchBilan.parDomaine) &&
+        template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
             <label>
                 <input type="radio" id="fake" checked >
                 <span>
@@ -94,14 +98,18 @@
         </form>
     </section>
     <section ng-class="{'inputSection1': search.eleve !== '' && displayCycle}">
-        <p ng-show="showEnseignementChoice()">
-            <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="false">
-            <span><i18n>evaluation.search.by.enseignements</i18n></span>
-        </p>
-        <p>
-            <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="true">
-            <span><i18n>evaluation.search.by.domaines</i18n></span>
-        </p>
+        <div>
+            <label>
+                <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="true">
+                <span><i18n>evaluation.search.by.domaines</i18n></span>
+            </label>
+        </div>
+        <div ng-show="showEnseignementChoice()&& $parent.suiviFilter.mine !== 'true' ">
+            <label>
+                <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="false">
+                <span><i18n>evaluation.search.by.enseignements</i18n></span>
+            </label>
+        </div>
     </section>
 </div>
 <div class="fiche student-info diffpadding cell card twelve criterion" ng-class="{opened : openedStudentInfo === true}"
