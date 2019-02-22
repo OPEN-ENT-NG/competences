@@ -54,6 +54,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.getLibellePeriode;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.util.*;
@@ -307,7 +308,15 @@ public class NoteController extends ControllerHelper {
                 utilsService.getParametersForExport(idStructure, event -> {
                     FormateFutureEvent.formate(imageStructureFuture, event);
                 });
-                CompositeFuture.all(exportResult, structureFuture, imageStructureFuture).setHandler((event -> {
+
+                // Récupération du libellé de la période
+                Future<String> periodeLibelleFuture = Future.future();
+                getLibellePeriode(eb, request, param.getInteger(ID_PERIODE_KEY),  periodeLibelleEvent -> {
+                    FormateFutureEvent.formate(periodeLibelleFuture,periodeLibelleEvent );
+                });
+
+                CompositeFuture.all(exportResult, structureFuture, imageStructureFuture, periodeLibelleFuture)
+                        .setHandler((event -> {
                     if (event.succeeded()) {
                         JsonObject exportJson = exportResult.result();
 
@@ -318,6 +327,7 @@ public class NoteController extends ControllerHelper {
                                     .getValue("path"));
                         }
                         exportJson.put("structureLibelle", mapEleve.get(key).getValue("structureLibelle"));
+                        exportJson.put("periodeLibelle", periodeLibelleFuture.result());
                         new DefaultExportService(eb, null).genererPdf(request, exportJson,
                                 "releve-periodique.pdf.xhtml", exportJson.getString("title"),
                                 vertx, config);
