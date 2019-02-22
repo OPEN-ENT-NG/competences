@@ -160,6 +160,7 @@
     <div class="twelve-mobile centered ng-scope warning-bilan-eleve italic" ng-if="filteredEnseignements.length === 0">
         <i18n>evaluation.bilan.eleve.empty</i18n>
     </div>
+</div>
 <div ng-if="template.contains('main', 'enseignants/releve_notes/display_releve')"
         ng-repeat="domaine in informations.domaines.all" ng-include="'tree_item_renderer.html'">
 </div>
