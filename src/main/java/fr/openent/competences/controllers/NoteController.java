@@ -278,7 +278,7 @@ public class NoteController extends ControllerHelper {
     }
 
     @Post("/releve/export")
-    @ApiDoc("Créer une note")
+    @ApiDoc("Exporte un relevé périodique")
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void exportRelevePeriodique(final HttpServerRequest request) {

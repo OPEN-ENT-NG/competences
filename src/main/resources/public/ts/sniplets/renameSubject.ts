@@ -31,6 +31,7 @@ export const renameSubject = {
     controller: {
         init: async function () {
             console.log(renameSubject.title);
+            this.lang = lang;
             this.id = this.source.id;
             this.search = {
                 name : ""
