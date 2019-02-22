@@ -87,6 +87,22 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 .put("action", "prepared");
     }
 
+    private JsonObject updateModel (String title, Long idModel, String idStructure) {
+        String query =
+                " UPDATE " + modelSubjectLibelleTable +
+                        " SET title = ?, id_etablissement =? " +
+                        " WHERE id = ? ";
+
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        values.add(title).add(idStructure).add(idModel);
+
+        return new JsonObject()
+                .put("statement", query)
+                .put("values", values)
+                .put("action", "prepared");
+    }
+
     private JsonObject saveLibelleSubjectModel ( String libelle, Long idModel, String idSubject) {
         String query =
                 " INSERT INTO " + subjectLibelleTable +
@@ -112,6 +128,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
         if (create) {
             statements.add(createModel(title, idModel, idStructure));
+        }
+        else {
+            statements.add(updateModel(title, idModel, idStructure));
         }
 
         for (int i =0; i < libelleMatiere.size(); i++) {
