@@ -1307,30 +1307,32 @@ public class LSUController extends ControllerHelper {
                 if (event.isRight()) {
                     JsonArray elementBilanPeriodique = event.right().getValue();
                     if (elementBilanPeriodique == null || elementBilanPeriodique.isEmpty()) {
-                        handler.handle("getApEpiParcoursBalises no data available ");
+                        handler.handle("success");
                         log.info(" getElementsBilanPeriodique in getApEpiParcoursBalises");
                     }
-                    int imax = elementBilanPeriodique.size();
-                    final List<Future> futuresListApEpiParcours = new ArrayList<>();
+                    else {
+                        int imax = elementBilanPeriodique.size();
+                        final List<Future> futuresListApEpiParcours = new ArrayList<>();
 
-                    for (int i = 0; i < imax; i++) {
-                        final Future<JsonObject> futureEltBilanPeriodique = Future.future();
-                        futuresListApEpiParcours.add(futureEltBilanPeriodique);
-                        JsonObject element = elementBilanPeriodique.getJsonObject(i);
-                        if (element != null) {
-                            Long typeElement = element.getLong("type");
-                            if (3L == typeElement) { //parcours group
-                                addParcoursGroup(element,futureEltBilanPeriodique);
-                            } else if (2L == typeElement) { //ap class/group
-                                addAccGroup(element, accGroupAdded,futureEltBilanPeriodique);
-                            } else if (1L == typeElement) { //epi group
-                                addEpiGroup(element, epiGroupAdded,futureEltBilanPeriodique);
+                        for (int i = 0; i < imax; i++) {
+                            final Future<JsonObject> futureEltBilanPeriodique = Future.future();
+                            futuresListApEpiParcours.add(futureEltBilanPeriodique);
+                            JsonObject element = elementBilanPeriodique.getJsonObject(i);
+                            if (element != null) {
+                                Long typeElement = element.getLong("type");
+                                if (3L == typeElement) { //parcours group
+                                    addParcoursGroup(element, futureEltBilanPeriodique);
+                                } else if (2L == typeElement) { //ap class/group
+                                    addAccGroup(element, accGroupAdded, futureEltBilanPeriodique);
+                                } else if (1L == typeElement) { //epi group
+                                    addEpiGroup(element, epiGroupAdded, futureEltBilanPeriodique);
+                                }
                             }
                         }
+                        CompositeFuture.all(futuresListApEpiParcours).setHandler(eventFutureApEpiParcours -> {
+                            handler.handle("success");
+                        });
                     }
-                    CompositeFuture.all(futuresListApEpiParcours).setHandler(eventFutureApEpiParcours -> {
-                        handler.handle("success");
-                            });
                 }
                 else {
                     handler.handle("getApEpiParcoursBalises no data available ");
