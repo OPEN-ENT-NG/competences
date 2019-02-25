@@ -223,6 +223,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     openTemplates();
                 }
             },
+
             viewNotesDevoir: async function (params) {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -318,6 +319,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
             },
+
             displayReleveNotes: function (params) {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -349,6 +351,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     template.open('main', 'enseignants/releve_notes/display_releve');
                 }
             },
+
             displayEpiApParcours: async function () {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -370,6 +373,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     template.open('main', 'enseignants/epi_ap_parcours/display_epi_ap_parcours');
                 }
             },
+
             displayBilanPeriodique: function () {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -380,6 +384,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     template.open('main', 'enseignants/bilan_periodique/display_bilan_periodique');
                 }
             },
+
             displaySuiviCompetencesEleve: function (params) {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
@@ -429,6 +434,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 }
             },
+
             displaySuiviCompetencesClasse: function (params) {
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -478,7 +484,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         display();
                     }
                 }
-            }, export: function () {
+            },
+
+            export: function () {
                 template.open('main', 'export/lsun');
                 utils.safeApply($scope);
             },
@@ -486,6 +494,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 template.open('main', 'disabled_structure');
                 utils.safeApply($scope);
             },
+
             bulletin: () => {
                 template.open('main', 'enseignants//bulletin/print_bulletin');
                 $scope.usePerso = evaluations.structure.usePerso;

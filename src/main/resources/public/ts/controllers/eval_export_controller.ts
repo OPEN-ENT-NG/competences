@@ -18,25 +18,27 @@
  * Created by agnes.lapeyronnie on 15/09/2017.
  */
 import {ng, _} from "entcore";
-import {Classe, LSU, Periode} from '../models/teacher';
+import {Classe, LSU, Periode, Utils} from '../models/teacher';
 //import * as utilsJson from '../utils/functions/xmlToJson';
 import * as utils from '../utils/teacher';
 export let exportControleur = ng.controller('ExportController',['$scope',
     function($scope) {
 
-        $scope.lsu = new LSU($scope.structure.id, $scope.evaluations.classes.where({type_groupe : Classe.type.CLASSE}),
-            $scope.structure.responsables.all);
-        $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
-        $scope.errorResponse = null;
-        function initparams(type) {
+        function initparams(type, stsFile?, errorResponse?) {
+            $scope.lsu = new LSU($scope.structure.id,
+                $scope.evaluations.classes.where({type_groupe : Classe.type.CLASSE}),
+                $scope.structure.responsables.all);
+            $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
+            $scope.errorResponse = (errorResponse!== undefined)? errorResponse: null;
             $scope.inProgress = false;
+
             $scope.params = {
                 type: type,
                 idStructure: $scope.structure.id,
                 classes: [],
                 responsables: [],
                 periodes_type: [],
-                stsFile: null
+                stsFile: (stsFile!== undefined)?stsFile:null
             };
             utils.safeApply($scope);
         }
@@ -80,30 +82,32 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 && $scope.params.classes.length > 0
                 && $scope.params.responsables.length > 0)
                 || ($scope.params.type == "2"
-                    && $scope.params.stsFile
-                    && $scope.params.periodes_type
+                    && $scope.params.stsFile !== null
+                    && $scope.params.periodes_type.length > 0
                     && $scope.params.classes.length > 0
                     && $scope.params.responsables.length > 0)
             );
         };
 
         $scope.uploadFile = function (files) {
-            var file = files[0],
+            let file = files[0],
                 reader = new FileReader();
             reader.onload = () => {
-                var text = reader.result;
-                var parser = new DOMParser();
-                var doc = parser.parseFromString(text, "application/xml");
+                let text = reader.result;
+                let parser = new DOMParser();
+                let doc = parser.parseFromString(text, "application/xml");
                // let individus = ((((utilsJson.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
                 //$scope.params.stsFile = utilsJson.cleanJson(individus);
                 let individus = ((((utils.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
                 $scope.params.stsFile = utils.cleanJson(individus);
-
-            }
+                $scope.inProgress = $scope.controleExportLSU();
+                utils.safeApply($scope);
+            };
             reader.readAsText(file);
         };
 
         $scope.exportLSU = ()=> {
+            Utils.runMessageLoader($scope);
             $scope.inProgress = true;
             $scope.params.type = ""+ $scope.params.type;
             $scope.lsu.export($scope.params)
@@ -114,12 +118,14 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     link.download = res.headers['content-disposition'].split('filename=')[1];
                     document.body.appendChild(link);
                     link.click();
-                    initparams("1");
+                    initparams("1", $scope.params.stsFile);
                     $scope.errorResponse = null;
+                    Utils.stopMessageLoader($scope);
                 }).catch((error) => {
-                console.log("$scope.lsu.export error");
-                $scope.errorResponse = error.response.statusText;
-                initparams("1");
+                console.error(error.response.statusText);
+                Utils.stopMessageLoader($scope);
+                initparams("1", $scope.params.stsFile, error.response.statusText);
+
             });
         };
     }

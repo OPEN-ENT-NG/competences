@@ -66,7 +66,8 @@
                         <label class="ten small">
                             Fichier Sts:
                             <input type="file" ng-model="params.stsFile"
-                                   onchange="angular.element(this).scope().uploadFile(this.files)">
+                                   onchange="angular.element(this).scope().uploadFile(this.files);
+                                   angular.element(this).scope().controleExportLSU()">
                         </label>
                     </div>
                 </div>
@@ -122,10 +123,13 @@
 
         </div>
     </article>
-    <p class="error" ng-show="errorResponse">[[errorResponse]]</p>
+
+    <p class="error twelve" ng-show="errorResponse">
+        <i class="close-2x" data-ng-click="errorResponse=null"></i>
+        [[errorResponse]]
+    </p>
     <button type="button" ng-click="exportLSU()" ng-disabled="controleExportLSU() || inProgress">
         <i18n>evaluation.lsu.export.button</i18n>
     </button>
-</div>
 </div>
 
