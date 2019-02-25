@@ -318,7 +318,11 @@ public class Acquis {
      *     
      */
     public void setPositionnement(BigInteger value) {
-        this.positionnement = value;
+
+        if( !BigInteger.valueOf(0).equals(value) && ( BigInteger.ONE.equals(value)
+                ||  BigInteger.valueOf(2).equals(value)|| BigInteger.valueOf(3).equals(value) || BigInteger.valueOf(4).equals(value)))
+            this.positionnement = value;
+
     }
 
 }

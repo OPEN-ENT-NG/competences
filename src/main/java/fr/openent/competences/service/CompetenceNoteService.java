@@ -130,6 +130,14 @@ public interface CompetenceNoteService extends CrudService {
     void getConversionNoteCompetence(String idEtablissement, String idclasse, Handler<Either<String, JsonArray>> handler);
 
     /**
+     *  Récupère la table de correspendance entre (Moyenne Note - Evaluation competence) d'un cycle et etablissment donné et d'une liste de classe
+     * @param idEtablissement identifiant de l'établissement
+     * @param idsClasses list of classes
+     * @param isClassList boolean for the params of request
+     * @param handler response
+     */
+    void getConversionTableByClass(String idEtablissement, List<String> idsClasses, Boolean isClassList, Handler<Either<String, JsonArray>> handler);
+    /**
      * Récupère la note maximale pour chaque compétence de chaque élève dont l'id est passé en paramètre.
      * @param idEleves id des élèves
      * @param idPeriode id de la période dont on souhaite récupérer les notes, peut être null pour sélectionner l'année

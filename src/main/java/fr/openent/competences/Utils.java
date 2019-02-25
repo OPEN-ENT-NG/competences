@@ -467,7 +467,7 @@ public class Utils {
                 Map<String,JsonObject> datesCreationVerrouByClasse = new HashMap<String,JsonObject>();
                 if("ok".equals(body.getString("status"))) {
                     JsonArray requestDateByClasse = body.getJsonArray("results");
-                    if(requestDateByClasse.size() > 0 && requestDateByClasse != null){
+                    if( requestDateByClasse != null && requestDateByClasse.size() > 0){
                         for(int i = 0; i < requestDateByClasse.size(); i++){
                             JsonObject jsonObjectRep = requestDateByClasse.getJsonObject(i);
                             if(jsonObjectRep.containsKey("id_classe")&&

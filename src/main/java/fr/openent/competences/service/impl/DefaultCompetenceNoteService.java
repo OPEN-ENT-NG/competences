@@ -31,10 +31,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -305,19 +302,41 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
     @Override
     public void getConversionNoteCompetence(String idEtablissement, String idClasse, Handler<Either<String,JsonArray>> handler){
+        //getConversionTableByClass( idEtablissement, Arrays.asList(idClasse),false,  handler);
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
                 .append("SELECT valmin, valmax, libelle, ordre, couleur, bareme_brevet ")
                 .append("FROM notes.niveau_competences AS niv ")
                 .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
                 .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
-                .append("AND cc.id_groupe = ? ")
+                .append("AND cc.id_groupe =?")
                 .append("AND echelle.id_structure = ? ")
-                .append("ORDER BY ordre DESC");
+                .append("ORDER BY  ordre DESC");
         values.add(idClasse);
         values.add(idEtablissement);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
+
+    @Override
+    public void getConversionTableByClass(String idEtablissement, List<String> idsClasses, Boolean hasClassList, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        StringBuilder query = new StringBuilder()
+                .append("SELECT id_groupe, json_agg(json_build_object(\'valmin\',valmin,\'valmax\', valmax, \'libelle\', libelle," +
+                        "\'ordre\', ordre,\'couleur\', couleur,\'bareme_brevet\', bareme_brevet )) as table_conversion ")
+                .append("FROM notes.niveau_competences AS niv ")
+                .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
+                .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
+                .append("AND cc.id_groupe IN " + Sql.listPrepared(idsClasses))
+                .append(" AND echelle.id_structure = ? ")
+                .append("GROUP BY  id_groupe");
+        for(String idClass : idsClasses){
+            values.add(idClass);
+        }
+
+        values.add(idEtablissement);
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
 
     @Override
     public void getMaxCompetenceNoteEleve(String[] id_eleve, Long idPeriode,Long idCycle, Handler<Either<String, JsonArray>> handler) {
