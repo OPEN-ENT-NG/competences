@@ -38,15 +38,22 @@
             height: 90px;
             margin-bottom: 20px;
             margin-left: 4px;
-            float:right;
             margin-top: 0px;
+            float:right;
         }
         #imgStruct {
-            width: auto;
             height: 90px;
+            position: relative;
+        }
+
+        .imgStructSize {
+            max-width : 230px;
+            max-height : 90px;
+            display : inline-block;
+            overflow : hidden;
+            float : right;
             margin-bottom: 20px;
-            margin-left: 4px;
-            float:right;
+
         }
 
         h1 {
@@ -162,6 +169,7 @@
             text-align: left;
             font-weight: normal;
             font-size: small;
+            display:block;
             color: black;
         }
 
@@ -173,19 +181,29 @@
         }
         .rightCommunication {
             padding : 20px!important;
-            vertical-align: middle;
+            vertical-align: top;
             background-color: #ffd0a0 !important;
             text-align: right;
             position: relative;
             heigth :  45px;
         }
         #imgSignature {
-            width: 200px;
+            width: 150px;
             height: auto;
-            position: relative;
             /*float:right;*/
         }
+
+        .imgSignatureSize {
+            max-width : 300px;
+            max-height : 150px;
+            display : block;
+            overflow : hidden;
+            float : right;
+            margin-bottom: 20px;
+
+        }
         .structure {
+            max-width : 335px;
             height: 90px;
             font-size: small;
             font-family: "Calibri", sans-serif;
@@ -263,10 +281,14 @@
         </div>
 
         {{#hasImgStructure}}
-        <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
+        <div class="imgStructSize">
+            <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
+        </div>
         {{/hasImgStructure}}
         {{#hasLevel}}
-        <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
+        <div class="imgStructSize">
+            <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
+        </div>
         {{/hasLevel}}
     </div>
 
@@ -349,7 +371,7 @@
             {{#getProgramElements}}
             {{#display}}
             <td style="text-align: left; word-wrap:break-word;{{{style}}}" class="secondSuivi onePadding">
-            {{/display}}
+                {{/display}}
                 {{elementsProgramme}}</td>
 
             {{/getProgramElements}}
@@ -472,12 +494,14 @@
                         </td>
                         <td  class="rightCommunication">
 
-                            <span >
+                            <span  style= " display : block;overflow : hidden; float : right; margin-bottom: 10px;">
                                 {{nameCE}}
                             </span>
 
                             {{#hasImgSignature}}
-                            <img id="imgSignature" src="{{imgSignature}}" alt="LogoSignature"/>
+                            <div class="imgSignatureSize">
+                                <img id="imgSignature" src="{{imgSignature}}" alt="LogoSignature"/>
+                            </div>
                             {{/hasImgSignature}}
 
                         </td>

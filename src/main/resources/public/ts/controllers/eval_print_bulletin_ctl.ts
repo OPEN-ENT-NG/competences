@@ -1,9 +1,7 @@
-import {_, ng, notify} from "entcore";
+import {_, ng, notify, idiom as lang} from "entcore";
 import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
 import {Classe, evaluations, Utils} from "../models/teacher";
-import {Defaultcolors} from "../models/eval_niveau_comp";
-import {renameSubject} from "../sniplets/renameSubject";
 import http from "axios";
 
 
@@ -70,6 +68,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             $scope.selected = {
                 periode : undefined
             };
+            $scope.lang = lang;
             stopMessageLoader();
         };
 

@@ -512,6 +512,10 @@
   "evaluations.export.error": "Une erreur est survenue lors de l'export",
   "evaluations.export.bulletin.legendPositionnement": " 1 : Maîtrise insuffisante - 2 : Maîtrise fragile - 3 : Maîtrise satisfaisante - 4 : Très bonne maîtrise",
   "evaluations.export.bulletin.legendSignature": "Image sur fond transparent (format .png)",
+  "evaluations.export.bulletin.legendMaxWidthSignature": "Largeur max conseillée: 300px",
+  "evaluations.export.bulletin.legendMaxHeightSignature": "Hauteur max conseillée: 150px",
+  "evaluations.export.bulletin.legendMaxWidthStructure": "Largeur max conseillée: 230px",
+  "evaluations.export.bulletin.legendMaxHeightStructure": "Hauteur max conseillée: 90px",
 
   "add.annotation":"Ajouter une annotation. Sélectionner 'Évaluer' pour enlever l'annotation.",
   "keyboard.button":"Raccourci clavier" ,
