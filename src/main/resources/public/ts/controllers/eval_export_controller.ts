@@ -77,7 +77,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
          * Controle la validité des selections avant l'exportLSU
          */
         $scope.controleExportLSU = function(){
-            return !(
+            $scope.inProgress = !(
                 ($scope.params.type == "1"
                 && $scope.params.classes.length > 0
                 && $scope.params.responsables.length > 0)
@@ -87,6 +87,8 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     && $scope.params.classes.length > 0
                     && $scope.params.responsables.length > 0)
             );
+            utils.safeApply($scope);
+            return $scope.inProgress;
         };
 
         $scope.uploadFile = function (files) {
