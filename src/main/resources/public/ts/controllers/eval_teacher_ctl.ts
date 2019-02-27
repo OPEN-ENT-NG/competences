@@ -1723,15 +1723,27 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.createDevoir = async () => {
             if ($location.path() === "/devoir/create") {
                 $scope.devoir = $scope.initDevoir();
-                $scope.devoir.id_groupe = $scope.searchOrFirst("classe", $scope.structure.classes.all).id;
-                $scope.devoir.id_type = _.findWhere($scope.structure.types.all, {default_type: true}).id;
+                let classes = _.filter($scope.structure.classes.all, (classe) => {
+                    return $scope.isValidClasse(classe.id)});
+                if(!_.isEmpty(classes)) {
+                    $scope.devoir.id_groupe = $scope.searchOrFirst("classe", classes).id;
+                    $scope.devoir.id_type = _.findWhere($scope.structure.types.all, {default_type: true}).id;
 
-                let currentPeriode = await $scope.getCurrentPeriode(_.findWhere($scope.structure.classes.all, {id: $scope.devoir.id_groupe}));
-                $scope.devoir.id_periode = currentPeriode !== -1 ? currentPeriode.id_type : null;
-                if ($scope.devoir.id_periode == null
-                    && $scope.search.periode && $scope.search.periode !== "*") {
-                    $scope.devoir.id_periode = $scope.search.periode.id_type;
+                    let currentPeriode = await $scope.getCurrentPeriode(_.findWhere(classes,
+                        {id: $scope.devoir.id_groupe}));
+                    $scope.devoir.id_periode = currentPeriode !== -1 ? currentPeriode.id_type : null;
+                    if ($scope.devoir.id_periode == null
+                        && $scope.search.periode && $scope.search.periode !== "*") {
+                        $scope.devoir.id_periode = $scope.search.periode.id_type;
+                        utils.safeApply($scope);
+                    }
+                    $scope.hideCreation = false;
+                }
+                else {
+                    $scope.hideCreation = true;
+                    template.open('main', 'enseignants/creation_devoir/display_creation_devoir');
                     utils.safeApply($scope);
+                    return;
                 }
             }
 
@@ -2851,7 +2863,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.isValidClasse = (idClasse) => {
             if ($scope.classes !== undefined) {
-                return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined;
+                let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
+                    idClasse, $scope.classes, $scope.search);
+                return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
+                              && !_.isEmpty(matiereClasse);
             }
         };
 

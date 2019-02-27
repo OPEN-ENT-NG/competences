@@ -18,25 +18,37 @@
 /**
  * Created by ledunoiss on 20/09/2016.
  */
-import { ng } from 'entcore';
+import {_, ng} from 'entcore';
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
     return function (matieres, idClasse, classes, search) {
+        let hasService = false;
         if (idClasse === '*' || idClasse === undefined) return matieres;
         if (classes.all.length > 0) {
             let classe = classes.findWhere({id : idClasse});
             if (classe !== undefined) {
                 let matieresClasse = matieres.filter((matiere) => {
-                    if (matiere.hasOwnProperty('libelleClasses')){
-                        return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
-                    } else {
-                        return false;
+                    if (classe.hasOwnProperty('services')){
+                        let services = classe.services;
+                        let evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable : true});
+                        if (services!== null) {
+                            hasService = true;
+                        }
+                        return evaluables !== undefined;
+                    }
+                    else {
+                        if (matiere.hasOwnProperty('libelleClasses')) {
+                            return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
+                        } else {
+                            return false;
+                        }
                     }
                 });
                 if (matieresClasse.length > 0) {
                      return matieresClasse;
                 }
-                return matieres;
+                let matieresList = (hasService)? matieresClasse : matieres;
+                return matieresList;
             }
         }
     }

@@ -15,8 +15,11 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 
-
-<div class="addDevoir row twelve cell">
+<article ng-show="hideCreation" class="row center twelve">
+    <i18n>evaluation.no.service.evaluable</i18n>
+</article>
+<div ng-hide="hideCreation"
+        class="addDevoir row twelve cell">
     <div class="eight cell twelve-mobile">
         <div class="pannel-in-cell">
             <tabs>

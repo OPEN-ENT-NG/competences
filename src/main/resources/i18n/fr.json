@@ -567,5 +567,7 @@
   "evaluations.choose.model": " Choisir le modèle ",
   "evaluations.default.model.libelle": "Modèle par défaut",
   "evaluations.use.model.libelle": "Utiliser un modèle de libellé de matière",
-  "evaluations.loading": "Chargement en cours ..."
+  "evaluations.loading": "Chargement en cours ...",
+  "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur"
+
 }
