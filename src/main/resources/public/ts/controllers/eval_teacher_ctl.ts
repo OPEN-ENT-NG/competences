@@ -1924,11 +1924,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Set les matière en fonction de l'identifiant de la classe
          */
         $scope.setClasseMatieres = function () {
-            getClassesMatieres($scope.devoir.id_groupe).then((matieres) => {
+            let matieres = $filter('getMatiereClasse')($scope.structure.matieres.all,
+                $scope.devoir.id_groupe, $scope.classes, $scope.search);
                 $scope.devoir.matieresByClasse = matieres;
-                if ($scope.devoir.matieresByClasse.length === 1) $scope.devoir.id_matiere = $scope.devoir.matieresByClasse[0].id;
+                if ($scope.devoir.matieresByClasse.length === 1){
+                    $scope.devoir.id_matiere = $scope.devoir.matieresByClasse[0].id;
+                }
                 $scope.selectedMatiere($scope.devoir);
-            });
         };
 
         $scope.deleteDevoir = function () {
@@ -2306,7 +2308,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Position l'objet matière sur le devoir en cours de création
          */
         $scope.selectedMatiere = function (devoir) {
-            var matiere = evaluations.matieres.findWhere({id: devoir.id_matiere});
+            let matiere = $filter('getMatiereClasse')($scope.structure.matieres.all,
+                $scope.devoir.id_groupe, $scope.classes, $scope.search)[0];
             if (matiere !== undefined) {
                 devoir.matiere = matiere;
                 devoir.id_matiere = matiere.id;

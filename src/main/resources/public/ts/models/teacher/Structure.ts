@@ -110,7 +110,8 @@ export class Structure extends Model {
             GET_TEACHER_DETAILS : {
                 synchronisation : `/directory/user/${model.me.userId}?manual-groups=true`
             },
-            GET_TYPE_SOUS_MATIERES: `/viescolaire/types/sousmatieres`
+            GET_TYPE_SOUS_MATIERES: `/viescolaire/types/sousmatieres`,
+            GET_SERVICES: `/competences/services?idEtablissement=${this.id}`
         };
     }
 
@@ -352,27 +353,37 @@ export class Structure extends Model {
             });
         };
         this.collection(Classe, {
-            sync: function () {
-                return new Promise((resolve, reject) => {
-                    http().getJson(that.api.CLASSE.synchronization).done((res) => {
-                        that.classes.addRange(castClasses(res));
-                        that.synchronized.classes = true;
-                        if (!Utils.isChefEtab()) {
-                            that.eleves.sync().then(() => {
-                                model.trigger('apply');
-                            });
-                            that.syncRemplacement().then(() => {
-                                model.trigger('apply');
-                            });
+            sync:  () => {
+                return new Promise(async (resolve, reject) => {
+
+
+                    let allPromise = await Promise.all([httpAxios.get(this.api.CLASSE.synchronization),
+                        httpAxios.get(this.api.GET_SERVICES)]);
+                    let res = allPromise[0].data;
+
+                    if (!Utils.isChefEtab()) {
+                        _.map(res, (classe) => {
+                            let services = _.where(allPromise[1].data,
+                                {id_enseignant: model.me.userId, id_groupe : classe.id});
+                            classe.services = (!_.isEmpty(services))? services : null;
+                        });
+
+                        this.eleves.sync().then(() => {
+                            model.trigger('apply');
+                        });
+                        this.syncRemplacement().then(() => {
+                            model.trigger('apply');
+                        });
+                        resolve();
+                    } else {
+                        this.eleves.sync().then(() => {
                             resolve();
-                        } else {
-                            that.eleves.sync().then(() => {
-                                resolve();
-                            });
-                        }
-                    });
+                        });
+                    }
+                    this.classes.addRange(castClasses(res));
+                    this.synchronized.classes = true;
                 });
-            },
+            }
         });
         this.collection(TypePeriode, {
             sync: async () : Promise<any> => {
@@ -513,9 +524,9 @@ export class Structure extends Model {
         return new Promise ( ((resolve, reject) => {
             http().getJson(this.api.GET_TEACHER_DETAILS.synchronisation)
                 .done((res)=> {
-                this.detailsUser = res;
-                this.synchronized.detailsUser = true;
-                resolve();
+                    this.detailsUser = res;
+                    this.synchronized.detailsUser = true;
+                    resolve();
                 })
                 .error(() => {
                     reject();
