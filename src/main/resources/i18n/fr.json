@@ -370,6 +370,7 @@
   "evaluation.skill.text.invalid": "Deux caractères maximum autorisés.",
   "evaluations.filtre.domaines" : "Filtrer par domaines",
   "evaluation.lsu.export.button" : "Générer l'export",
+  "evaluation.lsu.export.error" : "Une erreure est survenue lors de la génération du fichier",
   "open.devoir" : "Ouvrir l'évaluation",
   "save.devoir" : "Enregistrer l'évaluation",
   "end.saisie" : "Il n'est plus possible de créer une évaluation sur cette période",

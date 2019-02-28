@@ -126,7 +126,7 @@
 
     <p class="error twelve" ng-show="errorResponse">
         <i class="close-2x" data-ng-click="errorResponse=null"></i>
-        [[errorResponse]]
+        <i18n>evaluation.lsu.export.error</i18n>
     </p>
     <button type="button" ng-click="exportLSU()" ng-disabled="controleExportLSU() || inProgress">
         <i18n>evaluation.lsu.export.button</i18n>

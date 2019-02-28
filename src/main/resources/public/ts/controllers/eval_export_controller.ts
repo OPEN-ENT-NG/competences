@@ -120,13 +120,12 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     link.download = res.headers['content-disposition'].split('filename=')[1];
                     document.body.appendChild(link);
                     link.click();
-                    initparams("1", $scope.params.stsFile);
                     $scope.errorResponse = null;
                     Utils.stopMessageLoader($scope);
                 }).catch((error) => {
                 console.error(error.response.statusText);
+                $scope.errorResponse = true;
                 Utils.stopMessageLoader($scope);
-                initparams("1", $scope.params.stsFile, error.response.statusText);
 
             });
         };
