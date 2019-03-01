@@ -17,8 +17,9 @@
 
 import {model, idiom as lang, _, Behaviours} from 'entcore';
 import * as utils from '../../utils/teacher';
-import { BilanFinDeCycle, CompetenceNote } from './index';
+import {BilanFinDeCycle, Classe, CompetenceNote} from './index';
 import {evaluations} from "./model";
+import {updateFilters} from "../../utils/functions/updateFilters";
 
 export class Utils {
     static isHeadTeacher (classe) {
@@ -597,5 +598,37 @@ export class Utils {
         $scope.opened.displayMessageLoader = false;
         utils.safeApply($scope);
     };
+
+    static chooseClasse = async function (classe, $scope, withStudent) {
+        classe.selected = !classe.selected;
+        $scope.opened.displayMessageLoader = true;
+        utils.safeApply($scope);
+        if (classe.synchronized.periodes !== true) {
+            await classe.periodes.sync();
+        }
+        if (classe.synchronized.eleves !== true && withStudent === true) {
+            await classe.eleves.sync();
+        }
+        await updateFilters($scope, withStudent);
+        $scope.opened.displayMessageLoader = false;
+        utils.safeApply($scope);
+    };
+
+
+    static switchAll =  async (collection , b, isClasse, $scope, withStudent) => {
+        _.forEach(collection ,async (c) => {
+            c.selected = b;
+        });
+        if(isClasse === true){
+            $scope.opened.displayMessageLoader = true;
+            utils.safeApply($scope);
+            await updateFilters($scope, withStudent);
+            $scope.opened.displayMessageLoader = false;
+            utils.safeApply($scope);
+        }
+        utils.safeApply($scope);
+    };
+
+
 
 }

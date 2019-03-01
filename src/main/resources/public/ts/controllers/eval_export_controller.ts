@@ -17,9 +17,8 @@
 /**
  * Created by agnes.lapeyronnie on 15/09/2017.
  */
-import {ng, _} from "entcore";
-import {Classe, LSU, Periode, Utils} from '../models/teacher';
-//import * as utilsJson from '../utils/functions/xmlToJson';
+import {ng, _, notify} from "entcore";
+import {Classe, LSU, Utils} from '../models/teacher';
 import * as utils from '../utils/teacher';
 export let exportControleur = ng.controller('ExportController',['$scope',
     function($scope) {
@@ -31,6 +30,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
             $scope.errorResponse = (errorResponse!== undefined)? errorResponse: null;
             $scope.inProgress = false;
+            $scope.filteredPeriodes = [];
 
             $scope.params = {
                 type: type,
@@ -77,10 +77,11 @@ export let exportControleur = ng.controller('ExportController',['$scope',
          * Controle la validité des selections avant l'exportLSU
          */
         $scope.controleExportLSU = function(){
+
             $scope.inProgress = !(
                 ($scope.params.type == "1"
-                && $scope.params.classes.length > 0
-                && $scope.params.responsables.length > 0)
+                    && $scope.params.classes.length > 0
+                    && $scope.params.responsables.length > 0)
                 || ($scope.params.type == "2"
                     && $scope.params.stsFile !== null
                     && $scope.params.periodes_type.length > 0
@@ -98,7 +99,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 let text = reader.result;
                 let parser = new DOMParser();
                 let doc = parser.parseFromString(text, "application/xml");
-               // let individus = ((((utilsJson.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
+                // let individus = ((((utilsJson.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
                 //$scope.params.stsFile = utilsJson.cleanJson(individus);
                 let individus = ((((utils.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
                 $scope.params.stsFile = utils.cleanJson(individus);
@@ -128,6 +129,25 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 Utils.stopMessageLoader($scope);
 
             });
+        };
+        $scope.chooseClasse = async function (classe) {
+            await Utils.chooseClasse(classe,$scope, false);
+            utils.safeApply($scope);
+        };
+        $scope.updateFilters = async (classes) => {
+            if(!_.isEmpty(classes)) {
+                _.map(classes, (classe) => {
+                    classe.selected = true;
+                });
+                $scope.printClasses = {
+                    all: classes
+                };
+                await utils.updateFilters($scope, false);
+                if (_.isEmpty($scope.filteredPeriodes)) {
+                    notify.info('evaluations.classes.are.not.initialized');
+                }
+                utils.safeApply($scope);
+            }
         };
     }
 ]);

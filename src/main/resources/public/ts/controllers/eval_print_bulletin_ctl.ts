@@ -145,17 +145,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         };
 
         $scope.chooseClasse = async function (classe) {
-            classe.selected = !classe.selected;
-            $scope.opened.displayMessageLoader = true;
-            utils.safeApply($scope);
-            if (classe.synchronized.periodes !== true) {
-                await classe.periodes.sync();
-            }
-            if (classe.synchronized.eleves !== true) {
-                await classe.eleves.sync();
-            }
-            await $scope.updateFilters();
-            $scope.opened.displayMessageLoader = false;
+            await Utils.chooseClasse(classe,$scope, true);
             utils.safeApply($scope);
         };
 
@@ -165,16 +155,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         };
 
         $scope.switchAll =  async function (collection , b, isClasse) {
-            _.forEach(collection ,async (c) => {
-                c.selected = b;
-            });
-            if(isClasse === true){
-                $scope.opened.displayMessageLoader = true;
-                utils.safeApply($scope);
-                await $scope.updateFilters();
-                $scope.opened.displayMessageLoader = false;
-                utils.safeApply($scope);
-            }
+            await Utils.switchAll(collection, b,isClasse, $scope, true);
             utils.safeApply($scope);
         };
 
@@ -190,67 +171,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             return show;
         };
 
-        // Permet de mettre à jour les périodes et les élèves dans les listes en fonction de la classe
-        $scope.updateFilters = async function () {
-            let selectedClasses = _.where($scope.printClasses.all, {selected : true});
-            $scope.filteredPeriodes = [];
-            if (selectedClasses.length === 0) {
-                $scope.allElevesClasses = [];
-                $scope.filteredPeriodes = [];
-                utils.safeApply($scope);
-                return;
-            }
-            else {
-
-                // synchronisation de toutes les périodes et les élèves des classes sélectionnées
-                let allPromise = [];
-                _.forEach(selectedClasses, (classe: Classe)=> {
-                    allPromise.push( Promise.all([classe.periodes.sync(), classe.eleves.sync()]));
-                });
-
-                await Promise.all(allPromise);
-                $scope.allElevesClasses = [];
-                let periodes = [];
-
-                _.forEach(selectedClasses, (classe) => {
-                    _.map(classe.eleves.all, (eleve) => {
-                        $scope.allElevesClasses.push(eleve);
-                    });
-                    periodes = _.union(periodes, classe.periodes.all);
-                });
-                $scope.filteredPeriodes = [];
-                _.forEach(periodes, (periode) => {
-                    if(periode.id_type !== undefined) {
-                        let periodeToset = _.findWhere($scope.filteredPeriodes, {id_type: periode.id_type});
-                        if (periodeToset === undefined) {
-                            let classe = [];
-                            classe.push(periode.id_classe);
-                            $scope.filteredPeriodes.push(
-                                {
-                                    id_type: periode.id_type,
-                                    type: periode.type,
-                                    periode: periode,
-                                    classes: classe
-                                });
-                        }
-                        else {
-                            periodeToset.classes.push(periode.id_classe);
-                        }
-                    }
-                });
-
-                if ($scope.selected.periode !== undefined) {
-                    $scope.selected.periode = _.findWhere($scope.filteredPeriodes, {
-                        id_type: $scope.selected.periode.id_type
-                    });
-                }
-                if (!_.isEmpty($scope.allElevesClasses)) {
-                    $scope.allElevesClasses = _.sortBy($scope.allElevesClasses, function (eleve)  {
-                        return eleve.lastName + ' ' + eleve.firstName;
-                    })
-                }
-            }
-        };
 
         $scope.openModel = (model) => {
           $scope.opened.lightboxModel = true;

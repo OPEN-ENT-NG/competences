@@ -47,20 +47,6 @@
 
             </div>
             <div class="row" ng-show="params.type == 2">
-
-                <div class="five cell horizontal-spacing">
-                    <div class="row display-inline-block">
-                        <label class="checkbox ten" ng-repeat="periode in lsu.periodes_type">
-                            <input type="checkbox"
-                                   name="params.periodes_type[]"
-                                   value="[[periode]]"
-                                   ng-checked="selection.indexOf(periode) > -1"
-                                   ng-click="toggleperiode(periode)"
-                            ><span>
-                        [[periode.label]]</span>
-                        </label>
-                    </div>
-                </div>
                 <div class="five cell horizontal-spacing">
                     <div class="row display-inline-block">
                         <label class="ten small">
@@ -85,6 +71,8 @@
                                     order-by="name"
                                     filtered-model="params.classes"
                                     labels="comboLabels"
+                                    selection-event="updateFilters(params.classes)"
+                                    deselection-event="updateFilters(params.classes)"
                             ></multi-combo>
                             <div class="select-blocks">
                                 <div ng-repeat="classe in params.classes"
@@ -120,7 +108,20 @@
                     </div>
                 </div>
             </div>
-
+            <div class="row" ng-show="params.type == 2">
+                <div class="five cell horizontal-spacing">
+                    <div class="row display-inline-block">
+                        <label class="checkbox ten"
+                               ng-repeat="periode in filteredPeriodes | orderBy:'id_type'">
+                            <input type="checkbox"
+                                   ng-model="periode.selected"
+                                   ng-click="toggleperiode(periode)"
+                            ><span>
+                        [[getI18nPeriode(periode.periode)]]</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
     </article>
 

@@ -34,11 +34,7 @@ export class LSU {
         this.idStructure = structureId ;
         this.classes = classes;
         this.responsables = responsables ;
-        this.periodes_type = [
-            {label: 'trimestre 1', id_type: 3},
-            {label: 'trimestre 2', id_type: 4},
-            {label: 'trimestre 3', id_type: 5}
-            ];
+        this.periodes_type = [];
     }
 
     async export(params: any): Promise<any> {
