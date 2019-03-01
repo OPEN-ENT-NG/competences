@@ -545,7 +545,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
 
     @Override
-    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,final Long idPeriode, final Handler<Either<String, JsonArray>> handler) {
+    public void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,final Long idPeriode,
+                                                  Boolean isCycle, final Long idCycle,
+                                                  final Handler<Either<String, JsonArray>> handler) {
         // j'ai besoin de récupérer les idsEleve et idStructure à partir de l'idClass
         final JsonArray moyControlesContinusEleves = new fr.wseduc.webutils.collections.JsonArray();
         getParamsMethodGetMoyenne(idsClasses,
@@ -579,7 +581,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                                 final Map<Integer, Integer> mapOrdreBaremeBrevet = respMaxMapOrdreBareme.right().getValue().entrySet().iterator().next().getValue();
 
                                                 //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
-                                                buildBFC(false, idsEleves, idClasse, idStructure, idPeriode, null, new Handler<Either<String, JsonObject>>() {
+                                                buildBFC(false, idsEleves, idClasse, idStructure,
+                                                        idPeriode,
+                                                        idCycle, new Handler<Either<String, JsonObject>>() {
                                                     @Override
                                                     public void handle(Either<String, JsonObject> responseMaitriseEleves) {
                                                         if (responseMaitriseEleves.isRight()) {

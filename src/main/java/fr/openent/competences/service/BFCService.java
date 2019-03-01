@@ -123,10 +123,14 @@ public interface BFCService extends CrudService {
      * @param eb eventBus
      * @param idsClasses des id des  classe
      * @param idPeriode identifiant de la période sélectionnée
+     * @param isCycle si la périodePassée est un cycle
+     * @param idCycle id du cycle
      * @param handler  handler portant le résultat
      */
 
-    void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,Long idPeriode, final Handler<Either<String, JsonArray>> handler);
+    void getMoyenneControlesContinusBrevet(EventBus eb, List<String> idsClasses,Long idPeriode,
+                                           Boolean isCycle, Long idCycle,
+                                           final Handler<Either<String, JsonArray>> handler);
 
 
     void checkHeadTeacherForBFC(UserInfos user, String id_eleve, String id_etablissement,

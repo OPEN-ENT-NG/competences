@@ -501,10 +501,23 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         };
                         let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?
                             $scope.suiviCompetence.periode.id_type : null;
+                        let isCycle = ($scope.suiviCompetence.periode.libelle !== null
+                            && $scope.suiviCompetence.periode.libelle !== undefined
+                            && $scope.suiviCompetence.periode.id === null);
+                        let idCycle = null;
+                        if($scope.selectedCycleRadio!== undefined){
+                            if ( $scope.selectedCycleRadio !== null) {
+                                idCycle = $scope.selectedCycleRadio.id_cycle;
+                            }
+                            else {
+                                idCycle = $scope.currentCycle.id_cycle;
+                            }
+                        }
                         $scope.suiviCompetence.bilanFinDeCycles.all = [];
                         $scope.suiviCompetence.domaines.all = [];
                         let allPromise = [$scope.suiviCompetence.sync(),
-                            $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode),
+                            $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,
+                                idTypePeriode, isCycle, idCycle),
                             $scope.suiviCompetence.bilanFinDeCycles.sync(), $scope.initSliderBFC()];
                         if ($scope.searchBilan.parDomaine ===  'true') {
                             allPromise.push($scope.suiviCompetence.domaines.sync());
@@ -1030,7 +1043,20 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.baremeBrevet = async() => {
             //on récupère la période en cours en fonction du type car quand il n'y a pas de période sélectionnée on a un type de période
             let idTypePeriode = ($scope.suiviCompetence.periode.id !== null) ? $scope.suiviCompetence.periode.id_type : null;
-            await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id, idTypePeriode);
+            let isCycle = ($scope.suiviCompetence.periode.libelle !== null
+                && $scope.suiviCompetence.periode.libelle !== undefined
+                && $scope.suiviCompetence.periode.id === null);
+            let idCycle = null;
+            if($scope.selectedCycleRadio!== undefined){
+                if ( $scope.selectedCycleRadio !== null) {
+                    idCycle = $scope.selectedCycleRadio.id_cycle;
+                }
+                else {
+                    idCycle = $scope.currentCycle.id_cycle;
+                }
+            }
+            await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,
+                idTypePeriode, isCycle, idCycle);
             $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id});
             utils.safeApply($scope);
         };

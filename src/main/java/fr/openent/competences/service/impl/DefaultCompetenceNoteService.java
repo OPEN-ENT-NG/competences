@@ -193,46 +193,6 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, Handler<Either<String, JsonArray>> handler) {
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        StringBuilder query = new StringBuilder()
-                .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
-                .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, ")
-                .append("competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
-                .append("devoirs.id_matiere AS id_matiere, rel_competences_domaines.id_domaine, ")
-                .append("users.username as owner_name, type.formative AS formative ")
-                .append(", competence_niveau_final.niveau_final AS niveau_final  ")
-                .append(", devoirs.eval_lib_historise as eval_lib_historise ")
-                .append("FROM notes.competences ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id) ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ")
-                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users ON (users.id = devoirs.owner) ")
-                .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id ")
-            .append("AND competence_niveau_final.id_periode = devoirs.id_periode ")
-            .append("AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
-                .append("AND competence_niveau_final.id_matiere = devoirs.id_matiere )")
-                .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
-            values.add(idEleve);
-        if (idPeriode != null) {
-            query.append("AND devoirs.id_periode = ? ");
-            values.add(idPeriode);
-        }
-        if (idCycle != null) {
-            query.append("AND competences.id_cycle = ? ");
-            values.add(idCycle);
-        }
-        if(!isCycle) {
-            query.append("AND devoirs.eval_lib_historise = false ");
-        }
-        query.append("ORDER BY competences_notes.created ");
-
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
-    }
-
-
-    @Override
     public void getCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
@@ -339,6 +299,45 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
 
     @Override
+    public void getCompetencesNotesEleve(String idEleve, Long idPeriode, Long idCycle, boolean isCycle, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        StringBuilder query = new StringBuilder()
+                .append("SELECT DISTINCT competences.id as id_competence, competences.id_parent, competences.id_type, competences.id_cycle, ")
+                .append("competences_notes.id as id_competences_notes, competences_notes.evaluation, competences_notes.owner, ")
+                .append("competences_notes.created, devoirs.name as evaluation_libelle, devoirs.date as evaluation_date,")
+                .append("devoirs.id_matiere AS id_matiere, rel_competences_domaines.id_domaine, ")
+                .append(" type.formative AS formative ")
+                .append(", competence_niveau_final.niveau_final AS niveau_final  ")
+                .append(", devoirs.eval_lib_historise as eval_lib_historise ")
+                .append("FROM notes.competences ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id) ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".devoirs ON (competences_notes.id_devoir = devoirs.id) ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type ON (type.id = devoirs.id_type) ")
+                .append("LEFT JOIN notes.competence_niveau_final ON (competence_niveau_final.id_competence = competences.id ")
+                .append("AND competence_niveau_final.id_periode = devoirs.id_periode ")
+                .append("AND competence_niveau_final.id_eleve = competences_notes.id_eleve ")
+                .append("AND competence_niveau_final.id_matiere = devoirs.id_matiere )")
+                .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
+        values.add(idEleve);
+        if (idPeriode != null) {
+            query.append("AND devoirs.id_periode = ? ");
+            values.add(idPeriode);
+        }
+        if (idCycle != null) {
+            query.append("AND competences.id_cycle = ? ");
+            values.add(idCycle);
+        }
+        if(!isCycle) {
+            query.append("AND devoirs.eval_lib_historise = false ");
+        }
+        query.append("ORDER BY competences_notes.created ");
+
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
+
+    @Override
     public void getMaxCompetenceNoteEleve(String[] id_eleve, Long idPeriode,Long idCycle, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
@@ -362,6 +361,9 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         if(idCycle != null) {
             query.append("AND competences.id_cycle = ? ");
             values.add(idCycle);
+        }
+        else {
+            query.append(" AND (devoirs.eval_lib_historise = false ) ");
         }
 
         if(idPeriode != null) {

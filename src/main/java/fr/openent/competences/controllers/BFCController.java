@@ -536,8 +536,11 @@ public class BFCController extends ControllerHelper {
     public void getMaxBaremeMoyBaremeBrevet(final HttpServerRequest request){
         final List<String> idsClasses = request.params().contains("idClasse")?request.params().getAll("idClasse"):null;
         final Long idTypePeriode = (!request.params().get("idTypePeriode").equals("null")) ? Long.valueOf(request.params().get("idTypePeriode")) : null;
+        final Boolean isCycle = Boolean.valueOf(request.params().get("isCycle"));
+        final Long idCycle = (isCycle)? Long.valueOf(request.params().get("idCycle")):null;
         if(idsClasses != null) {
-            bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idTypePeriode, arrayResponseHandler(request));
+            bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idTypePeriode, isCycle, idCycle,
+                    arrayResponseHandler(request));
         }else{
             log.debug("eleves bareme brevet  not found");
             Renders.badRequest(request);

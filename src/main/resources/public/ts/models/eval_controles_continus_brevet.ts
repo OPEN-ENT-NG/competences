@@ -39,11 +39,11 @@ export class BaremeBrevetEleves {
         this.all = [];
     }
 
-    async sync(id_classe: string,idTypePeriode: number){
+    async sync(id_classe: string,idTypePeriode: number, isCycle: boolean, idCycle: number){
         return new Promise( async (resolve, reject) => {
         try{
             let { data } = await http.get(`/competences/bfc/bareme/brevet/eleves?idClasse=${
-                id_classe}&idTypePeriode=${idTypePeriode}`);
+                id_classe}&idTypePeriode=${idTypePeriode}&isCycle=${isCycle}&idCycle=${idCycle}`);
             this.all = Mix.castArrayAs(BaremeBrevetEleve,data);
             resolve(data);
         }catch (e){
