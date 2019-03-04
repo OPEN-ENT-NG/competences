@@ -1671,7 +1671,8 @@ public class LSUController extends ControllerHelper {
             public void handle(Either<String, JsonObject> suiviAcquisResponse) {
                 originalSize.getAndDecrement();
                 if (originalSize.get() == 0) {
-                    log.info("Get OUTTTTT " + bilansPeriodiques.getBilanPeriodique().size() + "  ==  " + eleves.getEleve().size());
+                    log.info("Get OUTTTTT " + bilansPeriodiques.getBilanPeriodique().size() + "  ==  "
+                            + eleves.getEleve().size());
                     donnees.setBilansPeriodiques(bilansPeriodiques);
                     handler.handle(new Either.Right<String, JsonObject>(suiviAcquisResponse.right().getValue()));
                 } else {
@@ -1681,7 +1682,7 @@ public class LSUController extends ControllerHelper {
         };
 
         if( !(eleves.getEleve().size() > 0) || !(periodes.getPeriode().size() > 0)){
-            handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("error", "getBaliseBilansPeriodiques : Eleves or Periodes are empty")));
+            handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("error",  "getBaliseBilansPeriodiques : Eleves or Periodes are empty")));
             return;
         }
         donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
@@ -1700,13 +1701,15 @@ public class LSUController extends ControllerHelper {
                     Future<JsonObject> getAppreciationsFuture = Future.future();
                     Future<JsonObject> getSuiviAcquisFuture = Future.future();
                     Future<JsonObject> getSyntheseFuture = Future.future();
-                    CompositeFuture.all(getRetardsAndAbsencesFuture, getAppreciationsFuture, getSuiviAcquisFuture, getSyntheseFuture).setHandler(
+                final BilanPeriodique bilanPeriodique = objectFactory.createBilanPeriodique();
+                    CompositeFuture.all(getRetardsAndAbsencesFuture, getAppreciationsFuture,
+                            getSuiviAcquisFuture, getSyntheseFuture).setHandler(
                             event -> {
                                 response.put("status", 200);
                                 getOut.handle(new Either.Right<String, JsonObject>(response));
                             });
 
-                    final BilanPeriodique bilanPeriodique = objectFactory.createBilanPeriodique();
+
 
                     if(!addresponsableEtabRef(donnees, response, bilanPeriodique)){
                         response.put("status", 400);
@@ -1742,7 +1745,6 @@ public class LSUController extends ControllerHelper {
                         @Override
                         public void handle(Either<String, JsonArray> eventViesco) {
                             addVieScolairePerso(eventViesco, bilanPeriodique);
-                            bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
                             getRetardsAndAbsencesFuture.complete();
                         }
 
@@ -1887,11 +1889,13 @@ public class LSUController extends ControllerHelper {
                                 }
                             });
 
-                    bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getTypePeriode()), currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
+                    bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getTypePeriode()),
+                            currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
                             new Handler<Either<String, JsonArray>>() {
                                 @Override
                                 public void handle(Either<String, JsonArray> suiviAcquisResponse) {
-                                    if (suiviAcquisResponse.isRight()) {
+                                    if (suiviAcquisResponse.isRight() &&
+                                            !suiviAcquisResponse.right().getValue().isEmpty()) {
                                         final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
                                         //init Bilan Periodique
                                         //donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
@@ -1899,8 +1903,13 @@ public class LSUController extends ControllerHelper {
                                         bilanPeriodique.setPeriodeRef(currentPeriode);
                                         addResponsable(bilanPeriodique);
                                         addListeAcquis(suiviAcquis, bilanPeriodique);
+                                        // add Only if suiviAcquis is not Empty
+                                        bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
                                     } else {
-                                        bilansPeriodiques.getBilanPeriodique().remove(currentEleve.getIdNeo4j());
+                                        if(suiviAcquisResponse.isRight()){
+                                            log.info(currentEleve.getIdNeo4j() + " NO ");
+                                        }
+                                       // bilansPeriodiques.getBilanPeriodique().remove(bilanPeriodique);
                                     }
                                     getSuiviAcquisFuture.complete();
                                 }
