@@ -13,7 +13,6 @@ export function  updateFilters ($scope, withStudent) {
                 $scope.allElevesClasses = [];
                 $scope.filteredPeriodes = [];
                 safeApply($scope);
-                return;
             }
             else {
 

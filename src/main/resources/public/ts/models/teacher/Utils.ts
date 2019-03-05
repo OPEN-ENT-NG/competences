@@ -615,7 +615,7 @@ export class Utils {
     };
 
 
-    static switchAll =  async (collection , b, isClasse, $scope, withStudent) => {
+    static switchAll =  async function (collection , b, isClasse, $scope, withStudent) {
         _.forEach(collection ,async (c) => {
             c.selected = b;
         });
@@ -628,7 +628,5 @@ export class Utils {
         }
         utils.safeApply($scope);
     };
-
-
 
 }
