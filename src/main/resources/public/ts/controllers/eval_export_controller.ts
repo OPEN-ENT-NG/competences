@@ -124,8 +124,12 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     $scope.errorResponse = null;
                     Utils.stopMessageLoader($scope);
                 }).catch((error) => {
-                console.error(error);
-                $scope.errorResponse = true;
+                if($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined && $scope.lsu.errorsLSU.all.length > 0){
+                    $scope.opened.lightboxErrorsLSU = true;
+                }else{
+                    console.error(error);
+                    $scope.errorResponse = true;
+                }
                 Utils.stopMessageLoader($scope);
             });
         };

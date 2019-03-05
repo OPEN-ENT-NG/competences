@@ -19,15 +19,17 @@
  * Created by agnes.lapeyronnie on 19/09/2017.
  */
 import http from 'axios';
-import {angular} from "entcore";
+import {angular, _} from 'entcore';
 import { Responsable, Classe } from '../teacher';
-import {Periode} from './Periode';
+import {ErrorLSU, ErrorsLSU} from './ErrorLSU';
+import { Mix } from 'entcore-toolkit';
 
 export class LSU {
     responsables: Array<Responsable>;
     periodes_type: any[];
     classes : Array<Classe>;//sans les groupes
     idStructure : string;
+    errorsLSU : ErrorsLSU;
 
 
     constructor (structureId : string, classes : Array<Classe>, responsables : Array<Responsable>){
@@ -35,17 +37,22 @@ export class LSU {
         this.classes = classes;
         this.responsables = responsables ;
         this.periodes_type = [];
+        this.errorsLSU = new ErrorsLSU();
+
     }
 
     async export(params: any): Promise<any> {
-        return await new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             http.post('/competences/exportLSU/lsu', params, {responseType: 'arraybuffer'})
                 .then(function (data) {
                     if (resolve && typeof(resolve) === 'function') {
                         resolve(data);
                     }
                 })
-                .catch(function (data) {
+                .catch( (data) => {
+                    if(data.response.status === 500){
+                        this.errorsLSU.setErrorsLSU(data.response.data);
+                    }
                     reject();
                 });
         });

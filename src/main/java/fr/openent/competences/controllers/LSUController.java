@@ -26,6 +26,7 @@ import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -89,7 +90,8 @@ public class LSUController extends ControllerHelper {
     private BFCService bfcService;
     private BfcSyntheseService bfcSynthseService;
     private EleveEnseignementComplementService eleveEnsCpl;
-    private JsonArray listErreursEleves;
+//    private JsonArray listErreursEleves;
+    private JsonObject errorsExport;
     private EventBus ebController;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
     private final BilanPeriodiqueService bilanPeriodiqueService;
@@ -223,37 +225,23 @@ public class LSUController extends ControllerHelper {
                                                     public void handle(Either<String, Map<String, JsonObject>> resultsQuery) {
                                                         if (resultsQuery.isRight()) {
                                                             Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
-
-                                                            getBaliseBilansCycle(donnees, idsClasse, idStructure, dateCreationVerrouByClasse, new Handler<Either<String, JsonArray>>() {
+                                                            getBaliseBilansCycle(donnees, idsClasse, idStructure, dateCreationVerrouByClasse, new Handler<String>() {
                                                                 @Override
-                                                                public void handle(Either<String, JsonArray> reponseErreursJsonArray) {
-                                                                    if (reponseErreursJsonArray.isRight()) {
+                                                                public void handle(String event) {
+                                                                    if (event.equals("success")) {
 
-                                                                        if (donnees.getBilansCycle() != null && donnees.getBilansCycle().getBilanCycle().size() != 0) {
-                                                                            lsunBilans.setDonnees(donnees);
-                                                                            returnResponse(request, lsunBilans);
+                                                                        if(errorsExport != null && errorsExport.size() > 0){
+                                                                            renderError(request, errorsExport);
+                                                                            log.info("getXML : BaliseBilansCycle");
                                                                         } else {
-                                                                            JsonArray listErreurs = reponseErreursJsonArray.right().getValue();
-                                                                            if (listErreurs.size() > 0) {
-                                                                                JsonArray affichageDesELeves = new fr.wseduc.webutils.collections.JsonArray();
-                                                                                for (int i = 0; i < listErreurs.size(); i++) {
-                                                                                    JsonObject affichageEleve = new JsonObject();
-                                                                                    JsonObject erreurOneEleve = listErreurs.getJsonObject(i);
-                                                                                    affichageEleve.put("nom", erreurOneEleve.getString("nom"))
-                                                                                            .put("prenom", erreurOneEleve.getString("prenom"))
-                                                                                            .put("classe", erreurOneEleve.getString("classe"));
-                                                                                    affichageDesELeves.add(affichageEleve);
-                                                                                }
-                                                                                // Renders.renderJson(request, reponseErreursJsonArray.right().getValue());
-                                                                                badRequest(request, "no lsunBilans");
-                                                                                // leftToResponse(request,new Either.Left<String,JsonArray>("no LSU BFC " + reponseErreursJsonArray.right().getValue()));
-                                                                            }
+                                                                        lsunBilans.setDonnees(donnees);
+                                                                        returnResponse(request, lsunBilans);
                                                                         }
                                                                     }
                                                                 }
                                                             });
                                                         } else {
-                                                            leftToResponse(request, new Either.Left<String, JsonArray>("getXML : getDatesCreationVerrouByClasses " + resultsQuery.left().getValue()));
+                                                            leftToResponse(request, new Either.Left<>("getXML : getDatesCreationVerrouByClasses " + resultsQuery.left().getValue()));
                                                             log.error("getXML : getDatesCreationVerrouByClasses " + resultsQuery);
                                                         }
                                                     }
@@ -327,13 +315,15 @@ public class LSUController extends ControllerHelper {
         Handler<Either.Right<String, JsonObject>> getBilansPeriodiquesHandler = backresponse -> {
 
             JsonObject data = backresponse.right().getValue();
-            if (data.getInteger("status") == 200) {
+
+            if (data.getInteger("status") == 200 && errorsExport.isEmpty()) {
                 log.info("FIN exportLSU : export ");
                 lsunBilans.setDonnees(donnees);
                 returnResponse(request, lsunBilans);
             } else {
+                renderJson(request,errorsExport, 500);
                 log.error("getXML : getBaliseBilansPeriodiques " + data.getString("error"));
-                badRequest(request, "getXML : getBaliseBilansPeriodiques " + backresponse);
+               //badRequest(request, "getXML : getBaliseBilansPeriodiques " + backresponse);
             }
         };
 
@@ -343,34 +333,10 @@ public class LSUController extends ControllerHelper {
                         epiGroupAdded, tableConversionByClass,enseignantFromSts, getBilansPeriodiquesHandler);
 
             } else {
-                log.error("getXML : getApEpiParcoursBalises " + event);
-                badRequest(request, "getXML : getApEpiParcoursBalises "+ event);
+            log.error("getXML : getApEpiParcoursBalises " + event);
+            badRequest(request, "getXML : getApEpiParcoursBalises "+ event);
             }
         };
-        /*Handler<Either<String, Map<String, JsonObject>>> getDatesCreationVerrouByClassesHandler = resultsQuery -> {
-            if (resultsQuery.isRight()) {
-                log.info("getBaliseBilansPeriodiques");
-                Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
-                this.getBaliseBilansPeriodiques(donnees, idStructure, periodesAdded, dateCreationVerrouByClasse,
-                        epiGroupAdded, tableConversionByClass,enseignantFromSts, getBilansPeriodiquesHandler);
-
-
-            } else {
-                log.error("getXML : getDatesCreationVerrouByClasses " + resultsQuery);
-                badRequest(request, "getXML : getDatesCreationVerrouByClasses " + resultsQuery);
-            }
-        };*/
-
-      /*  Handler<String> getApEpiParcoursHandler = event -> {
-            if (event.equals("success")) {
-                log.info("getDatesCreationVerrouByClasses");
-                Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse, getDatesCreationVerrouByClassesHandler);
-
-            } else {
-                log.error("getXML : getApEpiParcoursBalises " + event);
-                badRequest(request, "getXML : getApEpiParcoursBalises "+ event);
-            }
-        };*/
 
         List<Future> listGetFuture = new ArrayList<Future>();
         Future<JsonObject> getTableConversionFuture = Future.future();
@@ -915,7 +881,7 @@ public class LSUController extends ControllerHelper {
                 //on récupère le JsonObject de l'enseignement de complément et de la synthèse
                 JsonObject ensCplEleve = getJsonObject(ensCplsEleves,idEleve);
                 JsonObject syntheseEleve = getJsonObject(synthesesEleves, idEleve);
-                JsonObject erreursEleve = new JsonObject();
+                //JsonObject erreursEleve = new JsonObject();
                 //si l'élève est dans la mapIdEleveIdDomainePosition
                 if (mapIdEleveIdDomainePosition.containsKey(eleve.getIdNeo4j())) {
                     //alors on récupère la map<Iddomaine,positionnement> de l'élève en cours
@@ -934,12 +900,6 @@ public class LSUController extends ControllerHelper {
                                 //si l'élève n'a pas d'enseignement de complément par défault on met le code AUC et niv 0
                                 EnseignementComplement enseignementComplement = new EnseignementComplement("AUC", 0);
                                 bilanCycle.setEnseignementComplement(enseignementComplement);
-                                // ajouter l'élève dans liste des erreurs
-                                // erreursEleve.put("idEleve", idEleve).put("prenom", eleve.getPrenom()).put("nom", eleve.getNom()).put("classe", eleve.getCodeDivision());
-                                // JsonArray erreurs = new fr.wseduc.webutils.collections.JsonArray();
-                                // erreurs.add(new JsonObject().put("ensCpl", "L'enseignement de complement n'est pas renseigne"));
-                                // erreursEleve.put("typeErreur", erreurs);
-                                // listErreursEleves.add(erreursEleve);
 
                             }
                             //enseignement Complément s'il existe pour l'élève en cours
@@ -992,45 +952,33 @@ public class LSUController extends ControllerHelper {
                         bilansCycle.getBilanCycle().add(bilanCycle);
 
                     } else {
+
                         //supprimer l'élève de la liste de la Balise ELEVES
                         eleves.getEleve().remove(eleve);
                         //affecter les différentes erreurs en fonction des conditions non respectées
-                        erreursEleve.put("idEleve", idEleve).put("prenom", eleve.getPrenom()).put("nom", eleve.getNom()).put("classe", eleve.getCodeDivision());
-                        JsonArray erreurs = new fr.wseduc.webutils.collections.JsonArray();
                         if ( mapIdDomainePosition.size() != mapIdDomaineCodeDomaine.size() || !bmapSansIdDomaineCPDETR ) {
-                            erreurs.add(new JsonObject().put("socleDomaine", "Il manque des domaines du socle commun a cet eleve"));
-                            erreursEleve.put("typeErreur", erreurs);
-                            if ( syntheseEleve.size() == 0 ) {
-                                erreurs.add(new JsonObject().put("synthese", "La synthese du bilan de fin de cycle n'est pas completee "));
-                                erreursEleve.put("typeErreur", erreurs);
+                            setError(errorsExport,eleve,"Des domaines n'ont pas été evalués");
+                           if ( syntheseEleve.size() == 0 ) {
+                                setError(errorsExport,eleve,"Pas de synthèse du BFC");
+
                             }
                         } else if ( syntheseEleve.size() == 0 ) {
-                            erreurs.add(new JsonObject().put("synthese", "La synthese du bilan de fin de cycle n'est pas completee "));
-                            erreursEleve.put("typeErreur", erreurs);
+                            setError(errorsExport,eleve,"Pas de synthèse du BFC");
                         }
                         if(!ensCplEleve.containsKey("id_eleve")){
-                            erreurs.add(new JsonObject().put("ensCpl", "L'enseignement de complement n'est pas renseigne"));
-                            erreursEleve.put("typeErreur", erreurs);
+                            setError(errorsExport,eleve,"Pas d'enseignement de complément");
                         }
                     }
                 } else {//si l'élève n'est pas dans la map alors il n'a aucune évaluation et
                     // il faut le supprimer du xml donc de la list des élèves de la balise ELEVES
                     eleves.getEleve().remove(eleve);
-                    erreursEleve.put("idEleve", idEleve).put("prenom", eleve.getPrenom()).put("nom", eleve.getNom()).put("classe", eleve.getCodeDivision());
-                    JsonArray erreurs = new fr.wseduc.webutils.collections.JsonArray();
-                    erreurs.add(new JsonObject().put("socleDomaine", "Aucun domaine du socle commun "));
-                    erreursEleve.put("typeErreur", erreurs);
+                    setError(errorsExport,eleve,"Aucun domaine du socle commun ");
                     if(!ensCplEleve.containsKey("id_eleve")){
-                        erreurs.add(new JsonObject().put("ensCpl", "L'enseignement de complement n'est pas renseigne"));
-                        erreursEleve.put("typeErreur", erreurs);
+                        setError(errorsExport,eleve, "Pas d'enseignement de complément");
                     }
                     if(!syntheseEleve.containsKey("id_eleve")){
-                        erreurs.add(new JsonObject().put("synthese", "La synthese du bilan de fin de cycle n'est pas completee "));
-                        erreursEleve.put("typeErreur", erreurs);
+                        setError(errorsExport,eleve, "Pas de synthèse du BFC");
                     }
-                }
-                if (erreursEleve.size() > 0) {
-                    listErreursEleves.add(erreursEleve);
                 }
             }else
                 log.info("eleve qui n'est pas dans la list des eleves " + idEleve);
@@ -1170,7 +1118,7 @@ public class LSUController extends ControllerHelper {
      */
 
     private void getBaliseBilansCycle(final Donnees donnees,final List<String> idsClass, final String idStructure,
-                                      final Map<String,JsonObject> dateCreationVerrouByClasse, final Handler<Either<String,JsonArray>> handler) {
+                                      final Map<String,JsonObject> dateCreationVerrouByClasse, final Handler<String> handler) {
         final Donnees.BilansCycle bilansCycle = objectFactory.createDonneesBilansCycle();
         final List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
         final Donnees.Eleves eleves = donnees.getEleves();
@@ -1179,7 +1127,7 @@ public class LSUController extends ControllerHelper {
         final AtomicInteger nbEleveCompteur = new AtomicInteger(0);
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
         log.info("DEBUT : method getBaliseBilansCycle : nombreEleve : "+eleves.getEleve().size());
-        listErreursEleves = new fr.wseduc.webutils.collections.JsonArray();
+        errorsExport = new JsonObject();
         AtomicBoolean answer = new AtomicBoolean(false);
         AtomicInteger count = new AtomicInteger(0);
         final String thread = "("  + idStructure +  ")";
@@ -1196,9 +1144,8 @@ public class LSUController extends ControllerHelper {
                         getIdClassIdCycleValue(idsClass, this);
                     }
                     else{
-                        handler.handle(new Either.Left<>(
-                                "getBaliseBilansEleve : list (map<idclasse,idCycle>,map<idCycle,cycle>) : " +
-                                        error));
+                        handler.handle("getBaliseBilansEleve : list (map<idclasse,idCycle>,map<idCycle,cycle>) : " +
+                                        error);
                     }
                     log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>,map<idCycle,cycle>) " + error);
                 }
@@ -1231,7 +1178,7 @@ public class LSUController extends ControllerHelper {
                                                         (Long) mapIdClassIdCycle.get(idClass),  this);
                                             }
                                             else {
-                                                handler.handle(new Either.Left<>("getBaliseBilansEleve :  : " + error));
+                                                handler.handle("getBaliseBilansEleve :  : " + error);
                                                 log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>, " +
                                                         " map<idCycle,cycle>) " + error);
                                             }
@@ -1251,9 +1198,9 @@ public class LSUController extends ControllerHelper {
                                                             getMapCodeDomaineById(idClass,this);
                                                         }
                                                         else {
-                                                            handler.handle(new Either.Left<>("getBaliseBilansCycle : " +
+                                                            handler.handle("getBaliseBilansCycle : " +
                                                                     "Map<String, Map<Long, Integer>>> resultatsEleves : " +
-                                                                    error));
+                                                                    error);
                                                             log.error("getBaliseBilansCycle Map<String, Map<Long, Integer>>> " +
                                                                     "resultatsEleves :  " + error);
                                                         }
@@ -1275,7 +1222,7 @@ public class LSUController extends ControllerHelper {
                                                                                     idCycle, this);
                                                                         }
                                                                         else {
-                                                                            handler.handle(new Either.Left<>("getBaliseBilansCycle XML requete synthese du BFC: " + error));
+                                                                            handler.handle("getBaliseBilansCycle XML requete synthese du BFC: " + error);
                                                                             log.error("getBaliseBilansCycle requete synthese du BFC: " + error);
                                                                         }
                                                                     }
@@ -1292,7 +1239,7 @@ public class LSUController extends ControllerHelper {
                                                                                         eleveEnsCpl.listNiveauCplByEleves(idsEleve,this);
                                                                                     }
                                                                                     else {
-                                                                                        handler.handle(new Either.Left<>("getBaliseBilansCycle XML requete enseignement complement: " + error));
+                                                                                        handler.handle("getBaliseBilansCycle XML requete enseignement complement: " + error);
                                                                                         log.error("getBaliseBilansCycle requete enseignementComplement: " + error);
                                                                                     }
                                                                                 }
@@ -1301,21 +1248,21 @@ public class LSUController extends ControllerHelper {
                                                                                     setSocleSyntheseEnsCpl(mapIdDomaineCodeDomaine, idsEleve, nbEleveCompteur, eleves, ensCplsEleves, synthesesEleves,
                                                                                             mapIdEleveIdDomainePosition, responsablesEtab, valueCycle, millesime, bilansCycle, datesCreationVerrou);
 
-                                                                                    log.info("FIN method getBaliseBilansCycle nombre d'eleve dans la classe en cours : " + idsEleve.length);
-                                                                                    log.info("FIN method getBaliseBilansCycle nombre de bilans de cycle complets : " + bilansCycle.getBilanCycle().size());
-                                                                                    log.info("nb d'eleves au depart : " + nbElevesTotal);
-                                                                                    log.info("nb d'eleve parcouru : " + nbEleveCompteur.intValue());
-                                                                                    if (nbEleveCompteur.intValue() == nbElevesTotal.intValue()) {
-                                                                                        if (bilansCycle.getBilanCycle().size() != 0) {
-                                                                                            donnees.setBilansCycle(bilansCycle);
-                                                                                            log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle complet " + eleves.getEleve().size());
-                                                                                        }
-                                                                                        log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle incomplet " + listErreursEleves.size());
-                                                                                        // log for time-out
-                                                                                        answer.set(true);
-                                                                                        lsuService.serviceResponseOK(answer, count.get(), thread, method);
-                                                                                        handler.handle(new Either.Right<>(listErreursEleves));
-                                                                                    }
+                                                                            log.info("FIN method getBaliseBilansCycle nombre d'eleve dans la classe en cours : " + idsEleve.length);
+                                                                            log.info("FIN method getBaliseBilansCycle nombre de bilans de cycle complets : " + bilansCycle.getBilanCycle().size());
+                                                                            log.info("nb d'eleves au depart : " + nbElevesTotal);
+                                                                            log.info("nb d'eleve parcouru : " + nbEleveCompteur.intValue());
+                                                                            if (nbEleveCompteur.intValue() == nbElevesTotal.intValue()) {
+                                                                                if (bilansCycle.getBilanCycle().size() != 0) {
+                                                                                    donnees.setBilansCycle(bilansCycle);
+                                                                                    log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle complet " + eleves.getEleve().size());
+                                                                                }
+                                                                                log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle incomplet " + errorsExport.getMap().size());
+                                                                                handler.handle("success");
+                                                                                // log for time-out
+                                                                                answer.set(true);
+                                                                                lsuService.serviceResponseOK(answer, count.get(), thread, method);
+                                                                            }
 
                                                                                 }
                                                                             }
@@ -1325,7 +1272,7 @@ public class LSUController extends ControllerHelper {
                                                                 }
                                                             });
                                                         } else {
-                                                            handler.handle(new Either.Left<>("getBaliseBilansCycle XML idCycle  :  " + idCycle));
+                                                            handler.handle("getBaliseBilansCycle XML idCycle  :  " + idCycle);
                                                             log.error("getBaliseBilansCycle idCycle :  " + idCycle);
                                                         }
                                                     }
@@ -1674,8 +1621,6 @@ public class LSUController extends ControllerHelper {
         }
         return existing;
     };
-    //private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure,
-// JsonObject epiGroupAdded, JsonObject accGroupAdded,final JsonArray enseignantFromSts, final Handler<String> handler)
     private void getApEpiParcoursBalises(final Donnees donnees, final List<String> idsClass, final String idStructure,
                                          JsonObject epiGroupAdded, final JsonArray enseignantFromSts,
                                          final Handler<String> handler) {
@@ -1707,20 +1652,19 @@ public class LSUController extends ControllerHelper {
                                         if (3L == typeElement) { //parcours group
                                             addParcoursGroup(element, futureEltBilanPeriodique);
                                         } else if (2L == typeElement) { //ap class/group
-                                            //addAccGroup(element, accGroupAdded,futureEltBilanPeriodique);
                                             addAccGroup(element, futureEltBilanPeriodique);
-                                        } else if (1L == typeElement) { //epi group
-                                            addEpiGroup(element, epiGroupAdded, futureEltBilanPeriodique);
-                                        }
-                                    }
+                                } else if (1L == typeElement) { //epi group
+                                    addEpiGroup(element, epiGroupAdded, futureEltBilanPeriodique);
                                 }
-                                CompositeFuture.all(futuresListApEpiParcours).setHandler(eventFutureApEpiParcours -> {
-                                    handler.handle("success");
-                                });
                             }
                         }
-                        else {
-                            String error = event.left().getValue();
+                        CompositeFuture.all(futuresListApEpiParcours).setHandler(eventFutureApEpiParcours -> {
+                            handler.handle("success");
+                        });
+                    }
+                }
+                else {
+                    String error = event.left().getValue();
                             if(error!=null && error.contains(TIME)){
                                 elementBilanPeriodiqueService.getElementsBilanPeriodique(null, idsClass,
                                         idStructure, this);
@@ -1959,7 +1903,8 @@ public class LSUController extends ControllerHelper {
         final String millesime = getMillesime();
         final AtomicInteger nbEleveCompteur = new AtomicInteger(0);
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
-        listErreursEleves = new fr.wseduc.webutils.collections.JsonArray();
+        //listErreursEleves = new fr.wseduc.webutils.collections.JsonArray();
+        errorsExport = new JsonObject();
         final AtomicInteger originalSize = new AtomicInteger();
         final AtomicInteger idElementProgramme = new AtomicInteger();
 
@@ -1983,6 +1928,7 @@ public class LSUController extends ControllerHelper {
             handler.handle(new Either.Right<String, JsonObject>(new JsonObject().put("error",  "getBaliseBilansPeriodiques : Eleves or Periodes are empty")));
             return;
         }
+
         donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
         //For each eleve create his periodic bilan
         for (Integer i = 0; i < eleves.getEleve().size(); i++) {
@@ -1999,31 +1945,38 @@ public class LSUController extends ControllerHelper {
                 Future<JsonObject> getAppreciationsFuture = Future.future();
                 Future<JsonObject> getSuiviAcquisFuture = Future.future();
                 Future<JsonObject> getSyntheseFuture = Future.future();
-                final BilanPeriodique bilanPeriodique = objectFactory.createBilanPeriodique();
+                final BilanPeriodique bilanPeriodique = objectFactory.createBilanPeriodique();;
+
                 CompositeFuture.all(getRetardsAndAbsencesFuture, getAppreciationsFuture,
                         getSuiviAcquisFuture, getSyntheseFuture).setHandler(
                         event -> {
-                            response.put("status", 200);
-                            getOut.handle(new Either.Right<String, JsonObject>(response));
+                            if(event.succeeded()){
+                                response.put("status", 200);
+                                getOut.handle(new Either.Right<String, JsonObject>(response));
+                            }
+
                         });
 
 
 
-                if(!addresponsableEtabRef(donnees, response, bilanPeriodique)){
-                    response.put("status", 400);
-                    response.put(MESSAGE, "Responsable do not exist on Bilan periodique balise : eleve : "+
-                            currentEleve.getIdNeo4j() + " " +currentEleve.getNom() + " periode : "+ currentPeriode.getId() );
-                    getOut.handle(new Either.Right<String, JsonObject>(response));
-                    return;
-                }
 
-                if(!addDatesBilanPeriodique(bilanPeriodique, periodesByClasse, currentEleve, currentPeriode)){
-                    response.put("status", 400);
-                    response.put(MESSAGE, "Periode do not exit for this class "+ currentEleve.getCodeDivision() +
-                            "id : "+currentEleve.getId_Class());
-                    getOut.handle(new Either.Right<String, JsonObject>(response));
-                    return;
-                }
+
+                   if(!addresponsableEtabRef(donnees, response, bilanPeriodique)){
+                        response.put("status", 400);
+                        response.put(MESSAGE, "Responsable do not exist on Bilan periodique balise : eleve : "+
+                                currentEleve.getIdNeo4j() + " " +currentEleve.getNom() + " periode : "+ currentPeriode.getId() );
+                        getOut.handle(new Either.Right<String, JsonObject>(response));
+                        return;
+                    }
+
+                   if(!addDatesBilanPeriodique(bilanPeriodique, periodesByClasse, currentEleve, currentPeriode)){
+                       /*response.put("status", 400);
+                        response.put(MESSAGE, "Periode do not exit for this class "+ currentEleve.getCodeDivision() +
+                                "id : "+currentEleve.getId_Class());
+                        getOut.handle(new Either.Right<String, JsonObject>(response));
+                        return;*/
+                       setError(errorsExport,currentEleve,"Pas de dates pour cette classe");
+                   }
 
                 syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique((long) currentPeriode.getTypePeriode(),
                         currentEleve.getIdNeo4j(), new Handler<Either<String, JsonObject>>() {
@@ -2042,8 +1995,8 @@ public class LSUController extends ControllerHelper {
                                         synthese = rightValue.getString("synthese");
                                     }
                                     answer.set(true);
-                                }
-                                else{
+                                } else{
+                                        setError(errorsExport, currentEleve, "Pas de synthèse du conseil de classe");
                                     String error = eventSynthese.left().getValue();
                                     if(error != null && error.contains(TIME)){
 
@@ -2060,7 +2013,11 @@ public class LSUController extends ControllerHelper {
                                 }
                                 lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                 if (answer.get()) {
-                                    bilanPeriodique.setAcquisConseils(synthese);
+                                    if(!"null".equals(synthese)){
+                                        bilanPeriodique.setAcquisConseils(synthese);
+                                    }else{
+                                        setError(errorsExport, currentEleve, "Pas de synthese du conseil");
+                                    }
                                     getSyntheseFuture.complete();
                                 }
                             }});
@@ -2121,39 +2078,34 @@ public class LSUController extends ControllerHelper {
                                     .findFirst()
                                     .orElse(null);
 
-                            if (viesco != null && viesco.containsKey("id_eleve")) {
-                                if (viesco.getLong("abs_non_just") != null) {
-                                    viescolare.setNbAbsInjustifiees(BigInteger.valueOf(viesco.getLong("abs_non_just")));
+                                if (viesco != null && viesco.containsKey("id_eleve")) {
+                                    if (viesco.getLong("abs_non_just") != null) {
+                                        viescolare.setNbAbsInjustifiees(BigInteger.valueOf(viesco.getLong("abs_non_just")));
+                                    }
+                                    if (viesco.getLong("abs_just") != null) {
+                                        viescolare.setNbAbsJustifiees(BigInteger.valueOf(viesco.getLong("abs_just")));
+                                    }
+                                    if (viesco.getLong("retard") != null) {
+                                        viescolare.setNbRetards(BigInteger.valueOf(viesco.getLong("retard")));
+                                    }
+                                    if (viesco.getLong("abs_totale_heure") != null) {
+                                        viescolare.setNbHeuresManquees(BigInteger.valueOf(viesco.getLong("abs_totale_heure")));
+                                    }
                                 }
-                                if (viesco.getLong("abs_just") != null) {
-                                    viescolare.setNbAbsJustifiees(BigInteger.valueOf(viesco.getLong("abs_just")));
-                                }
-                                if (viesco.getLong("retard") != null) {
-                                    viescolare.setNbRetards(BigInteger.valueOf(viesco.getLong("retard")));
-                                }
-                                if (viesco.getLong("abs_totale_heure") != null) {
-                                    viescolare.setNbHeuresManquees(BigInteger.valueOf(viesco.getLong("abs_totale_heure")));
-                                }
-                            }
                             bilanPeriodique.setVieScolaire(viescolare);
                         }
                         else {
-                            response.put("status", 400);
-                            response.put(MESSAGE, "VieScolaire, leftResponse bilanPeriodiqueService.getRetardsAndAbsences  : " +
+                                response.put("status", 400);
+                                response.put(MESSAGE, "VieScolaire, leftResponse bilanPeriodiqueService.getRetardsAndAbsences  : " +
                                     currentEleve.getIdNeo4j() + " " + currentEleve.getNom() + " periode : " + currentPeriode.getId());
                             log.error("getBaliseBilansPeriodiques : bilanPeriodiqueService.getRetardsAndAbsences  " + eventViesco);
                         }
                     }
                 });
 
-                   /* elementBilanPeriodiqueService.getApprecBilanPerEleve(Collections.singletonList(periodeJSon.getString("id_classe")),
-                            periodeJSon.getInteger("id_type").toString(), null, currentEleve.getIdNeo4j(),
+                    elementBilanPeriodiqueService.getApprecBilanPerEleve(Collections.singletonList(currentEleve.getId_Class()),
+                            new Integer (currentPeriode.getTypePeriode()).toString(), null, currentEleve.getIdNeo4j(),
                             new Handler<Either<String, JsonArray>>() {
-                                @Override
-                                public void handle(Either<String, JsonArray> eventApp) {*/
-                elementBilanPeriodiqueService.getApprecBilanPerEleve(Collections.singletonList(currentEleve.getId_Class()),
-                        new Integer (currentPeriode.getTypePeriode()).toString(), null, currentEleve.getIdNeo4j(),
-                        new Handler<Either<String, JsonArray>>() {
                             AtomicBoolean answer = new AtomicBoolean(false);
                             AtomicInteger count = new AtomicInteger(0);
                             final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() +" )";
@@ -2161,9 +2113,8 @@ public class LSUController extends ControllerHelper {
                             @Override
                             public void handle(Either<String, JsonArray> eventApp) {
 
-
-                                if (eventApp.isRight()) {
-                                    final JsonArray appreciations = eventApp.right().getValue();
+                                    if (eventApp.isRight()) {
+                                        final JsonArray appreciations = eventApp.right().getValue();
 
                                     for (int i = 0; i < appreciations.size(); i++) {
                                         JsonObject element = appreciations.getJsonObject(i);
@@ -2284,8 +2235,6 @@ public class LSUController extends ControllerHelper {
                                 } else {
                                     if (!suiviAcquisResponse.right().getValue().isEmpty()) {
                                         final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
-                                        //init Bilan Periodique
-                                        //donnees.setElementsProgramme(objectFactory.createDonneesElementsProgramme());
                                         bilanPeriodique.setEleveRef(currentEleve);
                                         bilanPeriodique.setPeriodeRef(currentPeriode);
                                         addResponsable(bilanPeriodique);
@@ -2294,6 +2243,7 @@ public class LSUController extends ControllerHelper {
                                         bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
                                     } else {
                                         if (suiviAcquisResponse.isRight()) {
+                                            setError(errorsExport, currentEleve, "Pas de suivi des acquis");
                                             log.info(currentEleve.getIdNeo4j() + " NO ");
                                         }
                                     }
@@ -2312,16 +2262,15 @@ public class LSUController extends ControllerHelper {
                                 }
                             }
 
-
-                            private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
-                                BilanPeriodique.ListeAcquis aquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
-                                for (Integer i = 0; i < suiviAcquis.size(); i++) {
-                                    final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
-                                    Acquis aquisEleve = addListeAcquis_addAcquis(currentAcquis);
-                                    addListeAcquis_addMissingTeacherToXml(aquisEleveList, currentAcquis,aquisEleve);
+                                private void addListeAcquis(JsonArray suiviAcquis, BilanPeriodique bilanPeriodique) {
+                                    BilanPeriodique.ListeAcquis aquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
+                                    for (Integer i = 0; i < suiviAcquis.size(); i++) {
+                                        final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
+                                        Acquis aquisEleve = addListeAcquis_addAcquis(currentAcquis);
+                                        addListeAcquis_addMissingTeacherToXml(aquisEleveList, currentAcquis,aquisEleve);
+                                    }
+                                    bilanPeriodique.setListeAcquis(aquisEleveList);
                                 }
-                                bilanPeriodique.setListeAcquis(aquisEleveList);
-                            }
 
                             private Acquis addListeAcquis_addAcquis(JsonObject currentAcquis) {
                                 Acquis aquisEleve = objectFactory.createAcquis();
@@ -2396,9 +2345,10 @@ public class LSUController extends ControllerHelper {
 
                                     positionnementToSet = BigInteger.valueOf(valuePositionnementFinal);
 
-                                }
-                                acquisEleve.setPositionnement(positionnementToSet);
-
+                                    }
+                                    if(positionnementToSet.intValue() != 0){
+                                        acquisEleve.setPositionnement(positionnementToSet);
+                                    }
                             }
 
                             private void addListeAcquis_addMissingTeacherToXml(BilanPeriodique.ListeAcquis aquisEleveList,
@@ -2418,30 +2368,29 @@ public class LSUController extends ControllerHelper {
                                 }
                             }
 
-                            private void addAcquis_addAppreciation(JsonObject currentAcquis,
-                                                                   Acquis aquisEleve,
-                                                                   Periode currentPeriode) {
-                                JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"),
-                                        (long) currentPeriode.getTypePeriode(),
-                                        "id_periode");
-
-                                if (app != null) {
-                                    JsonArray appreciationByClasse = app.getJsonArray("appreciationByClasse");
-                                    if (appreciationByClasse != null
-                                            && appreciationByClasse.size() > 0) {
-                                        int imax = appreciationByClasse.size();
-                                        for (int i = 0; i < imax; i++) {
-                                            app = appreciationByClasse.getJsonObject(i);
-                                            if (app.containsKey("appreciation")) {
-                                                String appTmp = app.getString("appreciation");
-                                                if (appTmp != null && !appTmp.isEmpty()) {
-                                                    aquisEleve.setAppreciation(appTmp);
+                                private void addAcquis_addAppreciation(JsonObject currentAcquis,
+                                                                       Acquis aquisEleve,
+                                                                       Periode currentPeriode) {
+                                    JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"),
+                                            (long) currentPeriode.getTypePeriode(),
+                                            "id_periode");
+                                    if(app != null){
+                                        JsonArray appreciationByClasse = app.getJsonArray("appreciationByClasse");
+                                        if(appreciationByClasse != null && appreciationByClasse.size() > 0 ){
+                                            int imax = appreciationByClasse.size();
+                                            for(int i = 0; i < imax; i++ ) {
+                                                app = appreciationByClasse.getJsonObject(i);
+                                                if (app.containsKey("appreciation")) {
+                                                    String appTmp = app.getString("appreciation");
+                                                    if(appTmp != null && !appTmp.isEmpty()){
+                                                        aquisEleve.setAppreciation(appTmp);
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
+
 
                             private JsonObject addAppreciation_getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
                                 JsonObject res = null;
@@ -2493,6 +2442,25 @@ public class LSUController extends ControllerHelper {
         }
     }
 
+    private void setError(JsonObject errorsExport,Eleve currentEleve, String message){
+        if(errorsExport.containsKey(currentEleve.getIdNeo4j())){
+            JsonObject errorEleve = errorsExport.getJsonObject(currentEleve.getIdNeo4j());
+            if(errorEleve.containsKey("errorsMessages")){
+                errorEleve.getJsonArray("errorsMessages").add(message);
+            }else{
+                errorEleve.put("error",new JsonArray().add(message));
+            }
+        }else{
+            errorsExport.put(currentEleve.getIdNeo4j(),
+                    new JsonObject().put("idEleve", currentEleve.getIdNeo4j())
+                            .put("lastName",currentEleve.getNom())
+                            .put("firstName", currentEleve.getPrenom())
+                            .put("nameClass",currentEleve.getCodeDivision())
+                            .put("errorsMessages",new JsonArray().add(message)));
+        }
+
+    }
+
     private Boolean addresponsableEtabRef(Donnees donnees, JsonObject response, BilanPeriodique bilanPeriodique) {
         if ( donnees.getResponsablesEtab() != null && donnees.getResponsablesEtab().getResponsableEtab().size() > 0) {
             bilanPeriodique.setResponsableEtabRef(donnees.getResponsablesEtab().getResponsableEtab().get(0));
@@ -2504,7 +2472,8 @@ public class LSUController extends ControllerHelper {
                                             Eleve currentEleve, Periode currentPeriode){
 
         if(periodesByClass != null  && periodesByClass.containsKey(currentEleve.getId_Class()) &&
-                utilsService.getObjectForPeriode(periodesByClass.get(currentEleve.getId_Class()), (long) currentPeriode.getTypePeriode(), "id_type") != null){
+                utilsService.getObjectForPeriode(periodesByClass.get(currentEleve.getId_Class()),
+                        (long) currentPeriode.getTypePeriode(), "id_type") != null){
 
             JsonArray periodes = periodesByClass.get(currentEleve.getId_Class());
             JsonObject periode = utilsService.getObjectForPeriode(periodes, (long) currentPeriode.getTypePeriode(), "id_type");
