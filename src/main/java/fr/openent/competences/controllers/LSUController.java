@@ -2034,14 +2034,19 @@ public class LSUController extends ControllerHelper {
                                     JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"),
                                             (long) currentPeriode.getTypePeriode(),
                                             "id_periode");
-                                    if(app != null && app.containsKey("appreciationByClasse") && app.getJsonArray("appreciationByClasse").size() > 0) {
-                                        int imax = app.getJsonArray("appreciationByClasse").size();
-                                        for(int i = 0; i < imax; i++ ) {
-                                            app = app.getJsonArray("appreciationByClasse").getJsonObject(i);
-                                            if (app.containsKey("appreciation")) {
-                                                String appTmp = app.getString("appreciation");
-                                                if(appTmp != null && !appTmp.isEmpty()){
-                                                    aquisEleve.setAppreciation(appTmp);
+
+                                    if (app != null) {
+                                        JsonArray appreciationByClasse = app.getJsonArray("appreciationByClasse");
+                                        if (appreciationByClasse != null
+                                                && appreciationByClasse.size() > 0) {
+                                            int imax = appreciationByClasse.size();
+                                            for (int i = 0; i < imax; i++) {
+                                                app = appreciationByClasse.getJsonObject(i);
+                                                if (app.containsKey("appreciation")) {
+                                                    String appTmp = app.getString("appreciation");
+                                                    if (appTmp != null && !appTmp.isEmpty()) {
+                                                        aquisEleve.setAppreciation(appTmp);
+                                                    }
                                                 }
                                             }
                                         }
