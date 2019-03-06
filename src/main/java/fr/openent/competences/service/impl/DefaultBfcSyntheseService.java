@@ -100,7 +100,8 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
                     }
                     values.add(idCycle);
 
-                    Sql.getInstance().prepared(query,values, SqlResult.validResultHandler(handler));
+                    Sql.getInstance().prepared(query,values, Competences.DELIVERY_OPTIONS,
+                            SqlResult.validResultHandler(handler));
 
                 }else{
                     handler.handle(new Either.Right<String,JsonArray>(new fr.wseduc.webutils.collections.JsonArray()));

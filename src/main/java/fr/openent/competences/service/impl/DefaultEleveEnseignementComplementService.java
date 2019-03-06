@@ -71,7 +71,8 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
         }
 
 
-        Sql.getInstance().prepared(query,values, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query,values, Competences.DELIVERY_OPTIONS,
+                SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -98,7 +99,8 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
                         values.add(idEleve);
                     }
 
-                    Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
+                    Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
+                            SqlResult.validResultHandler(handler));
                 }else{
                     handler.handle(new Either.Right<String,JsonArray>(new fr.wseduc.webutils.collections.JsonArray()) );
                 }

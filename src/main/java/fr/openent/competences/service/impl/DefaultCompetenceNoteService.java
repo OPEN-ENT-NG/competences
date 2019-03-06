@@ -294,7 +294,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         }
 
         values.add(idEtablissement);
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
+                SqlResult.validResultHandler(handler));
     }
 
 
