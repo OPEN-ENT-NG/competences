@@ -14,7 +14,7 @@ public class DefaultLSUService implements LSUService {
 
     public void serviceResponseOK (AtomicBoolean answer, int count, String thread, String method) {
         if (count > 1 ) {
-            log.info("[ "+ method + " ] : " + thread + " success " + count);
+            log.info("[ "+ method + " ] : " + thread + " TIME OUT " + count);
         }
         if(!answer.get()) {
             answer.set(true);

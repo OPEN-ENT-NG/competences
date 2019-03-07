@@ -535,7 +535,6 @@ public class LSUController extends ControllerHelper {
                             String error = body.getString(MESSAGE);
                             count ++;
                             if(error!=null && error.contains(TIME)){
-                                lsuService.serviceResponseOK(answer, count, thread, method);
                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                         handlerToAsyncHandler(this));
                             }
@@ -543,6 +542,7 @@ public class LSUController extends ControllerHelper {
                                 handler.handle("method getBaliseEntete : error when collecting UAI  " + error);
                                 log.error("An error occured when collecting UAI for " + idStructure + " structure");
                             }
+                            lsuService.serviceResponseOK(answer, count, thread, method);
                         }
                     }
                 }));
@@ -1526,7 +1526,6 @@ public class LSUController extends ControllerHelper {
                                 resp1FutureComposite.complete();
                             }else{
                                 String error = body.getString(MESSAGE);
-                                lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                                 if (error!=null && error.contains(TIME)) {
                                     eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                             handlerToAsyncHandler(this));
@@ -1536,6 +1535,7 @@ public class LSUController extends ControllerHelper {
                                     answer.set(true);
                                     resp1FutureComposite.complete();
                                 }
+                                lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             }
                         }
                     }));
@@ -1556,6 +1556,7 @@ public class LSUController extends ControllerHelper {
                     @Override
                     public void handle(Either<String, JsonArray> responseTableConversion) {
                         if (responseTableConversion.isRight()) {
+                            answer.set(true);
                             JsonArray allTablesConversion = responseTableConversion.right().getValue();
                             List<Future> listFutureTable = new ArrayList<Future>();
 
@@ -1577,21 +1578,23 @@ public class LSUController extends ControllerHelper {
                                 }
                                 futureTable.complete();
                             }
+                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             CompositeFuture.all(listFutureTable).setHandler(event -> {
                                 handler.handle("success");
                             });
 
                         } else {
                             String error = responseTableConversion.left().getValue();
-                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             if (error != null && error.contains(TIME)) {
                                 competenceNoteService.getConversionTableByClass(idStructure, idsClasses,
                                         true, this);
                             } else {
+                                answer.set(true);
                                 log.info("event is not Right getTableConversion ");
                                 handler.handle("getTableConversion no data available ");
 
                             }
+                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                         }
                     }
                 });
@@ -1621,11 +1624,15 @@ public class LSUController extends ControllerHelper {
                         }
                         else{
                             String error = message.body().getString(MESSAGE);
-                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             if(error != null && error.contains(TIME)){
                                 eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                                         handlerToAsyncHandler(this));
                             }
+                            else{
+                                answer.set(true);
+                                handler.handle(error);
+                            }
+                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                         }
                     }
                 }));
@@ -1683,6 +1690,7 @@ public class LSUController extends ControllerHelper {
                         if (event.isRight()) {
                             JsonArray elementBilanPeriodique = event.right().getValue();
                             if (elementBilanPeriodique == null || elementBilanPeriodique.isEmpty()) {
+                                answer.set(true);
                                 handler.handle("success");
                                 log.info(" getElementsBilanPeriodique in getApEpiParcoursBalises");
                             }
@@ -2257,10 +2265,9 @@ public class LSUController extends ControllerHelper {
                                                 new Long(currentPeriode.getTypePeriode()),
                                                 currentEleve.getIdNeo4j(), currentEleve.getId_Class(), this);
                                     } else {
-                                        answer.set(true);
+                                        getSuiviAcquisFuture.complete();
                                     }
                                 } else {
-                                    answer.set(true);
                                     if (!suiviAcquisResponse.right().getValue().isEmpty()) {
                                         final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
                                         //init Bilan Periodique
@@ -2276,11 +2283,9 @@ public class LSUController extends ControllerHelper {
                                             log.info(currentEleve.getIdNeo4j() + " NO ");
                                         }
                                     }
-                                }
-                                lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
-                                if(answer.get()){
                                     getSuiviAcquisFuture.complete();
                                 }
+                                lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             }
 
                             private void addResponsable(BilanPeriodique bilanPeriodique) {
