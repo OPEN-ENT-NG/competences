@@ -39,8 +39,7 @@ export class LSU {
 
     async export(params: any): Promise<any> {
         return await new Promise((resolve, reject) => {
-            http.post('/competences/exportLSU/lsu', params, {
-                responseType: 'arraybuffer'})
+            http.post('/competences/exportLSU/lsu', params, {timeout: 180000, responseType: 'arraybuffer'})
                 .then(function (data) {
                     if (resolve && typeof(resolve) === 'function') {
                         resolve(data);
