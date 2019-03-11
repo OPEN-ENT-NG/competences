@@ -48,7 +48,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         String query = "SELECT code, libelle_court FROM "+ this.resourceTable;
         Map<String,String> mapCodeLibelleCourt = new HashMap<>();
 
-        Sql.getInstance().prepared(query ,new JsonArray(),
+        Sql.getInstance().prepared(query ,new JsonArray(), Competences.DELIVERY_OPTIONS,
                 SqlResult.validResultHandler( event -> {
 
                     if(event.isRight()){
