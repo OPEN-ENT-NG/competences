@@ -617,7 +617,9 @@ export class Utils {
 
     static switchAll =  async function (collection , b, isClasse, $scope, withStudent) {
         _.forEach(collection ,async (c) => {
-            c.selected = b;
+            if((isClasse === undefined && c.deleteDate === null) || (isClasse === true)) {
+                c.selected = b;
+            }
         });
         if(isClasse === true){
             $scope.opened.displayMessageLoader = true;
