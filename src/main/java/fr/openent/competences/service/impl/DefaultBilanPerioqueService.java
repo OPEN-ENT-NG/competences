@@ -217,8 +217,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     moyenneFinaleFuture).setHandler( event -> {
                 if(event.succeeded()){
                     setElementProgramme(result, elementsProgFuture.result());
-                    setAppreciationMoyFinalePositionnementEleve(result,
-                            appreciationMoyFinalePosFuture.result());
+                    setAppreciationMoyFinalePositionnementEleve(result,appreciationMoyFinalePosFuture.result());
                     setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(),moyenneFinaleFuture.result(),
                             result, idEleve);
                     results.add(result);

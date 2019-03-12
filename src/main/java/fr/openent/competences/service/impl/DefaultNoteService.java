@@ -711,36 +711,168 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return notesByDevoirByPeriodeClasse;
     }
 
+    private String nullPositionnemetFinal() {
+        return  " null AS positionnement_final,  null AS id_classe_posi,  null AS id_periode_positionnement, ";
+    }
+
+    private void getPositionnementFinal(String idEleve, String idMatiere, Long idPeriode,
+                                        Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT positionnement.positionnement AS positionnement_final, " +
+                " positionnement.id_classe AS id_classe_posi, " +
+                nullMoyenneFinale() + nullAppreciation() +
+                " positionnement.id_periode AS id_periode_positionnement " +
+                " FROM notes.positionnement " +
+                " WHERE " +
+                ((idPeriode!=null)?" (positionnement.id_periode = ?) AND ":"") +
+                "    (positionnement.id_eleve = ?) " +
+                "     AND " +
+                "     (positionnement.id_matiere = ?)";
+        JsonArray params = new JsonArray();
+        if(idPeriode!=null){
+            params.add(idPeriode);
+        }
+        params.add(idEleve).add(idMatiere);
+        Sql.getInstance().prepared( query, params,Competences.DELIVERY_OPTIONS, validResultHandler(handler));
+    }
+
+    private String nullMoyenneFinale() {
+        return " null AS moyenne_finale,  null AS id_classe_moyfinale, null AS id_periode_moyenne_finale, ";
+    }
+
+    private void getMoyenneFinale(String idEleve, String idMatiere, Long idPeriode,
+                                  Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT moyenne_finale.moyenne AS moyenne_finale, " +
+                " moyenne_finale.id_classe AS id_classe_moyfinale, moyenne_finale.id_periode " +
+                " AS id_periode_moyenne_finale, " +
+                nullAppreciation() + nullPositionnemetFinal() +
+                " moyenne_finale.id_eleve " +
+
+                " FROM notes.moyenne_finale" +
+                " WHERE " +
+                ((idPeriode!=null)?"( moyenne_finale.id_periode = ?) AND ": "") +
+                "    (moyenne_finale.id_eleve = ?) " +
+                "     AND ( moyenne_finale.id_matiere = ?)";
+        JsonArray params = new JsonArray();
+        if(idPeriode!=null){
+            params.add(idPeriode);
+        }
+        params.add(idEleve).add(idMatiere);
+        Sql.getInstance().prepared( query, params,Competences.DELIVERY_OPTIONS, validResultHandler(handler));
+
+    }
+
+    private String nullAppreciation() {
+        return " null AS appreciation_matiere_periode,  null AS id_classe_appreciation, " +
+                " null AS id_periode_appreciation, " ;
+    }
+    private void getAppreciationMatierePeriode(String idEleve, String idMatiere, Long idPeriode,
+                                               Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT appreciation_matiere_periode.appreciation_matiere_periode, " +
+                " appreciation_matiere_periode.id_classe AS id_classe_appreciation, " +
+                nullMoyenneFinale() + nullPositionnemetFinal() +
+                " appreciation_matiere_periode.id_periode AS id_periode_appreciation " +
+                " FROM notes.appreciation_matiere_periode " +
+                " WHERE " +
+                ((idPeriode!=null)?"(appreciation_matiere_periode.id_periode = ? ) AND ": "") +
+                "    (appreciation_matiere_periode.id_eleve = ?) " +
+                "     AND (appreciation_matiere_periode.id_matiere = ?) ";
+
+        JsonArray params = new JsonArray();
+        if(idPeriode!=null){
+            params.add(idPeriode);
+        }
+        params.add(idEleve).add(idMatiere);
+        Sql.getInstance().prepared( query, params,Competences.DELIVERY_OPTIONS, validResultHandler(handler));
+    }
+    private JsonObject leftJoin(JsonObject left, JsonObject right){
+        JsonObject res = new JsonObject(left.getMap());
+        for ( Map.Entry<String, Object> entry : right.getMap().entrySet()){
+            if(entry.getValue() != null) {
+                res.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return res;
+    }
+
+
+    private JsonArray fullJoinAppMoyPosiFinale( JsonArray appreciation ,JsonArray moyenneFinale,
+                                                JsonArray positionnement ){
+        JsonArray result = new JsonArray();
+        Map<String, JsonObject> joinMap = new HashMap<>();
+        // SELECT FROM appreciation
+        for(int i =0; i<appreciation.size(); i++){
+            JsonObject appreciationObj = appreciation.getJsonObject(i);
+            String idClasse = appreciationObj.getString("id_classe_appreciation");
+            Integer idPeriode = appreciationObj.getInteger("id_periode_appreciation");
+            String key = idClasse+idPeriode;
+            joinMap.put(key, appreciationObj);
+        }
+        // FULL JOIN  moyenneFinale
+        for(int i =0; i<moyenneFinale.size(); i++){
+            JsonObject moyenneFinaleObj = moyenneFinale.getJsonObject(i);
+            String idClasse = moyenneFinaleObj.getString("id_classe_moyfinale");
+            Integer idPeriode = moyenneFinaleObj.getInteger("id_periode_moyenne_finale");
+            String key = idClasse+idPeriode;
+            if(!joinMap.containsKey(key)) {
+                joinMap.put(key, moyenneFinaleObj);
+            }
+            else {
+                joinMap.replace(key, leftJoin(joinMap.get(key), moyenneFinaleObj));
+            }
+        }
+        // FULL JOIN POSITIONNEMENT
+        for(int i =0; i<positionnement.size(); i++){
+            JsonObject positionnementObj = positionnement.getJsonObject(i);
+            String idClasse = positionnementObj.getString("id_classe_posi");
+            Integer idPeriode = positionnementObj.getInteger("id_periode_positionnement");
+            String key = idClasse+idPeriode;
+            if(!joinMap.containsKey(key)) {
+                joinMap.put(key, positionnementObj);
+            }
+            else {
+                joinMap.replace(key, leftJoin(joinMap.get(key), positionnementObj));
+            }
+        }
+
+        // RETURNING
+        for (Map.Entry<String, JsonObject> o : joinMap.entrySet()) {
+            result.add(o.getValue());
+        }
+
+        return result;
+    }
+
     @Override
-    public void getAppreciationMoyFinalePositionnement(String idEleve, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
-        String query = new String();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+    public void getAppreciationMoyFinalePositionnement(String idEleve, String idMatiere, Long idPeriode,
+                                                       Handler<Either<String, JsonArray>> handler) {
 
-        query = "SELECT positionnement.positionnement AS positionnement_final, positionnement.id_classe AS id_classe_posi," +
-                " positionnement.id_periode AS id_periode_positionnement,"+
-                " moyenne_finale.moyenne AS moyenne_finale, moyenne_finale.id_classe AS id_classe_moyfinale, moyenne_finale.id_periode AS id_periode_moyenne_finale," +
-                " appreciation_matiere_periode.appreciation_matiere_periode,  appreciation_matiere_periode.id_classe AS id_classe_appreciation," +
-                " appreciation_matiere_periode.id_periode AS id_periode_appreciation"+
-                " FROM notes.positionnement" +
-                " FULL JOIN notes.moyenne_finale ON (positionnement.id_periode = moyenne_finale.id_periode" +
-                " AND positionnement.id_eleve = moyenne_finale.id_eleve AND positionnement.id_matiere = moyenne_finale.id_matiere)" +
-                " FULL JOIN notes.appreciation_matiere_periode ON (positionnement.id_periode = appreciation_matiere_periode.id_periode" +
-                " AND positionnement.id_eleve = appreciation_matiere_periode.id_eleve AND" +
-                " positionnement.id_matiere = appreciation_matiere_periode.id_matiere )" +
-                " WHERE ";
-        if(idPeriode != null){
-            query += "(positionnement.id_periode = ? OR moyenne_finale.id_periode = ? OR appreciation_matiere_periode.id_periode = ? ) AND";
-        }
-        query += " (positionnement.id_eleve = ? OR moyenne_finale.id_eleve = ? OR appreciation_matiere_periode.id_eleve = ? )" +
-                " AND (positionnement.id_matiere = ? OR moyenne_finale.id_matiere = ? OR appreciation_matiere_periode.id_matiere = ? )";
-        if(idPeriode !=null){
-            values.add(idPeriode).add(idPeriode).add(idPeriode);
-        }
-        values.add(idEleve).add(idEleve).add(idEleve);
-        values.add(idMatiere).add(idMatiere).add(idMatiere);
 
-        Sql.getInstance().prepared( query, values,Competences.DELIVERY_OPTIONS,
-                validResultHandler(handler));
+        Future<JsonArray> appreciationFuture = Future.future();
+        getAppreciationMatierePeriode(idEleve, idMatiere, idPeriode, event-> {
+            FormateFutureEvent.formate(appreciationFuture, event);
+        });
+
+        Future<JsonArray> moyenneFinaleFuture = Future.future();
+        getMoyenneFinale(idEleve, idMatiere, idPeriode, event -> {
+            FormateFutureEvent.formate(moyenneFinaleFuture, event);
+        });
+
+        Future<JsonArray> positionnementFinalFuture = Future.future();
+        getPositionnementFinal(idEleve, idMatiere, idPeriode, event -> {
+            FormateFutureEvent.formate(positionnementFinalFuture, event);
+        });
+        CompositeFuture.all(appreciationFuture, moyenneFinaleFuture, positionnementFinalFuture).setHandler(event -> {
+            if(event.succeeded()){
+                JsonArray appreciation = appreciationFuture.result();
+                JsonArray moyenneFinale = moyenneFinaleFuture.result();
+                JsonArray positionnement = positionnementFinalFuture.result();
+                JsonArray result = fullJoinAppMoyPosiFinale(appreciation, moyenneFinale, positionnement);
+                handler.handle(new Either.Right<>(result));
+            }
+            else{
+                handler.handle(new Either.Left<>(event.cause().getMessage()));
+            }
+        });
     }
 
     public Double calculMoyenneClasseByPeriode(ArrayList<NoteDevoir> allNotes,

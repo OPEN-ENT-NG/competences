@@ -124,10 +124,9 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     $scope.errorResponse = null;
                     Utils.stopMessageLoader($scope);
                 }).catch((error) => {
-                console.error(error.response.statusText);
+                console.error(error);
                 $scope.errorResponse = true;
                 Utils.stopMessageLoader($scope);
-
             });
         };
         $scope.chooseClasse = async function (classe) {

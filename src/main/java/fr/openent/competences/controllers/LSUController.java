@@ -2047,6 +2047,9 @@ public class LSUController extends ControllerHelper {
                                     String error = eventSynthese.left().getValue();
                                     if(error != null && error.contains(TIME)){
 
+                                        if(getSyntheseFuture.isComplete()){
+                                            return;
+                                        }
                                         syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(
                                                 (long) currentPeriode.getTypePeriode(),
                                                 currentEleve.getIdNeo4j(),this);
@@ -2074,7 +2077,13 @@ public class LSUController extends ControllerHelper {
                         if(eventViesco.isLeft()) {
                             String error = eventViesco.left().getValue();
                             if(error != null && error.contains(TIME)){
-                                bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getIdNeo4j(),this);
+                                if(!getRetardsAndAbsencesFuture.isComplete()) {
+                                    bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getIdNeo4j(),
+                                            this);
+                                }
+                                else {
+                                    return;
+                                }
                             }
                             else {
                                 answer.set(true);
@@ -2082,8 +2091,13 @@ public class LSUController extends ControllerHelper {
                         }
                         else {
                             answer.set(true);
-                            addVieScolairePerso(eventViesco, bilanPeriodique);
-                            getRetardsAndAbsencesFuture.complete();
+                            if(!getRetardsAndAbsencesFuture.isComplete()) {
+                                addVieScolairePerso(eventViesco, bilanPeriodique);
+                                getRetardsAndAbsencesFuture.complete();
+                            }
+                            else {
+                                return;
+                            }
                         }
                         lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                     }
@@ -2260,7 +2274,7 @@ public class LSUController extends ControllerHelper {
                             public void handle(Either<String, JsonArray> suiviAcquisResponse) {
                                 if (suiviAcquisResponse.isLeft()) {
                                     String error = suiviAcquisResponse.left().getValue();
-                                    if (error != null && error.contains(TIME)) {
+                                    if (error != null && error.contains(TIME) && !getSuiviAcquisFuture.isComplete()) {
                                         bilanPeriodiqueService.getSuiviAcquis(idStructure,
                                                 new Long(currentPeriode.getTypePeriode()),
                                                 currentEleve.getIdNeo4j(), currentEleve.getId_Class(), this);
@@ -2283,7 +2297,9 @@ public class LSUController extends ControllerHelper {
                                             log.info(currentEleve.getIdNeo4j() + " NO ");
                                         }
                                     }
-                                    getSuiviAcquisFuture.complete();
+                                    if(!getSuiviAcquisFuture.isComplete()) {
+                                        getSuiviAcquisFuture.complete();
+                                    }
                                 }
                                 lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             }
