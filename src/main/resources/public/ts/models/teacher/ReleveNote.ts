@@ -92,7 +92,8 @@ export class ReleveNote extends  Model implements IModel {
             devoirs: false,
             evaluations: false,
             releve: false,
-            appreciationClasse: false
+            appreciationClasse: false,
+            moyenneClasse: false
         };
         this.structure = evaluations.structure;
         this.matiere = _.findWhere(evaluations.structure.matieres.all, {id: this.idMatiere});
@@ -106,7 +107,8 @@ export class ReleveNote extends  Model implements IModel {
             averageFinal: true,
             averageAuto: true,
             positionnementFinal: true,
-            appreciationClasse: true
+            appreciationClasse: true,
+            moyenneClasse: true
         };
         this.collection(Devoir, {
             sync: () => {
@@ -645,6 +647,11 @@ export class ReleveNote extends  Model implements IModel {
                         csvData += (`${lang.translate('evaluations.releve.appreciation.classe')};${
                             response.appreciation_classe.appreciation}\r\n`);
                     }
+                    if(this.exportOptions.moyenneClasse ){
+                        csvData += (`${lang.translate('average.class')};${
+                            response.moyenne_classe}\r\n`);
+                    }
+
 
 
                     blob = new Blob([csvData]);

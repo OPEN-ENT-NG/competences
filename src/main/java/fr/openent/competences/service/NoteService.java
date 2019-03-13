@@ -20,6 +20,8 @@ package fr.openent.competences.service;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.bean.StatClass;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerRequest;
 import org.entcore.common.service.CrudService;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -237,4 +239,13 @@ public interface NoteService extends CrudService {
      */
     void putLibelleAndParamsForExportReleve(JsonObject resultFinal, JsonObject params);
 
+    /**
+     * Permet de réaliser l'export PDF d'un relevé périodique
+     * @param param
+     * @param request
+     * @param vertx
+     * @param config
+     */
+    void exportPDFRelevePeriodique(JsonObject param, final HttpServerRequest request, Vertx vertx,
+                                   JsonObject config );
 }

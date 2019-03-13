@@ -286,63 +286,14 @@ public class NoteController extends ControllerHelper {
         RequestUtils.bodyToJson(request, param -> {
             if(param.getString("fileType").equals("pdf")) {
 
-                // Récupération des données de l'export
-                Future<JsonObject> exportResult = Future.future();
-                notesService.getDatasReleve(param, event -> {
-                    FormateFutureEvent.formate(exportResult, event);
-                });
-
-                String key = ELEVES;
-                String idStructure = param.getString(ID_ETABLISSEMENT_KEY);
-                Map<String, JsonObject> mapEleve = new HashMap<>();
-                Future<JsonObject> structureFuture = Future.future();
-                mapEleve.put(key, new JsonObject().put(ID_ETABLISSEMENT_KEY, idStructure));
-
-                // Récupération des informations sur l'établissment
-                new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve, event -> {
-                    FormateFutureEvent.formate(structureFuture, event);
-                });
-
-                // Récupération du logo de l'établissment
-                Future<JsonObject> imageStructureFuture = Future.future();
-                utilsService.getParametersForExport(idStructure, event -> {
-                    FormateFutureEvent.formate(imageStructureFuture, event);
-                });
-
-                // Récupération du libellé de la période
-                Future<String> periodeLibelleFuture = Future.future();
-                getLibellePeriode(eb, request, param.getInteger(ID_PERIODE_KEY),  periodeLibelleEvent -> {
-                    FormateFutureEvent.formate(periodeLibelleFuture,periodeLibelleEvent );
-                });
-
-                CompositeFuture.all(exportResult, structureFuture, imageStructureFuture, periodeLibelleFuture)
-                        .setHandler((event -> {
-                    if (event.succeeded()) {
-                        JsonObject exportJson = exportResult.result();
-
-                        notesService.putLibelleAndParamsForExportReleve(exportJson, param);
-                        JsonObject imgStructure =  imageStructureFuture.result();
-                        if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
-                            exportJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
-                                    .getValue("path"));
-                        }
-                        exportJson.put("structureLibelle", mapEleve.get(key).getValue("structureLibelle"));
-                        exportJson.put("periodeLibelle", periodeLibelleFuture.result());
-                        new DefaultExportService(eb, null).genererPdf(request, exportJson,
-                                "releve-periodique.pdf.xhtml", exportJson.getString("title"),
-                                vertx, config);
-                    }
-                    else {
-                        log.info(event.cause().getMessage());
-                        badRequest(request);
-                    }
-                }));
+               notesService.exportPDFRelevePeriodique(param,  request, vertx, config);
             }
             else {
                 notesService.getDatasReleve(param, notEmptyResponseHandler(request));
             }
         });
     }
+
     @Get("/eleve/:idEleve/moyenne")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @ApiDoc("Retourne la moyenne de l'élève dont l'id est passé en paramètre, sur les devoirs passés en paramètre")

@@ -22,34 +22,40 @@
         <legend><i18n>viescolaire.utils.options</i18n></legend>
 
         <div class="four cell twelve-mobile">
-        <label class="checkbox">
-            <input type="checkbox" ng-model="releveNote.exportOptions.averageFinal"/><span>
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.averageFinal"/><span>
                             <i18n>average.final</i18n>
                         </span></label>
-    </div>
-    <div class="four cell twelve-mobile">
-        <label class="checkbox">
-            <input type="checkbox" ng-model="releveNote.exportOptions.averageAuto"/><span>
+        </div>
+        <div class="four cell twelve-mobile">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.averageAuto"/><span>
                             <i18n>average.auto</i18n>
                         </span></label>
-    </div>
+        </div>
 
-    <div class="four cell twelve-mobile">
-        <label class="checkbox">
-            <input type="checkbox" ng-model="releveNote.exportOptions.positionnementFinal"/><span>
+        <div class="four cell twelve-mobile">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.positionnementFinal"/><span>
                             <i18n>evaluations.releve.positionnement</i18n>
                         </span></label>
-    </div>
-    <div class="four cell twelve-mobile">
-        <label class="checkbox">
-            <input type="checkbox" ng-model="releveNote.exportOptions.appreciation"/><span>
+        </div>
+        <div class="four cell twelve-mobile">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.appreciation"/><span>
                             <i18n>evaluations.releve.appreciations.student</i18n>
                         </span></label>
-    </div>
+        </div>
         <div class="four cell twelve-mobile">
             <label class="checkbox">
                 <input type="checkbox" ng-model="releveNote.exportOptions.appreciationClasse"/><span>
                             <i18n>evaluations.releve.appreciation.classe</i18n>
+                        </span></label>
+        </div>
+        <div class="four cell twelve-mobile">
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.moyenneClasse"/><span>
+                            <i18n>average.class</i18n>
                         </span></label>
         </div>
     </fieldset>
@@ -58,17 +64,17 @@
         <legend><i18n>evaluations.export.format</i18n></legend>
 
         <div class="checkbox-grid twelve">
-        <label>
-            <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="pdf">
-            <span>
+            <label>
+                <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="pdf">
+                <span>
                     <i18n>evaluations.pdf</i18n>
              </span>
-        </label>
-        <label>
-            <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="csv">
-            <i18n>evaluations.csv</i18n>
-        </label>
-    </div>
+            </label>
+            <label>
+                <input type="radio"  ng-model="releveNote.exportOptions.fileType" value="csv">
+                <i18n>evaluations.csv</i18n>
+            </label>
+        </div>
     </fieldset>
     <br/>
     <div class="row">

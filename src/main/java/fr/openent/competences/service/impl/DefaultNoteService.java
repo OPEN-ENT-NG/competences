@@ -31,8 +31,10 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.apache.pdfbox.pdfviewer.MapEntry;
@@ -43,10 +45,13 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.text.DecimalFormat;
 import java.util.*;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.getLibellePeriode;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
@@ -1555,6 +1560,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private void putLibelleForExport(JsonObject object) {
         object.put("appreciationClasseLibelle", getLibelle("evaluations.releve.appreciation.classe"));
+        object.put("moyenneClasseLibelle", getLibelle("average.class"));
         object.put("exportReleveLibelle", getLibelle("evaluations.releve.title"));
         object.put("displayNameLibelle", getLibelle("students"));
         object.put("moyenneLibelle", getLibelle("average.auto.min"));
@@ -1654,7 +1660,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             appreciationClassFuture.complete(new JsonArray());
         }
 
-        // Récupération des moyennes Finales , des Notes, des Competences Notes
+        // Avec les ids des élèves de la classe, récupération des moyennes Finales , des Notes, des Competences Notes
         // et des Appreciations et des Positionnements finaux
         CompositeFuture.all(studentsClassFuture, appreciationClassFuture, tableauDeConversionFuture,
                 nbEvaluatedHomeWork)
@@ -1751,7 +1757,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 FormateColonneFinaleReleve(moyennesFinalesFutures.result(), elevesMapObject,
                                         MOYENNE, idPeriode, hasEvaluatedHomeWork);
 
-                                // Calcul des moyennes auto
+                                // Rajout des notes par devoir et Calcul des moyennes auto
                                 resultHandler.put(NOTES, notesFuture.result());
                                 calculMoyennesNotesFOrReleve(notesFuture.result(), resultHandler,idPeriode,
                                         elevesMapObject, hasEvaluatedHomeWork, isExport);
@@ -1809,6 +1815,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             HashMap<Long, ArrayList<NoteDevoir>> notesByDevoir = new HashMap<>();
             HashMap<String, T> notesByEleve = new HashMap<>();
 
+            Double sumMoyClasse = 0.0;
+            int nbMoyenneClasse = 0;
 
             Map<String, HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>>
                     notesByDevoirByPeriodeByEleve = new HashMap<>();
@@ -1834,6 +1842,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         Double.valueOf(note.getLong(DIVISEUR)),
                         note.getBoolean(RAMENER_SUR),
                         Double.valueOf(note.getString(COEFICIENT)));
+
 
                 if (idPeriode == null) {
                     Long id_periode = note.getLong(ID_PERIODE);
@@ -1864,6 +1873,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 listMoyDevoirs.add(moyenne);
             }
             result.put("devoirs", listMoyDevoirs);
+
+            // Calcul des moyennes par élève
             for (Map.Entry<String, T> entry : notesByEleve.entrySet()) {
                 JsonObject moyenne;
                 String idEleve = entry.getKey();
@@ -1878,12 +1889,20 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         el.put(MOYENNEFINALE, moy);
                     }
 
+                    if(el.containsKey(MOYENNEFINALE)){
+                        sumMoyClasse += el.getDouble(MOYENNEFINALE);
+                    }
+                    else {
+                        sumMoyClasse += moy;
+                    }
+                    ++nbMoyenneClasse;
                 }
 
                 moyenne.put("id", idEleve);
                 listMoyEleves.add(moyenne);
             }
-
+            DecimalFormat decimalFormat = new DecimalFormat("#.00");
+            result.put("moyenne_classe",(nbMoyenneClasse>0)? decimalFormat.format((sumMoyClasse/nbMoyenneClasse)): " ");
 
             if (idPeriode == null) {
                 HashMap<Long, JsonArray> listMoy = new HashMap<>();
@@ -2065,5 +2084,60 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         Sql.getInstance().prepared(query.toString(), values, validUniqueResultHandler(handler));
+    }
+
+    public void exportPDFRelevePeriodique(JsonObject param, final HttpServerRequest request, Vertx vertx,
+                                          JsonObject config ){
+        // Récupération des données de l'export
+        Future<JsonObject> exportResult = Future.future();
+        getDatasReleve(param, event -> {
+            FormateFutureEvent.formate(exportResult, event);
+        });
+
+        String key = ELEVES;
+        String idStructure = param.getString(ID_ETABLISSEMENT_KEY);
+        Map<String, JsonObject> mapEleve = new HashMap<>();
+        Future<JsonObject> structureFuture = Future.future();
+        mapEleve.put(key, new JsonObject().put(ID_ETABLISSEMENT_KEY, idStructure));
+
+        // Récupération des informations sur l'établissment
+        new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve, event -> {
+            FormateFutureEvent.formate(structureFuture, event);
+        });
+
+        // Récupération du logo de l'établissment
+        Future<JsonObject> imageStructureFuture = Future.future();
+        utilsService.getParametersForExport(idStructure, event -> {
+            FormateFutureEvent.formate(imageStructureFuture, event);
+        });
+
+        // Récupération du libellé de la période
+        Future<String> periodeLibelleFuture = Future.future();
+        getLibellePeriode(eb, request, param.getInteger(ID_PERIODE_KEY),  periodeLibelleEvent -> {
+            FormateFutureEvent.formate(periodeLibelleFuture,periodeLibelleEvent );
+        });
+
+        CompositeFuture.all(exportResult, structureFuture, imageStructureFuture, periodeLibelleFuture)
+                .setHandler((event -> {
+                    if (event.succeeded()) {
+                        JsonObject exportJson = exportResult.result();
+
+                        putLibelleAndParamsForExportReleve(exportJson, param);
+                        JsonObject imgStructure =  imageStructureFuture.result();
+                        if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
+                            exportJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
+                                    .getValue("path"));
+                        }
+                        exportJson.put("structureLibelle", mapEleve.get(key).getValue("structureLibelle"));
+                        exportJson.put("periodeLibelle", periodeLibelleFuture.result());
+                        new DefaultExportService(eb, null).genererPdf(request, exportJson,
+                                "releve-periodique.pdf.xhtml", exportJson.getString("title"),
+                                vertx, config);
+                    }
+                    else {
+                        log.info(event.cause().getMessage());
+                        badRequest(request);
+                    }
+                }));
     }
 }
