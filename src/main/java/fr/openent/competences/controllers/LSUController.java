@@ -1996,7 +1996,7 @@ public class LSUController extends ControllerHelper {
                                     }
                                     answer.set(true);
                                 } else{
-                                        setError(errorsExport, currentEleve, "Pas de synthèse du conseil de classe");
+                                    setError(errorsExport, currentEleve, "Pas de synthèse du conseil de classe");
                                     String error = eventSynthese.left().getValue();
                                     if(error != null && error.contains(TIME)){
 
@@ -2280,7 +2280,7 @@ public class LSUController extends ControllerHelper {
                                 addAcquis_addAppreciation(currentAcquis, aquisEleve, currentPeriode);
                                 addAcquis_addDiscipline(currentAcquis, aquisEleve);
                                 addAcquis_addElementProgramme(currentAcquis, aquisEleve);
-
+                                addAcquis_setEleveNonNote(aquisEleve);
                                 return aquisEleve;
                             }
 
@@ -2308,13 +2308,11 @@ public class LSUController extends ControllerHelper {
                                             "NN";
                                 }
                                 acquisEleve.setMoyenneEleve(valueMoyEleve);
-                                acquisEleve.setEleveNonNote("NN".equals(acquisEleve.getMoyenneEleve()));
                                 //MoyenneClasse
                                 String valueMoyClasse = new String();
                                 valueMoyClasse = (moyClasse != null)? moyClasse.getValue("moyenne") + "/20" :
                                         "NN";
                                 acquisEleve.setMoyenneStructure(valueMoyClasse);
-                                acquisEleve.setStructureNonNotee("NN".equals(acquisEleve.getMoyenneStructure()));
                             }
                             private void addAcquis_addPositionnement( JsonObject currentAcquis, JsonArray tableConversion,
                                                                       Acquis acquisEleve, Periode currentPeriode){
@@ -2349,6 +2347,15 @@ public class LSUController extends ControllerHelper {
                                     if(positionnementToSet.intValue() != 0){
                                         acquisEleve.setPositionnement(positionnementToSet);
                                     }
+                            }
+
+                            private void addAcquis_setEleveNonNote(Acquis acquisEleve){
+                                if(acquisEleve.getPositionnement() != null || !"NN".equals(acquisEleve.getMoyenneEleve())){
+                                    acquisEleve.setEleveNonNote(false);
+                                }else{
+                                    acquisEleve.setEleveNonNote("NN".equals(acquisEleve.getMoyenneEleve()) && acquisEleve.getPositionnement() == null);
+                                }
+                                acquisEleve.setStructureNonNotee(false);
                             }
 
                             private void addListeAcquis_addMissingTeacherToXml(BilanPeriodique.ListeAcquis aquisEleveList,
