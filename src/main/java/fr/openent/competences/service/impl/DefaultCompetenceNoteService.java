@@ -321,7 +321,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("AND competence_niveau_final.id_matiere = devoirs.id_matiere )")
                 .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
         values.add(idEleve);
-        if (idPeriode != null) {
+         if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(idPeriode);
         }

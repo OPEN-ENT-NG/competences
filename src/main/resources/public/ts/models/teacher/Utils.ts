@@ -213,7 +213,7 @@ export class Utils {
 
         // calcul de la moyenne pour les sous-domaines
         if(poDomaine.domaines) {
-            for(var i=0; i<poDomaine.domaines.all.length; i++) {
+            for(let i=0; i<poDomaine.domaines.all.length; i++) {
                 // si le domaine parent n'est pas évalué, il faut vider pour chaque sous-domaine les poMaxEvaluationsDomaines sauvegardés
                 if(!poDomaine.evaluated) {
                     poMaxEvaluationsDomaines = [];
@@ -277,7 +277,7 @@ export class Utils {
      *
      */
 
-     static setMaxCompetenceShow  ( competence) {
+     static setMaxCompetenceShow  ( competence, isCycle) {
 
         //all evaluations
         // récupèrer toutes les évaluations de type non "formative"
@@ -286,10 +286,12 @@ export class Utils {
             // la competence doit être reliée à un devoir ayant un type non "formative"
         });
         if(allEvaluations !== undefined && allEvaluations.length > 0){
-            let notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
-                return evaluation.eval_lib_historise === false;
-            });
-            allEvaluations = (notHistorizedEvals.length > 0)? notHistorizedEvals : allEvaluations;
+            if (isCycle !== true) {
+                let notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
+                    return evaluation.eval_lib_historise === false;
+                });
+                allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
+            }
             competence.niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations);
         }
 
@@ -337,7 +339,7 @@ export class Utils {
             return _.max(allmaxMats);
         }
     }
-    static setCompetenceNotes(poDomaine, poCompetencesNotes, object?, classe?, tabDomaine?) {
+    static setCompetenceNotes(poDomaine, poCompetencesNotes, object?, classe?, tabDomaine?, isCycle?) {
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {
                 _.map(poDomaine.competences.all, function (competence) {
@@ -345,7 +347,7 @@ export class Utils {
                         id_competence: competence.id
                     });
                     if( competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence);
+                        Utils.setMaxCompetenceShow(competence, isCycle);
                     }
                 });
                 if (tabDomaine !== undefined) {
@@ -360,7 +362,7 @@ export class Utils {
                     id_domaine: competence.id_domaine
                 });
                 if( competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence);
+                        Utils.setMaxCompetenceShow(competence, isCycle);
                 }
 
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
@@ -411,7 +413,8 @@ export class Utils {
 
         if( poDomaine.domaines) {
             for (var i = 0; i < poDomaine.domaines.all.length; i++) {
-                this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, object, classe, tabDomaine);
+                this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, object, classe,
+                    tabDomaine, isCycle);
             }
         }
     }

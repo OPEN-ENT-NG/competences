@@ -303,7 +303,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     }
                 });
                 await competenceNiveauFinal.saveNiveaufinal();
-                Utils.setMaxCompetenceShow(competence);
+                Utils.setMaxCompetenceShow(competence, $scope.isCycle);
             }
         };
 

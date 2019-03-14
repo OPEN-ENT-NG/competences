@@ -103,7 +103,8 @@ export class SuiviCompetence extends Model {
                             domaine.id_chef_etablissement = model.me.userId;
                             domaine.id_etablissement = structure.id;
                             this.domaines.all.push(domaine);
-                            Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.domaines, null);
+                            Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.domaines, null,
+                               undefined , this.isCycle);
                         }
                     }
                     if (resolve && typeof (resolve) === 'function') {
