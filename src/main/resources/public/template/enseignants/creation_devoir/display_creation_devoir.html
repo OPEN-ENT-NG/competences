@@ -203,6 +203,7 @@
                                     <section style="padding: 10px 0;" class="row twelve-mobile">
                                         <div class="three cell addDevoirTable__libelle four-mobile">
                                             <i18n>viescolaire.utils.coefficient</i18n>
+                                            <i class="asterisk obligatoire"></i>
                                         </div>
 
                                         <div class="one cell addDevoirTable__libelle eight-mobile">
@@ -527,6 +528,9 @@
             </li>
             <li ng-if="devoir.dateDevoir == undefined">
                 <span><i18n>evaluations.test.date</i18n></span>
+            </li>
+            <li ng-if="devoir.is_evaluated && devoir.coefficient == undefined">
+                <span><i18n>viescolaire.utils.coefficient</i18n></span>
             </li>
             <li ng-if="errDateDevoir">
                 <span><i18n>devoir.errDateDevoir</i18n></span>

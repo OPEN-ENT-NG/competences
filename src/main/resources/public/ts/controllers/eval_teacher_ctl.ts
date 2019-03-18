@@ -1235,6 +1235,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && name.trim() !== ''
                 && $scope.devoir.id_periode !== undefined
                 && $scope.devoir.coefficient !== undefined
+                && (!$scope.devoir.is_evaluated || $scope.devoir.coefficient !== null)
                 && $scope.devoir.coefficient >= 0
                 && $scope.devoir.diviseur !== undefined
                 && $scope.devoir.diviseur > 0
