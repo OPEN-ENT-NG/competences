@@ -17,7 +17,6 @@
 
 package fr.openent.competences.service.impl;
 
-import com.mongodb.util.JSON;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.Eleve;
@@ -37,7 +36,6 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.pdfbox.pdfviewer.MapEntry;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.user.UserInfos;
@@ -47,12 +45,11 @@ import io.vertx.core.json.JsonObject;
 
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibellePeriode;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.badRequest;
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
@@ -1835,18 +1832,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 Long idDevoir = note.getLong(ID_DEVOIR);
                 String idEleve = note.getString(ID_ELEVE);
+                Long id_periode = note.getLong(ID_PERIODE);
                 NoteDevoir noteDevoir;
-
                 noteDevoir = new NoteDevoir(
                         Double.valueOf(note.getString(VALEUR)),
                         Double.valueOf(note.getLong(DIVISEUR)),
                         note.getBoolean(RAMENER_SUR),
-                        Double.valueOf(note.getString(COEFICIENT)));
+                        Double.valueOf(note.getString(COEFICIENT)), idEleve, id_periode);
 
 
                 if (idPeriode == null) {
-                    Long id_periode = note.getLong(ID_PERIODE);
-
                     if (!notesByDevoirByPeriodeByEleve.containsKey(idEleve)) {
                         notesByDevoirByPeriodeByEleve.put(idEleve, new HashMap<>());
                         notesByDevoirByPeriodeByEleve.get(idEleve).put(null, new HashMap<>());
@@ -1859,8 +1854,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     if (note.getString(ID_ELEVE).equals(idEleve)) {
                         utilsService.addToMap(id_periode,
                                 notesByDevoirByPeriodeByEleve.get(idEleve).get(id_periode), noteDevoir);
-                        utilsService.addToMap(null,
-                                notesByDevoirByPeriodeByEleve.get(idEleve).get(null), noteDevoir);
+                        utilsService.addToMap(null, notesByDevoirByPeriodeByEleve.get(idEleve).get(null),
+                                noteDevoir);
                     }
                 }
                 utilsService.addToMap(idDevoir, notesByDevoir, noteDevoir);
@@ -1890,7 +1885,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
 
                     if(el.containsKey(MOYENNEFINALE)){
-                        sumMoyClasse += el.getDouble(MOYENNEFINALE);
+                        sumMoyClasse += Double.valueOf( el.getString(MOYENNEFINALE));
                     }
                     else {
                         sumMoyClasse += moy;
@@ -1912,7 +1907,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> entryPeriode
                             : notesByDevoirByPeriodeByEleve.get(entryEleve.getKey()).entrySet()) {
                         listMoy.put(entryPeriode.getKey(), new fr.wseduc.webutils.collections.JsonArray());
-                        eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, new JsonArray());
+                        if(!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
+                            eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, new JsonArray());
+                        }
                         int nbMoyenne = 0;
                         Double moyenneAnnee = 0.0;
                         JsonArray moyennesFinales = eleveMapObject.get(entryEleve.getKey())
@@ -1922,33 +1919,48 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             JsonObject moyenne = utilsService.calculMoyenne(
                                     entry.getValue(),
                                     false, 20);
-                            moyenne.put(ID_PERIODE, entry.getKey());
-                            moyenne.put(ID_ELEVE, entryEleve.getKey());
+
                             Double moy = moyenne.getDouble(MOYENNE);
                             Boolean isFinale = false;
                             if (moyennesFinales != null) {
-                                JsonObject moyObj = utilsService.getObjectForPeriode(moyennesFinales, entry.getKey(),
-                                        ID_PERIODE);
-                                if (moyObj != null) {
-                                    moy = Double.valueOf(moyObj.getString(MOYENNE));
+
+                                if (entry.getKey() == null) {
+                                    List<NoteDevoir> notePeriode = entry.getValue();
+                                    int nbMoy = moyennesFinales.size();
+                                    double sumMoy = 0.0;
+                                    for (int i = 0; i < nbMoy; i++) {
+                                        JsonObject moyFin = moyennesFinales.getJsonObject(i);
+                                        Long periode = moyFin.getLong(ID_PERIODE);
+                                        notePeriode = notePeriode.stream()
+                                                .filter(line -> !(line.getIdPeriode().equals(periode)))
+                                                .collect(Collectors.toList());
+                                        sumMoy += Double.valueOf(moyFin.getString(MOYENNE));
+                                    }
+                                    if (!notePeriode.isEmpty()) {
+                                        ++nbMoy;
+                                        moyenne = utilsService.calculMoyenne(
+                                                notePeriode,
+                                                false, 20);
+                                        sumMoy += moyenne.getDouble(MOYENNE);
+                                    }
                                     moyenne.remove(MOYENNE);
-                                    moyenne.put(MOYENNE, moy);
-                                    isFinale = true;
+                                    moyenne.put(MOYENNE,sumMoy / nbMoy );
+                                } else {
+                                    JsonObject moyObj = utilsService.getObjectForPeriode(moyennesFinales,
+                                            entry.getKey(), ID_PERIODE);
+                                    if (moyObj != null) {
+                                        moy = Double.valueOf(moyObj.getString(MOYENNE));
+                                        moyenne.remove(MOYENNE);
+                                        moyenne.put(MOYENNE, moy);
+                                        isFinale = true;
+                                    }
                                 }
                             }
+                            moyenne.put(ID_PERIODE, entry.getKey());
+                            moyenne.put(ID_ELEVE, entryEleve.getKey());
                             moyenne.put("isFinale", isFinale);
                             listMoy.get(entryPeriode.getKey()).add(moyenne);
-                            if (moyenne.getDouble(MOYENNE) != null) {
-                                nbMoyenne++;
-                                moyenneAnnee += moy;
-                            }
                             eleveMapObject.get(entryEleve.getKey()).getJsonArray(MOYENNES).add(moyenne);
-                        }
-                        if (nbMoyenne > 0) {
-                            eleveMapObject.get(entryEleve.getKey()).getJsonArray(MOYENNES)
-                                    .add(new JsonObject().put(ID_PERIODE, (String) null).put(ID_ELEVE,
-                                            entryEleve.getKey())
-                                            .put(MOYENNE, moyenneAnnee / nbMoyenne));
                         }
                         if (listMoy.get(entryPeriode.getKey()).size() > 0) {
                             result.getJsonArray(MOYENNES).add(

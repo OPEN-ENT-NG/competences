@@ -48,6 +48,8 @@ public class NoteDevoir {
 
     public static final Double DIVISEUR_DEFAULT_VALUE = 20.0;
 
+    private Long idPeriode;
+
     /**
      * @param note valeur de la note
      * @param diviseur sur combien est la note.
@@ -90,6 +92,16 @@ public class NoteDevoir {
         this.coefficient = coefficient;
     }
 
+    public NoteDevoir(Double note, Double diviseur, Boolean ramenerSur, Double coefficient,String idEleve, Long idPeriode) {
+        this.note = note;
+        this.diviseur = diviseur;
+        this.ramenerSur = ramenerSur;
+        this.coefficient = coefficient;
+        this.idPeriode = idPeriode;
+        this.idEleve = idEleve;
+    }
+
+
     public Double getNote() {
         return note;
     }
@@ -129,4 +141,7 @@ public class NoteDevoir {
     public void setIdEleve(String idEleve) {
         this.idEleve = idEleve;
     }
+
+    public Long getIdPeriode() {return this.idPeriode;}
+
 }
