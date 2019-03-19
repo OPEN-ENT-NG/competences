@@ -320,10 +320,12 @@ public class NoteController extends ControllerHelper {
 
                                 for (int i = 0; i < notesEleve.size(); i++) {
                                     JsonObject note = notesEleve.getJsonObject(i);
-                                    notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur")),
-                                            Double.parseDouble(note.getInteger("diviseur").toString()),
-                                            note.getBoolean("ramener_sur"),
-                                            Double.parseDouble(note.getString("coefficient"))));
+                                    if(note.getString("coefficient") != null) {
+                                        notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur")),
+                                                Double.parseDouble(note.getInteger("diviseur").toString()),
+                                                note.getBoolean("ramener_sur"),
+                                                Double.parseDouble(note.getString("coefficient"))));
+                                    }
                                 }
                                 Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20));
                             } else {
@@ -738,7 +740,10 @@ public class NoteController extends ControllerHelper {
                                                                 JsonObject note = listNotes.getJsonObject(j);
 
                                                                 if (note.getString("valeur") == null ||
+                                                                        note.getString("coefficient") == null ||
                                                                         !note.getBoolean("is_evaluated")) {
+
+
                                                                     continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
                                                                     // elle n'est pas prise en compte dans le calcul de la moyenne
                                                                 }

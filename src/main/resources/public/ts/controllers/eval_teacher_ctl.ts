@@ -2619,6 +2619,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                             evaluation.save().then((res) => {
                                                 evaluation.valid = true;
                                                 evaluation.oldValeur = evaluation.valeur;
+                                                if(devoir.coefficient === null){
+                                                    notify.info('evaluation.devoir.coef.is.null');
+                                                }
                                                 if (res.id !== undefined) {
                                                     evaluation.id = res.id;
                                                     evaluation.data.id = res.id;

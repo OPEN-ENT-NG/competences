@@ -66,7 +66,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public final String VALEUR = "valeur";
     public final String DIVISEUR = "diviseur";
     public final String RAMENER_SUR = "ramener_sur";
-    public final String COEFICIENT = "coefficient";
+    public final String COEFFICIENT = "coefficient";
     public final String IS_EVALUATED = "is_evaluated";
     public final String ID_DEVOIR = "id_devoir";
     public final String APPRECIATION_MATIERE_PERIODE = "appreciation_matiere_periode";
@@ -637,9 +637,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         //pour toutes les notes existantes dans la classe
         for (int i = 0; i < listNotes.size(); i++) {
-            JsonObject note =
-                    listNotes.getJsonObject(i);
-            if (note.getString("valeur") == null || !note.getBoolean("is_evaluated")) {
+            JsonObject note = listNotes.getJsonObject(i);
+
+            if (note.getString("valeur") == null
+                    || !note.getBoolean("is_evaluated") || note.getString("coefficient") == null) {
                 continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
                 // elle n'est pas prise en compte dans le calcul de la moyenne
             }
@@ -1273,6 +1274,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                         }
 
                                                                                     } else {//pas de moyFinale => set mapIdEleveIdMatListNotes
+                                                                                        if (respNoteMoyFinale.getString("coefficient") == null){
+                                                                                            continue;
+                                                                                        }
                                                                                         if(respNoteMoyFinale.getString("id_eleve_notes")!= null){
                                                                                             if (mapIdEleveIdMatListNotes.containsKey(respNoteMoyFinale.getString("id_eleve_notes"))) {
 
@@ -1824,7 +1828,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             for (int i = 0; i < listNotes.size(); i++) {
                 JsonObject note = listNotes.getJsonObject(i);
-                if (note.getString(VALEUR) == null ||
+                if (note.getString(VALEUR) == null || note.getString(COEFFICIENT) == null ||
                         !note.getBoolean(IS_EVALUATED)) {
                     continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
                     // elle n'est pas prise en compte dans le calcul de la moyenne
@@ -1838,7 +1842,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         Double.valueOf(note.getString(VALEUR)),
                         Double.valueOf(note.getLong(DIVISEUR)),
                         note.getBoolean(RAMENER_SUR),
-                        Double.valueOf(note.getString(COEFICIENT)), idEleve, id_periode);
+                        Double.valueOf(note.getString(COEFFICIENT)), idEleve, id_periode);
 
 
                 if (idPeriode == null) {
@@ -1885,7 +1889,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
 
                     if(el.containsKey(MOYENNEFINALE)){
-                        sumMoyClasse += Double.valueOf( el.getString(MOYENNEFINALE));
+                        try {
+                            sumMoyClasse += Double.valueOf(el.getString(MOYENNEFINALE));
+                        }
+                        catch (ClassCastException c) {
+                            sumMoyClasse += el.getDouble(MOYENNEFINALE);
+                        }
                     }
                     else {
                         sumMoyClasse += moy;
@@ -1910,8 +1919,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         if(!eleveMapObject.get(entryEleve.getKey()).containsKey(MOYENNES)) {
                             eleveMapObject.get(entryEleve.getKey()).put(MOYENNES, new JsonArray());
                         }
-                        int nbMoyenne = 0;
-                        Double moyenneAnnee = 0.0;
                         JsonArray moyennesFinales = eleveMapObject.get(entryEleve.getKey())
                                 .getJsonArray(MOYENNESFINALES);
                         for (Map.Entry<Long, ArrayList<NoteDevoir>> entry :

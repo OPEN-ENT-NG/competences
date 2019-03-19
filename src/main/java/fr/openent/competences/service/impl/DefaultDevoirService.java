@@ -1173,14 +1173,16 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                                             for (int i = 0; i < listNotes.size(); i++) {
 
                                                                 JsonObject note = listNotes.getJsonObject(i);
+                                                                String  coef = note.getString("coefficient");
+                                                                if(coef != null) {
+                                                                    NoteDevoir noteDevoir = new NoteDevoir(
+                                                                            Double.valueOf(note
+                                                                                    .getString("valeur")),
+                                                                            note.getBoolean("ramener_sur"),
+                                                                            Double.valueOf(coef));
 
-                                                                NoteDevoir noteDevoir = new NoteDevoir(
-                                                                        Double.valueOf(note.getString("valeur")),
-                                                                        note.getBoolean("ramener_sur"),
-                                                                        Double.valueOf(note
-                                                                                .getString("coefficient")));
-
-                                                                notes.add(noteDevoir);
+                                                                    notes.add(noteDevoir);
+                                                                }
                                                             }
 
                                                             Either<String, JsonObject> result;

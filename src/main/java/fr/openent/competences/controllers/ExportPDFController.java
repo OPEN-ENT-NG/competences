@@ -222,18 +222,22 @@ public class ExportPDFController extends ControllerHelper {
         // parcours des devoirs
         for (int i = 0; i < devoirsJson.size(); i++) {
             JsonObject devoirJson = devoirsJson.getJsonObject(i);
-
+            Boolean hasCoeff = devoirJson.getString("coefficient") != null;
+            Double coefficient = null;
+            if(!hasCoeff){
+                hasCoeff = !Double.valueOf(devoirJson.getString("coefficient")).equals(new Double(1));
+                coefficient = Double.valueOf(devoirJson.getString("coefficient"));
+            }
             // boolean permettant de savoir s'il y a un coefficient différent de 1 sur la note
-            devoirJson.put("hasCoeff", !Double.valueOf(devoirJson.getString("coefficient")).equals(new Double(1)));
+            devoirJson.put("hasCoeff", hasCoeff);
 
             // ajout du devoir sur la matiere, si son identifiant de matière correspond bien
-            if (matiereInter.getString("id").equals(devoirJson.getString("id_matiere"))) {
+            if ( coefficient!=null
+                    && matiereInter.getString("id").equals(devoirJson.getString("id_matiere"))) {
                 devoirsMatiereJson.add(devoirJson);
                 Double note = Double.valueOf(devoirJson.getString("note"));
                 Double diviseur = Double.valueOf(devoirJson.getInteger("diviseur"));
                 Boolean ramenerSur = devoirJson.getBoolean("ramener_sur");
-                Double coefficient = Double.valueOf(devoirJson.getString("coefficient"));
-
                 NoteDevoir noteDevoir = new NoteDevoir(note, diviseur, ramenerSur, coefficient);
                 listeNoteDevoirs.add(noteDevoir);
             }

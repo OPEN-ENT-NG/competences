@@ -49,15 +49,14 @@ public class StatMat {
                     statClass.putMapEleveStat(note.getString("id_eleve_moyenne_finale"),
                             Double.valueOf(note.getString("moyenne")), null);
                 }
-                if (note.getString("id_eleve") != null && note.getString("valeur") != null) {
-                    if (note.getString("id_eleve") != null && note.getString("valeur") != null) {
-                        statClass.putMapEleveStat(note.getString("id_eleve"), null,
-                                new NoteDevoir(
-                                        Double.valueOf(note.getString("valeur")),
-                                        Double.valueOf(note.getInteger("diviseur")),
-                                        note.getBoolean("ramener_sur"),
-                                        Double.valueOf(note.getString("coefficient"))));
-                    }
+                if (note.getString("id_eleve") != null && note.getString("coefficient") != null
+                        && note.getString("valeur") != null) {
+                    statClass.putMapEleveStat(note.getString("id_eleve"), null,
+                            new NoteDevoir(
+                                    Double.valueOf(note.getString("valeur")),
+                                    Double.valueOf(note.getInteger("diviseur")),
+                                    note.getBoolean("ramener_sur"),
+                                    Double.valueOf(note.getString("coefficient"))));
                 }
                 this.mapIdMatStatclass.put(note.getString("id_matiere"),statClass);
             }

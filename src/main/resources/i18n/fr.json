@@ -113,6 +113,7 @@
   "evaluation.devoir.cartouche.number": "Nombre de cartouche(s)",
   "evaluations.export.image" : "Exporter au format image",
   "evaluation.devoir.cartouche.image.help":"Cette option permet d'imprimer une cartouche au format image.",
+  "evaluation.devoir.coef.is.null":"Attention la note est enregistrée sur un devoir n'ayant pas de coeficient",
   "evaluation.suivieleve.filtre.competence":"Afficher uniquement les compétences évaluées",
   "evaluations.evaluation.theme":"Couleur des Compétences",
   "viescolaire.notes.title":"Évaluation",
