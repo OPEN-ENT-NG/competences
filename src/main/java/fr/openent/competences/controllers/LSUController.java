@@ -308,6 +308,7 @@ public class LSUController extends ControllerHelper {
         // final JsonObject accGroupAdded = new JsonObject();
         final Map<String, JsonArray> tableConversionByClass= new HashMap<>();
         final Map<String, JsonArray> periodesByClass = new HashMap<>();
+        final Map<String, JsonArray> mapIdClassHeadTeachers = new HashMap<>();
 
         donnees.setEnseignants(objectFactory.createDonneesEnseignants());
 
@@ -330,7 +331,7 @@ public class LSUController extends ControllerHelper {
         Handler<String> getApEpiParcoursHandler = event -> {
             if (event.equals("success")) {
                 this.getBaliseBilansPeriodiques(donnees, idStructure, periodesByClass,
-                        epiGroupAdded, tableConversionByClass,enseignantFromSts, getBilansPeriodiquesHandler);
+                        epiGroupAdded, tableConversionByClass,enseignantFromSts,mapIdClassHeadTeachers, getBilansPeriodiquesHandler);
 
             } else {
             log.error("getXML : getApEpiParcoursBalises " + event);
@@ -368,6 +369,19 @@ public class LSUController extends ControllerHelper {
         };
         getBaliseEnseignants(donnees, idStructure, idsClasse, enseignantFromSts, getEnseignantsHandler);
 
+        Future<JsonObject> getHeadTeachersFuture = Future.future();
+        listGetFuture.add(getHeadTeachersFuture);
+        Handler<String> getHeadTeachersHandler = event -> {
+            if (event.equals("success")) {
+              log.info("getHeadTeachers");
+              getHeadTeachersFuture.complete();
+            } else {
+                getHeadTeachersFuture.complete();
+                leftToResponse(request, new Either.Left<>(event));
+                log.error("getXML : getBaliseEnseignants " + event);
+            }
+        };
+        getHeadTeachers(idsClasse,mapIdClassHeadTeachers, getHeadTeachersHandler);
 
         Future<JsonObject> getPeriodesFuture = Future.future();
         listGetFuture.add(getPeriodesFuture);
@@ -1123,7 +1137,7 @@ public class LSUController extends ControllerHelper {
         final List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
         final Donnees.Eleves eleves = donnees.getEleves();
         final Integer nbElevesTotal = eleves.getEleve().size();
-        final String millesime = getMillesime();
+        final String millesime = getMillesimeBFC();
         final AtomicInteger nbEleveCompteur = new AtomicInteger(0);
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
         log.info("DEBUT : method getBaliseBilansCycle : nombreEleve : "+eleves.getEleve().size());
@@ -1491,6 +1505,56 @@ public class LSUController extends ControllerHelper {
                 event -> handler.handle("success"));
     }
 
+    private void getHeadTeachers( List<String> idsClasse, Map<String, JsonArray> mapIdClasseHeadTeachers, final Handler<String> handler){
+        List<Future> listFutureClasse = new ArrayList<Future>();
+        for(String idClass : idsClasse){
+            Future futureclass = Future.future();
+            JsonObject action = new JsonObject();
+            action.put("action","classe.getHeadTeachersClasse").put("idClasse", idClass);
+            eb.send(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                AtomicBoolean answer = new AtomicBoolean(false);
+                AtomicInteger count = new AtomicInteger(0);
+                final String thread = "( "  + idClass + " )";
+                final String method = "getHeadTeachers";
+
+                @Override
+                public void handle(Message<JsonObject> message) {
+
+                    JsonObject body = message.body();
+                    if(!"ok".equals(body.getString("status"))){
+                        String error = body.getString(MESSAGE);
+                        if (error!=null && error.contains(TIME)) {
+                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                    handlerToAsyncHandler(this));
+                        }
+                        else {
+                            // log for time-out
+                            answer.set(true);
+                            futureclass.complete();
+                        }
+                        lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+
+                    }else{
+                        JsonArray headTeachers = body.getJsonArray("results");
+                        mapIdClasseHeadTeachers.put(idClass,headTeachers);
+
+                        // log for time-out
+                        answer.set(true);
+                        lsuService.serviceResponseOK(answer, count.get(), thread, method);
+                        futureclass.complete();
+
+                    }
+
+                }
+            }));
+
+
+        }
+        CompositeFuture.all(listFutureClasse).setHandler(
+                event -> handler.handle("success"));
+
+    }
+
     private void getTableConversion(String idStructure, List<String> idsClasses,
                                     final Map<String, JsonArray> tableConversionByClass,final Handler<String> handler){
         competenceNoteService.getConversionTableByClass(idStructure, idsClasses, true,
@@ -1603,7 +1667,8 @@ public class LSUController extends ControllerHelper {
             if(enseignantsFromSts != null && enseignantsFromSts.size() > 0) {
                 JsonObject enseigantFromSts = (JsonObject) enseignantsFromSts.stream()
                         .filter(
-                                el -> (((JsonObject) el).getString("NOM_USAGE").equals(enseignant.getString("lastName")))
+                                el -> (((JsonObject) el).getString("NOM_USAGE").equals(enseignant.getString("lastName")) ||
+                                        ((JsonObject) el).getString("NOM_USAGE").equals(enseignant.getString("name")))
                                         && ((JsonObject) el).getString("PRENOM").equals(enseignant.getString("firstName"))
                                         && ((JsonObject) el).getString("DATE_NAISSANCE").equals(enseignant.getString("birthDate"))
                         )
@@ -1653,9 +1718,9 @@ public class LSUController extends ControllerHelper {
                                             addParcoursGroup(element, futureEltBilanPeriodique);
                                         } else if (2L == typeElement) { //ap class/group
                                             addAccGroup(element, futureEltBilanPeriodique);
-                                } else if (1L == typeElement) { //epi group
-                                    addEpiGroup(element, epiGroupAdded, futureEltBilanPeriodique);
-                                }
+                                        } else if (1L == typeElement) { //epi group
+                                            addEpiGroup(element, epiGroupAdded, futureEltBilanPeriodique);
+                                        }
                             }
                         }
                         CompositeFuture.all(futuresListApEpiParcours).setHandler(eventFutureApEpiParcours -> {
@@ -1884,26 +1949,19 @@ public class LSUController extends ControllerHelper {
      * @param handler
      */
 
-   /* private void getBaliseBilansPeriodiques(final Donnees donnees, final String idStructure,
-                                            JsonObject periodesAdded, final Map<String, JsonObject> dateCreationVerrouByClasse,
-                                            final JsonObject epiGroupAdded, final Map<String, JsonArray> tableConversionByClasse,final JsonObject accGroupAdded
-                                            final JsonArray enseignantFromSts,
-                                            final Handler<Either.Right<String, JsonObject>> handler) {*/
-
     private void getBaliseBilansPeriodiques(final Donnees donnees, final String idStructure,
                                             final Map<String, JsonArray> periodesByClasse,
                                             final JsonObject epiGroupAdded, final Map<String, JsonArray> tableConversionByClasse,
-                                            final JsonArray enseignantFromSts,
+                                            final JsonArray enseignantFromSts, final Map<String, JsonArray> mapIdClassHeadTeachers,
                                             final Handler<Either.Right<String, JsonObject>> handler) {
         final Donnees.BilansPeriodiques bilansPeriodiques = objectFactory.createDonneesBilansPeriodiques();
         final List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
         final Donnees.Eleves eleves = donnees.getEleves();
         final Donnees.Periodes periodes = donnees.getPeriodes();
         final Integer nbElevesTotal = eleves.getEleve().size();
-        final String millesime = getMillesime();
+        //final String millesime = getMillesime();
         final AtomicInteger nbEleveCompteur = new AtomicInteger(0);
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
-        //listErreursEleves = new fr.wseduc.webutils.collections.JsonArray();
         errorsExport = new JsonObject();
         final AtomicInteger originalSize = new AtomicInteger();
         final AtomicInteger idElementProgramme = new AtomicInteger();
@@ -1933,6 +1991,8 @@ public class LSUController extends ControllerHelper {
         //For each eleve create his periodic bilan
         for (Integer i = 0; i < eleves.getEleve().size(); i++) {
             Eleve currentEleve = eleves.getEleve().get(i);
+            JsonArray headTeachers = mapIdClassHeadTeachers.get(currentEleve.getId_Class());
+
             for (Integer i2 = 0; i2 < periodes.getPeriode().size(); i2++) {
                 originalSize.getAndIncrement();
                 JsonObject response = new JsonObject();
@@ -1958,25 +2018,30 @@ public class LSUController extends ControllerHelper {
                         });
 
 
-
-
-
-                   if(!addresponsableEtabRef(donnees, response, bilanPeriodique)){
-                        response.put("status", 400);
-                        response.put(MESSAGE, "Responsable do not exist on Bilan periodique balise : eleve : "+
-                                currentEleve.getIdNeo4j() + " " +currentEleve.getNom() + " periode : "+ currentPeriode.getId() );
-                        getOut.handle(new Either.Right<String, JsonObject>(response));
-                        return;
+                if (headTeachers != null && headTeachers.size() > 0) {
+                    for(int k = 0; k < headTeachers.size(); k++){
+                        Enseignant headTeacher = addorFindTeacherBalise(donnees,enseignantFromSts,headTeachers.getJsonObject(k));
+                        bilanPeriodique.getProfPrincRefs().add(headTeacher);
                     }
+                }
 
-                   if(!addDatesBilanPeriodique(bilanPeriodique, periodesByClasse, currentEleve, currentPeriode)){
-                       /*response.put("status", 400);
-                        response.put(MESSAGE, "Periode do not exit for this class "+ currentEleve.getCodeDivision() +
-                                "id : "+currentEleve.getId_Class());
-                        getOut.handle(new Either.Right<String, JsonObject>(response));
-                        return;*/
-                       setError(errorsExport,currentEleve,"Pas de dates pour cette classe");
-                   }
+
+               if(!addresponsableEtabRef(donnees, response, bilanPeriodique)){
+                    response.put("status", 400);
+                    response.put(MESSAGE, "Responsable do not exist on Bilan periodique balise : eleve : "+
+                            currentEleve.getIdNeo4j() + " " +currentEleve.getNom() + " periode : "+ currentPeriode.getId() );
+                    getOut.handle(new Either.Right<String, JsonObject>(response));
+                    return;
+                }
+
+               if(!addDatesBilanPeriodique(bilanPeriodique, periodesByClasse, currentEleve, currentPeriode)){
+                   /*response.put("status", 400);
+                    response.put(MESSAGE, "Periode do not exit for this class "+ currentEleve.getCodeDivision() +
+                            "id : "+currentEleve.getId_Class());
+                    getOut.handle(new Either.Right<String, JsonObject>(response));
+                    return;*/
+                   setError(errorsExport,currentEleve,"Pas de dates pour cette classe");
+               }
 
                 syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique((long) currentPeriode.getTypePeriode(),
                         currentEleve.getIdNeo4j(), new Handler<Either<String, JsonObject>>() {
@@ -2520,7 +2585,7 @@ public class LSUController extends ControllerHelper {
         return "EP_"+String.valueOf(idElementProgramme.incrementAndGet());
     }
 
-    private String getMillesime(){
+    private String getMillesimeBFC(){
         Integer millesime;
         Calendar today = Calendar.getInstance();
         Calendar janvier = Calendar.getInstance();
