@@ -376,7 +376,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     resolve();
                     return;
                 }
-                if ($scope.search.classe.eleves.empty()) {
+                if ($scope.search.eleve !== undefined && $scope.search.classe.eleves.empty()) {
                     await $scope.search.classe.eleves.sync();
                 }
                 if ($scope.search.eleve !== undefined &&
