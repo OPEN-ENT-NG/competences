@@ -42,7 +42,7 @@ export class LSU {
     }
 
     async export(params: any): Promise<any> {
-        return new Promise((resolve, reject) => {
+       return new Promise((resolve, reject) => {
             http.post('/competences/exportLSU/lsu', params, {responseType: 'arraybuffer'})
                 .then(function (data) {
                     if (resolve && typeof(resolve) === 'function') {
@@ -50,7 +50,7 @@ export class LSU {
                     }
                 })
                 .catch( (data) => {
-                    if(data.response.status === 500){
+                    if(data.response != undefined && data.response.status === 500){
                         this.errorsLSU.setErrorsLSU(data.response.data);
                     }
                     reject();

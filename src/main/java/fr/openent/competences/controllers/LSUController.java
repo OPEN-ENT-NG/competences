@@ -940,13 +940,15 @@ public class LSUController extends ControllerHelper {
 
                         //la synthèse
                         bilanCycle.setSynthese(syntheseEleve.getString("texte"));
-
+                        //dates
                         XMLGregorianCalendar dateCreation = getDateFormatGregorian(datesCreationVerrou.getString("date_creation"));
                         bilanCycle.setDateCreation(dateCreation);
                         bilanCycle.setDateVerrou(datesCreationVerrou.getString("date_verrou").substring(0,19));
+                        bilanCycle.setMillesime(millesime);
 
                         //on ajoute les différents attributs de la balise BilanCycle de l'élève
                         ResponsableEtab responsableEtabRef = responsablesEtab.get(0);
+                        bilanCycle.setResponsableEtabRef(responsableEtabRef);
                         //on ajoute les responsables de l'élève (attribut de clui-ci) aux responsables et au bilanCycle
                         if(eleve.getResponsableList() != null && eleve.getResponsableList().size()> 0) {
                             BilanCycle.Responsables responsablesEleve = objectFactory.createBilanCycleResponsables();
@@ -954,7 +956,6 @@ public class LSUController extends ControllerHelper {
                             bilanCycle.setResponsables(responsablesEleve);
                         }
 
-                        bilanCycle.setResponsableEtabRef(responsableEtabRef);
                         bilanCycle.setEleveRef(eleve);
                         try {
                             bilanCycle.setCycle(new BigInteger(String.valueOf(valueCycle)));
@@ -962,7 +963,6 @@ public class LSUController extends ControllerHelper {
                             log.error("method setSocleSyntheseEnsCpl new BigInteger valueCycle : " + valueCycle + " " + e.getMessage());
 
                         }
-                        bilanCycle.setMillesime(millesime);
                         bilansCycle.getBilanCycle().add(bilanCycle);
 
                     } else {
@@ -970,7 +970,7 @@ public class LSUController extends ControllerHelper {
                         //supprimer l'élève de la liste de la Balise ELEVES
                         eleves.getEleve().remove(eleve);
                         //affecter les différentes erreurs en fonction des conditions non respectées
-                        if ( mapIdDomainePosition.size() != mapIdDomaineCodeDomaine.size() || !bmapSansIdDomaineCPDETR ) {
+                        if ( mapIdDomainePosition.size() != mapIdDomaineCodeDomaine.size() && !bmapSansIdDomaineCPDETR ) {
                             setError(errorsExport,eleve,"Des domaines n'ont pas été evalués");
                            if ( syntheseEleve.size() == 0 ) {
                                 setError(errorsExport,eleve,"Pas de synthèse du BFC");
@@ -979,17 +979,11 @@ public class LSUController extends ControllerHelper {
                         } else if ( syntheseEleve.size() == 0 ) {
                             setError(errorsExport,eleve,"Pas de synthèse du BFC");
                         }
-                        if(!ensCplEleve.containsKey("id_eleve")){
-                            setError(errorsExport,eleve,"Pas d'enseignement de complément");
-                        }
                     }
                 } else {//si l'élève n'est pas dans la map alors il n'a aucune évaluation et
                     // il faut le supprimer du xml donc de la list des élèves de la balise ELEVES
                     eleves.getEleve().remove(eleve);
                     setError(errorsExport,eleve,"Aucun domaine du socle commun ");
-                    if(!ensCplEleve.containsKey("id_eleve")){
-                        setError(errorsExport,eleve, "Pas d'enseignement de complément");
-                    }
                     if(!syntheseEleve.containsKey("id_eleve")){
                         setError(errorsExport,eleve, "Pas de synthèse du BFC");
                     }
