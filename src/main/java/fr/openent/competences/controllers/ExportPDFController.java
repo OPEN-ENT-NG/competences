@@ -224,7 +224,7 @@ public class ExportPDFController extends ControllerHelper {
             JsonObject devoirJson = devoirsJson.getJsonObject(i);
             Boolean hasCoeff = devoirJson.getString("coefficient") != null;
             Double coefficient = null;
-            if(!hasCoeff){
+            if(hasCoeff){
                 hasCoeff = !Double.valueOf(devoirJson.getString("coefficient")).equals(new Double(1));
                 coefficient = Double.valueOf(devoirJson.getString("coefficient"));
             }
@@ -299,10 +299,14 @@ public class ExportPDFController extends ControllerHelper {
                             if (eventUser.isRight()) {
                                 final JsonObject userJSON = eventUser.right().getValue();
 
-                                final String classeEleve = userJSON.getJsonObject("u").getJsonObject("data").getJsonArray("classes").getString(0);
+                                final String classeEleve = userJSON.getJsonObject("u").getJsonObject("data")
+                                        .getJsonArray("classes").getString(0);
+                                final String idClasse = userJSON.getJsonObject("c").getJsonObject("data")
+                                        .getString("id");
 
                                 // Récupération de la liste des devoirs de la personne avec ses notes associées
-                                devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode,false, new Handler<Either<String, JsonArray>>() {
+                                devoirService.listDevoirs(idUser, idEtablissement, idClasse, null,
+                                        idPeriode,false, new Handler<Either<String, JsonArray>>() {
                                     @Override
                                     public void handle(final Either<String, JsonArray> eventListDevoirs) {
                                         if (eventListDevoirs.isRight()) {
@@ -322,7 +326,8 @@ public class ExportPDFController extends ControllerHelper {
                                                     .put("action", "matiere.getMatieres")
                                                     .put("idMatieres", idMatieres);
 
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                                                 @Override
                                                 public void handle(Message<JsonObject> message) {
                                                     JsonObject body = message.body();
