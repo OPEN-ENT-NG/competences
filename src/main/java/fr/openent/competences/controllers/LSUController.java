@@ -26,7 +26,6 @@ import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -38,7 +37,6 @@ import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.eventbus.DeliveryOptions;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -90,7 +88,6 @@ public class LSUController extends ControllerHelper {
     private BFCService bfcService;
     private BfcSyntheseService bfcSynthseService;
     private EleveEnseignementComplementService eleveEnsCpl;
-//    private JsonArray listErreursEleves;
     private JsonObject errorsExport;
     private EventBus ebController;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
@@ -120,7 +117,7 @@ public class LSUController extends ControllerHelper {
         eleveEnsCpl = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA,Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,Competences.COMPETENCES_NOTES_TABLE);
-        lsuService = new DefaultLSUService();
+        lsuService = new DefaultLSUService(eb);
     }
 
 
@@ -190,86 +187,165 @@ public class LSUController extends ControllerHelper {
     private void bilanFinCycleExport(HttpServerRequest request, JsonObject entries) {
         if (!entries.containsKey("idStructure")
                 || !entries.containsKey("classes")
-                || !entries.containsKey("responsables")) {
+                || !entries.containsKey("responsables")
+                || !entries.containsKey("stsFile")) {
             badRequest(request, "bilanFinCycleExport - No valid params");
             return;
         }
-        //instancier le lsunBilans qui sera composé de entete,donnees et version
-        final LsunBilans lsunBilans = objectFactory.createLsunBilans();
-        //donnees composée de responsables-etab, eleves et bilans-cycle
-        final Donnees donnees = objectFactory.createDonnees();
+
         final String idStructure = entries.getString("idStructure");
         log.info("idStructure = " + idStructure);
         final List<String> idsClasse = getIdsList(entries.getJsonArray("classes"));
         final List<String> idsResponsable = getIdsList(entries.getJsonArray("responsables"));
+        final JsonArray enseignantFromSts = entries.getJsonArray("stsFile");
+
+        //instancier le lsunBilans qui sera composé de entete,donnees et version
+        final LsunBilans lsunBilans = objectFactory.createLsunBilans();
+        //donnees composée de responsables-etab, eleves et bilans-cycle
+        final Donnees donnees = objectFactory.createDonnees();
+        final Map<String,JsonArray> mapIdClassHeadTeacher = new HashMap<>();
+
+        Handler<String> getBilanfinCycleHandler = event -> {
+
+            if(event.equals("success") && errorsExport.isEmpty()){
+                log.info("FIN exportLSU : export ");
+                lsunBilans.setDonnees(donnees);
+                returnResponse(request, lsunBilans);
+            }else{
+                renderJson(request,errorsExport, 500);
+                log.info("getXML : BaliseBilansCycle");
+            }
+
+        };
+
+        List<Future> listFutureGetMethodsBFC = new ArrayList<>();
+
+        Future<JsonObject> getEnteteFuture = Future.future();
+        listFutureGetMethodsBFC.add(getEnteteFuture);
+        Handler<String> getEnteteHandler = event -> {
+            if (event.equals("success")) {
+                getEnteteFuture.complete();
+            } else {
+                getEnteteFuture.fail("can't generate Balises Entete Future");
+                log.error("getXML : getBaliseEntete " + event);
+            }
+        };
+        getBaliseEntete(lsunBilans, idStructure, getEnteteHandler);
+
+        Future<JsonObject> getResponsableFuture = Future.future();
+        listFutureGetMethodsBFC.add(getResponsableFuture);
+        Handler<String> getResponsableHandler = event -> {
+            if (event.equals("success")) {
+                getResponsableFuture.complete();
+            } else {
+                getResponsableFuture.fail("can't generate Balises Responsables Future");
+                log.error("getXML : getBaliseResponsable " + event);
+            }
+        };
+        getBaliseResponsables(donnees, idsResponsable, getResponsableHandler);
+
+        Future<JsonObject> getElevesFuture = Future.future();
+        listFutureGetMethodsBFC.add(getElevesFuture);
+        Handler<String> getElevesHandler = event -> {
+            if (event.equals("success")) {
+                getElevesFuture.complete();
+            } else {
+                getElevesFuture.fail("can't generate Balises Eleves Future");
+                log.error("getXML : getBaliseEleves " + event);
+            }
+        };
+        getBaliseEleves(donnees, idsClasse, getElevesHandler);
+
+        Future<Map<String,List<Enseignant>>> getHeadTeachersFuture = Future.future();
+        listFutureGetMethodsBFC.add(getHeadTeachersFuture);
+        Handler<String> getHeadTeachersHandler = event -> {
+            Map<String,List<Enseignant>> mapIdClassListHeadTeacher = new HashMap<>();
+            if(event.equals("success")){
+
+                if(mapIdClassHeadTeacher != null && mapIdClassHeadTeacher.size() > 0){
+                    for(Map.Entry<String,JsonArray> jsonArrayEntry : mapIdClassHeadTeacher.entrySet() ){
+                        JsonArray arrayHeadTeachers = jsonArrayEntry.getValue();
+                        List<Enseignant> listHeadTeacher = new ArrayList<>();
+                        if(arrayHeadTeachers != null && arrayHeadTeachers.size() > 0){
+                            for(int i = 0; i < arrayHeadTeachers.size(); i++){
+                                Enseignant headTeacherEnseignant = addorFindTeacherBalise(donnees,enseignantFromSts,arrayHeadTeachers.getJsonObject(i));
+                                 if(headTeacherEnseignant != null){
+                                    listHeadTeacher.add(headTeacherEnseignant);
+                                }
+                            }
+                        }
+                        mapIdClassListHeadTeacher.put(jsonArrayEntry.getKey(),listHeadTeacher);
+                    }
+                }
+                getHeadTeachersFuture.complete(mapIdClassListHeadTeacher);
+
+            }else{
+                getHeadTeachersFuture.complete(mapIdClassListHeadTeacher);
+                log.error("getXML LSU : getHeadteachers "+ event);
+            }
+        };
+        getHeadTeachers( idsClasse, mapIdClassHeadTeacher,getHeadTeachersHandler);
+
+
+        Future<Map<String, JsonObject>> getDatesCreationVerrouByClassesFuture = Future.future();
+        listFutureGetMethodsBFC.add(getDatesCreationVerrouByClassesFuture);
+        Handler<Either<String, Map<String, JsonObject>>> getDatesCreationVerrouHandler = event -> {
+            if(event.isRight()){
+                getDatesCreationVerrouByClassesFuture.complete(event.right().getValue());
+            }else{
+                log.error("getXML LSU : getDatesCreationVerrouByClasses " + event);
+                getDatesCreationVerrouByClassesFuture.fail("getXML LSU : getDatesCreationVerrouByClasses " +
+                        event.left().getValue());
+            }
+        };
+        Utils.getDatesCreationVerrouByClasses(eb,idStructure,idsClasse,getDatesCreationVerrouHandler);
+
+        Future<List<Map>> getIdClassIdCycleValueFuture = Future.future();
+        listFutureGetMethodsBFC.add(getIdClassIdCycleValueFuture);
+        Handler<Either<String, List<Map>>> getIdClassIdCycleValueHandler = event -> {
+            if(event.isRight()){
+                getIdClassIdCycleValueFuture.complete(event.right().getValue());
+
+            }else{
+                log.error("getXML LSU : getIdClassIdCycleValue : list (map<idclasse,idCycle>,map<idCycle,cycle>) " + event.left().getValue());
+                getIdClassIdCycleValueFuture.fail("getXML LSU : getIdClassIdCycleValue : list (map<idclasse,idCycle>,map<idCycle,cycle>) "
+                + event.left().getValue());
+            }
+        };
+        lsuService.getIdClassIdCycleValue(idsClasse, getIdClassIdCycleValueHandler );
+
+        Future<Map<String,Map<Long, String>>> getMapIdClassCodeDomaineByIdFuture = Future.future();
+        listFutureGetMethodsBFC.add(getMapIdClassCodeDomaineByIdFuture);
+        Handler<Either<String, Map<String,Map<Long, String>>>> getMapCodeDomaineByIdHandler = event -> {
+            if(event.isRight()){
+                getMapIdClassCodeDomaineByIdFuture.complete(event.right().getValue());
+            }else{
+                log.error("getXML LSU : getMapCodeDomaineById error when collecting codeDomaineById " + event.left().getValue());
+                getMapIdClassCodeDomaineByIdFuture.fail("getMapCodeDomaineById : map<");
+
+            }
+        };
+        lsuService.getMapIdClassCodeDomaineById(idsClasse,getMapCodeDomaineByIdHandler);
+
 
         lsunBilans.setSchemaVersion("3.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
-            getBaliseEntete(lsunBilans, idStructure, new Handler<String>() {
-                @Override
-                public void handle(String event) {
-                    if (event.equals("success")) {
 
-                        getBaliseResponsables(donnees, idsResponsable, new Handler<String>() {
-                            @Override
-                            public void handle(String event) {
-                                if (event.equals("success")) {
-
-                                    getBaliseEleves(donnees, idsClasse, new Handler<String>() {
-                                        @Override
-                                        public void handle(final String event) {
-                                            if (event.equals("success")) {
-                                                Utils.getDatesCreationVerrouByClasses(eb, idStructure, idsClasse, new Handler<Either<String, Map<String, JsonObject>>>() {
-                                                    @Override
-                                                    public void handle(Either<String, Map<String, JsonObject>> resultsQuery) {
-                                                        if (resultsQuery.isRight()) {
-                                                            Map<String, JsonObject> dateCreationVerrouByClasse = resultsQuery.right().getValue();
-                                                            getBaliseBilansCycle(donnees, idsClasse, idStructure, dateCreationVerrouByClasse, new Handler<String>() {
-                                                                @Override
-                                                                public void handle(String event) {
-                                                                    if (event.equals("success")) {
-
-                                                                        if(errorsExport != null && errorsExport.size() > 0){
-                                                                            renderError(request, errorsExport);
-                                                                            log.info("getXML : BaliseBilansCycle");
-                                                                        } else {
-                                                                        lsunBilans.setDonnees(donnees);
-                                                                        returnResponse(request, lsunBilans);
-                                                                        }
-                                                                    }
-                                                                }
-                                                            });
-                                                        } else {
-                                                            leftToResponse(request, new Either.Left<>("getXML : getDatesCreationVerrouByClasses " + resultsQuery.left().getValue()));
-                                                            log.error("getXML : getDatesCreationVerrouByClasses " + resultsQuery);
-                                                        }
-                                                    }
-                                                });
-
-                                            } else {
-                                                leftToResponse(request, new Either.Left<>(event));
-                                                log.error("getXML : getBaliseEleves " + event);
-                                            }
-                                        }
-                                    });
-                                } else {
-                                    leftToResponse(request, new Either.Left<>(event));
-                                    log.error("getXML : getBaliseResponsable " + event);
-                                }
-                            }
-                        });
-                    } else {
-                        leftToResponse(request, new Either.Left<>(event));
-                        log.error("getXML : getBaliseEntete " + event);
-
-                    }
+            CompositeFuture.all(listFutureGetMethodsBFC).setHandler(event -> {
+                if(event.succeeded()){
+                    Map<String, JsonObject> dateCreationVerrouByClasse = getDatesCreationVerrouByClassesFuture.result();
+                    Map<String,List<Enseignant>> mapIdClassListHeadTeacher = getHeadTeachersFuture.result();
+                    List<Map> listMapClassCycle = getIdClassIdCycleValueFuture.result();
+                    Map<String,Map<Long,String>> mapIdClasseCodesDomaines = getMapIdClassCodeDomaineByIdFuture.result();
+                    getBaliseBilansCycle(mapIdClasseCodesDomaines, listMapClassCycle, donnees, idsClasse, idStructure, dateCreationVerrouByClasse, mapIdClassListHeadTeacher, getBilanfinCycleHandler);
+                }else{
+                    badRequest(request, event.cause().getMessage());
                 }
             });
-        } else {
-            badRequest(request);
+        }else {
+            badRequest(request, "Classes or Responsable are empty.");
         }
-        log.info("FIN exportLSU : export ");
     }
 
 
@@ -303,15 +379,12 @@ public class LSUController extends ControllerHelper {
         final LsunBilans lsunBilans = objectFactory.createLsunBilans();//instancier le lsunBilans qui sera composé de entete,donnees et version
         //donnees composée de responsables-etab, eleves et bilans-cycle
         final Donnees donnees = objectFactory.createDonnees();
-        // final JsonObject periodesAdded = new JsonObject();
         final JsonObject epiGroupAdded = new JsonObject();
-        // final JsonObject accGroupAdded = new JsonObject();
         final Map<String, JsonArray> tableConversionByClass= new HashMap<>();
         final Map<String, JsonArray> periodesByClass = new HashMap<>();
         final Map<String, JsonArray> mapIdClassHeadTeachers = new HashMap<>();
 
         donnees.setEnseignants(objectFactory.createDonneesEnseignants());
-
 
         Handler<Either.Right<String, JsonObject>> getBilansPeriodiquesHandler = backresponse -> {
 
@@ -340,6 +413,23 @@ public class LSUController extends ControllerHelper {
         };
 
         List<Future> listGetFuture = new ArrayList<Future>();
+
+        Future getHeadTeachersFuture = Future.future();
+        listGetFuture.add(getHeadTeachersFuture);
+        Handler<String> getHeadTeachersHandler = event -> {
+            if (event.equals("success")) {
+                log.info("getHeadTeachers");
+                getHeadTeachersFuture.complete();
+
+            } else {
+
+                leftToResponse(request, new Either.Left<>(event));
+                log.error("getXML : getBaliseEnseignants " + event);
+            }
+        };
+        getHeadTeachers(idsClasse,mapIdClassHeadTeachers,getHeadTeachersHandler);
+
+
         Future<JsonObject> getTableConversionFuture = Future.future();
         listGetFuture.add(getTableConversionFuture);
 
@@ -368,20 +458,6 @@ public class LSUController extends ControllerHelper {
             }
         };
         getBaliseEnseignants(donnees, idStructure, idsClasse, enseignantFromSts, getEnseignantsHandler);
-
-        Future<JsonObject> getHeadTeachersFuture = Future.future();
-        listGetFuture.add(getHeadTeachersFuture);
-        Handler<String> getHeadTeachersHandler = event -> {
-            if (event.equals("success")) {
-              log.info("getHeadTeachers");
-              getHeadTeachersFuture.complete();
-            } else {
-                getHeadTeachersFuture.complete();
-                leftToResponse(request, new Either.Left<>(event));
-                log.error("getXML : getBaliseEnseignants " + event);
-            }
-        };
-        getHeadTeachers(idsClasse,mapIdClassHeadTeachers, getHeadTeachersHandler);
 
         Future<JsonObject> getPeriodesFuture = Future.future();
         listGetFuture.add(getPeriodesFuture);
@@ -423,7 +499,6 @@ public class LSUController extends ControllerHelper {
         };
         getBaliseDisciplines(donnees, idStructure, getDisciplineHandler);
 
-
         Future<JsonObject> getResponsableFuture = Future.future();
         listGetFuture.add(getResponsableFuture);
         Handler<String> getResponsableHandler = event -> {
@@ -450,18 +525,15 @@ public class LSUController extends ControllerHelper {
         };
         getBaliseEntete(lsunBilans, idStructure, getEnteteHandler);
 
-
         lsunBilans.setSchemaVersion("3.0");
         log.info("DEBUT  get exportLSU : export Classe : " + idsClasse);
         if (!idsClasse.isEmpty() && !idsResponsable.isEmpty()) {
             log.info("before CompositeFuture bilanPeriodiqueExport");
-            //CompositeFuture.all(getEnteteFuture, getResponsableFuture, getDisciplineFuture, getElevesFuture, getPeriodesFuture, getEnseignantsFuture,getTableConversionFuture).setHandler(
             CompositeFuture.all(listGetFuture).setHandler(
                     event -> {
                         log.info("out future 1 ");
                         if (event.succeeded()) {
                             log.info("getApEpiParcoursBalises");
-                            //getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, accGroupAdded, enseignantFromSts, getApEpiParcoursHandler);
                             getApEpiParcoursBalises(donnees, idsClasse, idStructure, epiGroupAdded, enseignantFromSts, getApEpiParcoursHandler);
                         }
                         else{
@@ -717,11 +789,11 @@ public class LSUController extends ControllerHelper {
 
     /**
      *  M
-     * @param classIds liste des idsClass dont on recherche le cycle auquel elles appartiennent
-     * @param handler retourne une liste de 2 map : map<idClass,idCycle> et map<idCycle,value_cycle>
+     * @param //classIds liste des idsClass dont on recherche le cycle auquel elles appartiennent
+     * @param //handler retourne une liste de 2 map : map<idClass,idCycle> et map<idCycle,value_cycle>
      */
 
-    private void getIdClassIdCycleValue(List<String> classIds, final Handler<Either<String, List<Map>>> handler) {
+   /* private void getIdClassIdCycleValue(List<String> classIds, final Handler<Either<String, List<Map>>> handler) {
         utilsService.getCycle(classIds, new Handler<Either<String, JsonArray>>() {
             int count = 0;
             AtomicBoolean answer = new AtomicBoolean(false);
@@ -768,14 +840,9 @@ public class LSUController extends ControllerHelper {
                 }
             }
         });
-    }
+    }*/
 
-    /**
-     * méthode qui permet de construire une Map avec id_domaine et son code_domaine (domaine de hérarchie la plus haute)
-     * @param idClass liste des idsClass
-     * @param handler contient la map<IdDomaine,Code_domaine> les codes domaines : codes des socles communs au cycle
-     */
-    private void getMapCodeDomaineById(String idClass, final Handler<Either<String, Map<Long, String>>> handler) {
+  /*  private void getMapCodeDomaineById(String idClass, final Handler<Either<String, Map<Long, String>>> handler) {
         JsonObject action = new JsonObject()
                 .put("action", "user.getCodeDomaine")
                 .put("idClass", idClass);
@@ -838,7 +905,7 @@ public class LSUController extends ControllerHelper {
                 }
             }
         }));
-    }
+    }*/
 
 
     private JsonObject  getJsonObject(JsonArray rep ,String idEleve){
@@ -881,10 +948,14 @@ public class LSUController extends ControllerHelper {
     }
 
 
-    private void setSocleSyntheseEnsCpl(Map<Long, String> mapIdDomaineCodeDomaine, String[] idsEleve, AtomicInteger nbEleveCompteur, Donnees.Eleves eleves, JsonArray ensCplsEleves, JsonArray synthesesEleves,
-                                        Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition, List<ResponsableEtab> responsablesEtab, Long valueCycle,
-                                        String millesime, Donnees.BilansCycle bilansCycle, JsonObject datesCreationVerrou) {
-
+    private void setSocleSyntheseEnsCpl( final Map<String,List<Enseignant>> mapIdClassListHeadTeacher,
+                                        final Map<Long, String> mapIdDomaineCodeDomaine, String[] idsEleve,
+                                        final AtomicInteger nbEleveCompteur, Donnees donnees,
+                                        final JsonArray ensCplsEleves, final JsonArray synthesesEleves,
+                                        final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition, final Long valueCycle,
+                                        final String millesime, JsonObject datesCreationVerrou) {
+        Donnees.Eleves eleves = donnees.getEleves();
+        List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
         //on récupère id du codeDomaine CPD_ETR
         Long idDomaineCPD_ETR = giveIdDomaine(mapIdDomaineCodeDomaine, "CPD_ETR");
 
@@ -906,7 +977,6 @@ public class LSUController extends ControllerHelper {
                             && !mapIdDomainePosition.containsKey(idDomaineCPD_ETR));
                     if (syntheseEleve.size() > 0 && (mapIdDomainePosition.size() == mapIdDomaineCodeDomaine.size() || bmapSansIdDomaineCPDETR)) {
 
-
                         final BilanCycle bilanCycle = objectFactory.createBilanCycle();
                         BilanCycle.Socle socle = objectFactory.createBilanCycleSocle();
                         if(valueCycle == 4) {
@@ -914,7 +984,6 @@ public class LSUController extends ControllerHelper {
                                 //si l'élève n'a pas d'enseignement de complément par défault on met le code AUC et niv 0
                                 EnseignementComplement enseignementComplement = new EnseignementComplement("AUC", 0);
                                 bilanCycle.setEnseignementComplement(enseignementComplement);
-
                             }
                             //enseignement Complément s'il existe pour l'élève en cours
                             if (ensCplEleve.containsKey("id_eleve")) {
@@ -963,7 +1032,13 @@ public class LSUController extends ControllerHelper {
                             log.error("method setSocleSyntheseEnsCpl new BigInteger valueCycle : " + valueCycle + " " + e.getMessage());
 
                         }
-                        bilansCycle.getBilanCycle().add(bilanCycle);
+                        if(mapIdClassListHeadTeacher != null && mapIdClassListHeadTeacher.containsKey(eleve.getId_Class())){
+                            List<Enseignant> listHeadTeachers = mapIdClassListHeadTeacher.get(eleve.getId_Class());
+                            if(listHeadTeachers != null && listHeadTeachers.size() > 0){
+                                bilanCycle.getProfPrincRefs().addAll(listHeadTeachers);
+                            }
+                        }
+                        donnees.getBilansCycle().getBilanCycle().add(bilanCycle);
 
                     } else {
 
@@ -1119,182 +1194,143 @@ public class LSUController extends ControllerHelper {
     /**
      * permet de completer tous les attributs de la balise BilanCycle et de la setter à donnees
      * sauf les attributs de date, synthese et enseignements de complement
+     * @param listMapClassCycle = Map<IdClass,idCycle> and Map<idCycle, libelle>
      * @param donnees permet de recuperer les eleves
-     * @param idsClass
-     * @param idStructure
-     * @param handler
+     * @param idsClass classes list
+     * @param idStructure id Structure
+     * @param handler response
      */
 
-    private void getBaliseBilansCycle(final Donnees donnees,final List<String> idsClass, final String idStructure,
-                                      final Map<String,JsonObject> dateCreationVerrouByClasse, final Handler<String> handler) {
-        final Donnees.BilansCycle bilansCycle = objectFactory.createDonneesBilansCycle();
-        final List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
+    private void getBaliseBilansCycle( final Map<String,Map<Long,String>> mapIdClasseCodesDomaines,
+                                       final List<Map> listMapClassCycle,
+                                       final Donnees donnees,final List<String> idsClass, final String idStructure,
+                                       final Map<String,JsonObject> dateCreationVerrouByClasse,
+                                       final Map<String,List<Enseignant>> mapIdClassListHeadTeachers,
+                                       final Handler<String> handler) {
+
+        //final List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
         final Donnees.Eleves eleves = donnees.getEleves();
         final Integer nbElevesTotal = eleves.getEleve().size();
         final String millesime = getMillesimeBFC();
         final AtomicInteger nbEleveCompteur = new AtomicInteger(0);
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
+        final Map mapIdClassIdCycle = listMapClassCycle.get(0);//map<IdClass,IdCycle>
+        final Map mapIdCycleValue = listMapClassCycle.get(1);//map<IdCycle,ValueCycle>
+
         log.info("DEBUT : method getBaliseBilansCycle : nombreEleve : "+eleves.getEleve().size());
         errorsExport = new JsonObject();
         AtomicBoolean answer = new AtomicBoolean(false);
         AtomicInteger count = new AtomicInteger(0);
         final String thread = "("  + idStructure +  ")";
         final String method = "getBaliseBilansCycle";
+        donnees.setBilansCycle(objectFactory.createDonneesBilansCycle());
+        //on parcourt les classes
+        for (final Map.Entry<String, List<String>> listIdsEleve : mapIdClassIdsEleve.entrySet()) {
+            //récupère un tableau de sting idEleve nécessaire pour la méthode buildBFC de bfcService
+            final String[] idsEleve = listIdsEleve.getValue().toArray(
+                    new String[listIdsEleve.getValue().size()]);
+            final String idClass = listIdsEleve.getKey();
+            final JsonObject datesCreationVerrou = dateCreationVerrouByClasse.get(idClass);
+            final List<String> listIdEleves = listIdsEleve.getValue();
+            final Map<Long, String> mapIdDomaineCodeDomaine = mapIdClasseCodesDomaines.get(idClass);
+            final Long idCycle = (Long) mapIdClassIdCycle.get(idClass);
+            final Long valueCycle = (Long) mapIdCycleValue.get(idCycle);
 
-        getIdClassIdCycleValue(idsClass, new Handler<Either<String, List<Map>>>() {
-            @Override
-            public void handle(Either<String, List<Map>> repIdClassIdCycleValue) {
+            getResultsElevesByDomaine(listIdEleves, idClass, idStructure,(Long) mapIdClassIdCycle.get(idClass),
+                    new Handler<Either<String, Map<String, Map<Long, Integer>>>>() {
+                        @Override
+                        public void handle(Either<String, Map<String, Map<Long, Integer>>> resultatsEleves) {
 
-                if (repIdClassIdCycleValue.isLeft()) {
-                    String error =  repIdClassIdCycleValue.left().getValue();
-                    lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
-                    if (error!=null && error.contains(TIME)) {
-                        getIdClassIdCycleValue(idsClass, this);
-                    }
-                    else{
-                        handler.handle("getBaliseBilansEleve : list (map<idclasse,idCycle>,map<idCycle,cycle>) : " +
-                                        error);
-                    }
-                    log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>,map<idCycle,cycle>) " + error);
-                }
-                else {
-                    final List<Map> mapIdClassIdCycleValue = repIdClassIdCycleValue.right().getValue();
-                    final Map mapIdClassIdCycle = mapIdClassIdCycleValue.get(0);//map<IdClass,IdCycle>
-                    final Map mapIdCycleValue = mapIdClassIdCycleValue.get(1);//map<IdCycle,ValueCycle>
-                    //on parcourt les classes
-                    for (final Map.Entry<String, List<String>> listIdsEleve : mapIdClassIdsEleve.entrySet()) {
-                        //récupère un tableau de sting idEleve nécessaire pour la méthode buildBFC de bfcService
-                        final String[] idsEleve = listIdsEleve.getValue().toArray(
-                                new String[listIdsEleve.getValue().size()]);
-                        final String idClass = listIdsEleve.getKey();
-                        final JsonObject datesCreationVerrou = dateCreationVerrouByClasse.get(idClass);
-                        final List<String> listIdEleves = listIdsEleve.getValue();
+                            if(resultatsEleves.isLeft()) {
 
-                        getResultsElevesByDomaine(listIdEleves, idClass, idStructure,
-                                (Long) mapIdClassIdCycle.get(idClass),
-                                new Handler<Either<String, Map<String, Map<Long, Integer>>>>() {
-                                    @Override
-                                    public void handle(Either<String, Map<String, Map<Long, Integer>>> resultatsEleves) {
+                                String error =  resultatsEleves.left().getValue();
 
-                                        if(resultatsEleves.isLeft()) {
+                                lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                if (error!=null && error.contains(TIME)) {
+                                    getResultsElevesByDomaine(listIdEleves, idClass, idStructure,
+                                            (Long) mapIdClassIdCycle.get(idClass),  this);
+                                }
+                                else {
+                                    handler.handle("getBaliseBilansEleve :  : " + error);
+                                    log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>, " +
+                                            " map<idCycle,cycle>) " + error);
+                                }
+                            }
+                            else{
 
-                                            String error =  resultatsEleves.left().getValue();
+                                final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition = resultatsEleves.right().getValue();
 
-                                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
-                                            if (error!=null && error.contains(TIME)) {
-                                                getResultsElevesByDomaine(listIdEleves, idClass, idStructure,
-                                                        (Long) mapIdClassIdCycle.get(idClass),  this);
+                                if (idCycle != null) {
+                                    bfcSynthseService.getBfcSyntheseByIdsEleve(idsEleve, idCycle, new Handler<Either<String, JsonArray>>() {
+                                        @Override
+                                        public void handle(Either<String, JsonArray> repSynthese) {
+                                            if (repSynthese.isLeft()) {
+                                                String error =  repSynthese.left().getValue();
+                                                lsuService.serviceResponseOK(answer,
+                                                        count.incrementAndGet(), thread, method);
+                                                if (error!=null && error.contains(TIME)) {
+                                                    bfcSynthseService.getBfcSyntheseByIdsEleve(idsEleve,
+                                                            idCycle, this);
+                                                }
+                                                else {
+                                                    handler.handle("getBaliseBilansCycle XML requete synthese du BFC: " + error);
+                                                    log.error("getBaliseBilansCycle requete synthese du BFC: " + error);
+                                                }
                                             }
                                             else {
-                                                handler.handle("getBaliseBilansEleve :  : " + error);
-                                                log.error("getBaliseBilansCycle XML:list (map<idclasse,idCycle>, " +
-                                                        " map<idCycle,cycle>) " + error);
-                                            }
-                                        }
-                                        else{
-
-                                            final Map<String, Map<Long, Integer>> mapIdEleveIdDomainePosition = resultatsEleves.right().getValue();
-                                            getMapCodeDomaineById(idClass, new Handler<Either<String, Map<Long, String>>>() {
-                                                @Override
-                                                public void handle(Either<String, Map<Long, String>> repMapCodeDomaineId) {
-                                                    if (repMapCodeDomaineId.isLeft()) {
-                                                        String error =  repMapCodeDomaineId.left().getValue();
-
-                                                        lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread,
-                                                                method);
-                                                        if (error!=null && error.contains(TIME)) {
-                                                            getMapCodeDomaineById(idClass,this);
+                                                final JsonArray synthesesEleves = repSynthese.right().getValue();
+                                                eleveEnsCpl.listNiveauCplByEleves(idsEleve, new Handler<Either<String, JsonArray>>() {
+                                                    @Override
+                                                    public void handle(Either<String, JsonArray> repEleveEnsCpl) {
+                                                        if (repEleveEnsCpl.isLeft()) {
+                                                            String error =  repEleveEnsCpl.left().getValue();
+                                                            lsuService.serviceResponseOK(answer,
+                                                                    count.incrementAndGet(), thread, method);
+                                                            if (error!=null && error.contains(TIME)) {
+                                                                eleveEnsCpl.listNiveauCplByEleves(idsEleve,this);
+                                                            }
+                                                            else {
+                                                                handler.handle("getBaliseBilansCycle XML requete enseignement complement: " + error);
+                                                                log.error("getBaliseBilansCycle requete enseignementComplement: " + error);
+                                                            }
                                                         }
                                                         else {
-                                                            handler.handle("getBaliseBilansCycle : " +
-                                                                    "Map<String, Map<Long, Integer>>> resultatsEleves : " +
-                                                                    error);
-                                                            log.error("getBaliseBilansCycle Map<String, Map<Long, Integer>>> " +
-                                                                    "resultatsEleves :  " + error);
-                                                        }
-                                                    }
-                                                    else {
-                                                        final Map<Long, String> mapIdDomaineCodeDomaine = repMapCodeDomaineId.right().getValue();
-                                                        final Long idCycle = (Long) mapIdClassIdCycle.get(idClass);
-                                                        final Long valueCycle = (Long) mapIdCycleValue.get(idCycle);
-                                                        if (idCycle != null) {
-                                                            bfcSynthseService.getBfcSyntheseByIdsEleve(idsEleve, idCycle, new Handler<Either<String, JsonArray>>() {
-                                                                @Override
-                                                                public void handle(Either<String, JsonArray> repSynthese) {
-                                                                    if (repSynthese.isLeft()) {
-                                                                        String error =  repSynthese.left().getValue();
-                                                                        lsuService.serviceResponseOK(answer,
-                                                                                count.incrementAndGet(), thread, method);
-                                                                        if (error!=null && error.contains(TIME)) {
-                                                                            bfcSynthseService.getBfcSyntheseByIdsEleve(idsEleve,
-                                                                                    idCycle, this);
-                                                                        }
-                                                                        else {
-                                                                            handler.handle("getBaliseBilansCycle XML requete synthese du BFC: " + error);
-                                                                            log.error("getBaliseBilansCycle requete synthese du BFC: " + error);
-                                                                        }
-                                                                    }
-                                                                    else {
-                                                                        final JsonArray synthesesEleves = repSynthese.right().getValue();
-                                                                        eleveEnsCpl.listNiveauCplByEleves(idsEleve, new Handler<Either<String, JsonArray>>() {
-                                                                            @Override
-                                                                            public void handle(Either<String, JsonArray> repEleveEnsCpl) {
-                                                                                if (repEleveEnsCpl.isLeft()) {
-                                                                                    String error =  repEleveEnsCpl.left().getValue();
-                                                                                    lsuService.serviceResponseOK(answer,
-                                                                                            count.incrementAndGet(), thread, method);
-                                                                                    if (error!=null && error.contains(TIME)) {
-                                                                                        eleveEnsCpl.listNiveauCplByEleves(idsEleve,this);
-                                                                                    }
-                                                                                    else {
-                                                                                        handler.handle("getBaliseBilansCycle XML requete enseignement complement: " + error);
-                                                                                        log.error("getBaliseBilansCycle requete enseignementComplement: " + error);
-                                                                                    }
-                                                                                }
-                                                                                else {
-                                                                                    final JsonArray ensCplsEleves = repEleveEnsCpl.right().getValue();
-                                                                                    setSocleSyntheseEnsCpl(mapIdDomaineCodeDomaine, idsEleve, nbEleveCompteur, eleves, ensCplsEleves, synthesesEleves,
-                                                                                            mapIdEleveIdDomainePosition, responsablesEtab, valueCycle, millesime, bilansCycle, datesCreationVerrou);
+                                                            final JsonArray ensCplsEleves = repEleveEnsCpl.right().getValue();
+                                                            setSocleSyntheseEnsCpl(mapIdClassListHeadTeachers, mapIdDomaineCodeDomaine,
+                                                                    idsEleve, nbEleveCompteur, donnees, ensCplsEleves, synthesesEleves,
+                                                                    mapIdEleveIdDomainePosition, valueCycle, millesime, datesCreationVerrou);
 
-                                                                            log.info("FIN method getBaliseBilansCycle nombre d'eleve dans la classe en cours : " + idsEleve.length);
-                                                                            log.info("FIN method getBaliseBilansCycle nombre de bilans de cycle complets : " + bilansCycle.getBilanCycle().size());
-                                                                            log.info("nb d'eleves au depart : " + nbElevesTotal);
-                                                                            log.info("nb d'eleve parcouru : " + nbEleveCompteur.intValue());
-                                                                            if (nbEleveCompteur.intValue() == nbElevesTotal.intValue()) {
-                                                                                if (bilansCycle.getBilanCycle().size() != 0) {
-                                                                                    donnees.setBilansCycle(bilansCycle);
-                                                                                    log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle complet " + eleves.getEleve().size());
-                                                                                }
-                                                                                log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle incomplet " + errorsExport.getMap().size());
-                                                                                handler.handle("success");
-                                                                                // log for time-out
-                                                                                answer.set(true);
-                                                                                lsuService.serviceResponseOK(answer, count.get(), thread, method);
-                                                                            }
-
-                                                                                }
-                                                                            }
-                                                                        });
-
-                                                                    }
+                                                            log.info("FIN method getBaliseBilansCycle nombre d'eleve dans la classe en cours : " + idsEleve.length);
+                                                            log.info("FIN method getBaliseBilansCycle nombre de bilans de cycle complets : " + donnees.getBilansCycle().getBilanCycle().size());
+                                                            log.info("nb d'eleves au depart : " + nbElevesTotal);
+                                                            log.info("nb d'eleve parcouru : " + nbEleveCompteur.intValue());
+                                                            if (nbEleveCompteur.intValue() == nbElevesTotal.intValue()) {
+                                                                if (donnees.getBilansCycle().getBilanCycle().size() != 0) {
+                                                                    donnees.setBilansCycle(donnees.getBilansCycle());
+                                                                    log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle complet " + eleves.getEleve().size());
                                                                 }
-                                                            });
-                                                        } else {
-                                                            handler.handle("getBaliseBilansCycle XML idCycle  :  " + idCycle);
-                                                            log.error("getBaliseBilansCycle idCycle :  " + idCycle);
+                                                                log.info("FIN method getBaliseBilansCycle nombre d'eleve avec un bilan cycle incomplet " + errorsExport.getMap().size());
+                                                                handler.handle("success");
+                                                                // log for time-out
+                                                                answer.set(true);
+                                                                lsuService.serviceResponseOK(answer, count.get(), thread, method);
+                                                            }
+
                                                         }
                                                     }
+                                                });
 
-                                                }
-                                            });
+                                            }
                                         }
-                                    }
-                                });
-                    }
-                }
-            }
-
-        });
+                                    });
+                                } else {
+                                   handler.handle("getBaliseBilansCycle XML idCycle  :  " + idCycle);
+                                    log.error("getBaliseBilansCycle idCycle :  " + idCycle);
+                                }
+                            }
+                        }
+                    });
+        }
     }
 
     private void getBaliseDisciplines(final Donnees donnees, final String idStructure, final Handler<String> handler) {
@@ -1354,8 +1390,6 @@ public class LSUController extends ControllerHelper {
                     }}));
     }
 
-    /* private void getBalisePeriodes(final Donnees donnees, final List<Integer> wantedPeriodes, final JsonObject periodesAdded,
-                                    final String idStructure, final List<String> idClasse, final Handler<String> handler) {*/
     private void getBalisePeriodes(final Donnees donnees, final List<Integer> wantedPeriodes, final Map<String, JsonArray> periodesByClass,
                                    final String idStructure, final List<String> idClasse, final Handler<String> handler) {
         JsonObject action = new JsonObject()
@@ -1499,10 +1533,13 @@ public class LSUController extends ControllerHelper {
                 event -> handler.handle("success"));
     }
 
-    private void getHeadTeachers( List<String> idsClasse, Map<String, JsonArray> mapIdClasseHeadTeachers, final Handler<String> handler){
-        List<Future> listFutureClasse = new ArrayList<Future>();
+    private void getHeadTeachers( List<String> idsClasse,
+                                  Map<String, JsonArray> mapIdClasseHeadTeachers,
+                                  final Handler<String> handler){
+        List<Future> listFutureClasses = new ArrayList<Future>();
         for(String idClass : idsClasse){
-            Future futureclass = Future.future();
+            Future futureClass = Future.future();
+            listFutureClasses.add(futureClass);
             JsonObject action = new JsonObject();
             action.put("action","classe.getHeadTeachersClasse").put("idClasse", idClass);
             eb.send(Competences.VIESCO_BUS_ADDRESS,action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -1524,18 +1561,17 @@ public class LSUController extends ControllerHelper {
                         else {
                             // log for time-out
                             answer.set(true);
-                            futureclass.complete();
+                            futureClass.complete();
                         }
                         lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
 
                     }else{
                         JsonArray headTeachers = body.getJsonArray("results");
                         mapIdClasseHeadTeachers.put(idClass,headTeachers);
-
                         // log for time-out
                         answer.set(true);
                         lsuService.serviceResponseOK(answer, count.get(), thread, method);
-                        futureclass.complete();
+                        futureClass.complete();
 
                     }
 
@@ -1544,7 +1580,7 @@ public class LSUController extends ControllerHelper {
 
 
         }
-        CompositeFuture.all(listFutureClasse).setHandler(
+        CompositeFuture.all(listFutureClasses).setHandler(
                 event -> handler.handle("success"));
 
     }
@@ -1675,6 +1711,9 @@ public class LSUController extends ControllerHelper {
             }
 
             if(existing.getId()!= null && existing.getIdSts() != null && existing.getIdSts() != null){
+                if(donnees.getEnseignants() == null){
+                  donnees.setEnseignants(objectFactory.createDonneesEnseignants());
+                }
                 donnees.getEnseignants().getEnseignant().add(existing);
             }
         }
@@ -1946,14 +1985,13 @@ public class LSUController extends ControllerHelper {
     private void getBaliseBilansPeriodiques(final Donnees donnees, final String idStructure,
                                             final Map<String, JsonArray> periodesByClasse,
                                             final JsonObject epiGroupAdded, final Map<String, JsonArray> tableConversionByClasse,
-                                            final JsonArray enseignantFromSts, final Map<String, JsonArray> mapIdClassHeadTeachers,
+                                            final JsonArray enseignantFromSts, final  Map<String, JsonArray> mapIdClassHeadTeachers,
                                             final Handler<Either.Right<String, JsonObject>> handler) {
         final Donnees.BilansPeriodiques bilansPeriodiques = objectFactory.createDonneesBilansPeriodiques();
         final List<ResponsableEtab> responsablesEtab = donnees.getResponsablesEtab().getResponsableEtab();
         final Donnees.Eleves eleves = donnees.getEleves();
         final Donnees.Periodes periodes = donnees.getPeriodes();
         final Integer nbElevesTotal = eleves.getEleve().size();
-        //final String millesime = getMillesime();
         final AtomicInteger nbEleveCompteur = new AtomicInteger(0);
         final Map<String, List<String>> mapIdClassIdsEleve = eleves.getMapIdClassIdsEleve();
         errorsExport = new JsonObject();
@@ -1985,7 +2023,7 @@ public class LSUController extends ControllerHelper {
         //For each eleve create his periodic bilan
         for (Integer i = 0; i < eleves.getEleve().size(); i++) {
             Eleve currentEleve = eleves.getEleve().get(i);
-            JsonArray headTeachers = mapIdClassHeadTeachers.get(currentEleve.getId_Class());
+           JsonArray headTeachers = mapIdClassHeadTeachers.get(currentEleve.getId_Class());
 
             for (Integer i2 = 0; i2 < periodes.getPeriode().size(); i2++) {
                 originalSize.getAndIncrement();

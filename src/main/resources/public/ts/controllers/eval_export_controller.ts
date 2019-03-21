@@ -81,7 +81,8 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             $scope.inProgress = !(
                 ($scope.params.type == "1"
                     && $scope.params.classes.length > 0
-                    && $scope.params.responsables.length > 0)
+                    && $scope.params.responsables.length > 0
+                    && $scope.params.stsFile !== null)
                 || ($scope.params.type == "2"
                     && $scope.params.stsFile !== null
                     && $scope.params.periodes_type.length > 0
