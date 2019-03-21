@@ -32,3 +32,4 @@ export * from './functions/utilsNN';
 export * from './functions/clone';
 export * from './functions/xmlToJson';
 export * from './functions/updateFilters';
+export * from './functions/initChartsEval';
