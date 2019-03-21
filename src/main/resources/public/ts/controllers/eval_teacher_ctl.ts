@@ -48,7 +48,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.selectCycleForView = function (id_cycle?) {
-           return selectCycleForView($scope, $location, id_cycle);
+            return selectCycleForView($scope, $location, id_cycle);
         };
 
 
@@ -385,7 +385,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             },
 
-            displaySuiviCompetencesEleve: function (params) {
+            displaySuiviCompetencesEleve: async function (params) {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -406,7 +406,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
                         }
 
-                        template.open('main', 'enseignants/suivi_competences_eleve/container');
                         if ($scope.informations.eleve === undefined) {
                             $scope.informations.eleve = null;
                         }
@@ -421,17 +420,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.search.eleve = _.findWhere($scope.structure.eleves.all, {'id': params.idEleve});
                         $scope.syncPeriode($scope.search.classe.id);
                         $scope.search.periode = '*';
-                        $scope.search.classe.eleves.sync().then(() => {
-                            $scope.search.eleve = _.findWhere($scope.search.classe.eleves.all, {'id': params.idEleve});
-                            if ($scope.displayFromClass) $scope.displayFromClass = false;
-                            $scope.displayFromClass = true;
-                            display();
-                        });
+                        Utils.runMessageLoader($scope);
+                        await $scope.search.classe.eleves.sync();
+                        $scope.search.eleve = _.findWhere($scope.search.classe.eleves.all, {'id': params.idEleve});
+                        if ($scope.displayFromClass) $scope.displayFromClass = false;
+                        $scope.displayFromClass = true;
+                        display();
+                        Utils.stopMessageLoader($scope);
                     } else {
                         $scope.syncPeriode($scope.search.classe.id);
                         display();
                     }
-
+                    template.open('main', 'enseignants/suivi_competences_eleve/container');
+                    utils.safeApply($scope);
                 }
             },
 
@@ -649,7 +650,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             cycle: null,
             domaineEnseignement: null,
             sousDomainesEnseignement: [],
-        }
+        };
 
         let setSearchPeriode = function(classe,res){
 
@@ -1927,11 +1928,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.setClasseMatieres = function () {
             let matieres = $filter('getMatiereClasse')($scope.structure.matieres.all,
                 $scope.devoir.id_groupe, $scope.classes, $scope.search);
-                $scope.devoir.matieresByClasse = matieres;
-                if ($scope.devoir.matieresByClasse.length === 1){
-                    $scope.devoir.id_matiere = $scope.devoir.matieresByClasse[0].id;
-                }
-                $scope.selectedMatiere($scope.devoir);
+            $scope.devoir.matieresByClasse = matieres;
+            if ($scope.devoir.matieresByClasse.length === 1){
+                $scope.devoir.id_matiere = $scope.devoir.matieresByClasse[0].id;
+            }
+            $scope.selectedMatiere($scope.devoir);
         };
 
         $scope.deleteDevoir = function () {
@@ -2873,7 +2874,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
                     idClasse, $scope.classes, $scope.search);
                 return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
-                              && !_.isEmpty(matiereClasse);
+                    && !_.isEmpty(matiereClasse);
             }
         };
 
@@ -3359,7 +3360,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.updateNiveau = function (usePerso) {
-           updateNiveau(usePerso, $scope);
+            updateNiveau(usePerso, $scope);
         };
 
         $scope.togglePanel = function ($event) {
@@ -3681,7 +3682,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
                     else {
-                         eleve.moyenneFinale = eleve.oldMoyenneFinale;
+                        eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     }
                 }
                 else{
@@ -3828,8 +3829,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let competencesNotes = [];
                     _.forEach(_.where($scope.informations.eleve.competencesNotes,
                         {id_devoir: evaluation.id_devoir}), (competencesNote) => {
-                            competencesNotes.push(utils.clone(competencesNote))
-                        });
+                        competencesNotes.push(utils.clone(competencesNote))
+                    });
 
                     _.extend(devoir, {competencesNotes:competencesNotes});
                     _.extend(evaluation, devoir);

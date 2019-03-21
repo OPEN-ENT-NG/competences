@@ -192,7 +192,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         await $scope.suiviCompetence.domaines.sync();
                         $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                         $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
-                        $scope.initChartsEval();
+                       utils.initChartsEval($scope);
 
                         utils.safeApply($scope);
                     }
@@ -248,8 +248,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             );
         };
 
-        $scope.initFilterMine = () => {
-
+        $scope.initFilterMine = function(){
             $scope.suiviFilter = {
                 mine: (!Utils.isChefEtab()).toString()
             };
@@ -347,7 +346,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
         $scope.updateColorAndLetterForSkills = function () {
             updateColorAndLetterForSkills($scope, $location);
-            $scope.initChartsEval();
+           utils.initChartsEval($scope);
             utils.safeApply($scope);
         };
 
@@ -713,7 +712,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         $scope.openDetailCompetence = function (competence, detail) {
             $scope.detailCompetence = competence;
-            $scope.initChartsEval();
+           utils.initChartsEval($scope);
             if (detail !== undefined) {
                 template.open("suivi-competence-detail", detail);
             }
@@ -968,63 +967,11 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          *
          */
         $scope.initChartsEval = function () {
-            if ($scope.detailCompetence !== undefined && $scope.detailCompetence !== null) {
-                let ListEval = _.filter($scope.detailCompetence.competencesEvaluations, function (evalu) {
-                    return $scope.filterOwnerSuivi(evalu);
-                });
-                //initialisation et rajout de la 1er colomn vide
-                $scope.chartOptionsEval.tooltipLabels = [];
-                $scope.chartOptionsEval.tooltipLabels.push(' ');
-                $scope.chartOptionsEval.datasets.data = [];
-                $scope.chartOptionsEval.datasets.data.push(-10);
-                $scope.chartOptionsEval.datasets.labels = [];
-                $scope.chartOptionsEval.datasets.labels.push(" ");
-                $scope.chartOptionsEval.colors = [];
-                $scope.chartOptionsEval.colors.push('#FFFFFF');
-                ListEval = _.sortBy(ListEval, function (evalu) {
-                    return evalu.evaluation_date;
-                });
-
-                for (let i = 0; i < ListEval.length; i++) {
-
-                    let fontText = $scope.mapLettres[ListEval[i].evaluation];
-                    if (!fontText) {
-                        fontText = " ";
-                    }
-                    $scope.chartOptionsEval.datasets.data.push({
-                        y: ListEval[i].evaluation + 2,
-                        x: $scope.getDateFormated(ListEval[i].evaluation_date),
-                        r: 10,
-                        label: fontText
-                    });
-                    $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].evaluation_date));
-                    let colorValue;
-                    if (ListEval[i].evaluation !== -1) {
-                        colorValue = $scope.mapCouleurs[ListEval[i].evaluation];
-                    }
-                    else {
-                        colorValue = Defaultcolors.unevaluated;
-                    }
-                    $scope.chartOptionsEval.colors.push(colorValue);
-
-                    let libelle = ListEval[i].evaluation_libelle;
-                    if (ListEval[i].formative) {
-                        libelle += " (F)"
-                    }
-                    $scope.chartOptionsEval.tooltipLabels.push(libelle + ' : ' + ListEval[i].owner_name);
-
-                }
-
-                //rajout de la dernière colomn vide
-                $scope.chartOptionsEval.datasets.data.push(-10);
-                $scope.chartOptionsEval.datasets.labels.push(" ");
-                $scope.chartOptionsEval.colors.push('#FFFFFF');
-                $scope.chartOptionsEval.tooltipLabels.push(' ');
-            }
+            utils.initChartsEval($scope);
             utils.safeApply($scope);
         };
         $scope.$watch($scope.detailCompetence, function () {
-            $scope.initChartsEval();
+           utils.initChartsEval($scope);
         });
 
         $scope.selected.grey = true;

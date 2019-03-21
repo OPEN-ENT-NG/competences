@@ -531,6 +531,11 @@ export class Utils {
         }
     };
 
+    static initFilterMine ($scope){
+        $scope.suiviFilter = {
+            mine: (!Utils.isChefEtab()).toString()
+        };
+    }
 
     /**
      * Retourne si l'utilisateur n'est pas le propriétaire de compétences
@@ -538,7 +543,7 @@ export class Utils {
      * @returns {boolean} Retourne true si l'utilisateur n'est pas le propriétaire
      */
     static notEvalutationOwner = function (listeEvaluations, $scope) {
-        if ($scope.suiviFilter === undefined) $scope.initFilterMine();
+        if ($scope.suiviFilter === undefined) Utils.initFilterMine($scope);
         if ($scope.suiviFilter.mine === 'false' || $scope.suiviFilter.mine === false) {
             return false;
         }
@@ -549,6 +554,7 @@ export class Utils {
     };
 
     static FilterNotEvaluated = function (MaCompetence, $scope) {
+        if ($scope.suiviFilter === undefined) Utils.initFilterMine($scope);
         if ($scope.selected.grey === true || ($scope.selected.grey === false && MaCompetence.masque)) {
             let _t = MaCompetence.competencesEvaluations;
             if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
