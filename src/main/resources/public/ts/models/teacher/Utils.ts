@@ -72,6 +72,7 @@ export class Utils {
      * Méthode récursive de l'affichage des sous domaines d'un domaine
      *
      * @param poDomaines la liste des domaines
+     * @param pbVisible
      * @pbMesEvaluations booleen indiquant d'afficher ou non un domaine
      *
      */
@@ -273,7 +274,7 @@ export class Utils {
      *For a list of Evaluations set niveauFinaltoShowAllEvaluations, niveauAtteintToShowMyEvaluations
      * and niveauFinalToShowMyEvaluations for a competence
      * @param competence
-     *
+     * @param isCycle
      *
      */
 
@@ -587,7 +588,7 @@ export class Utils {
         for (let i = 0; i < array.length; i++) {
             let line = '';
             for (let index in array[i]) {
-                if (line != '') line += ';'
+                if (line != '') line += ';';
 
                 line += array[i][index];
             }
@@ -598,20 +599,20 @@ export class Utils {
         return str;
     }
 
-    static runMessageLoader = ($scope) => {
+    static runMessageLoader = async function ($scope) {
         $scope.opened.displayMessageLoader = true;
-        utils.safeApply($scope);
+        await utils.safeApply($scope);
     };
 
-    static stopMessageLoader = ($scope) => {
+    static stopMessageLoader = async function ($scope) {
         $scope.opened.displayMessageLoader = false;
-        utils.safeApply($scope);
+        await utils.safeApply($scope);
     };
 
     static chooseClasse = async function (classe, $scope, withStudent) {
         classe.selected = !classe.selected;
         $scope.opened.displayMessageLoader = true;
-        utils.safeApply($scope);
+        await utils.safeApply($scope);
         if (classe.synchronized.periodes !== true) {
             await classe.periodes.sync();
         }
@@ -620,7 +621,7 @@ export class Utils {
         }
         await updateFilters($scope, withStudent);
         $scope.opened.displayMessageLoader = false;
-        utils.safeApply($scope);
+        await utils.safeApply($scope);
     };
 
 
@@ -632,12 +633,12 @@ export class Utils {
         });
         if(isClasse === true){
             $scope.opened.displayMessageLoader = true;
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
             await updateFilters($scope, withStudent);
             $scope.opened.displayMessageLoader = false;
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         }
-        utils.safeApply($scope);
+        await utils.safeApply($scope);
     };
 
 }

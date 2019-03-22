@@ -2,7 +2,7 @@ import {Defaultcolors} from "../../models/eval_niveau_comp";
 import {_} from "entcore";
 import {safeApply} from "./safeApply";
 
-export let initChartsEval = function ($scope) {
+export let initChartsEval = async function ($scope) {
     if ($scope.detailCompetence !== undefined && $scope.detailCompetence !== null) {
         let ListEval = _.filter($scope.detailCompetence.competencesEvaluations, function (evalu) {
             return $scope.filterOwnerSuivi(evalu);
@@ -56,5 +56,5 @@ export let initChartsEval = function ($scope) {
         $scope.chartOptionsEval.colors.push('#FFFFFF');
         $scope.chartOptionsEval.tooltipLabels.push(' ');
     }
-   safeApply($scope);
+   await safeApply($scope);
 };

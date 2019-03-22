@@ -43,7 +43,6 @@ export let updateColorAndLetterForSkills = function ($scope, $location) {
         $scope.niveauCompetences.push(niv);
         $scope.selected.colors[niv.ordre] = true;
     });
-    utils.safeApply($scope);
 };
 
 

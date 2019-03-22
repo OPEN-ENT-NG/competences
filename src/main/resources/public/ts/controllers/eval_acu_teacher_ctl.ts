@@ -102,12 +102,12 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                             $scope.currentDevoirsNotDone.push($scope.devoirsNotDone[d]);
                         }
                     }
-                    utils.safeApply($scope);
+                    await utils.safeApply($scope);
                 });
             }
 
             $scope.initChartListNotDone = function () {
-                $scope.getDevoirsNotDone().then((devoirs) => {
+                $scope.getDevoirsNotDone().then(async function(devoirs){
                     $scope.devoirsNotDone = devoirs;
                     $scope.devoirsClasses = _.filter(evaluations.structure.classes.all, (classe) => {
                         return _.contains(_.uniq(_.pluck($scope.devoirsNotDone, 'id_groupe')), classe.id)
@@ -117,7 +117,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                         $scope.chartOptions.selectedClasse = _.first(_.sortBy($scope.devoirsClasses, 'name')).id;
                         $scope.loadChart($scope.chartOptions.selectedClasse);
                     }
-                    utils.safeApply($scope);
+                    await utils.safeApply($scope);
                 });
             };
         };
@@ -159,7 +159,7 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
             $scope.goTo(path, idOfpath);
         };
 
-        $scope.changeEtablissementAccueil =  () => {
+        $scope.changeEtablissementAccueil =  async function(){
             let switchEtab = async () => {
                 await $scope.initControler();
                 await $scope.$parent.initReferences();
@@ -169,16 +169,16 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                 $scope.classes = evaluations.structure.classes;
                 $scope.initChartListNotDone();
                 $scope.getCurrentDevoirsNotDone();
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             };
             if (evaluations.structure === undefined || !evaluations.structure.isSynchronized) {
                 $scope.$parent.opened.displayStructureLoader = true;
-                evaluations.structure.sync().then(() => {
-                    switchEtab();
+                evaluations.structure.sync().then(async function(){
+                    await switchEtab();
                     $scope.$parent.opened.displayStructureLoader = false;
                 });
             } else {
-                switchEtab();
+               await  switchEtab();
             }
         };
 

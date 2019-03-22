@@ -22,7 +22,7 @@
  * @returns {Promise<T>} Promesse
  */
 export function safeApply(that) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         let phase = (that.$root !== null)?that.$root.$$phase : undefined;
         if(phase === '$apply' || phase === '$digest') {
             if(resolve && (typeof(resolve) === 'function')) resolve();
@@ -30,5 +30,6 @@ export function safeApply(that) {
             if (resolve && (typeof(resolve) === 'function')) that.$apply(resolve);
             else that.$apply();
         }
+        if(resolve && (typeof(resolve) === 'function')) resolve();
     });
 }

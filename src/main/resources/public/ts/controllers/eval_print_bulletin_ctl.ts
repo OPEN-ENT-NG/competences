@@ -1,7 +1,7 @@
 import {_, ng, notify, idiom as lang} from "entcore";
 import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
-import {Classe, evaluations, Utils} from "../models/teacher";
+import {evaluations, Utils} from "../models/teacher";
 import http from "axios";
 
 
@@ -13,12 +13,12 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
     function ($scope) {
 
-        let runMessageLoader = () => {
-           Utils.runMessageLoader($scope);
+        let runMessageLoader = async function () {
+           await Utils.runMessageLoader($scope);
         };
 
-        let stopMessageLoader = () => {
-            Utils.stopMessageLoader($scope);
+        let stopMessageLoader = async function(){
+            await Utils.stopMessageLoader($scope);
         };
 
         let selectPersonnalisation = (id_cycle) => {
@@ -30,7 +30,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
         // Fonction d'initialisation de la vue de l'export des bulletins
         $scope.initBulletin = async function ( ) {
-            runMessageLoader();
+            await runMessageLoader();
 
             // Initialisation des classes sélectionnables
             $scope.printClasses = {
@@ -59,7 +59,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             }
             catch (e) {
                 console.log(e);
-                stopMessageLoader();
+                await stopMessageLoader();
             }
             $scope.filteredPeriodes = [];
             $scope.filterEleves =  [];
@@ -69,7 +69,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 periode : undefined
             };
             $scope.lang = lang;
-            stopMessageLoader();
+            await stopMessageLoader();
         };
 
         $scope.setImageStructure = async () => {
@@ -113,50 +113,52 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 notify.info('evaluations.choose.student.for.periode');
                 return ;
             }
-            runMessageLoader();
+            await runMessageLoader();
 
             let classes = _.groupBy($scope.allElevesClasses, 'classeName');
             for ( let key in classes) {
-                let val = classes[key];
-                options.classeName = key;
-                options.idStructure = $scope.structure.id;
-                if (val !== undefined && val.length > 0 ) {
-                    options.idClasse = val[0].idClasse;
-                    if (options.showBilanPerDomaines === true) {
-                        selectPersonnalisation(val[0].id_cycle);
+                if (classes.hasOwnProperty(key)) {
+                    let val = classes[key];
+                    options.classeName = key;
+                    options.idStructure = $scope.structure.id;
+                    if (val !== undefined && val.length > 0) {
+                        options.idClasse = val[0].idClasse;
+                        if (options.showBilanPerDomaines === true) {
+                            selectPersonnalisation(val[0].id_cycle);
+                        }
+                    }
+                    options.students = _.filter(val, function (student) {
+                        return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
+                    });
+                    options.idStudents = _.pluck(options.students, 'id');
+                    if (options.idStudents !== undefined && options.idStudents.length > 0) {
+                        try {
+
+                            await ExportBulletins.generateBulletins(options, $scope);
+                        }
+                        catch (e) {
+                            await stopMessageLoader();
+                        }
                     }
                 }
-                options.students = _.filter(val, function (student) {
-                    return student.selected === true && _.contains($scope.selected.periode.classes, student.idClasse);
-                });
-                options.idStudents = _.pluck(options.students, 'id');
-                if(options.idStudents!== undefined && options.idStudents.length > 0){
-                   try {
-
-                       await ExportBulletins.generateBulletins(options, $scope);
-                   }
-                   catch (e) {
-                      stopMessageLoader();
-                   }
-                }
             }
-           stopMessageLoader();
+           await stopMessageLoader();
 
         };
 
         $scope.chooseClasse = async function (classe) {
             await Utils.chooseClasse(classe,$scope, true);
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
 
-        $scope.chooseStudent = function (student) {
+        $scope.chooseStudent = async function (student) {
             student.selected = !student.selected;
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
 
         $scope.switchAll =  async function (collection , b, isClasse) {
             await Utils.switchAll(collection, b,isClasse, $scope, true);
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
 
 
@@ -172,10 +174,10 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         };
 
 
-        $scope.openModel = (model) => {
+        $scope.openModel = async function(model){
           $scope.opened.lightboxModel = true;
           $scope.currentModel = model;
-          utils.safeApply($scope);
+          await utils.safeApply($scope);
         };
     }
 ]);
