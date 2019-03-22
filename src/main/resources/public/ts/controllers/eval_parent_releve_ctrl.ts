@@ -72,8 +72,7 @@ export let releveController = ng.controller('ReleveController', [
             };
             $scope.matieres = evaluations.matieres;
             $scope.calculMoyenneMatieres();
-            utils.safeApply($scope);
-            Utils.stopMessageLoader($scope);
+            await Utils.stopMessageLoader($scope);
         };
 
 

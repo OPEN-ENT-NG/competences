@@ -389,7 +389,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
-                    let display = () => {
+                    let display = async function (){
                         $scope.selected.matieres = [];
                         $scope.exportByEnseignement = "false";
                         $scope.allUnselect = true;
@@ -413,33 +413,32 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.sortReverse = false;  // set the default sort order
                         $scope.usePerso = evaluations.structure.usePerso;
                         $scope.updateColorAndLetterForSkills();
-                        utils.safeApply($scope);
+                        await utils.safeApply($scope);
                     };
                     if (params.idEleve != undefined && params.idClasse != undefined) {
                         $scope.search.classe = _.findWhere(evaluations.classes.all, {'id': params.idClasse});
                         $scope.search.eleve = _.findWhere($scope.structure.eleves.all, {'id': params.idEleve});
                         $scope.syncPeriode($scope.search.classe.id);
                         $scope.search.periode = '*';
-                        Utils.runMessageLoader($scope);
+                        await Utils.runMessageLoader($scope);
                         await $scope.search.classe.eleves.sync();
                         $scope.search.eleve = _.findWhere($scope.search.classe.eleves.all, {'id': params.idEleve});
                         if ($scope.displayFromClass) $scope.displayFromClass = false;
                         $scope.displayFromClass = true;
-                        display();
-                        Utils.stopMessageLoader($scope);
+                        await display();
                     } else {
                         $scope.syncPeriode($scope.search.classe.id);
-                        display();
+                        await display();
                     }
                     template.open('main', 'enseignants/suivi_competences_eleve/container');
-                    utils.safeApply($scope);
+                    await  utils.safeApply($scope);
                 }
             },
 
-            displaySuiviCompetencesClasse: function (params) {
+            displaySuiviCompetencesClasse: async function (params) {
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
-                    let display = () => {
+                    let display = async function(){
                         $scope.selected.matieres = [];
                         $scope.allUnselect = true;
                         $scope.allRefreshed = false;
@@ -463,12 +462,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.sortReverse = false;  // set the default sort order
                         $scope.usePerso = evaluations.structure.usePerso;
                         template.open('main', 'enseignants/suivi_competences_classe/container');
-                        utils.safeApply($scope);
+                        await utils.safeApply($scope);
                     };
                     if (!Utils.isChefEtab()) {
-                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
+                        http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,)
+                            .done(async function (res) {
                             $scope.allMatieresSorted = _.sortBy(res, 'name');
-                            utils.safeApply($scope);
+                            await utils.safeApply($scope);
                         });
                     } else {
                         $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
@@ -479,28 +479,28 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         if (classe !== undefined) {
                             if (classe.eleves.empty()) classe.eleves.sync();
                             $scope.syncPeriode(params.idClasse);
-                            display();
+                            await display();
                         }
                     } else {
-                        display();
+                        await display();
                     }
                 }
             },
 
-            export: function () {
+            export: async function () {
                 template.open('main', 'export/lsun');
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             },
-            disabled: () => {
+            disabled: async () => {
                 template.open('main', 'disabled_structure');
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             },
 
-            bulletin: () => {
+            bulletin: async () => {
                 template.open('main', 'enseignants//bulletin/print_bulletin');
                 $scope.usePerso = evaluations.structure.usePerso;
                 $scope.updateColorAndLetterForSkills();
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             }
         };
 
@@ -4039,10 +4039,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             if(template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view')) {
                 template.close('contentDetails');
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
                 await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine);
                 template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             }
         };
         $scope.hasCompetences = function (devoir) {
@@ -4162,31 +4162,31 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.openGraphView = async function (displayDomaine) {
             $scope.displayDomaine = displayDomaine;
             template.close('contentDetails');
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
             await $scope.releveNote.getDataForGraph($scope.informations.eleve, displayDomaine);
             template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
             $scope.displayBoxAboveTheHeadBand();
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
 
         $scope.exportReleve = async function () {
             $scope.opened.displayMessageLoader = true;
             $scope.releveNote.exportOptions.show = false;
-            utils.safeApply($scope);
-            let stopLoading = () => {
+            await utils.safeApply($scope);
+            let stopLoading = async function (){
                 $scope.opened.displayMessageLoader = false;
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             };
 
             try{
                 await $scope.releveNote.export();
-                stopLoading();
+                await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
             }
             catch (e) {
                 console.error(e);
-                stopLoading();
+                await stopLoading();
                 notify.error(e);
             }
 

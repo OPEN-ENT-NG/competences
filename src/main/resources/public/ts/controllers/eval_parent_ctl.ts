@@ -390,8 +390,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.syncColorAndLetter = async function () {
             await $scope.updateColorArray();
-            $scope.updateColorAndLetterForSkills();
-            utils.safeApply($scope);
+            await $scope.updateColorAndLetterForSkills();
+            await utils.safeApply($scope);
         };
         $scope.initLimit = function () {
             $scope.limits = [5,10,15,20];
@@ -587,9 +587,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Lance la séquence d'ouverture du détail d'une compétence permettant d'accéder à la vue liste ou graph
          * @param competence Compétence à ouvrir
          */
-        $scope.openDetailCompetence = function (competence) {
+        $scope.openDetailCompetence = async function (competence) {
             $scope.detailCompetence = competence;
-           utils.initChartsEval($scope);
+            await utils.initChartsEval($scope);
             template.open("main", "parent_enfant/bilan_competences/detail_vue_graph");
             utils.scrollTo('top');
         };
@@ -724,8 +724,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         });
 
-        $scope.initChartsEval = function () {
-           utils.initChartsEval($scope);
+        $scope.initChartsEval = async function () {
+           await utils.initChartsEval($scope);
         };
 
         /**

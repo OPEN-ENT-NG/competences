@@ -21,9 +21,9 @@ import {ng, _, notify} from "entcore";
 import {Classe, LSU, Utils} from '../models/teacher';
 import * as utils from '../utils/teacher';
 export let exportControleur = ng.controller('ExportController',['$scope',
-    function($scope) {
+    async function($scope) {
 
-        function initparams(type, stsFile?, errorResponse?) {
+        async function initparams(type, stsFile?, errorResponse?) {
             $scope.lsu = new LSU($scope.structure.id,
                 $scope.evaluations.classes.where({type_groupe : Classe.type.CLASSE}),
                 $scope.structure.responsables.all);
@@ -40,38 +40,39 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 periodes_type: [],
                 stsFile: (stsFile!== undefined)?stsFile:null
             };
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         }
-        initparams("1");
 
-        $scope.changeType = (type: String): void => {
-            initparams(type);
+
+        $scope.changeType = async function (type: String){
+            await initparams(type);
         };
 
-        $scope.dropComboModel = (el: any, table: any): void => {
-            table = _.without(table, el);
-            utils.safeApply($scope);
+        $scope.dropComboModel = async function (el: any, table: any){
+             _.without(table, el);
+            await utils.safeApply($scope);
         };
 
-        $scope.toggleperiode = function toggleperiode(periode_type) {
+        $scope.toggleperiode = async function toggleperiode(periode_type) {
             let idx = $scope.params.periodes_type.indexOf(periode_type);
             if (idx > -1) {
                 $scope.params.periodes_type.splice(idx, 1);
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             }
             else {
                 $scope.params.periodes_type.push(periode_type);
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             }
         };
 
         // Créer une fonction dans le $scope qui lance la récupération des responsables
         $scope.getResponsables = function () {
-            $scope.structure.responsables.sync().then(() => {
-                $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName
+            $scope.structure.responsables.sync().then(async function(){
+                $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName;
+                await utils.safeApply($scope);
             });
         };
-        $scope.getResponsables();
+
 
         /**
          * Controle la validité des selections avant l'exportLSU
@@ -109,12 +110,12 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             reader.readAsText(file);
         };
 
-        $scope.exportLSU = ()=> {
-            Utils.runMessageLoader($scope);
+        $scope.exportLSU = async function() {
+            await Utils.runMessageLoader($scope);
             $scope.inProgress = true;
             $scope.params.type = ""+ $scope.params.type;
             $scope.lsu.export($scope.params)
-                .then((res) => {
+                .then(async function(res){
                     let blob = new Blob([res.data]);
                     let link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
@@ -122,22 +123,24 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     document.body.appendChild(link);
                     link.click();
                     $scope.errorResponse = null;
-                    Utils.stopMessageLoader($scope);
-                }).catch((error) => {
+                    await Utils.stopMessageLoader($scope);
+                }).catch(async (error) => {
                 if($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined && $scope.lsu.errorsLSU.all.length > 0){
                     $scope.opened.lightboxErrorsLSU = true;
                 }else{
                     console.error(error);
                     $scope.errorResponse = true;
                 }
-                Utils.stopMessageLoader($scope);
+                await Utils.stopMessageLoader($scope);
             });
         };
+
         $scope.chooseClasse = async function (classe) {
             await Utils.chooseClasse(classe,$scope, false);
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
-        $scope.updateFilters = async (classes) => {
+
+        $scope.updateFilters = async function(classes){
             if(!_.isEmpty(classes)) {
                 _.map(classes, (classe) => {
                     classe.selected = true;
@@ -149,16 +152,18 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 if (_.isEmpty($scope.filteredPeriodes)) {
                     notify.info('evaluations.classes.are.not.initialized');
                 }
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             }
         };
+
+
+
+
+        /*********************************************************************************************
+         * Séquence exécuté au chargement du controleur
+         *********************************************************************************************/
+        await initparams("1");
+        $scope.getResponsables();
     }
 ]);
 
-
-
-
-// Si 1 structure =>  Initialiser lsu.structureId à l'id de la structure
-// if($scope.evaluations.structures.all.length == 1){
-//$scope.lsu.idStructure = $scope.structure.id;
-// }
