@@ -367,7 +367,7 @@ export class Structure extends Model {
                                 {id_enseignant: model.me.userId, id_groupe : classe.id});
                             classe.services = (!_.isEmpty(services))? services : null;
                         });
-
+                        this.classes.addRange(castClasses(res));
                         this.eleves.sync().then(() => {
                             model.trigger('apply');
                         });
@@ -376,11 +376,11 @@ export class Structure extends Model {
                         });
                         resolve();
                     } else {
+                        this.classes.addRange(castClasses(res));
                         this.eleves.sync().then(() => {
                             resolve();
                         });
                     }
-                    this.classes.addRange(castClasses(res));
                     this.synchronized.classes = true;
                 });
             }
