@@ -15,9 +15,8 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, http, idiom as lang, Model} from 'entcore';
-import {Classe, Eleve, evaluations, Structure, SuivisDesAcquis, TypePeriode} from "./index";
-import {Defaultcolors} from "../eval_niveau_comp";
+import { Model} from 'entcore';
+import {Classe, Eleve,  Structure, SuivisDesAcquis, TypePeriode} from "./index";
 import {SyntheseBilanPeriodique} from "./SyntheseBilanPeriodique";
 import {AppreciationCPE} from "./AppreciationCPE";
 import {AvisConseil} from "./AvisConseil";
