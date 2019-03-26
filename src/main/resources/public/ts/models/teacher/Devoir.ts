@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, IModel, Collection, http, _, moment, $, model } from 'entcore';
+import { Model, IModel, Collection, http, _, $ } from 'entcore';
 import {
     Competence,
     CompetenceNote,
@@ -27,6 +27,7 @@ import {
     Matiere,
     Type,
 } from './index';
+import axioshttp from 'axios';
 
 export class Devoir extends Model implements IModel{
     statistiques : any;
@@ -103,50 +104,59 @@ export class Devoir extends Model implements IModel{
             }
         });
         this.collection(Eleve, {
-            sync : function (periode) : Promise<any> {
-                return new Promise((resolve, reject) => {
-                    var _classe = evaluations.structure.classes.findWhere({id : that.id_groupe})
-                        .filterEvaluableEleve(periode);
-                    // that.eleves.load(JSON.parse(JSON.stringify(_classe.eleves.all)));
-                    // that.eleves.load($.extend(true, {}, JSON.stringify(_classe.eleves.all)));
+            sync: function (periode): Promise<any> {
+                return new Promise(async (resolve, reject) => {
+                    let _classe = evaluations.structure.classes.findWhere({id: that.id_groupe});
+                    if (_.isEmpty(_classe.eleves.all)) {
+                        await _classe.eleves.sync();
+                    }
+                    _classe = _classe.filterEvaluableEleve(periode);
 
-                    var e = $.map($.extend(true, {}, _classe.eleves.all), function (el) {
+                    let e = $.map($.extend(true, {}, _classe.eleves.all), function (el) {
                         return el;
                     });
                     that.eleves.load(e);
-                    http().getJson(that.api.getNotesDevoir).done(function (res) {
-                        for (var i = 0; i < res.length; i++) {
-                            var _e = that.eleves.findWhere({id : res[i].id_eleve});
-                            if (_e !== undefined) {
-                                _e.evaluation = new Evaluation(res[i]);
-                                _e.evaluation.oldAppreciation = _e.evaluation.appreciation !== undefined ? _e.evaluation.appreciation : '';
-                                if (_e.evaluation.id_annotation === undefined
-                                    || _e.evaluation.id_annotation === null) {
-                                    _e.evaluation.id_annotation = -1;
-                                } else {
-                                    let annotation = _.findWhere(evaluations.structure.annotations.all, {id : _e.evaluation.id_annotation});
-                                    if (annotation !== undefined && annotation !== null) {
-                                        _e.evaluation.valeur = annotation.libelle_court;
-                                    }
+                    let response = await Promise.all([axioshttp.get(that.api.getNotesDevoir),
+                        that.syncCompetencesNotes(true)]);
+                    let notes = response[0].data;
+                    let compNotes = response[1];
+                    for (let i = 0; i < notes.length; i++) {
+                        let _e = that.eleves.findWhere({id: notes[i].id_eleve});
+                        if (_e !== undefined) {
+                            _e.evaluation = new Evaluation(notes[i]);
+                            _e.evaluation.oldAppreciation =
+                                _e.evaluation.appreciation !== undefined ? _e.evaluation.appreciation : '';
+
+                            if (_e.evaluation.id_annotation === undefined
+                                || _e.evaluation.id_annotation === null) {
+                                _e.evaluation.id_annotation = -1;
+                            } else {
+                                let annotation = _.findWhere(evaluations.structure.annotations.all,
+                                    {id: _e.evaluation.id_annotation});
+                                if (annotation !== undefined && annotation !== null) {
+                                    _e.evaluation.valeur = annotation.libelle_court;
                                 }
-                                _e.evaluation.oldValeur = _e.evaluation.valeur;
-                                _e.evaluation.oldId_annotation = _e.evaluation.id_annotation;
-                                delete _e.evaluations;
                             }
+                            _e.evaluation.oldValeur = _e.evaluation.valeur;
+                            _e.evaluation.oldId_annotation = _e.evaluation.id_annotation;
+                            delete _e.evaluations;
                         }
-                        var _t = that.eleves.filter(function (eleve) {
-                            delete eleve.evaluations;
-                            return (!_.has(eleve, "evaluation"));
-                        });
-                        for (var j = 0; j < _t.length; j++) {
-                            _t[j].evaluation = new Evaluation({valeur:"", oldValeur : "", appreciation : "", oldAppreciation : "", id_devoir : that.id, id_eleve : _t[j].id, ramener_sur : that.ramener_sur, coefficient : that.coefficient});
-                        }
-                        that.syncCompetencesNotes().then(() => {
-                            if(resolve && (typeof(resolve) === 'function')) {
-                                resolve();
-                            }
-                        });
+                    }
+                    let _t = that.eleves.filter(function (eleve) {
+                        delete eleve.evaluations;
+                        return (!_.has(eleve, "evaluation"));
                     });
+                    for (let j = 0; j < _t.length; j++) {
+                        _t[j].evaluation = new Evaluation({
+                            valeur: "", oldValeur: "", appreciation: "",
+                            oldAppreciation: "", id_devoir: that.id, id_eleve: _t[j].id,
+                            ramener_sur: that.ramener_sur, coefficient: that.coefficient
+                        });
+                    }
+                    that.loadCompetencesNotes(that, compNotes);
+                    if (resolve && (typeof(resolve) === 'function')) {
+                        resolve();
+                    }
                 });
             }
         });
@@ -299,57 +309,75 @@ export class Devoir extends Model implements IModel{
     }
 
     calculStats () : Promise<any> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             let that = this;
-            http().getJson(this.api.getStatsDevoir).done(function (res) {
-                if(!res.error) {
-                    that.statistiques = res;
-                    let id = [];
-                    id.push(that.id);
-                    evaluations.devoirs.getPercentDone(that).then(() => {
-                        that.statistiques.percentDone = _.findWhere(evaluations.structure.devoirs.all,{id : that.id}).percent;
-                    });
+            try {
+                let response = await Promise.all([axioshttp.get(this.api.getStatsDevoir),
+                    evaluations.devoirs.getPercentDone(that)]);
+                let stat = response[0].data;
+
+                if (!stat.error) {
+                    that.statistiques = stat;
+                    that.statistiques.percentDone =
+                        _.findWhere(evaluations.structure.devoirs.all, {id: that.id}).percent;
                 } else {
                     _.mapObject(that.statistiques, (val) => {
                         return "";
                     });
                 }
-                //model.trigger('apply');
-                if(resolve && typeof(resolve) === 'function'){
+
+                if (resolve && typeof(resolve) === 'function') {
                     resolve();
                 }
-            });
+            }
+            catch (e){
+                reject(e);
+            }
         });
     }
 
-    syncCompetencesNotes() : Promise<any> {
-        return new Promise((resolve, reject) => {
-            var that = this;
-            http().getJson(that.api.getCompetencesNotes + that.id).done(function (res) {
-                for (var i = 0; i < that.eleves.all.length; i++) {
-                    var _comps = _.where(res, {id_eleve : that.eleves.all[i].id});
-                    if (_comps.length > 0) {
-                        var _results = [];
-                        for (var j = 0; j < that.competences.all.length; j++) {
-                            var _c = that.competences.all[j];
-                            var _t = _.findWhere(_comps, {id_competence : _c.id_competence});
-                            if (_t === undefined) {
-                                _results.push(new CompetenceNote({id_competence : _c.id_competence, nom : _c.nom, id_devoir : that.id, id_eleve : that.eleves.all[i].id, evaluation : -1}));
-                            } else {
-                                _results.push(_t);
-                            }
-                        }
-                        that.eleves.all[i].evaluation.competenceNotes.load(_results);
+    loadCompetencesNotes (that, res)  {
+
+        for (let i = 0; i < that.eleves.all.length; i++) {
+            let _comps = _.where(res, {id_eleve : that.eleves.all[i].id});
+            if (_comps.length > 0) {
+                let _results = [];
+                for (let j = 0; j < that.competences.all.length; j++) {
+                    let _c = that.competences.all[j];
+                    let _t = _.findWhere(_comps, {id_competence : _c.id_competence});
+                    if (_t === undefined) {
+                        _results.push(new CompetenceNote({id_competence : _c.id_competence,
+                            nom : _c.nom,
+                            id_devoir : that.id,
+                            id_eleve : that.eleves.all[i].id,
+                            evaluation : -1}));
                     } else {
-                        var _results = [];
-                        for (var j = 0; j < that.competences.all.length; j++) {
-                            _results.push(new CompetenceNote({id_competence : that.competences.all[j].id_competence, nom : that.competences.all[j].nom, id_devoir : that.id, id_eleve : that.eleves.all[i].id, evaluation : -1}));
-                        }
-                        that.eleves.all[i].evaluation.competenceNotes.load(_results);
+                        _results.push(_t);
                     }
                 }
+                that.eleves.all[i].evaluation.competenceNotes.load(_results);
+            } else {
+                let _results = [];
+                for (let j = 0; j < that.competences.all.length; j++) {
+                    _results.push(new CompetenceNote({id_competence : that.competences.all[j].id_competence,
+                        nom : that.competences.all[j].nom,
+                        id_devoir : that.id, id_eleve : that.eleves.all[i].id,
+                        evaluation : -1}));
+                }
+                that.eleves.all[i].evaluation.competenceNotes.load(_results);
+            }
+        }
+    }
+
+    syncCompetencesNotes(returnGet?) : Promise<any> {
+        return new Promise((resolve, reject) => {
+            let that = this;
+            http().getJson(that.api.getCompetencesNotes + that.id).done(function (res) {
+                if (returnGet !== true) {
+                    that.loadCompetencesNotes(that, res);
+                }
                 if(resolve && (typeof(resolve) === 'function')) {
-                    resolve();
+                    resolve(res);
                 }
             });
         });
