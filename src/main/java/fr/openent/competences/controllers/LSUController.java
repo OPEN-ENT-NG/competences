@@ -2365,7 +2365,6 @@ public class LSUController extends ControllerHelper {
                                 bilanPeriodique.getListeParcours().getParcours().add(parcoursEleve);
                             }
                         });
-
                 bilanPeriodiqueService.getSuiviAcquis(idStructure, new Long(currentPeriode.getTypePeriode()),
                         currentEleve.getIdNeo4j(), currentEleve.getId_Class(),
                         new Handler<Either<String, JsonArray>>() {
