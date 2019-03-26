@@ -225,6 +225,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             viewNotesDevoir: async function (params) {
+                await Utils.runMessageLoader($scope);
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -235,7 +236,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($scope.structure.devoirs.empty()) {
                         await $scope.structure.devoirs.sync();
                     }
-                    $scope.currentDevoir = _.findWhere(evaluations.structure.devoirs.all, {id: parseInt(params.devoirId)});
+                    $scope.currentDevoir = _.findWhere(evaluations.structure.devoirs.all,
+                        {id: parseInt(params.devoirId)});
                     $scope.usePerso = evaluations.structure.usePerso;
                     $scope.updateColorAndLetterForSkills();
                     $scope.updateNiveau($scope.usePerso);
@@ -255,46 +257,38 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.currentDevoir.groupe = _.findWhere($scope.structure.classes.all,
                         {id: $scope.currentDevoir.id_groupe});
 
+                    let allPromise = [];
                     if ($scope.currentDevoir.groupe.periodes.empty()) {
-                        await $scope.currentDevoir.groupe.periodes.sync();
+                        allPromise.push($scope.currentDevoir.groupe.periodes.sync(),
+                            $scope.currentDevoir.groupe.eleves.sync());
                     }
                     if ($scope.structure.typePeriodes.empty()) {
-                        await $scope.structure.typePeriodes.sync();
+                        allPromise.push($scope.structure.typePeriodes.sync());
+                    }
+                    if(!_.isEmpty(allPromise)){
+                        await Promise.all(allPromise);
                     }
                     $scope.currentDevoir.periode = _.findWhere($scope.currentDevoir.groupe.periodes.all,
                         {id_type: $scope.currentDevoir.id_periode});
 
                     $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir);
 
-                    let syncStudents = () => {
+                    template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
+                    let syncStudents = async () => {
                         $scope.openedDetails = true;
                         $scope.openedStatistiques = true;
                         $scope.openedStudentInfo = true;
                         if ($scope.currentDevoir !== undefined) {
-                            $scope.currentDevoir.competences.sync().then(() => {
-                                utils.safeApply($scope);
-                            });
-                            $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode).then(() => {
-                                //$scope.$broadcast('initHeaderColumn');
-                                var _evals = [];
-                                for (var i = 0; i < $scope.currentDevoir.eleves.all.length; i++) {
-                                    if ($scope.currentDevoir.eleves.all[i].evaluation.valeur !== null
-                                        && $scope.currentDevoir.eleves.all[i].evaluation.valeur !== undefined
-                                        && $scope.currentDevoir.eleves.all[i].evaluation.valeur !== "") {
-                                        _evals.push($scope.currentDevoir.eleves.all[i].evaluation);
-                                    }
-                                }
-                                utils.safeApply($scope);
-                                $scope.currentDevoir.calculStats(_evals).then(() => {
-                                    // fin message chargement
-                                    $scope.opened.displayMessageLoader = false;
-                                    utils.safeApply($scope);
-                                });
-                            });
+                            await Promise.all([$scope.currentDevoir.competences.sync(),
+                                $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode),
+                                $scope.currentDevoir.calculStats()]);
+                            await  Utils.stopMessageLoader($scope);
+                            // fin message chargement
+                            $scope.opened.displayMessageLoader = false;
+                            await  utils.safeApply($scope);
                         }
 
-                        template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
-                        utils.safeApply($scope);
+                        await  Utils.stopMessageLoader($scope);
 
                         angular.element(document).bind('mousewheel', function () {
                             // On Calque la position de la partie centrale sur le menu de gauche
@@ -307,15 +301,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
                     if (_classe !== undefined) {
-                        if (_classe.eleves.all.length === 0) {
-                            _classe.eleves.sync().then(() => {
-                                syncStudents();
-                            })
-                        } else {
-                            syncStudents();
-                        }
+                        await syncStudents();
                     } else {
                         $scope.opened.displayMessageLoader = false;
+                        await  Utils.stopMessageLoader($scope);
                     }
                 }
             },
@@ -467,9 +456,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if (!Utils.isChefEtab()) {
                         http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,)
                             .done(async function (res) {
-                            $scope.allMatieresSorted = _.sortBy(res, 'name');
-                            await utils.safeApply($scope);
-                        });
+                                $scope.allMatieresSorted = _.sortBy(res, 'name');
+                                await utils.safeApply($scope);
+                            });
                     } else {
                         $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
                     }
