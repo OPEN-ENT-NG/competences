@@ -215,7 +215,7 @@ public class LSUController extends ControllerHelper {
                 lsunBilans.setDonnees(donnees);
                 returnResponse(request, lsunBilans);
             }else{
-                renderJson(request,errorsExport, 500);
+                renderJson(request,errorsExport, 400);
                 log.info("getXML : BaliseBilansCycle");
             }
 
