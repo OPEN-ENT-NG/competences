@@ -2101,12 +2101,12 @@ public class LSUController extends ControllerHelper {
                         });
 
 
-                /*if (headTeachers != null && headTeachers.size() > 0) {
+                if (headTeachers != null && headTeachers.size() > 0) {
                     for(int k = 0; k < headTeachers.size(); k++){
                         Enseignant headTeacher = addorFindTeacherBalise(donnees,enseignantFromSts,headTeachers.getJsonObject(k));
                         bilanPeriodique.getProfPrincRefs().add(headTeacher);
                     }
-                }*/
+                }
 
 
                if(!addresponsableEtabRef(donnees, response, bilanPeriodique)){
