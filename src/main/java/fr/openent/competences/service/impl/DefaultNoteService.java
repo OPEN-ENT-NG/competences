@@ -1262,13 +1262,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                         if (mapIdEleveIdMatMoy.containsKey(respNoteMoyFinale.getString("id_eleve_moyf"))) {
                                                                                             Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(respNoteMoyFinale.getString("id_eleve_moyf"));
                                                                                             // meme eleve changement de matiere
-                                                                                            if (!mapIdMatMoy.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
+                                                                                            if (!mapIdMatMoy.containsKey(respNoteMoyFinale.getString("id_mat_moyf"))) {
                                                                                                 mapIdMatMoy.put(respNoteMoyFinale.getString("id_matiere"),
                                                                                                         Double.valueOf(respNoteMoyFinale.getString("moyenne_finale")));
                                                                                             }
                                                                                         } else {//nouvel eleve
                                                                                             Map<String, Double> newMapIdMatMoy = new HashMap<>();
-                                                                                            newMapIdMatMoy.put(respNoteMoyFinale.getString("id_matiere"),
+                                                                                            newMapIdMatMoy.put(respNoteMoyFinale.getString("id_mat_moyf"),
                                                                                                     Double.valueOf(respNoteMoyFinale.getString("moyenne_finale")));
                                                                                             mapIdEleveIdMatMoy.put(respNoteMoyFinale.getString("id_eleve_moyf"), newMapIdMatMoy);
                                                                                         }
@@ -1320,19 +1320,20 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                         }
 
                                                                                     }
-                                                                                    if (mapAllidMatAndidTeachers.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
-                                                                                        if (!mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
-                                                                                                .contains(respNoteMoyFinale.getString("owner"))) {
-                                                                                            mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
-                                                                                                    .add(respNoteMoyFinale.getString("owner"));
+                                                                                    if(respNoteMoyFinale.getString("id_matiere") != null){
+                                                                                        if (mapAllidMatAndidTeachers.containsKey(respNoteMoyFinale.getString("id_matiere"))) {
+                                                                                            if (!mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
+                                                                                                    .contains(respNoteMoyFinale.getString("owner"))) {
+                                                                                                mapAllidMatAndidTeachers.get(respNoteMoyFinale.getString("id_matiere"))
+                                                                                                        .add(respNoteMoyFinale.getString("owner"));
+                                                                                            }
+                                                                                        } else {
+                                                                                            Set<String> listIdsTeacher = new HashSet();
+                                                                                            listIdsTeacher.add(respNoteMoyFinale.getString("owner"));
+                                                                                            mapAllidMatAndidTeachers.put(respNoteMoyFinale.getString("id_matiere"),
+                                                                                                    listIdsTeacher);
                                                                                         }
-                                                                                    } else {
-                                                                                        Set<String> listIdsTeacher = new HashSet();
-                                                                                        listIdsTeacher.add(respNoteMoyFinale.getString("owner"));
-                                                                                        mapAllidMatAndidTeachers.put(respNoteMoyFinale.getString("id_matiere"),
-                                                                                                listIdsTeacher);
                                                                                     }
-
                                                                                 }
 
                                                                                 //3 - calculate average by eleve by mat with mapIdEleveIdMatListNotes and set result in mapIdEleveIdMatMoy
