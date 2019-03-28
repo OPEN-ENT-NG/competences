@@ -145,9 +145,10 @@ public interface DevoirService extends CrudService {
      * Liste des devoirs pour un établissement.
      *
      * @param user
+     * @param limit
      * @param handler
      */
-    void listDevoirsEtab(UserInfos user, Handler<Either<String, JsonArray>> handler);
+    void listDevoirsEtab(UserInfos user, Integer limit, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Retourne la liste des toutes les classes qui font ou ont fait l'objet d'un devoir par

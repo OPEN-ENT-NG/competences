@@ -976,6 +976,7 @@ public class DefaultUtilsService  implements UtilsService {
     }
 
     public JsonArray flatten(JsonArray collection, String keyToFlatten) {
+        log.debug("DEBUT flatten");
         JsonArray result = new JsonArray();
         for (Object o : collection) {
             JsonObject castedO = (JsonObject) o;
@@ -989,6 +990,7 @@ public class DefaultUtilsService  implements UtilsService {
                 }
             }
         }
+        log.debug("FIN flatten");
         return result;
     }
 

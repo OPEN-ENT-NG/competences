@@ -90,7 +90,9 @@ public class DevoirController extends ControllerHelper {
                     // si l'utilisateur a la fonction d'admin
                     if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
-                        devoirsService.listDevoirsEtab(user, handler);
+                        String limit = request.params().get("limit");
+                        Integer iLimit = (limit==null) ? null : Integer.valueOf(limit);
+                        devoirsService.listDevoirsEtab(user, iLimit, handler);
                     }
                     else{
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);

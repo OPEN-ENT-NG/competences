@@ -594,11 +594,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
+
     @Override
-    public void listDevoirsEtab(UserInfos user, Handler<Either<String, JsonArray>> handler){
-        StringBuilder query = new StringBuilder();
+    public void listDevoirsEtab(UserInfos user, Integer limit, Handler<Either<String, JsonArray>> handler){
+        boolean limitResult = limit != null && limit.intValue() > 0;
+
+        StringBuilder mainQuery = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        query.append(" SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe , rel_devoirs_groupes.type_groupe , devoirs.is_evaluated, " )
+        mainQuery.append(" SELECT devoirs.id, devoirs.name, devoirs.owner, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe , rel_devoirs_groupes.type_groupe , devoirs.is_evaluated, " )
                 .append("   devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur, devoirs.percent, ")
                 .append("   devoirs.id_etat, devoirs.date_publication, devoirs.id_matiere, devoirs.coefficient, devoirs.ramener_sur,  ")
                 .append("   type_sousmatiere.libelle as _sousmatiere_libelle, devoirs.date,  ")
@@ -612,15 +615,59 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("   inner join notes.users on users.id = devoirs.owner")
                 .append("   where devoirs.id_etablissement IN "+ Sql.listPrepared(user.getStructures().toArray()) +" ")
                 .append("   and devoirs.eval_lib_historise = false ")
-                .append("   and id_groupe is not null ")
-                .append("   GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username,  ")
+                .append("   and id_groupe is not null ");
+
+        StringBuilder endMainQuery = new StringBuilder();
+        endMainQuery.append("   GROUP BY devoirs.id, devoirs.name, devoirs.created, devoirs.libelle, rel_devoirs_groupes.id_groupe, devoirs.is_evaluated, users.username,  ")
                 .append("   devoirs.id_sousmatiere,devoirs.id_periode, devoirs.id_type, devoirs.id_etablissement, devoirs.diviseur,  ")
-                .append("   devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe , devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom  ")
-                .append("   ORDER BY devoirs.date DESC; ");
-        for (int i = 0; i < user.getStructures().size(); i++) {
-            values.add(user.getStructures().get(i));
+                .append("   devoirs.id_etat, devoirs.date_publication, devoirs.date, devoirs.id_matiere, rel_devoirs_groupes.type_groupe , devoirs.coefficient, devoirs.ramener_sur, type_sousmatiere.libelle, type.nom  ");
+
+
+        StringBuilder orderByQuery = new StringBuilder();
+        orderByQuery.append("   ORDER BY date DESC; ");
+
+
+
+        StringBuilder globalQuery = new StringBuilder();
+        if(limitResult) {
+            StringBuilder limitQuery = new StringBuilder();
+            limitQuery.append("LIMIT ?");
+
+            globalQuery.append("(")
+                .append(mainQuery)
+                .append("AND devoirs.percent < 100 ")
+                .append(endMainQuery)
+                .append(limitQuery)
+            .append(") UNION ( ")
+                    .append(mainQuery)
+                    .append("AND devoirs.percent = 100 ")
+                    .append(endMainQuery)
+                    .append(limitQuery)
+            .append(")")
+            .append(orderByQuery);
+
+            // params requete 1
+            for (int i = 0; i < user.getStructures().size(); i++) {
+                values.add(user.getStructures().get(i));
+            }
+            values.add(limit);
+
+            // params requete 2
+            for (int i = 0; i < user.getStructures().size(); i++) {
+                values.add(user.getStructures().get(i));
+            }
+            values.add(limit);
+
+        } else {
+            globalQuery.append(mainQuery).append(endMainQuery).append(orderByQuery);
+
+            for (int i = 0; i < user.getStructures().size(); i++) {
+                values.add(user.getStructures().get(i));
+            }
         }
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+
+
+        Sql.getInstance().prepared(globalQuery.toString(), values, validResultHandler(handler));
 
     }
 

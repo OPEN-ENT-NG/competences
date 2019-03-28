@@ -436,7 +436,7 @@ export class Structure extends Model {
                 this.usePerso = res;
                 this.niveauCompetences.sync(useDefautTheme).then(isSynced);
             });
-            this.syncDevoirs().then(isSynced);
+            this.syncDevoirs(25).then(isSynced);
             this.getDetailsOfUser().then(isSynced);
             if (Utils.isChefEtab()) {
                 this.syncEnseignants().then(isSynced);
@@ -450,9 +450,9 @@ export class Structure extends Model {
         });
     }
 
-    syncDevoirs(): Promise<any> {
+    syncDevoirs(limit:number): Promise<any> {
         return new Promise((resolve, reject) => {
-            this.devoirs.sync().then((data) => {
+            this.devoirs.sync(limit).then((data) => {
                 this.synchronized.devoirs = true;
                 this.devoirs.trigger('devoirs-sync');
                 resolve();

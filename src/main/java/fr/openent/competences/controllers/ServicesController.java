@@ -69,15 +69,17 @@ public class ServicesController extends ControllerHelper {
                     .put("action", "matiere.getAllMatieresEnseignants")
                     .put("idStructure", request.getParam("idEtablissement"));
 
+            log.debug("DEBUT Appel bus");
             eb.send(Competences.VIESCO_BUS_ADDRESS, action,
                     handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
-
+                        log.debug("FIN Appel bus");
                         if ("ok".equals(body.getString("status"))) {
                             JsonArray matiere = body.getJsonArray("results");
 
                             Handler<Either<String, JsonArray>> handlerOverwrite = getserviceHandler(utilsService.flatten(matiere, "idClasses"), arrayResponseHandler(request));
 
+                            log.debug("DEBUT Appel SQL");
                             servicesConfigurationService.getServices(request.getParam("idEtablissement"), getParams(request), handlerOverwrite);
                         }
                     }));
@@ -142,6 +144,8 @@ public class ServicesController extends ControllerHelper {
     private Handler<Either<String, JsonArray>> getserviceHandler(JsonArray aDBService, Handler<Either<String, JsonArray>> requestHandler) {
 
         return stringJsonArrayEither -> {
+            log.debug("FIN Appel SQL");
+            log.debug("DEBUT getserviceHandler");
             if(stringJsonArrayEither.isRight()) {
                 JsonArray aParamService = stringJsonArrayEither.right().getValue();
                 JsonArray result = new JsonArray();
@@ -181,6 +185,7 @@ public class ServicesController extends ControllerHelper {
             } else {
                 requestHandler.handle(stringJsonArrayEither.left());
             }
+            log.debug("FIN getserviceHandler");
         };
     }
 

@@ -34,9 +34,13 @@ export class DevoirsCollection {
 
     constructor (idEtablissement : string) {
         this.idEtablissement = idEtablissement;
-        this.sync =  function () {
+        this.sync =  function (limit) {
             return new Promise((resolve) => {
-                http().getJson(this.api.get).done(function (res) {
+                let urlGet = this.api.get;
+                if(limit !== undefined) {
+                    urlGet += "&limit="+limit;
+                }
+                http().getJson(urlGet).done(function (res) {
                     this.load(res);
                     if (evaluations.synchronized.matieres) {
                         DevoirsCollection.synchronizeDevoirMatiere();
