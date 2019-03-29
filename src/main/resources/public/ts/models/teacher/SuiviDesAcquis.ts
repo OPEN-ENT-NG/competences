@@ -220,7 +220,7 @@ export class SuivisDesAcquis extends Model{
                        }
                     });
 
-                    if (suiviDesAcquis.appreciationByClasse.appreciation === "" && suiviDesAcquis.moyenneEleve === "NN" && suiviDesAcquis.moyenneClasse === "NN"
+                    if (suiviDesAcquis.appreciationByClasse.appreciation === "" && suiviDesAcquis.moyenneEleve === "NN" /*&& suiviDesAcquis.moyenneClasse === "NN"*/
                     && suiviDesAcquis.positionnement_auto === 0 && suiviDesAcquis.positionnement_final === 0) {
                         suiviDesAcquisToRemove.push(suiviDesAcquis)
                     }
