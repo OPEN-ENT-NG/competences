@@ -194,6 +194,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
+
+                    // récupération de tous les devoirs sans limite
+                    evaluations.structure.syncDevoirs();
+
                     _.map($scope.devoirs.all, (devoir) => {
                         devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
                     });
@@ -313,6 +317,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
+
+                    // récupération de tous les devoirs sans limite
+                    evaluations.structure.syncDevoirs();
+
                     // $scope.initPeriodesList();
                     // Affichage des criteres par défaut quand on arrive sur le releve
                     $scope.openLeftMenu("opened.criteres", false);
