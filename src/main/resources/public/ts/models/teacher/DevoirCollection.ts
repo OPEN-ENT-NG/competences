@@ -34,7 +34,7 @@ export class DevoirsCollection {
 
     constructor (idEtablissement : string) {
         this.idEtablissement = idEtablissement;
-        this.sync =  function (limit) {
+        this.sync =  function (limit?) {
             return new Promise((resolve) => {
                 let urlGet = this.api.get;
                 if(limit !== undefined) {

@@ -97,11 +97,14 @@ public class DevoirController extends ControllerHelper {
                     else{
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                         String idEtablissement = request.params().get("idEtablissement");
-                        if (request.params().size() == 2) {
+                        String idClasse = request.params().get("idClasse");
+                        String idMatiere = request.params().get("idMatiere");
+
+
+                        if (idClasse == null) {
                             devoirsService.listDevoirs(user,idEtablissement, handler);
                         } else {
-                            String idClasse = request.params().get("idClasse");
-                            String idMatiere = request.params().get("idMatiere");
+
                             boolean historise = false;
                             if (request.params().get("historise") != null) {
                                 historise = Boolean.parseBoolean(request.params().get("historise"));

@@ -450,7 +450,7 @@ export class Structure extends Model {
         });
     }
 
-    syncDevoirs(limit:number): Promise<any> {
+    syncDevoirs(limit?:number): Promise<any> {
         return new Promise((resolve, reject) => {
             this.devoirs.sync(limit).then((data) => {
                 this.synchronized.devoirs = true;
