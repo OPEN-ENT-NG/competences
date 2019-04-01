@@ -1263,7 +1263,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                                                             Map<String, Double> mapIdMatMoy = mapIdEleveIdMatMoy.get(respNoteMoyFinale.getString("id_eleve_moyf"));
                                                                                             // meme eleve changement de matiere
                                                                                             if (!mapIdMatMoy.containsKey(respNoteMoyFinale.getString("id_mat_moyf"))) {
-                                                                                                mapIdMatMoy.put(respNoteMoyFinale.getString("id_matiere"),
+                                                                                                mapIdMatMoy.put(respNoteMoyFinale.getString("id_mat_moyf"),
                                                                                                         Double.valueOf(respNoteMoyFinale.getString("moyenne_finale")));
                                                                                             }
                                                                                         } else {//nouvel eleve
