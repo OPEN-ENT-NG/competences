@@ -75,7 +75,7 @@
                                 <h5><i18n>viescolaire.utils.class</i18n></h5>
                             </div>
                         </div>
-                        <div class="content-box-accueil--table--content" style="max-height: 220px;">
+                        <div class="content-box-accueil--table--content" style="max-height: 220px; overflow: auto !important;" bottom-scroll="syncAllDevoirs()">
                             <div  ng-repeat="devoir in devoirs.all | filter:filterValidClasse() | customSearchFilters:search | orderBy:'date':true" class="row">
                                 <a ng-href="#/devoir/[[devoir.id]]" >
                                     <div class="four cell">
@@ -116,7 +116,7 @@
                                 <h5><i18n>viescolaire.utils.class</i18n></h5>
                             </div>
                         </div>
-                        <div class="content-box-accueil--table--content">
+                        <div class="content-box-accueil--table--content" style="overflow: auto !important;" bottom-scroll="syncAllDevoirs()">
                             <div ng-repeat="devoir in currentDevoirsNotDone track by $index | orderBy:'date':true |filter:FilterGroupEmpty" class="row">
                                 <a ng-href="#/devoir/[[devoir.id]]" >
                                     <div class="four cell">

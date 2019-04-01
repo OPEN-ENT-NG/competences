@@ -97,10 +97,10 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                     $scope.currentDevoirsNotDone = [];
                     for(var d = 0; d < devoirs.length; d++){
                         let classe = _.findWhere($scope.structure.classes.all, {id: devoirs[d].id_groupe});
-                        let current_periode = await $scope.getCurrentPeriode(classe);
-                        if(current_periode === -1 || current_periode.id_type === devoirs[d].id_periode){
+                        // let current_periode = await $scope.getCurrentPeriode(classe);
+                        // if(current_periode === -1 || current_periode.id_type === devoirs[d].id_periode){
                             $scope.currentDevoirsNotDone.push($scope.devoirsNotDone[d]);
-                        }
+                        // }
                     }
                     await utils.safeApply($scope);
                 });
@@ -214,6 +214,13 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
                     $scope.chartOptions.classes[$scope.chartOptions.selectedClasse].id[points[0]._index];
                 $scope.goTo(path);
             }
+
+        };
+
+        $scope.syncAllDevoirs =  async function(){
+            console.log("syncAllDevoirs...")
+            await evaluations.structure.syncDevoirs();
+            console.log("syncAllDevoirs done !")
 
         };
 
