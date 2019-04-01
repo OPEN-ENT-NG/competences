@@ -2307,8 +2307,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Position l'objet matière sur le devoir en cours de création
          */
         $scope.selectedMatiere = function (devoir) {
-            let matiere = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                $scope.devoir.id_groupe, $scope.classes, $scope.search)[0];
+            let matieres = $filter('getMatiereClasse')($scope.structure.matieres.all,
+                $scope.devoir.id_groupe, $scope.classes, $scope.search);
+            let matiere = _.findWhere(matieres, {id: devoir.id_matiere});
+
             if (matiere !== undefined) {
                 devoir.matiere = matiere;
                 devoir.id_matiere = matiere.id;
