@@ -67,7 +67,7 @@
                     </label>
                 </div>
                 <a ng-href="#/devoir/[[devoir.id]]"
-                   ng-if="isValidClasse(devoir.id_groupe)">
+                   ng-if="isValidClasseMatiere(devoir.id_groupe)">
                     <div class="cell cell-indent expandable-content four-mobile"
                          ng-class="{'one': isChefEtab(), 'two': !isChefEtab()}" >
                         [[getDateFormated(devoir.date)]]
@@ -93,7 +93,7 @@
                         [[devoir.teacher]]
                     </div>
                 </a>
-                <div ng-if="!isValidClasse(devoir.id_groupe)">
+                <div ng-if="!isValidClasseMatiere(devoir.id_groupe)">
                     <div class="cell cell-indent expandable-content four-mobile"
                          ng-class="{'one': isChefEtab(), 'two': !isChefEtab()}">
                         [[getDateFormated(devoir.date)]]

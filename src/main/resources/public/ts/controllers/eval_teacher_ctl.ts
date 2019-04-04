@@ -2868,12 +2868,24 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return;
         };
 
-        $scope.isValidClasse = (idClasse) => {
+        $scope.isValidClasseMatiere = (idClasse) => {
             if ($scope.classes !== undefined) {
                 let matiereClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
                     idClasse, $scope.classes, $scope.search);
                 return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined
                     && !_.isEmpty(matiereClasse);
+            }
+        };
+
+        $scope.filterValidClasseMatiere = () => {
+            return (item) => {
+                return $scope.isValidClasseMatiere(item.id_groupe || item.id);
+            };
+        };
+
+        $scope.isValidClasse = (idClasse) => {
+            if ($scope.classes !== undefined) {
+                return $scope.classes.findWhere({id: idClasse, remplacement: false}) !== undefined;
             }
         };
 
