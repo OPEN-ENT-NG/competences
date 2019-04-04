@@ -18,6 +18,7 @@
 import { ng, moment, _ } from 'entcore';
 import { evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
+import {Utils} from "../models/teacher/Utils";
 
 export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', [
     '$scope', 'route', 'model', '$rootScope',
@@ -218,9 +219,22 @@ export let evalAcuTeacherController = ng.controller('EvalAcuTeacherController', 
         };
 
         $scope.syncAllDevoirs =  async function(){
-            console.log("syncAllDevoirs...")
-            await evaluations.structure.syncDevoirs();
-            console.log("syncAllDevoirs done !")
+            if(evaluations.structure !== undefined && evaluations.structure.devoirs !== undefined
+                && evaluations.structure.devoirs.length() < 51 && evaluations.structure.devoirs.lock === undefined) {
+
+                console.log("syncAllDevoirs...");
+                Utils.runMessageLoader($scope);
+
+                evaluations.structure.devoirs.lock = true;
+                await evaluations.structure.syncDevoirs();
+                evaluations.structure.devoirs.lock = undefined;
+
+                Utils.stopMessageLoader($scope);
+                console.log("syncAllDevoirs done !");
+            } else {
+                console.log("syncAllDevoirs already running or devoirs already sync : " + evaluations.structure.devoirs.length());
+            }
+
 
         };
 

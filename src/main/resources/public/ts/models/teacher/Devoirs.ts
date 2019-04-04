@@ -20,5 +20,6 @@ import { Devoir, DevoirsCollection } from './index';
 
 export interface Devoirs extends Collection<Devoir>, DevoirsCollection {
     all: Devoir[];
+    lock: boolean;
     synchronizedDevoirType: () => any;
 }

@@ -112,6 +112,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.showPanel = false;
         });
 
+
+        function endAccueil() {
+            utils.safeApply($scope);
+            $scope.opened.lightbox = false;
+            template.open('main', 'enseignants/eval_acu_teacher');
+            utils.safeApply($scope);
+        }
         let routesActions = {
 
             accueil: function (params) {
@@ -119,10 +126,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.cleanRoot();
                     $scope.search = $scope.initSearch();
                     $scope.displayCycles($scope.search.periode);
+                    evaluations.structure.syncDevoirs(25).then(() => {
+                        endAccueil();
+                    });
+                } else {
+                    endAccueil();
                 }
-                $scope.opened.lightbox = false;
-                template.open('main', 'enseignants/eval_acu_teacher');
-                utils.safeApply($scope);
             },
 
             listRemplacements: function () {
