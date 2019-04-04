@@ -745,7 +745,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (_classe !== undefined && !_classe.remplacement && _classe.eleves.empty()) {
                     _classe.eleves.sync().then(() => {
                         utils.safeApply($scope);
-                        evaluations.structure.trigger('synchronize-students');
+                        _classe.trigger('synchronize-students');
                         return true;
                     });
                 }

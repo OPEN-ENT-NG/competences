@@ -124,7 +124,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 } else {
                     // cas 1ère sélection de période : on attend le chargement des élèves avant de passer
                     // lal iste des élèves au constructeur SuiviCompetenceClasse
-                    evaluations.structure.on('synchronize-students', async function () {
+                    $scope.informations.classe.on('synchronize-students', async function () {
                         $scope.suiviCompetence = new SuiviCompetenceClasse(
                             $scope.search.classe.filterEvaluableEleve($scope.search.periode)
                             , $scope.search.periode);
