@@ -514,7 +514,7 @@ public class Utils {
                             JsonArray requestMats = body.getJsonArray("results");
 
                             if( requestMats != null && requestMats.size() > 0 ){
-                                matiereService.getLibellesCourtsMatieres(new Handler<Either<String, Map<String,String>>>() {
+                                matiereService.getLibellesCourtsMatieres(true,new Handler<Either<String, Map<String,String>>>() {
                                     @Override
                                     public void handle(Either<String, Map<String, String>> event) {
                                         Map mapCodeLibelleCourt = event.right().getValue();

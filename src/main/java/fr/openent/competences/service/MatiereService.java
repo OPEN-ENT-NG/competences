@@ -11,7 +11,7 @@ import io.vertx.core.Handler;
 import java.util.Map;
 
 public interface MatiereService extends CrudService {
-     void getLibellesCourtsMatieres(Handler<Either<String, Map<String,String>>> handler);
+     void getLibellesCourtsMatieres(Boolean wantMapCodeLibelle,Handler<Either<String, Map<String,String>>> handler);
      /**
       * Sauvegarde un model de libelle de matiere
       * @param idStructure

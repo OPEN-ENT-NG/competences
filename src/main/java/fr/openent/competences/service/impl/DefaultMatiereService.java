@@ -43,10 +43,10 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     }
 
     @Override
-    public void getLibellesCourtsMatieres(Handler<Either<String, Map<String,String>>> handler) {
+    public void getLibellesCourtsMatieres(Boolean wantMapCodeLibelle, Handler<Either<String, Map<String,String>>> handler) {
 
         String query = "SELECT code, libelle_court FROM "+ this.resourceTable;
-        Map<String,String> mapCodeLibelleCourt = new HashMap<>();
+        Map<String,String> responseMap = new HashMap<>();
 
         Sql.getInstance().prepared(query ,new JsonArray(), Competences.DELIVERY_OPTIONS,
                 SqlResult.validResultHandler( event -> {
@@ -55,14 +55,18 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                         JsonArray codesLibellesCourts = event.right().getValue();
 
                         for(int i = 0; i < codesLibellesCourts.size(); i++ ){
-                            if(!mapCodeLibelleCourt.containsKey(codesLibellesCourts.getJsonObject(i).getString(CODE))) {
-                                mapCodeLibelleCourt.put(codesLibellesCourts.getJsonObject(i).getString(CODE),
+                            if(!responseMap.containsKey(codesLibellesCourts.getJsonObject(i).getString(CODE))) {
+                                if(wantMapCodeLibelle)//if you want map<codeMatiere,libelleCourt>
+                                    responseMap.put(codesLibellesCourts.getJsonObject(i).getString(CODE),
                                         codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT));
+                            }else{//if you want map<libelleCourt,codeMatiere
+                                responseMap.put(codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT),
+                                        codesLibellesCourts.getJsonObject(i).getString(CODE));
                             }
                         }
-                        handler.handle(new Either.Right<>(mapCodeLibelleCourt));
+                        handler.handle(new Either.Right<>(responseMap));
                     }else{
-                        handler.handle(new Either.Right<>(mapCodeLibelleCourt));
+                        handler.handle(new Either.Right<>(responseMap));
                         log.error("getLibellesCourtsMatieres : " + event.left().getValue());
                     }
 

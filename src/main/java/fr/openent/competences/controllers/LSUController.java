@@ -475,8 +475,6 @@ public class LSUController extends ControllerHelper {
     }
 
 
-
-
     /**
      * complete la balise entete et la set a lsunBilans
      * @param lsunBilans
@@ -1661,10 +1659,14 @@ public class LSUController extends ControllerHelper {
             if(enseignantsFromSts != null && enseignantsFromSts.size() > 0) {
                 JsonObject enseigantFromSts = (JsonObject) enseignantsFromSts.stream()
                         .filter(
-                                el -> (((JsonObject) el).getString("NOM_USAGE").equals(enseignant.getString("lastName")) ||
+                                el -> (((JsonObject) el).getString("NOM_USAGE") != null &&
+                                        ((JsonObject) el).getString("NOM_USAGE").equals(enseignant.getString("lastName")) ||
                                         ((JsonObject) el).getString("NOM_USAGE").equals(enseignant.getString("name")))
-                                        && ((JsonObject) el).getString("PRENOM").equals(enseignant.getString("firstName"))
-                                        && ((JsonObject) el).getString("DATE_NAISSANCE").equals(enseignant.getString("birthDate"))
+                                        && ((JsonObject) el).getString("PRENOM")!=null &&
+                                        ((JsonObject) el).getString("PRENOM").equals(enseignant.getString("firstName"))
+                                        && ( ((JsonObject) el).getString("DATE_NAISSANCE")== null ||
+                                        ((JsonObject) el).getString("DATE_NAISSANCE")!=null &&
+                                                ((JsonObject) el).getString("DATE_NAISSANCE").equals(enseignant.getString("birthDate")))
                         )
                         .findFirst()
                         .orElse(null);
