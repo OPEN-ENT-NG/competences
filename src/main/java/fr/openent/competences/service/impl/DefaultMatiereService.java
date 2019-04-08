@@ -54,14 +54,15 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                     if(event.isRight()){
                         JsonArray codesLibellesCourts = event.right().getValue();
 
-                        for(int i = 0; i < codesLibellesCourts.size(); i++ ){
-                            if(!responseMap.containsKey(codesLibellesCourts.getJsonObject(i).getString(CODE))) {
-                                if(wantMapCodeLibelle)//if you want map<codeMatiere,libelleCourt>
+                        for(int i = 0; i < codesLibellesCourts.size(); i++ ) {
+                            if (!responseMap.containsKey(codesLibellesCourts.getJsonObject(i).getString(CODE))) {
+                                if (wantMapCodeLibelle) {//if you want map<codeMatiere,libelleCourt>
                                     responseMap.put(codesLibellesCourts.getJsonObject(i).getString(CODE),
-                                        codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT));
-                            }else{//if you want map<libelleCourt,codeMatiere
-                                responseMap.put(codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT),
-                                        codesLibellesCourts.getJsonObject(i).getString(CODE));
+                                            codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT));
+                                } else {//if you want map<libelleCourt,codeMatiere
+                                    responseMap.put(codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT),
+                                            codesLibellesCourts.getJsonObject(i).getString(CODE));
+                                }
                             }
                         }
                         handler.handle(new Either.Right<>(responseMap));

@@ -47,6 +47,7 @@
   "competences.create": "Créer un Compétences",
   "competences.acquired": "Acquis scolaires",
   "competences.on.periode": "Sur la période",
+  "competences.code": "Code",
 
   "custom": "Personnalisé",
 
@@ -85,6 +86,7 @@
   "from": "De",
   "date": "Date",
   "share.search.title": "Rechercher des utilisateurs et des groupes",
+
 
   "tuto.title": "Naviguez au sein de vos documents en vue vignettes : ",
   "tuto.action.select": "Cliquez",
@@ -398,6 +400,7 @@
   "evaluation.lsu.export.button" : "Générer l'export",
   "evaluation.lsu.export.error" : "Une erreur est survenue lors de la génération du fichier",
   "evaluations.lsu.errors.eleves.bilan.periodique.title" : "Pour information, les élèves suivants n'ont pas tous les élèments nécessaires pour générer le XML",
+  "evaluations.lsu.errors.errorCode.bilan.periodique.title" : "Désolé, les disciplines suivantes ont des codes identiques.",
   "evaluation.lsu.lightBox.errors.firstName" : "Prénom",
   "evaluation.lsu.lightBox.errors.messages" : "éléments manquants",
   "evaluations.devoir.updateDevoir.firstConfirmSupp.change.classe":"Suite au changement de classe, les évaluations, annotations et appréciations ne seront pas conservées.",

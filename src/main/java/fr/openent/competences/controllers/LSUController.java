@@ -26,6 +26,7 @@ import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.bean.lsun.ElementProgramme;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -39,6 +40,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.DeliveryOptions;
+import org.apache.fontbox.afm.Composite;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -99,6 +101,7 @@ public class LSUController extends ControllerHelper {
     private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
     private final DefaultCompetenceNoteService competenceNoteService;
     private LSUService lsuService;
+    private int fakeCode = 10;
 
     private static final String TIME = "Time";
     private static final String MESSAGE = "message";
@@ -309,7 +312,7 @@ public class LSUController extends ControllerHelper {
         final Map<String, JsonArray> tableConversionByClass= new HashMap<>();
         final Map<String, JsonArray> periodesByClass = new HashMap<>();
         final Map<String, JsonArray> mapIdClassHeadTeachers = new HashMap<>();
-
+        fakeCode = 10;
         donnees.setEnseignants(objectFactory.createDonneesEnseignants());
 
 
@@ -1295,13 +1298,54 @@ public class LSUController extends ControllerHelper {
         });
     }
 
+    private String getCode(String externalId, Map<String, String> lisCode){
+        Object result = externalId;
+        try {
+            Long.valueOf(externalId);
+        }
+        catch (NumberFormatException e){
+            result = lisCode.get(externalId);
+            if(result == null){
+                log.info(" No Code Found ");
+                result = "0000" + String.valueOf(++fakeCode);
+            }
+        }
+        return result.toString();
+    }
+    private void setDisciplineForStructure(final Donnees donnees, JsonArray listSubject, Map<String, String> listCode,
+                                           final Handler<String> handler) {
+        donnees.setDisciplines(objectFactory.createDonneesDisciplines());
+        if (listSubject != null && !listSubject.isEmpty()) {
+            listSubject.forEach(item -> {
+                JsonObject currentSubject = (JsonObject) item;
+                Discipline discipline = objectFactory.createDiscipline();
+                String externalId =  currentSubject.getString("externalId");
+                discipline.setCode(getCode(externalId, listCode));
+                discipline.setId("DIS_" + currentSubject.getString("id"));
+                discipline.setLibelle(currentSubject.getString("name"));
+                discipline.setModaliteElection(ModaliteElection.fromValue("S"));
+                donnees.getDisciplines().getDiscipline().add(discipline);
+            });
+            JsonObject response = new JsonObject();
+            response.put("status", "success");
+            response.put("data", "success");
+            // log for time-out
+            handler.handle("success");
+        }
+    }
     private void getBaliseDisciplines(final Donnees donnees, final String idStructure, final Handler<String> handler) {
+
+        Future<Map<String, String>> libelleCourtFuture = Future.future();
+        new DefaultMatiereService().getLibellesCourtsMatieres(false, event -> {
+            FormateFutureEvent.formate(libelleCourtFuture, event);
+        });
         JsonObject action = new JsonObject()
                 .put("action", "matiere.getMatieresForUser")
                 .put("userType", "Personnel")
                 .put("idUser", "null")
                 .put("idStructure", idStructure)
                 .put("onlyId", false);
+        Future<JsonArray> disciplines = Future.future();
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                     AtomicBoolean answer = new AtomicBoolean(false);
@@ -1314,28 +1358,11 @@ public class LSUController extends ControllerHelper {
                         if ("ok".equals(body.getString("status"))) {
                             try {
                                 JsonArray listSubject = body.getJsonArray("results");
-                                donnees.setDisciplines(objectFactory.createDonneesDisciplines());
-                                if (listSubject != null && !listSubject.isEmpty()) {
-                                    listSubject.forEach(item -> {
-                                        JsonObject currentSubject = (JsonObject) item;
-                                        Discipline discipline = objectFactory.createDiscipline();
-                                        discipline.setCode(currentSubject.getString("externalId"));
-                                        discipline.setId("DIS_" + currentSubject.getString("id"));
-                                        discipline.setLibelle(currentSubject.getString("name"));
-                                        discipline.setModaliteElection(ModaliteElection.fromValue("S"));
-                                        donnees.getDisciplines().getDiscipline().add(discipline);
-                                    });
-                                    JsonObject response = new JsonObject();
-                                    response.put("status", "success");
-                                    response.put("data", "success");
-                                    // log for time-out
-                                    answer.set(true);
-                                    lsuService.serviceResponseOK(answer, count.get(), thread, method);
-                                    handler.handle("success");
-                                }
+                                disciplines.complete(listSubject);
+                                answer.set(true);
+                                lsuService.serviceResponseOK(answer, count.get(), thread, method);
                             } catch (Throwable e) {
-                                handler.handle("method getBaliseResponsable : " + e.getMessage());
-                                log.error("method getBaliseResponsable : " + e.getMessage());
+                                disciplines.fail("method getBaliseResponsable : " + e.getMessage());
                             }
                         } else {
                             String error = body.getString(MESSAGE);
@@ -1345,11 +1372,22 @@ public class LSUController extends ControllerHelper {
                                         handlerToAsyncHandler(this));
                             }
                             else {
-                                log.error("method getBaliseDisciplines discipline : error eb matiere.getMatieresForUser ko, idStructure: " + idStructure);
-                                handler.handle("getBaliseDisciplines discipline : error eb matiere.getMatieresForUser ko");
+                                String failureMessage = "getBaliseDisciplines discipline :" +
+                                        " error eb matiere.getMatieresForUser ko";
+                                disciplines.fail(failureMessage);
                             }
                         }
                     }}));
+
+        CompositeFuture.all(libelleCourtFuture, disciplines).setHandler(event -> {
+            if(event.failed()){
+               handler.handle(event.cause().getMessage());
+            }
+            else{
+                setDisciplineForStructure(donnees, disciplines.result(), libelleCourtFuture.result(), handler);
+            }
+
+        });
     }
 
     /* private void getBalisePeriodes(final Donnees donnees, final List<Integer> wantedPeriodes, final JsonObject periodesAdded,
@@ -1961,6 +1999,7 @@ public class LSUController extends ControllerHelper {
         errorsExport = new JsonObject();
         final AtomicInteger originalSize = new AtomicInteger();
         final AtomicInteger idElementProgramme = new AtomicInteger();
+        JsonArray idsEvaluatedDiscipline = new JsonArray();
 
 
         Handler getOut = new Handler<Either<String, JsonObject>>() {
@@ -1971,6 +2010,8 @@ public class LSUController extends ControllerHelper {
                     log.info("Get OUTTTTT " + bilansPeriodiques.getBilanPeriodique().size() + "  ==  "
                             + eleves.getEleve().size());
                     donnees.setBilansPeriodiques(bilansPeriodiques);
+                    // récupération des disciplines évaluées
+                    lsuService.validateDisciplines(idsEvaluatedDiscipline, donnees,errorsExport);
                     handler.handle(new Either.Right<String, JsonObject>(suiviAcquisResponse.right().getValue()));
                 } else {
                     //log.info("waiting all child done");
@@ -2474,7 +2515,11 @@ public class LSUController extends ControllerHelper {
                             }
 
                             private void addAcquis_addDiscipline(JsonObject currentAcquis, Acquis aquisEleve) {
-                                Discipline currentSubj = getDisciplineInXML(currentAcquis.getString("id_matiere"), donnees);
+                                String idMatiere = currentAcquis.getString("id_matiere");
+                                if(!idsEvaluatedDiscipline.contains(idMatiere)){
+                                    idsEvaluatedDiscipline.add(idMatiere);
+                                }
+                                Discipline currentSubj = getDisciplineInXML(idMatiere, donnees);
                                 if (currentSubj != null) {
                                     aquisEleve.setDisciplineRef(currentSubj);
                                 }

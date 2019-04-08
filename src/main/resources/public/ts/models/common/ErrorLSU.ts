@@ -29,25 +29,33 @@ export class ErrorLSU extends Model {
 }
 export class ErrorsLSU {
 
+    errorCode : any[];
     all : ErrorLSU[];
 
     constructor () {
         this.all = [];
+        this.errorCode = [];
     }
+
     setErrorsLSU(data: any){
         if(data instanceof ArrayBuffer){
-           var obj : string;
-           var decodedString : any;
+           let obj : string;
+           let decodedString : any;
 
             if('TextDecoder' in window){
-                var dataView = new DataView(data);
+                let dataView = new DataView(data);
                 decodedString = new TextDecoder ('utf8');
                 obj = JSON.parse(decodedString.decode(dataView));
             }else{
                  decodedString = String.fromCharCode.apply(null, new Uint8Array(data));
                  obj = JSON.parse(decodedString);
             }
-            this.all = Mix.castArrayAs(ErrorLSU,_.values(obj));
+            let errorCode = _.values(_.pick(obj, 'errorCode'));
+            if(!_.isEmpty(errorCode)){
+                errorCode = errorCode[0];
+            }
+            this.errorCode =  errorCode;
+            this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode')));
         }
     }
 

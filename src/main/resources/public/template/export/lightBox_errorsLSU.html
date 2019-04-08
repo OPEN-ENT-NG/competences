@@ -16,8 +16,28 @@
   -->
 
 <lightbox show="opened.lightboxErrorsLSU" on-close="!opened.lightboxErrorsLSU">
-    <h2 class="center"><i18n>evaluations.lsu.errors.eleves.bilan.periodique.title</i18n></h2>
-    <div class="responsive-table">
+
+    <h2 ng-if="lsu.errorsLSU.errorCode.length > 0" class="center">
+    <i18n>evaluations.lsu.errors.errorCode.bilan.periodique.title</i18n></h2>
+    <div ng-if="lsu.errorsLSU.errorCode.length > 0" class="responsive-table">
+        <table>
+            <thead>
+            <tr>
+                <th><i18n>competences.code</i18n></th>
+                <th class="center"><i18n>evaluations.libelle</i18n></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="discipline in lsu.errorsLSU.errorCode | orderBy:['code']">
+                <td>[[discipline.code]]</td>
+                <td>[[discipline.libelle]]</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <h2 ng-if="lsu.errorsLSU.all.length > 0" class="center">
+        <i18n>evaluations.lsu.errors.eleves.bilan.periodique.title</i18n></h2>
+    <div ng-if="lsu.errorsLSU.all.length > 0" class="responsive-table">
         <table>
             <thead>
             <tr>
