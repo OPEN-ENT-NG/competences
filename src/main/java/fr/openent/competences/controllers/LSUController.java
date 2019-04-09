@@ -77,6 +77,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
+import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -312,6 +313,7 @@ public class LSUController extends ControllerHelper {
         final Map<String, JsonArray> tableConversionByClass= new HashMap<>();
         final Map<String, JsonArray> periodesByClass = new HashMap<>();
         final Map<String, JsonArray> mapIdClassHeadTeachers = new HashMap<>();
+        lsuService.initIdsEvaluatedDiscipline();
         fakeCode = 10;
         donnees.setEnseignants(objectFactory.createDonneesEnseignants());
 
@@ -319,7 +321,8 @@ public class LSUController extends ControllerHelper {
         Handler<Either.Right<String, JsonObject>> getBilansPeriodiquesHandler = backresponse -> {
 
             JsonObject data = backresponse.right().getValue();
-
+            // récupération des disciplines évaluées
+            lsuService.validateDisciplines(lsuService.getIdsEvaluatedDiscipline(), donnees, errorsExport);
             if (data.getInteger("status") == 200 && errorsExport.isEmpty()) {
                 log.info("FIN exportLSU : export ");
                 lsunBilans.setDonnees(donnees);
@@ -1306,7 +1309,7 @@ public class LSUController extends ControllerHelper {
         catch (NumberFormatException e){
             result = lisCode.get(externalId);
             if(result == null){
-                log.info(" No Code Found ");
+                log.info(" No Code Found " + externalId);
                 result = "0000" + String.valueOf(++fakeCode);
             }
         }
@@ -1321,7 +1324,7 @@ public class LSUController extends ControllerHelper {
                 Discipline discipline = objectFactory.createDiscipline();
                 String externalId =  currentSubject.getString("externalId");
                 discipline.setCode(getCode(externalId, listCode));
-                discipline.setId("DIS_" + currentSubject.getString("id"));
+                discipline.setId(DISCIPLINE_KEY + currentSubject.getString("id"));
                 discipline.setLibelle(currentSubject.getString("name"));
                 discipline.setModaliteElection(ModaliteElection.fromValue("S"));
                 donnees.getDisciplines().getDiscipline().add(discipline);
@@ -1953,6 +1956,7 @@ public class LSUController extends ControllerHelper {
             }else {
                 finalInsertAddEnseignantDiscipline(enseignantDiscipline, disciplineRefs, resp1FutureComposite, currentSubj, currentEnseignant);
             }
+            lsuService.addIdsEvaluatedDiscipline(currentSubj.getId().replaceAll(DISCIPLINE_KEY, ""));
         } else {
             log.info("addEnseignantDiscipline no completed");
             resp1FutureComposite.complete();
@@ -1999,7 +2003,7 @@ public class LSUController extends ControllerHelper {
         errorsExport = new JsonObject();
         final AtomicInteger originalSize = new AtomicInteger();
         final AtomicInteger idElementProgramme = new AtomicInteger();
-        JsonArray idsEvaluatedDiscipline = new JsonArray();
+
 
 
         Handler getOut = new Handler<Either<String, JsonObject>>() {
@@ -2010,8 +2014,6 @@ public class LSUController extends ControllerHelper {
                     log.info("Get OUTTTTT " + bilansPeriodiques.getBilanPeriodique().size() + "  ==  "
                             + eleves.getEleve().size());
                     donnees.setBilansPeriodiques(bilansPeriodiques);
-                    // récupération des disciplines évaluées
-                    lsuService.validateDisciplines(idsEvaluatedDiscipline, donnees,errorsExport);
                     handler.handle(new Either.Right<String, JsonObject>(suiviAcquisResponse.right().getValue()));
                 } else {
                     //log.info("waiting all child done");
@@ -2516,9 +2518,7 @@ public class LSUController extends ControllerHelper {
 
                             private void addAcquis_addDiscipline(JsonObject currentAcquis, Acquis aquisEleve) {
                                 String idMatiere = currentAcquis.getString("id_matiere");
-                                if(!idsEvaluatedDiscipline.contains(idMatiere)){
-                                    idsEvaluatedDiscipline.add(idMatiere);
-                                }
+                                lsuService.addIdsEvaluatedDiscipline(idMatiere);
                                 Discipline currentSubj = getDisciplineInXML(idMatiere, donnees);
                                 if (currentSubj != null) {
                                     aquisEleve.setDisciplineRef(currentSubj);
@@ -2607,7 +2607,7 @@ public class LSUController extends ControllerHelper {
             return null;
         }
         return donnees.getDisciplines().getDiscipline().stream()
-                .filter(dis -> dis.getId().equals("DIS_"+id))
+                .filter(dis -> dis.getId().equals(DISCIPLINE_KEY + id))
                 .findFirst()
                 .orElse(null);
     }

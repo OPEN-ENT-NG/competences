@@ -16,8 +16,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class DefaultLSUService implements LSUService {
-
+    public static final String DISCIPLINE_KEY = "DIS_";
     private static final Logger log = LoggerFactory.getLogger(DefaultExportBulletinService.class);
+    private JsonArray idsEvaluatedDiscipline;
 
     public void serviceResponseOK (AtomicBoolean answer, int count, String thread, String method) {
         if (count > 1 ) {
@@ -35,7 +36,8 @@ public class DefaultLSUService implements LSUService {
         // Récupération des disciplines évaluées
         List<Discipline> disciplines = donnees.getDisciplines().getDiscipline().stream().filter(
                 discipline ->
-                        idsEvaluatedDiscipline.contains(discipline.getId().substring(4, discipline.getId().length())) )
+                        idsEvaluatedDiscipline.contains(discipline.getId().substring(DISCIPLINE_KEY.length(),
+                                discipline.getId().length())) )
                         .collect(Collectors.toList());
 
 
@@ -63,6 +65,20 @@ public class DefaultLSUService implements LSUService {
 
         donnees.setDisciplines(correctEvaluatedDisciplines);
 
+    }
+
+    public JsonArray getIdsEvaluatedDiscipline() {
+        return idsEvaluatedDiscipline;
+    }
+
+    public void addIdsEvaluatedDiscipline( Object idDiscipline) {
+        if(!idsEvaluatedDiscipline.contains(idDiscipline)){
+            idsEvaluatedDiscipline.add(idDiscipline);
+        }
+    }
+
+    public void initIdsEvaluatedDiscipline(){
+        idsEvaluatedDiscipline = new JsonArray();
     }
 
 }

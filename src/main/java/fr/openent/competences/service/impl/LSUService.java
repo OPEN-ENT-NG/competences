@@ -19,4 +19,11 @@ public interface LSUService {
      * @param errorsExport
      */
     void validateDisciplines(JsonArray idsEvaluatedDiscipline, Donnees donnees, JsonObject errorsExport);
+
+
+    JsonArray getIdsEvaluatedDiscipline() ;
+
+    void addIdsEvaluatedDiscipline( Object idDiscipline);
+
+    void initIdsEvaluatedDiscipline();
 }
