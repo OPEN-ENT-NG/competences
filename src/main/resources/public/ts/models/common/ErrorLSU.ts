@@ -38,22 +38,21 @@ export class ErrorsLSU {
     }
 
     setErrorsLSU(data: any){
-        if(data instanceof ArrayBuffer){
+        if(data instanceof ArrayBuffer && data.byteLength !== 0){
            let obj : string;
            let decodedString : any;
-
-            if('TextDecoder' in window){
-                let dataView = new DataView(data);
-                decodedString = new TextDecoder ('utf8');
-                obj = JSON.parse(decodedString.decode(dataView));
-            }else{
-                 decodedString = String.fromCharCode.apply(null, new Uint8Array(data));
-                 obj = JSON.parse(decodedString);
-            }
-            let errorCode = _.values(_.pick(obj, 'errorCode'));
-            if(!_.isEmpty(errorCode)){
-                errorCode = errorCode[0];
-            }
+                            if('TextDecoder' in window){
+                    let dataView = new DataView(data);
+                    decodedString = new TextDecoder ('utf8');
+                    obj = JSON.parse(decodedString.decode(dataView));
+                }else{
+                     decodedString = String.fromCharCode.apply(null, new Uint8Array(data));
+                     obj = JSON.parse(decodedString);
+                }
+                let errorCode = _.values(_.pick(obj, 'errorCode'));
+                if(!_.isEmpty(errorCode)){
+                    errorCode = errorCode[0];
+                }
             this.errorCode =  errorCode;
             this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode')));
         }
