@@ -2531,7 +2531,8 @@ public class LSUController extends ControllerHelper {
                                 newEP.setLibelle(epLabel);
 
                                 ElementProgramme ep = donnees.getElementsProgramme().getElementProgramme().stream()
-                                        .filter(cep -> cep.getLibelle().equals(newEP.getLibelle()))
+                                        .filter(cep -> cep.getLibelle().replaceAll("[\\s]","")
+                                                .equals(newEP.getLibelle().replaceAll("[\\s]","")))
                                         .findFirst()
                                         .orElse(null);
                                 if(ep == null){

@@ -113,7 +113,11 @@ public class ElementProgramme {
         if(value == null || value.isEmpty()){
             value = Competences.ELEMENT_PROGRAMME_DEFAULT;
         }
-        this.libelle = value;
+        if(value.length() > 300){
+            this.libelle = value.substring(0,299);;
+        }else{
+            this.libelle = value;
+        }
     }
 
 }
