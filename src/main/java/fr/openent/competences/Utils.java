@@ -524,19 +524,21 @@ public class Utils {
 
                                             if (!idsMatLibelle.containsKey(requestMat.getString("id"))) {
 
-                                                String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
+                                               // String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
                                                 String codeMatiere = requestMat.getJsonObject("data").getJsonObject("data").getString("code");
+                                                try{
+                                                    Integer.valueOf(codeMatiere);
+                                                    if(!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere) ){
+                                                        requestMat.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
 
-                                                if (!"AAF".equals(source)) {
+                                                    } else {//si le codeMatiere n'est pas dans la table matiere prendre
+                                                        // les 5 premiers caracteres du libelle de la matiere
+
+                                                        String nameMat = requestMat.getString("name").substring(0, 4);
+                                                        requestMat.put("libelle_court", nameMat);
+                                                    }
+                                                }catch(NumberFormatException e){
                                                     requestMat.put("libelle_court", codeMatiere);
-                                                } else if(!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere) ){
-                                                    requestMat.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
-
-                                                } else {//si le codeMatiere n'est pas dans la table matiere prendre
-                                                    // les 5 premiers caracteres du libelle de la matiere
-
-                                                    String nameMat = requestMat.getString("name").substring(0, 4);
-                                                    requestMat.put("libelle_court", nameMat);
                                                 }
 
                                             }

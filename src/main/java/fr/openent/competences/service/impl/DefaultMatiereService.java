@@ -45,7 +45,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     @Override
     public void getLibellesCourtsMatieres(Boolean wantMapCodeLibelle, Handler<Either<String, Map<String,String>>> handler) {
 
-        String query = "SELECT code, libelle_court FROM "+ this.resourceTable;
+        String query = "SELECT bcn, code, libelle_court FROM "+ this.resourceTable;
         Map<String,String> responseMap = new HashMap<>();
 
         Sql.getInstance().prepared(query ,new JsonArray(), Competences.DELIVERY_OPTIONS,
@@ -56,10 +56,11 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
 
                         for(int i = 0; i < codesLibellesCourts.size(); i++ ) {
                             if (!responseMap.containsKey(codesLibellesCourts.getJsonObject(i).getString(CODE))) {
-                                if (wantMapCodeLibelle) {//if you want map<codeMatiere,libelleCourt>
+                                //if you want map<codeMatiere,libelleCourt> get only libelle_court of bcn
+                                if (wantMapCodeLibelle && codesLibellesCourts.getJsonObject(i).getBoolean("bcn")) {
                                     responseMap.put(codesLibellesCourts.getJsonObject(i).getString(CODE),
                                             codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT));
-                                } else {//if you want map<libelleCourt,codeMatiere
+                                } else {//if you want map<libelleCourt,codeMatiere get all libelle_court
                                     responseMap.put(codesLibellesCourts.getJsonObject(i).getString(LIBELLE_COURT),
                                             codesLibellesCourts.getJsonObject(i).getString(CODE));
                                 }
