@@ -652,19 +652,26 @@ public class LSUController extends ControllerHelper {
                                 } else {
                                     eleve = eleves.getEleveById(idEleve);
                                 }
-                                if(o.getString("address")!= null
-                                        && o.getString("zipCode")!=null && o.getString("city")!= null ){
-                                    String adress = o.getString("address");
-                                    String codePostal =  o.getString("zipCode");
-                                    String commune = o.getString("city");
-                                    if(codePostal.length() > 10){
-                                        codePostal = o.getString("zipCode").substring(0,10);
-                                    }
-                                    if(commune.length() > 100){
-                                        commune = o.getString("city").substring(0,100);
-                                    }
-                                    adresse = objectFactory.createAdresse(adress, codePostal, commune);
+
+
+                                String adress = o.getString("address");
+                                String codePostal =  o.getString("zipCode");
+                                String commune = o.getString("city");
+
+                                // gestion données non renseignées
+                                adress = (adress == null || adress.isEmpty()) ? "inconnue" : adress;
+                                codePostal = (codePostal == null || codePostal.isEmpty()) ? "inconnu" : codePostal;
+                                commune = (commune == null || commune.isEmpty()) ? "inconnue" : commune;
+
+                                if(codePostal.length() > 10){
+                                    codePostal = codePostal.substring(0,10);
                                 }
+                                if(commune.length() > 100){
+                                    commune = commune.substring(0,100);
+                                }
+                                adresse = objectFactory.createAdresse(adress, codePostal, commune);
+
+
                                 if (o.getString("externalIdRelative")!= null && o.getString("lastNameRelative") !=null &&
                                         o.getString("firstNameRelative")!= null && o.getJsonArray("relative").size() > 0 ) {
                                     JsonArray relatives = o.getJsonArray("relative");
