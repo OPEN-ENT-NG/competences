@@ -205,7 +205,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     $scope.cleanRoot();
 
                     // récupération de tous les devoirs sans limite
-                    evaluations.structure.syncDevoirs();
+                    await evaluations.structure.syncDevoirs();
+                    $scope.matieresToDisplay = $filter('getMatiereClasse')($scope.matieres.all, null,
+                        $scope.classes,$scope.search, $scope.devoirs.all);
 
                     _.map($scope.devoirs.all, (devoir) => {
                         devoir.nameClass = $scope.getClasseData(devoir.id_groupe, 'name');
@@ -218,7 +220,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         //$scope.initPeriodesList();
                         template.open('main', 'enseignants/liste_devoirs/display_devoirs_structure');
                         template.open('evaluations', 'enseignants/liste_devoirs/list_view');
-                        utils.safeApply($scope);
+                        await utils.safeApply($scope);
                     };
 
                     if (Utils.isChefEtab()) {
@@ -233,7 +235,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     /* TODO PERCENT DONE
                      evaluations.devoirs.getPercentDone(_.pluck(evaluations.devoirs.all,'id'));
                      */
-                    openTemplates();
+                    await openTemplates();
                 }
             },
 
@@ -322,13 +324,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             },
 
-            displayReleveNotes: function (params) {
+            displayReleveNotes: async function (params) {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
 
                     // récupération de tous les devoirs sans limite
-                    evaluations.structure.syncDevoirs();
+                    await evaluations.structure.syncDevoirs();
+                    $scope.matieresToDisplay = $filter('getMatiereClasse')($scope.matieres.all, null,
+                        $scope.classes,$scope.search, $scope.devoirs.all);
 
                     // $scope.initPeriodesList();
                     // Affichage des criteres par défaut quand on arrive sur le releve
@@ -657,7 +661,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             domaineEnseignement: null,
             sousDomainesEnseignement: [],
         };
-
         let setSearchPeriode = function(classe,res){
 
             if($location.path() === '/competences/eleve' || $location.path() === '/competences/classe' ){

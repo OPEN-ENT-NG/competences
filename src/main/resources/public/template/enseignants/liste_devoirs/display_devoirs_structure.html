@@ -57,7 +57,7 @@
 
                     <section>
                         <label class="select">
-                            <select ng-model="search.classe" ng-change="syncPeriode(search.classe.id); synchronizeStudents(search.classe.id);"
+                            <select ng-model="search.classe" ng-change="syncPeriode(search.classe.id); synchronizeStudents(search.classe.id); "
                                     ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name'] | customClassFilters:devoirs.all:search">
                                 <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                             </select>
@@ -68,7 +68,7 @@
                         <label class="select">
                             <select ng-model="search.matiere"
                                     ng-init="initDefaultMatiere()"
-                                    ng-options="matiere.name for matiere in matieres.all | unique:'name'">
+                                    ng-options="matiere.name for matiere in matieresToDisplay track by matiere.id">
                                 <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                             </select>
                         </label>

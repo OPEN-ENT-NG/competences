@@ -145,7 +145,7 @@
                     <label class="select">
                         <select ng-model="search.matiere" ng-change="getReleve()"
                                 ng-init="initDefaultMatiere()"
-                                ng-options="matiere.name for matiere in matieres.all|unique:'name'">
+                                ng-options="matiere.name for matiere in matieresToDisplay track by matiere.id">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.subject')]]</option>
                         </select>
                     </label>
