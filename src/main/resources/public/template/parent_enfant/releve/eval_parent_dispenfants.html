@@ -16,7 +16,7 @@
   -->
 <div class="children-list">
     <div class="dominos">
-        <div class="item" ng-repeat="eleve in eleves.all" ng-click="chooseChild(eleve.id)">
+        <div class="item" ng-repeat="eleve in eleves.all" ng-click="chooseChild(eleve.id, true)">
             <section class="domino green" >
                 <div class="top">
                     <img ng-src="/userbook/avatar/[[eleve.id]]" alt="[[eleve.displayName]]" />

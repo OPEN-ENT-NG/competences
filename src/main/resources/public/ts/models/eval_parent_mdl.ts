@@ -300,9 +300,8 @@ export class Evaluations extends Model {
                     classe: new Classe({id: model.me.classes[0], name: model.me.classNames[0].split('$')[1]})
                 });
 
-                await this.eleve.classe.sync();
-                await this.devoirs.sync(this.eleve.idStructure, this.eleve.id, null);
-                await this.updateUsePerso();
+                await Promise.all([this.eleve.classe.sync(), this.updateUsePerso()]);
+                // await this.devoirs.sync(this.eleve.idStructure, this.eleve.id, null);
                 resolve();
             }
             this.synchronised = true;
