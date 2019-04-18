@@ -59,7 +59,7 @@ export let releveController = ng.controller('ReleveController', [
          * @returns {Promise<void>}
          */
         $scope.loadReleveNote = async function() {
-            Utils.runMessageLoader($scope);
+            await Utils.runMessageLoader($scope);
             let eleve = $scope.searchReleve.eleve;
             let idPeriode = undefined;
             if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id !== null) {
@@ -92,23 +92,36 @@ export let releveController = ng.controller('ReleveController', [
             Utils.stopMessageLoader($scope);
         };
 
+
+        let initSearchReleve = (periode) => {
+            $scope.searchReleve = {
+                eleve: evaluations.eleve,
+                periode: periode,
+                enseignants: evaluations.enseignants
+            };
+        };
         // Initialisation des variables du relevé
         $scope.initReleve = async function () {
             $scope.dataReleve = {
                 devoirs : evaluations.devoirs
             };
-            $scope.searchReleve = {
-                eleve: evaluations.eleve,
-                periode: evaluations.periode,
-                enseignants: evaluations.enseignants
-            };
+            if($scope.searchReleve !== undefined
+                && $scope.searchReleve.periode !== undefined
+                && $scope.searchReleve.periode.id_type !== undefined){
+                initSearchReleve(_.findWhere(evaluations.eleve.classe.periodes.all,
+                    {id_type: $scope.searchReleve.periode.id_type}));
+            }
+            else{
+                initSearchReleve(evaluations.periode);
+            }
+
             $scope.me = {
                 type: model.me.type
             };
             $scope.matieres = evaluations.matieres;
             $scope.translate = lang.translate;
             await $scope.loadReleveNote();
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
 
         await $scope.init();
@@ -116,7 +129,7 @@ export let releveController = ng.controller('ReleveController', [
         // Au changement de la période par le parent
         $scope.$on('loadPeriode', async function() {
             $scope.initReleve();
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         });
 
         // Filter
