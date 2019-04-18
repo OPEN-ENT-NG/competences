@@ -20,19 +20,20 @@ import http from "axios";
 import {evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
 
-console.log("bilanPeriodique");
 
 export const bilanPeriodique = {
-    title: 'Bilan périodique',
+
+
+title: 'Bilan périodique',
     description: 'Permet de paramétrer les éléments nécessaires à la construction des bilans périodiques',
     that: undefined,
     controller: {
         init: async function () {
+            console.log("bilanPeriodique");
             this.displayMessageLoader = true;
             this.elementAll = {selected: false};
             this.idStructure = this.source.idStructure;
             this.selected = {EPI: true, AP: false, parcours: false};
-
             await evaluations.sync();
             await evaluations.structure.sync();
             this.selectedElements = [];

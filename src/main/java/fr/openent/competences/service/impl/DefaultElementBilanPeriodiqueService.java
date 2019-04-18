@@ -643,10 +643,10 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        String query = "SELECT DISTINCT " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.*, rel_groupe_appreciation_elt_eleve.id_groupe ";
+        String query = "SELECT DISTINCT " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve.* ";
 
         if (idElements == null) {
-            query += ", thematiqueBP.code, elBP.type_elt_bilan_periodique ";
+            query += ", rel_groupe_appreciation_elt_eleve.id_groupe , thematiqueBP.code, elBP.type_elt_bilan_periodique ";
         }
                 query += "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve ";
 
