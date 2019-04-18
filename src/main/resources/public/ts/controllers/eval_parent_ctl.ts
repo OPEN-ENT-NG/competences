@@ -199,7 +199,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     await eleve.classe.sync();
                     await $scope.setCurrentPeriode();
                     if (withSyncDevoir === true) {
-                        await evaluations.devoirs.sync(eleve.idStructure, eleve.id, eleve.idClasse);
+                        await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined);
                     }
                     $scope.search.periode = evaluations.periode;
                     $scope.devoirs = evaluations.devoirs;

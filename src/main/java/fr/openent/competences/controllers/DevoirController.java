@@ -100,8 +100,10 @@ public class DevoirController extends ControllerHelper {
                         String idClasse = request.params().get("idClasse");
                         String idMatiere = request.params().get("idMatiere");
 
-
-                        if (idClasse == null) {
+                        final String _STUDENT = "Student";
+                        final String _RELATIVE = "Relative";
+                        if (idClasse == null && ! _STUDENT.equals(user.getType())
+                            && !_RELATIVE.equals(user.getType())) {
                             devoirsService.listDevoirs(user,idEtablissement, handler);
                         } else {
 
@@ -109,8 +111,6 @@ public class DevoirController extends ControllerHelper {
                             if (request.params().get("historise") != null) {
                                 historise = Boolean.parseBoolean(request.params().get("historise"));
                             }
-                            final String _STUDENT = "Student";
-                            final String _RELATIVE = "Relative";
                             Long idPeriode = null;
                             if (request.params().get("idPeriode") != null) {
                                 idPeriode = testLongFormatParameter("idPeriode", request);

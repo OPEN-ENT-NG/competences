@@ -65,8 +65,8 @@ export let releveController = ng.controller('ReleveController', [
             if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id !== null) {
                 idPeriode = $scope.searchReleve.periode.id_type;
             }
-            let idClasse = (eleve.classe!==undefined)?eleve.classe.id : undefined;
-            await evaluations.devoirs.sync(eleve.idStructure,eleve.id, idClasse, idPeriode);
+            //let idClasse = (eleve.classe!==undefined)?eleve.classe.id : undefined;
+            await evaluations.devoirs.sync(eleve.idStructure,eleve.id, undefined, idPeriode);
             $scope.dataReleve = {
                 devoirs : evaluations.devoirs
             };
