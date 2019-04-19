@@ -18,7 +18,7 @@
 /**
  * Created by ledunoiss on 08/08/2016.
  */
-import { model, http, Model, Collection, moment, _ } from 'entcore';
+import {model, http, Model, Collection, moment, _, Behaviours} from 'entcore';
 import { Classe } from './parent_eleve/Classe';
 import { Devoir } from './parent_eleve/Devoir';
 import { Matiere } from './parent_eleve/Matiere';
@@ -329,6 +329,9 @@ export class Evaluations extends Model {
 
     async updateUsePerso () {
         // Recup du ...
+        if(Behaviours.applicationsBehaviours.viescolaire === undefined){
+            await model.me.workflow.load(['viescolaire']);
+        }
         let s = new Structure({id:  model.me.structures[0]});
         //let s = evaluations.structure;
         s.usePersoFun(model.me.userId).then(async(res) => {
@@ -349,6 +352,9 @@ export let evaluations = new Evaluations();
 model.build = async function () {
     require('angular-chart.js');
     (this as any).evaluations = evaluations;
+    if(Behaviours.applicationsBehaviours.viescolaire === undefined){
+        await model.me.workflow.load(['viescolaire']);
+    }
     await evaluations.sync();
 };
 
