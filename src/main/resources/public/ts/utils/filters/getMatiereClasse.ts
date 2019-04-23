@@ -21,65 +21,13 @@
 import {_, ng} from 'entcore';
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
-    return function (matieres, idClasse, classes, search, devoirs?) {
-
-        if ((idClasse === '*' || idClasse === undefined) && devoirs === undefined) return matieres;
-
+    return function (matieres, idClasse, classes, search) {
         let hasService = false;
+        if (idClasse === '*' || idClasse === undefined) return matieres;
         if (classes.all.length > 0) {
-
-            let matieresClasse = [];
-
-            // Si on a défini un idClasse on ne renvoit que les services correspondant à cet idClasse
-            if(idClasse!== undefined && idClasse !== null && idClasse !== '*'){
-                matieresClasse = _.union(matieresClasse,
-                    getMatiereClasse(idClasse, matieres, classes, hasService));
-            }
-            // Si non on récupère tous les services évaluables de la classe
-            else{
-                _.forEach(classes.all, (_classe) => {
-                    matieresClasse = _.union(matieresClasse,
-                        getMatiereClasse(_classe.id, matieres, classes, hasService));
-                });
-            }
-
-            let allMatieres = matieres;
-            let matieresFromDevoirs = undefined;
-            if(devoirs!== undefined) {
-                // On recherche aussi toutes les matières sur lesquelles des devoirs ont été créées
-                matieresFromDevoirs = _.filter(allMatieres, (matiere) => {
-                    return _.findWhere(devoirs, {id_matiere: matiere.id}) !== undefined;
-                });
-
-                // Par on rajoute aux matières sur lesquels on a des services créée, celles où des
-                // devoirs ont été créés
-                if (!_.isEmpty(matieresFromDevoirs)) {
-                    allMatieres = matieresFromDevoirs;
-                    if(!_.isEmpty(matieresClasse)){
-                        matieresClasse = _.union(matieresClasse, matieresFromDevoirs);
-                    }
-                }
-            }
-
-            if (matieresClasse.length > 0) {
-                return matieresClasse;
-            }
-
-            return  (hasService) ? matieresClasse : allMatieres;
-        }
-        else {
-            return matieres.all;
-        }
-    }
-});
-
-let getMatiereClasse = (id_classe, matieres, classes, hasService) => {
-    let classe = classes.findWhere({id : id_classe});
-    if (classe === undefined) {
-        return [];
-    }
-    else{
-        return matieres.filter((matiere) => {
+            let classe = classes.findWhere({id : idClasse});
+            if (classe !== undefined) {
+                let matieresClasse = matieres.filter((matiere) => {
             if (classe.hasOwnProperty('services')) {
                 let services = classe.services;
                 let evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true});
@@ -96,5 +44,12 @@ let getMatiereClasse = (id_classe, matieres, classes, hasService) => {
                 }
             }
         });
+                if (matieresClasse.length > 0) {
+                     return matieresClasse;
+                }
+                let matieresList = (hasService)? matieresClasse : matieres;
+                return matieresList;
     }
-};
+        }
+    }
+});
