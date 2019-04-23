@@ -403,6 +403,8 @@
   "evaluations.lsu.errors.errorCode.bilan.periodique.title" : "Désolé, les disciplines suivantes ont des codes identiques.",
   "evaluation.lsu.lightBox.errors.firstName" : "Prénom",
   "evaluation.lsu.lightBox.errors.messages" : "éléments manquants",
+  "evaluation.lsu.error.no.appreciation": "Appréciation manquante dans le suivi des acquis",
+  "evaluation.lsu.no.appreciation.message": "Pas d'appréciation",
   "evaluations.devoir.updateDevoir.firstConfirmSupp.change.classe":"Suite au changement de classe, les évaluations, annotations et appréciations ne seront pas conservées.",
   "viescolaire.utils.enseignements":"Enseignements",
   "viescolaire.utils.langues.culture.regionale.choix" : "Choix langue",

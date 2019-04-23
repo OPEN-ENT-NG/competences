@@ -76,6 +76,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
 import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -2388,10 +2389,10 @@ public class LSUController extends ControllerHelper {
                                 JsonArray tableConversion = tableConversionByClasse.get(currentEleve.getId_Class());
                                 addAcquis_addMoyennes(currentAcquis,aquisEleve,currentPeriode);
                                 addAcquis_addPositionnement(currentAcquis, tableConversion, aquisEleve, currentPeriode);
-                                addAcquis_addAppreciation(currentAcquis, aquisEleve, currentPeriode);
                                 addAcquis_addDiscipline(currentAcquis, aquisEleve);
                                 addAcquis_addElementProgramme(currentAcquis, aquisEleve);
                                 addAcquis_setEleveNonNote(aquisEleve);
+                                addAcquis_addAppreciation(currentAcquis, aquisEleve, currentPeriode);
                                 return aquisEleve;
                             }
 
@@ -2489,6 +2490,8 @@ public class LSUController extends ControllerHelper {
                                 private void addAcquis_addAppreciation(JsonObject currentAcquis,
                                                                        Acquis aquisEleve,
                                                                        Periode currentPeriode) {
+                                    boolean hasAppreciation = false;
+                                    boolean studentIsNN = aquisEleve.isEleveNonNote();
                                     JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"),
                                             (long) currentPeriode.getTypePeriode(),
                                             "id_periode");
@@ -2502,10 +2505,19 @@ public class LSUController extends ControllerHelper {
                                                     String appTmp = app.getString("appreciation");
                                                     if(appTmp != null && !appTmp.isEmpty()){
                                                         aquisEleve.setAppreciation(appTmp);
+                                                        hasAppreciation = true;
                                                     }
                                                 }
                                             }
                                         }
+                                    }
+                                    if(!hasAppreciation && !studentIsNN){
+                                        setError(errorsExport, currentEleve,
+                                                getLibelle("evaluation.lsu.error.no.appreciation"));
+                                    }
+                                    else if(!hasAppreciation && studentIsNN){
+                                        aquisEleve.setAppreciation(
+                                                getLibelle("evaluation.lsu.no.appreciation.message"));
                                     }
                                 }
 
