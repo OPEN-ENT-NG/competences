@@ -1988,7 +1988,6 @@ public class LSUController extends ControllerHelper {
     /**
      * permet de completer tous les attributs de la balise BilansPeriodiques et de la setter à donnees
      * @param donnees     permet de recuperer les eleves
-     *
      * @param periodesByClasse
      * @param epiGroupAdded
      * @param tableConversionByClasse
@@ -2108,7 +2107,9 @@ public class LSUController extends ControllerHelper {
                                     }
                                     answer.set(true);
                                 } else{
-                                    setError(errorsExport, currentEleve, "Pas de synthèse du conseil de classe");
+                                    setError(errorsExport, currentEleve,
+                                            getLibelle("evaluation.lsu.error.no.synthese") +
+                                                    currentPeriode.getLabel());
                                     String error = eventSynthese.left().getValue();
                                     if(error != null && error.contains(TIME)){
 
@@ -2128,7 +2129,9 @@ public class LSUController extends ControllerHelper {
                                     if(!"null".equals(synthese)){
                                         bilanPeriodique.setAcquisConseils(synthese);
                                     }else{
-                                        setError(errorsExport, currentEleve, "Pas de synthese du conseil");
+                                        setError(errorsExport, currentEleve,
+                                                getLibelle("evaluation.lsu.error.no.synthese") +
+                                                currentPeriode.getLabel());
                                     }
                                     getSyntheseFuture.complete();
                                 }
@@ -2347,15 +2350,15 @@ public class LSUController extends ControllerHelper {
                                 } else {
                                     if (!suiviAcquisResponse.right().getValue().isEmpty()) {
                                         final JsonArray suiviAcquis = suiviAcquisResponse.right().getValue();
-                                        bilanPeriodique.setEleveRef(currentEleve);
-                                        bilanPeriodique.setPeriodeRef(currentPeriode);
-                                        addResponsable(bilanPeriodique);
+
                                         addListeAcquis(suiviAcquis, bilanPeriodique);
                                         // add Only if suiviAcquis is not Empty
                                         bilansPeriodiques.getBilanPeriodique().add(bilanPeriodique);
                                     } else {
                                         if (suiviAcquisResponse.isRight()) {
-                                            setError(errorsExport, currentEleve, "Pas de suivi des acquis");
+                                            setError(errorsExport, currentEleve,
+                                                    getLibelle("evaluation.lsu.error.no.suivi.acquis")+
+                                                            currentPeriode.getLabel());
                                             log.info(currentEleve.getIdNeo4j() + " NO ");
                                         }
                                     }
@@ -2378,21 +2381,32 @@ public class LSUController extends ControllerHelper {
                                     BilanPeriodique.ListeAcquis aquisEleveList = objectFactory.createBilanPeriodiqueListeAcquis();
                                     for (Integer i = 0; i < suiviAcquis.size(); i++) {
                                         final JsonObject currentAcquis = suiviAcquis.getJsonObject(i);
-                                        Acquis aquisEleve = addListeAcquis_addAcquis(currentAcquis);
-                                        addListeAcquis_addMissingTeacherToXml(aquisEleveList, currentAcquis,aquisEleve);
+                                        Boolean toAdd = false;
+                                        Acquis aquisEleve = addListeAcquis_addAcquis(currentAcquis, toAdd);
+                                        if(currentAcquis.getBoolean("toAdd")) {
+                                            addAcquis_addDiscipline(currentAcquis, aquisEleve);
+                                            addAcquis_addElementProgramme(currentAcquis, aquisEleve);
+                                            addListeAcquis_addMissingTeacherToXml(aquisEleveList, currentAcquis,
+                                                    aquisEleve);
+                                        }
                                     }
-                                    bilanPeriodique.setListeAcquis(aquisEleveList);
+                                    if(!aquisEleveList.getAcquis().isEmpty()) {
+                                        bilanPeriodique.setListeAcquis(aquisEleveList);
+                                    }
+                                    else{
+                                        setError(errorsExport, currentEleve,
+                                                getLibelle("evaluation.lsu.error.no.suivi.acquis")+
+                                                        currentPeriode.getLabel());
+                                    }
                                 }
 
-                            private Acquis addListeAcquis_addAcquis(JsonObject currentAcquis) {
+                            private Acquis addListeAcquis_addAcquis(JsonObject currentAcquis, Boolean toAdd) {
                                 Acquis aquisEleve = objectFactory.createAcquis();
                                 JsonArray tableConversion = tableConversionByClasse.get(currentEleve.getId_Class());
                                 addAcquis_addMoyennes(currentAcquis,aquisEleve,currentPeriode);
                                 addAcquis_addPositionnement(currentAcquis, tableConversion, aquisEleve, currentPeriode);
-                                addAcquis_addDiscipline(currentAcquis, aquisEleve);
-                                addAcquis_addElementProgramme(currentAcquis, aquisEleve);
                                 addAcquis_setEleveNonNote(aquisEleve);
-                                addAcquis_addAppreciation(currentAcquis, aquisEleve, currentPeriode);
+                                addAcquis_addAppreciation(currentAcquis, aquisEleve, currentPeriode , toAdd);
                                 return aquisEleve;
                             }
 
@@ -2489,7 +2503,7 @@ public class LSUController extends ControllerHelper {
 
                                 private void addAcquis_addAppreciation(JsonObject currentAcquis,
                                                                        Acquis aquisEleve,
-                                                                       Periode currentPeriode) {
+                                                                       Periode currentPeriode, boolean toAdd) {
                                     boolean hasAppreciation = false;
                                     boolean studentIsNN = aquisEleve.isEleveNonNote();
                                     JsonObject app = addAppreciation_getObjectForPeriode(currentAcquis.getJsonArray("appreciations"),
@@ -2512,13 +2526,23 @@ public class LSUController extends ControllerHelper {
                                         }
                                     }
                                     if(!hasAppreciation && !studentIsNN){
+
                                         setError(errorsExport, currentEleve,
-                                                getLibelle("evaluation.lsu.error.no.appreciation"));
+                                                getLibelle("evaluation.lsu.error.no.appreciation") +
+                                        currentPeriode.getLabel());
                                     }
                                     else if(!hasAppreciation && studentIsNN){
                                         aquisEleve.setAppreciation(
                                                 getLibelle("evaluation.lsu.no.appreciation.message"));
                                     }
+                                    if (hasAppreciation || !studentIsNN) {
+                                        bilanPeriodique.setEleveRef(currentEleve);
+                                        bilanPeriodique.setPeriodeRef(currentPeriode);
+                                        addResponsable(bilanPeriodique);
+                                        toAdd = true;
+                                    }
+
+                                    currentAcquis.put("toAdd", toAdd);
                                 }
 
 
@@ -2594,13 +2618,6 @@ public class LSUController extends ControllerHelper {
 
     }
 
-    private Boolean addresponsableEtabRef(Donnees donnees, JsonObject response, BilanPeriodique bilanPeriodique) {
-        if ( donnees.getResponsablesEtab() != null && donnees.getResponsablesEtab().getResponsableEtab().size() > 0) {
-            bilanPeriodique.setResponsableEtabRef(donnees.getResponsablesEtab().getResponsableEtab().get(0));
-            return true;
-        }
-        return false;
-    }
     private Boolean addDatesBilanPeriodique(BilanPeriodique bilanPeriodique,final Map<String,JsonArray> periodesByClass,
                                             Eleve currentEleve, Periode currentPeriode){
 
@@ -2609,8 +2626,13 @@ public class LSUController extends ControllerHelper {
                         (long) currentPeriode.getTypePeriode(), "id_type") != null){
 
             JsonArray periodes = periodesByClass.get(currentEleve.getId_Class());
-            JsonObject periode = utilsService.getObjectForPeriode(periodes, (long) currentPeriode.getTypePeriode(), "id_type");
-
+            JsonObject periode = utilsService.getObjectForPeriode(periodes, (long) currentPeriode.getTypePeriode(),
+                    "id_type");
+            if(currentPeriode.getLabel() == null) {
+                String labelPeriode = getLibelle("viescolaire.periode." + periode.getValue("type"));
+                labelPeriode += (" " + periode.getValue("ordre"));
+                currentPeriode.setLabel(labelPeriode);
+            }
             XMLGregorianCalendar dateScolarite = getDateFormatGregorian(periode.getString("timestamp_fn"));
             XMLGregorianCalendar dateConseil = getDateFormatGregorian(periode.getString("date_conseil_classe"));
             String dateVerrou = periode.getString("date_fin_saisie").substring(0,19);
@@ -2619,6 +2641,13 @@ public class LSUController extends ControllerHelper {
             bilanPeriodique.setDateVerrou(dateVerrou);
             return true;
 
+        }
+        return false;
+    }
+    private Boolean addresponsableEtabRef(Donnees donnees, JsonObject response, BilanPeriodique bilanPeriodique) {
+        if ( donnees.getResponsablesEtab() != null && donnees.getResponsablesEtab().getResponsableEtab().size() > 0) {
+            bilanPeriodique.setResponsableEtabRef(donnees.getResponsablesEtab().getResponsableEtab().get(0));
+            return true;
         }
         return false;
     }

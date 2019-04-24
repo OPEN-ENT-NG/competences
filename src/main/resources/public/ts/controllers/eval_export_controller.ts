@@ -126,7 +126,10 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     await Utils.stopMessageLoader($scope);
                 }).catch(async (error) => {
                 if($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
-                    && $scope.lsu.errorsLSU.all.length > 0 || $scope.lsu.errorsLSU.errorCode.length > 0){
+                    && ($scope.lsu.errorsLSU.all.length > 0
+                        || $scope.lsu.errorsLSU.errorCode.length > 0
+                    || $scope.lsu.errorsLSU.emptyDiscipline)
+                ){
                     $scope.opened.lightboxErrorsLSU = true;
                 }else{
                     console.error(error);

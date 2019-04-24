@@ -31,10 +31,12 @@ export class ErrorsLSU {
 
     errorCode : any[];
     all : ErrorLSU[];
+    emptyDiscipline : boolean;
 
     constructor () {
         this.all = [];
         this.errorCode = [];
+        this.emptyDiscipline = false;
     }
 
     setErrorsLSU(data: any){
@@ -54,7 +56,14 @@ export class ErrorsLSU {
                     errorCode = errorCode[0];
                 }
             this.errorCode =  errorCode;
-            this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode')));
+            let emptyDiscipline = _.values(_.pick(obj, 'emptyDiscipline'));
+            if(!_.isEmpty(emptyDiscipline)){
+                this.emptyDiscipline = emptyDiscipline[0];
+            }
+            else{
+                this.emptyDiscipline = false;
+            }
+            this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode', 'emptyDiscipline')));
         }
     }
 

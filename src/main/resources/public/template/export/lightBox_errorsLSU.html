@@ -17,6 +17,8 @@
 
 <lightbox show="opened.lightboxErrorsLSU" on-close="!opened.lightboxErrorsLSU">
 
+    <h2 ng-if="lsu.errorsLSU.emptyDiscipline" class="center">
+        <i18n>evaluation.lsu.error.no.discipline</i18n></h2>
     <h2 ng-if="lsu.errorsLSU.errorCode.length > 0" class="center">
     <i18n>evaluations.lsu.errors.errorCode.bilan.periodique.title</i18n></h2>
     <div ng-if="lsu.errorsLSU.errorCode.length > 0" class="responsive-table">

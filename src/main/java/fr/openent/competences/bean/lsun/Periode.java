@@ -71,6 +71,8 @@ public class Periode {
     protected int nbPeriodes;
     @XmlTransient
     protected int typePeriode;
+    @XmlTransient
+    protected String label;
 
     /**
      * Gets the value of the id property.
@@ -159,4 +161,13 @@ public class Periode {
     public void setTypePeriode(int typePeriode) {
         this.typePeriode = typePeriode;
     }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
 }

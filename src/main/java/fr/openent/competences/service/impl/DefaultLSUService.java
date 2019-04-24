@@ -62,7 +62,9 @@ public class DefaultLSUService implements LSUService {
                                 .collect(Collectors.toList()));
             }
         });
-
+        if(correctEvaluatedDisciplines.getDiscipline().isEmpty()) {
+            errorsExport.put("emptyDiscipline", true);
+        }
         donnees.setDisciplines(correctEvaluatedDisciplines);
 
     }
