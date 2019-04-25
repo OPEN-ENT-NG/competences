@@ -2603,7 +2603,10 @@ public class LSUController extends ControllerHelper {
         if(errorsExport.containsKey(currentEleve.getIdNeo4j())){
             JsonObject errorEleve = errorsExport.getJsonObject(currentEleve.getIdNeo4j());
             if(errorEleve.containsKey("errorsMessages")){
-                errorEleve.getJsonArray("errorsMessages").add(message);
+                JsonArray errorsMessages = errorEleve.getJsonArray("errorsMessages");
+                if(!errorsMessages.contains(message)){
+                    errorsMessages.add(message);
+                }
             }else{
                 errorEleve.put("error",new JsonArray().add(message));
             }
