@@ -2,13 +2,14 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.lsun.CodeDomaineSocle;
-import fr.openent.competences.service.LSUService;
-import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.bean.lsun.Discipline;
 import fr.openent.competences.bean.lsun.Donnees;
+import fr.openent.competences.service.LSUService;
+import fr.openent.competences.service.UtilsService;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
+import fr.wseduc.webutils.Either;
+import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
@@ -16,14 +17,11 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
