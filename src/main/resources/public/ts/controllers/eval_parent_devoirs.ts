@@ -124,6 +124,7 @@ export let listController = ng.controller('ListController', [
                 && (index + parseInt(num)) < evaluations.devoirs.all.length) {
                 let target = evaluations.devoirs.all[index + parseInt(num)];
                 $scope.goToDevoir(target.id);
+                $scope.currentDevoir = target;
                 utils.safeApply($scope);
             }
         };
