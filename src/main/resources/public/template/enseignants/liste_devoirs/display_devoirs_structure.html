@@ -18,10 +18,10 @@
 
 <div class="row">
     <nav class="twelve cell marginLeftFive nav-devoirs">
-        <div class="cell switch-view-buttons">
+        <div class="cell fix-icon-size switch-view-buttons">
             <i class="show-list" ng-class="{ selected: template.contains('evaluations', 'enseignants/liste_devoirs/list_view') }"
                ng-click="template.open('evaluations', 'enseignants/liste_devoirs/list_view')"></i>
-            <i class="show-icons" ng-class="{ selected: template.contains('evaluations', 'enseignants/liste_devoirs/icon_view') }"
+            <i class="show-cards" ng-class="{ selected: template.contains('evaluations', 'enseignants/liste_devoirs/icon_view') }"
                ng-click="template.open('evaluations', 'enseignants/liste_devoirs/icon_view')"></i>
         </div>
         <button workflow="competences.canCreateDevoir" class="marginFive" ng-click="goTo('/devoir/create');"><i18n>evaluations.test.new</i18n></button>

@@ -1881,6 +1881,11 @@ body.evaluations {
     bottom: 20px;
     right: 1%;
   }
+
+  .fix-icon-size {
+    font-size: 24px;
+  }
+
   //.list-devoirs{
   //    margin-top: 60px;
   //}
@@ -2130,6 +2135,19 @@ body.evaluations {
 
     &::after{
       content:"\e810";
+    }
+
+    &.selected{
+      opacity: 0.6;
+    }
+  }
+
+  i.show-cards{
+    @include fonticon;
+    opacity: 0.2;
+
+    &::after{
+      content:"\e837";
     }
 
     &.selected{
