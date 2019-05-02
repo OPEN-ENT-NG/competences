@@ -58,22 +58,25 @@
                         },
                         tooltips: {
                             mode: 'label',
-                            custom: function(tooltipModel) {
-                                if(tooltipModel.body !== undefined) {
-                                    for (var i=2; i < tooltipModel.body.length; i++) {
+                            custom: function (tooltipModel) {
+                                if (tooltipModel.body !== undefined) {
+                                    for (var i = 0; i < tooltipModel.body.length; i++) {
                                         var split_label = tooltipModel.body[i].lines[0].split(':');
                                         var dim = 0;
-                                        for (var j= i-1; j >= 2; j--) {
-                                            if (i !== 2) {
-                                                dim += (parseFloat(tooltipModel.body[j].lines[0]
-                                                    .split(':')[1]) * 4 / 100);
+                                        var idx_label = myChart.data.labels.indexOf(tooltipModel.title[0]);
+                                        var idx_datasets = myChart.data.datasets.indexOf(
+                                            _.findWhere(myChart.data.datasets, {label: split_label[0]}));
+                                        if (idx_datasets >= 2 ) {
+                                            if (idx_datasets > 2) {
+                                                dim = parseFloat(myChart.data.datasets[idx_datasets - 1]
+                                                    .data[idx_label]);
                                             }
+                                            var percentage = parseFloat(myChart.data.datasets[idx_datasets]
+                                                .data[idx_label]) - dim;
+                                            var display = (parseFloat(percentage * 100 / 4)).toFixed(2);
+                                            tooltipModel.body[i].lines[0] = split_label[0] +
+                                                ' : ' + (isNaN(parseFloat(display)) ? 0 : display) + ' %';
                                         }
-                                        var display = (parseFloat(parseFloat(split_label[1] - dim) * 100/ 4 )
-                                        ).toFixed(2);
-                                        var _t = (isNaN(parseFloat(display))? 0 : display );
-                                        tooltipModel.body[i].lines[0] = split_label[0] +
-                                            ' : ' +_t + ' %';
                                     }
                                 }
                             }
@@ -97,6 +100,18 @@
                         }
                     }
                 });
+                var init = false;
+                if(oldChart === undefined) {
+                    var oldChart = myChart;
+                    init = true;
+                }
+                if(!init) {
+                    for (var i = 0; i < myChart.data.datasets.length; i++) {
+                        myChart.getDatasetMeta(i).hidden = oldChart.getDatasetMeta(i).hidden;
+                    }
+                    myChart.update();
+                    oldChart = myChart;
+                }
             </script>
         </div>
     </div>

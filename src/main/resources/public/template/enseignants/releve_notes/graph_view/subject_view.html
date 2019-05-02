@@ -91,19 +91,23 @@
                                 mode: 'label',
                                 custom: function (tooltipModel) {
                                     if (tooltipModel.body !== undefined) {
-                                        for (var i = 2; i < tooltipModel.body.length; i++) {
+                                        for (var i = 0; i < tooltipModel.body.length; i++) {
                                             var split_label = tooltipModel.body[i].lines[0].split(':');
                                             var dim = 0;
-                                            for (var j = i - 1; j >= 2; j--) {
-                                                if (i !== 2) {
-                                                    dim += (parseFloat(tooltipModel.body[j].lines[0]
-                                                        .split(':')[1]) * 4 / 100);
+                                            var idx_label = myCharty.data.labels.indexOf(tooltipModel.title[0]);
+                                            var idx_datasets = myCharty.data.datasets.indexOf(
+                                                _.findWhere(myCharty.data.datasets, {label: split_label[0]}));
+                                            if (idx_datasets >= 2 ) {
+                                                if (idx_datasets > 2) {
+                                                        dim = parseFloat(myCharty.data.datasets[idx_datasets - 1]
+                                                            .data[idx_label]);
                                                 }
+                                                var percentage = parseFloat(myCharty.data.datasets[idx_datasets]
+                                                    .data[idx_label]) - dim;
+                                                var display = (parseFloat(percentage * 100 / 4)).toFixed(2);
+                                                tooltipModel.body[i].lines[0] = split_label[0] +
+                                                    ' : ' + (isNaN(parseFloat(display)) ? 0 : display) + ' %';
                                             }
-                                            var display = (parseFloat((parseFloat(split_label[1]) - dim) * 100 / 4))
-                                                .toFixed(2);
-                                            tooltipModel.body[i].lines[0] = split_label[0] +
-                                                ' : ' + (isNaN(parseFloat(display)) ? 0 : display) + ' %';
                                         }
                                     }
                                 }
@@ -151,6 +155,18 @@
                             }
                         }
                     });
+                    var init = false;
+                    if(oldCharty === undefined) {
+                        var oldCharty = myCharty;
+                        init = true;
+                    }
+                    if(!init) {
+                        for (var i = 0; i < myCharty.data.datasets.length; i++) {
+                            myCharty.getDatasetMeta(i).hidden = oldCharty.getDatasetMeta(i).hidden;
+                        }
+                        myCharty.update();
+                        oldCharty = myCharty;
+                    }
                 }
             </script>
         </div>
