@@ -66,7 +66,7 @@ export class Graph extends Model{
         let averageClass = []; // Moyenne notes par matiere de la classe
 
 
-        let labels = [] //Nom des matières
+        let labels = []; //Nom des matières
         let data_set1 = [];
         let data_set2 = [];
         let data_set3 = [];
@@ -82,15 +82,38 @@ export class Graph extends Model{
 
         let series = [lang.translate('level.student'), lang.translate('level.class')];
         let i18nTitleView = (forDomaine !== true) ? 'evaluation.by.subject' : 'evaluation.by.domaine';
-        let options = {
+        let commonOption = {
             legend: {
                 display: true
             },
             title: {
                 display: false,
                 text: lang.translate(i18nTitleView)
-            },
+            }
         };
+        let averageOption = {
+            scale: {scaleOverride : true,
+                ticks: {
+                    min: 0,
+                    max: 20,
+                    stepSize: 2
+                }
+            }
+        };
+        let levelOption = {
+            scale: {scaleOverride : true,
+                //       scaleSteps : 1,
+                //       scaleStartValue : 0,
+                ticks: {
+                    min: 0,
+                    max: 4,
+                    stepSize: 1
+                }
+            }
+        };
+        _.extend(averageOption, commonOption);
+        _.extend(levelOption, commonOption);
+       let options = {average : averageOption, level : levelOption};
         let configRadarChart = {
             datasets: {
                 data: data,
