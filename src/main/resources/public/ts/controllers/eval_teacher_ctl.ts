@@ -28,6 +28,7 @@ import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
 import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
+import {Graph} from "../models/common/Graph";
 
 declare let $: any;
 declare let document: any;
@@ -323,6 +324,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             displayReleveNotes: function (params) {
+                $scope.myCharts = {};
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -381,6 +383,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             displayBilanPeriodique: function () {
+                $scope.myCharts = {};
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -3525,7 +3528,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 default :
                     $scope.exportRecapEvalObj.errExport = true;
             }
-        }
+        };
 
         $scope.selectMatiere = function (id) {
             $scope.closeWarningMessages();
@@ -3565,11 +3568,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.closeLightboxChampsObligatoire = function () {
             $scope.lightboxChampsObligatoire = false;
-        }
+        };
 
         $scope.disabledExport = function () {
             return (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) || typeof($scope.releveComp.periode) === 'undefined'
-        }
+        };
 
 
         $scope.closeWarningMessages = function () {
@@ -3582,7 +3585,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.cycleNotFound = false;
             $scope.exportRelCompObj.errExport = false;
             $scope.exportRecapEvalObj.errExport = false;
-        }
+        };
 
         $scope.openedLigthbox = function (classe) {
             $scope.opened.releveComp = true;
@@ -3591,7 +3594,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.closeWarningMessages();
             $scope.selectUnselectMatieres(false);
             classe ? $scope.forClasse = true : $scope.forClasse = false;
-        }
+        };
 
         $scope.getFormatedDate = function (date) {
             return moment(date).format("DD/MM/YYYY");
@@ -3756,15 +3759,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.sousDomaines = _.where(evaluations.sousDomainesEnseignements, {
                 id_domaine: id
             });
-        }
+        };
 
         $scope.openElementProgramme = function openElementProgramme() {
             $scope.opened.elementProgramme = !$scope.opened.elementProgramme;
-        }
+        };
 
         $scope.openAppreciation = function () {
             $scope.opened.appreciation = !$scope.opened.appreciation;
-        }
+        };
 
         $scope.saveElementProgramme = function (texte) {
             if (texte !== undefined) {
@@ -4210,6 +4213,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
         };
+
+
+        $scope.$on('chart-create', function (event, chart) {
+            let oldChart = $scope.myCharts[chart.chart.canvas.id];
+            //If id is the same, reference will be updated
+            if(oldChart !== undefined) {
+                for (let i = 0; i < chart.data.datasets.length; i++) {
+                    chart.getDatasetMeta(i).hidden = oldChart.getDatasetMeta(i).hidden;
+                }
+                chart.update();
+            }
+            $scope.myCharts[chart.chart.canvas.id] = chart;
+        });
 
     }
 ]);

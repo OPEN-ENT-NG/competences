@@ -6,6 +6,8 @@ declare  let Chart: any;
 
 export class Graph extends Model{
 
+    static _metas : any;
+
     static getDataForGraph(that, eleve, forDomaine?): any {
         return new Promise((resolve, reject) => {
             let uri = (forDomaine === true) ? that.api.GET_DATA_FOR_GRAPH_DOMAINE : that.api.GET_DATA_FOR_GRAPH;
@@ -22,7 +24,7 @@ export class Graph extends Model{
         });
     }
 
-   static moyenneNiveau(competencesNotes): number {
+    static moyenneNiveau(competencesNotes): number {
         let res = 0;
         let summ = 0;
         _.forEach(competencesNotes, (c) => {
@@ -34,7 +36,7 @@ export class Graph extends Model{
         return (summ === 0) ? 0 : parseFloat((res / summ).toFixed(2));
     }
 
-  static moyenneNote(notes): number {
+    static moyenneNote(notes): number {
         let res = 0;
         let sum = 0;
         let sumCoef = 0;
@@ -54,7 +56,7 @@ export class Graph extends Model{
         return parseFloat(res.toFixed(2));
     }
 
-   static configCharts(eleve, _datas, forDomaine?): any {
+    static configCharts(eleve, _datas, forDomaine?): any {
         // CompetenceNotes
         let data = [];
         let dataStudent = [];  // Moyenne CompetenceNotes par matiere de l'élève
@@ -113,7 +115,7 @@ export class Graph extends Model{
         };
         _.extend(averageOption, commonOption);
         _.extend(levelOption, commonOption);
-       let options = {average : averageOption, level : levelOption};
+        let options = {average : averageOption, level : levelOption};
         let configRadarChart = {
             datasets: {
                 data: data,
@@ -200,7 +202,7 @@ export class Graph extends Model{
                 }else{
                     averageClass.push(0);
                 }
-               // averageStudent.push(this.moyenneNote(matiereOrDomaine.notesEleve));
+                // averageStudent.push(this.moyenneNote(matiereOrDomaine.notesEleve));
                 //averageClass.push(this.moyenneNote(matiereOrDomaine.notes));
 
                 let nbrCompNotesUnevaluated = _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: -1});
