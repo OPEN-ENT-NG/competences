@@ -347,8 +347,13 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         $scope.getCyclesEleve = async () => {
             await $scope.search.eleve.getCycles();
-            $scope.currentCycle = _.findWhere($scope.search.eleve.cycles, {id_cycle: $scope.search.classe.id_cycle});
-            $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
+            if($scope.search.eleve.cycles.length == 0) {
+                $scope.currentCycle = {id_cycle: undefined, libelle: "Pas de cycle évalué"};
+                $scope.selectedCycleRadio = {id_cycle: undefined};
+            }else {
+                $scope.currentCycle = _.findWhere($scope.search.eleve.cycles, {id_cycle: $scope.search.classe.id_cycle});
+                $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
+            }
             await utils.safeApply($scope);
         };
 
@@ -508,32 +513,33 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         }
                         $scope.suiviCompetence.bilanFinDeCycles.all = [];
                         $scope.suiviCompetence.domaines.all = [];
-                        let allPromise = [$scope.suiviCompetence.sync(),
-                            $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,
-                                idTypePeriode, isCycle, idCycle),
-                            $scope.suiviCompetence.bilanFinDeCycles.sync(), $scope.initSliderBFC()];
-                        if ($scope.searchBilan.parDomaine ===  'true') {
-                            allPromise.push($scope.suiviCompetence.domaines.sync());
-                        }
-                        else {
-                            $scope.suiviFilter.mine = 'false';
-                            allPromise.push($scope.suiviCompetence.enseignements.sync());
-                        }
-                        // On lance les synchronisation en paralelle
-                        await Promise.all(allPromise);
+                        if(idCycle !== undefined) {
+                            let allPromise = [$scope.suiviCompetence.sync(),
+                                $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,
+                                    idTypePeriode, isCycle, idCycle),
+                                $scope.suiviCompetence.bilanFinDeCycles.sync(), $scope.initSliderBFC()];
+                            if ($scope.searchBilan.parDomaine === 'true') {
+                                allPromise.push($scope.suiviCompetence.domaines.sync());
+                            } else {
+                                $scope.suiviFilter.mine = 'false';
+                                allPromise.push($scope.suiviCompetence.enseignements.sync());
+                            }
+                            // On lance les synchronisation en paralelle
+                            await Promise.all(allPromise);
 
-                        // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
-                        //on récupère la période en cours en fonction du type car quand il n'y a pas de période
-                        // sélectionnée on a un type de période
-                        $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
-                        $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve,
-                            _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all,
-                                {id_eleve: $scope.search.eleve.id}));
+                            // On récupère d'abord les bilans de fin de cycle enregistrés par le chef d'établissement
+                            //on récupère la période en cours en fonction du type car quand il n'y a pas de période
+                            // sélectionnée on a un type de période
+                            $scope.suiviCompetence.baremeBrevetEleve = new BaremeBrevetEleve();
+                            $scope.suiviCompetence.baremeBrevetEleve = Mix.castAs(BaremeBrevetEleve,
+                                _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all,
+                                    {id_eleve: $scope.search.eleve.id}));
 
-                        $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
-                        model.on('refresh-slider', function () {
-                            $scope.baremeBrevet();
-                        });
+                            $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                            model.on('refresh-slider', function () {
+                                $scope.baremeBrevet();
+                            });
+                        }
                         if ($scope.opened.detailCompetenceSuivi) {
                             if ($scope.detailCompetence !== undefined) {
                                 $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);

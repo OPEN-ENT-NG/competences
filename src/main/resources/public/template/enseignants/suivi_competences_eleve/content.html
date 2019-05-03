@@ -145,17 +145,17 @@
     <div class="content-suivi-eleve twelve-mobile ten card"
          ng-if="informations.eleve !== '' && informations.eleve !== undefined">
 
-        <div class="twelve" ng-class="{'suivi-eleve-ctl' : suiviCompetence !== undefined}" sticky offset="64">
+        <div class="twelve" ng-class="{'suivi-eleve-ctl' : (suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined)}" sticky offset="64">
             <h2 class="align-center">
                 <i class="previous cell" ng-click="incrementEleve(-1)"></i>
                 <span ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</span>
                 <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
             </h2>
             <div class="ten twelve-mobile centered center"
-                     ng-if="suiviCompetence === undefined">
+                     ng-if="suiviCompetence === undefined || suiviCompetence.cycle.id_cycle === undefined">
                 <i18n>evaluation.suivi.eleve.empty</i18n>
             </div>
-            <div ng-if="suiviCompetence !== undefined">
+            <div ng-if="suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined">
                 <div ng-show="!opened.detailCompetenceSuivi"
                      ng-include="'/competences/public/template/enseignants/suivi_competences_eleve/content_buttons.html'"></div>
 
@@ -178,7 +178,7 @@
                 </div>
             </div>
         </div>
-        <div class="suivi-eleve-slider" ng-if="suiviCompetence !== undefined">
+        <div class="suivi-eleve-slider" ng-if="suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined">
             <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
                 <container template="suivi-competence-content"></container>
             </div>
