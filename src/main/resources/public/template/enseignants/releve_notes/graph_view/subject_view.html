@@ -91,6 +91,7 @@
                                 mode: 'label',
                                 custom: function (tooltipModel) {
                                     if (tooltipModel.body !== undefined) {
+                                        tooltipModel.y += 54;
                                         for (var i = 0; i < tooltipModel.body.length; i++) {
                                             var split_label = tooltipModel.body[i].lines[0].split(':');
                                             var dim = 0;
