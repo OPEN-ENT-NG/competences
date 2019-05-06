@@ -24,10 +24,10 @@
     <div class="imgEleve">
         <img src="/userbook/avatar/[[informations.eleve.id]]" alt="" ng-if="informations.eleve !== null" />
     </div>
-    <p ng-if="informations.eleve.birthDate!= 'undefined' && informations.eleve.birthDate!= null" style="padding: 0 5px;"><i18n>viescolaire.utils.user.birthdate</i18n> : <span class="italic">[[getDateFormated(informations.eleve.birthDate)]]</span></p>
-    <p ng-if="informations.eleve.birthDate == 'undefined' || informations.eleve.birthDate== null" style="padding: 0 5px;">
+    <div ng-if="informations.eleve.birthDate!= 'undefined' && informations.eleve.birthDate!= null" class="center vertical-spacing"><i18n>viescolaire.utils.user.birthdate</i18n> : <span class="italic">[[getDateFormated(informations.eleve.birthDate)]]</span></div>
+    <div ng-if="informations.eleve.birthDate == 'undefined' || informations.eleve.birthDate== null" class="center vertical-spacing">
         <i18n>viescolaire.utils.user.birthdate.undefined</i18n>
-    </p>
+    </div>
     <div ng-if="informations.eleve.competencesNotes !== undefined"
             class="five inline-block align-center" style="padding-left: 29%">
         <proportion-suivi-competence

@@ -6,6 +6,7 @@ import {Eleve, evaluations, Utils} from "../models/teacher";
 import {SyntheseBilanPeriodique} from "../models/teacher/SyntheseBilanPeriodique";
 import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 import {AvisConseil} from "../models/teacher/AvisConseil";
+import {AvisOrientation} from "../models/teacher/AvisOrientation";
 import http from "axios";
 import {bilanPeriodique} from "../sniplets/bilanPeriodique";
 
@@ -286,9 +287,12 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
 
                 $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id, $scope.search.periode.id_type);
+                $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id, $scope.search.periode.id_type);
                 await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
                 await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
+                await $scope.elementBilanPeriodique.avisOrientation.syncAvisOrientation();
                 $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
+                $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
                 utils.safeApply($scope);
             }
 

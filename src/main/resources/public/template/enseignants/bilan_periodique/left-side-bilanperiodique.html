@@ -16,76 +16,78 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   ~
   -->
-<div class="criteres card criterion opened" ng-class="{opened : opened.criteres === true}">
-    <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
-    <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
-        <h2><i18n>viescolaire.utils.criterion</i18n></h2>
+<div sticky offset="64">
+    <div class="criteres card criterion opened" ng-class="{openedAvis : opened.criteres === true}">
+        <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
+        <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
+            <h2><i18n>viescolaire.utils.criterion</i18n></h2>
+        </div>
+        <section ng-if="evaluations.structures.all.length > 1">
+            <label class="select">
+                <select ng-model="evaluations.structure"
+                        ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
+                        ng-change="switchEtablissementSuivi();"></select>
+            </label>
+        </section>
+        <section>
+            <label class="select" >
+                <select ng-model="search.classe"
+                        ng-change="synchronizeStudents(search.classe.id); syncPeriodesBilanPeriodique(); displayBilanPeriodique(); deleteStudent();"
+                        ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
+                    <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
+                </select>
+            </label>
+        </section>
+        <section>
+            <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
+                <select ng-model="search.periode"
+                        ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
+                        ng-change="displayBilanPeriodique(); changeContent();"
+                        ng-options="getI18nPeriode(periode) for periode in filteredPeriode">
+                    <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
+                </select>
+            </label>
+        </section>
+        <section>
+            <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
+                <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
+                        ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
+                        ng-change="displayBilanPeriodique(); changeContent();">
+                    <option disabled value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
+                </select>
+            </label>
+        </section>
     </div>
-    <section ng-if="evaluations.structures.all.length > 1">
-        <label class="select">
-            <select ng-model="evaluations.structure"
-                    ng-options="structure.libelle for structure in evaluations.structures.all track by structure.id"
-                    ng-change="switchEtablissementSuivi();"></select>
-        </label>
-    </section>
-    <section>
-        <label class="select" >
-            <select ng-model="search.classe"
-                    ng-change="synchronizeStudents(search.classe.id); syncPeriodesBilanPeriodique(); displayBilanPeriodique(); deleteStudent();"
-                    ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
-                <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
-            </select>
-        </label>
-    </section>
-    <section>
-        <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
-            <select ng-model="search.periode"
-                    ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                    ng-change="displayBilanPeriodique(); changeContent();"
-                    ng-options="getI18nPeriode(periode) for periode in filteredPeriode">
-                <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
-            </select>
-        </label>
-    </section>
-    <section>
-        <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
-            <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
-                    ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
-                    ng-change="displayBilanPeriodique(); changeContent();">
-                <option disabled value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
-            </select>
-        </label>
-    </section>
-</div>
 
-<div class="criteres card criterion" ng-class="{opened : openedStudentInfo === true}"
-     ng-if="informations.eleve !== '' && informations.eleve !== undefined">
-    <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
-    <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
-</div>
-
-<div class="criteres card criterion" ng-class="{openedAvis : opened.avis === true}">
-    <span class="plus-input" ng-click="openLeftMenu('opened.avis', opened.avis);"></span>
-    <div class="header" ng-click="openLeftMenu('opened.avis', opened.avis);">
-        <h2><i18n>viescolaire.utils.avis</i18n></h2>
+    <div class="criteres card criterion" ng-class="{openedAvis : openedStudentInfo === true}"
+         ng-if="informations.eleve !== '' && informations.eleve !== undefined">
+        <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
+        <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'" class="eleven"></div>
     </div>
-    <section class="select-avis-padding">
-        <label class="select">
-            <select ng-model="search.idAvisClasse"
-                    ng-options="avis.id as avis.libelle for avis in elementBilanPeriodique.avisConseil.avis | filter:filterAvis(1)"
-                    ng-change="elementBilanPeriodique.avisConseil.saveAvisConseil(search.idAvisClasse);">
-                <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
-            </select>
-        </label>
-    </section>
-    <section ng-show="showAvisOrientation">
-        <label class="select">
-            <select ng-model="search.idAvisOrientation"
-                    ng-options="avis.id as avis.libelle for avis in bilanPeriodique.avis | filter:filterAvis(2)"
-                    ng-disabled="false">
-                <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
-            </select>
-        </label>
-    </section>
 
+    <div class="criteres card criterion" ng-class="{openedAvis : opened.avis === true}">
+        <span class="plus-input" ng-click="openLeftMenu('opened.avis', opened.avis);"></span>
+        <div class="header" ng-click="openLeftMenu('opened.avis', opened.avis);">
+            <h2><i18n>viescolaire.utils.avis</i18n></h2>
+        </div>
+        <section>
+            <label class="select">
+                <select ng-model="search.idAvisClasse"
+                        ng-options="avis.id as avis.libelle for avis in elementBilanPeriodique.avisConseil.avis | filter:filterAvis(1)"
+                        ng-change="elementBilanPeriodique.avisConseil.saveAvisConseil(search.idAvisClasse);">
+                    <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
+                </select>
+            </label>
+        </section>
+        <section>
+            <label class="select">
+                <select ng-model="search.idAvisOrientation"
+                        ng-options="avis.id as avis.libelle for avis in elementBilanPeriodique.avisConseil.avis | filter:filterAvis(2)"
+                        ng-change="elementBilanPeriodique.avisOrientation.saveAvisOrientation(search.idAvisOrientation);">
+                    <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
+                </select>
+            </label>
+        </section>
+
+    </div>
 </div>

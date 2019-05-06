@@ -20,6 +20,7 @@ import {Classe, Eleve,  Structure, SuivisDesAcquis, TypePeriode} from "./index";
 import {SyntheseBilanPeriodique} from "./SyntheseBilanPeriodique";
 import {AppreciationCPE} from "./AppreciationCPE";
 import {AvisConseil} from "./AvisConseil";
+import {AvisOrientation} from "./AvisOrientation";
 import {Graph} from "../common/Graph";
 
 
@@ -41,6 +42,7 @@ export class ElementBilanPeriodique extends Model {
     syntheseBilanPeriodique : SyntheseBilanPeriodique;
     appreciationCPE : AppreciationCPE;
     avisConseil : AvisConseil;
+    avisOrientation : AvisOrientation;
     graph: Graph;
 
     get api() {

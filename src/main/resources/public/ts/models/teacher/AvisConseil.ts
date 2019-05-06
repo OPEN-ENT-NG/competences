@@ -1,10 +1,8 @@
-import {Model, notify} from 'entcore';
+import {notify} from 'entcore';
 import http from 'axios';
+import {DefaultAvis} from "../common/DefaultAvis";
 
-export class AvisConseil extends Model {
-    id_eleve : string;
-    id_periode : number;
-    id_avis_conseil_bilan : number;
+export class AvisConseil extends DefaultAvis {
     avis: string;
     // avis: [];
 

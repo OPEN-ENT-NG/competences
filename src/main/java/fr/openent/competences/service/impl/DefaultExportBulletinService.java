@@ -48,6 +48,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String GET_APPRECIATION_CPE_METHOD = "getAppreciationCPE";
     private static final String EXPORT_BULLETIN_METHOD = "export Bulletin";
     private static final String GET_AVIS_CONSEIL_METHOD = "getAvisConseil";
+    private static final String GET_AVIS_ORIENTATION_METHOD = "getAvisOrientation";
     private static final String GET_IMAGE_GRAPH_METHOD = "getImageGraph";
     private static final String GET_ARBRE_DOMAINE_METHOD = "getArbreDomaines";
 
@@ -110,6 +111,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private final DefaultAppreciationCPEService appreciationCPEService;
     private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
     private AvisConseilService avisConseilService;
+    private AvisOrientationService avisOrientationService;
     private DomainesService domainesService;
     private ExportService exportService;
     private final Storage storage;
@@ -123,6 +125,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         appreciationCPEService = new DefaultAppreciationCPEService();
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         avisConseilService = new DefaultAvisConseilService();
+        avisOrientationService = new DefaultAvisOrientationService();
         domainesService = new DefaultDomaineService(Competences.COMPETENCES_SCHEMA, Competences.DOMAINES_TABLE);
         exportService = new DefaultExportService(eb, storage);
         utilsService = new DefaultUtilsService();
@@ -207,6 +210,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getCycle(idEleve,elevesMap,idPeriode, params.getLong(TYPE_PERIODE), finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
                 getAvisConseil(idEleve, elevesMap, idPeriode, finalHandler);
+                getAvisOrientation(idEleve, elevesMap, idPeriode, finalHandler);
                 if(params.getBoolean(GET_RESPONSABLE)) {
                     getResponsables(idEleve, elevesMap, finalHandler);
                 }
@@ -547,6 +551,57 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     .put("hasAvisConseil",true);
                         }
                         serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_CONSEIL_METHOD);
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode,
+                               Handler<Either<String, JsonObject>> finalHandler) {
+        logBegin(GET_AVIS_ORIENTATION_METHOD, idEleve);
+        JsonObject eleveObject = elevesMap.get(idEleve);
+        if (eleveObject == null) {
+            logStudentNotFound(idEleve, GET_AVIS_ORIENTATION_METHOD);
+            finalHandler.handle(new Either.Right<>(null));
+        }else{
+            avisOrientationService.getAvisOrientation(idEleve, idPeriode, new Handler<Either<String, JsonObject>>() {
+                private int count = 1;
+                private AtomicBoolean answer = new AtomicBoolean(false);
+
+                @Override
+                public void handle(Either<String, JsonObject> event) {
+                    if(event.isLeft()){
+                        String message = event.left().getValue();
+                        log.error("[getAvisOrientation ] : " + idEleve  + " " + message + " " + count);
+                        if (message.contains(TIME)) {
+                            count++;
+                            avisOrientationService.getAvisOrientation(idEleve, idPeriode,this);
+                        }
+                        else {
+                            if (eleveObject.getJsonArray(ERROR) == null) {
+                                eleveObject.put(ERROR, new JsonArray());
+                            }
+                            JsonArray errors = eleveObject.getJsonArray(ERROR);
+                            errors.add(GET_AVIS_ORIENTATION_METHOD);
+                            serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_ORIENTATION_METHOD);
+                        }
+                    }else{
+                        JsonObject avisOrientation = event.right().getValue();
+                        if(avisOrientation != null && !avisOrientation.isEmpty() ) {
+                            eleveObject.put("avisOrientation",avisOrientation.getString(LIBELLE))
+                                    .put("hasAvisOrientation",true);
+                            if(idPeriode == 5)
+                                eleveObject.put("beforeAvisOrientation",I18n.getInstance()
+                                        .translate("orientation.avis.LastTrimester",
+                                                I18n.DEFAULT_DOMAIN, Locale.FRANCE));
+                            else
+                                eleveObject.put("beforeAvisOrientation",I18n.getInstance()
+                                        .translate("orientation.avis.FirstSecondTrimester",
+                                                I18n.DEFAULT_DOMAIN, Locale.FRANCE));
+                        }
+                        serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_ORIENTATION_METHOD);
                     }
                 }
             });

@@ -32,6 +32,8 @@
   "evaluations.pdf": "pdf",
   "evaluations.csv": "csv",
 
+  "orientation.avis.LastTrimester": "Avis d'orientation / Proposition du conseil de classe : ",
+  "orientation.avis.FirstSecondTrimester": "Avis provisoire d'orientation : ",
 
   "competences.title": "Compétences",
   "competences.notify.saved": "La donnée a été sauvegardée",

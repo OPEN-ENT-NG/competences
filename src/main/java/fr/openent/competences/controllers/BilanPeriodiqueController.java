@@ -43,6 +43,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
     private final DefaultAppreciationCPEService appreciationCPEService;
     private final DefaultAvisConseilService avisConseilService;
+    private final DefaultAvisOrientationService avisOrientationService;
 
     public BilanPeriodiqueController (EventBus eb){
         this.eb = eb;
@@ -50,6 +51,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         appreciationCPEService = new DefaultAppreciationCPEService();
         avisConseilService = new DefaultAvisConseilService();
+        avisOrientationService = new DefaultAvisOrientationService();
     }
 
     @Get("/bilan/periodique/eleve/:idEleve")
@@ -296,6 +298,87 @@ public class BilanPeriodiqueController extends ControllerHelper{
             public void handle(final UserInfos user) {
                 if (user != null) {
                     avisConseilService.getAvisConseil(
+                            request.params().get("id_eleve"),
+                            Long.parseLong(request.params().get("id_periode")),
+                            defaultResponseHandler(request));
+                } else {
+                    badRequest(request);
+                }
+            }
+        });
+    }
+
+    /**
+     * Ajoute un avis du conseil de classe avec les données passées en POST
+     *
+     * @param request
+     */
+    @Post("/avis/orientation")
+    @ApiDoc("Créer ou mettre à jour un avis d'orientation périodique d'un élève pour une période donnée")
+    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
+    public void createOrUpdateAvisOrientation(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    String validator = pathPrefix + Competences.SCHEMA_AVIS_ORIENTATION_BILAN_PERIODIQUE;
+                    RequestUtils.bodyToJson(request, validator,
+                            new Handler<JsonObject>() {
+                                @Override
+                                public void handle(JsonObject idAvisClasse) {
+                                    final Long idPeriode = idAvisClasse.getLong("id_periode");
+                                    final String idEleve = idAvisClasse.getString("id_eleve");
+                                    final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
+                                    avisOrientationService.createOrUpdateAvisOrientation(
+                                            idEleve,
+                                            idPeriode,
+                                            idAvis,
+                                            DefaultResponseHandler.defaultResponseHandler(request));
+                                }
+                            });
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+    @Delete("/avis/orientation")
+    @ApiDoc("Supprimer un avis d'orientation du conseil de classe")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    public void deleteAvisOrientation(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if(user != null){
+                    avisOrientationService.deleteAvisOrientation(
+                            Long.parseLong(request.params().get("id_periode")),
+                            request.params().get("id_eleve"),
+                            defaultResponseHandler(request));
+                }else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+
+    /**
+     * Récupère les orientations du conseil de classe de l'élève
+     *
+     * @param request
+     */
+    @Get("/avis/orientation")
+    @ApiDoc("Récupère l'avis d'orientation d'un élève pour une période donnée")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getAvisOrientation(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    avisOrientationService.getAvisOrientation(
                             request.params().get("id_eleve"),
                             Long.parseLong(request.params().get("id_periode")),
                             defaultResponseHandler(request));

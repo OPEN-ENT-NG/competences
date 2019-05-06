@@ -26,6 +26,7 @@ import {
 } from './index';
 import {AppreciationElement} from "./AppreciationElement";
 import {AvisConseil} from "./AvisConseil";
+import {AvisOrientation} from "./AvisOrientation";
 
 export class BilanPeriodique extends  Model {
     synchronized: any;
