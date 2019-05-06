@@ -86,7 +86,7 @@ export class Utils {
         }
     }
 
-    static setSliderOptions(poDomaine,tableConversions) {
+    static setSliderOptions(poDomaine,tableConversions, suiviCompetence) {
 
         poDomaine.myChangeSliderListener = function(sliderId) {
             // Au changement du Slider on détermine si on est dans le cas d'un ajout d'un bfc ou d'une modification
@@ -123,7 +123,7 @@ export class Utils {
 
                         model.trigger('apply');
                     }
-                    model.trigger('refresh-slider');
+                    suiviCompetence.trigger('refresh-slider');
 
                 });
             }
@@ -199,7 +199,7 @@ export class Utils {
     }
 
     static getMaxEvaluationsDomaines(poDomaine, poMaxEvaluationsDomaines,tableConversions, pbMesEvaluations,
-                                     bfcsParDomaine, classe) {
+                                     bfcsParDomaine, classe, suiviCompetence) {
 
 
         // si le domaine est évalué, on ajoute les max de chacunes de ses competences
@@ -230,7 +230,7 @@ export class Utils {
                     }
                 }
                 this.getMaxEvaluationsDomaines(poDomaine.domaines.all[i], poMaxEvaluationsDomaines,tableConversions,
-                    pbMesEvaluations,bfcsParDomaine, classe);
+                    pbMesEvaluations,bfcsParDomaine, classe, suiviCompetence);
             }
         }
 
@@ -241,7 +241,7 @@ export class Utils {
             poDomaine.moyenne = -1;
         }
 
-        this.setSliderOptions(poDomaine,tableConversions);
+        this.setSliderOptions(poDomaine,tableConversions, suiviCompetence);
 
         // Chefs d'établissement
 

@@ -536,7 +536,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                                     {id_eleve: $scope.search.eleve.id}));
 
                             $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
-                            model.on('refresh-slider', function () {
+                            $scope.suiviCompetence.on('refresh-slider', function () {
                                 $scope.baremeBrevet();
                             });
                         }

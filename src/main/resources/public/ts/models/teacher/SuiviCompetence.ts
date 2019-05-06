@@ -160,7 +160,7 @@ export class SuiviCompetence extends Model {
             // recherche de toutes les évaluations du domaine et ses sous domaines
             // (uniquement les max de chaque compétence)
             Utils.getMaxEvaluationsDomaines(oDomaine, oEvaluationsArray,
-                this.tableConversions.all, false, this.bilanFinDeCycles, this.classe);
+                this.tableConversions.all, false, this.bilanFinDeCycles, this.classe, this);
         }
     }
 
