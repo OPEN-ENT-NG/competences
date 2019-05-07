@@ -60,17 +60,29 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH = 600;
         $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
 
+        let closeTemplateButNot = (notThis) => {
+            let allTemplate = ['suivi-acquis','vie-scolaire', 'graphique', 'graphMatiere', 'graphDomaine',
+                'synthese','projet','bfc'];
+
+            _.forEach(allTemplate, (_template) => {
+                if(notThis instanceof Array){
+                    if(!_.contains(notThis,template) || _.isEmpty(notThis)){
+                        template.close(_template);
+                    }
+                }
+                else {
+                    if(notThis !== _template){
+                        template.close(_template);
+                    }
+                }
+            });
+        };
 
         //////            Onglets du bilan périodique            //////
 
         $scope.openSuiviAcquis = async () => {
             $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
-            template.close('projet');
-            template.close('vie-scolaire');
-            template.close('graphique');
-            template.close('graphMatiere');
-            template.close('graphDomaine');
-            template.close('synthese');
+            closeTemplateButNot('suivi-acquis');
             utils.safeApply($scope);
 
             if(model.me.type === 'PERSRELELEVE'){
@@ -94,12 +106,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.openProjet = async () => {
             $scope.selected = {projet: true};
-            template.close('suivi-acquis');
-            template.close('vie-scolaire');
-            template.close('graphique');
-            template.close('graphMatiere');
-            template.close('graphDomaine');
-            template.close('synthese');
+            closeTemplateButNot('projet');
             $scope.canUpdateAppreciations = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                 "canUpdateAppreciations") && finSaisieBilan;
             utils.safeApply($scope);
@@ -110,12 +117,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.openVieScolaire = async function () {
             $scope.selected = {vieScolaire: true};
-            template.close('suivi-acquis');
-            template.close('projet');
-            template.close('graphique');
-            template.close('graphMatiere');
-            template.close('graphDomaine');
-            template.close('synthese');
+            closeTemplateButNot('vie-scolaire');
             utils.safeApply($scope);
             $scope.canUpdateRetardAndAbscence = model.me.hasWorkflow(
                 Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbscence) && finSaisieBilan;
@@ -212,6 +214,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
         };
 
+        $scope.openBFC = async function () {
+            $scope.selected = { bfc: false };
+            closeTemplateButNot([]);
+            await utils.safeApply($scope);
+            template.open('bfc', 'enseignants/suivi_competences_eleve/content');
+            $scope.selected.bfc = true;
+            await Utils.runMessageLoader($scope);
+        };
 
         //////            Graph de l'onglet graphique            //////
 
@@ -285,6 +295,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if ($scope.selected.projet) {
                     await $scope.openProjet();
                 }
+                if ($scope.selected.bfc){
+                    await $scope.openBFC();
+                }
 
                 $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id, $scope.search.periode.id_type);
                 $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id, $scope.search.periode.id_type);
@@ -316,7 +329,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                             return avis;
                         }
                     }
-        }
+        };
 
 
 

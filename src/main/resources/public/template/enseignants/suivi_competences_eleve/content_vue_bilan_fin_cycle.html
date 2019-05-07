@@ -63,7 +63,7 @@
 
 <div class="content-bilan-fin-cycle">
     <h2><i18n>evaluations.bilan.fin.cycle.title</i18n>
-        <dropdown-buttons class="right-magnet">
+        <dropdown-buttons data-ng-click="removeBottomClass()" id='bfc_dropdowns'class="right-magnet right">
             <open class="opener"><i class="download"></i></open>
             <options>
                 <bt ng-click="exportBFC(search.eleve, search.periode)"><i18n>evaluation.bfc.export.button.eleve</i18n></bt>

@@ -15,14 +15,17 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 
-<article ng-show="search.periode.libelle !== 'cycle'" class="titre-widget ten centered">
+<article ng-show="search.periode.libelle !== 'cycle' && $location.path() !== '/conseil/de/classe'"
+         class="titre-widget ten centered">
     <div class="row twelve">
         <h2 class="cell "><i18n>viescolaire.eleve.recherche</i18n></h2>
         <autocomplete class="ten cell clear-none" options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
     </div>
 </article>
 <!-- A afficher dans la vue cycle à la place de la RechercheBar -->
-<article ng-show="search.periode.libelle === 'cycle'" class="titre-widget ten centered">
+<article ng-show="search.periode.libelle === 'cycle' || $location.path() === '/conseil/de/classe'"
+         ng-class="{'twelve' : $location.path() === '/conseil/de/classe','ten' : $location.path() !== '/conseil/de/classe'}"
+         class="titre-widget centered">
     <div class="row twelve">
         <h2 class="cell two cycleTitle">[[currentCycle.libelle]]</h2>
     </div>
@@ -141,11 +144,12 @@
     <!--<img ng-src="competences/public/template/enseignants/suivi_competences_eleve/0.png" alt=""/>-->
     <!--</div>-->
 </lightbox>
-<div  ng-if="search.classe.id_cycle !== null">
-    <div class="content-suivi-eleve twelve-mobile ten card"
+<div  ng-if="search.classe.id_cycle !== null ">
+    <div class="content-suivi-eleve twelve-mobile card"
+         ng-class="{'twelve' : $location.path() === '/conseil/de/classe','ten' : $location.path() !== '/conseil/de/classe'}"
          ng-if="informations.eleve !== '' && informations.eleve !== undefined">
 
-        <div class="twelve" ng-class="{'suivi-eleve-ctl' : (suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined)}" sticky offset="64">
+        <div ng-if="$location.path() !== '/conseil/de/classe'" class="twelve" ng-class="{'suivi-eleve-ctl' : (suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined)}" sticky offset="64">
             <h2 class="align-center">
                 <i class="previous cell" ng-click="incrementEleve(-1)"></i>
                 <span ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</span>

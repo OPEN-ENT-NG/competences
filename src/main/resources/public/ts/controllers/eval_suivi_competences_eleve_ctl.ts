@@ -34,6 +34,7 @@ import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Pers
 declare let _: any;
 declare let Chart: any;
 declare let location: any;
+declare let $: any;
 
 export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleveCtl', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
@@ -885,25 +886,50 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          * @param refresh
          * @returns {Promise<any>}
          */
-        $scope.refreshAndOpenBFC = async function (refresh?) {
+        $scope.refreshAndOpenBFC = async function (refresh?, init?) {
             return new Promise (async resolve => {
-                await Utils.runMessageLoader($scope);
-                if ($scope.searchBilan.parDomaine ===  'false' || refresh === true) {
-                    $scope.searchBilan.parDomaine = 'true';
-                    template.close('suivi-competence-content');
-                    await utils.safeApply($scope);
-                    await $scope.suiviCompetence.domaines.sync();
-                    await $scope.initSliderBFC();
+                try {
+                    if (init === true) {
+                        Utils.initFilterMine($scope);
+                        await $scope.search.eleve.getCycles();
+                        $scope.currentCycle = _.findWhere($scope.search.eleve.cycles,
+                            {id_cycle: $scope.search.classe.id_cycle});
+                        $scope.isCycle = true;
+                        $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve,
+                            {libelle: "cycle", id: null}, $scope.search.classe, $scope.currentCycle,
+                            $scope.isCycle, $scope.evaluations.structure);
+                        $scope.selectedCycleRadio = $scope.currentCycle;
+                        await Promise.all([$scope.suiviCompetence.bilanFinDeCycles.sync(),
+                            $scope.updateColorAndLetterForSkills(), $scope.baremeBrevet()]);
+                    }
+                    await Utils.runMessageLoader($scope);
+                    if ($scope.searchBilan.parDomaine === 'false' || refresh === true) {
+                        $scope.searchBilan.parDomaine = 'true';
+                        template.close('suivi-competence-content');
+                        await utils.safeApply($scope);
+                        await $scope.suiviCompetence.domaines.sync();
+                        await $scope.initSliderBFC();
+                    }
+                    $scope.showRechercheBarFunction(false);
+                    $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                    template.open('suivi-competence-content',
+                        'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle');
+                    await Utils.stopMessageLoader($scope);
+                    resolve();
                 }
-                $scope.showRechercheBarFunction(false);
-                $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
-                template.open('suivi-competence-content',
-                    'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle');
-                await Utils.stopMessageLoader($scope);
-                resolve();
+                catch (e){
+                    await Utils.stopMessageLoader($scope);
+                    resolve();
+                }
+
             });
         };
 
+        $scope.removeBottomClass = function () {
+            if($location.path() === '/conseil/de/classe' ){
+                $('#bfc_dropdowns').removeClass("bottom");
+            }
+        };
         /**
          * MISE A JOUR POUR LA PRISE EN COMPTE DE LA PERSONNALISATION DES COULEURS DE COMPETENCES DANS LE GRAPHE
          */
@@ -1041,7 +1067,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         };
 
         $scope.initView = async function () {
-            if ($scope.searchBilan.parDomaine ===  'false') {
+            if ($scope.searchBilan !== undefined  && $scope.searchBilan.parDomaine ===  'false') {
                 $scope.searchBilan.parDomaine = 'true';
                 await $scope.changeContent();
             }
@@ -1063,53 +1089,54 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         /**********************************************************************************************************
          *  instructions exécutées au chargement du controleur
          *********************************************************************************************************/
-        template.open('container', 'layouts/2_10_layout');
-        template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
-        template.open('content', 'enseignants/suivi_competences_eleve/content');
-        template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
-
-        $scope.route = $route;
-        $scope.lang = lang;
-        $scope.opened.lightboxEvalLibre = false;
         $scope.searchBilan = {
             parDomaine: 'true'
         };
-        $scope.$watch(function () {
-            if ($scope.evaluationLibre != undefined)
-                return $scope.evaluationLibre.id_matiere;
-        }, function (newValue) {
-            if (newValue !== "" && newValue !== undefined && newValue !== null) {
-                let mamatiere = _.findWhere($scope.evaluationLibre.matieres, {id: $scope.evaluationLibre.id_matiere});
-                if (mamatiere != undefined) {
-                    $scope.evaluationLibre.sousmatiere = mamatiere.sousMatieres.all;
-                    if(mamatiere.sousMatieres.all !== undefined && mamatiere.sousMatieres.all.length > 0) {
-                        $scope.evaluationLibre.id_sousmatiere = mamatiere.sousMatieres.all[0].id_type_sousmatiere;
+        if($location.path() === '/competences/eleve') {
+            template.open('container', 'layouts/2_10_layout');
+            template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
+            template.open('content', 'enseignants/suivi_competences_eleve/content');
+            template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
+
+            $scope.route = $route;
+            $scope.lang = lang;
+            $scope.opened.lightboxEvalLibre = false;
+            $scope.$watch(function () {
+                if ($scope.evaluationLibre != undefined)
+                    return $scope.evaluationLibre.id_matiere;
+            }, function (newValue) {
+                if (newValue !== "" && newValue !== undefined && newValue !== null) {
+                    let mamatiere = _.findWhere($scope.evaluationLibre.matieres, {id: $scope.evaluationLibre.id_matiere});
+                    if (mamatiere != undefined) {
+                        $scope.evaluationLibre.sousmatiere = mamatiere.sousMatieres.all;
+                        if (mamatiere.sousMatieres.all !== undefined && mamatiere.sousMatieres.all.length > 0) {
+                            $scope.evaluationLibre.id_sousmatiere = mamatiere.sousMatieres.all[0].id_type_sousmatiere;
+                        }
                     }
+                } else if (newValue === null) {
+                    $scope.evaluationLibre.sousmatiere = []
                 }
-            } else if (newValue === null) {
-                $scope.evaluationLibre.sousmatiere = []
-            }
-        });
-        await $scope.initSuivi();
-        $scope.$watch($scope.displayFromClass, async function (newValue, oldValue) {
-            if (newValue !== oldValue) {
-                await $scope.initSuivi();
-            }
-        });
+            });
+            await $scope.initSuivi();
+            $scope.$watch($scope.displayFromClass, async function (newValue, oldValue) {
+                if (newValue !== oldValue) {
+                    await $scope.initSuivi();
+                }
+            });
 
-        /*
-         Listener sur le template suivi-competence-detail permettant la transition entre la vue détail
-         et la vue globale
-         */
-        template.watch("suivi-competence-detail", function () {
-            if (!$scope.opened.detailCompetenceSuivi) {
-                $scope.opened.detailCompetenceSuivi = true;
-            }
-        });
-        $scope.$watch($scope.detailCompetence, async function () {
-            await utils.initChartsEval($scope);
-        });
-        await Utils.stopMessageLoader($scope);
-
+            /*
+             Listener sur le template suivi-competence-detail permettant la transition entre la vue détail
+             et la vue globale
+             */
+            template.watch("suivi-competence-detail", function () {
+                if (!$scope.opened.detailCompetenceSuivi) {
+                    $scope.opened.detailCompetenceSuivi = true;
+                }
+            });
+            $scope.$watch($scope.detailCompetence, async function () {
+                await utils.initChartsEval($scope);
+            });
+            await Utils.stopMessageLoader($scope);
+        }
     }
 ]);
