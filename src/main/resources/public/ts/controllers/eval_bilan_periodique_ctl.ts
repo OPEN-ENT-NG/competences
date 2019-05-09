@@ -1,14 +1,13 @@
-import {notify, idiom as lang, ng, template, model, Behaviours, moment} from 'entcore';
+import {notify, idiom as lang, ng, template, model, Behaviours, angular} from 'entcore';
 import * as utils from '../utils/teacher';
 import {ElementBilanPeriodique} from "../models/teacher/ElementBilanPeriodique";
 import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
-import {Eleve, evaluations, Utils} from "../models/teacher";
+import {Utils} from "../models/teacher";
 import {SyntheseBilanPeriodique} from "../models/teacher/SyntheseBilanPeriodique";
 import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 import {AvisConseil} from "../models/teacher/AvisConseil";
 import {AvisOrientation} from "../models/teacher/AvisOrientation";
-import http from "axios";
-import {bilanPeriodique} from "../sniplets/bilanPeriodique";
+import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 
 declare let _:any;
 
@@ -30,8 +29,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.showAvisOrientation = false;
         $scope.showMoyGeneral = false;
         $scope.opened.avis = true;
-
-        $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
+        $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc: false};
         $scope.displayBilanPeriodique = async() => {
             if(model.me.type === 'PERSRELELEVE'){
                 $scope.critereIsEmpty = !($scope.search.periode !== '*' && $scope.search.periode !== null && $scope.search.periode !== undefined);
@@ -40,7 +38,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     && ($scope.search.eleve !== '*' && $scope.search.eleve !== null && $scope.search.eleve !== undefined)
                     && ($scope.search.periode !== '*' && $scope.search.periode !== null && $scope.search.periode !== undefined));
             }
-            $scope.updateColorAndLetterForSkills();
         };
 
         if(model.me.type === 'PERSRELELEVE'){
@@ -76,12 +73,16 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     }
                 }
             });
+            if(!$scope.critereIsEmpty && $scope.elementBilanPeriodique === undefined){
+                $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                    $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
+            }
         };
 
         //////            Onglets du bilan périodique            //////
 
         $scope.openSuiviAcquis = async () => {
-            $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false};
+            $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc :false};
             closeTemplateButNot('suivi-acquis');
             utils.safeApply($scope);
 
@@ -181,14 +182,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 year.ordre += evenement.ordre;
 
 
-                    if (periode.id_type === $scope.search.periode.id_type) {
-                        $scope.search.eleve.evenement = evenement;
-                    }
-                    if (pushIt) {
-                        $scope.search.eleve.evenements.push(evenement);
-                    }
-                });
-                $scope.search.eleve.evenements.push(year);
+                if (periode.id_type === $scope.search.periode.id_type) {
+                    $scope.search.eleve.evenement = evenement;
+                }
+                if (pushIt) {
+                    $scope.search.eleve.evenements.push(evenement);
+                }
+            });
+            $scope.search.eleve.evenements.push(year);
 
             $scope.elementBilanPeriodique.appreciationCPE = new AppreciationCPE($scope.informations.eleve.id, $scope.search.periode.id_type);
             await $scope.elementBilanPeriodique.appreciationCPE.syncAppreciationCPE();
@@ -199,19 +200,25 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
 
         $scope.openGraphique = async function () {
-            $scope.selected = { graphique: true };
-            template.close('suivi-acquis');
-            template.close('projet');
-            template.close('vie-scolaire');
-            utils.safeApply($scope);
-            $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
-            $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id, $scope.search.periode.id_type);
-            await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();
-            utils.safeApply($scope);
-            template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
-            template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
-            utils.safeApply($scope);
+            try {
+                $scope.selected = {graphique: true};
+                template.close('suivi-acquis');
+                template.close('projet');
+                template.close('vie-scolaire');
+                await Utils.runMessageLoader($scope);
+                $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique(
+                    $scope.search.classe,"canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
+                $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique(
+                    $scope.informations.eleve.id, $scope.search.periode.id_type);
+                await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();
+                await utils.safeApply($scope);
+                template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
+                template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
+                await Utils.stopMessageLoader($scope);
+            }
+            catch (e) {
+                await Utils.stopMessageLoader($scope);
+            }
         };
 
         $scope.openBFC = async function () {
@@ -219,7 +226,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             closeTemplateButNot([]);
             await utils.safeApply($scope);
             template.open('bfc', 'enseignants/suivi_competences_eleve/content');
-            $scope.selected.bfc = true;
+            $scope.selected = { bfc: true };
             await Utils.runMessageLoader($scope);
         };
 
@@ -264,6 +271,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.changeContent = async function () {
             $scope.informations.eleve = $scope.search.eleve;
             if (!$scope.critereIsEmpty) {
+                $scope.updateColorAndLetterForSkills();
                 finSaisieBilan = !_.find($scope.search.classe.periodes.all, {id_type : $scope.search.periode.id_type}).publication_bulletin;
                 if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve,
@@ -287,6 +295,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                         $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
                     await $scope.openSuiviAcquis();
+                }
+                if($scope.elementBilanPeriodique === undefined){
+                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                        $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
                 }
                 if ($scope.selected.vieScolaire) {
                     await $scope.openVieScolaire();
@@ -325,10 +337,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.filterAvis = function (param) {
             return (avis) => {
-                        if (avis.type_avis === param) {
-                            return avis;
-                        }
-                    }
+                if (avis.type_avis === param) {
+                    return avis;
+                }
+            }
         };
 
 
@@ -381,7 +393,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
                 $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
             }
-            if (param === "isBilanPeriodique") {
+            if (param === "isBilanPeriodique" && $scope.bilanPeriodique !== undefined) {
                 _.forEach($scope.bilanPeriodique.appreciations, (appreciation) => {
                     if ($scope.elementsDisplay === undefined) {
                         $scope.elementsDisplay = [_.findWhere($scope.bilanPeriodique.elements, {id: appreciation.id_elt_bilan_periodique})];
@@ -389,7 +401,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     else if (!_.findWhere($scope.elementsDisplay, {id: appreciation.id_elt_bilan_periodique})) {
                         $scope.elementsDisplay.push(_.findWhere($scope.bilanPeriodique.elements, {id: appreciation.id_elt_bilan_periodique}));
                     }
-                })
+                });
 
                 $scope.informations.eleve = _.findWhere($scope.bilanPeriodique.classe.eleves.all, {id: $scope.search.eleve.id});
             }
@@ -487,7 +499,53 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             utils.safeApply($scope);
         };
 
-    }
+        $scope.updateNiveau = function (usePerso) {
+            updateNiveau(usePerso, $scope);
+        };
 
+        $scope.updateColorAndLetterForSkills = async function () {
+            updateColorAndLetterForSkills($scope, $location);
+            let graphiqueClosed = false;
+            let bfcClosed = false;
+            if($scope.selected !== undefined) {
+                if($scope.selected.graphique === true) {
+                    await Utils.runMessageLoader($scope);
+                    $scope.selected.graphique = false;
+                    template.close('graphique');
+                    graphiqueClosed = true;
+                }
+                if($scope.selected.bfc === true) {
+                    await Utils.runMessageLoader($scope);
+                    $scope.selected.bfc = false;
+                    template.close('bfc');
+                    bfcClosed = true;
+                }
+            }
+            await utils.safeApply($scope);
+            if(graphiqueClosed){
+                $scope.selected.graphique = true;
+                template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
+                if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
+                    $scope.openMatiere();
+                }
+                if (template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
+                    $scope.openDomaine();
+                }
+                await Utils.stopMessageLoader($scope);
+            }
+            if(bfcClosed){
+                $scope.selected.bfc = true;
+                template.open('bfc', 'enseignants/suivi_competences_eleve/content');
+            }
+
+            await utils.safeApply($scope);
+        };
+        $scope.$watch('selected', function(newValue, oldValue) {
+            if($scope.selected !== newValue) {
+                angular.copy(newValue, $scope.selected);
+            }
+        });
+
+    }
 
 ]);

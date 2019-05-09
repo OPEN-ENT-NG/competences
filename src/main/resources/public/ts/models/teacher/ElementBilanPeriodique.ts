@@ -55,7 +55,7 @@ export class ElementBilanPeriodique extends Model {
     }
 
 
-     constructor(pClasse, pEleve, pIdTypePeriode,pStructure, pTypePeriode) {
+    constructor(pClasse, pEleve, pIdTypePeriode,pStructure, pTypePeriode) {
         super();
         this.structure = pStructure;
         this.classe = pClasse;
@@ -63,8 +63,8 @@ export class ElementBilanPeriodique extends Model {
         this.idTypePeriode = pIdTypePeriode;
         this.idPeriode = this.idTypePeriode;
         this.typePeriode = pTypePeriode;
-            this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id,
-                this.idTypePeriode, this.typePeriode);
+        this.suivisAcquis = new SuivisDesAcquis(this.eleve.id, this.classe.id, this.structure.id,
+            this.idTypePeriode, this.typePeriode);
     }
 
 
