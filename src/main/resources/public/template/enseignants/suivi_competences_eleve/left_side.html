@@ -140,7 +140,7 @@
     <div ng-show="successUpdateEnseignement" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateEnseignement</i18n></div>
     <section>
         <label class="select" >
-            <select  ng-model="suiviCompetence.ensCplSelected" ng-change="onChangeEns()" ng-options ="ensCpl as ensCpl.libelle for ensCpl in suiviCompetence.ensCpls.all">
+            <select  ng-model="suiviCompetence.ensCplSelected" ng-change="onChangeEns()" ng-options ="ensCpl as ensCpl.libelle for ensCpl in suiviCompetence.ensCpls.all | orderBy:'libelle' track by ensCpl.id">
                 <option class="header-opt" value="" disabled ><i18n>[[translate('viescolaire.utils.enseignements')]]</i18n></option>
             </select>
         </label>
@@ -156,7 +156,7 @@
     <section>
         <label class="select" ng-show="suiviCompetence.ensCplSelected.code === 'LCR' ">
             <select  ng-model="suiviCompetence.langueSelected" ng-change="oncChangeLangue()"
-                     ng-options ="langue as langue.libelle for langue in suiviCompetence.langues.all">
+                     ng-options ="langue as langue.libelle for langue in suiviCompetence.langues.all | orderBy:'libelle' track by langue.id">
                 <option class="header-opt" value="" disabled ><i18n>[[translate('viescolaire.utils.langues.culture.regionale.choix')]]</i18n></option>
             </select>
         </label>
