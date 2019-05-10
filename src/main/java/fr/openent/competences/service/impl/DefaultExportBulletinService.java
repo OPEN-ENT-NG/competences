@@ -254,7 +254,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         - Rajoute tous les libelles i18n nécessaires pour le bulletin
         - Récupère l'appréciation CPE
         - Récupération de l'avis du conseil de l'élève
-
+        - Récupération de l'avis d'orientation de l'élève
         - Récupération des Responsable légaux de l'élève (si GET_RESPONSABLE)
 
         - Récupération des EPI/AP/PARCOURS (si SHOW_PROJECTS)
@@ -264,7 +264,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
      */
-        int nbServices = 11;
+        int nbServices = 12;
         if (params.getBoolean(GET_RESPONSABLE)) {
             ++nbServices;
         }
