@@ -100,9 +100,7 @@ export class DevoirsCollection {
     getPercentDone (devoir?) : Promise<any> {
         return new Promise((resolve, reject) => {
             if(devoir && evaluations.structure.synchronized.devoirs) {
-                let url = this.api.done + "?idDevoir="+devoir.id + "&is_evaluated=" +devoir.is_evaluated;
-                url += "&idGroupe=" + devoir.id_groupe;
-                url += "&has_competence=" + (devoir.competences.all.length > 0 || devoir.nbcompetences > 0);
+                let url = this.api.done + "?idDevoir="+devoir.id;
                 http().getJson(url)
                     .done((res) => {
                         let calculatedPercent = _.findWhere(res, {id : devoir.id});

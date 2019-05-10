@@ -16,19 +16,11 @@
  */
 
 import {model, notify, idiom as lang, ng, template, moment, _, angular, http} from 'entcore';
-import {
-    Devoir,
-    Evaluation,
-    evaluations,
-    ReleveNote,
-    GestionRemplacement,
-    Classe
-} from '../models/teacher';
+import {Devoir, Evaluation, evaluations, ReleveNote, GestionRemplacement, Classe} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
 import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
-import {Graph} from "../models/common/Graph";
 
 declare let $: any;
 declare let document: any;
@@ -239,87 +231,107 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             viewNotesDevoir: async function (params) {
-                await Utils.runMessageLoader($scope);
-                $scope.opened.lightbox = false;
-                if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
-                    $scope.cleanRoot();
-                    window.scrollTo(0, 0);
-                    $scope.resetSelected();
-                    if (!template.isEmpty('leftSide-userInfo')) template.close('leftSide-userInfo');
-                    if (!template.isEmpty('leftSide-devoirInfo')) template.close('leftSide-devoirInfo');
-                    if ($scope.structure.devoirs.empty()) {
-                        await $scope.structure.devoirs.sync();
-                    }
-                    $scope.currentDevoir = _.findWhere(evaluations.structure.devoirs.all,
-                        {id: parseInt(params.devoirId)});
-                    $scope.usePerso = evaluations.structure.usePerso;
-                    $scope.updateColorAndLetterForSkills();
-                    $scope.updateNiveau($scope.usePerso);
-                    if ($scope.printOption === undefined) {
-                        $scope.printOption = {
-                            display: false,
-                            fileType: "formSaisie",
-                            cartoucheNmb: 1,
-                            byEleve: false,
-                            inColor: false,
+                try {
+
+                    await Utils.runMessageLoader($scope);
+                    $scope.opened.lightbox = false;
+                    if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
+                        $scope.cleanRoot();
+                        window.scrollTo(0, 0);
+                        $scope.resetSelected();
+                        if (!template.isEmpty('leftSide-userInfo')) template.close('leftSide-userInfo');
+                        if (!template.isEmpty('leftSide-devoirInfo')) template.close('leftSide-devoirInfo');
+                        if ($scope.structure.devoirs.empty()) {
+                            await $scope.structure.devoirs.sync();
+                        }
+                        let getDevoir = () => {
+                            $scope.currentDevoir = _.findWhere(evaluations.structure.devoirs.all,
+                                {id: parseInt(params.devoirId)});
                         };
-                    }
-                    if (evaluations.structure.classes.empty()) {
-                        await evaluations.structure.classes.sync();
-                    }
-                    $scope.structure.classes = evaluations.structure.classes;
-                    $scope.currentDevoir.groupe = _.findWhere($scope.structure.classes.all,
-                        {id: $scope.currentDevoir.id_groupe});
+                        getDevoir();
+                        if ($scope.currentDevoir === undefined) {
+                            await evaluations.structure.syncDevoirs();
+                            getDevoir();
+                            if ($scope.currentDevoir === undefined) {
+                                notify.error('error.homework.not.found');
+                                $scope.opened.displayMessageLoader = false;
+                                await  Utils.stopMessageLoader($scope);
+                                $scope.goTo('/');
+                                return;
+                            }
+                        }
+                        $scope.usePerso = evaluations.structure.usePerso;
+                        $scope.updateColorAndLetterForSkills();
+                        // $scope.updateNiveau($scope.usePerso);
+                        if ($scope.printOption === undefined) {
+                            $scope.printOption = {
+                                display: false,
+                                fileType: "formSaisie",
+                                cartoucheNmb: 1,
+                                byEleve: false,
+                                inColor: false,
+                            };
+                        }
+                        if (evaluations.structure.classes.empty()) {
+                            await evaluations.structure.classes.sync();
+                        }
+                        $scope.structure.classes = evaluations.structure.classes;
+                        $scope.currentDevoir.groupe = _.findWhere($scope.structure.classes.all,
+                            {id: $scope.currentDevoir.id_groupe});
 
-                    let allPromise = [];
-                    if ($scope.currentDevoir.groupe.periodes.empty()) {
-                        allPromise.push($scope.currentDevoir.groupe.periodes.sync(),
-                            $scope.currentDevoir.groupe.eleves.sync());
-                    }
-                    if ($scope.structure.typePeriodes.empty()) {
-                        allPromise.push($scope.structure.typePeriodes.sync());
-                    }
-                    if(!_.isEmpty(allPromise)){
-                        await Promise.all(allPromise);
-                    }
-                    $scope.currentDevoir.periode = _.findWhere($scope.currentDevoir.groupe.periodes.all,
-                        {id_type: $scope.currentDevoir.id_periode});
-
-                    $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir);
-
-                    template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
-                    let syncStudents = async () => {
-                        $scope.openedDetails = true;
-                        $scope.openedStatistiques = true;
-                        $scope.openedStudentInfo = true;
-                        if ($scope.currentDevoir !== undefined) {
-                            await Promise.all([$scope.currentDevoir.competences.sync(),
-                                $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode),
-                                $scope.currentDevoir.calculStats()]);
-                            await  Utils.stopMessageLoader($scope);
-                            // fin message chargement
-                            $scope.opened.displayMessageLoader = false;
-                            await  utils.safeApply($scope);
+                        let allPromise = [$scope.currentDevoir.calculStats(), $scope.currentDevoir.competences.sync()];
+                        if ($scope.currentDevoir.groupe.periodes.empty()) {
+                            allPromise.push($scope.currentDevoir.groupe.periodes.sync(),
+                                $scope.currentDevoir.groupe.eleves.sync());
+                        }
+                        if ($scope.structure.typePeriodes.empty()) {
+                            allPromise.push($scope.structure.typePeriodes.sync());
                         }
 
-                        await  Utils.stopMessageLoader($scope);
+                        await Promise.all(allPromise);
 
-                        angular.element(document).bind('mousewheel', function () {
-                            // On Calque la position de la partie centrale sur le menu de gauche
-                            let element = $('#left-side-notes');
-                            let mirorElement = $('#liste-notes-devoir-header');
-                            utils.mirorOnScroll(element, mirorElement);
-                        });
+                        $scope.currentDevoir.periode = _.findWhere($scope.currentDevoir.groupe.periodes.all,
+                            {id_type: $scope.currentDevoir.id_periode});
 
-                    };
+                        $scope.currentDevoir.endSaisie = await $scope.checkEndSaisieSeul($scope.currentDevoir);
 
-                    let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
-                    if (_classe !== undefined) {
-                        await syncStudents();
-                    } else {
-                        $scope.opened.displayMessageLoader = false;
-                        await  Utils.stopMessageLoader($scope);
+                        template.open('main', 'enseignants/liste_notes_devoir/display_notes_devoir');
+                        let syncStudents = async () => {
+                            $scope.openedDetails = true;
+                            $scope.openedStatistiques = true;
+                            $scope.openedStudentInfo = true;
+                            if ($scope.currentDevoir !== undefined) {
+                                await $scope.currentDevoir.eleves.sync($scope.currentDevoir.periode);
+                                await  Utils.stopMessageLoader($scope);
+                                // fin message chargement
+                                $scope.opened.displayMessageLoader = false;
+                                await  utils.safeApply($scope);
+                            }
+
+                            await  Utils.stopMessageLoader($scope);
+
+                            angular.element(document).bind('mousewheel', function () {
+                                // On Calque la position de la partie centrale sur le menu de gauche
+                                let element = $('#left-side-notes');
+                                let mirorElement = $('#liste-notes-devoir-header');
+                                utils.mirorOnScroll(element, mirorElement);
+                            });
+
+                        };
+
+                        let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});
+                        if (_classe !== undefined) {
+                            await syncStudents();
+                        } else {
+                            $scope.opened.displayMessageLoader = false;
+                            await  Utils.stopMessageLoader($scope);
+                        }
+
                     }
+                }
+                catch (e){
+                    $scope.opened.displayMessageLoader = false;
+                    await  Utils.stopMessageLoader($scope);
                 }
             },
 
@@ -655,6 +667,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             grey : true
         };
 
+        $scope.annotationNN = utils.getNN();
         $scope.aideSaisie = {
             cycle: null,
             domaineEnseignement: null,
@@ -2499,11 +2512,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         evaluation.valeur = annotation.libelle_court;
                         delete evaluation.id;
                         delete evaluation.data.id;
-                        for (let i = 0; i < evaluation.competenceNotes.all.length; i++) {
-                            evaluation.competenceNotes.all[i].evaluation = -1;
+                        if($scope.currentDevoir.is_evaluated === false ||
+                            (evaluation.valeur !== utils.getNN() && $scope.currentDevoir.is_evaluated === true)) {
+                            for (let i = 0; i < evaluation.competenceNotes.all.length; i++) {
+                                evaluation.competenceNotes.all[i].evaluation = -1;
+                            }
                         }
                         evaluation.oldId_annotation = evaluation.id_annotation;
-                        if (evaluation.valeur === "NN"  && !isAnnotaion) {
+                        if (evaluation.valeur === utils.getNN() && !isAnnotaion) {
                             $scope.calculerMoyenneEleve(eleve, $scope.releveNote.devoirs.all);
                             $scope.calculStatsDevoirReleve(_.findWhere($scope.releveNote.devoirs.all, {id: evaluation.id_devoir}));
                         }
@@ -2543,12 +2559,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     delete evaluation.oldId_annotation;
                     delete evaluation.id_annotation;
                     if (resetValeur) {
+                        if($scope.currentDevoir.is_evaluated === false ||
+                            (evaluation.valeur !== utils.getNN() && $scope.currentDevoir.is_evaluated === true)) {
+                            for (let i = 0; i < evaluation.competenceNotes.all.length; i++) {
+                                evaluation.competenceNotes.all[i].evaluation = -1;
+                                delete evaluation.competenceNotes.all[i].id;
+                            }
+                        }
                         evaluation.oldValeur = "";
                         evaluation.valeur = "";
-                        for (let i = 0; i < evaluation.competenceNotes.all.length; i++) {
-                            evaluation.competenceNotes.all[i].evaluation = -1;
-                            delete evaluation.competenceNotes.all[i].id;
-                        }
                     }
                     $scope.calculStatsDevoir();
                     if (!evaluation.valid) {
@@ -4213,7 +4232,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
         };
-
 
         $scope.$on('chart-create', function (event, chart) {
             let oldChart = $scope.myCharts[chart.chart.canvas.id];

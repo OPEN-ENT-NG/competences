@@ -107,17 +107,19 @@ export class Devoir extends Model implements IModel{
             sync: function (periode): Promise<any> {
                 return new Promise(async (resolve, reject) => {
                     let _classe = evaluations.structure.classes.findWhere({id: that.id_groupe});
+                    let allPromise = [axioshttp.get(that.api.getNotesDevoir),
+                        that.syncCompetencesNotes(true)];
                     if (_.isEmpty(_classe.eleves.all)) {
-                        await _classe.eleves.sync();
+                        allPromise.push(_classe.eleves.sync());
                     }
+                    let response = await Promise.all(allPromise);
+
                     _classe = _classe.filterEvaluableEleve(periode);
 
                     let e = $.map($.extend(true, {}, _classe.eleves.all), function (el) {
                         return el;
                     });
                     that.eleves.load(e);
-                    let response = await Promise.all([axioshttp.get(that.api.getNotesDevoir),
-                        that.syncCompetencesNotes(true)]);
                     let notes = response[0].data;
                     let compNotes = response[1];
                     for (let i = 0; i < notes.length; i++) {

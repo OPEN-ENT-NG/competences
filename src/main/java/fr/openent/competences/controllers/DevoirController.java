@@ -29,7 +29,11 @@ import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
+
+import static fr.openent.competences.Competences.NN;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+
+import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -61,7 +65,8 @@ import java.util.List;
 
 
 
-import java.util.concurrent.atomic.AtomicInteger;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -108,7 +113,7 @@ public class DevoirController extends ControllerHelper {
                         final String _STUDENT = "Student";
                         final String _RELATIVE = "Relative";
                         if (idClasse == null && ! _STUDENT.equals(user.getType())
-                            && !_RELATIVE.equals(user.getType())) {
+                                && !_RELATIVE.equals(user.getType())) {
                             devoirsService.listDevoirs(user,idEtablissement, handler);
                         } else {
 
@@ -528,7 +533,8 @@ public class DevoirController extends ControllerHelper {
                                                         updatePercentWithAnnotationsAndCompetences(idEleves, idDevoir,
                                                                 user, idGroupe,
                                                                 nbNotesByDevoir, is_evaluated, request, true,
-                                                                0, 0, idEleves.size());
+                                                                0, 0, idEleves.size(),
+                                                                Boolean.valueOf(has_competence));
                                                     }
                                                 } else {
                                                     leftToResponse(request, eventResultEleves.left());
@@ -697,7 +703,7 @@ public class DevoirController extends ControllerHelper {
         }
         if (request.params().contains("id_matiere")) {
             idMatiere = request.getParam("id_matiere");
-            }
+        }
         if (request.params().contains("id_enseignant")) {
             idEnseignant = request.getParam("id_enseignant");
         }
@@ -864,7 +870,8 @@ public class DevoirController extends ControllerHelper {
                             }
                         }
                         updatePercentWithAnnotationsAndCompetences(idEleves, idDevoir, user, idGroupe,
-                                nbNotesByDevoir, is_evaluated, request, returning, currentThread,number, nbStudents);
+                                nbNotesByDevoir, is_evaluated, request, returning, currentThread,number, nbStudents,
+                                Boolean.valueOf(has_competence));
                     }
                 } else {
                     leftToResponse(request, event.left());
@@ -881,128 +888,118 @@ public class DevoirController extends ControllerHelper {
                                                     final HashMap<Long, Float> nbNotesByDevoir,
                                                     final String is_evaluated, final HttpServerRequest request ,
                                                     final boolean returning, final int currentThread, final int number,
-                                                    final int nbStudents){
+                                                    final int nbStudents, final boolean devoirHasCompetence){
 
         final JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
         final HashMap<String, Integer> nbElevesByGroupe = new HashMap<>();
 
 
         // On récupère le nombre d'annotations
-        devoirsService.getNbAnnotationsDevoirs(user, idEleves, idDevoir , new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
-                if (event.isRight()) {
-                    JsonArray resultNbAnnotationsDevoir = event.right().getValue();
+        Future<JsonArray> nbAnnotationsDevoirsFuture = Future.future();
+        devoirsService.getNbAnnotationsDevoirs(user, idEleves, idDevoir ,
+                nbsAnnotations -> FormateFutureEvent.formate(nbAnnotationsDevoirsFuture, nbsAnnotations));
 
-                    if( resultNbAnnotationsDevoir.size() > 0) {
-                        JsonObject o = resultNbAnnotationsDevoir.getJsonObject(0);
+        // On récupère le nombre de compétences par élèves pour le devoir courant
+        Future<JsonArray> nbCompetenceNotesDevoirsFuture = Future.future();
+        devoirsService.getNbCompetencesDevoirsByEleve(idEleves, idDevoir,
+                nbCompetenceNotes -> FormateFutureEvent.formate(nbCompetenceNotesDevoirsFuture, nbCompetenceNotes));
 
-                        if (o != null) {
-                            // On ajoute le nombre d'annotations au nombre de notes pour déterminer le taux d'avancement
-                            if (!nbNotesByDevoir.containsKey(o.getLong("id"))) {
-                                nbNotesByDevoir.put(o.getLong("id"), Float.valueOf(o.getInteger("nb_annotations")));
-                            } else {
-                                Float nbNotesEtAnnotations = nbNotesByDevoir.get(o.getLong("id"))
-                                        + o.getInteger("nb_annotations");
-                                nbNotesByDevoir.put(o.getLong("id"), nbNotesEtAnnotations);
+        CompositeFuture.all(nbAnnotationsDevoirsFuture, nbCompetenceNotesDevoirsFuture).setHandler(
+                event -> {
+                    if(event.failed()){
+                        String error = event.cause().getMessage();
+                        log.info(error);
+                        leftToResponse(request, new Either.Left<>(error));
+                    }
+                    else {
+                        JsonArray resultNbAnnotationsDevoir = nbAnnotationsDevoirsFuture.result();
+                        Boolean isEvaluated = String.valueOf(true).equals(is_evaluated);
+                        if (resultNbAnnotationsDevoir.size() > 0) {
+                            for (int i = 0; i < resultNbAnnotationsDevoir.size(); i++) {
+                                JsonObject o = resultNbAnnotationsDevoir.getJsonObject(i);
+                                Boolean isNN = o.getString("type") != null && NN.equals(o.getString("type"));
+                                // On ajoute le nombre d'annotations au nombre de notes pour déterminer
+                                // le taux d'avancement
+                                Float nbAnnotations = Float.valueOf(o.getInteger("nb_annotations"));
+                                if (isNN && isEvaluated && devoirHasCompetence) {
+                                    nbAnnotations = nbAnnotations/2;
+                                }
+                                if (!nbNotesByDevoir.containsKey(o.getLong("id"))) {
+                                    nbNotesByDevoir.put(o.getLong("id"), nbAnnotations);
+                                } else {
+                                    Float nbNotesEtAnnotations = nbNotesByDevoir.get(o.getLong("id"))
+                                            + nbAnnotations;
+                                    nbNotesByDevoir.put(o.getLong("id"), nbNotesEtAnnotations);
+                                }
                             }
                         }
-                    }
-                    // On récupère le nombre de compétences par élèves pour le devoir courant
-                    devoirsService.getNbCompetencesDevoirsByEleve(idEleves, idDevoir,
-                            new Handler<Either<String, JsonArray>>() {
-                                @Override
-                                public void handle(Either<String, JsonArray> event) {
-                                    if (event.isRight()) {
-                                        JsonArray resultNbCompetencesByStudents = event.right().getValue();
-                                        Float nbCompetences = Float.valueOf(0);
-                                        for (int i = 0; i < resultNbCompetencesByStudents.size(); i++) {
-                                            JsonObject o = resultNbCompetencesByStudents.getJsonObject(i);
+                        JsonArray resultNbCompetencesByStudents = nbCompetenceNotesDevoirsFuture.result();
+                        Float nbCompetences = Float.valueOf(0);
+                        for (int i = 0; i < resultNbCompetencesByStudents.size(); i++) {
+                            JsonObject ob = resultNbCompetencesByStudents.getJsonObject(i);
                                     /*
                                     - Un élève est considéré comme évalué lorsqu'il a au moins une compétence d'évalué.
                                     - Pour l'avancement les compétences comptent à moitié pour les devoirs contenant
                                       une évaluation numérique
                                     */
-                                            if (o != null) {
-                                                if (o.getInteger("nb_competences") >= 1
-                                                        && String.valueOf(true).equals(is_evaluated)) {
-                                                    nbCompetences += Float.valueOf(1)/2;
-                                                }
-                                                else if (o.getInteger("nb_competences") >= 1
-                                                        && String.valueOf(false).equals(is_evaluated)) {
-                                                    nbCompetences += 1;
-                                                }
-                                            }
-
-                                        }
-                                        // On ajoute le nombre de compétences au nombre d'annotations et de notes
-                                        // pour déterminer le taux d'avancement
-                                        if (!nbNotesByDevoir.containsKey(idDevoir)) {
-                                            nbNotesByDevoir.put(idDevoir, nbCompetences);
-                                        } else {
-
-                                            Float nbNotesAnnotionsCompetences = nbNotesByDevoir.get(idDevoir)
-                                                    + nbCompetences;
-                                            nbNotesByDevoir.put(idDevoir, nbNotesAnnotionsCompetences);
-                                        }
-                                        // Calcul du taux d'avancement en fonction du nombre d'élève(s)
-                                        nbElevesByGroupe.put(
-                                                idGroupe,
-                                                nbStudents);
-                                    }
-
-                                    JsonObject o = new JsonObject();
-
-                                    if( nbElevesByGroupe.get(idGroupe) != Integer.valueOf(0)) {
-                                        final float nbElevesEvalues = nbNotesByDevoir.get(idDevoir);
-                                        final Integer nbEleves = nbElevesByGroupe.get(idGroupe);
-
-                                        int _percent = 0;
-                                        if(nbEleves != Integer.valueOf(0) && nbEleves != null){
-                                            _percent = (int) (nbElevesEvalues*100/ nbEleves);
-                                        }
-
-                                        final Integer percent = _percent;
-
-                                        o.put("id", idDevoir);
-                                        o.put("percent", percent);
-                                        result.add(o);
-
-                                        devoirsService.updatePercent(idDevoir, percent, new
-                                                Handler<Either<String, JsonArray>>() {
-                                                    @Override
-                                                    public void handle(Either<String, JsonArray> event){
-                                                        if (event.isRight()) {
-                                                            if (returning) {
-                                                                Renders.renderJson(request, result);
-                                                            } else if (number == currentThread) {
-                                                                JsonObject res = new JsonObject();
-                                                                int nbrs = number + 1;
-                                                                res.put("nbUpdatedDevoirs",nbrs);
-                                                                Renders.renderJson(request, res);
-                                                                log.info(" FIN : " + nbrs +
-                                                                        " devoir(s) mis à jour");
-                                                            }
-                                                        }
-                                                        else {
-                                                            log.error("UPDATE NOT DONE FOR" + number + 1 + "devoirs");
-                                                        }
-                                                    }
-                                                });
-                                    }
-                                    else {
-
-                                        log.info(" No students for class or group: " + idGroupe);
-
-                                    }
+                            if (ob != null) {
+                                if (ob.getInteger("nb_competences") >= 1 && isEvaluated) {
+                                    nbCompetences += Float.valueOf(1) / 2;
+                                } else if (ob.getInteger("nb_competences") >= 1 && !isEvaluated) {
+                                    nbCompetences += 1;
                                 }
+                            }
 
+                        }
+                        // On ajoute le nombre de compétences au nombre d'annotations et de notes
+                        // pour déterminer le taux d'avancement
+                        if (!nbNotesByDevoir.containsKey(idDevoir)) {
+                            nbNotesByDevoir.put(idDevoir, nbCompetences);
+                        } else {
+
+                            Float nbNotesAnnotionsCompetences = nbNotesByDevoir.get(idDevoir) + nbCompetences;
+                            nbNotesByDevoir.put(idDevoir, nbNotesAnnotionsCompetences);
+                        }
+                        // Calcul du taux d'avancement en fonction du nombre d'élève(s)
+                        nbElevesByGroupe.put(idGroupe, nbStudents);
+
+                        JsonObject o = new JsonObject();
+                        if (nbElevesByGroupe.get(idGroupe) != Integer.valueOf(0)) {
+                            final float nbElevesEvalues = nbNotesByDevoir.get(idDevoir);
+                            final Integer nbEleves = nbElevesByGroupe.get(idGroupe);
+
+                            int _percent = 0;
+                            if (nbEleves != Integer.valueOf(0) && nbEleves != null) {
+                                _percent = (int) (nbElevesEvalues * 100 / nbEleves);
+                            }
+
+                            final Integer percent = _percent;
+
+                            o.put("id", idDevoir);
+                            o.put("percent", percent);
+                            result.add(o);
+
+                            devoirsService.updatePercent(idDevoir, percent, updated -> {
+                                if (updated.isRight()) {
+                                    if (returning) {
+                                        Renders.renderJson(request, result);
+                                    } else if (number == currentThread) {
+                                        JsonObject res = new JsonObject();
+                                        int nbrs = number + 1;
+                                        res.put("nbUpdatedDevoirs", nbrs);
+                                        Renders.renderJson(request, res);
+                                        log.info(" FIN : " + nbrs + " devoir(s) mis à jour");
+                                    }
+                                } else {
+                                    log.error("UPDATE NOT DONE FOR" + number + 1 + "devoirs");
+                                }
                             });
-                } else {
-                    leftToResponse(request, event.left());
+                        } else {
+                            log.info(" No students for class or group: " + idGroupe);
+                        }
+                    }
                 }
-            }
-        });
+        );
     }
 
 
@@ -1093,7 +1090,8 @@ public class DevoirController extends ControllerHelper {
                                                                         null, idGroupe,
                                                                         nbNotesByDevoir, is_evaluated, request,
                                                                         false, indiceBoucle,
-                                                                        devoirsInfos.size() - 1,idEleves.size());
+                                                                        devoirsInfos.size() - 1,
+                                                                        idEleves.size(), Boolean.valueOf(has_competence));
                                                             }
                                                         }
                                                     }

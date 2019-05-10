@@ -91,27 +91,18 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessEvaluationFilter.class)
     public void view(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(UserInfos user) {
-                if (user != null) {
-                    Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
+        Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
 
-                    Long idDevoir;
-                    try {
-                        idDevoir = Long.parseLong(request.params().get("idDevoir"));
-                    } catch (NumberFormatException e) {
-                        log.error(" Error : idDevoir must be a long object", e);
-                        badRequest(request, e.getMessage());
-                        return;
-                    }
+        Long idDevoir;
+        try {
+            idDevoir = Long.parseLong(request.params().get("idDevoir"));
+        } catch (NumberFormatException e) {
+            log.error(" Error : idDevoir must be a long object", e);
+            badRequest(request, e.getMessage());
+            return;
+        }
 
-                    notesService.listNotesParDevoir(idDevoir, handler);
-                } else {
-                    unauthorized(request);
-                }
-            }
-        });
+        notesService.listNotesParDevoir(idDevoir, handler);
     }
 
     /**
@@ -262,14 +253,14 @@ public class NoteController extends ControllerHelper {
                                             return;
                                         }
                                     }
-                                        JsonObject params = new JsonObject().put(ID_ELEVE_KEY, idEleve)
-                                                .put(ID_CLASSE_KEY, idClasse)
-                                                .put(ID_PERIODE_KEY, idPeriode)
-                                                .put(ID_ETABLISSEMENT_KEY, idEtablissement)
-                                                .put(ID_MATIERE_KEY, idMatiere)
-                                                .put(TYPE_CLASSE_KEY, typeClasse);
+                                    JsonObject params = new JsonObject().put(ID_ELEVE_KEY, idEleve)
+                                            .put(ID_CLASSE_KEY, idClasse)
+                                            .put(ID_PERIODE_KEY, idPeriode)
+                                            .put(ID_ETABLISSEMENT_KEY, idEtablissement)
+                                            .put(ID_MATIERE_KEY, idMatiere)
+                                            .put(TYPE_CLASSE_KEY, typeClasse);
 
-                                        notesService.getDatasReleve(params, notEmptyResponseHandler(request));
+                                    notesService.getDatasReleve(params, notEmptyResponseHandler(request));
 
                                 }
                             }
@@ -286,7 +277,7 @@ public class NoteController extends ControllerHelper {
         RequestUtils.bodyToJson(request, param -> {
             if(param.getString("fileType").equals("pdf")) {
 
-               notesService.exportPDFRelevePeriodique(param,  request, vertx, config);
+                notesService.exportPDFRelevePeriodique(param,  request, vertx, config);
             }
             else {
                 notesService.getDatasReleve(param, notEmptyResponseHandler(request));

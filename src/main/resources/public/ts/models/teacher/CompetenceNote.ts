@@ -96,20 +96,18 @@ export class CompetenceNote extends Model implements IModel {
 
     save(): Promise<any> {
         return new Promise((resolve, reject) => {
-            if (!this.id) {
-                this.create().then((data) => {
-                    if (resolve && (typeof (resolve) === 'function')) {
-                        resolve(data);
-                    }
-                });
-            } else if (this.evaluation === -1) {
+            if (this.id && this.evaluation === -1) {
                 this.delete().then((data) => {
                     if (resolve && (typeof (resolve) === 'function')) {
                         resolve();
                     }
                 });
             } else {
-                this.update();
+                this.create().then((data) => {
+                    if (resolve && (typeof (resolve) === 'function')) {
+                        resolve(data);
+                    }
+                });
             }
         });
     }

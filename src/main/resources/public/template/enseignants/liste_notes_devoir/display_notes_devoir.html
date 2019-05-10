@@ -128,61 +128,61 @@
         <aside class="two cell">
             <nav class="vertical hash-magnet floating zero-mobile scrolling"
                  id="left-side-notes">
-            <div class="menuLeftStyle detail-devoir criterion card" ng-class="{opened : openedDetails === true}">
-                <div class="header">
-                    <span class="plus-input" ng-click="openedDetails = !openedDetails"></span>
-                    <h2 ng-click="openedDetails = !openedDetails"><i18n>evaluations.homework.details</i18n></h2>
-                </div>
-                <div>
-                    <section ng-if="currentDevoir.libelle !== null">
-                        <label><i18n class="bold">viescolaire.utils.description</i18n> : [[::currentDevoir.libelle]]</label>
-                    </section>
-                    <section ng-if="isChefEtab()">
-                        <span class="bold"><i18n>evaluations.test.teacher</i18n></span> : [[::currentDevoir.teacher]]
-                    </section>
-                    <section><span class="bold"><i18n>viescolaire.utils.class</i18n></span> : [[::getClasseData(currentDevoir.id_groupe, 'name')]]</section>
-
-                    <section>
-                        <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[::getLibelleMatiere(currentDevoir.id_matiere)]]</label>
-                    </section>
-                    <section ng-show="currentDevoir.id_sousmatiere!== null">
-                        <label>
-                            <i18n class="bold">viescolaire.utils.undersubject</i18n> : [[::getLibelleSousMatiere(currentDevoir)]]
-                        </label>
-                    </section>
-                    <section>
-                        <label><i18n class="bold">viescolaire.utils.periode</i18n> : [[::getI18nPeriode(currentDevoir.periode) + currentDevoir._periode_ordre]]</label>
-                    </section>
-                    <section ng-if="currentDevoir.is_evaluated">
-                        <label><i18n class="bold">viescolaire.utils.coefficient</i18n> : [[::currentDevoir.coefficient]]</label>
-                    </section>
-                    <section ng-if="currentDevoir.is_evaluated">
-                        <label><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[::currentDevoir.diviseur]]</label>
-                    </section>
-                </div>
-            </div>
-            <div  class="menuLeftStyle statistiques-devoir criterion card" ng-class="{opened : openedStatistiques === true}">
-                <div class="header">
-                    <span class="plus-input" ng-click="openedStatistiques = !openedStatistiques"></span>
-                    <h2 ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
-                </div>
-                <div ng-if="currentDevoir.is_evaluated">
-                    <section><i18n class="bold">evaluation.classe.average</i18n> : <span style="color: #1785E6;font-weight: bold;">[[currentDevoir.statistiques.moyenne | number:2]]</span></section>
-                    <section><i18n class="bold">evaluations.grade.min</i18n> : <span style="color: #E61758;font-weight: bold;">[[currentDevoir.statistiques.noteMin | number:2]]</span></section>
-                    <section><i18n class="bold">evaluations.grade.max</i18n> : <span style="color: #48C593;font-weight: bold;">[[currentDevoir.statistiques.noteMax | number:2]]</span></section>
-                </div>
-                <div>
-                    <progress-bar max="100" filled="currentDevoir.statistiques.percentDone" unit="%"></progress-bar>
-                </div>
-            </div>
-
-                    <div class="marginFive card">
-                        <div class="fiche student-info" ng-class="{opened : openedStudentInfo == true}">
-                            <span class="plus-input" ng-click="openedStudentInfo = !openedStudentInfo"></span>
-                            <container class="cell tailleMax" template="leftSide-userInfo"
-                                       id="notes-devoir-student-info"></container>
-                        </div>
+                <div class="menuLeftStyle detail-devoir criterion card" ng-class="{opened : openedDetails === true}">
+                    <div class="header">
+                        <span class="plus-input" ng-click="openedDetails = !openedDetails"></span>
+                        <h2 ng-click="openedDetails = !openedDetails"><i18n>evaluations.homework.details</i18n></h2>
                     </div>
+                    <div>
+                        <section ng-if="currentDevoir.libelle !== null">
+                            <label><i18n class="bold">viescolaire.utils.description</i18n> : [[::currentDevoir.libelle]]</label>
+                        </section>
+                        <section ng-if="isChefEtab()">
+                            <span class="bold"><i18n>evaluations.test.teacher</i18n></span> : [[::currentDevoir.teacher]]
+                        </section>
+                        <section><span class="bold"><i18n>viescolaire.utils.class</i18n></span> : [[::getClasseData(currentDevoir.id_groupe, 'name')]]</section>
+
+                        <section>
+                            <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[::getLibelleMatiere(currentDevoir.id_matiere)]]</label>
+                        </section>
+                        <section ng-show="currentDevoir.id_sousmatiere!== null">
+                            <label>
+                                <i18n class="bold">viescolaire.utils.undersubject</i18n> : [[::getLibelleSousMatiere(currentDevoir)]]
+                            </label>
+                        </section>
+                        <section>
+                            <label><i18n class="bold">viescolaire.utils.periode</i18n> : [[::getI18nPeriode(currentDevoir.periode) + currentDevoir._periode_ordre]]</label>
+                        </section>
+                        <section ng-if="currentDevoir.is_evaluated">
+                            <label><i18n class="bold">viescolaire.utils.coefficient</i18n> : [[::currentDevoir.coefficient]]</label>
+                        </section>
+                        <section ng-if="currentDevoir.is_evaluated">
+                            <label><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[::currentDevoir.diviseur]]</label>
+                        </section>
+                    </div>
+                </div>
+                <div  class="menuLeftStyle statistiques-devoir criterion card" ng-class="{opened : openedStatistiques === true}">
+                    <div class="header">
+                        <span class="plus-input" ng-click="openedStatistiques = !openedStatistiques"></span>
+                        <h2 ng-click="openedStatistiques = !openedStatistiques"><i18n>viescolaire.utils.stats</i18n></h2>
+                    </div>
+                    <div ng-if="currentDevoir.is_evaluated">
+                        <section><i18n class="bold">evaluation.classe.average</i18n> : <span style="color: #1785E6;font-weight: bold;">[[currentDevoir.statistiques.moyenne | number:2]]</span></section>
+                        <section><i18n class="bold">evaluations.grade.min</i18n> : <span style="color: #E61758;font-weight: bold;">[[currentDevoir.statistiques.noteMin | number:2]]</span></section>
+                        <section><i18n class="bold">evaluations.grade.max</i18n> : <span style="color: #48C593;font-weight: bold;">[[currentDevoir.statistiques.noteMax | number:2]]</span></section>
+                    </div>
+                    <div>
+                        <progress-bar max="100" filled="currentDevoir.statistiques.percentDone" unit="%"></progress-bar>
+                    </div>
+                </div>
+
+                <div class="marginFive card">
+                    <div class="fiche student-info" ng-class="{opened : openedStudentInfo == true}">
+                        <span class="plus-input" ng-click="openedStudentInfo = !openedStudentInfo"></span>
+                        <container class="cell tailleMax" template="leftSide-userInfo"
+                                   id="notes-devoir-student-info"></container>
+                    </div>
+                </div>
             </nav>
         </aside>
 
@@ -235,9 +235,9 @@
                             <!--ng-class="{'six' : currentDevoir.competences.all.length > 7, 'four' : currentDevoir.competences.all.length < 8}"-->
                             <div class="inline-block cell-indent competence-text-overflow cell four"
                                  ng-if="currentDevoir.competences.all.length > 0">
-                                    <i18n style="padding-left: 20px;">evaluations.test.competences</i18n>
-                                    <i class="help" ng-click="getInfoCompetencesDevoir()"></i>
-                                    <span id="competence-detail" tooltip=""></span>
+                                <i18n style="padding-left: 20px;">evaluations.test.competences</i18n>
+                                <i class="help" ng-click="getInfoCompetencesDevoir()"></i>
+                                <span id="competence-detail" tooltip=""></span>
                             </div>
                             <div class="inline-block cell-indent cell"
                                  ng-if="currentDevoir.competences.all.length < 8"
@@ -249,7 +249,7 @@
                                      ng-click="switchVisibilityApprec(currentDevoir)">
                                     <i ng-class="{'eye-slash': !currentDevoir.apprec_visible, 'eye-open': currentDevoir.apprec_visible}"></i>
                                     <span ng-if="!currentDevoir.apprec_visible"
-                                      tooltip="evaluations.devoir.appreciation.tooltip.hide">&nbsp;</span>
+                                          tooltip="evaluations.devoir.appreciation.tooltip.hide">&nbsp;</span>
                                     <span ng-if="currentDevoir.apprec_visible"
                                           tooltip="evaluations.devoir.appreciation.tooltip.show">&nbsp;</span>
                                 </div>
@@ -288,7 +288,10 @@
                                                 <input type="checkbox" ng-model="eleve.selected"
                                                        ng-init="eleve.selected = false"
                                                        ng-click="getEleveInfo(eleve);selectEleveListe(eleve)"
-                                                       ng-disabled="eleve.evaluation.id_annotation !== undefined && eleve.evaluation.id_annotation > 0">
+                                                       ng-disabled="eleve.evaluation.id_annotation !== undefined
+                                                       && eleve.evaluation.id_annotation > 0
+                                                       && ((!currentDevoir.is_evaluated)
+                                                       || (currentDevoir.is_evaluated && eleve.evaluation.valeur !== annotationNN)) ">
                                                 <span></span>
                                             </label>
                                         </div>
@@ -324,7 +327,8 @@
                                              class="cell cell-indent expandable-content"
                                              ng-click="getEleveInfo(eleve);expandNote($index, false)"
                                              ng-if="currentDevoir.competences.all.length > 0 ">
-                                            <ul class="skills-eleve-list" ng-if="(eleve.evaluation.id_annotation === undefined || eleve.evaluation.id_annotation === -1)">
+                                            <ul class="skills-eleve-list" ng-if="(eleve.evaluation.id_annotation === undefined
+                                            || eleve.evaluation.id_annotation === -1 ||(eleve.evaluation.valeur === annotationNN && currentDevoir.is_evaluated))">
                                                 <li ng-mouseenter="highlightCompetence(competence.id_competence, true)"
                                                     ng-mouseleave="highlightCompetence(competence.id_competence, false)"
                                                     class="navigable-cell competences-cell"

@@ -177,9 +177,13 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < _datas.size(); i++) {
             JsonObject o = _datas.getJsonObject(i);
-            query.append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_notes (id_devoir, id_competence, evaluation, owner, id_eleve, created) VALUES (?, ?, ?, ?, ?, now());");
-            values.add(o.getInteger("id_devoir")).add(o.getInteger("id_competence")).add(o.getInteger("evaluation"))
-                    .add(user.getUserId()).add(o.getString("id_eleve"));
+            query.append("INSERT INTO "+ Competences.COMPETENCES_SCHEMA +".competences_notes ")
+                    .append(" (id_devoir, id_competence, evaluation, owner, id_eleve, created) ")
+                    .append(" VALUES (?, ?, ?, ?, ?, now()) ")
+                    .append(" ON CONFLICT (id_devoir, id_competence, id_eleve) DO UPDATE SET evaluation = ? ;");
+            values.add(o.getInteger("id_devoir")).add(o.getInteger("id_competence"))
+                    .add(o.getInteger("evaluation"))
+                    .add(user.getUserId()).add(o.getString("id_eleve")).add(o.getInteger("evaluation"));
         }
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
@@ -196,10 +200,10 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     public void getCompetencesNotesClasse(List<String> idEleves, Long idPeriode, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
-            .append("SELECT competences_notes.id_eleve AS id_eleve, competences.id as id_competence, max(competences_notes.evaluation) as evaluation , competence_niveau_final.niveau_final ,rel_competences_domaines.id_domaine, devoirs.id_matiere, competences_notes.owner ")
-            .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
-            .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
-            .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
+                .append("SELECT competences_notes.id_eleve AS id_eleve, competences.id as id_competence, max(competences_notes.evaluation) as evaluation , competence_niveau_final.niveau_final ,rel_competences_domaines.id_domaine, devoirs.id_matiere, competences_notes.owner ")
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".competences ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".rel_competences_domaines ON (competences.id = rel_competences_domaines.id_competence) ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
 
         for (int i=0; i<idEleves.size()-1 ; i++){
             query.append("?,");
@@ -239,7 +243,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         query.append("?)) ");
         values.add(Integer.valueOf(idDomaines.get(idDomaines.size()-1)));
 
-         query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
+        query.append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_notes ON (competences_notes.id_competence = competences.id AND competences_notes.id_eleve IN (");
 
         for (int i=0; i<idEleves.size()-1 ; i++){
             query.append("?,");
@@ -321,7 +325,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 .append("AND competence_niveau_final.id_matiere = devoirs.id_matiere )")
                 .append("WHERE competences_notes.id_eleve = ? AND evaluation >= 0 ");
         values.add(idEleve);
-         if (idPeriode != null) {
+        if (idPeriode != null) {
             query.append("AND devoirs.id_periode = ? ");
             values.add(idPeriode);
         }
@@ -373,7 +377,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         }
 
         query.append(" GROUP BY competences_notes.id_eleve, competences.id, competences.id_cycle,rel_competences_domaines.id_domaine, ")
-        .append("devoirs.id_matiere, competence_niveau_final.niveau_final");
+                .append("devoirs.id_matiere, competence_niveau_final.niveau_final");
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
@@ -392,7 +396,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                         JsonObject nivCompetence = niveauxCompetences.getJsonObject(i);
                         mapOrdreBareme.put(nivCompetence.getInteger("ordre"),nivCompetence.getInteger("bareme_brevet"));
                         if(maxBaremeBrevet < nivCompetence.getInteger("bareme_brevet"))
-                        maxBaremeBrevet = nivCompetence.getInteger("bareme_brevet");
+                            maxBaremeBrevet = nivCompetence.getInteger("bareme_brevet");
                     }
                     Map<Integer,Map<Integer,Integer>> mapMaxBaremeMapOrdreBareme = new HashMap<>();
                     mapMaxBaremeMapOrdreBareme.put(maxBaremeBrevet,mapOrdreBareme);

@@ -492,6 +492,7 @@
   "error.average.outbound":"La moyenne doit être comprise entre 0 et 20",
   "error.positionnement.outbound": "Le positionnement doit être ccompris entre 0 et ",
   "error.char.outbound": "Le nombre maximum de caractères autorisés est ",
+  "error.homework.not.found": "Désolé, vous n'avez pas accès à l'évaluation demandée",
   "viescolaire.classe.moyenne" :"Moyenne de la classe",
   "viescolaire.classe.note.min":"Note min",
   "viescolaire.classe.note.max":"Note max",

@@ -19,7 +19,7 @@
  * Created by ledunoiss on 21/09/2016.
  */
 import {ng, appPrefix, idiom as lang, _} from 'entcore';
-
+import {getNN}  from '../utils/functions/utilsNN';
 export let cSkillsColorPage = ng.directive("cSkillsColorPage", function(){
     return {
         restrict : 'E',
@@ -53,7 +53,8 @@ export let cSkillsColorPage = ng.directive("cSkillsColorPage", function(){
                             for (var j = 0; j < _eval.competenceNotes.all.length; j++) {
                                 if (ids.indexOf(_eval.competenceNotes.all[j].id_competence) !== -1) {
                                     // Si la compétence est sélectionnée et qu'il n'y a pas d'annotation, on l'ajoute
-                                    if (_eval.id_annotation === undefined || _eval.id_annotation < 1){
+                                    if (_eval.id_annotation === undefined || _eval.id_annotation < 1
+                                        || ($scope.devoir.is_evaluated && _eval.valeur === getNN())){
                                         _eval.competenceNotes.all[j].evaluation = evaluation;
                                         _datas.push(_eval.competenceNotes.all[j]);
                                     }
@@ -61,7 +62,8 @@ export let cSkillsColorPage = ng.directive("cSkillsColorPage", function(){
                             }
                         } else {
                             for (var j = 0; j < _eval.competenceNotes.all.length; j++) {
-                                if (_eval.id_annotation === undefined || _eval.id_annotation < 1) {
+                                if (_eval.id_annotation === undefined || _eval.id_annotation < 1
+                                    || ($scope.devoir.is_evaluated && _eval.valeur === getNN())) {
                                     _eval.competenceNotes.all[j].evaluation = evaluation;
                                     _datas.push(_eval.competenceNotes.all[j]);
                                 }

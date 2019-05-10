@@ -638,17 +638,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             limitQuery.append("LIMIT ?");
 
             globalQuery.append("(")
-                .append(mainQuery)
-                .append("AND devoirs.percent < 100 ")
-                .append(endMainQuery)
-                .append(limitQuery)
-            .append(") UNION ( ")
+                    .append(mainQuery)
+                    .append("AND devoirs.percent < 100 ")
+                    .append(endMainQuery)
+                    .append(limitQuery)
+                    .append(") UNION ( ")
                     .append(mainQuery)
                     .append("AND devoirs.percent = 100 ")
                     .append(endMainQuery)
                     .append(limitQuery)
-            .append(")")
-            .append(orderByQuery);
+                    .append(")")
+                    .append(orderByQuery);
 
             // params requete 1
             for (int i = 0; i < user.getStructures().size(); i++) {
@@ -970,7 +970,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     }
     private void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
-                                  Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
+                                   Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
         StringBuilder query = new StringBuilder();
 
 
@@ -1044,48 +1044,66 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     }
 
-    private void getNbAnnotationsDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
-                                        Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
-        StringBuilder query = new StringBuilder();
-        query.append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations , devoirs.id, rel_devoirs_groupes.id_groupe ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA + ".rel_annotations_devoirs, "+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )
-                .append("WHERE rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append("AND rel_annotations_devoirs.id_devoir = devoirs.id ")
-                .append("AND devoirs.id = ? ");
-
-        if(!isChefEtab) {
-            query.append(" AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
-                    .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
-                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
-                    .append("WHERE id_remplacant = ? ")
-                    .append("AND rel_professeurs_remplacants.id_etablissement IN " + Sql.listPrepared(user.getStructures().toArray()) + " ")
-                    .append(") OR ")
-                    .append("? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
-                    .append("WHERE resource_id = devoirs.id ")
-                    .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE + "')")
-                    .append(") ");
-        }
-
-        // filtre sur les élèves de la classe à l'instant T
-        if(idEleves != null && idEleves.size() > 0) {
-            query.append(" AND rel_annotations_devoirs.id_eleve IN ").append(Sql.listPrepared(idEleves.toArray()));
-        }
-
-        query.append("GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
-
-        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
-
-        //Ajout des id désirés
+    private StringBuilder buildAnnotationNotNNQuery(List<String> idsStudents, JsonArray values, Long idDevoir) {
+        StringBuilder res = new StringBuilder()
+                .append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations ,'notNN' as type, ")
+                .append(" devoirs.id, rel_devoirs_groupes.id_groupe ")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_annotations_devoirs \n")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
+                .append("      ON rel_annotations_devoirs.id_devoir = devoirs.id AND devoirs.id = ? \n");
         values.add(idDevoir);
-        addValueForRequest(values,user,isChefEtab);
-        // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
-        if(idEleves != null && idEleves.size() > 0) {
-            for (String idEleve: idEleves) {
+
+        if(idsStudents != null && idsStudents.size() > 0) {
+            res.append(" AND rel_annotations_devoirs.id_eleve IN ")
+                    .append(Sql.listPrepared(idsStudents.toArray()));
+            for (String idEleve: idsStudents) {
                 values.add(idEleve);
             }
         }
+        res.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ")
+                .append("      ON rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id =? \n")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".annotations ")
+                .append("      ON annotations.id = rel_annotations_devoirs.id_annotation ")
+                .append("         AND NOT annotations.libelle_court = 'NN' \n")
+                .append(" GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
+        values.add(idDevoir);
+        return res;
+    }
+
+    private StringBuilder buildAnnotationNNQuery(List<String> idsStudents, JsonArray values, Long idDevoir) {
+        StringBuilder res = new StringBuilder()
+                .append("SELECT count(rel_annotations_devoirs.id_annotation) AS nb_annotations ,'NN' as type, ")
+                .append(" devoirs.id, rel_devoirs_groupes.id_groupe ")
+                .append(" FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_annotations_devoirs \n")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".devoirs ")
+                .append("      ON rel_annotations_devoirs.id_devoir = devoirs.id AND devoirs.id = ? \n");
+        values.add(idDevoir);
+        if(idsStudents != null && idsStudents.size() > 0) {
+            res.append(" AND rel_annotations_devoirs.id_eleve IN ")
+                    .append(Sql.listPrepared(idsStudents.toArray()));
+            for (String idEleve: idsStudents) {
+                values.add(idEleve);
+            }
+        }
+        res.append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".rel_devoirs_groupes ")
+                .append("      ON rel_devoirs_groupes.id_devoir = devoirs.id AND devoirs.id =? \n")
+                .append(" INNER JOIN ").append(Competences.COMPETENCES_SCHEMA).append(".annotations ")
+                .append("      ON annotations.id = rel_annotations_devoirs.id_annotation ")
+                .append("         AND annotations.libelle_court = 'NN' \n")
+                .append(" GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
+        values.add(idDevoir);
+
+        return res;
+    }
+    private void getNbAnnotationsDevoirs(UserInfos user, List<String> idsStudents, Long idDevoir,
+                                         Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
+
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
+        StringBuilder queryAnnotationNotNN = buildAnnotationNotNNQuery(idsStudents,values, idDevoir);
+        StringBuilder queryAnnotationNN = buildAnnotationNNQuery(idsStudents,values,idDevoir);
+
+        StringBuilder query = new StringBuilder().append(queryAnnotationNotNN)
+                .append(" UNION ").append(queryAnnotationNN);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }

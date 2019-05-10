@@ -25,7 +25,7 @@ import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import org.apache.fontbox.afm.Composite;
+import io.vertx.core.json.Json;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -37,6 +37,7 @@ import io.vertx.core.json.JsonObject;
 public class DefaultAnnotationService extends SqlCrudService implements AnnotationService {
     private final NoteService noteService;
     private final CompetenceNoteService competenceNoteService;
+    public final String NN = "NN";
     public DefaultAnnotationService(String schema, String table) {
         super(schema, table);
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
@@ -55,6 +56,19 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
+
+    private void getAnnotation(Long id, Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT * ")
+                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".annotations ")
+                .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".annotations.id = ?");
+        values.add(id);
+
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
 
     @Override
     public void createAppreciation(JsonObject appreciation, UserInfos user, Handler<Either<String, JsonObject>> handler) {
@@ -109,6 +123,11 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                 .put("values", paramsDeleteNote)
                 .put("action", "prepared"));
     }
+
+    private Boolean isAnnotationNN(JsonObject annotation) {
+        String libelleCourtKey = "libelle_court";
+        return annotation.getString(libelleCourtKey) != null && annotation.getString(libelleCourtKey).equals(NN);
+    }
     @Override
     public void createAnnotationDevoir(final Long idDevoir,final Long idAnnotation,
                                        final String idEleve,final  Handler<Either<String, JsonObject>> handler) {
@@ -126,32 +145,48 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
             FormateFutureEvent.formate(competencesNotesFuture, event);
         });
 
-        CompositeFuture.all(notesFuture, competencesNotesFuture).setHandler( event -> {
-            if(event.failed()){
-                handler.handle(new Either.Left<>(event.cause().getMessage()));
-            }
-            else {
-                JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+        // Récupération de l'annotation  de l'établissement
+        Future<JsonArray> annotationFuture = Future.future();
+        getAnnotation(idAnnotation, annotation -> FormateFutureEvent.formate(annotationFuture, annotation));
 
-                //Si on une compétence note existe sur le devoir, pour un élève donné, on le supprime
-                JsonArray competencesDevoir = competencesNotesFuture.result();
-                if(competencesDevoir != null && competencesDevoir.size()>0 ){
-                    // Suppression compétence note
-                    addStatementdeleteCompetenceNote(statements, idDevoir, idEleve);
-                }
+        // Récupération des informations sur le devoir
+        Future<JsonObject> infosDevoirFuture = Future.future();
+        new DefaultDevoirService(null).getDevoirInfo(idDevoir,
+                devoir -> FormateFutureEvent.formate(infosDevoirFuture, devoir));
 
-                //Si on une note existe sur le devoir, pour un élève donné, on le supprime
-                JsonArray notesDevoir =  notesFuture.result();
-                    if(notesDevoir!= null && notesDevoir.size()>0){
-                        // Suppression Note
-                        addStatementdeleteNote(statements, idDevoir, idEleve);
+        CompositeFuture.all(notesFuture, competencesNotesFuture, annotationFuture, infosDevoirFuture)
+                .setHandler( event -> {
+                    if(event.failed()){
+                        handler.handle(new Either.Left<>(event.cause().getMessage()));
                     }
+                    else {
+                        JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+                        JsonArray aRes = annotationFuture.result();
+                        Boolean isAnnotationNN = aRes.isEmpty()? false : isAnnotationNN(aRes.getJsonObject(0));
+                        JsonObject devoir = infosDevoirFuture.result();
+                        Boolean isEvaluated = devoir != null ? devoir.getBoolean("is_evaluated") : false;
 
-                // Ajout de l'annotation sur le devoir, pour un élève donné
-                addStatementAnnotation(statements, idDevoir, idAnnotation, idEleve);
-                Sql.getInstance().transaction(statements,SqlResult.validRowsResultHandler(handler));
-            }
-        });
+                        //Si on a des compétences notes sur le devoir, pour un élève donné, et qu'on insert
+                        // une annotation autre que l'annotation NN, on les supprimes
+                        JsonArray competencesDevoir = competencesNotesFuture.result();
+                        if(competencesDevoir != null && competencesDevoir.size()>0
+                                && (!isAnnotationNN || isAnnotationNN && !isEvaluated)){
+                            // Suppression compétence note
+                            addStatementdeleteCompetenceNote(statements, idDevoir, idEleve);
+                        }
+
+                        //Si on une note existe sur le devoir, pour un élève donné, on le supprime
+                        JsonArray notesDevoir =  notesFuture.result();
+                        if(notesDevoir!= null && notesDevoir.size()>0){
+                            // Suppression Note
+                            addStatementdeleteNote(statements, idDevoir, idEleve);
+                        }
+
+                        // Ajout de l'annotation sur le devoir, pour un élève donné
+                        addStatementAnnotation(statements, idDevoir, idAnnotation, idEleve);
+                        Sql.getInstance().transaction(statements,SqlResult.validRowsResultHandler(handler));
+                    }
+                });
 
     }
 
