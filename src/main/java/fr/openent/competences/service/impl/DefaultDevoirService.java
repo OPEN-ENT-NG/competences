@@ -25,6 +25,8 @@ import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+import org.entcore.common.neo4j.Neo4j;
+import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -37,6 +39,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,6 +55,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     private DefaultUtilsService utilsService;
     private DefaultNoteService noteService;
+    private final Neo4j neo4j = Neo4j.getInstance();
     private EventBus eb;
 
     public DefaultDevoirService(EventBus eb) {
@@ -145,7 +149,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" )
                 .append(" FROM notes.competences_devoirs c" )
                 .append(" WHERE c.id_devoir =?) comp")
-                .append(" INNER Join notes.rel_devoirs_groupes  Gdevoir ON Gdevoir.id_devoir = devoir.id ")
+                .append(" INNER Join notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
                 .append(" WHERE devoir.id = ? ;");
 
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
@@ -1328,7 +1332,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     }
 
-    public void getDevoirsInfos(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
+    public void getDevoirsInfosCompetencesCondition(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
 
@@ -1341,6 +1345,25 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         if (idDevoirs != null) {
             query.append(" AND id IN " + Sql.listPrepared(idDevoirs) + " ");
+            //Ajout des id désirés
+            for (Long l : idDevoirs) {
+                values.add(l);
+            }
+        }
+
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+    }
+
+    public void getDevoirsInfos(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT devoir.id, devoir.id_matiere, devoir.id_periode, Gdevoir.id_groupe FROM notes.devoirs devoir ")
+                .append("INNER Join notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id ")
+                .append(" WHERE devoir.id IN ");
+
+        if (idDevoirs != null) {
+            query.append(Sql.listPrepared(idDevoirs) + " ;");
             //Ajout des id désirés
             for (Long l : idDevoirs) {
                 values.add(l);
@@ -1427,11 +1450,86 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void delete(JsonArray ids, Handler<Either<String, JsonObject>> handler) {
         String query = "DELETE FROM " + this.resourceTable + " WHERE id IN " + Sql.listPrepared(ids.getList());
         JsonArray values = new JsonArray();
-
         for(Object o: ids) {
             values.add(o);
         }
 
         Sql.getInstance().prepared(query, values, SqlResult.validRowsResultHandler(handler));
+    }
+
+    @Override
+    public void getEleveGroups(String id_classe, Handler<Either<String, JsonArray>> result) {
+        StringBuilder query = new StringBuilder();
+
+        query.append("MATCH (u:User {profiles: ['Student']})-[:IN]-(:ProfileGroup)-[:DEPENDS]-(c:Class) ")
+                .append("WHERE c.id = {idClasse} ")
+                .append("WITH u, c MATCH (u)--(g) WHERE g:FunctionalGroup OR g:ManualGroup OR g:ProfileGroup ")
+                .append("RETURN u.id as idEleve, COLLECT(DISTINCT g.id) AS id_groupes");
+
+        neo4j.execute(query.toString(), new JsonObject().put("idClasse", id_classe), Neo4jResult.validResultHandler(result));
+    }
+
+    @Override
+    public void autoCleanSQLTable(Handler<Either<String, JsonObject>> result) {
+        String query = "DELETE FROM notes.moyenne_finale AS moy WHERE NOT EXISTS " +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                " WHERE moy.id_matiere = dev.id_matiere AND moy.id_periode = dev.id_periode AND moy.id_classe = relDevGr.id_groupe);" +
+                " " +
+                "DELETE FROM notes.appreciation_classe AS appClass WHERE NOT EXISTS " +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                " WHERE appClass.id_matiere = dev.id_matiere AND appClass.id_periode = dev.id_periode" +
+                " AND appClass.id_classe = relDevGr.id_groupe);" +
+                " " +
+                "DELETE FROM notes.appreciation_matiere_periode AS appMatPer WHERE NOT EXISTS " +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                "  WHERE appMatPer.id_matiere = dev.id_matiere AND appMatPer.id_periode = dev.id_periode" +
+                " AND appMatPer.id_classe = relDevGr.id_groupe);" +
+                " " +
+                "DELETE FROM notes.element_programme AS elPro WHERE NOT EXISTS " +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                " WHERE elPro.id_matiere = dev.id_matiere AND elPro.id_periode = dev.id_periode " +
+                "AND elPro.id_classe = relDevGr.id_groupe);";
+
+        Sql.getInstance().raw(query, SqlResult.validRowsResultHandler(result));
+    }
+
+    @Override
+    public void updateCompetenceNiveauFinalTableAfterDelete(List<String> listEleves, List<String> listGroups, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> result) {
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new JsonArray();
+            query.append("DELETE FROM notes.competence_niveau_final AS compNivFin WHERE compNivFin.id_periode = ? AND " +
+                    "compNivFin.id_matiere = ? AND compNivFin.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
+                    "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                    " WHERE compNivFin.id_matiere = dev.id_matiere AND compNivFin.id_periode = dev.id_periode " +
+                    "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
+
+                values.add(idPeriode);
+                values.add(idMatiere);
+                for (String eleve : listEleves)
+                    values.add(eleve);
+                for (String group : listGroups)
+                    values.add(group);
+
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(result));
+    }
+
+    @Override
+    public void updatePositionnementTableAfterDelete(List<String> listEleves, List<String> listGroups, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> result) {
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new JsonArray();
+            query.append("DELETE FROM notes.positionnement AS pos WHERE pos.id_periode = ? AND " +
+                    "pos.id_matiere = ? AND pos.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
+                    "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                    " WHERE pos.id_matiere = dev.id_matiere AND pos.id_periode = dev.id_periode " +
+                    "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
+
+                values.add(idPeriode);
+                values.add(idMatiere);
+                for (String eleve : listEleves)
+                    values.add(eleve);
+                for (String group : listGroups)
+                    values.add(group);
+
+        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(result));
     }
 }

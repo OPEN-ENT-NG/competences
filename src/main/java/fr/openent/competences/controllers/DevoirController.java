@@ -48,6 +48,8 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.Future;
+import io.vertx.core.CompositeFuture;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -56,6 +58,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+
+
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
@@ -553,7 +558,38 @@ public class DevoirController extends ControllerHelper {
             @Override
             public void handle(final UserInfos user) {
                 if (user != null) {
-                    devoirsService.delete(request.params().get("idDevoir"),user, notEmptyResponseHandler(request));
+                    devoirsService.getDevoirInfo(Long.parseLong(request.params().get("idDevoir")), new Handler<Either<String, JsonObject>>() {
+                        @Override
+                        public void handle(final Either<String, JsonObject> devoirInfo) {
+                            if (devoirInfo.isRight()) {
+                                final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
+                                final String idGroupe = devoirInfos.getString("id_groupe");
+                                final Long idPeriode = devoirInfos.getLong("id_periode");
+                                final String idMatiere = devoirInfos.getString("id_matiere");
+                                devoirsService.delete(request.params().get("idDevoir"), user, new Handler<Either<String, JsonObject>>() {
+                                    @Override
+                                    public void handle(Either<String, JsonObject> event) {
+                                        if (event.isRight()) {
+                                            devoirsService.autoCleanSQLTable(new Handler<Either<String, JsonObject>>() {
+                                                @Override
+                                                public void handle(Either<String, JsonObject> event) {
+                                                    if (event.isRight()) {
+                                                        updateSQLTablesAfterDelete(idGroupe,idPeriode,idMatiere, request);
+                                                    } else {
+                                                        badRequest(request);
+                                                    }
+                                                }
+                                            });
+                                        } else {
+                                            badRequest(request);
+                                        }
+                                    }
+                                });
+                            } else {
+                                badRequest(request);
+                            }
+                        }
+                    });
                 } else {
                     unauthorized(request);
                 }
@@ -699,7 +735,104 @@ public class DevoirController extends ControllerHelper {
             if (!entries.containsKey("id_devoirs")) {
                 badRequest(request);
             } else {
-                devoirsService.delete(entries.getJsonArray("id_devoirs"), notEmptyResponseHandler(request));
+                Long[] idDevoirs = new Long[entries.getJsonArray("id_devoirs").getList().size()];
+                for (int i = 0; i < entries.getJsonArray("id_devoirs").getList().size(); i++) {
+                    idDevoirs[i] = Long.parseLong(entries.getJsonArray("id_devoirs").getList().get(i).toString());
+                }
+                devoirsService.getDevoirsInfos(idDevoirs, new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(final Either<String, JsonArray> devoirsInfos) {
+                        if (devoirsInfos.isRight()) {
+                            final JsonArray devoirsInfosList = devoirsInfos.right().getValue();
+                            devoirsService.delete(entries.getJsonArray("id_devoirs"), new Handler<Either<String, JsonObject>>() {
+                                @Override
+                                public void handle(Either<String, JsonObject> event) {
+                                    if (event.isRight()) {
+                                        devoirsService.autoCleanSQLTable(new Handler<Either<String, JsonObject>>() {
+                                            @Override
+                                            public void handle(Either<String, JsonObject> event) {
+                                                if (event.isRight()) {
+                                                        updateSQLTablesAfterDelete(devoirsInfosList.getJsonObject(0).getString("id_groupe"),Long.parseLong(devoirsInfosList.getJsonObject(0).getValue("id_periode").toString()),devoirsInfosList.getJsonObject(0).getString("id_matiere"), request);
+                                                } else {
+                                                    badRequest(request);
+                                                }
+                                            }
+                                        });
+                                    } else {
+                                        badRequest(request);
+                                    }
+                                }
+                            });
+                        } else {
+                            badRequest(request);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private void updateSQLTablesAfterDelete(final String idGroupe,final Long idPeriode,final String idMatiere,final HttpServerRequest request){
+        devoirsService.getEleveGroups(idGroupe, new Handler<Either<String, JsonArray>>(){
+            @Override
+            public void handle(final Either<String, JsonArray> event) {
+                if (event.isRight()) {
+                    JsonArray listElevesGroups = event.right().getValue();
+                    List<ArrayList<String>> listOfListGroups = new ArrayList<ArrayList<String>>();
+                    List<ArrayList<String>> listOfListEleves = new ArrayList<ArrayList<String>>();
+                    for (int i = 0; i < listElevesGroups.size(); i++) {
+                        JsonObject jsonObjectEleve = listElevesGroups.getJsonObject(i);
+                        ArrayList<String> groupes = new ArrayList<String>();
+                        ArrayList<String> eleve = new ArrayList<String>();
+                        eleve.add(jsonObjectEleve.getString("idEleve"));
+                        groupes.add(idGroupe);
+                        for(Object groupe : jsonObjectEleve.getJsonArray("id_groupes")){
+                            groupes.add(((String)groupe));
+                        }
+                        if (!listOfListGroups.contains(groupes)) {
+                            listOfListGroups.add(groupes);
+                            listOfListEleves.add(eleve);
+                        }else{
+                            listOfListEleves.get(listOfListGroups.indexOf(groupes)).add(jsonObjectEleve.getString("idEleve"));
+                        }
+                    }
+                    List<Future> futures = new ArrayList<>();
+                    for (int i = 0; i < listOfListGroups.size(); i++) {
+                        List<String> listEleves = listOfListEleves.get(i);
+                        List<String> listGroups = listOfListGroups.get(i);
+                        Future<JsonArray> future1 = Future.future();
+                        devoirsService.updatePositionnementTableAfterDelete(listEleves, listGroups, idMatiere, idPeriode, eventFutur -> {
+                            if (eventFutur.isRight()) {
+                                future1.complete(eventFutur.right().getValue());
+                            } else {
+                                log.error(eventFutur.left());
+                                future1.complete(new JsonArray());
+                            }
+                        });
+                        futures.add(future1);
+                        Future<JsonArray> future2 = Future.future();
+                        devoirsService.updateCompetenceNiveauFinalTableAfterDelete(listEleves, listGroups, idMatiere, idPeriode, eventFutur -> {
+                            if (eventFutur.isRight()) {
+                                future2.complete(eventFutur.right().getValue());
+                            } else {
+                                log.error(eventFutur.left());
+                                future2.complete(new JsonArray());
+                            }
+                        });
+                        futures.add(future2);
+                    }
+                    CompositeFuture.all(futures).setHandler(
+                            eventFutur -> {
+                                if (eventFutur.succeeded()) {
+                                    Renders.ok(request);
+                                } else {
+                                    leftToResponse(request, new Either.Left<String,JsonObject>(eventFutur.cause().getMessage()));
+                                }
+                            });
+
+                } else {
+                    leftToResponse(request, event.left());
+                }
             }
         });
     }
@@ -915,7 +1048,7 @@ public class DevoirController extends ControllerHelper {
                         log.info("MAJ du taux de complétude pour tous les devoirs.");
                     }
 
-                    devoirsService.getDevoirsInfos(idDevoirsArray, new Handler<Either<String, JsonArray>>() {
+                    devoirsService.getDevoirsInfosCompetencesCondition(idDevoirsArray, new Handler<Either<String, JsonArray>>() {
                         @Override
                         public void handle(Either<String, JsonArray> event) {
                             if (event.isRight()) {

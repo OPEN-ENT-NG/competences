@@ -24,6 +24,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -45,6 +46,13 @@ public interface DevoirService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     void getDevoirInfo(final Long idDevoir, final Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * récupère les information de plusieurs devoirs
+     * @param idDevoirs
+     * @param handler handler portant le résultat de la requête
+     */
+    void getDevoirsInfos(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Créer le statement SQL de création d'un devoir.
@@ -193,4 +201,39 @@ public interface DevoirService extends CrudService {
     void updateDevoirsService(JsonArray ids, String idMatiere, Handler<Either<String, JsonArray>> handler);
 
     void delete(JsonArray ids, Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Met à jour les tables SQL (possible suppression des moyennes finales, appreciations des classes, appreciations des
+     * élèves sur une matière et période donnée et des élèments de programme) lorsqu'il n'y a plus aucun devoir sur une matière, à une période donné et à une classe ou un élève donné
+     * @param handler handler portant le résultat de la requête NEO4j
+     */
+    void autoCleanSQLTable(Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * Récupère l'id des groupes auquel chaque élève fait partie
+     * @param id_classe l'id de la classe
+     * @param result handler portant le résultat de la requête NEO4j
+     */
+    void getEleveGroups(String id_classe, Handler<Either<String, JsonArray>> result);
+
+    /**
+     * Met à jour la table SQL de la competence niveau final lorsqu'il n'y a plus aucun devoirs sur une matière, à une période donné et à une classe ou un élève donné
+     * @param listEleves liste d'ids des élèves
+     * @param listGroups listes d'ids des groupes et la classe auquel l'élève fait partie
+     * @param idMatiere la matière du devoir supprimé
+     * @param idPeriode la période du devoir supprimé
+     * @param result handler portant le résultat de la requête NEO4j
+     */
+    void updateCompetenceNiveauFinalTableAfterDelete(List<String> listEleves, List<String> listGroups, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> result);
+
+    /**
+     * Met à jour la table SQL des positionnements des élèves sur une matière
+     * lorsqu'il n'y a plus aucun devoir sur une matière, à une période donné et à une classe ou un élève donné
+     * @param listEleves liste d'ids des élèves
+     * @param listGroups listes d'ids des groupes et la classe auquel l'élève fait partie
+     * @param idMatiere la matière du devoir supprimé
+     * @param idPeriode la période du devoir supprimé
+     * @param result handler portant le résultat de la requête NEO4j
+     */
+    void updatePositionnementTableAfterDelete(List<String> listEleves, List<String> listGroups, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> result);
 }
