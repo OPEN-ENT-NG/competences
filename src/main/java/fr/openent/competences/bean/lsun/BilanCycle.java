@@ -69,6 +69,7 @@ import java.util.List;
  *             &lt;/complexContent>
  *           &lt;/complexType>
  *         &lt;/element>
+ *         &lt;element name="langue-culture-regionale" type="{urn:fr:edu:scolarite:lsun:bilans:import}LangueCultureRegionale" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="eleve-ref" use="required" type="{http://www.w3.org/2001/XMLSchema}IDREF" />
  *       &lt;attribute name="cycle" use="required" type="{urn:fr:edu:scolarite:lsun:bilans:import}Cycle" />
@@ -89,7 +90,8 @@ import java.util.List;
     "socle",
     "synthese",
     "enseignementComplement",
-    "responsables"
+    "responsables",
+    "langueCultureRegionale"
 })
 public class BilanCycle {
 
@@ -100,6 +102,8 @@ public class BilanCycle {
     @XmlElement(name = "enseignement-complement")
     protected EnseignementComplement enseignementComplement;
     protected Responsables responsables;
+    @XmlElement(name = "langue-culture-regionale")
+    protected LangueCultureRegionale langueCultureRegionale;
     @XmlAttribute(name = "eleve-ref", required = true)
     @XmlIDREF
     @XmlSchemaType(name = "IDREF")
@@ -220,6 +224,30 @@ public class BilanCycle {
      */
     public void setResponsables(Responsables value) {
         this.responsables = value;
+    }
+
+    /**
+     * Obtient la valeur de la propriété langueCultureRegionale.
+     *
+     * @return
+     *     possible object is
+     *     {@link LangueCultureRegionale }
+     *
+     */
+    public LangueCultureRegionale getLangueCultureRegionale() {
+        return langueCultureRegionale;
+    }
+
+    /**
+     * Définit la valeur de la propriété langueCultureRegionale.
+     *
+     * @param value
+     *     allowed object is
+     *     {@link LangueCultureRegionale }
+     *
+     */
+    public void setLangueCultureRegionale(LangueCultureRegionale value) {
+        this.langueCultureRegionale = value;
     }
 
     /**

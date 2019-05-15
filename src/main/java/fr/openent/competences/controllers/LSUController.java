@@ -998,8 +998,29 @@ public class LSUController extends ControllerHelper {
                             }
                             //enseignement Complément s'il existe pour l'élève en cours
                             if (ensCplEleve.containsKey("id_eleve")) {
-                                EnseignementComplement enseignementComplement = new EnseignementComplement(ensCplEleve.getString("code"), ensCplEleve.getInteger("niveau"));
+                                EnseignementComplement enseignementComplement = new EnseignementComplement(ensCplEleve.getString("code"),
+                                                                                                        ensCplEleve.getInteger("niveau"));
                                 bilanCycle.setEnseignementComplement(enseignementComplement);
+
+                                CodeLangueCultureRegionale codeLangueCultureRegionale = null;
+                                Integer niveauLcr = null;
+                                try {
+                                    codeLangueCultureRegionale =  CodeLangueCultureRegionale.fromValue(ensCplEleve.getString("code_lcr"));
+                                    niveauLcr = ensCplEleve.getInteger("niveau_lcr");
+
+                                    if(codeLangueCultureRegionale != null && niveauLcr != null) {
+                                        LangueCultureRegionale langueCultureRegionale = new LangueCultureRegionale();
+                                        langueCultureRegionale.setCode(codeLangueCultureRegionale);
+                                        langueCultureRegionale.setPositionnement(BigInteger.valueOf(niveauLcr));
+                                        bilanCycle.setLangueCultureRegionale(langueCultureRegionale);
+                                    }
+                                } catch (Exception e) {
+                                    log.error("error setting langueCultureRegionale fo user " + idEleve, e);
+                                    log.error("codeLangueCultureRegionale : "+ codeLangueCultureRegionale);
+                                    log.error("niveauLcr : " + niveauLcr);
+                                }
+
+
                             }
                         }
 
