@@ -1008,7 +1008,9 @@ public class LSUController extends ControllerHelper {
                                     codeLangueCultureRegionale =  CodeLangueCultureRegionale.fromValue(ensCplEleve.getString("code_lcr"));
                                     niveauLcr = ensCplEleve.getInteger("niveau_lcr");
 
-                                    if(codeLangueCultureRegionale != null && niveauLcr != null) {
+                                    if(codeLangueCultureRegionale != null
+                                            && !codeLangueCultureRegionale.equals(CodeLangueCultureRegionale.AUC)
+                                            && niveauLcr != null) {
                                         LangueCultureRegionale langueCultureRegionale = new LangueCultureRegionale();
                                         langueCultureRegionale.setCode(codeLangueCultureRegionale);
                                         langueCultureRegionale.setPositionnement(BigInteger.valueOf(niveauLcr));
