@@ -101,6 +101,10 @@
   "tuto.bienvenu":"Bienvenue sur l'écran de saisie de notes et de compétences.Vous avez la possiblité d'évaluer les compétences au clavier. ",
   "tuto.raccourci":"Il suffit pour cela , de se positionner sur une pastille et utiliser la touche numérique correspondante :",
 
+  "tuto.lsu.title" :"Vous pouvez changer le status (ignoré/non ignoré) d'un ou de plusieurs élève(s) pour l'export en cliquant sur les icones :",
+  "tuto.lsu.one.student": "Pour un élève ",
+  "tuto.lsu.all.student": "Pour Tous les élèves ",
+
   "evaluations.devoir.updateDevoir.firstConfirmSupp.part1": "Des compétences évaluées seront supprimées.",
 
   "modified.on": "Modifié le ",
@@ -108,6 +112,7 @@
   "view": "Afficher",
   "remove.confirm": "Voulez-vous vraiment supprimer ce contenu ?",
   "open": "Ouvrir",
+  "continue": "Continuer",
 
   "evaluations.devoir.updateDevoir.firstConfirmSupp.part2" : "Souhaitez vous continuer ?",
   "evaluations.devoir.updateDevoir.secondConfirmSupp.part1" : "Confirmez-vous le choix de retirer une ou plusieurs compétences évaluées ?",
@@ -404,9 +409,13 @@
   "evaluation.by.subject": "Par matière",
   "evaluation.by.domaine": "Par domaine",
   "evaluations.exportLSU":"Export LSU",
+  "evaluation.lsu.unheeded":"Ignorer",
+  "evaluation.lsu.unheeded.students":"Attention, les élèves suivants vont être ignorés pendant l'export",
+  "evaluation.lsu.unheeded.student": " Élève ignoré",
+  "evaluation.lsu.heeded.student": " Élève non ignoré",
   "evaluation.lsu.export.button.classes" : "Exporter le bilan de fin de cycle de la classe au format XML",
   "evaluation.lsu.export.button" : "Générer l'export",
-  "evaluation.lsu.export.error" : "Une erreur est survenue lors de la génération du fichier",
+  "evaluation.lsu.export.error" : "Une erreur est survenue lors de la génération du fichier. ",
   "evaluations.lsu.errors.eleves.bilan.periodique.title" : "Pour information, les élèves suivants n'ont pas tous les élèments nécessaires pour générer le XML",
   "evaluations.lsu.errors.errorCode.bilan.periodique.title" : "Désolé, les disciplines suivantes ont des codes identiques.",
   "evaluation.lsu.lightBox.errors.firstName" : "Prénom",
@@ -416,6 +425,7 @@
   "evaluation.lsu.no.appreciation.message": "Pas d'appréciation",
   "evaluation.lsu.error.no.suivi.acquis":"Pas de suivi des acquis pour le ",
   "evaluation.lsu.error.no.synthese": "Pas de synthèse du conseil pour le ",
+  "evaluation.lsu.error.getEleves.no.student": "Désolé, les élèves des classes sélectionnées ne sont pas présents ou sont ignorés sur la/les période(s) sélectionnée(s).",
   "evaluation.lsu.error.eleve.in.several.classes" : "L'élève est ou a été dans les classes demandées : effectuer l'export des classes séparément",
   "evaluations.devoir.updateDevoir.firstConfirmSupp.change.classe":"Suite au changement de classe, les évaluations, annotations et appréciations ne seront pas conservées.",
   "viescolaire.utils.enseignements":"Enseignements",

@@ -52,6 +52,7 @@ export class ErrorsLSU {
                      decodedString = String.fromCharCode.apply(null, new Uint8Array(data));
                      obj = JSON.parse(decodedString);
                 }
+
             let errorCode = _.values(_.pick(obj, 'errorCode'));
             if(!_.isEmpty(errorCode)){
                 errorCode = errorCode[0];

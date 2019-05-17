@@ -1,0 +1,105 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~ This program is free software; you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation (version 3 of the License).
+  ~ For the sake of explanation, any module that communicate over native
+  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~ license and could be license under its own terms. This is merely considered
+  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<lightbox show="lsu.hasUnheededStudents" on-close="!lsu.hasUnheededStudents">
+
+    <h2 class="center">
+        <i18n>evaluation.lsu.unheeded.students</i18n></h2>
+    <div class="twelve center">
+        <div class="cell six">
+            <span>
+                <i class="nobody" style="color: red"></i>
+                <i18n>evaluation.lsu.unheeded.student</i18n>
+            </span>
+        </div>
+        <div class="cell six">
+            <span>
+                <i class="person" style="color: green"></i>
+                <i18n>evaluation.lsu.heeded.student</i18n>
+            </span>
+        </div>
+    </div>
+    <section class="twelve">
+        <infotip name="lsu-unheeded-students-tutorial" class="info marginFive">
+            <strong><i18n>tuto.lsu.title</i18n></strong>
+            <ul>
+                <li>
+                    <i18n>tuto.lsu.one.student</i18n>
+                </li>
+            </ul>
+            <div class="twelve center">
+                <div class="cell one"><span><i class="nobody" style="color: red"></i></span></div>
+                <div class="cell one"><span><i class="person" style="color: green"></i></span></div>
+            </div>
+            <br>
+            <ul>
+                <li>
+                    <i18n>tuto.lsu.all.student</i18n>
+                </li>
+            </ul>
+            <div class="twelve center">
+                <div class="cell one"><span><i style="transform: rotate(0deg);" class="allIgnored users"></i></span></div>
+                <div class="cell one"><span><i style="transform: rotate(0deg);" class="allIgnored users ignored"></i></span></div>
+            </div>
+        </infotip>
+    </section>
+    <div ng-if="lsu.unheededStudents.length > 0" class="responsive-table">
+        <table>
+            <thead>
+            <tr>
+                <th ><i18n>viescolaire.utils.name</i18n></th>
+                <th class="center"><i18n>evaluation.lsu.lightBox.errors.firstName</i18n></th>
+                <th class="center"><i18n>viescolaire.utils.classe</i18n></th>
+                <th class="center"><i18n>viescolaire.utils.periode</i18n></th>
+                <th class="center">
+                    <i ng-init="chooseAllUnheededStudents = true;"
+                           ng-model="chooseAllUnheededStudents"
+                           class="allIgnored users"
+                           ng-class="{ignored : !chooseAllUnheededStudents}"
+                           ng-click="chooseAllUnheededStudents = !chooseAllUnheededStudents;changeUnheededStudents(lsu.unheededStudents, chooseAllUnheededStudents)">
+                    </i>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="student in lsu.unheededStudents | orderBy:['classeName','lastName']">
+                <td>[[student.lastName]]</td>
+                <td>[[student.firstName]]</td>
+                <td>[[student.classeName]]</td>
+                <td>
+                    <div ng-repeat="periode in student.periodes">[[periode.libelle]]</div>
+                </td>
+                <td>
+                    <div ng-init="student.choose =true;"
+                         ng-model="student.choose" ng-click="student.choose=!student.choose; changeUnheededStudents(student)">
+                        <i ng-class="{nobody: student.choose, person:!student.choose}"
+                           ng-style="{'color': !student.choose? 'green' : 'red'}"
+                           class="twentyFontSize " ></i>
+                        <span ng-if="periode.selected">[[getI18nPeriode(periode.periode)]]</span>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <button class="marginFive" ng-click="exportLSU(false)" ng-disabled="controleExportLSU()">
+        <i18n>continue</i18n>
+    </button>
+    <button class="marginFive" ng-click="lsu.hasUnheededStudents = !lsu.hasUnheededStudents;">
+        <i18n>evaluations.devoir.annuler</i18n>
+    </button>
+</lightbox>

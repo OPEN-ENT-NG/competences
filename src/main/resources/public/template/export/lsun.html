@@ -17,6 +17,7 @@
 
 <div ng-controller="ExportController" class="ng-scope">
     <div ng-include="'/competences/public/template/export/lightBox_errorsLSU.html'"></div>
+    <div ng-include="'/competences/public/template/export/lightBox_unheededStudentLSU.html'"></div>
     <article class="row lsu">
         <div class="twelve">
             <div class="row">
@@ -129,8 +130,9 @@
     <p class="error twelve" ng-show="errorResponse">
         <i class="close-2x" data-ng-click="errorResponse=null"></i>
         <i18n>evaluation.lsu.export.error</i18n>
+        <i18n ng-if="noStudent">evaluation.lsu.error.getEleves.no.student</i18n>
     </p>
-    <button type="button" ng-click="exportLSU()" ng-disabled="controleExportLSU()">
+    <button type="button" ng-click="exportLSU(true)" ng-disabled="controleExportLSU()">
         <i18n>evaluation.lsu.export.button</i18n>
     </button>
 </div>

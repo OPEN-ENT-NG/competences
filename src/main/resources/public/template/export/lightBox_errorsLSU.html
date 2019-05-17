@@ -15,14 +15,14 @@
   ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 
-<lightbox show="opened.lightboxErrorsLSU" on-close="!opened.lightboxErrorsLSU">
+<lightbox class="enLargedLightBox" show="opened.lightboxErrorsLSU" on-close="!opened.lightboxErrorsLSU">
 
     <h2 ng-if="lsu.errorsLSU.emptyDiscipline" class="center">
         <i18n>evaluation.lsu.error.no.discipline</i18n></h2>
     <h2 ng-if="lsu.errorsLSU.errorCode.length > 0" class="center">
-    <i18n>evaluations.lsu.errors.errorCode.bilan.periodique.title</i18n></h2>
-    <div ng-if="lsu.errorsLSU.errorCode.length > 0" class="responsive-table">
-        <table>
+        <i18n>evaluations.lsu.errors.errorCode.bilan.periodique.title</i18n></h2>
+    <div ng-if="lsu.errorsLSU.errorCode.length > 0" class="twelve">
+        <table class="twelve">
             <thead>
             <tr>
                 <th><i18n>competences.code</i18n></th>
@@ -39,24 +39,105 @@
     </div>
     <h2 ng-if="lsu.errorsLSU.all.length > 0" class="center">
         <i18n>evaluations.lsu.errors.eleves.bilan.periodique.title</i18n></h2>
+    <section class="twelve center">
+        <infotip name="lsu-error-unheeded-student-tutorial" class="info marginFive">
+            <strong><i18n>tuto.lsu.title</i18n></strong>
+            <ul>
+                <li>
+                    <i18n>tuto.lsu.one.student</i18n>
+                </li>
+            </ul>
+            <div class="twelve center">
+                <div class="cell one"><span><i class="nobody" style="color: red"></i></span></div>
+                <div class="cell one"><span><i class="person" style="color: green"></i></span></div>
+            </div>
+            <br>
+            <ul>
+                <li>
+                    <i18n>tuto.lsu.all.student</i18n>
+                </li>
+            </ul>
+            <div class="twelve center">
+                <div class="cell one"><span><i style="transform: rotate(0deg);" class="allIgnored users"></i></span></div>
+                <div class="cell one"><span><i style="transform: rotate(0deg);" class="allIgnored users ignored"></i></span></div>
+            </div>
+        </infotip>
+    </section>
+    <div ng-if="lsu.errorsLSU.all.length > 0" class="twelve center">
+        <div class="cell six">
+            <span>
+                <i class="nobody" style="color: red"></i>
+                <i18n>evaluation.lsu.unheeded.student</i18n>
+            </span>
+        </div>
+        <div class="cell three">
+            <span>
+                <i class="person" style="color: green"></i>
+                <i18n>evaluation.lsu.heeded.student</i18n>
+            </span>
+        </div>
+    </div>
     <div ng-if="lsu.errorsLSU.all.length > 0" class="responsive-table">
         <table>
             <thead>
             <tr>
                 <th ><i18n>viescolaire.utils.name</i18n></th>
-                <th class="center"><i18n>evaluation.lsu.lightBox.errors.firstName</i18n></th>
-                <th class="center"><i18n>viescolaire.utils.classe</i18n></th>
-                <th class="center four"><i18n>evaluation.lsu.lightBox.errors.messages</i18n></th>
+                <th class="center "><i18n>evaluation.lsu.lightBox.errors.firstName</i18n></th>
+                <th class="center one"><i18n>viescolaire.utils.classe</i18n></th>
+                <th class="center five"><i18n>evaluation.lsu.lightBox.errors.messages</i18n></th>
+                <th class="center" style="min-width: 110px !important;">
+                    <span>
+                    <i ng-init="chooseAllUnheededStudents = false;"
+                       ng-model="chooseAllUnheededStudents"
+                       class="allIgnored users"
+                       ng-class="{ignored : !chooseAllUnheededStudents}"
+                       ng-click="chooseAllUnheededStudents = !chooseAllUnheededStudents;changeUnheededStudents(lsu.errorsLSU.all, chooseAllUnheededStudents,filteredPeriodes )">
+                    </i>
+                    </span>
+                </th>
             </tr>
             </thead>
             <tbody>
-            <tr ng-repeat="errorLSU in lsu.errorsLSU.all | orderBy:['nameClass','lastName']">
-                <td>[[errorLSU.lastName]]</td>
-                <td>[[errorLSU.firstName]]</td>
-                <td>[[errorLSU.nameClass]]</td>
-                <td ><span ng-repeat="errorMessage in errorLSU.errorsMessages">[[errorMessage]]</br></span></td>
+            <tr ng-repeat="student in lsu.errorsLSU.all | orderBy:['nameClass','lastName']">
+                <td>[[student.lastName]]</td>
+                <td>[[student.firstName]]</td>
+                <td>[[student.nameClass]]</td>
+                <td><span ng-repeat="errorMessage in student.errorsMessages">[[errorMessage]]</br></span></td>
+                <td ng-init="student.choose = [];">
+                    <div>
+                        <div>
+                            <div ng-if="params.type === '1'">
+                            <div ng-model="student.choose[0]"
+                                 ng-init="student.choose[0] = false;"
+                                 ng-click="student.choose[0]=!student.choose[0];changeUnheededStudents(student, undefined, null, 0)">
+                                <i ng-class="{nobody: !student.choose[0], person:student.choose[0]}"
+                                   ng-style="{'color': !student.choose[0]? 'green' : 'red'}"
+                                   class="twentyFontSize " ></i>
+                                <span><i18n>viescolaire.utils.cycle</i18n></span>
+                            </div>
+                            </div>
+                            <div ng-if="params.type === '2'" ng-repeat="periode in filteredPeriodes">
+                            <div ng-if="periode.selected"
+                                 ng-model="student.choose[$index]"
+                                 ng-init="student.choose[$index] = false;"
+                                 ng-click="student.choose[$index] = ! student.choose[$index]; changeUnheededStudents(student, undefined, periode, $index)">
+                                <i ng-class="{nobody: student.choose[$index], person: !student.choose[$index]}"
+                                   ng-style="{'color': !student.choose[$index]? 'green' : 'red'}"
+                                   class="twentyFontSize " ></i>
+                                <span ng-if="periode.selected">[[getI18nPeriode(periode.periode)]]</span>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </td>
             </tr>
             </tbody>
         </table>
     </div>
+    <button class="marginFive" ng-click="exportLSU(false); opened.lightboxErrorsLSU = false;" ng-disabled="controleExportLSU()">
+        <i18n>continue</i18n>
+    </button>
+    <button class="marginFive" ng-click="opened.lightboxErrorsLSU = !opened.lightboxErrorsLSU;">
+        <i18n>evaluations.devoir.annuler</i18n>
+    </button>
 </lightbox>

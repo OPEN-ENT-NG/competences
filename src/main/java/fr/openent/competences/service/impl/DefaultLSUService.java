@@ -17,17 +17,26 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
+import org.entcore.common.sql.SqlStatementsBuilder;
 
 import java.util.*;
+import java.lang.reflect.Array;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import static fr.openent.competences.Competences.ID_ELEVE;
+import static fr.openent.competences.Competences.ID_ELEVE_KEY;
+import static fr.openent.competences.Competences.ID_PERIODE;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultLSUService implements LSUService {
     public static final String DISCIPLINE_KEY = "DIS_";
     private static final Logger log = LoggerFactory.getLogger(DefaultExportBulletinService.class);
+    public static final String LSU_UNHEEDED_STUDENTS_TABLE = "eleves_ignores_lsu";
     private JsonArray idsEvaluatedDiscipline;
     private UtilsService utilsService;
     protected EventBus eb;
@@ -235,6 +244,151 @@ public class DefaultLSUService implements LSUService {
         });
     }
 
+    private void prepareStatements( SqlStatementsBuilder statements, JsonArray idsStudents, Long idPeriode,
+                                   String idClasse, String query){
+        for (Object idStudent: idsStudents) {
+            JsonArray values = new JsonArray().add((String) idStudent).add(idClasse);
+            if(idPeriode != null){
+                values.add(idPeriode);
+            }
+            statements.prepared(query, values);
+        }
+    }
+    public void addUnheededStudents(JsonArray idsStudents, Long idPeriode, String idClasse,
+                                    final Handler<Either<String, JsonArray>> handler){
+        SqlStatementsBuilder statements = new SqlStatementsBuilder();
+        String query = " INSERT INTO " + Competences.EVAL_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
+                + " (id_eleve, id_classe, id_periode, created) "
+                + " VALUES (?, ?, " + ((idPeriode != null) ? " ?,": "-1," ) + " NOW()) "
+                + " ON CONFLICT (id_eleve, id_classe,id_periode) DO UPDATE SET created = NOW() ";
+
+       prepareStatements(statements, idsStudents, idPeriode, idClasse, query);
+
+        Sql.getInstance().transaction(statements.build(), validResultHandler(handler));
+    }
+    public void remUnheededStudents(JsonArray idsStudents, Long idPeriode, String idClasse,
+                                    final Handler<Either<String, JsonArray>> handler){
+
+        SqlStatementsBuilder statements = new SqlStatementsBuilder();
+        String query = " DELETE FROM " + Competences.EVAL_SCHEMA + "." + LSU_UNHEEDED_STUDENTS_TABLE
+                + " WHERE id_eleve =? AND  id_classe = ? "
+                + ((idPeriode!=null)?" AND id_periode =? ;": " AND id_periode =-1 ;");
+
+        prepareStatements(statements, idsStudents, idPeriode, idClasse, query);
+
+        Sql.getInstance().transaction(statements.build(), validResultHandler(handler));
+    }
+
+    public void getUnheededStudents(JsonArray idPeriodes, JsonArray idClasses,
+                                    final  Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder().append(" SELECT * ").append(" FROM ")
+                .append(Competences.EVAL_SCHEMA).append(".").append(LSU_UNHEEDED_STUDENTS_TABLE)
+                .append(" WHERE id_classe IN ").append(Sql.listPrepared(idClasses.getList()))
+                .append(" AND id_periode ");
+
+        if(idPeriodes != null && !idPeriodes.isEmpty()) {
+            query.append(" IN ").append(Sql.listPrepared(idPeriodes.getList()));
+        }
+        else{
+            query.append(" = -1 ");
+        }
+
+        JsonArray values = new JsonArray().addAll(idClasses);
+        if(idPeriodes != null){
+            values.addAll(idPeriodes);
+        }
+        Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
+                SqlResult.validResultHandler(handler));
+    }
+    public void getUnheededStudents(JsonArray idPeriodes, JsonArray idClasses, String idStructure,
+                                    final Handler<Either<String, JsonArray>> handler){
+
+        getUnheededStudents(idPeriodes, idClasses, response -> {
+            if(response.isLeft()){
+                handler.handle(new Either.Left<>(response.left().getValue()));
+            }
+            else {
+                JsonArray unheededStudents = response.right().getValue();
+                if(unheededStudents == null || unheededStudents.isEmpty()) {
+                    handler.handle(new Either.Right<>(new JsonArray()));
+                }
+                else {
+                    Map<String, List<JsonObject>> ignoredInfos =  ((List<JsonObject>)unheededStudents.getList())
+                            .stream().collect(Collectors.groupingBy(  o ->  o.getString("id_eleve")));
+
+                    JsonObject action = new JsonObject()
+                            .put("action", "eleve.getInfoEleve")
+                            .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
+                            .put("idEleves", new JsonArray(Arrays.asList(ignoredInfos.keySet().toArray())));
+
+                    eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                            handlerToAsyncHandler( studentsInfo ->  {
+                                JsonObject body = studentsInfo.body();
+                                if (!"ok".equals(body.getString("status"))) {
+                                    handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                                }
+                                else {
+                                    JsonArray students = body.getJsonArray("results");
+                                    JsonArray results = new JsonArray();
+                                    // On ne récupère que les élèves des classes où ils  sont ignorés
+                                    students.getList().forEach( s -> {
+                                        JsonObject student = (JsonObject)s;
+                                        String idClasse = student.getString("idClasse");
+                                        JsonArray studentIgnoredInfos = new JsonArray();
+                                        List<JsonObject> studentIgnoredInfo = ignoredInfos
+                                                .get(student.getString(ID_ELEVE_KEY));
+                                        for(int i = 0; i<studentIgnoredInfo.size(); i++){
+                                            if(studentIgnoredInfo.get(i).getString("id_classe").equals(idClasse)){
+                                                studentIgnoredInfos.add(studentIgnoredInfo.get(i));
+                                            }
+                                        }
+                                        if(!studentIgnoredInfos.isEmpty()) {
+                                            student.put("ignoredInfos", studentIgnoredInfos);
+                                            results.add(student);
+                                        }
+                                    });
+                                    handler.handle(new Either.Right<>(results));
+                                }
+                            }));
+
+                }
+            }
+        });
+
+    }
+
+    public void getStudents(final List<String> classids, Future<Message<JsonObject>> studentsFuture,
+                            AtomicInteger count, AtomicBoolean answer, final String thread, final String method){
+
+        JsonObject action = new JsonObject()
+                .put("action", "user.getElevesRelatives")
+                .put("idsClass", new fr.wseduc.webutils.collections.JsonArray(classids));
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        if (!("ok".equals(body.getString("status"))
+                                && body.getJsonArray("results").size() != 0)) {
+                            String error = body.getString(MESSAGE);
+                            count.addAndGet(1);
+                            serviceResponseOK(answer, count.get(), thread, method);
+                            if (error != null && error.contains(TIME)) {
+                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                        handlerToAsyncHandler(this));
+                            } else {
+                                String failure = "getBaliseEleves : error when collecting Eleves " + error;
+                                studentsFuture.fail(failure);
+                                log.error("method getBaliseEleves an error occured when collecting Eleves " + error);
+                            }
+                        }
+                        else {
+                            studentsFuture.complete(message);
+                        }
+                    }
+                }));
+    }
     /**
      * get Deleted Student in Postgres ( in personne_supp table)
      * @param periodesByClass map requested periodes by class
@@ -370,5 +524,92 @@ public class DefaultLSUService implements LSUService {
             }
         }));
     }
+    public int nbIgnoredTimes(String idEleve, String idClasse, Map<String,JsonArray> periodesByClass,
+                          Map<Long, JsonObject> periodeUnheededStudents){
+        AtomicInteger nbIgnoredTimes = new AtomicInteger(0);
+        if(periodesByClass.containsKey(idClasse)) {
+            JsonArray periodes = periodesByClass.get(idClasse);
+            periodes.getList().forEach(periode -> {
+                if (periodeUnheededStudents != null) {
+                    JsonObject unheededPeriode = periodeUnheededStudents
+                            .get(Long.valueOf(((JsonObject) periode).getInteger("id_type")));
+                    if (unheededPeriode != null) {
+                        JsonArray unheededClass = unheededPeriode.getJsonArray(idClasse);
+                        if (unheededClass != null && unheededClass.contains(idEleve)) {
+                            nbIgnoredTimes.incrementAndGet();
+                        }
+                    }
+                }
+            });
+        }
+        return nbIgnoredTimes.get();
+    }
 
+    public Boolean isIgnorated(String idEleve, String idClasse, Long idPeriode,
+                               Map<Long, JsonObject> periodeUnheededStudents){
+        Boolean ignorated = false;
+        if (periodeUnheededStudents != null && periodeUnheededStudents.containsKey(idPeriode)) {
+            JsonObject unheededPeriode = periodeUnheededStudents.get(idPeriode);
+            if(unheededPeriode != null) {
+                JsonArray unheededClass = unheededPeriode.getJsonArray(idClasse);
+                if(unheededClass != null && unheededClass.contains(idEleve)){
+                    ignorated = true;
+                }
+            }
+        }
+
+        return ignorated;
+    }
+
+    public void setLsuUnheededStudents(Future<JsonArray> ignoredStudentFuture,
+                                       Map<Long, JsonObject> periodeUnheededStudents ){
+        ignoredStudentFuture.result().getList().forEach( ignoredStudent -> {
+            JsonObject ignoredStudentJs = ((JsonObject)ignoredStudent);
+            String idEleve = ignoredStudentJs.getString(ID_ELEVE);
+            Long idPeriode = ignoredStudentJs.getLong(ID_PERIODE);
+            String idClasse = ignoredStudentJs.getString("id_classe");
+            if (!periodeUnheededStudents.containsKey(idPeriode)) {
+                periodeUnheededStudents.put(idPeriode, new JsonObject());
+            }
+            JsonObject classesStudentsPeriode = periodeUnheededStudents.get(idPeriode);
+            if(!classesStudentsPeriode.containsKey(idClasse)){
+                periodeUnheededStudents.get(idPeriode).put(idClasse, new JsonArray());
+            }
+            periodeUnheededStudents.get(idPeriode).getJsonArray(idClasse).add(idEleve);
+        });
+    }
+
+    public JsonArray filterUnheededStrudentsForBfc(JsonArray students, JsonArray unheededStudents ){
+        JsonArray results = new JsonArray();
+        Map<String, JsonArray> unheededStudentByClass = new HashMap<>();
+        unheededStudents.getList().forEach( ignoredStudent -> {
+            JsonObject ignoredStudentJs = ((JsonObject)ignoredStudent);
+            String idEleve = ignoredStudentJs.getString(ID_ELEVE);
+            String idClasse = ignoredStudentJs.getString("id_classe");
+
+            if(!unheededStudentByClass.containsKey(idClasse)){
+                unheededStudentByClass.put(idClasse, new JsonArray());
+            }
+            if(!unheededStudentByClass.get(idClasse).contains(idEleve)) {
+                unheededStudentByClass.get(idClasse).add(idEleve);
+            }
+        });
+
+        students.getList().forEach( student -> {
+            JsonObject studentJson = (JsonObject) student;
+            String idClasse = studentJson.getString("idClass");
+            String idEleve = studentJson.getString("idNeo4j");
+            Boolean isIgnorated = false;
+            if(unheededStudentByClass.containsKey(idClasse)){
+                if(unheededStudentByClass.get(idClasse).contains(idEleve)){
+                    isIgnorated = true;
+                }
+            }
+            if(!isIgnorated){
+                results.add(studentJson);
+            }
+        });
+
+        return results;
+    }
 }

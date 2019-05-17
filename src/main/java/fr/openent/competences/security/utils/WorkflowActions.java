@@ -26,7 +26,8 @@ public enum WorkflowActions {
 	CREATE_DISPENSE_DOMAINE_ELEVE ("create.dispense.domaine.eleve"),
 	CREATE_ELEMENT_BILAN_PERIODIQUE ("create.element.bilan.periodique"),
 	SAVE_COMPETENCE_NIVEAU_FINAL ("save.competence.niveau.final"),
-	SAVE_APPMATIERE_POSITIONNEMENT_BILAN_PERIODIQUE("bilan.periodique.save.appMatiere.positionnement");
+	SAVE_APPMATIERE_POSITIONNEMENT_BILAN_PERIODIQUE("bilan.periodique.save.appMatiere.positionnement"),
+	EXPORT_LSU ("competences.lsun.export");
 	private final String actionName;
 
 	WorkflowActions(String actionName) {

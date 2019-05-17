@@ -20,6 +20,7 @@
 import {ng, _, notify} from "entcore";
 import {Classe, LSU, Utils} from '../models/teacher';
 import * as utils from '../utils/teacher';
+import {LSU_TYPE_EXPORT} from "../models/common/LSU";
 export let exportControleur = ng.controller('ExportController',['$scope',
     async function($scope) {
 
@@ -64,6 +65,9 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     $scope.params.periodes_type.push(periode_type);
                     await utils.safeApply($scope);
                 }
+                if(periode_type.libelle === undefined){
+                    periode_type.libelle = $scope.getI18nPeriode(periode_type.periode);
+                }
             }else{
                 $scope.params.periodes_type = _.without($scope.params.periodes_type, periode_type);
             }
@@ -85,11 +89,11 @@ export let exportControleur = ng.controller('ExportController',['$scope',
         $scope.controleExportLSU = function(){
 
             $scope.inProgress = !(
-                ($scope.params.type == "1"
+                ($scope.params.type == LSU_TYPE_EXPORT.BFC
                     && $scope.params.classes.length > 0
                     && $scope.params.responsables.length > 0
                     && $scope.params.stsFile !== null)
-                || ($scope.params.type == "2"
+                || ($scope.params.type == LSU_TYPE_EXPORT.BILAN_PERIODIQUE
                     && $scope.params.stsFile !== null
                     && $scope.params.periodes_type.length > 0
                     && $scope.params.classes.length > 0
@@ -116,33 +120,46 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             reader.readAsText(file);
         };
 
-        $scope.exportLSU = async function() {
+        $scope.exportLSU = async function(getUnheededStudents) {
             await Utils.runMessageLoader($scope);
             $scope.inProgress = true;
             $scope.params.type = ""+ $scope.params.type;
-            $scope.lsu.export($scope.params)
+            $scope.noStudent = false;
+            $scope.lsu.export($scope.params, getUnheededStudents)
                 .then(async function(res){
-                    let blob = new Blob([res.data]);
-                    let link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = res.headers['content-disposition'].split('filename=')[1];
-                    document.body.appendChild(link);
-                    link.click();
-                    $scope.errorResponse = null;
+                    if(!$scope.lsu.hasUnheededStudents) {
+                        let blob = new Blob([res.data]);
+                        let link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = res.headers['content-disposition'].split('filename=')[1];
+                        document.body.appendChild(link);
+                        link.click();
+                        $scope.errorResponse = null;
+                    }
                     await Utils.stopMessageLoader($scope);
-                }).catch(async (error) => {
-                if($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
-                    && ($scope.lsu.errorsLSU.all.length > 0
-                        || $scope.lsu.errorsLSU.errorCode.length > 0
-                    || $scope.lsu.errorsLSU.emptyDiscipline)
-                ){
-                    $scope.opened.lightboxErrorsLSU = true;
-                }else{
-                    console.error(error);
-                    $scope.errorResponse = true;
-                }
-                await Utils.stopMessageLoader($scope);
-            });
+                })
+
+                .catch(async (error) => {
+                    if($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
+                        && ($scope.lsu.errorsLSU.all.length > 0
+                            || $scope.lsu.errorsLSU.errorCode.length > 0
+                            || $scope.lsu.errorsLSU.emptyDiscipline)
+                    ){
+                        $scope.opened.lightboxErrorsLSU = true;
+                    }
+                    else {
+                        if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
+                            && !_.isEmpty($scope.lsu.errorsLSU.errorMessageBadRequest)) {
+                            if (_.contains($scope.lsu.errorsLSU.errorMessageBadRequest, "getEleves : no student")) {
+                                $scope.noStudent = true;
+                                notify.info('evaluation.lsu.error.getEleves.no.student');
+                            }
+                            console.error(error);
+                            $scope.errorResponse = true;
+                        }
+                    }
+                    await Utils.stopMessageLoader($scope);
+                });
         };
 
         $scope.chooseClasse = async function (classe) {
@@ -181,6 +198,81 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     _.each($scope.params.periodes_type, ( periode_type ) => {
                         periode_type.classes =[];
                     });
+                }
+            }
+        };
+
+        $scope.changeUnheededStudents = async function (students, changeTo?, periode?, index?){
+            if(changeTo === undefined) {
+                if(students.hasOwnProperty("choose")){
+                    let choose = (index === undefined)? students.choose : students.choose[index];
+                    let idperiode = null;
+                    if(periode!== null && periode === undefined){
+                        idperiode = students.ignoredInfos
+                    } else if (periode!== null && periode !== undefined){
+                        idperiode = periode.id_type;
+                    }
+                    let idClasse = (students.idClasse !== undefined)?students.idClasse : students.id_classe;
+                    let idStudents = [students.idEleve];
+                    let doChange = async (periodeId) => {
+                        if(choose) {
+                            await $scope.lsu.addUnheededStudents(idStudents, periodeId, idClasse);
+                        }
+                        else{
+                            await $scope.lsu.remUnheededStudents(idStudents, periodeId, idClasse);
+                        }
+                    };
+                    if(idperiode instanceof Array){
+                        let allPromise = [];
+                        _.forEach(idperiode, (ignoredInfo) => {
+                            allPromise.push(doChange(ignoredInfo.id_periode));
+                        });
+                        await Promise.all(allPromise);
+                    }
+                    else {
+                        await doChange(idperiode);
+                    }
+                }
+            }
+            else {
+                await Utils.runMessageLoader($scope);
+                try {
+                    let allPromise = [];
+                    _.forEach(students, (student) => {
+                        if (student.hasOwnProperty("choose")) {
+                            if (periode === undefined) {
+                                if (student.choose !== changeTo) {
+                                    student.choose = changeTo;
+                                    allPromise.push($scope.changeUnheededStudents(student));
+                                }
+                            }
+                            else{
+                                if($scope.params.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
+                                    for (let index = 0; index < periode.length; index++) {
+                                        let currentPeriode = periode[index];
+                                        if (currentPeriode.selected === true && student.choose[index] !== changeTo) {
+                                            student.choose[index] = changeTo;
+                                            allPromise.push($scope.changeUnheededStudents(student, undefined,
+                                                currentPeriode, index));
+                                        }
+                                    }
+                                }
+                                else if ($scope.params.type === LSU_TYPE_EXPORT.BFC){
+                                    if (student.choose[0] !== changeTo) {
+                                        student.choose[0] = changeTo;
+                                        allPromise.push($scope.changeUnheededStudents(student, undefined, null, 0));
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    if (!_.isEmpty(allPromise)) {
+                        await Promise.all(allPromise);
+                    }
+                    await Utils.stopMessageLoader($scope);
+                }
+                catch (e){
+                    await Utils.stopMessageLoader($scope);
                 }
             }
         };

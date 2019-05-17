@@ -17,6 +17,21 @@
 
 body.evaluations {
 
+  .twentyFontSize {
+    font-size: 20px !important;
+  }
+  .allIgnored{
+    transform: rotate(-90deg);
+    position: relative;
+    display: inline-block;
+  }
+  i.allIgnored.users:before {
+    color: $red;
+  }
+  i.ignored.users:before{
+      color: green !important;
+  }
+
   .whiteSpaceNormalBox {
     white-space: normal !important;
     text-overflow: unset;
@@ -2721,6 +2736,7 @@ body.evaluations {
 
   //EXPORT LSU
   .lsu {
+
     .filtre {
       position: relative;
       height: 25px;
