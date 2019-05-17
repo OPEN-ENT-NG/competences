@@ -318,7 +318,11 @@ public class BFCController extends ControllerHelper {
                         RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_BFCSYNTHESE_CREATE, new Handler<JsonObject>() {
                             @Override
                             public void handle(JsonObject synthese) {
-                                syntheseService.updateBfcSynthese(request.params().get("id"), synthese, notEmptyResponseHandler(request));
+                                if(synthese.getString("texte").isEmpty()) {
+                                    syntheseService.deleteBfcSynthese(request.params().get("id"), notEmptyResponseHandler(request));
+                                } else {
+                                    syntheseService.updateBfcSynthese(request.params().get("id"), synthese, notEmptyResponseHandler(request));
+                                }
                             }
                         });
                     }else{

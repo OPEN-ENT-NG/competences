@@ -464,13 +464,16 @@
             <div style="background-color: #eef4d7 !important; min-height: 20px; font-size: small;" class="synthese">
                 {{syntheseBilanPeriodque}}<br/>
                 {{#hasAvisConseil}}
-                {{avisConseil}}
+                    <span style="font-weight: bold">
+                        {{beforeAvisConseil}}
+                    </span>
+                    {{avisConseil}}
                 {{/hasAvisConseil}}<br/>
                 {{#hasAvisOrientation}}
-                <span style="font-weight: bold">
-                {{beforeAvisOrientation}}
-                </span>
-                {{avisOrientation}}
+                    <span style="font-weight: bold">
+                        {{beforeAvisOrientation}}
+                    </span>
+                    {{avisOrientation}}
                 {{/hasAvisOrientation}}
             </div>
         </div>

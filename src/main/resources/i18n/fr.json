@@ -36,6 +36,8 @@
   "orientation.avis.LastTrimester": "Avis d'orientation / Proposition du conseil de classe : ",
   "orientation.avis.FirstSecondTrimester": "Avis provisoire d'orientation : ",
 
+  "conseil.avis.mention": "Mention du conseil de classe : ",
+
   "competences.title": "Compétences",
   "competences.notify.saved": "La donnée a été sauvegardée",
   "competences.notify.modified": "La donnée a été modifiée",

@@ -54,21 +54,42 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
         super.delete(idNote.toString(), user, handler);
     }
 
+    private void deleteAppreciationClasse (String id_classe, Integer id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler) {
+
+
+            StringBuilder query = new StringBuilder().append("DELETE FROM ")
+                    .append(Competences.COMPETENCES_SCHEMA + ".appreciation_classe ")
+                    .append("WHERE ")
+                    .append("id_classe = ? AND id_periode = ? AND id_matiere = ?;");
+            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+            values.add(id_classe);
+            values.add(id_periode);
+            values.add(id_matiere);
+
+            Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
+    }
+
     @Override
     public void createOrUpdateAppreciationClasse(String appreciation, String id_classe, Integer id_periode, String id_matiere, Handler<Either<String, JsonObject>> handler) {
-        StringBuilder query = new StringBuilder().append("INSERT INTO ")
-                .append( Competences.COMPETENCES_SCHEMA + ".appreciation_classe (appreciation, id_classe, id_periode, id_matiere) ")
-                .append(" VALUES " )
-                .append(" ( ?, ?, ?, ?)" )
-                .append(" ON CONFLICT (id_classe, id_periode, id_matiere) DO UPDATE SET appreciation = ?");
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(appreciation);
-        values.add(id_classe);
-        values.add(id_periode);
-        values.add(id_matiere);
-        values.add(appreciation);
 
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
+        if(appreciation == null || appreciation.isEmpty()) {
+            this.deleteAppreciationClasse(id_classe, id_periode, id_matiere,handler);
+        } else {
+
+            StringBuilder query = new StringBuilder().append("INSERT INTO ")
+                    .append(Competences.COMPETENCES_SCHEMA + ".appreciation_classe (appreciation, id_classe, id_periode, id_matiere) ")
+                    .append(" VALUES ")
+                    .append(" ( ?, ?, ?, ?)")
+                    .append(" ON CONFLICT (id_classe, id_periode, id_matiere) DO UPDATE SET appreciation = ?");
+            JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+            values.add(appreciation);
+            values.add(id_classe);
+            values.add(id_periode);
+            values.add(id_matiere);
+            values.add(appreciation);
+
+            Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
+        }
     }
 
     @Override

@@ -546,7 +546,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         }
                     }else{
                         JsonObject avisConseil = event.right().getValue();
-                        if(avisConseil != null ) {
+                        if(avisConseil != null && !avisConseil.isEmpty()) {
+
+                            eleveObject.put("beforeAvisConseil",I18n.getInstance()
+                                    .translate("conseil.avis.mention",
+                                            I18n.DEFAULT_DOMAIN, Locale.FRANCE));
+
                             eleveObject.put("avisConseil",avisConseil.getString(LIBELLE))
                                     .put("hasAvisConseil",true);
                         }
