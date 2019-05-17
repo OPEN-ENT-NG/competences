@@ -581,16 +581,27 @@ export class Utils {
 
     };
 
-    static ConvertToCSV (objArray, entete) {
+    static ConvertToCSV (objArray, entete, orderColumn?) {
         let array = typeof objArray != 'object' ? JSON.parse(objArray) : objArray;
         let str = entete + '\r\n';
 
         for (let i = 0; i < array.length; i++) {
             let line = '';
-            for (let index in array[i]) {
-                if (line != '') line += ';';
+            if(orderColumn != undefined){
+                for (let index of orderColumn) {
+                    if (line != '')
+                        line += ';';
+                    if(array[i][index] != undefined)
+                        line += array[i][index];
+                    else
+                        line +=';'
+                }
+            }else {
+                for (let index in array[i]) {
+                    if (line != '') line += ';';
 
-                line += array[i][index];
+                    line += array[i][index];
+                }
             }
 
             str += line + '\r\n';

@@ -357,6 +357,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         });
                     break;
                 }
+                case 'printTabMoyPosAppr': {
+                    $scope.exportMoyennesMatieres();
+                    break;
+                }
             }
             utils.safeApply($scope);
         };

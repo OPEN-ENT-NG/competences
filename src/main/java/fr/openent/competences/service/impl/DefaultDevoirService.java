@@ -707,14 +707,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         String matiere = idMatiere;
 
         query.append("SELECT devoirs.*, ")
-                .append("type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre");
+                .append("type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre, users.username as teacher ");
         if (idEleve != null) {
             query.append(", notes.valeur as note, COUNT(competences_devoirs.id) as nbcompetences ");
         }
         query.append("FROM ")
                 .append(Competences.COMPETENCES_SCHEMA +".devoirs ")
                 .append("left join "+ Competences.VSCO_SCHEMA +".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
-                .append("inner join "+ Competences.COMPETENCES_SCHEMA +".type on devoirs.id_type = type.id ");
+                .append("inner join "+ Competences.COMPETENCES_SCHEMA +".type on devoirs.id_type = type.id ")
+                .append("inner join "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ");
         if(idClasse != null) {
             query.append("inner join " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes on rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe =? ");
         }

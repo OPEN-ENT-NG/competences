@@ -16,7 +16,7 @@
  */
 
 import {model, notify, idiom as lang, ng, template, moment, _, angular, http} from 'entcore';
-import {Devoir, Evaluation, evaluations, ReleveNote, GestionRemplacement, Classe} from '../models/teacher';
+import {Devoir, Evaluation, evaluations, ReleveNote, ReleveNoteTotale, GestionRemplacement, Classe} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
@@ -633,6 +633,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.matieres = evaluations.matieres;
         $scope.releveNotes = evaluations.releveNotes;
         $scope.releveNote = null;
+        $scope.releveNoteTotale = null;
         $scope.classes = evaluations.classes;
         $scope.types = evaluations.types;
         $scope.filter = $filter;
@@ -3621,6 +3622,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.openedRecapEval = () => {
             //$scope.isChefEtabAndHeadTeacher = Utils.isChefEtab($scope.search.classe);
+            if ($scope.releveNoteTotale !== undefined) {
+                delete $scope.releveNoteTotale;
+            }
+            let p = {
+                idEtablissement: evaluations.structure.id,
+                idClasse: $scope.search.classe.id,
+                idPeriode: null,
+                periodeName: null
+            };
+            if ($scope.search.periode) {
+                p.idPeriode = $scope.search.periode.id_type;
+                p.periodeName = $scope.getI18nPeriode($scope.search.periode);
+            }
+            let releve = new ReleveNoteTotale(p);
+            $scope.releveNoteTotale = releve;
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
             $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
@@ -4222,6 +4238,28 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             try{
                 await $scope.releveNote.export();
+                await stopLoading();
+                notify.success('evaluations.export.bulletin.success');
+            }
+            catch (e) {
+                console.error(e);
+                await stopLoading();
+                notify.error(e);
+            }
+
+        };
+
+        $scope.exportMoyennesMatieres = async function () {
+            $scope.opened.displayMessageLoader = true;
+            $scope.opened.recapEval = false;
+            await utils.safeApply($scope);
+            let stopLoading = async function (){
+                $scope.opened.displayMessageLoader = false;
+                await utils.safeApply($scope);
+            };
+
+            try{
+                await $scope.releveNoteTotale.export();
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
             }

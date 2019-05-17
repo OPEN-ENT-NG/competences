@@ -233,6 +233,13 @@ public interface NoteService extends CrudService {
     void getDatasReleve(final JsonObject param, final Handler<Either<String, JsonObject>> handler);
 
     /**
+     * Réalise l'export totale (dans toutes les matières passé en paramètres) d'un relevé
+     * @param param objet contenant les informations relative au releve
+     * @param handler handler portant le résultat de la requête
+     */
+    void getTotaleDatasReleve(final JsonObject param, final Handler<Either<String, JsonObject>> handler);
+
+    /**
      * Renseigne les libéllés et paramètre ne nécessaire à ll'xport
      * @param resultFinal
      * @param params

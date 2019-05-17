@@ -38,6 +38,7 @@ export * from './Matiere';
 export * from './Periode';
 export * from './ElementBilanPeriodique';
 export * from './ReleveNote';
+export * from './ReleveNoteTotale';
 export * from './Remplacement';
 export * from './Responsable';
 export * from './SousMatiere';

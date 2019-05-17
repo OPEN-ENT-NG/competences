@@ -29,6 +29,7 @@ import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.security.utils.FilterUser;
 import fr.openent.competences.security.utils.FilterPeriodeUtils;
 import fr.openent.competences.security.utils.FilterUserUtils;
+import fr.openent.competences.service.DevoirService;
 import fr.openent.competences.service.ElementProgramme;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
@@ -71,12 +72,14 @@ public class NoteController extends ControllerHelper {
      * Déclaration des services
      */
     private final NoteService notesService;
+    private final DevoirService devoirsService;
     private final UtilsService utilsService;
     private final ElementProgramme elementProgramme;
 
     public NoteController(EventBus eb) {
         this.eb = eb;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
+        devoirsService = new DefaultDevoirService(this.eb);
         utilsService = new DefaultUtilsService();
         elementProgramme = new DefaultElementProgramme();
     }
@@ -283,6 +286,37 @@ public class NoteController extends ControllerHelper {
                 notesService.getDatasReleve(param, notEmptyResponseHandler(request));
             }
         });
+    }
+
+    @Post("/releve/exportTotale")
+    @ApiDoc("Exporte un relevé périodique")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void exportTotaleRelevePeriodique(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, param -> {
+                notesService.getTotaleDatasReleve(param, notEmptyResponseHandler(request));
+        });
+    }
+
+    @Get("/releve/export/checkDevoirs")
+    @ApiDoc("Vérifie s'il y a des devoirs dans la matière")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessReleveFilter.class)
+    public void exportCheckDevoirs(final HttpServerRequest request) {
+        final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
+        String idEtablissement = request.params().get("idEtablissement");
+        String idClasse = request.params().get("idClasse");
+        Long idPeriode = null;
+        if (request.params().get("idPeriode") != null) {
+            idPeriode = Long.parseLong(request.params().get("idPeriode"));
+        }
+        if (idEtablissement != "undefined" && idClasse != "undefined"
+                && request.params().get("idPeriode") != "undefined") {
+            devoirsService.listDevoirs(null,idEtablissement, idClasse, null,
+                    idPeriode,false, handler);
+        } else {
+            Renders.badRequest(request, "Invalid parameters");
+        }
     }
 
     @Get("/eleve/:idEleve/moyenne")

@@ -30,7 +30,6 @@ import {
 import {getNN} from "../../utils/functions/utilsNN";
 import * as utils from "../../utils/teacher";
 import {Graph} from "../common/Graph";
-declare  let Chart: any;
 
 
 export class ReleveNote extends  Model implements IModel {
@@ -86,7 +85,7 @@ export class ReleveNote extends  Model implements IModel {
 
     constructor(o?: any) {
         super();
-        if (o && o !== undefined) this.updateData(o, false);
+        if (o) this.updateData(o, false);
         this.synchronized = {
             classe: false,
             devoirs: false,

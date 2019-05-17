@@ -43,6 +43,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;enumeration value="PRO"/>
  *     &lt;enumeration value="LSF"/>
  *     &lt;enumeration value="LVE"/>
+ *     &lt;enumeration value="CHK"/>
  *   &lt;/restriction>
  * &lt;/simpleType>
  * </pre>
@@ -57,7 +58,8 @@ public enum CodeEnsCompl {
     LCR,
     PRO,
     LSF,
-    LVE;
+    LVE,
+    CHK;
 
     public String value() {
         return name();

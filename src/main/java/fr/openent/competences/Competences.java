@@ -181,6 +181,7 @@ public class Competences extends BaseServer {
     public static final String ELEVES = "eleves";
     public static final String APPRECIATION_CLASSE = "appreciation_classe";
     public static final String APPRECIATIONS = "appreciations";
+    public static final String APPRECIATIONS_ELEVE = "appreciations_eleve";
     public static final String NOTES = "notes";
     public static final String HAS_NOTE = "hasNote";
     public static final String NN = "NN";

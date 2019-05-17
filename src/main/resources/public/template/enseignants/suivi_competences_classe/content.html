@@ -25,9 +25,9 @@
     <i18n>evaluation.suivi.no.cycle</i18n>
 </article>
 <lightbox show="opened.recapEval" on-close="opened.recapEval = false; exportRecapEvalObj.errExport = false;">
-    <h2><i18n>evaluations.export.format.pdf</i18n>&nbsp;:</h2>
-
+    <h2><i18n>evaluations.export.file</i18n>&nbsp;:</h2>
     <div class="checkbox-grid">
+        <h4><i18n>evaluations.export.format.pdf</i18n>&nbsp;:</h4>
         <label>
             <input type="radio" ng-change="changePrintSuiviClasse('printRecapEval')" ng-model="printSuiviClasse" value="printRecapEval">
             <span><i18n>evaluations.recapEval</i18n></span>
@@ -43,6 +43,12 @@
         <label>
             <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="printSuiviClasse" value="printRecapAppreciations">
             <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
+        </label>
+        <br/>
+        <h4><i18n>evaluations.export.format.csv</i18n>&nbsp;:</h4>
+        <label>
+            <input type="radio" ng-change="changePrintSuiviClasse('printTabMoyPosAppr')" ng-model="printSuiviClasse" value="printTabMoyPosAppr">
+            <span><i18n>evaluations.tab.moysPos</i18n></span>
         </label>
     </div>
     <div class="row">
