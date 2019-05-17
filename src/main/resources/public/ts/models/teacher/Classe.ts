@@ -123,6 +123,14 @@ export class Classe extends Model {
         });
     }
 
+    unSyncEleves () {
+        if(this.synchronized != undefined && this.synchronized.eleves === true) {
+            this.eleves.all = [];
+            this.mapEleves = undefined;
+            this.synchronized.eleves = false;
+        }
+    };
+
     public static get_type_groupe_libelle = (classe) => {
         let libelleClasse;
 

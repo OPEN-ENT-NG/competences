@@ -23,6 +23,7 @@ export function  updateFilters ($scope, withStudent) {
                         allPromise.push(Promise.all([classe.periodes.sync(), classe.eleves.sync()]));
                     }
                     else {
+                        classe.unSyncEleves();
                         allPromise.push(Promise.all([classe.periodes.sync()]));
                     }
                 });
