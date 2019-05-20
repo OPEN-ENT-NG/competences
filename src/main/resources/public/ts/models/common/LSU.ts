@@ -43,6 +43,7 @@ export class LSU {
 
     async export(params: any): Promise<any> {
        return new Promise((resolve, reject) => {
+           this.errorsLSU = new ErrorsLSU();
             http.post('/competences/exportLSU/lsu', params, {responseType: 'arraybuffer'})
                 .then(function (data) {
                     if (resolve && typeof(resolve) === 'function') {

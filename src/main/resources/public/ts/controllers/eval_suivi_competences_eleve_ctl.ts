@@ -729,6 +729,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
             if (periode && periode !== "*" && periode.id_type) {
                 url += "&idPeriode=" + periode.id_type;
+            } else if ($scope.suiviCompetence.isCycle === true) {
+                url += "&idCycle="+$scope.suiviCompetence.cycle.id_cycle;
             }
             location.replace(url);
         };

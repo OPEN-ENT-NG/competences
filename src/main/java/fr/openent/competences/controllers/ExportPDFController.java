@@ -470,10 +470,11 @@ public class ExportPDFController extends ControllerHelper {
      *                    classe
      * @param idStructure L'identifiant de la structure. Necessaire afin de recuperer l'echelle de conversion.0
      * @param idPeriode   L'identifiant de la periode pour laquelle on souhaite recuperer le BFC.
+     * @param idCycle     L'identifiant du cycle pour lequel on souhaite recuperer le BFC.
      * @param handler     Handler contenant le BFC final.
      * @see Eleve
      */
-    private void getBFCParClasse(final Map<String, List<Eleve>> classes, final String idStructure, Long idPeriode, final Handler<Either<String, JsonArray>> handler) {
+    private void getBFCParClasse(final Map<String, List<Eleve>> classes, final String idStructure, Long idPeriode, Long idCycle, final Handler<Either<String, JsonArray>> handler) {
 
         // Contient toutes les classes sous forme JsonObject, indexant en fontion de l'identifiant de la classe
         // correspondante.
@@ -579,7 +580,7 @@ public class ExportPDFController extends ControllerHelper {
 
 
 
-            bfcService.buildBFC(false, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, null, new Handler<Either<String, JsonObject>>() {
+            bfcService.buildBFC(false, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, idCycle, new Handler<Either<String, JsonObject>>() {
                 @Override
                 public void handle(final Either<String, JsonObject> event) {
                     if (event.isRight()) {
@@ -902,6 +903,7 @@ public class ExportPDFController extends ControllerHelper {
         final String idStructure = request.params().get("idStructure");
         final List<String> idClasses = request.params().getAll("idClasse");
         final List<String> idEleves = request.params().getAll("idEleve");
+        final Long idCycle = (request.params().get("idCycle") != null) ? Long.valueOf(request.params().get("idCycle")) : null;
         final Long idPeriode =
                 (request.params().get("idPeriode") != null) ? Long.valueOf(request.params().get("idPeriode")) : null;
 
@@ -920,7 +922,7 @@ public class ExportPDFController extends ControllerHelper {
                                 final String idStructureGot = event.right().getValue().entrySet().iterator().next().getKey();
                                 final Map<String, List<Eleve>> classes = event.right().getValue().entrySet().iterator().next().getValue();
 
-                                getBFCParClasse(classes, idStructureGot, idPeriode, new Handler<Either<String, JsonArray>>() {
+                                getBFCParClasse(classes, idStructureGot, idPeriode, idCycle, new Handler<Either<String, JsonArray>>() {
                                     @Override
                                     public void handle(Either<String, JsonArray> event) {
                                         if (event.isRight()) {
