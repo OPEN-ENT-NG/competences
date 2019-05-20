@@ -84,7 +84,7 @@
                 <select ng-model="search.idAvisOrientation"
                         ng-options="avis.id as avis.libelle for avis in elementBilanPeriodique.avisConseil.avis | filter:filterAvis(2)"
                         ng-change="elementBilanPeriodique.avisOrientation.saveAvisOrientation(search.idAvisOrientation);">
-                    <option class="header-opt" disabled value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
+                    <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
                 </select>
             </label>
         </section>
