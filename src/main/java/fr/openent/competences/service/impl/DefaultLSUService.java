@@ -1,6 +1,7 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.bean.lsun.CodeDomaineSocle;
 import fr.openent.competences.bean.lsun.Discipline;
 import fr.openent.competences.bean.lsun.Donnees;
@@ -17,11 +18,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -234,6 +233,142 @@ public class DefaultLSUService implements LSUService {
         CompositeFuture.all(listFutureClass).setHandler(event -> {
             handler.handle(new Either.Right<String, Map<String,Map<Long, String>>>(mapIdClassCodesDomaines));
         });
+    }
+
+    /**
+     * get Deleted Student in Postgres ( in personne_supp table)
+     * @param periodesByClass map requested periodes by class
+     * @param handler response
+     */
+    @Override
+    public void getDeletedStudentsPostgres(final Map<String, JsonArray> periodesByClass,
+                                           Map<String, JsonObject> mapDeleteStudent,
+                                          Handler<Either<String, Map<String, JsonObject>>> handler) {
+
+        if(periodesByClass != null && periodesByClass.size()>0){
+
+            final List<Future> futuresList = new ArrayList<>();
+
+            for(Map.Entry<String,JsonArray> classPeriodes : periodesByClass.entrySet()){
+                Future<JsonArray> futureDeletedStudentsByClass = Future.future();
+                futuresList.add(futureDeletedStudentsByClass);
+
+                String beginingPeriode = Utils.getPeriode(classPeriodes.getValue(),true);
+
+                JsonObject action = new JsonObject()
+                        .put("action", "eleve.getDeletedStudentByPeriodeByClass")
+                        .put("idClass",classPeriodes.getKey())
+                        .put("beginningPeriode",beginingPeriode);
+                final String finalBeginingPeriode = beginingPeriode;
+                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                        handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+
+                            AtomicBoolean answer = new AtomicBoolean(false);
+                            AtomicInteger count = new AtomicInteger(0);
+                            String thread = "("  + finalBeginingPeriode + ", "+ classPeriodes.getKey()+ " )";
+                            String method = "getDeletedStudentsPostgres";
+
+                            @Override
+                            public void handle(Message<JsonObject> message) {
+
+                                if("ok".equals(message.body().getString("status"))){
+
+                                    JsonArray deletedStudentsPostgresByClasse = message.body().getJsonArray("results");
+
+                                    if(deletedStudentsPostgresByClasse != null && deletedStudentsPostgresByClasse.size()>0){
+
+                                        for(int j = 0 ; j < deletedStudentsPostgresByClasse.size(); j++){
+
+                                            JsonObject deleteStudent = deletedStudentsPostgresByClasse.getJsonObject(j);
+
+                                            //set map<IdEleve,JsonObject of deleted student
+                                            if(mapDeleteStudent.containsKey(deleteStudent.getString("id_user"))){
+                                                JsonObject deletedStudentMap = mapDeleteStudent.get(deleteStudent.getString("id_user"));
+
+                                                JsonArray deleteDateClass = deleteStudent.getJsonArray("delete_date_id_class");
+
+                                                for(int k=0 ; k < deleteDateClass.size(); k++){
+                                                    deletedStudentMap.getJsonArray("delete_date_id_class")
+                                                            .add(deleteDateClass.getJsonObject(k));
+                                                }
+
+                                            }else{
+                                                mapDeleteStudent.put(deleteStudent.getString("id_user"),deleteStudent);
+                                            }
+                                        }
+                                    }
+                                    //log for time-out
+                                    answer.set(true);
+                                    serviceResponseOK(answer, count.get(),thread,method);
+                                    futureDeletedStudentsByClass.complete();
+                                }else{
+                                    String error =  message.body().getString(MESSAGE);
+                                    if (error!=null && error.contains(TIME)){
+                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                                                handlerToAsyncHandler(this));
+                                    }
+                                    else {
+                                        // log for time-out
+                                        answer.set(true);
+                                        futureDeletedStudentsByClass.complete();
+                                    }
+                                    serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                                }
+
+
+                            }
+                        }));
+
+            }
+
+            CompositeFuture.all(futuresList).setHandler(event -> {
+                if(event.failed()){
+                    String error = event.cause().getMessage();
+                    log.info(error);
+                    handler.handle(new Either.Left<>(error));
+                }else{
+                    handler.handle(new Either.Right<>(mapDeleteStudent));
+                }
+            });
+        }
+    }
+
+    @Override
+    public void getAllStudentWithRelatives(String idStructure, List<String> idsClass, List<String> idsDeletedStudent, Handler<Either<String, JsonArray>> handler) {
+
+        JsonObject action = new JsonObject()
+                .put("action", "user.getAllElevesWithTheirRelatives")
+                .put("idStructure",idStructure)
+                .put("idsClass",new fr.wseduc.webutils.collections.JsonArray(idsClass))
+                .put("idsDeletedStudent",new fr.wseduc.webutils.collections.JsonArray(idsDeletedStudent));
+        eb.send(Competences.VIESCO_BUS_ADDRESS,action, Competences.DELIVERY_OPTIONS,handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            AtomicInteger count = new AtomicInteger(0);
+            String thread = "idsresponsable -> " + action.encode();
+            String method = "getAllStudentWithRelatives";
+            AtomicBoolean answer = new AtomicBoolean(false);
+
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                if("ok".equals(body.getString("status"))){
+                    JsonArray allStudentsWithRelative = body.getJsonArray("results");
+
+                    handler.handle(new Either.Right<>(allStudentsWithRelative));
+
+                    answer.set(true);
+                    serviceResponseOK(answer,count.get(),thread,method);
+                }else{
+                    String error = body.getString(MESSAGE);
+                    serviceResponseOK(answer,count.incrementAndGet(),thread,method);
+                    if(error != null && error.contains(TIME)){
+                        eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(this));
+                    }else{
+                        handler.handle(new Either.Left<>("get all students : error when collecting Students : "+ error));
+                        log.error("method getAllStudentWithRelatives error when collecting Students : "+ error);
+                    }
+                }
+            }
+        }));
     }
 
 }

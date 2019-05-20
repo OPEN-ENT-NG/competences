@@ -675,4 +675,29 @@ public class Utils {
         return I18n.getInstance().translate(key,
                 I18n.DEFAULT_DOMAIN, Locale.FRANCE);
     }
+
+    public static String getPeriode(JsonArray periodesByClass,Boolean wantedBegenningPeriode){
+        String periode = null;
+        Integer smallestTypeOfPeriode = periodesByClass.getJsonObject(0).getInteger("id_type");
+        Integer biggestTypePeriode = periodesByClass.getJsonObject(0).getInteger("id_type");
+
+
+            for (int i = 0; i < periodesByClass.size(); i++) {
+                //get the begining periode
+                if (wantedBegenningPeriode) {
+                    if (periodesByClass.getJsonObject(i).getInteger("id_type") <= smallestTypeOfPeriode) {
+                        smallestTypeOfPeriode = periodesByClass.getJsonObject(i).getInteger("id_type");
+                        periode = periodesByClass.getJsonObject(i).getString("timestamp_dt");
+                    }
+                } else {
+                    if (periodesByClass.getJsonObject(i).getInteger("id_type") >= biggestTypePeriode) {
+                        biggestTypePeriode = periodesByClass.getJsonObject(i).getInteger("id_type");
+                        periode = periodesByClass.getJsonObject(i).getString("timestamp_fn");
+                    }
+                }
+            }
+
+        return periode;
+    }
+
 }

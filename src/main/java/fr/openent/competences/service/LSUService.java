@@ -25,6 +25,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public interface LSUService {
@@ -51,5 +52,20 @@ public interface LSUService {
 
     void getMapIdClassCodeDomaineById(List<String> idClass, final Handler<Either<String, Map<String,Map<Long, String>>>> handler);
 
+    /**
+     * get deleted student by classe and deleted date > min(resqueted periodes)
+     * @param periodesByClass resqueted periodes of the class
+     * @param handler response
+     */
+    void getDeletedStudentsPostgres(Map<String,JsonArray> periodesByClass, Map<String, JsonObject> mapDeleteStudent,
+                                    Handler<Either<String, Map<String, JsonObject>>> handler);
 
+    /**
+     * get all students of the icClass list
+     * @param idStrure idStructure
+     * @param idsClass requested idsClass
+     * @param idsDeletedStudent deleted students of Postgres
+     * @param handler response
+     */
+    void getAllStudentWithRelatives(String idStrure, List<String> idsClass, List<String> idsDeletedStudent,Handler<Either<String,JsonArray>> handler);
 }

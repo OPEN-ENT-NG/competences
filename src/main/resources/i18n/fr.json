@@ -416,6 +416,7 @@
   "evaluation.lsu.no.appreciation.message": "Pas d'appréciation",
   "evaluation.lsu.error.no.suivi.acquis":"Pas de suivi des acquis pour le ",
   "evaluation.lsu.error.no.synthese": "Pas de synthèse du conseil pour le ",
+  "evaluation.lsu.error.eleve.in.several.classes" : "L'élève est ou a été dans les classes demandées : effectuer l'export des classes séparément",
   "evaluations.devoir.updateDevoir.firstConfirmSupp.change.classe":"Suite au changement de classe, les évaluations, annotations et appréciations ne seront pas conservées.",
   "viescolaire.utils.enseignements":"Enseignements",
   "viescolaire.utils.langues.culture.regionale.choix" : "Choix langue",

@@ -70,7 +70,7 @@ public class Periode {
     @XmlAttribute(name = "nb-periodes", required = true)
     protected int nbPeriodes;
     @XmlTransient
-    protected int typePeriode;
+    protected Integer typePeriode;
     @XmlTransient
     protected String label;
 

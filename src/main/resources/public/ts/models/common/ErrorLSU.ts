@@ -32,6 +32,7 @@ export class ErrorsLSU {
     errorCode : any[];
     all : ErrorLSU[];
     emptyDiscipline : boolean;
+    errorMessageBadRequest : String;
 
     constructor () {
         this.all = [];
@@ -43,7 +44,7 @@ export class ErrorsLSU {
         if(data instanceof ArrayBuffer && data.byteLength !== 0){
            let obj : string;
            let decodedString : any;
-                            if('TextDecoder' in window){
+           if('TextDecoder' in window){
                     let dataView = new DataView(data);
                     decodedString = new TextDecoder ('utf8');
                     obj = JSON.parse(decodedString.decode(dataView));
@@ -51,10 +52,10 @@ export class ErrorsLSU {
                      decodedString = String.fromCharCode.apply(null, new Uint8Array(data));
                      obj = JSON.parse(decodedString);
                 }
-                let errorCode = _.values(_.pick(obj, 'errorCode'));
-                if(!_.isEmpty(errorCode)){
-                    errorCode = errorCode[0];
-                }
+            let errorCode = _.values(_.pick(obj, 'errorCode'));
+            if(!_.isEmpty(errorCode)){
+                errorCode = errorCode[0];
+            }
             this.errorCode =  errorCode;
             let emptyDiscipline = _.values(_.pick(obj, 'emptyDiscipline'));
             if(!_.isEmpty(emptyDiscipline)){
@@ -63,7 +64,11 @@ export class ErrorsLSU {
             else{
                 this.emptyDiscipline = false;
             }
-            this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode', 'emptyDiscipline')));
+            let errorBadRequest = _.values(_.pick(obj, 'error'));
+            if(!_.isEmpty(errorBadRequest)){
+               this.errorMessageBadRequest = errorBadRequest;
+            }
+            this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode', 'emptyDiscipline','error')));
         }
     }
 

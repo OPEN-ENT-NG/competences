@@ -50,7 +50,7 @@ export class LSU {
                     }
                 })
                 .catch( (data) => {
-                    if(data.response != undefined && data.response.status === 400){
+                    if(data.response != undefined && data.response.status === 400 ){
                         this.errorsLSU.setErrorsLSU(data.response.data);
                     }
                     reject();

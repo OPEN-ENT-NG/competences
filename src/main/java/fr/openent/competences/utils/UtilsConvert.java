@@ -18,11 +18,23 @@
 package fr.openent.competences.utils;
 
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
+import java.text.Format;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
+
 
 /**
  * Created by lugana on 26/04/2018.
  */
 public class UtilsConvert {
+
+    protected static final Logger log = LoggerFactory.getLogger(UtilsConvert.class);
 
     public static String[] jsonArrayToStringArr (JsonArray jsonArray) {
         if(jsonArray == null) {
@@ -48,6 +60,20 @@ public class UtilsConvert {
             }
         }
         return result;
+    }
+
+    public static Date convertStringToDate(String dateString,String format)  {
+        Date date = null;
+        if(dateString != null && format != null){
+            try{
+                SimpleDateFormat formatter = new SimpleDateFormat(format);
+                date = formatter.parse(dateString);
+            } catch (ParseException e) {
+                e.printStackTrace();
+                log.info(e.getMessage());
+            }
+        }
+        return date;
     }
 
 }

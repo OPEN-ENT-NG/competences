@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -81,7 +82,10 @@ public class Eleve {
     protected List<Responsable> responsableList;
     @XmlTransient
     protected String id_Class;
-
+    @XmlTransient
+    protected Date createDate;
+    @XmlTransient
+    protected Date deleteDate;
 
     @XmlTransient
     protected String level;
@@ -269,5 +273,21 @@ public class Eleve {
     @Override
     public int hashCode() {
         return id.hashCode();
+    }
+
+    public Date getCreatedDate() {
+        return createDate;
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createDate = createdDate;
+    }
+
+    public Date getDeleteDate() {
+        return deleteDate;
+    }
+
+    public void setDeleteDate(Date deleteDate) {
+        this.deleteDate = deleteDate;
     }
 }
