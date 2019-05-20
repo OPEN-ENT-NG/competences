@@ -139,6 +139,7 @@ public class LSUController extends ControllerHelper {
             @Override
             public void handle(JsonObject entries) {
                 if (entries.containsKey("type")) {
+                    errorsExport = new JsonObject();
                     if ("1".equals(entries.getString("type"))) {
                         bilanFinCycleExport(request, entries);
                     } else {
@@ -741,7 +742,7 @@ public class LSUController extends ControllerHelper {
 
 
         Map<String,String> mapIdClassCodeDivision = new HashMap<>();
-        errorsExport = new JsonObject();
+        //errorsExport = new JsonObject();
         if(allStudentsWithRelatives.isEmpty()){
             handler.handle("no student");
         }else {
