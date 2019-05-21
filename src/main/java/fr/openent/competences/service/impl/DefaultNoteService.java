@@ -394,6 +394,89 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Competences.DELIVERY_OPTIONS, validResultHandler(handler));
     }
 
+    public void getNotesReleveTotalesEleves(JsonArray ids,String etablissementId, String classeId,JsonArray matiereIds,
+                                     Long periodeId, Handler<Either<String, JsonArray>> handler) {
+
+        List<String> idEleves = new ArrayList<String>();
+
+        if (ids != null) {
+            for (int i = 0; i < ids.size(); i++) {
+                idEleves.add(ids.getString(i));
+            }
+        }
+
+        List<String> idMatieres = new ArrayList<String>();
+
+        if (matiereIds != null) {
+            for (int i = 0; i < matiereIds.size(); i++) {
+                idMatieres.add(matiereIds.getString(i));
+            }
+        }
+
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        //Construction de la requête
+        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient," +
+                " devoirs.diviseur, devoirs.ramener_sur,notes.valeur, notes.id, devoirs.id_periode , notes.id_eleve," +
+                " devoirs.is_evaluated, null as annotation, devoirs.id_matiere" +
+                " FROM " + COMPETENCES_SCHEMA + ".devoirs" +
+                " LEFT JOIN " + COMPETENCES_SCHEMA + ".notes" +
+                " ON ( devoirs.id = notes.id_devoir  " +
+                "AND notes.id_eleve IN " + Sql.listPrepared(idEleves) + ")"+
+                " INNER JOIN " + COMPETENCES_SCHEMA + ".rel_devoirs_groupes ON " +
+                "(rel_devoirs_groupes.id_devoir = devoirs.id AND "+
+                "rel_devoirs_groupes.id_groupe = ?)"+
+                " WHERE devoirs.id_etablissement = ? AND devoirs.id_matiere IN "+Sql.listPrepared(idMatieres)+" ");
+
+        for (String eleve : idEleves) {
+            values.add(eleve);
+        }
+        values.add(classeId);
+        values.add(etablissementId);
+        for (String matiere : idMatieres) {
+            values.add(matiere);
+        }
+
+        if (periodeId != null) {
+            query.append("AND devoirs.id_periode = ? ");
+            values.add(periodeId);
+        }
+        query.append(" UNION ");
+        query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient," +
+                " devoirs.diviseur, devoirs.ramener_sur,null as valeur, null as id, devoirs.id_periode, " +
+                " rel_annotations_devoirs.id_eleve, devoirs.is_evaluated," +
+                " rel_annotations_devoirs.id_annotation as annotation, devoirs.id_matiere" +
+                " FROM " + COMPETENCES_SCHEMA + ".devoirs" +
+                " LEFT JOIN " + COMPETENCES_SCHEMA + ".rel_annotations_devoirs" +
+                " ON (devoirs.id = rel_annotations_devoirs.id_devoir " +
+                " AND rel_annotations_devoirs.id_eleve IN " +Sql.listPrepared(idEleves) + ")"+
+                " INNER JOIN " + COMPETENCES_SCHEMA + ".rel_devoirs_groupes" +
+                " ON (rel_devoirs_groupes.id_devoir = devoirs.id " +
+                "AND rel_devoirs_groupes.id_groupe = ?) "+
+                " WHERE devoirs.id_etablissement = ? " +
+                "AND devoirs.id_matiere IN "+Sql.listPrepared(idMatieres)+" ");
+
+        for (String eleve : idEleves) {
+            values.add(eleve);
+        }
+        values.add(classeId);
+        values.add(etablissementId);
+        for (String matiere : idMatieres) {
+            values.add(matiere);
+        }
+        if (periodeId != null) {
+            query.append("AND devoirs.id_periode = ? ");
+            values.add(periodeId);
+        }
+        query.append("ORDER BY date ASC ");
+
+        Sql.getInstance().prepared(query.toString(), values,
+                Competences.DELIVERY_OPTIONS, validResultHandler(handler));
+    }
+
+
+
     private void setParamGetNotesReleve(JsonArray idsGroup,List<String> idEleves,String classeId,JsonArray values){
         if(null == idsGroup){
             for (String eleve : idEleves) {
@@ -422,6 +505,27 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         runGetCompetencesNotesReleve(etablissementId, classeId, groupIds,  matiereId, periodeId,
                 eleveId,
                 typeClasse, idEleves, withDomaineInfo, handler);
+    }
+
+    public void getCompetencesNotesReleveTotaleEleves(JsonArray ids, String etablissementId, String classeId,
+                                                JsonArray matiereIds, Long periodeId,
+                                                Handler<Either<String, JsonArray>> handler) {
+        List<String> idEleves = new ArrayList<String>();
+
+        if (ids != null) {
+            for (int i = 0; i < ids.size(); i++) {
+                idEleves.add(ids.getString(i));
+            }
+        }
+        List<String> idMatieres = new ArrayList<String>();
+
+        if (matiereIds != null) {
+            for (int i = 0; i < matiereIds.size(); i++) {
+                idMatieres.add(matiereIds.getString(i));
+            }
+        }
+        runGetCompetencesNotesReleveTotale(etablissementId, classeId,  idMatieres, periodeId,
+                idEleves, handler);
     }
 
     public void getCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds, String matiereId,
@@ -534,6 +638,66 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 validResultHandler(handler));
     }
 
+    private void runGetCompetencesNotesReleveTotale(String etablissementId, String classeId, List<String> matiereIds,
+                                              Long periodeId,List<String> idEleves,
+                                              Handler<Either<String, JsonArray>> handler) {
+
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT ")
+                .append(" devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, ")
+                .append(" devoirs.diviseur, devoirs.ramener_sur, competences_notes.evaluation ,")
+                .append(" competences_notes.id_competence , devoirs.id_matiere, competences_notes.id,")
+                .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
+                .append("null as annotation, ")
+                .append("competence_niveau_final.niveau_final AS niveau_final, type.formative")
+                .append(" FROM "+ COMPETENCES_SCHEMA +".devoirs ");
+
+        query.append(" INNER JOIN "+ COMPETENCES_SCHEMA +".type ON (devoirs.id_type = type.id) ");
+
+        query.append(" LEFT JOIN "+ COMPETENCES_SCHEMA +".competences_notes " +
+                "ON (devoirs.id  = competences_notes.id_devoir " +
+                "AND  competences_notes.id_eleve IN "+ Sql.listPrepared(idEleves)+ ")" );
+        for (String idEleve : idEleves) {
+            values.add(idEleve);
+        }
+
+        query.append(" INNER JOIN "+ COMPETENCES_SCHEMA +".rel_devoirs_groupes ON ");
+
+        if(classeId != null ){
+            JsonArray groupIds = new JsonArray();
+            groupIds.add(classeId);
+            query.append("(rel_devoirs_groupes.id_devoir = devoirs.id  AND rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared( UtilsConvert.jsonArrayToStringArr(groupIds)) + " )");
+            for (Object groupeId : groupIds) {
+                values.add(groupeId);
+            }
+
+        }else{
+            query.append("rel_devoirs_groupes.id_devoir = devoirs.id");
+        }
+
+        query.append(" LEFT JOIN "+ COMPETENCES_SCHEMA + ".competence_niveau_final ON " +
+                "( competence_niveau_final.id_periode = devoirs.id_periode AND competence_niveau_final.id_eleve = competences_notes.id_eleve" +
+                " AND competence_niveau_final.id_competence = competences_notes.id_competence AND competence_niveau_final.id_matiere = devoirs.id_matiere )");
+        query.append(" WHERE devoirs.id_etablissement = ? ")
+                .append(" AND devoirs.id_matiere IN "+Sql.listPrepared(matiereIds)+" ");
+
+        values.add(etablissementId);
+
+        for (String matiere : matiereIds) {
+            values.add(matiere);
+        }
+
+        if(periodeId != null) {
+            query.append("AND devoirs.id_periode = ? ");
+            values.add(periodeId);
+        }
+
+        Sql.getInstance().prepared(query.toString(), values,Competences.DELIVERY_OPTIONS,
+                validResultHandler(handler));
+    }
+
     @Override
     public void deleteColonneReleve(String idEleve, Long idPeriode, String idMatiere, String idClasse,
                                     String colonne,   Handler<Either<String, JsonArray>> handler){
@@ -615,6 +779,118 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 values.add(idPeriode);
             }
         }
+        Sql.getInstance().prepared(query.toString(), values,
+                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+                validResultHandler(handler));
+    }
+
+    public void getColonneReleveTotale(JsonArray idEleves, Long idPeriode, JsonArray idsMatiere, JsonArray idsClasse,
+                                        Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT moy.id_eleve, moy.id_periode, null as avis_orientation, null as avis_conseil, null as synthese, " +
+                "-15 as positionnement, moy.id_matiere, moy.moyenne, moy.id_classe FROM "+COMPETENCES_SCHEMA + ".moyenne_finale AS moy WHERE " );
+
+        if (null != idEleves) {
+            query.append("moy.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
+            for (int i = 0; i < idEleves.size(); i++) {
+                values.add(idEleves.getString(i));
+            }
+        }
+        if (null != idPeriode) {
+            query.append(" AND moy.id_periode = ? ");
+            values.add(idPeriode);
+        }
+
+        if (null != idsMatiere) {
+            query.append(" AND moy.id_matiere IN " + Sql.listPrepared(idsMatiere.getList().toArray()));
+            for (int i = 0; i < idsMatiere.size(); i++) {
+                values.add(idsMatiere.getString(i));
+            }
+        }
+
+        if (null != idsClasse) {
+            query.append(" AND moy.id_classe IN " + Sql.listPrepared(idsClasse.getList()));
+            for (Object idClasse : idsClasse.getList()) {
+                values.add(idClasse);
+            }
+        }
+
+        query.append(" UNION " +
+                "SELECT pos.id_eleve, pos.id_periode, pos.id_matiere, null as moyenne, null as avis_orientation, null as avis_conseil, " +
+                "null as synthese, pos.positionnement, null as id_classe FROM "+COMPETENCES_SCHEMA + ".positionnement AS pos WHERE " );
+
+        if (null != idEleves) {
+            query.append("pos.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
+            for (int i = 0; i < idEleves.size(); i++) {
+                values.add(idEleves.getString(i));
+            }
+        }
+        if (null != idPeriode) {
+            query.append(" AND pos.id_periode = ? ");
+            values.add(idPeriode);
+        }
+
+        if (null != idsMatiere) {
+            query.append(" AND pos.id_matiere IN " + Sql.listPrepared(idsMatiere.getList().toArray()));
+            for (int i = 0; i < idsMatiere.size(); i++) {
+                values.add(idsMatiere.getString(i));
+            }
+        }
+
+        query.append(" UNION " +
+                "SELECT IdTableAvisOrientation.id_eleve, IdTableAvisOrientation.id_periode, null as id_matiere, null as moyenne, " +
+                "libelleTableAvisOrientation.libelle as avis_orientation, null as avis_conseil, null as synthese, null as positionnement " +
+                ", null as id_classe FROM "+COMPETENCES_SCHEMA + ".avis_conseil_orientation AS IdTableAvisOrientation " +
+                "JOIN "+COMPETENCES_SCHEMA +".avis_conseil_bilan_periodique AS libelleTableAvisOrientation ON " +
+                "IdTableAvisOrientation.id_avis_conseil_bilan = libelleTableAvisOrientation.id WHERE ");
+
+        if (null != idEleves) {
+            query.append("IdTableAvisOrientation.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
+            for (int i = 0; i < idEleves.size(); i++) {
+                values.add(idEleves.getString(i));
+            }
+        }
+        if (null != idPeriode) {
+            query.append(" AND IdTableAvisOrientation.id_periode = ? ");
+            values.add(idPeriode);
+        }
+
+        query.append(" UNION " +
+                "SELECT IdTableAvisConseil.id_eleve, IdTableAvisConseil.id_periode, null as id_matiere, null as moyenne, " +
+                "null as avis_orientation, libelleTableAvisConseil.libelle as avis_conseil, null as synthese, null as positionnement " +
+                ", null as id_classe FROM "+COMPETENCES_SCHEMA + ".avis_conseil_de_classe AS IdTableAvisConseil " +
+                "JOIN "+COMPETENCES_SCHEMA +".avis_conseil_bilan_periodique AS libelleTableAvisConseil ON " +
+                "IdTableAvisConseil.id_avis_conseil_bilan = libelleTableAvisConseil.id WHERE ");
+
+        if (null != idEleves) {
+            query.append("IdTableAvisConseil.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
+            for (int i = 0; i < idEleves.size(); i++) {
+                values.add(idEleves.getString(i));
+            }
+        }
+        if (null != idPeriode) {
+            query.append(" AND IdTableAvisConseil.id_periode = ? ");
+            values.add(idPeriode);
+        }
+
+        query.append("UNION " +
+                "SELECT syntheseBP.id_eleve, syntheseBP.id_typeperiode as id_periode, null as id_matiere, null as moyenne, " +
+                "null as avis_orientation, null as avis_conseil, syntheseBP.synthese as synthese, null as positionnement " +
+                ", null as id_classe FROM "+COMPETENCES_SCHEMA + ".synthese_bilan_periodique AS syntheseBP WHERE " );
+
+        if (null != idEleves) {
+            query.append("syntheseBP.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
+            for (int i = 0; i < idEleves.size(); i++) {
+                values.add(idEleves.getString(i));
+            }
+        }
+        if (null != idPeriode) {
+            query.append(" AND syntheseBP.id_periode = ? ");
+            values.add(idPeriode);
+        }
+
         Sql.getInstance().prepared(query.toString(), values,
                 new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
                 validResultHandler(handler));
@@ -1887,7 +2163,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public void getTotaleDatasReleve(final JsonObject params, final Handler<Either<String, JsonObject>> handler){
         final String idEtablissement = params.getString(Competences.ID_ETABLISSEMENT_KEY);
         final String idClasse = params.getString(Competences.ID_CLASSE_KEY);
-        final String idMatiere = params.getString("idMatiere");
+        final JsonArray idMatieres = params.getJsonArray("idMatieres");
         final Long idPeriode = params.getLong(Competences.ID_PERIODE_KEY);
         final Integer typeClasse = params.getInteger(Competences.TYPE_CLASSE_KEY);
         final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
@@ -1899,12 +2175,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         getStudentClassForExportReleve(idClasse, idPeriode, idEleves, typeClasse,
                 elevesMapObject, studentsClassFuture);
 
-        // Récupération du  nombre de devoirs avec évaluation numérique
-        Future<JsonObject> nbEvaluatedHomeWork = Future.future();
-        getNbEvaluatedHomeWork(idClasse, idMatiere, idPeriode, event -> {
-            FormateFutureEvent.formate(nbEvaluatedHomeWork, event);
-        });
-
         // Récupération du tableau de conversion
         Future<JsonArray> tableauDeConversionFuture = Future.future();
         // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
@@ -1914,104 +2184,62 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             FormateFutureEvent.formate(tableauDeConversionFuture, tableauEvent);
                         });
 
+        List<Future> listFuturesFirst = new ArrayList<>(
+                Arrays.asList(studentsClassFuture,tableauDeConversionFuture)
+        );
+
+        for (Object idMatiere : idMatieres){
+            // Récupération du  nombre de devoirs avec évaluation numérique
+            Future<JsonObject> nbEvaluatedHomeWork = Future.future();
+            getNbEvaluatedHomeWork(idClasse, idMatiere.toString(), idPeriode, event -> {
+                FormateFutureEvent.formate(nbEvaluatedHomeWork, event);
+            });
+            listFuturesFirst.add(nbEvaluatedHomeWork);
+        }
+
         // Avec les ids des élèves de la classe, récupération des moyennes Finales , des Notes, des Competences Notes
         // et des Appreciations et des Positionnements finaux
-        CompositeFuture.all(studentsClassFuture, tableauDeConversionFuture, nbEvaluatedHomeWork)
+        CompositeFuture.all(listFuturesFirst)
                 .setHandler( idElevesEvent -> {
                     if(idElevesEvent.succeeded()) {
-                        resultHandler.put(TABLE_CONVERSION_KEY, tableauDeConversionFuture.result());
 
                         // Récupération des moyennes Finales
-                        Future<JsonArray> moyennesFinalesFutures = Future.future();
-                        getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse), MOYENNE,
-                                moyennesFinalesEvent -> {
-                                    FormateFutureEvent.formate(moyennesFinalesFutures, moyennesFinalesEvent);
-                                });
+                        Future<JsonArray> bigRequestFuture = Future.future();
+                        getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse), (Either<String, JsonArray> Event) -> {
+                            FormateFutureEvent.formate(bigRequestFuture, Event);
+                        });
 
-                        // Récupération des Appreciations par élèves
-                        Future<JsonArray> appreciationsElevesFutures = Future.future();
-                        if (idPeriode != null) {
-                            getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse),
-                                    SYNTHESE_BILAN_PERIODIQUE,
-                                    appreciationEvent -> {
-                                        FormateFutureEvent.formate(appreciationsElevesFutures, appreciationEvent);
-                                    });
-                        }
-                        else {
-                            appreciationsElevesFutures.complete(new JsonArray());
-                        }
-
-                        // Récupération des avis du conseil de classe par élèves
-                        Future<JsonArray> avisConseilFutures = Future.future();
-                        if (idPeriode != null) {
-                            getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse),
-                                    AVIS_CONSEIL_DE_CLASSE,
-                                    avisConseilEvent -> {
-                                        FormateFutureEvent.formate(avisConseilFutures, avisConseilEvent);
-                                    });
-                        }
-                        else {
-                            appreciationsElevesFutures.complete(new JsonArray());
-                        }
-
-                        // Récupération des avis d'orientation du conseil de classe par élèves
-                        Future<JsonArray> avisOrientationFutures = Future.future();
-                        if (idPeriode != null) {
-                            getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse),
-                                    AVIS_CONSEIL_ORIENTATION,
-                                    avisOrientationEvent -> {
-                                        FormateFutureEvent.formate(avisOrientationFutures, avisOrientationEvent);
-                                    });
-                        }
-                        else {
-                            appreciationsElevesFutures.complete(new JsonArray());
-                        }
-
-                        // Récupération des positionnements finaux
-                        Future<JsonArray> positionnementsFinauxFutures = Future.future();
-                        if(idPeriode != null) {
-                            getColonneReleve(idEleves, idPeriode, idMatiere, new JsonArray().add(idClasse),
-                                    POSITIONNEMENT,
-                                    positionnementsFinauxEvent -> {
-                                        FormateFutureEvent.formate(positionnementsFinauxFutures,
-                                                positionnementsFinauxEvent);
-                                    });
-
-                        }
-                        else {
-                            positionnementsFinauxFutures.complete(new JsonArray());
-                        }
                         // Récupération des Notes du Relevé
                         Future<JsonArray> notesFuture = Future.future();
-                        Boolean hasEvaluatedHomeWork = (nbEvaluatedHomeWork.result().getLong("nb") > 0);
-                        getNotesReleveEleves(idEleves, idEtablissement, idClasse, idMatiere, idPeriode, typeClasse,
-                                false, null,
+                        getNotesReleveTotalesEleves(idEleves, idEtablissement, idClasse, idMatieres, idPeriode,
                                 (Either<String, JsonArray> notesEvent) -> {
                                     FormateFutureEvent.formate(notesFuture, notesEvent);
                                 });
 
                         // Récupération des Compétences-Notes du Relevé
                         Future<JsonArray> compNotesFuture = Future.future();
-                        getCompetencesNotesReleveEleves(idEleves, idEtablissement, idClasse,
-                                null, idMatiere, idPeriode,null,
-                                typeClasse,false, compNotesEvent -> {
+                            getCompetencesNotesReleveTotaleEleves(idEleves, idEtablissement, idClasse,
+                                    idMatieres, idPeriode, compNotesEvent -> {
                                     FormateFutureEvent.formate(compNotesFuture, compNotesEvent);
                                 });
 
                         List<Future> listFutures = new ArrayList<>(
-                                Arrays.asList(compNotesFuture,notesFuture, moyennesFinalesFutures, appreciationsElevesFutures,
-                                        avisConseilFutures,avisOrientationFutures,positionnementsFinauxFutures)
+                                Arrays.asList(bigRequestFuture, compNotesFuture,notesFuture)
                         );
                         CompositeFuture.all(listFutures).setHandler( event -> {
                             if(event.succeeded()) {
                                 // Rajout des moyennes finales
-                                FormateColonneFinaleReleve(moyennesFinalesFutures.result(), elevesMapObject,
-                                        MOYENNE, idPeriode, hasEvaluatedHomeWork);
 
-                                // Rajout des notes par devoir et Calcul des moyennes auto
-                                resultHandler.put(NOTES, notesFuture.result());
-                                calculMoyennesNotesFOrReleve(notesFuture.result(), resultHandler,idPeriode,
-                                        elevesMapObject, hasEvaluatedHomeWork, true);
+                                for (int i=2; i<idMatieres.size();i++){
+                                    // Récupération du  nombre de devoirs avec évaluation numérique
+                                    Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result()).getLong("nb") > 0);
+
+                                    //FormateColonneFinaleReleve(moyennesFinalesFutures.result(), elevesMapObject, MOYENNE, idPeriode, hasEvaluatedHomeWork);
+                                    // Rajout des notes par devoir et Calcul des moyennes auto
+                                    resultHandler.put(NOTES, notesFuture.result());
+                                    calculMoyennesNotesFOrReleve(notesFuture.result(), resultHandler,idPeriode,
+                                            elevesMapObject, hasEvaluatedHomeWork, true);
+                                }
 
                                 // positionne
                                 resultHandler.put(COMPETENCES_NOTES_KEY, compNotesFuture.result());
@@ -2022,7 +2250,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
 
                                     // Rajout des positionnements finaux
-                                    FormateColonneFinaleReleve(positionnementsFinauxFutures.result(), elevesMapObject,
+                                    /*FormateColonneFinaleReleve(bigRequestFuture.result(), elevesMapObject,
                                             POSITIONNEMENT, idPeriode, hasEvaluatedHomeWork);
 
                                     //Rajout des appreciations par élèves
@@ -2034,7 +2262,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                             AVIS_CONSEIL_DE_CLASSE, idPeriode, hasEvaluatedHomeWork);
                                     resultHandler.put(AVIS_CONSEIL_ORIENTATION, avisOrientationFutures.result());
                                     FormateColonneFinaleReleve(avisOrientationFutures.result(), elevesMapObject,
-                                            AVIS_CONSEIL_ORIENTATION, idPeriode, hasEvaluatedHomeWork);
+                                            AVIS_CONSEIL_ORIENTATION, idPeriode, hasEvaluatedHomeWork);*/
                                 }
                                 handler.handle(new Either.Right<>(resultHandler.put(ELEVES,
                                         new DefaultExportBulletinService(eb, null)
