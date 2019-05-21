@@ -49,20 +49,25 @@ export let exportControleur = ng.controller('ExportController',['$scope',
         };
 
         $scope.dropComboModel = async function (el: any, table: any){
-             _.without(table, el);
+            table = _.without(table, el);
             await utils.safeApply($scope);
         };
 
         $scope.toggleperiode = async function toggleperiode(periode_type) {
-            let idx = $scope.params.periodes_type.indexOf(periode_type);
-            if (idx > -1) {
-                $scope.params.periodes_type.splice(idx, 1);
-                await utils.safeApply($scope);
+            if(periode_type.selected){
+                let idx = $scope.params.periodes_type.indexOf(periode_type);
+                if (idx > -1) {
+                    $scope.params.periodes_type.splice(idx, 1);
+                    await utils.safeApply($scope);
+                }
+                else {
+                    $scope.params.periodes_type.push(periode_type);
+                    await utils.safeApply($scope);
+                }
+            }else{
+                $scope.params.periodes_type = _.without($scope.params.periodes_type, periode_type);
             }
-            else {
-                $scope.params.periodes_type.push(periode_type);
-                await utils.safeApply($scope);
-            }
+
         };
 
         // Créer une fonction dans le $scope qui lance la récupération des responsables
@@ -146,22 +151,39 @@ export let exportControleur = ng.controller('ExportController',['$scope',
         };
 
         $scope.updateFilters = async function(classes){
-            if(!_.isEmpty(classes)) {
-                _.map(classes, (classe) => {
+            if( !_.isEmpty(classes) ) {
+                _.map( classes, (classe) => {
                     classe.selected = true;
                 });
                 $scope.printClasses = {
                     all: classes
                 };
                 await utils.updateFilters($scope, false);
-                if (_.isEmpty($scope.filteredPeriodes)) {
+                if( !_.isEmpty( $scope.params.periodes_type) &&  !_.isEmpty( $scope.filteredPeriodes )){
+                    _.forEach( $scope.filteredPeriodes, (filteredPeriode) => {
+                        let periodeToSelected =_.findWhere($scope.params.periodes_type, {id_type: filteredPeriode.id_type});
+                        if(periodeToSelected !== undefined){
+                            if(periodeToSelected.selected !== undefined ){
+                                filteredPeriode.selected = periodeToSelected.selected;
+                            }
+                            periodeToSelected.periode.id_classe = filteredPeriode.periode.id_classe;
+                            periodeToSelected.classes = filteredPeriode.classes;
+                        }
+                    });
+                }
+
+                if ( _.isEmpty($scope.filteredPeriodes )) {
                     notify.info('evaluations.classes.are.not.initialized');
                 }
                 await utils.safeApply($scope);
+            }else{
+                if( !_.isEmpty($scope.params.periodes_type )){
+                    _.each($scope.params.periodes_type, ( periode_type ) => {
+                        periode_type.classes =[];
+                    });
+                }
             }
         };
-
-
 
 
         /*********************************************************************************************
