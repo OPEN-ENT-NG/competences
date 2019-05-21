@@ -789,8 +789,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT moy.id_eleve, moy.id_periode, null as avis_orientation, null as avis_conseil, null as synthese, " +
-                "-15 as positionnement, moy.id_matiere, moy.moyenne, moy.id_classe FROM "+COMPETENCES_SCHEMA + ".moyenne_finale AS moy WHERE " );
+        query.append("SELECT moy.id_eleve, moy.id_periode, null as avis_orientation, null as avis_conseil, null as synthese, null as positionnement, " +
+                "moy.id_matiere, moy.moyenne, moy.id_classe FROM "+COMPETENCES_SCHEMA + ".moyenne_finale AS moy WHERE " );
 
         if (null != idEleves) {
             query.append("moy.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
@@ -818,8 +818,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         query.append(" UNION " +
-                "SELECT pos.id_eleve, pos.id_periode, pos.id_matiere, null as moyenne, null as avis_orientation, null as avis_conseil, " +
-                "null as synthese, pos.positionnement, null as id_classe FROM "+COMPETENCES_SCHEMA + ".positionnement AS pos WHERE " );
+                "SELECT pos.id_eleve, pos.id_periode, null as avis_orientation, null as avis_conseil, " +
+                "null as synthese, pos.positionnement, pos.id_matiere, null as moyenne, null as id_classe " +
+                "FROM "+COMPETENCES_SCHEMA + ".positionnement AS pos WHERE " );
 
         if (null != idEleves) {
             query.append("pos.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
@@ -840,9 +841,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         query.append(" UNION " +
-                "SELECT IdTableAvisOrientation.id_eleve, IdTableAvisOrientation.id_periode, null as id_matiere, null as moyenne, " +
-                "libelleTableAvisOrientation.libelle as avis_orientation, null as avis_conseil, null as synthese, null as positionnement " +
-                ", null as id_classe FROM "+COMPETENCES_SCHEMA + ".avis_conseil_orientation AS IdTableAvisOrientation " +
+                "SELECT IdTableAvisOrientation.id_eleve, IdTableAvisOrientation.id_periode, libelleTableAvisOrientation.libelle as avis_orientation, " +
+                "null as avis_conseil, null as synthese, null as positionnement, null as id_matiere, null as moyenne, null as id_classe " +
+                "FROM "+COMPETENCES_SCHEMA + ".avis_conseil_orientation AS IdTableAvisOrientation " +
                 "JOIN "+COMPETENCES_SCHEMA +".avis_conseil_bilan_periodique AS libelleTableAvisOrientation ON " +
                 "IdTableAvisOrientation.id_avis_conseil_bilan = libelleTableAvisOrientation.id WHERE ");
 
@@ -858,9 +859,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         query.append(" UNION " +
-                "SELECT IdTableAvisConseil.id_eleve, IdTableAvisConseil.id_periode, null as id_matiere, null as moyenne, " +
-                "null as avis_orientation, libelleTableAvisConseil.libelle as avis_conseil, null as synthese, null as positionnement " +
-                ", null as id_classe FROM "+COMPETENCES_SCHEMA + ".avis_conseil_de_classe AS IdTableAvisConseil " +
+                "SELECT IdTableAvisConseil.id_eleve, IdTableAvisConseil.id_periode, null as avis_orientation," +
+                "libelleTableAvisConseil.libelle as avis_conseil, null as synthese, null as positionnement, null as id_matiere, " +
+                "null as moyenne, null as id_classe FROM "+COMPETENCES_SCHEMA + ".avis_conseil_de_classe AS IdTableAvisConseil " +
                 "JOIN "+COMPETENCES_SCHEMA +".avis_conseil_bilan_periodique AS libelleTableAvisConseil ON " +
                 "IdTableAvisConseil.id_avis_conseil_bilan = libelleTableAvisConseil.id WHERE ");
 
@@ -876,9 +877,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
 
         query.append("UNION " +
-                "SELECT syntheseBP.id_eleve, syntheseBP.id_typeperiode as id_periode, null as id_matiere, null as moyenne, " +
-                "null as avis_orientation, null as avis_conseil, syntheseBP.synthese as synthese, null as positionnement " +
-                ", null as id_classe FROM "+COMPETENCES_SCHEMA + ".synthese_bilan_periodique AS syntheseBP WHERE " );
+                "SELECT syntheseBP.id_eleve, syntheseBP.id_typeperiode as id_periode, null as avis_orientation, null as avis_conseil," +
+                "syntheseBP.synthese as synthese, null as positionnement, null as id_matiere, null as moyenne, null as id_classe " +
+                "FROM "+COMPETENCES_SCHEMA + ".synthese_bilan_periodique AS syntheseBP WHERE " );
 
         if (null != idEleves) {
             query.append("syntheseBP.id_eleve IN " + Sql.listPrepared(idEleves.getList().toArray()));
@@ -887,7 +888,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
         if (null != idPeriode) {
-            query.append(" AND syntheseBP.id_periode = ? ");
+            query.append(" AND syntheseBP.id_typeperiode = ? ");
             values.add(idPeriode);
         }
 
@@ -2230,23 +2231,168 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             if(event.succeeded()) {
                                 // Rajout des moyennes finales
 
-                                for (int i=2; i<idMatieres.size();i++){
+                                for (int i=2; i<idMatieres.size()+2;i++){
                                     // Récupération du  nombre de devoirs avec évaluation numérique
                                     Boolean hasEvaluatedHomeWork = (((JsonObject)listFuturesFirst.get(i).result()).getLong("nb") > 0);
 
                                     //FormateColonneFinaleReleve(moyennesFinalesFutures.result(), elevesMapObject, MOYENNE, idPeriode, hasEvaluatedHomeWork);
                                     // Rajout des notes par devoir et Calcul des moyennes auto
-                                    resultHandler.put(NOTES, notesFuture.result());
-                                    calculMoyennesNotesFOrReleve(notesFuture.result(), resultHandler,idPeriode,
-                                            elevesMapObject, hasEvaluatedHomeWork, true);
+                                    JsonArray notesMatiere = new JsonArray();
+
+                                    for(Object note : notesFuture.result()){
+                                        if(((JsonObject)note).getString("id_matiere").equals(idMatieres.getString(i-2))){
+                                            notesMatiere.add(note);
+                                        }
+                                    }
+
+                                    if(resultHandler.containsKey(NOTES)){
+                                        resultHandler.getJsonObject(NOTES).put(idMatieres.getString(i-2),notesMatiere);
+                                    }else{
+                                        JsonObject jsonNotesToAdd = new JsonObject();
+                                        jsonNotesToAdd.put(idMatieres.getString(i-2),notesMatiere);
+                                        resultHandler.put(NOTES, jsonNotesToAdd);
+                                    }
+
+                                    JsonObject resultNotes = new JsonObject();
+
+                                    if (!hasEvaluatedHomeWork) {
+                                        for (Map.Entry<String, JsonObject> student : elevesMapObject.entrySet()) {
+                                            if( student.getValue().containsKey(MOYENNE)){
+                                                if(student.getValue().getValue(MOYENNE).getClass() == Double.class){
+                                                    student.getValue().remove(MOYENNE);
+                                                    JsonObject jsonToAdd = new JsonObject();
+                                                    jsonToAdd.put(idMatieres.getString(i-2),NN);
+                                                    student.getValue().put(MOYENNE, jsonToAdd);
+                                                }else {
+                                                    student.getValue().getJsonObject(MOYENNE).put(idMatieres.getString(i - 2), NN);
+                                                }
+                                            }else{
+                                                JsonObject jsonToAdd = new JsonObject();
+                                                jsonToAdd.put(idMatieres.getString(i-2),NN);
+                                                student.getValue().put(MOYENNE, jsonToAdd);
+                                            }
+                                        }
+                                    }else{
+                                        calculMoyennesNotesFOrReleve(notesMatiere, resultNotes,idPeriode,
+                                                elevesMapObject, hasEvaluatedHomeWork, true);
+                                        if( resultHandler.containsKey(MOYENNE)){
+                                            resultHandler.getJsonObject(MOYENNE).put(idMatieres.getString(i-2),resultNotes);
+                                        }else{
+                                            JsonObject jsonToAdd = new JsonObject();
+                                            jsonToAdd.put(idMatieres.getString(i-2),resultNotes);
+                                            resultHandler.put(MOYENNE, jsonToAdd);
+                                        }
+                                    }
+
                                 }
 
-                                // positionne
-                                resultHandler.put(COMPETENCES_NOTES_KEY, compNotesFuture.result());
                                 if (idPeriode != null) {
-                                    // Cacul du positionnement auto
-                                    calculMoyennesCompetencesNotesFOrReleve(compNotesFuture.result(), resultHandler,
-                                            idPeriode, tableauDeConversionFuture.result(), elevesMapObject);
+                                    for (Object idMatiere : idMatieres){
+                                        JsonArray notesMatiere = new JsonArray();
+
+                                        for(Object note : compNotesFuture.result()){
+                                            if(((JsonObject)note).getString("id_matiere").equals(idMatiere.toString())){
+                                                notesMatiere.add(note);
+                                            }
+                                        }
+                                        if( resultHandler.containsKey(COMPETENCES_NOTES_KEY)){
+                                            resultHandler.getJsonObject(COMPETENCES_NOTES_KEY).put(idMatiere.toString(),notesMatiere);
+                                        }else{
+                                            JsonObject jsonToAdd = new JsonObject();
+                                            jsonToAdd.put(idMatiere.toString(),notesMatiere);
+                                            resultHandler.put(COMPETENCES_NOTES_KEY, jsonToAdd);
+                                        }
+
+                                        Map<String, JsonArray> notesByEleve = groupeNotesByStudent(notesMatiere);
+
+                                        for (Map.Entry<String, JsonArray> entry : notesByEleve.entrySet()) {
+                                            String idEleve = entry.getKey();
+                                            JsonArray compNotesEleve = entry.getValue();
+
+                                            if(elevesMapObject.containsKey(idEleve) && idEleve != null) {
+                                                JsonObject eleveObject = elevesMapObject.get(idEleve);
+                                                if( eleveObject.containsKey(COMPETENCES_NOTES_KEY)){
+                                                    if (eleveObject.getJsonObject(COMPETENCES_NOTES_KEY).getJsonObject(idMatiere.toString()) == null) {
+                                                        eleveObject.getJsonObject(COMPETENCES_NOTES_KEY).put(idMatiere.toString(), compNotesEleve);
+                                                    }
+                                                }else{
+                                                    JsonObject jsonToAdd = new JsonObject();
+                                                    jsonToAdd.put(idMatiere.toString(),compNotesEleve);
+                                                    eleveObject.put(COMPETENCES_NOTES_KEY, jsonToAdd);
+                                                }
+                                                JsonObject resultNotes = new JsonObject();
+                                                calculPositionnementAutoByEleveByMatiere(compNotesEleve, resultNotes);
+                                                if( eleveObject.containsKey(POSITIONNEMENT_AUTO)){
+                                                    eleveObject.getJsonObject(POSITIONNEMENT_AUTO).put(idMatiere.toString(),resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
+                                                }else{
+                                                    JsonObject jsonToAdd = new JsonObject();
+                                                    jsonToAdd.put(idMatiere.toString(),resultNotes.getJsonArray(POSITIONNEMENTS_AUTO));
+                                                    eleveObject.put(POSITIONNEMENT_AUTO, jsonToAdd);
+                                                }
+                                                JsonObject positionnement = utilsService.getObjectForPeriode(
+                                                        eleveObject.getJsonObject(POSITIONNEMENT_AUTO).getJsonArray(idMatiere.toString()), idPeriode, ID_PERIODE);
+                                                String positionnement_auto  = "";
+                                                if (positionnement != null) {
+                                                    Float moyennePositionnement =  positionnement.getFloat(MOYENNE);
+
+                                                    positionnement_auto = utilsService.convertPositionnement(moyennePositionnement,
+                                                            tableauDeConversionFuture.result(), null);
+                                                }
+                                                if( eleveObject.containsKey(POSITIONNEMENT)){
+                                                    eleveObject.getJsonObject(POSITIONNEMENT).put(idMatiere.toString(),positionnement_auto);
+                                                }else{
+                                                    JsonObject jsonToAdd = new JsonObject();
+                                                    jsonToAdd.put(idMatiere.toString(),positionnement_auto);
+                                                    eleveObject.put(POSITIONNEMENT, jsonToAdd);
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    JsonArray resultatBigRequest = bigRequestFuture.result();
+                                    JsonArray cleanBigRequestResult = new JsonArray();
+                                    List<String> elevesInsert = new ArrayList<>();
+                                    List<String> keys = new ArrayList<String>(
+                                            Arrays.asList("avis_orientation","avis_conseil","synthese","id_classe"));
+                                    for (Object result : resultatBigRequest){
+                                        JsonObject jsonResult = (JsonObject)result;
+                                        if(elevesInsert.contains(jsonResult.getString("id_eleve"))){
+                                            JsonObject correctJson = cleanBigRequestResult.getJsonObject(elevesInsert.indexOf(jsonResult.getString("id_eleve")));
+                                            for(String key : keys){
+                                                if(jsonResult.getValue(key) != null)
+                                                    correctJson.put(key,jsonResult.getValue(key));
+                                            }
+                                            if(jsonResult.getValue("positionnement") != null){
+                                                if(correctJson.containsKey("id_matiere") && correctJson.getValue("positionnement") != null) {
+                                                    JsonObject matPos = new JsonObject();
+                                                    matPos.put(jsonResult.getString("id_matiere"),jsonResult.getValue("positionnement"));
+                                                    matPos.put(correctJson.getString("id_matiere"),correctJson.getValue("positionnement"));
+                                                    correctJson.put("positionnement",matPos);
+                                                    correctJson.remove("id_matiere");
+                                                }else{
+                                                    JsonObject matPos = new JsonObject();
+                                                    matPos.put(jsonResult.getString("id_matiere"),jsonResult.getValue("positionnement"));
+                                                    correctJson.put("positionnement",matPos);
+                                                }
+                                            }
+                                            if(jsonResult.getValue("moyenne") != null){
+                                                if(correctJson.containsKey("id_matiere") && correctJson.getValue("moyenne") != null) {
+                                                    JsonObject matPos = new JsonObject();
+                                                    matPos.put(jsonResult.getString("id_matiere"),jsonResult.getValue("moyenne"));
+                                                    matPos.put(correctJson.getString("id_matiere"),correctJson.getValue("moyenne"));
+                                                    correctJson.put("moyenne",matPos);
+                                                    correctJson.remove("id_matiere");
+                                                }else{
+                                                    JsonObject matPos = new JsonObject();
+                                                    matPos.put(jsonResult.getString("id_matiere"),jsonResult.getValue("moyenne"));
+                                                    correctJson.put("moyenne",matPos);
+                                                }
+                                            }
+                                        }else{
+                                            elevesInsert.add(jsonResult.getString("id_eleve"));
+                                            cleanBigRequestResult.add(jsonResult);
+                                        }
+                                    }
 
 
                                     // Rajout des positionnements finaux
