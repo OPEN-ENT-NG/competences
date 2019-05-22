@@ -471,8 +471,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.suiviClasse = {
                             textMod: true,
                             exportByEnseignement: 'false',
-                            withMoyGeneraleByEleve: false,
-                            withMoyMinMaxByMat: false
+                            withMoyGeneraleByEleve: true,
+                            withMoyMinMaxByMat: true,
+                            withAppreciations: true,
+                            withAvisConseil: true,
+                            withAvisOrientation: true,
                         };
                         if (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
                             $scope.disabledExportSuiviClasse = true;
@@ -3625,18 +3628,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($scope.releveNoteTotale !== undefined) {
                 delete $scope.releveNoteTotale;
             }
-            let p = {
-                idEtablissement: evaluations.structure.id,
-                idClasse: $scope.search.classe.id,
-                idPeriode: null,
-                periodeName: null
-            };
-            if ($scope.search.periode) {
-                p.idPeriode = $scope.search.periode.id_type;
-                p.periodeName = $scope.getI18nPeriode($scope.search.periode);
-            }
-            let releve = new ReleveNoteTotale(p);
-            $scope.releveNoteTotale = releve;
+
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
             $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
@@ -4259,6 +4251,34 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             };
 
             try{
+                let p = {
+                    idEtablissement: evaluations.structure.id,
+                    idClasse: $scope.search.classe.id,
+                    idPeriode: null,
+                    periodeName: null,
+                    exportOptions: {
+                        appreciation:true,
+                        averageFinal: true,
+                        statistiques: true,
+                        positionnementFinal: true,
+                        avisConseil: true,
+                        avisOrientation: true
+                    }
+                };
+                if ($scope.search.periode) {
+                    p.idPeriode = $scope.search.periode.id_type;
+                    p.periodeName = $scope.getI18nPeriode($scope.search.periode);
+                }
+                if ($scope.suiviClasse) {
+                    p.exportOptions.appreciation = $scope.suiviClasse.withAppreciations;
+                    p.exportOptions.averageFinal = $scope.suiviClasse.withMoyGeneraleByEleve;
+                    p.exportOptions.statistiques = $scope.suiviClasse.withMoyMinMaxByMat;
+                    p.exportOptions.positionnementFinal = true;
+                    p.exportOptions.avisConseil = $scope.suiviClasse.withAvisConseil;
+                    p.exportOptions.avisOrientation = $scope.suiviClasse.withAvisOrientation;
+                }
+                let releve = new ReleveNoteTotale(p);
+                $scope.releveNoteTotale = releve;
                 await $scope.releveNoteTotale.export();
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');

@@ -108,20 +108,41 @@
             </div>
         </div>
     </div>
-    <div ng-if="printSuiviClasse === 'printTabMoys'" class="cell">
+    <div ng-if="printSuiviClasse === 'printTabMoys' || printSuiviClasse === 'printTabMoyPosAppr'" class="cell">
         <h2><i18n>viescolaire.utils.options</i18n></h2>
-        <div class="vertical-spacing">
+        <div class="horizontal-spacing">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withMoyGeneraleByEleve">
                 <span><i18n>evaluations.moy.generale.by.eleve</i18n></span>
             </label>
         </div>
-        <div class="vertical-spacing">
+        <div class="horizontal-spacing">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withMoyMinMaxByMat">
                 <span><i18n>evaluations.moy.min.max.by.matiere</i18n></span>
+            </label>
+        </div>
+        <div class="horizontal-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-model="suiviClasse.withAppreciations">
+                <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
+            </label>
+        </div>
+        <div class="horizontal-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">>
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-model="suiviClasse.withAvisConseil">
+                <span><i18n>evaluations.evaluation.avis.conseil</i18n></span>
+            </label>
+        </div>
+        <div class="horizontal-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">>
+            <label class="checkbox">
+                <input type="checkbox"
+                       ng-model="suiviClasse.withAvisOrientation">
+                <span><i18n>evaluations.evaluation.avis.orientation</i18n></span>
             </label>
         </div>
     </div>

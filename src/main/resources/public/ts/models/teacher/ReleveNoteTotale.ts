@@ -63,15 +63,12 @@ export class ReleveNoteTotale extends  Model implements IModel {
         this.matiereWithDevoirs = [];
         this.matieresId = [];
         this.exportOptions = {
-            show : false,
-            fileType: 'csv',
-
             appreciation: true,
             averageFinal: true,
-            averageAuto: true,
+            statistiques: true,
             positionnementFinal: true,
-            appreciationClasse: true,
-            moyenneClasse: true
+            avisConseil: true,
+            avisOrientation: true
         };
         this.collection(Devoir, {
             sync: () => {
@@ -114,7 +111,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         let moyennePos = 0;
                         let min;
                         let max;
-                        if (response.eleves[0].moyenneFinale != undefined) {
+                        if (response.eleves[0].moyenneFinale[matiere.id] != undefined) {
                             min = response.eleves[0].moyenneFinale[matiere.id];
                             max = response.eleves[0].moyenneFinale[matiere.id];
                         } else {
@@ -205,8 +202,8 @@ export class ReleveNoteTotale extends  Model implements IModel {
                                 if (this.exportOptions.appreciationClasse) {
                                     let jsonMoyenneToAdd = {};
                                     jsonMoyenneToAdd["displayName"] = lang.translate('viescolaire.classe.moyenne');
-                                    if(response.moyenne[matiere.id] != undefined)
-                                        jsonMoyenneToAdd[matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id]);
+                                    if(response.moyenne[matiere.id].moyenne_classe != undefined)
+                                        jsonMoyenneToAdd[matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id].moyenne_classe);
                                     else
                                         jsonMoyenneToAdd[matiere.name + 'Moyenne'] = "NN";
                                     if(moyennePos != 0)
@@ -280,7 +277,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             if (this.exportOptions.appreciationClasse || this.exportOptions.moyenneClasse) {
                                 if (this.exportOptions.appreciationClasse) {
                                     if (response.moyenne[matiere.id] != undefined)
-                                        columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id]);
+                                        columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id].moyenne_classe);
                                     else
                                         columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = "NN";
                                     if (moyennePos != 0)

@@ -2309,9 +2309,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     FormateColonneFinaleReleveTotale(bigRequestFuture.result(), elevesMapObject,
                                             AVIS_CONSEIL_ORIENTATION, idPeriode, false, "");
                                 }
-                                handler.handle(new Either.Right<>(resultHandler.put(ELEVES,
-                                        new DefaultExportBulletinService(eb, null)
-                                                .sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
+                                handler.handle(new Either.Right<>(resultHandler.put(ELEVES, new DefaultExportBulletinService(eb, null)
+                                        .sortResultByClasseNameAndNameForBulletin(elevesMapObject))));
                             }
                             else {
                                 handler.handle(new Either.Left<>(event.cause().getMessage()));
@@ -2604,19 +2603,19 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         JsonObject moyMat = new JsonObject();
                         moyMat.put(idMatiere,moy);
                         el.put(MOYENNEFINALE, moyMat);
-                        sumMoyClasse += moy;
-                    }else{
-                        if(el.getJsonObject(MOYENNEFINALE).containsKey(idMatiere)) {
-                            try {
-                                sumMoyClasse += Double.valueOf(el.getJsonObject(MOYENNEFINALE).getString(idMatiere));
-                            } catch (ClassCastException c) {
-                                sumMoyClasse += el.getJsonObject(MOYENNEFINALE).getDouble(idMatiere);
-                            }
-                        }else{
-                            el.getJsonObject(MOYENNEFINALE).put(idMatiere,moy);
-                        }
+                    }else if(!el.getJsonObject(MOYENNEFINALE).containsKey(idMatiere)){
+                        el.getJsonObject(MOYENNEFINALE).put(idMatiere,moy);
                     }
 
+                    if(el.getJsonObject(MOYENNEFINALE).containsKey(idMatiere)) {
+                        try {
+                            sumMoyClasse += Double.valueOf(el.getJsonObject(MOYENNEFINALE).getString(idMatiere));
+                        } catch (ClassCastException c) {
+                            sumMoyClasse += el.getJsonObject(MOYENNEFINALE).getDouble(idMatiere);
+                        }
+                    }else{
+                        sumMoyClasse += moy;
+                    }
                     ++nbMoyenneClasse;
                 }
 
