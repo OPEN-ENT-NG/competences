@@ -754,7 +754,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             values.add(idMatiere);
         }
         if (idEleve != null) {
-            query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur ")
+            query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, users.username ")
                     .append(" ORDER BY devoirs.date ASC, devoirs.id ASC ");
             values.add(idEleve);
         }
