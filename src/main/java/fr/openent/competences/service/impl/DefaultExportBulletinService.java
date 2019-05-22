@@ -597,7 +597,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         if(avisOrientation != null && !avisOrientation.isEmpty() ) {
                             eleveObject.put("avisOrientation",avisOrientation.getString(LIBELLE))
                                     .put("hasAvisOrientation",true);
-                            if(idPeriode == 5)
+                            if(idPeriode == 5 || idPeriode == 2)
                                 eleveObject.put("beforeAvisOrientation",I18n.getInstance()
                                         .translate("orientation.avis.LastTrimester",
                                                 I18n.DEFAULT_DOMAIN, Locale.FRANCE));
