@@ -109,192 +109,194 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     let data = await httpAxios.post(this.api.EXPORT, parameter);
                     console.dir(data);
                     let response = data.data;
-                    nbEleves = 0;
-                    let moyennePos = 0;
-                    let min;
-                    let max;
-                    if (response.eleves[0].moyenneFinale != undefined) {
-                        min = response.eleves[0].moyenneFinale;
-                        max = response.eleves[0].moyenneFinale;
-                    } else {
-                        min = "";
-                        max = "";
-                    }
-                    let minPos;
-                    let maxPos;
-                    if (response.eleves[0].positionnement != undefined) {
-                        minPos = Number(response.eleves[0].positionnement);
-                        maxPos = Number(response.eleves[0].positionnement);
-                    } else {
-                        minPos = "";
-                        maxPos = "";
-                    }
-                    /*if (!addingAllStudents) {
-                        _.forEach(response.eleves, (line) => {
-                            nbEleves++;
-                            line['eleveNonNote']= false;
-                            if (this.exportOptions.averageFinal) {
-                                if(line.moyenneFinale != undefined) {
-                                    line[matiereToAdd.name + 'Moyenne'] = line.moyenneFinale;
-                                    if (line.moyenneFinale != "NN") {
-                                        line['moyenne_generale'] =  Number(line.moyenneFinale);
-                                        line['nbMatieres'] = 1;
-                                        if (max != "NN" && min != "NN" && max != "" && min != "") {
-                                            if (max < line.moyenneFinale)
-                                                max =  Number(line.moyenneFinale);
-                                            if (min > line.moyenneFinale)
-                                                min =  Number(line.moyenneFinale);
+                    _.forEach(this.matiereWithDevoirs, (matiere)=> {
+                        nbEleves = 0;
+                        let moyennePos = 0;
+                        let min;
+                        let max;
+                        if (response.eleves[0].moyenneFinale != undefined) {
+                            min = response.eleves[0].moyenneFinale[matiere.id];
+                            max = response.eleves[0].moyenneFinale[matiere.id];
+                        } else {
+                            min = "";
+                            max = "";
+                        }
+                        let minPos;
+                        let maxPos;
+                        if (response.eleves[0].positionnement[matiere.id] != undefined) {
+                            minPos = Number(response.eleves[0].positionnement[matiere.id]);
+                            maxPos = Number(response.eleves[0].positionnement[matiere.id]);
+                        } else {
+                            minPos = "";
+                            maxPos = "";
+                        }
+                        if (!addingAllStudents) {
+                            _.forEach(response.eleves, (line) => {
+                                nbEleves++;
+                                line['eleveNonNote']= false;
+                                if (this.exportOptions.averageFinal) {
+                                    if(line.moyenneFinale[matiere.id] != undefined) {
+                                        line[matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];
+                                        if (line.moyenneFinale[matiere.id] != "NN") {
+                                            line['moyenne_generale'] =  Number(line.moyenneFinale[matiere.id]);
+                                            line['nbMatieres'] = 1;
+                                            if (max != "NN" && min != "NN" && max != "" && min != "") {
+                                                if (max < line.moyenneFinale[matiere.id])
+                                                    max =  Number(line.moyenneFinale[matiere.id]);
+                                                if (min > line.moyenneFinale[matiere.id])
+                                                    min =  Number(line.moyenneFinale[matiere.id]);
+                                            } else {
+                                                max = line.moyenneFinale[matiere.id];
+                                                min = line.moyenneFinale[matiere.id];
+                                            }
                                         } else {
-                                            max = line.moyenneFinale;
-                                            min = line.moyenneFinale;
+                                            line['moyenne_generale'] = 0;
+                                            line['nbMatieres'] = 0;
+                                            line['eleveNonNote'] = true;
+                                            if (max == "" && min == "") {
+                                                max = line.moyenneFinale[matiere.id];
+                                                min = line.moyenneFinale[matiere.id];
+                                            }
                                         }
-                                    } else {
+                                    }else{
+                                        line[matiere.name + 'Moyenne'] = "";
                                         line['moyenne_generale'] = 0;
                                         line['nbMatieres'] = 0;
                                         line['eleveNonNote'] = true;
-                                        if (max == "" && min == "") {
-                                            max = line.moyenneFinale;
-                                            min = line.moyenneFinale;
+                                    }
+                                    if(line.positionnement[matiere.id] != undefined) {
+                                        line[matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id]);
+                                        moyennePos += Number(line.positionnement[matiere.id]);
+                                        if(maxPos != "" && maxPos != "") {
+                                            if (maxPos < line.positionnement[matiere.id])
+                                                maxPos = Number(line.positionnement[matiere.id]);
+                                            if (minPos > line.positionnement[matiere.id])
+                                                minPos = Number(line.positionnement[matiere.id]);
+                                        }else{
+                                            maxPos = Number(line.positionnement[matiere.id]);
+                                            minPos = Number(line.positionnement[matiere.id]);
                                         }
                                     }
-                                }else{
-                                    line[matiereToAdd.name + 'Moyenne'] = "";
-                                    line['moyenne_generale'] = 0;
-                                    line['nbMatieres'] = 0;
-                                    line['eleveNonNote'] = true;
-                                }
-                                if(line.positionnement != undefined) {
-                                    line[matiereToAdd.name + 'Positionnement'] = Number(line.positionnement);
-                                    moyennePos += Number(line.positionnement);
-                                    if(maxPos != "" && maxPos != "") {
-                                        if (maxPos < line.positionnement)
-                                            maxPos = Number(line.positionnement);
-                                        if (minPos > line.positionnement)
-                                            minPos = Number(line.positionnement);
-                                    }else{
-                                        maxPos = Number(line.positionnement);
-                                        minPos = Number(line.positionnement);
+                                    else {
+                                        line[matiere.name + 'Positionnement'] = "";
+                                        nbEleves--;
                                     }
-                                }
-                                else {
-                                    line[matiereToAdd.name + 'Positionnement'] = "";
-                                    nbEleves--;
-                                }
-                                if (response.appreciations_eleve.filter(eleve => eleve.id_eleve == line.id)[0] != undefined) {
-                                    line['appreciation_conseil_de_classe'] = response.appreciations_eleve.filter(eleve => eleve.id_eleve == line.id)[0].synthese;
-                                    while (!_.isEmpty(line['appreciation_conseil_de_classe'].match('\n'))) {
-                                        line['appreciation_conseil_de_classe'] = line['appreciation_conseil_de_classe'].replace('\n',' ');
+                                    if (line.synthese_bilan_periodique != undefined) {
+                                        line['appreciation_conseil_de_classe'] = line.synthese_bilan_periodique;
+                                        while (!_.isEmpty(line['appreciation_conseil_de_classe'].match('\n'))) {
+                                            line['appreciation_conseil_de_classe'] = line['appreciation_conseil_de_classe'].replace('\n',' ');
+                                        }
                                     }
+                                    else
+                                        line['appreciation_conseil_de_classe'] = "";
+                                    if (line.avis_conseil_de_classe != undefined)
+                                        line['avis_conseil_de_classe'] = line.avis_conseil_de_classe;
+                                    else
+                                        line['avis_conseil_de_classe'] = "";
+                                    if (line.avis_conseil_orientation != undefined)
+                                        line['avis_orientation'] = line.avis_conseil_orientation;
+                                    else
+                                        line['avis_orientation'] = "";
                                 }
-                                else
-                                    line['appreciation_conseil_de_classe'] = "";
-                                if (response.avis_conseil_de_classe.filter(eleve => eleve.id_eleve == line.id)[0] != undefined)
-                                    line['avis_conseil_de_classe'] = response.avis_conseil_de_classe.filter(eleve => eleve.id_eleve == line.id)[0].libelle;
-                                else
-                                    line['avis_conseil_de_classe'] = "";
-                                if (response.avis_conseil_orientation.filter(eleve => eleve.id_eleve == line.id)[0] != undefined)
-                                    line['avis_orientation'] = response.avis_conseil_orientation.filter(eleve => eleve.id_eleve == line.id)[0].libelle;
-                                else
-                                    line['avis_orientation'] = "";
-                            }
-                            elevesNbMatieresEvaluate.push(line);
-                            columnCsv.push(_.pick(line, format['column']));
-                        });
-                        if (this.exportOptions.appreciationClasse || this.exportOptions.moyenneClasse) {
-                            if (this.exportOptions.appreciationClasse) {
-                                let jsonMoyenneToAdd = {};
-                                jsonMoyenneToAdd["displayName"] = lang.translate('viescolaire.classe.moyenne');
-                                if(response.moyenne_classe != undefined)
-                                    jsonMoyenneToAdd[matiereToAdd.name + 'Moyenne'] = Number(response.moyenne_classe);
-                                else
-                                    jsonMoyenneToAdd[matiereToAdd.name + 'Moyenne'] = "NN";
-                                if(moyennePos != 0)
-                                    jsonMoyenneToAdd[matiereToAdd.name + 'Positionnement'] = Number((moyennePos / nbEleves).toFixed(2));
-                                else
-                                    jsonMoyenneToAdd[matiereToAdd.name + 'Positionnement'] = "";
+                                elevesNbMatieresEvaluate.push(line);
+                                columnCsv.push(_.pick(line, format['column']));
+                            });
+                            if (this.exportOptions.appreciationClasse || this.exportOptions.moyenneClasse) {
+                                if (this.exportOptions.appreciationClasse) {
+                                    let jsonMoyenneToAdd = {};
+                                    jsonMoyenneToAdd["displayName"] = lang.translate('viescolaire.classe.moyenne');
+                                    if(response.moyenne[matiere.id] != undefined)
+                                        jsonMoyenneToAdd[matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id]);
+                                    else
+                                        jsonMoyenneToAdd[matiere.name + 'Moyenne'] = "NN";
+                                    if(moyennePos != 0)
+                                        jsonMoyenneToAdd[matiere.name + 'Positionnement'] = Number((moyennePos / nbEleves).toFixed(2));
+                                    else
+                                        jsonMoyenneToAdd[matiere.name + 'Positionnement'] = "";
 
-                                columnCsv.push(jsonMoyenneToAdd);
+                                    columnCsv.push(jsonMoyenneToAdd);
+                                }
+                                if (this.exportOptions.moyenneClasse) {
+                                    let jsonMinToAdd = {};
+                                    jsonMinToAdd["displayName"] = "Minimum";
+                                    jsonMinToAdd[matiere.name + 'Moyenne'] = min;
+                                    jsonMinToAdd[matiere.name + 'Positionnement'] = minPos;
+                                    columnCsv.push(jsonMinToAdd);
+                                    let jsonMaxToAdd = {};
+                                    jsonMaxToAdd["displayName"] = "Maximum";
+                                    jsonMaxToAdd[matiere.name + 'Moyenne'] = max;
+                                    jsonMaxToAdd[matiere.name + 'Positionnement'] = maxPos;
+                                    columnCsv.push(jsonMaxToAdd);
+                                }
                             }
-                            if (this.exportOptions.moyenneClasse) {
-                                let jsonMinToAdd = {};
-                                jsonMinToAdd["displayName"] = "Minimum";
-                                jsonMinToAdd[matiereToAdd.name + 'Moyenne'] = min;
-                                jsonMinToAdd[matiereToAdd.name + 'Positionnement'] = minPos;
-                                columnCsv.push(jsonMinToAdd);
-                                let jsonMaxToAdd = {};
-                                jsonMaxToAdd["displayName"] = "Maximum";
-                                jsonMaxToAdd[matiereToAdd.name + 'Moyenne'] = max;
-                                jsonMaxToAdd[matiereToAdd.name + 'Positionnement'] = maxPos;
-                                columnCsv.push(jsonMaxToAdd);
-                            }
-                        }
-                        addingAllStudents = true;
-                    } else {
-                        _.forEach(response.eleves, (line) => {
-                            nbEleves++;
-                            if (this.exportOptions.averageFinal) {
-                                if (line.moyenneFinale != undefined) {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiereToAdd.name + 'Moyenne'] = line.moyenneFinale;
-                                    if (line.moyenneFinale != "NN") {
-                                        columnCsv.filter(eleve => eleve.displayName == line.displayName)[0]['moyenne_generale'] += Number(line.moyenneFinale);
-                                        elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['nbMatieres']++;
-                                        if (max != "NN" && min != "NN" && max != "" && min != "") {
-                                            if (max < line.moyenneFinale)
-                                                max = Number(line.moyenneFinale);
-                                            if (min > line.moyenneFinale)
-                                                min = Number(line.moyenneFinale);
+                            addingAllStudents = true;
+                        } else {
+                            _.forEach(response.eleves, (line) => {
+                                nbEleves++;
+                                if (this.exportOptions.averageFinal) {
+                                    if (line.moyenneFinale[matiere.id] != undefined) {
+                                        columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];
+                                        if (line.moyenneFinale[matiere.id] != "NN") {
+                                            columnCsv.filter(eleve => eleve.displayName == line.displayName)[0]['moyenne_generale'] += Number(line.moyenneFinale[matiere.id]);
+                                            elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['nbMatieres']++;
+                                            if (max != "NN" && min != "NN" && max != "" && min != "") {
+                                                if (max < line.moyenneFinale[matiere.id])
+                                                    max = Number(line.moyenneFinale[matiere.id]);
+                                                if (min > line.moyenneFinale[matiere.id])
+                                                    min = Number(line.moyenneFinale[matiere.id]);
+                                            } else {
+                                                max = Number(line.moyenneFinale[matiere.id]);
+                                                min = Number(line.moyenneFinale[matiere.id]);
+                                            }
                                         } else {
-                                            max = Number(line.moyenneFinale);
-                                            min = Number(line.moyenneFinale);
+                                            elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote'] = true;
+                                            if (max == "" && min == "") {
+                                                max = line.moyenneFinale[matiere.id];
+                                                min = line.moyenneFinale[matiere.id];
+                                            }
                                         }
                                     } else {
+                                        columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Moyenne'] = "";
                                         elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote'] = true;
-                                        if (max == "" && min == "") {
-                                            max = line.moyenneFinale;
-                                            min = line.moyenneFinale;
+                                    }
+                                    if (line.positionnement[matiere.id] != undefined) {
+                                        columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id]);
+                                        moyennePos += Number(line.positionnement[matiere.id]);
+                                        if (maxPos != "" && maxPos != "") {
+                                            if (maxPos < line.positionnement[matiere.id])
+                                                maxPos = Number(line.positionnement[matiere.id]);
+                                            if (minPos > line.positionnement[matiere.id])
+                                                minPos = Number(line.positionnement[matiere.id]);
+                                        } else {
+                                            maxPos = Number(line.positionnement[matiere.id]);
+                                            minPos = Number(line.positionnement[matiere.id]);
                                         }
-                                    }
-                                } else {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiereToAdd.name + 'Moyenne'] = "";
-                                    elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote'] = true;
-                                }
-                                if (line.positionnement != undefined) {
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiereToAdd.name + 'Positionnement'] = Number(line.positionnement);
-                                    moyennePos += Number(line.positionnement);
-                                    if (maxPos != "" && maxPos != "") {
-                                        if (maxPos < line.positionnement)
-                                            maxPos = Number(line.positionnement);
-                                        if (minPos > line.positionnement)
-                                            minPos = Number(line.positionnement);
                                     } else {
-                                        maxPos = Number(line.positionnement);
-                                        minPos = Number(line.positionnement);
+                                        nbEleves--;
+                                        columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = "";
                                     }
-                                } else {
-                                    nbEleves--;
-                                    columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiereToAdd.name + 'Positionnement'] = "";
                                 }
-                            }
-                        });
-                        if (this.exportOptions.appreciationClasse || this.exportOptions.moyenneClasse) {
-                            if (this.exportOptions.appreciationClasse) {
-                                if (response.moyenne_classe != undefined)
-                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiereToAdd.name + 'Moyenne'] = Number(response.moyenne_classe);
-                                else
-                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiereToAdd.name + 'Moyenne'] = "NN";
-                                if (moyennePos != 0)
-                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiereToAdd.name + 'Positionnement'] = Number((moyennePos / nbEleves).toFixed(2));
-                                else
-                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiereToAdd.name + 'Positionnement'] = "";
-                            }
-                            if (this.exportOptions.moyenneClasse) {
-                                columnCsv.filter(line => line.displayName == "Minimum")[0][matiereToAdd.name + 'Moyenne'] = min;
-                                columnCsv.filter(line => line.displayName == "Maximum")[0][matiereToAdd.name + 'Moyenne'] = max;
-                                columnCsv.filter(line => line.displayName == "Minimum")[0][matiereToAdd.name + 'Positionnement'] = minPos;
-                                columnCsv.filter(line => line.displayName == "Maximum")[0][matiereToAdd.name + 'Positionnement'] = maxPos;
+                            });
+                            if (this.exportOptions.appreciationClasse || this.exportOptions.moyenneClasse) {
+                                if (this.exportOptions.appreciationClasse) {
+                                    if (response.moyenne[matiere.id] != undefined)
+                                        columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id]);
+                                    else
+                                        columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = "NN";
+                                    if (moyennePos != 0)
+                                        columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Positionnement'] = Number((moyennePos / nbEleves).toFixed(2));
+                                    else
+                                        columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Positionnement'] = "";
+                                }
+                                if (this.exportOptions.moyenneClasse) {
+                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Moyenne'] = min;
+                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Moyenne'] = max;
+                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Positionnement'] = minPos;
+                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Positionnement'] = maxPos;
+                                }
                             }
                         }
-                    }*/
+                    });
 
                     if (columnCsv.length > 0) {
 
