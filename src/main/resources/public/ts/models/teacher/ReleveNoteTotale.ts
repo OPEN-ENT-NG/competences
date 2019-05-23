@@ -62,14 +62,6 @@ export class ReleveNoteTotale extends  Model implements IModel {
         this.dataByMatiere = [];
         this.matiereWithDevoirs = [];
         this.matieresId = [];
-        this.exportOptions = {
-            appreciation: true,
-            averageFinal: true,
-            statistiques: true,
-            positionnementFinal: true,
-            avisConseil: true,
-            avisOrientation: true
-        };
         this.collection(Devoir, {
             sync: () => {
             }
@@ -93,13 +85,9 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     let format = result;
                     let blob;
                     let addingAllStudents = false;
-                    let nbMatieres = 0;
                     let nbEleves = 0;
                     let elevesNbMatieresEvaluate = [];
-                    let allPromise = [];
-                    let matieresId = [];
                     let parameter = this.toJson();
-                    _.extend(parameter, this.exportOptions);
                     _.extend(parameter, {
                         typeClasse: this.classe.type_groupe
                     });
@@ -111,7 +99,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         let moyennePos = 0;
                         let min;
                         let max;
-                        if (response.eleves[0].moyenneFinale[matiere.id] != undefined) {
+                        if (response.eleves[0].moyenneFinale[matiere.id] != undefined && this.exportOptions.moyenneMat) {
                             min = response.eleves[0].moyenneFinale[matiere.id];
                             max = response.eleves[0].moyenneFinale[matiere.id];
                         } else {
@@ -120,7 +108,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         }
                         let minPos;
                         let maxPos;
-                        if (response.eleves[0].positionnement[matiere.id] != undefined) {
+                        if (response.eleves[0].positionnement[matiere.id] != undefined && this.exportOptions.positionnementFinal) {
                             minPos = Number(response.eleves[0].positionnement[matiere.id]);
                             maxPos = Number(response.eleves[0].positionnement[matiere.id]);
                         } else {
@@ -131,65 +119,74 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             _.forEach(response.eleves, (line) => {
                                 nbEleves++;
                                 line['eleveNonNote']= false;
-                                if (this.exportOptions.averageFinal) {
-                                    if(line.moyenneFinale[matiere.id] != undefined) {
+                                if (this.exportOptions.moyenneMat) {
+                                    if (line.moyenneFinale[matiere.id] != undefined) {
                                         line[matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];
-                                        if (line.moyenneFinale[matiere.id] != "NN") {
-                                            line['moyenne_generale'] =  Number(line.moyenneFinale[matiere.id]);
-                                            line['nbMatieres'] = 1;
-                                            if (max != "NN" && min != "NN" && max != "" && min != "") {
-                                                if (max < line.moyenneFinale[matiere.id])
-                                                    max =  Number(line.moyenneFinale[matiere.id]);
-                                                if (min > line.moyenneFinale[matiere.id])
-                                                    min =  Number(line.moyenneFinale[matiere.id]);
-                                            } else {
-                                                max = line.moyenneFinale[matiere.id];
-                                                min = line.moyenneFinale[matiere.id];
-                                            }
-                                        } else {
-                                            line['moyenne_generale'] = 0;
-                                            line['nbMatieres'] = 0;
-                                            line['eleveNonNote'] = true;
-                                            if (max == "" && min == "") {
-                                                max = line.moyenneFinale[matiere.id];
-                                                min = line.moyenneFinale[matiere.id];
-                                            }
+                                        if (line.moyenneFinale[matiere.id] != "NN" && this.exportOptions.statistiques) {
+                                                if (max != "NN" && min != "NN" && max != "" && min != "") {
+                                                    if (max < line.moyenneFinale[matiere.id])
+                                                        max = Number(line.moyenneFinale[matiere.id]);
+                                                    if (min > line.moyenneFinale[matiere.id])
+                                                        min = Number(line.moyenneFinale[matiere.id]);
+                                                } else {
+                                                    max = line.moyenneFinale[matiere.id];
+                                                    min = line.moyenneFinale[matiere.id];
+                                                }
+                                        } else if (this.exportOptions.statistiques && max == "" && min == "") {
+                                            max = line.moyenneFinale[matiere.id];
+                                            min = line.moyenneFinale[matiere.id];
                                         }
-                                    }else{
+                                    } else {
                                         line[matiere.name + 'Moyenne'] = "";
+                                        line['eleveNonNote'] = true;
+                                    }
+                                }
+                                if (this.exportOptions.averageFinal){
+                                    if (line.moyenneFinale[matiere.id] != undefined && line.moyenneFinale[matiere.id] != "NN") {
+                                            line['moyenne_generale'] = Number(line.moyenneFinale[matiere.id]);
+                                            line['nbMatieres'] = 1;
+                                    } else {
                                         line['moyenne_generale'] = 0;
                                         line['nbMatieres'] = 0;
                                         line['eleveNonNote'] = true;
                                     }
-                                    if(line.positionnement[matiere.id] != undefined) {
+                                }
+                                if(this.exportOptions.positionnementFinal) {
+                                    if (line.positionnement[matiere.id] != undefined) {
                                         line[matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id]);
-                                        moyennePos += Number(line.positionnement[matiere.id]);
-                                        if(maxPos != "" && maxPos != "") {
-                                            if (maxPos < line.positionnement[matiere.id])
+                                        if (this.exportOptions.statistiques) {
+                                            moyennePos += Number(line.positionnement[matiere.id]);
+                                            if (maxPos != "" && maxPos != "") {
+                                                if (maxPos < line.positionnement[matiere.id])
+                                                    maxPos = Number(line.positionnement[matiere.id]);
+                                                if (minPos > line.positionnement[matiere.id])
+                                                    minPos = Number(line.positionnement[matiere.id]);
+                                            } else {
                                                 maxPos = Number(line.positionnement[matiere.id]);
-                                            if (minPos > line.positionnement[matiere.id])
                                                 minPos = Number(line.positionnement[matiere.id]);
-                                        }else{
-                                            maxPos = Number(line.positionnement[matiere.id]);
-                                            minPos = Number(line.positionnement[matiere.id]);
+                                            }
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         line[matiere.name + 'Positionnement'] = "";
                                         nbEleves--;
                                     }
+                                }
+                                if(this.exportOptions.appreciation) {
                                     if (line.synthese_bilan_periodique != undefined) {
                                         line['appreciation_conseil_de_classe'] = line.synthese_bilan_periodique;
                                         while (!_.isEmpty(line['appreciation_conseil_de_classe'].match('\n'))) {
-                                            line['appreciation_conseil_de_classe'] = line['appreciation_conseil_de_classe'].replace('\n',' ');
+                                            line['appreciation_conseil_de_classe'] = line['appreciation_conseil_de_classe'].replace('\n', ' ');
                                         }
-                                    }
-                                    else
+                                    } else
                                         line['appreciation_conseil_de_classe'] = "";
+                                }
+                                if(this.exportOptions.avisConseil) {
                                     if (line.avis_conseil_de_classe != undefined)
                                         line['avis_conseil_de_classe'] = line.avis_conseil_de_classe;
                                     else
                                         line['avis_conseil_de_classe'] = "";
+                                }
+                                if(this.exportOptions.avisOrientation) {
                                     if (line.avis_conseil_orientation != undefined)
                                         line['avis_orientation'] = line.avis_conseil_orientation;
                                     else
@@ -198,75 +195,82 @@ export class ReleveNoteTotale extends  Model implements IModel {
                                 elevesNbMatieresEvaluate.push(line);
                                 columnCsv.push(_.pick(line, format['column']));
                             });
-                            if (this.exportOptions.appreciationClasse || this.exportOptions.moyenneClasse) {
-                                if (this.exportOptions.appreciationClasse) {
-                                    let jsonMoyenneToAdd = {};
-                                    jsonMoyenneToAdd["displayName"] = lang.translate('viescolaire.classe.moyenne');
-                                    if(response.moyenne[matiere.id].moyenne_classe != undefined)
+                            if (this.exportOptions.statistiques && (this.exportOptions.positionnementFinal || this.exportOptions.moyenneMat) ) {
+                                let jsonMoyenneToAdd = {};
+                                jsonMoyenneToAdd["displayName"] = lang.translate('viescolaire.classe.moyenne');
+                                let jsonMinToAdd = {};
+                                jsonMinToAdd["displayName"] = "Minimum";
+                                let jsonMaxToAdd = {};
+                                jsonMaxToAdd["displayName"] = "Maximum";
+                                if(this.exportOptions.moyenneMat) {
+                                    if (response.moyenne[matiere.id].moyenne_classe != undefined)
                                         jsonMoyenneToAdd[matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id].moyenne_classe);
                                     else
                                         jsonMoyenneToAdd[matiere.name + 'Moyenne'] = "NN";
-                                    if(moyennePos != 0)
+                                    jsonMinToAdd[matiere.name + 'Moyenne'] = min;
+                                    jsonMaxToAdd[matiere.name + 'Moyenne'] = max;
+                                }
+                                if(this.exportOptions.positionnementFinal) {
+                                    if (moyennePos != 0)
                                         jsonMoyenneToAdd[matiere.name + 'Positionnement'] = Number((moyennePos / nbEleves).toFixed(2));
                                     else
                                         jsonMoyenneToAdd[matiere.name + 'Positionnement'] = "";
-
-                                    columnCsv.push(jsonMoyenneToAdd);
-                                }
-                                if (this.exportOptions.moyenneClasse) {
-                                    let jsonMinToAdd = {};
-                                    jsonMinToAdd["displayName"] = "Minimum";
-                                    jsonMinToAdd[matiere.name + 'Moyenne'] = min;
                                     jsonMinToAdd[matiere.name + 'Positionnement'] = minPos;
-                                    columnCsv.push(jsonMinToAdd);
-                                    let jsonMaxToAdd = {};
-                                    jsonMaxToAdd["displayName"] = "Maximum";
-                                    jsonMaxToAdd[matiere.name + 'Moyenne'] = max;
                                     jsonMaxToAdd[matiere.name + 'Positionnement'] = maxPos;
-                                    columnCsv.push(jsonMaxToAdd);
+
                                 }
+                                columnCsv.push(jsonMoyenneToAdd);
+                                columnCsv.push(jsonMinToAdd);
+                                columnCsv.push(jsonMaxToAdd);
                             }
                             addingAllStudents = true;
                         } else {
                             _.forEach(response.eleves, (line) => {
                                 nbEleves++;
-                                if (this.exportOptions.averageFinal) {
+                                if (this.exportOptions.moyenneMat) {
                                     if (line.moyenneFinale[matiere.id] != undefined) {
                                         columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];
-                                        if (line.moyenneFinale[matiere.id] != "NN") {
-                                            columnCsv.filter(eleve => eleve.displayName == line.displayName)[0]['moyenne_generale'] += Number(line.moyenneFinale[matiere.id]);
-                                            elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['nbMatieres']++;
+                                        if (line.moyenneFinale[matiere.id] != "NN" && this.exportOptions.statistiques) {
                                             if (max != "NN" && min != "NN" && max != "" && min != "") {
                                                 if (max < line.moyenneFinale[matiere.id])
                                                     max = Number(line.moyenneFinale[matiere.id]);
                                                 if (min > line.moyenneFinale[matiere.id])
                                                     min = Number(line.moyenneFinale[matiere.id]);
                                             } else {
-                                                max = Number(line.moyenneFinale[matiere.id]);
-                                                min = Number(line.moyenneFinale[matiere.id]);
-                                            }
-                                        } else {
-                                            elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote'] = true;
-                                            if (max == "" && min == "") {
                                                 max = line.moyenneFinale[matiere.id];
                                                 min = line.moyenneFinale[matiere.id];
                                             }
+                                        } else if (this.exportOptions.statistiques && max == "" && min == "") {
+                                            max = line.moyenneFinale[matiere.id];
+                                            min = line.moyenneFinale[matiere.id];
                                         }
                                     } else {
                                         columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Moyenne'] = "";
                                         elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote'] = true;
                                     }
+                                }
+                                if (this.exportOptions.averageFinal){
+                                    if (line.moyenneFinale[matiere.id] != undefined && line.moyenneFinale[matiere.id] != "NN") {
+                                        columnCsv.filter(eleve => eleve.displayName == line.displayName)[0]['moyenne_generale'] += Number(line.moyenneFinale[matiere.id]);
+                                        elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['nbMatieres']++;
+                                    } else {
+                                        elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote'] = true;
+                                    }
+                                }
+                                if(this.exportOptions.positionnementFinal) {
                                     if (line.positionnement[matiere.id] != undefined) {
                                         columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Positionnement'] = Number(line.positionnement[matiere.id]);
-                                        moyennePos += Number(line.positionnement[matiere.id]);
-                                        if (maxPos != "" && maxPos != "") {
-                                            if (maxPos < line.positionnement[matiere.id])
+                                        if (this.exportOptions.statistiques) {
+                                            moyennePos += Number(line.positionnement[matiere.id]);
+                                            if (maxPos != "" && maxPos != "") {
+                                                if (maxPos < line.positionnement[matiere.id])
+                                                    maxPos = Number(line.positionnement[matiere.id]);
+                                                if (minPos > line.positionnement[matiere.id])
+                                                    minPos = Number(line.positionnement[matiere.id]);
+                                            } else {
                                                 maxPos = Number(line.positionnement[matiere.id]);
-                                            if (minPos > line.positionnement[matiere.id])
                                                 minPos = Number(line.positionnement[matiere.id]);
-                                        } else {
-                                            maxPos = Number(line.positionnement[matiere.id]);
-                                            minPos = Number(line.positionnement[matiere.id]);
+                                            }
                                         }
                                     } else {
                                         nbEleves--;
@@ -274,20 +278,20 @@ export class ReleveNoteTotale extends  Model implements IModel {
                                     }
                                 }
                             });
-                            if (this.exportOptions.appreciationClasse || this.exportOptions.moyenneClasse) {
-                                if (this.exportOptions.appreciationClasse) {
+                            if (this.exportOptions.statistiques && (this.exportOptions.moyenneMat || this.exportOptions.positionnementFinal)) {
+                                if(this.exportOptions.moyenneMat) {
                                     if (response.moyenne[matiere.id] != undefined)
                                         columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id].moyenne_classe);
                                     else
                                         columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Moyenne'] = "NN";
+                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Moyenne'] = min;
+                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Moyenne'] = max;
+                                }
+                                if(this.exportOptions.positionnementFinal) {
                                     if (moyennePos != 0)
                                         columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Positionnement'] = Number((moyennePos / nbEleves).toFixed(2));
                                     else
                                         columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0][matiere.name + 'Positionnement'] = "";
-                                }
-                                if (this.exportOptions.moyenneClasse) {
-                                    columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Moyenne'] = min;
-                                    columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Moyenne'] = max;
                                     columnCsv.filter(line => line.displayName == "Minimum")[0][matiere.name + 'Positionnement'] = minPos;
                                     columnCsv.filter(line => line.displayName == "Maximum")[0][matiere.name + 'Positionnement'] = maxPos;
                                 }
@@ -303,33 +307,37 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         let moy = 0;
                         nbEleves = 0;
 
-                        _.forEach(columnCsv, line => {
-                            if (line['moyenne_generale'] == 0 && elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote']) {
-                                line['moyenne_generale'] = "NN";
-                                nbEleves--;
-                            } else if (elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0] != undefined) {
-                                nbEleves++;
-                                line['moyenne_generale'] = Number((line['moyenne_generale'] / elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['nbMatieres']).toFixed(2));
-                                if (!firstTime) {
-                                    min = line['moyenne_generale'];
-                                    max = line['moyenne_generale'];
-                                    firstTime = true;
+                        if(this.exportOptions.averageFinal) {
+                            _.forEach(columnCsv, line => {
+                                if (line['moyenne_generale'] == 0 && elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['eleveNonNote']) {
+                                    line['moyenne_generale'] = "NN";
+                                    nbEleves--;
+                                } else if (elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0] != undefined) {
+                                    nbEleves++;
+                                    line['moyenne_generale'] = Number((line['moyenne_generale'] / elevesNbMatieresEvaluate.filter(eleve => eleve.displayName == line.displayName)[0]['nbMatieres']).toFixed(2));
+                                    if (!firstTime) {
+                                        min = line['moyenne_generale'];
+                                        max = line['moyenne_generale'];
+                                        firstTime = true;
+                                    }
+                                    moy += line['moyenne_generale'];
+                                    if (min > line['moyenne_generale'])
+                                        min = line['moyenne_generale'];
+                                    if (max < line['moyenne_generale'])
+                                        max = line['moyenne_generale'];
                                 }
-                                moy += line['moyenne_generale'];
-                                if (min > line['moyenne_generale'])
-                                    min = line['moyenne_generale'];
-                                if (max < line['moyenne_generale'])
-                                    max = line['moyenne_generale'];
+                            });
+                            if(this.exportOptions.statistiques) {
+                                if (nbEleves > 0) {
+                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0]['moyenne_generale'] = Number((moy / nbEleves).toFixed(2));
+                                    columnCsv.filter(line => line.displayName == 'Minimum')[0]['moyenne_generale'] = min;
+                                    columnCsv.filter(line => line.displayName == 'Maximum')[0]['moyenne_generale'] = max;
+                                } else {
+                                    columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0]['moyenne_generale'] = "";
+                                    columnCsv.filter(line => line.displayName == 'Minimum')[0]['moyenne_generale'] = "";
+                                    columnCsv.filter(line => line.displayName == 'Maximum')[0]['moyenne_generale'] = "";
+                                }
                             }
-                        });
-                        if (nbEleves > 0) {
-                            columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0]['moyenne_generale'] = Number((moy / nbEleves).toFixed(2));
-                            columnCsv.filter(line => line.displayName == 'Minimum')[0]['moyenne_generale'] = min;
-                            columnCsv.filter(line => line.displayName == 'Maximum')[0]['moyenne_generale'] = max;
-                        } else {
-                            columnCsv.filter(line => line.displayName == lang.translate('viescolaire.classe.moyenne'))[0]['moyenne_generale'] = "";
-                            columnCsv.filter(line => line.displayName == 'Minimum')[0]['moyenne_generale'] = "";
-                            columnCsv.filter(line => line.displayName == 'Maximum')[0]['moyenne_generale'] = "";
                         }
 
                         let csvData = Utils.ConvertToCSV(columnCsv, format['header'], format['column']);
@@ -337,7 +345,13 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         blob = new Blob([csvData]);
                         let link = document.createElement('a');
                         link.href = window.URL.createObjectURL(blob);
-                        link.download = `tableau_moyenne_positionnement_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
+                        if(this.exportOptions.positionnementFinal && this.exportOptions.moyenneMat)
+                            link.download = `tableau_moyenne_positionnement_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
+                        else
+                            if(this.exportOptions.positionnementFinal)
+                                link.download = `tableau_positionnement_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
+                            else
+                                link.download = `tableau_moyenne_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
 
                         document.body.appendChild(link);
                         link.click();
@@ -374,10 +388,14 @@ export class ReleveNoteTotale extends  Model implements IModel {
         for (let matiere of this.matiereWithDevoirs) {
             let _devoirs = this.dataByMatiere[matiere.id];
             nbMatieres++;
-            header += `;${matiere.name}`;
-            column.push(matiere.name + 'Moyenne');
-            header += `;${matiere.name}`;
-            column.push(matiere.name + 'Positionnement');
+            if(this.exportOptions.moyenneMat) {
+                header += `;${matiere.name}`;
+                column.push(matiere.name + 'Moyenne');
+            }
+            if(this.exportOptions.positionnementFinal) {
+                header += `;${matiere.name}`;
+                column.push(matiere.name + 'Positionnement');
+            }
             this.devoirs.load(_devoirs, null, false);
             this.ennseignantsNames = "; ";
 
@@ -390,7 +408,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
             enseignants.push(this.ennseignantsNames);
         }
 
-        if(this.exportOptions.positionnementFinal) {
+        if(this.exportOptions.averageFinal) {
             header += `; ${lang.translate('average.min')}`;
             column.push('moyenne_generale');
         }
@@ -398,23 +416,29 @@ export class ReleveNoteTotale extends  Model implements IModel {
             header += `; ${lang.translate('viescolaire.utils.appreciations')}`;
             column.push('appreciation_conseil_de_classe');
         }
-        if(this.exportOptions.appreciation) {
+        if(this.exportOptions.avisConseil) {
             header += `; ${lang.translate('evaluations.evaluation.avis.conseil')}`;
             column.push('avis_conseil_de_classe');
         }
-        if(this.exportOptions.appreciation) {
+        if(this.exportOptions.avisOrientation) {
             header += `; ${lang.translate('evaluations.evaluation.avis.orientation')}`;
             column.push('avis_orientation');
         }
         header +=`\r\n${lang.translate('teachers')}`;
         for(let j =0; j<nbMatieres;j++){
-            header += `${enseignants[j]}`;
-            header += `${enseignants[j]}`;
+            if(this.exportOptions.moyenneMat)
+                header += `${enseignants[j]}`;
+            if(this.exportOptions.positionnementFinal)
+                header += `${enseignants[j]}`;
         }
         header +=`\r\n${lang.translate('students')};`;
         for(let i =0; i<nbMatieres;i++){
-            header +=`${lang.translate('average.min')};`;
-            header +=`${lang.translate('evaluations.releve.positionnement.min')};`;
+            if(this.exportOptions.moyenneMat) {
+                header += `${lang.translate('average.min')};`;
+            }
+            if(this.exportOptions.positionnementFinal) {
+                header += `${lang.translate('evaluations.releve.positionnement.min')};`;
+            }
         }
         return {header: header, column: column};
     }

@@ -620,7 +620,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 suppretionMsg2: false,
             },
             displayStructureLoader: false,
-            displayMessageLoader: false
+            displayMessageLoader: false,
+            releveNoteTotaleChoice : "moyPos"
         };
 
         $scope.isChefEtab = (classe?) => {
@@ -4257,25 +4258,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     idPeriode: null,
                     periodeName: null,
                     exportOptions: {
-                        appreciation:true,
-                        averageFinal: true,
-                        statistiques: true,
-                        positionnementFinal: true,
-                        avisConseil: true,
-                        avisOrientation: true
+                        appreciation:$scope.suiviClasse.withAppreciations,
+                        averageFinal: $scope.suiviClasse.withMoyGeneraleByEleve,
+                        statistiques: $scope.suiviClasse.withMoyMinMaxByMat,
+                        positionnementFinal: $scope.opened.releveNoteTotaleChoice == "pos" || $scope.opened.releveNoteTotaleChoice == "moyPos",
+                        moyenneMat: $scope.opened.releveNoteTotaleChoice == "moy" || $scope.opened.releveNoteTotaleChoice == "moyPos",
+                        avisConseil: $scope.suiviClasse.withAvisConseil,
+                        avisOrientation: $scope.suiviClasse.withAvisOrientation
                     }
                 };
                 if ($scope.search.periode) {
                     p.idPeriode = $scope.search.periode.id_type;
                     p.periodeName = $scope.getI18nPeriode($scope.search.periode);
-                }
-                if ($scope.suiviClasse) {
-                    p.exportOptions.appreciation = $scope.suiviClasse.withAppreciations;
-                    p.exportOptions.averageFinal = $scope.suiviClasse.withMoyGeneraleByEleve;
-                    p.exportOptions.statistiques = $scope.suiviClasse.withMoyMinMaxByMat;
-                    p.exportOptions.positionnementFinal = true;
-                    p.exportOptions.avisConseil = $scope.suiviClasse.withAvisConseil;
-                    p.exportOptions.avisOrientation = $scope.suiviClasse.withAvisOrientation;
                 }
                 let releve = new ReleveNoteTotale(p);
                 $scope.releveNoteTotale = releve;

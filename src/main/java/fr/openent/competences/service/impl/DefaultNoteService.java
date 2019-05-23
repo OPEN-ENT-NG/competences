@@ -2123,7 +2123,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .setHandler( idElevesEvent -> {
                     if(idElevesEvent.succeeded()) {
 
-                        // Récupération des moyennes Finales
+                        // Récupération des moyennes, positionnement Finales, appréciations, avis conseil de classe et orientation
                         Future<JsonArray> bigRequestFuture = Future.future();
                         getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse), (Either<String, JsonArray> Event) -> {
                             FormateFutureEvent.formate(bigRequestFuture, Event);

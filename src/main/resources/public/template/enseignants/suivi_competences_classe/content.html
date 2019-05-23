@@ -110,35 +110,49 @@
     </div>
     <div ng-if="printSuiviClasse === 'printTabMoys' || printSuiviClasse === 'printTabMoyPosAppr'" class="cell">
         <h2><i18n>viescolaire.utils.options</i18n></h2>
-        <div class="horizontal-spacing">
+        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
+            <label class="horizontal-spacing">
+                <input type="radio" ng-model="opened.releveNoteTotaleChoice" value="moy">
+                <span><i18n>average.final</i18n></span>
+            </label>
+            <label class="horizontal-spacing">
+                <input type="radio" ng-model="opened.releveNoteTotaleChoice" value="pos">
+                <span><i18n>evaluations.releve.positionnement.final</i18n></span>
+            </label>
+            <label class="horizontal-spacing">
+                <input type="radio" ng-model="opened.releveNoteTotaleChoice" value="moyPos">
+                <span><i18n>evaluations.both</i18n></span>
+            </label>
+        </div>
+        <div class="vertical-spacing">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withMoyGeneraleByEleve">
                 <span><i18n>evaluations.moy.generale.by.eleve</i18n></span>
             </label>
         </div>
-        <div class="horizontal-spacing">
+        <div class="vertical-spacing">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withMoyMinMaxByMat">
                 <span><i18n>evaluations.moy.min.max.by.matiere</i18n></span>
             </label>
         </div>
-        <div class="horizontal-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
+        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withAppreciations">
                 <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
             </label>
         </div>
-        <div class="horizontal-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">>
+        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withAvisConseil">
                 <span><i18n>evaluations.evaluation.avis.conseil</i18n></span>
             </label>
         </div>
-        <div class="horizontal-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">>
+        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withAvisOrientation">
