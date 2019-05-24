@@ -203,8 +203,11 @@ export class ReleveNoteTotale extends  Model implements IModel {
                                 let jsonMaxToAdd = {};
                                 jsonMaxToAdd["displayName"] = "Maximum";
                                 if(this.exportOptions.moyenneMat) {
-                                    if (response.moyenne[matiere.id].moyenne_classe != undefined)
-                                        jsonMoyenneToAdd[matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id].moyenne_classe);
+                                    if (response.moyenne[matiere.id] != undefined)
+                                        if(response.moyenne[matiere.id].moyenne_classe != undefined)
+                                            jsonMoyenneToAdd[matiere.name + 'Moyenne'] = Number(response.moyenne[matiere.id].moyenne_classe);
+                                        else
+                                            jsonMoyenneToAdd[matiere.name + 'Moyenne'] = "NN";
                                     else
                                         jsonMoyenneToAdd[matiere.name + 'Moyenne'] = "NN";
                                     jsonMinToAdd[matiere.name + 'Moyenne'] = min;

@@ -2814,10 +2814,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     if (idPeriode != null) {
                         if(MOYENNE.equals(colonne) || POSITIONNEMENT.equals(colonne)) {
                             if(data.getString("id_matiere").equals(idMatiere)) {
-                                if (eleve.getJsonObject(resultLabel).containsKey(idMatiere)) {
-                                    eleve.getJsonObject(resultLabel).remove(idMatiere);
+                                if(eleve.containsKey(resultLabel)) {
+                                    if (eleve.getJsonObject(resultLabel).containsKey(idMatiere)) {
+                                        eleve.getJsonObject(resultLabel).remove(idMatiere);
+                                    }
+                                    eleve.getJsonObject(resultLabel).put(idMatiere, data.getValue(colonne));
+                                }else{
+                                    JsonObject jsonToAdd = new JsonObject();
+                                    jsonToAdd.put(idMatiere, data.getValue(colonne));
+                                    eleve.put(resultLabel, jsonToAdd);
                                 }
-                                eleve.getJsonObject(resultLabel).put(idMatiere, data.getValue(colonne));
                             }
                         }else{
                             if (eleve.containsKey(resultLabel)) {
@@ -2838,8 +2844,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
         if (!hasEvaluatedHommeWork && MOYENNE.equals(colonne)) {
             for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
-                if (!student.getValue().getJsonObject(resultLabel).containsKey(idMatiere)){
-                    student.getValue().getJsonObject(resultLabel).put(idMatiere, NN);
+                if(student.getValue().containsKey(resultLabel)){
+                    if (!student.getValue().getJsonObject(resultLabel).containsKey(idMatiere)) {
+                        student.getValue().getJsonObject(resultLabel).put(idMatiere, NN);
+                    }
+                }else{
+                    JsonObject jsonToAdd = new JsonObject();
+                    jsonToAdd.put(idMatiere, NN);
+                    student.getValue().put(resultLabel, jsonToAdd);
                 }
             }
         }
