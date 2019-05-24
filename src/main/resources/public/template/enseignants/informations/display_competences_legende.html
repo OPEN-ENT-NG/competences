@@ -49,22 +49,5 @@
 <div ng-if="(template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle'))
             && route.current.$$route.originalPath.startsWith('/competences/eleve')" class="padding-five">
-    <ul class="conversion-legend bfc">
-        <li class="row" ng-repeat="Conversion in suiviCompetence.tableConversions.all track by $index">
-            <div class="inline-block legende-bfc-left">
-                <span class="maxval">[[Conversion.valmax.toFixed(2)]]</span>
-                <span class="last-minval" ng-if="$index === suiviCompetence.tableConversions.all.length - 1">[[Conversion.valmin.toFixed(2)]]</span>
-            </div>
-            <div class="inline-block legend-line" style="background-color: [[(mapCouleurs[Conversion.ordre-1])]]">
-                <span ng-if="$index === 0" class="tick first-tick"></span>
-                <span class="tick"></span>
-            </div>
-            <div class="inline-block legende-bfc-right">
-                <span class="libelle ellipsis cell conversion-libelle">
-                    [[Conversion.libelle]]
-                </span>
-            </div>
-        </li>
-    </ul>
-
+    <div ng-include = "'/competences/public/template/enseignants/informations/display_competences_conversion_table.html'"></div>
 </div>

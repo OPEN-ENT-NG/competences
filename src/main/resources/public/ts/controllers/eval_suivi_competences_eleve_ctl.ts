@@ -405,99 +405,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         await $scope.updateColorAndLetterForSkills();
 
                         //Enseignement de complement cycle 4
-                        $scope.suiviCompetence.niveauLangueCultRegs = new NiveauLangueCultRegs();
-                        await Promise.all([$scope.suiviCompetence.ensCpls.sync(),
-                            $scope.suiviCompetence.niveauEnsCpls.sync(),
-                            $scope.suiviCompetence.eleveEnsCpl.sync(),
-                            $scope.suiviCompetence.langues.sync()]);
-                        $scope.showButtonSave = true;
-                        if ($scope.suiviCompetence.eleveEnsCpl.id) {
-                            $scope.suiviCompetence.ensCplSelected = _.findWhere($scope.suiviCompetence.ensCpls.all,
-                                {id: $scope.suiviCompetence.eleveEnsCpl.id_enscpl});
-                            $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
-                                $scope.suiviCompetence.niveauEnsCpls.all, {id:
-                                    $scope.suiviCompetence.eleveEnsCpl.id_niveau});
-                            // si il y a une langue régionale de precisée, on la sélectionne
-                            if ($scope.suiviCompetence.eleveEnsCpl.id_langue !== undefined) {
-                                $scope.suiviCompetence.langueSelected = _.findWhere($scope.suiviCompetence.langues.all,
-                                    {id: $scope.suiviCompetence.eleveEnsCpl.id_langue});
-                                // sélection du niveau si renseigné
-                                if ($scope.suiviCompetence.eleveEnsCpl.niveau_lcr !== undefined) {
-                                    $scope.suiviCompetence.niveauLangueCultRegSelected = _.findWhere(
-                                        $scope.suiviCompetence.niveauLangueCultRegs.all,
-                                        {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau_lcr});
-                                }
-                            }
-                            await utils.safeApply($scope);
-                        } else {
-                            $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.eleveEnsCpl;
-                            await utils.safeApply($scope);
-                        }
+                        await $scope.initEnsCplt();
 
-                        $scope.onChangeEns = () => {
-                            // réinit des listes déroulantes concernant les langues régionales
-                            $scope.suiviCompetence.langueSelected = undefined;
-                            $scope.suiviCompetence.niveauLangueCultRegSelected = undefined;
-                            $scope.onChangeObjectif();
-                            //si id=1 on est sur ensCpl Aucun
-                            if ($scope.suiviCompetence.ensCplSelected.id === 1) {
-                                // on met à jour le niveau à 0
-                                $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
-                                    $scope.suiviCompetence.niveauEnsCpls.all,
-                                    {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau});
-                            } else {
-                                //sinon on positionne sur le 1er niveau par défaut
-                                $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
-                                    $scope.suiviCompetence.niveauEnsCpls.all,
-                                    {niveau: $scope.suiviCompetence.niveauEnsCpls.niveau = 1});
-
-                                // si l'enseignement sélectionné est avec le code LCR, alors, on affiche la liste déroulante
-                                // de choix de la langue de culture régionale et on positionne sur la 1ère langue par défaut
-                                if ($scope.suiviCompetence.ensCplSelected.code === 'LCR') {
-                                    $scope.suiviCompetence.langueSelected = $scope.suiviCompetence.langues.all[0];
-                                }
-
-                            }
-                        };
-                        $scope.onChangeObjectif = () => {
-                            ($scope.showButtonSave) ? $scope.showButtonSave = !$scope.showButtonSave :
-                                $scope.showButtonSave = $scope.showButtonSave;
-                        }
-
-                        $scope.showSaveButton = () => {
-                            let id_langue;
-                            if ($scope.suiviCompetence.langueSelected !== undefined) {
-                                id_langue = $scope.suiviCompetence.langueSelected.id;
-                            }
-
-                            let visible = $scope.suiviCompetence.ensCplSelected !== undefined &&
-                                $scope.suiviCompetence.ensCplSelected.id !== undefined && // ense complement
-                                $scope.suiviCompetence.niveauEnsCplSelected.niveau !== undefined && // avec un niveau
-                                ($scope.suiviCompetence.langueSelected == undefined || // et pas de langue regionale
-                                    ($scope.suiviCompetence.langueSelected !== undefined && // ou un langue avec le code AUC mais sans niveau
-                                        $scope.suiviCompetence.langueSelected.code === 'AUC') ||
-                                    ($scope.suiviCompetence.langueSelected !== undefined && // ou une langue avec un niveau
-                                        $scope.suiviCompetence.niveauLangueCultRegSelected.niveau !== undefined)
-                                );
-
-                            return visible;
-                        };
-
-
-                        $scope.oncChangeLangue = () => {
-
-
-
-                            $scope.onChangeObjectif();
-                            if ($scope.suiviCompetence.langueSelected.code === 'AUC') {
-                                // suppression du niveau
-                                $scope.suiviCompetence.niveauLangueCultRegSelected = new NiveauLangueCultReg(0);
-                            } else {
-                                // sélection du 1er niveau par defaut
-                                $scope.suiviCompetence.niveauLangueCultRegSelected = $scope.suiviCompetence.niveauLangueCultRegs.all[0];
-                            }
-
-                        };
                         let idTypePeriode = ($scope.suiviCompetence.periode.id !== null)?
                             $scope.suiviCompetence.periode.id_type : null;
                         let isCycle = ($scope.suiviCompetence.periode.libelle !== null
@@ -576,6 +485,103 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     resolve();
                 }
             });
+        };
+
+
+         $scope.initEnsCplt = async function(){
+             $scope.suiviCompetence.niveauLangueCultRegs = new NiveauLangueCultRegs();
+             await Promise.all([$scope.suiviCompetence.ensCpls.sync(),
+                 $scope.suiviCompetence.niveauEnsCpls.sync(),
+                 $scope.suiviCompetence.eleveEnsCpl.sync(),
+                 $scope.suiviCompetence.langues.sync()]);
+             $scope.showButtonSave = true;
+             if ( $scope.suiviCompetence.eleveEnsCpl.id ) {
+                 $scope.suiviCompetence.ensCplSelected = _.findWhere($scope.suiviCompetence.ensCpls.all,
+                     {id: $scope.suiviCompetence.eleveEnsCpl.id_enscpl});
+                 $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
+                     $scope.suiviCompetence.niveauEnsCpls.all, {id:
+                         $scope.suiviCompetence.eleveEnsCpl.id_niveau});
+                 // si il y a une langue régionale de precisée, on la sélectionne
+                 if ($scope.suiviCompetence.eleveEnsCpl.id_langue !== undefined &&
+                     $scope.suiviCompetence.eleveEnsCpl.id_langue !== null) {
+                     $scope.suiviCompetence.langueSelected = _.findWhere($scope.suiviCompetence.langues.all,
+                         {id: $scope.suiviCompetence.eleveEnsCpl.id_langue});
+                     // sélection du niveau si renseigné
+                     if ( $scope.suiviCompetence.eleveEnsCpl.niveau_lcr !== undefined ) {
+                         $scope.suiviCompetence.niveauLangueCultRegSelected = _.findWhere(
+                             $scope.suiviCompetence.niveauLangueCultRegs.all,
+                             {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau_lcr});
+                     }
+                 }
+                 await utils.safeApply($scope);
+             } else {
+                 $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.eleveEnsCpl;
+                 await utils.safeApply($scope);
+             }
+        };
+
+        $scope.showSaveButton = () => {
+            let id_langue;
+            if ($scope.suiviCompetence.langueSelected !== undefined) {
+                id_langue = $scope.suiviCompetence.langueSelected.id;
+            }
+
+            let visible = $scope.suiviCompetence.ensCplSelected !== undefined &&
+                $scope.suiviCompetence.ensCplSelected.id !== undefined && // ense complement
+                $scope.suiviCompetence.niveauEnsCplSelected.niveau !== undefined && // avec un niveau
+                ($scope.suiviCompetence.langueSelected === undefined || // et pas de langue regionale
+                    ($scope.suiviCompetence.langueSelected !== undefined && // ou un langue avec le code AUC mais sans niveau
+                        $scope.suiviCompetence.langueSelected.code === 'AUC') ||
+                    ($scope.suiviCompetence.langueSelected !== undefined && // ou une langue avec un niveau
+                        $scope.suiviCompetence.niveauLangueCultRegSelected.niveau !== undefined)
+                );
+
+            return visible;
+        };
+
+        $scope.onChangeEns = () => {
+            // réinit des listes déroulantes concernant les langues régionales
+            $scope.suiviCompetence.langueSelected = undefined;
+            $scope.suiviCompetence.niveauLangueCultRegSelected = undefined;
+            $scope.onChangeObjectif();
+            //si id=1 on est sur ensCpl Aucun
+            if ( $scope.suiviCompetence.ensCplSelected.id === 1) {
+                // on met à jour le niveau à 0
+                $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
+                    $scope.suiviCompetence.niveauEnsCpls.all,
+                    {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau});
+            } else {
+                //sinon on positionne sur le 1er niveau par défaut
+                if( $scope.suiviCompetence.niveauEnsCpls.all !== undefined ){
+                    $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
+                        $scope.suiviCompetence.niveauEnsCpls.all,
+                        {niveau: $scope.suiviCompetence.niveauEnsCpls.niveau = 1});
+                }
+                 // si l'enseignement sélectionné est avec le code LCR, alors, on affiche la liste déroulante
+                // de choix de la langue de culture régionale et on positionne sur la 1ère langue par défaut
+                if ( $scope.suiviCompetence.ensCplSelected !== undefined && $scope.suiviCompetence.ensCplSelected.code === 'LCR') {
+                    $scope.suiviCompetence.langueSelected = $scope.suiviCompetence.langues.all[0];
+                }
+
+            }
+        };
+
+        $scope.onChangeObjectif = () => {
+            ($scope.showButtonSave) ? $scope.showButtonSave = !$scope.showButtonSave :
+                $scope.showButtonSave = $scope.showButtonSave;
+        }
+
+        $scope.oncChangeLangue = () => {
+
+            $scope.onChangeObjectif();
+            if ($scope.suiviCompetence.langueSelected !== undefined && $scope.suiviCompetence.langueSelected.code === 'AUC') {
+                // suppression du niveau
+                $scope.suiviCompetence.niveauLangueCultRegSelected = new NiveauLangueCultReg(0);
+            } else {
+                // sélection du 1er niveau par defaut
+                $scope.suiviCompetence.niveauLangueCultRegSelected = $scope.suiviCompetence.niveauLangueCultRegs.all[0];
+            }
+
         };
 
         $scope.initSliderBFC =  async function () {
@@ -925,6 +931,26 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 }
 
             });
+        };
+        /**
+         * initialise SuiviCompetence avec les paramètres d'une autre vue pour visualiser la légende de conversion
+         * sur une autre vue;
+         */
+        $scope.openTableConversionAndEnsCplt = async function (){
+            return new Promise ( async resolve => {
+                try{
+                    Utils.initFilterMine($scope);
+                    $scope.currentCycle = {id_cycle : $scope.search.classe.id_cycle, libelle : $scope.search.classe.libelle}
+                    $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve, $scope.search.periode,
+                        $scope.search.classe, $scope.currentCycle,false,$scope.evaluations.structure);
+                    await Promise.all([$scope.initEnsCplt(),
+                        $scope.initSliderBFC()
+                    ]);
+                }catch(e){
+                    resolve();
+                }
+            });
+
         };
 
         $scope.removeBottomClass = function () {

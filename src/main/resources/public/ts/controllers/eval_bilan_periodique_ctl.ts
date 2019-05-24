@@ -28,7 +28,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.showHistoric = false;
         $scope.showAvisOrientation = false;
         $scope.showMoyGeneral = false;
+        $scope.opened.criteres = true;
         $scope.opened.avis = true;
+        $scope.opened.ensCplt = true;
         $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc: false};
         $scope.displayBilanPeriodique = async() => {
             if(model.me.type === 'PERSRELELEVE'){
@@ -227,7 +229,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await utils.safeApply($scope);
             template.open('bfc', 'enseignants/suivi_competences_eleve/content');
             $scope.selected = { bfc: true };
-            await Utils.runMessageLoader($scope);
         };
 
         //////            Graph de l'onglet graphique            //////

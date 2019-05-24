@@ -17,7 +17,7 @@
   ~
   -->
 <div sticky offset="64">
-    <div class="criteres card criterion opened" ng-class="{openedAvis : opened.criteres === true}">
+    <div class="criteres card criterion" ng-class="{openedAvis : opened.criteres === true}">
         <span class="plus-input" ng-click="openLeftMenu('opened.criteres', opened.criteres);"></span>
         <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
             <h2><i18n>viescolaire.utils.criterion</i18n></h2>
@@ -89,5 +89,21 @@
             </label>
         </section>
 
+    </div>
+
+    <div ng-if="selected.bfc && !critereIsEmpty" ng-controller ="EvalSuiviCompetenceEleveCtl"
+         ng-init = "openTableConversionAndEnsCplt()">
+        <div class="criteres card criterion" ng-class="{openedAvis : opened.legend === true}">
+            <span class="plus-input" ng-click="openLeftMenu('opened.legend', opened.legend);"></span>
+            <div class="header" ng-click="openLeftMenu('opened.legend', opened.legend);">
+                <h2><i18n>viescolaire.utils.legend.conversion</i18n></h2>
+            </div>
+            <div ng-include="'/competences/public/template/enseignants/informations/display_competences_conversion_table.html'">
+            </div>
+        </div>
+        <div class="criteres card criterion openedAvis">
+            <div ng-include = "'/competences/public/template/enseignants/suivi_competences_eleve/left_side_ens_cplt.html'">
+        </div>
+        </div>
     </div>
 </div>
