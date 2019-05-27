@@ -2855,6 +2855,24 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
             }
         }
+        if (MOYENNE.equals(colonne)) {
+            for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
+                if(!student.getValue().containsKey(resultLabel)){
+                    JsonObject jsonToAdd = new JsonObject();
+                    jsonToAdd.put(idMatiere, NN);
+                    student.getValue().put(resultLabel, jsonToAdd);
+                }
+            }
+        }
+        if (POSITIONNEMENT.equals(colonne)) {
+            for (Map.Entry<String, JsonObject> student : eleveMapObject.entrySet()) {
+                if(!student.getValue().containsKey(resultLabel)) {
+                    JsonObject jsonToAdd = new JsonObject();
+                    jsonToAdd.putNull(idMatiere);
+                    student.getValue().put(resultLabel, jsonToAdd);
+                }
+            }
+        }
 
     }
 

@@ -467,7 +467,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.exportRecapEvalObj = {
                             errExport: false
                         };
-                        $scope.printSuiviClasse = "printRecapEval";
                         $scope.suiviClasse = {
                             textMod: true,
                             exportByEnseignement: 'false',
@@ -476,12 +475,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             withAppreciations: true,
                             withAvisConseil: true,
                             withAvisOrientation: true,
+                            print: 'printRecapEval'
                         };
-                        if (_.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
-                            $scope.disabledExportSuiviClasse = true;
-                        } else {
-                            $scope.disabledExportSuiviClasse = false;
-                        }
+                        $scope.disabledExportSuiviClasse = _.findIndex($scope.allMatieresSorted, {select: true}) === -1;
                         $scope.sortType = 'title'; // set the default sort type
                         $scope.sortReverse = false;  // set the default sort order
                         $scope.usePerso = evaluations.structure.usePerso;
@@ -544,7 +540,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
         $scope.disabledExportSuiviClasseButton = function () {
-            if ($scope.printSuiviClasse === "printReleveComp" && _.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
+            if ($scope.suiviClasse.print === "printReleveComp" && _.findIndex($scope.allMatieresSorted, {select: true}) === -1) {
                 return true;
             } else {
                 return false;
@@ -3638,7 +3634,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.changePrintSuiviClasse = function (option) {
-            $scope.printSuiviClasse = option;
+            $scope.suiviClasse.print = option;
             if (option === "printReleveComp")
                 $scope.disabledExportSuiviClasse = $scope.allUnselect || typeof($scope.suiviClasse.periode) === 'undefined';
             if (option === "printRecapEval")
@@ -4267,9 +4263,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         avisOrientation: $scope.suiviClasse.withAvisOrientation
                     }
                 };
-                if ($scope.search.periode) {
-                    p.idPeriode = $scope.search.periode.id_type;
-                    p.periodeName = $scope.getI18nPeriode($scope.search.periode);
+                if ($scope.suiviClasse.periode) {
+                    p.idPeriode = $scope.suiviClasse.periode.id_type;
+                    p.periodeName = $scope.getI18nPeriode($scope.suiviClasse.periode);
                 }
                 let releve = new ReleveNoteTotale(p);
                 $scope.releveNoteTotale = releve;
@@ -4283,6 +4279,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 notify.error(e);
             }
 
+        };
+
+        $scope.disableExportCSV = function(){
+            if($scope.suiviClasse.periode.id_type == undefined) {
+                $scope.changePrintSuiviClasse('printRecapEval');
+                utils.safeApply($scope);
+            }
         };
 
         $scope.$on('chart-create', function (event, chart) {

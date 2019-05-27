@@ -29,25 +29,25 @@
     <div class="checkbox-grid">
         <h4><i18n>evaluations.export.format.pdf</i18n>&nbsp;:</h4>
         <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printRecapEval')" ng-model="printSuiviClasse" value="printRecapEval">
+            <input type="radio" ng-change="changePrintSuiviClasse('printRecapEval')" ng-model="suiviClasse.print" value="printRecapEval">
             <span><i18n>evaluations.recapEval</i18n></span>
         </label>
         <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printReleveComp')"  ng-model="printSuiviClasse" value="printReleveComp">
+            <input type="radio" ng-change="changePrintSuiviClasse('printReleveComp')"  ng-model="suiviClasse.print" value="printReleveComp">
             <span><i18n>evaluations.releveComp.classe</i18n></span>
         </label>
         <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printTabMoys')" ng-model="printSuiviClasse" value="printTabMoys">
+            <input type="radio" ng-change="changePrintSuiviClasse('printTabMoys')" ng-model="suiviClasse.print" value="printTabMoys">
             <span><i18n>evaluations.tab.moys</i18n></span>
         </label>
         <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="printSuiviClasse" value="printRecapAppreciations">
+            <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="suiviClasse.print" value="printRecapAppreciations">
             <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
         </label>
         <br/>
         <h4><i18n>evaluations.export.format.csv</i18n>&nbsp;:</h4>
         <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printTabMoyPosAppr')" ng-model="printSuiviClasse" value="printTabMoyPosAppr">
+            <input type="radio" ng-change="changePrintSuiviClasse('printTabMoyPosAppr')" ng-model="suiviClasse.print" value="printTabMoyPosAppr" ng-disabled="suiviClasse.periode.id_type == undefined && printSuiviClasse != 'printTabMoyPosAppr'">
             <span><i18n>evaluations.tab.moysPos</i18n></span>
         </label>
     </div>
@@ -57,14 +57,14 @@
             <label class=" six select">
                 <select ng-model="suiviClasse.periode"
                         ng-init="suiviClasse.periode = search.periode"
-                        ng-change="exportRelCompObj.errExport = false; closeWarningMessages();"
+                        ng-change="exportRelCompObj.errExport = false; closeWarningMessages(); disableExportCSV();"
                         ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
             </label><br/>
         </div>
     </div>
-    <div class="row" ng-if="printSuiviClasse === 'printReleveComp'">
+    <div class="row" ng-if="suiviClasse.print === 'printReleveComp'">
         <div class="twelve cell twelve-mobile">
             <label><i18n class="titre-libelle">viescolaire.utils.export.choose</i18n></label>
             <p class="inline-block">
@@ -81,7 +81,7 @@
             </p>
         </div>
     </div>
-    <div ng-if="printSuiviClasse === 'printReleveComp'">
+    <div ng-if="suiviClasse.print === 'printReleveComp'">
         <div class="row">
             <div class="twelve cell twelve-mobile">
                 <label><i18n class="titre-libelle">viescolaire.utils.subjects</i18n></label><br/>
@@ -108,9 +108,9 @@
             </div>
         </div>
     </div>
-    <div ng-if="printSuiviClasse === 'printTabMoys' || printSuiviClasse === 'printTabMoyPosAppr'" class="cell">
+    <div ng-if="suiviClasse.print === 'printTabMoys' || suiviClasse.print === 'printTabMoyPosAppr'" class="cell">
         <h2><i18n>viescolaire.utils.options</i18n></h2>
-        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
+        <div class="vertical-spacing" ng-if="suiviClasse.print === 'printTabMoyPosAppr'">
             <label class="horizontal-spacing">
                 <input type="radio" ng-model="opened.releveNoteTotaleChoice" value="moy">
                 <span><i18n>average.final</i18n></span>
@@ -138,21 +138,21 @@
                 <span><i18n>evaluations.moy.min.max.by.matiere</i18n></span>
             </label>
         </div>
-        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
+        <div class="vertical-spacing" ng-if="suiviClasse.print === 'printTabMoyPosAppr'">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withAppreciations">
                 <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
             </label>
         </div>
-        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
+        <div class="vertical-spacing" ng-if="suiviClasse.print === 'printTabMoyPosAppr'">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withAvisConseil">
                 <span><i18n>evaluations.evaluation.avis.conseil</i18n></span>
             </label>
         </div>
-        <div class="vertical-spacing" ng-if="printSuiviClasse === 'printTabMoyPosAppr'">
+        <div class="vertical-spacing" ng-if="suiviClasse.print === 'printTabMoyPosAppr'">
             <label class="checkbox">
                 <input type="checkbox"
                        ng-model="suiviClasse.withAvisOrientation">
@@ -193,7 +193,7 @@
              ng-if="cycleNotFound">
             <i18n>evaluations.export.cycle.not.found.err</i18n>
         </div>
-        <div ng-if="printSuiviClasse === 'printReleveComp' || printSuiviClasse === 'printRecapEval'" class="twelve cell twelve-mobile">
+        <div ng-if="suiviClasse.print === 'printReleveComp' || suiviClasse.print === 'printRecapEval'" class="twelve cell twelve-mobile">
             <div class="three cell horizontal-spacing vertical-spacing expandable-content">
                 <label class="checkbox">
                     <input type="checkbox"
@@ -204,7 +204,7 @@
         </div>
         <button class="right-magnet"
                 ng-disabled = "disabledExportSuiviClasseButton()"
-                ng-click="exportRecapEval(suiviClasse.textMod, printSuiviClasse, suiviClasse.periode.id_type,
+                ng-click="exportRecapEval(suiviClasse.textMod, suiviClasse.print, suiviClasse.periode.id_type,
                 suiviClasse.exportByEnseignement,suiviClasse.withMoyGeneraleByEleve, suiviClasse.withMoyMinMaxByMat)">
             <i18n>evaluations.export</i18n>
         </button>

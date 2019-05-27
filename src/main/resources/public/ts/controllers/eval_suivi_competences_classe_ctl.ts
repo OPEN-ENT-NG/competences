@@ -245,10 +245,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          */
         $scope.incrementClasse = async function (num) {
             $scope.Display = {EvaluatedCompetences: true};
-            let index = _.findIndex($scope.classes.all, {id: $scope.search.classe.id});
+            let index = _.findIndex(_.sortBy(_.sortBy($scope.classes.all,'name'),'type_groupe_libelle'), {id: $scope.search.classe.id});
             if (index !== -1 && (index + parseInt(num)) >= 0
                 && (index + parseInt(num)) < $scope.classes.all.length) {
-                $scope.search.classe = $scope.classes.all[index + parseInt(num)];
+                $scope.search.classe = _.sortBy(_.sortBy($scope.classes.all,'name'),'type_groupe_libelle')[index + parseInt(num)];
                 $scope.syncPeriode($scope.search.classe.id);
                 $scope.search.periode = '*';
                 $scope.synchronizeStudents($scope.search.classe.id);
