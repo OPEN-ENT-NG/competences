@@ -90,11 +90,16 @@
             <span class= "right-magnet bareme-brevet" ><i18n>evaluation.bfc.controle.continu</i18n>
             [[suiviCompetence.baremeBrevetEleve.controlesContinus_brevet]] / [[suiviCompetence.baremeBrevetEleve.totalMaxBaremeBrevet]]</span></div>
         <h2><i18n>evaluations.bilan.fin.cycle.tilte.synthese</i18n></h2>
-        <div ng-show="successCreateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successCreateSynthese</i18n></div>
-        <div ng-show="successUpdateSynthese" class="info"><i18n>evaluation.bilan.fin.cycle.successUpdateSynthese</i18n></div>
-        <textarea ng-disabled="!canUpdateBFCSynthese()" row="4" type="text" i18n-placeholder="evaluation.bilan.fin.cycle.placeholder.synthese" ng-model="suiviCompetence.bfcSynthese.texte"></textarea>
-        <button  workflow="competences.canUpdateBFCSynthese" ng-click="saveSynthese()" ng-disabled="suiviCompetence.synthese.texte.length === 0">
-            <i18n>evaluation.bilan.fin.cycle.save.synthese</i18n>
-        </button>
+        <ng-form name="synthesBfcForm">
+            <textarea name = "syntheseBFC"
+                      ng-disabled="!canUpdateBFCSynthese" row="4" type="text"
+                      ng-maxlength = "MAX_CHAR_SYNTHESE_BFC_LENGTH" maxlength = "MAX_CHAR_SYNTHESE_BFC_LENGTH"
+                      i18n-placeholder="evaluation.bilan.fin.cycle.placeholder.synthese"
+                      ng-model="suiviCompetence.bfcSynthese.texte" ng-blur="suiviCompetence.bfcSynthese.saveBfcSynthese()"></textarea>
+            <div ng-if="synthesBfcForm.syntheseBFC.$error.maxlength" class = "warning">
+                <i18n>evaluation.bilan.fin.cycle.synthes.max.length</i18n>
+            </div>
+
+        </ng-form>
     </div>
 </div>

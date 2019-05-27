@@ -68,9 +68,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             return Utils.canSaveCompetenceNiveauFinal();
         };
 
-        $scope.canUpdateBFCSynthese = () => {
-            return Utils.canUpdateBFCSynthese();
-        };
+        $scope.MAX_CHAR_SYNTHESE_BFC_LENGTH = 1500;
 
         /**
          * Initialise d'une évaluation libre.
@@ -368,6 +366,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         && $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined){
                         $scope.search.eleve = "";
                     }
+                    $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
+                        "canUpdateBFCSynthese");
                     await $scope.syncPeriode($scope.search.classe.id);
                 }
                 $scope.selected.grey = true;
@@ -614,8 +614,6 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     $scope.pOFilterEval = {
                         limitTo: 2
                     };
-                    $scope.successCreateSynthese = false;
-                    $scope.successUpdateSynthese = false;
                     $scope.successUpdateEnseignement = false;
                     $scope.textPeriode = "Hors periode scolaire";
                     $scope.chartOptionsEval = {
@@ -769,25 +767,6 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }, 3000);
         };
 
-        $scope.saveSynthese = () => {
-            $scope.suiviCompetence.bfcSynthese.saveBfcSynthese().then(async (res) => {
-                if (res.rows === 1) {
-                    $scope.successUpdateSynthese = true;
-                    await utils.safeApply($scope);
-                    $timeout(async () => {
-                        $scope.successUpdateSynthese = false;
-                        await utils.safeApply($scope);
-                    }, 3000);
-                } else {
-                    $scope.successCreateSynthese = true;
-                    await utils.safeApply($scope);
-                    $timeout(async () => {
-                        $scope.successCreateSynthese = false;
-                        await utils.safeApply($scope);
-                    }, 3000);
-                }
-            });
-        };
         /**
          * Lance la séquence d'ouverture du détail d'une compétence permettant d'accéder à la vue liste ou graph
          * @param competence Compétence à ouvrir
@@ -918,6 +897,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         await $scope.suiviCompetence.domaines.sync();
                         await $scope.initSliderBFC();
                     }
+                    $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
+                        "canUpdateBFCSynthese");
                     $scope.showRechercheBarFunction(false);
                     $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                     template.open('suivi-competence-content',
