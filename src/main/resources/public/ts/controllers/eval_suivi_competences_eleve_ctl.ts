@@ -487,14 +487,12 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             });
         };
 
-
          $scope.initEnsCplt = async function(){
              $scope.suiviCompetence.niveauLangueCultRegs = new NiveauLangueCultRegs();
              await Promise.all([$scope.suiviCompetence.ensCpls.sync(),
                  $scope.suiviCompetence.niveauEnsCpls.sync(),
                  $scope.suiviCompetence.eleveEnsCpl.sync(),
                  $scope.suiviCompetence.langues.sync()]);
-             $scope.showButtonSave = true;
              if ( $scope.suiviCompetence.eleveEnsCpl.id ) {
                  $scope.suiviCompetence.ensCplSelected = _.findWhere($scope.suiviCompetence.ensCpls.all,
                      {id: $scope.suiviCompetence.eleveEnsCpl.id_enscpl});
@@ -520,30 +518,10 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
              }
         };
 
-        $scope.showSaveButton = () => {
-            let id_langue;
-            if ($scope.suiviCompetence.langueSelected !== undefined) {
-                id_langue = $scope.suiviCompetence.langueSelected.id;
-            }
-
-            let visible = $scope.suiviCompetence.ensCplSelected !== undefined &&
-                $scope.suiviCompetence.ensCplSelected.id !== undefined && // ense complement
-                $scope.suiviCompetence.niveauEnsCplSelected.niveau !== undefined && // avec un niveau
-                ($scope.suiviCompetence.langueSelected === undefined || // et pas de langue regionale
-                    ($scope.suiviCompetence.langueSelected !== undefined && // ou un langue avec le code AUC mais sans niveau
-                        $scope.suiviCompetence.langueSelected.code === 'AUC') ||
-                    ($scope.suiviCompetence.langueSelected !== undefined && // ou une langue avec un niveau
-                        $scope.suiviCompetence.niveauLangueCultRegSelected.niveau !== undefined)
-                );
-
-            return visible;
-        };
-
         $scope.onChangeEns = () => {
             // réinit des listes déroulantes concernant les langues régionales
             $scope.suiviCompetence.langueSelected = undefined;
             $scope.suiviCompetence.niveauLangueCultRegSelected = undefined;
-            $scope.onChangeObjectif();
             //si id=1 on est sur ensCpl Aucun
             if ( $scope.suiviCompetence.ensCplSelected.id === 1) {
                 // on met à jour le niveau à 0
@@ -562,18 +540,11 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 if ( $scope.suiviCompetence.ensCplSelected !== undefined && $scope.suiviCompetence.ensCplSelected.code === 'LCR') {
                     $scope.suiviCompetence.langueSelected = $scope.suiviCompetence.langues.all[0];
                 }
-
             }
         };
 
-        $scope.onChangeObjectif = () => {
-            ($scope.showButtonSave) ? $scope.showButtonSave = !$scope.showButtonSave :
-                $scope.showButtonSave = $scope.showButtonSave;
-        }
-
         $scope.oncChangeLangue = () => {
 
-            $scope.onChangeObjectif();
             if ($scope.suiviCompetence.langueSelected !== undefined && $scope.suiviCompetence.langueSelected.code === 'AUC') {
                 // suppression du niveau
                 $scope.suiviCompetence.niveauLangueCultRegSelected = new NiveauLangueCultReg(0);
@@ -614,7 +585,6 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     $scope.pOFilterEval = {
                         limitTo: 2
                     };
-                    $scope.successUpdateEnseignement = false;
                     $scope.textPeriode = "Hors periode scolaire";
                     $scope.chartOptionsEval = {
                         series: ['Evaluation'],
@@ -757,14 +727,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 $scope.suiviCompetence.niveauEnsCplSelected.id,
                 $scope.suiviCompetence.niveauLangueCultRegSelected.niveau,
                 id_langue).save();
-            $scope.showButtonSave = !$scope.showButtonSave;
-
-            $scope.successUpdateEnseignement = true;
             await utils.safeApply($scope);
-            $timeout(async () => {
-                $scope.successUpdateEnseignement = false;
-                await utils.safeApply($scope);
-            }, 3000);
         };
 
         /**
