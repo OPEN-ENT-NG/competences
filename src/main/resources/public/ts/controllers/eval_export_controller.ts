@@ -166,7 +166,32 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             await Utils.chooseClasse(classe,$scope, false);
             await utils.safeApply($scope);
         };
-
+        $scope.controleAllIgnored = function (students, periodes): boolean {
+            let allStudentChoose = $scope.controleExportLSU();
+            if(allStudentChoose === false) {
+                for(let i =0; i < students.length; i++){
+                    let student = students[i];
+                    if (student.hasOwnProperty("choose")) {
+                        if ($scope.params.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
+                            for (let index = 0; index < periodes.length; index++) {
+                                let currentPeriode = periodes[index];
+                                if (currentPeriode.selected === true && student.choose[index] !== true) {
+                                    allStudentChoose = true;
+                                    break;
+                                }
+                            }
+                        }
+                        else if ($scope.params.type === LSU_TYPE_EXPORT.BFC) {
+                            if (student.choose[0] !== true) {
+                                allStudentChoose = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return allStudentChoose;
+        };
         $scope.updateFilters = async function(classes){
             if( !_.isEmpty(classes) ) {
                 _.map( classes, (classe) => {

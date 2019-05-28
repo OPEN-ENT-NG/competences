@@ -40,7 +40,7 @@
     <h2 ng-if="lsu.errorsLSU.all.length > 0" class="center">
         <i18n>evaluations.lsu.errors.eleves.bilan.periodique.title</i18n></h2>
     <section class="twelve center">
-        <infotip name="lsu-error-unheeded-student-tutorial" class="info marginFive">
+        <infotip name="lsu-error-unheeded-student-tutorial" class="info marginFive bottomInfo" >
             <strong><i18n>tuto.lsu.title</i18n></strong>
             <ul>
                 <li>
@@ -110,7 +110,7 @@
                             <div ng-model="student.choose[0]"
                                  ng-init="student.choose[0] = false;"
                                  ng-click="student.choose[0]=!student.choose[0];changeUnheededStudents(student, undefined, null, 0)">
-                                <i ng-class="{nobody: !student.choose[0], person:student.choose[0]}"
+                                <i ng-class="{nobody: student.choose[0], person:!student.choose[0]}"
                                    ng-style="{'color': !student.choose[0]? 'green' : 'red'}"
                                    class="twentyFontSize " ></i>
                                 <span><i18n>viescolaire.utils.cycle</i18n></span>
@@ -134,7 +134,7 @@
             </tbody>
         </table>
     </div>
-    <button class="marginFive" ng-click="exportLSU(false); opened.lightboxErrorsLSU = false;" ng-disabled="controleExportLSU()">
+    <button class="marginFive" ng-click="exportLSU(false); opened.lightboxErrorsLSU = false;" ng-disabled="controleAllIgnored(lsu.errorsLSU.all, filteredPeriodes)">
         <i18n>continue</i18n>
     </button>
     <button class="marginFive" ng-click="opened.lightboxErrorsLSU = !opened.lightboxErrorsLSU;">
