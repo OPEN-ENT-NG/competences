@@ -204,10 +204,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getEvenements(idEleve, elevesMap, idPeriode, finalHandler);
                 getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, finalHandler);
                 getStructure(idEleve, elevesMap, finalHandler);
-                getHeadTeachers(idEleve, elevesMap, finalHandler);
+                getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap, finalHandler);
                 getLibellePeriode(request, idEleve, elevesMap, idPeriode, finalHandler);
-                getAnneeScolaire(idEleve, elevesMap, finalHandler);
-                getCycle(idEleve,elevesMap,idPeriode, params.getLong(TYPE_PERIODE), finalHandler);
+                getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap, finalHandler);
+                getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE), finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
                 getAvisConseil(idEleve, elevesMap, idPeriode, finalHandler);
                 getAvisOrientation(idEleve, elevesMap, idPeriode, finalHandler);
@@ -216,11 +216,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 }
                 if(params.getBoolean(SHOW_BILAN_PER_DOMAINE)) {
                     getImageGraph(idEleve, elevesMap, idPeriode, finalHandler);
-                    getArbreDomaines(idEleve,elevesMap, finalHandler);
+                    getArbreDomaines(idEleve, classe.getString(ID_CLASSE), elevesMap, finalHandler);
                 }
 
                 if (params.getBoolean(SHOW_PROJECTS)) {
-                    getProjets(idEleve, elevesMap, idPeriode, finalHandler);
+                    getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, finalHandler);
                 }
                 getSuiviAcquis(idEleve, elevesMap, idPeriode, classe,  params.getBoolean(GET_PROGRAM_ELEMENT),
                         finalHandler);
@@ -304,7 +304,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getCycle ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode, Long typePeriode,
+    public void getCycle ( String idEleve, String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode, Long typePeriode,
                            Handler<Either<String, JsonObject>> finalHandler) {
         JsonObject eleve = elevesMap.get(idEleve);
         logBegin(GET_CYCLE_METHOD, idEleve);
@@ -315,7 +315,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
 
-            String idClasse = eleve.getString(ID_CLASSE);
+            //String idClasse = eleve.getString(ID_CLASSE);
 
             if (idClasse == null) {
                 log.error("[getCycle]| Object eleve doesn't contains field idClasse ");
@@ -407,7 +407,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
     @Override
-    public void getAnneeScolaire(String idEleve,
+    public void getAnneeScolaire(String idEleve, String idClasse,
                                  Map<String, JsonObject> elevesMap,
                                  Handler<Either<String, JsonObject>> finalHandler) {
         JsonObject eleve = elevesMap.get(idEleve);
@@ -417,7 +417,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             finalHandler.handle(new Either.Right<>(null));
         }
         else {
-            String idClasse = eleve.getString(ID_CLASSE);
+            //String idClasse = eleve.getString(ID_CLASSE);
 
             if (idClasse == null) {
                 logidClasseNotFound(idEleve, GET_ANNEE_SCOLAIRE_METHOD);
@@ -626,7 +626,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
 
     @Override
-    public void getProjets ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode,
+    public void getProjets (String idEleve, String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode,
                              Handler<Either<String, JsonObject>> finalHandler) {
         JsonObject eleveObject = elevesMap.get(idEleve);
         logBegin(GET_PROJECTS_METHOD, idEleve);
@@ -636,7 +636,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             // gets Projects
-            String idClasse = eleveObject.getString(ID_CLASSE);
+            //String idClasse = eleveObject.getString(ID_CLASSE);
             String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT);
 
             elementBilanPeriodiqueService.getElementsBilanPeriodique(null,  Arrays.asList(idClasse),
@@ -990,7 +990,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getHeadTeachers( String idEleve, Map<String,JsonObject> elevesMap,
+    public void getHeadTeachers( String idEleve, String idClasse, Map<String,JsonObject> elevesMap,
                                  Handler<Either<String, JsonObject>> finalHandler) {
         logBegin(GET_HEAD_TEACHERS_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
@@ -1000,7 +1000,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             JsonObject action = new JsonObject();
-            String idClasse = eleveObject.getString(ID_CLASSE);
+            //String idClasse = eleveObject.getString(ID_CLASSE);
             if (idClasse == null) {
                 logidClasseNotFound(idEleve, GET_HEAD_TEACHERS_METHOD);
                 finalHandler.handle(new Either.Right<>(null));
@@ -1289,7 +1289,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             String idEtablissement = eleveObject.getString(ID_ETABLISSEMENT);
-            String idClasse = eleveObject.getString(ID_CLASSE);
+            //String idClasse = eleveObject.getString(ID_CLASSE);
+            String idClasse = classe.getString(ID_CLASSE);
             if (idClasse == null || idEtablissement == null) {
                 if(idClasse == null) {
                     logidClasseNotFound(idEleve, GET_SUIVI_ACQUIS_METHOD);
@@ -1365,7 +1366,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getArbreDomaines(String idEleve, Map<String, JsonObject> elevesMap,
+    public void getArbreDomaines(String idEleve, String idClasse, Map<String, JsonObject> elevesMap,
                                  Handler<Either<String, JsonObject>> finalHandler){
 
         logBegin(GET_ARBRE_DOMAINE_METHOD, idEleve);
@@ -1375,7 +1376,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             finalHandler.handle(new Either.Right<>(null));
         }
         else {
-            String idClasse = eleveObject.getString(ID_CLASSE);
+            //String idClasse = eleveObject.getString(ID_CLASSE);
             if (idClasse == null ) {
                 if (idClasse == null) {
                     logidClasseNotFound(idEleve, GET_ARBRE_DOMAINE_METHOD);
@@ -1809,7 +1810,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public void setLevel(JsonObject eleve) {
         String level = eleve.getString(LEVEL);
         if(level == null) {
-            level = eleve.getString("classeName");
+            level = eleve.getString("classeNameToShow");
         }
         if(level != null) {
             level = String.valueOf(level.charAt(0));
@@ -1841,6 +1842,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             // Mise en forme de la date de naissance
             String idEleve = eleve.getString(ID_ELEVE_KEY);
             setBirthDate(eleve);
+
+            // Classe à afficher
+            String idClasseExporte = classe.getString("idClasse");
+
+            if(!eleve.getString("idClasse").equals(idClasseExporte) &&
+                    eleve.getJsonObject("oldClasses") != null &&
+                    eleve.getJsonObject("oldClasses").getString(idClasseExporte) != null) {
+                eleve.put("classeNameToShow", eleve.getJsonObject("oldClasses").getString(idClasseExporte));
+            } else {
+                eleve.put("classeNameToShow", eleve.getString("classeName"));
+            }
 
             // Rajout de l'image du graphe par domaine
             if (showBilanPerDomaines) {

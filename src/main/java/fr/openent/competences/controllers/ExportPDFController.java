@@ -2566,6 +2566,8 @@ public class ExportPDFController extends ControllerHelper {
                                     classe.put("models", models);
                                 }
 
+                                classe.put("idClasse", idClasse);
+
                                 final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
                                 final AtomicBoolean answered = new AtomicBoolean();
                                 final Handler<Either<String, JsonObject>> finalHandler

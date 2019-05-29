@@ -82,11 +82,12 @@ public interface ExportBulletinService {
     /**
      * Récupère les EPI, AP et Parcours d'un élève
      * @param idEleve ideleve
+     * @param idClasse identifiant de la classe
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idperiode
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getProjets ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode,
+    void getProjets ( String idEleve,  String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode,
                       Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -110,22 +111,24 @@ public interface ExportBulletinService {
 
     /**
      * Récupère le(s) professeur(s) princip(al/aux) de la classe de l'élève
-     * @param idEleve idEleve
+     * @param idEleve identifiant de l'élève
+     * @param idClasse identifiant de la classe
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getHeadTeachers( String idEleve, Map<String,JsonObject> elevesMap,
+    void getHeadTeachers( String idEleve, String idClasse, Map<String,JsonObject> elevesMap,
                                  Handler<Either<String, JsonObject>> finalHandler);
 
     /**
      * Récupère le cycle de la classe de l'élève
      * @param idEleve idEleve
+     * @param idClasse  id de la classe
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idPeriode
      * @param typePeriode (semestre (2)/trimestre (3))
      * @param finalHandler handler servant à la synchronisation des services
      */
-     void getCycle ( String idEleve,  Map<String,JsonObject> elevesMap,Long idPeriode, Long typePeriode,
+     void getCycle ( String idEleve, String idClasse, Map<String,JsonObject> elevesMap,Long idPeriode, Long typePeriode,
                            Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -145,10 +148,11 @@ public interface ExportBulletinService {
      * Calcul de l'année scolaire en fonction des périodes de la classe
      * le résultat est
      * @param idEleve idEleve
+     * @param idClasse id de la classe
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param finalHandler handler servant à la synchronisation des services
      */
-     void getAnneeScolaire(String idEleve,Map<String, JsonObject> elevesMap,
+     void getAnneeScolaire(String idEleve, String idClasse, Map<String, JsonObject> elevesMap,
                                  Handler<Either<String, JsonObject>> finalHandler) ;
 
     /**
@@ -175,10 +179,11 @@ public interface ExportBulletinService {
     /**
      * Récupération de tous les enseignements
      * @param idEleve l'identifiant de l'élève.
+     * @param idClasse l'identifiant de la classe
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param finalHandler handler servant à la synchronisation des services.
      */
-    void getArbreDomaines(String idEleve, Map<String, JsonObject> elevesMap,
+    void getArbreDomaines(String idEleve, String idClasse, Map<String, JsonObject> elevesMap,
                           Handler<Either<String, JsonObject>> finalHandler);
 
 
