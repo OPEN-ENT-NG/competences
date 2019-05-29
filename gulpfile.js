@@ -20,7 +20,7 @@ gulp.task('copy-files', ['drop-cache'], () => {
         .pipe(gulp.dest('./src/main/resources/public/dist/entcore'));
 
     return merge(html, bundle);
-})
+});
 
 gulp.task('webpack', ['copy-files'], () => { 
     return gulp.src('./src/main/resources/public')
@@ -38,7 +38,6 @@ gulp.task('rev', ['webpack'], () => {
         .pipe(rev.manifest())
         .pipe(gulp.dest('./'));
 });
-
 gulp.task('build', ['rev'], () => {
     var refs = gulp.src("./src/main/resources/view-src/**/*.html")
         .pipe(revReplace({manifest: gulp.src("./rev-manifest.json") }))

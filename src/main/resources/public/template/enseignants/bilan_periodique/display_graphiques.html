@@ -1,53 +1,136 @@
- <!--
-  ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
-  ~
-  ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
-  ~
-  ~ This program is free software; you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as
-  ~ published by the Free Software Foundation (version 3 of the License).
-  ~ For the sake of explanation, any module that communicate over native
-  ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
-  ~ license and could be license under its own terms. This is merely considered
-  ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  ~
-  -->
-
-<!--<section ng-show="elementBilanPeriodique.eleve.configMixedChart.labels.length === 0">-->
-     <!--<content>-->
-         <!--<article class="card twelve-mobile centered">-->
-             <!--<i18n>evaluation.bilan.periodique.graphique.empty</i18n>-->
-         <!--</article>-->
-     <!--</content>-->
- <!--</section>-->
+<!--
+ ~ Copyright (c) Région Hauts-de-France, Département 77, CGI, 2016.
+ ~
+ ~ This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+ ~
+ ~ This program is free software; you can redistribute it and/or modify
+ ~ it under the terms of the GNU Affero General Public License as
+ ~ published by the Free Software Foundation (version 3 of the License).
+ ~ For the sake of explanation, any module that communicate over native
+ ~ Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+ ~ license and could be license under its own terms. This is merely considered
+ ~ normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+ ~
+ ~ This program is distributed in the hope that it will be useful,
+ ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ ~
+ -->
 <div ng-show="selected.graphique">
-<section>
-    <article class="twelve cell">
-        <h3 ng-class="{'openedElem' : graphMat.opened}"
-            class="margin-top-05em chevron"
-            data-ng-click="graphMat.opened = !graphMat.opened; openMatiere(false);"
-            ng-init="graphMat.opened = true">
-            <i18n>evaluations.bilan.by.subject</i18n>
-        </h3>
-            <container ng-if="!graphMat.opened" template="graphMatiere"></container>
-    </article>
+    <section>
+        <article class="twelve cell">
+            <h3 ng-class="{'openedElem' : graphMat.opened}"
+                class="margin-top-05em chevron"
+                data-ng-click="graphMat.opened = !graphMat.opened; switchOpenMatiere(graphMat.opened);">
+                <i18n>evaluations.bilan.by.subject</i18n>
+            </h3>
+            <div ng-if="!graphMat.opened">
+                <div class="fancyCheck three cell">
+                    <input type="checkbox" id="subjectComparison" class="cell"
+                           ng-model="graphMat.comparison">
+                    <label class="cell twelve" for="subjectComparison">
+                        <h5 class=" ten "> <span><i18n>evaluation.bilan.periodique.open.comparison</i18n></span></h5>
+                    </label>
+                </div>
+                <fieldset class="twelve cell twelve-mobile" ng-show="graphMat.comparison">
+                    <legend><i18n>evaluation.comparison.options</i18n></legend>
 
-    <article class="twelve cell">
-        <h3 ng-class="{'openedElem' : graphDom.opened}"
-            class="margin-top-05em chevron"
-            data-ng-click="graphDom.opened = !graphDom.opened; openDomaine(true);"
-            ng-init="graphDom.opened = true">
-            <i18n>evaluations.bilan.by.domaine</i18n>
-        </h3>
-            <container ng-if="!graphDom.opened" template="graphDomaine"></container>
-    </article>
-</section>
+                    <div class="twelve cell twelve-mobile horizontal-spacing">
+                        <div class="row display-inline-block">
+                            <label class="checkbox ten"
+                                   ng-repeat="periode in filteredPeriode | orderBy:'id_type'">
+                                <input type="checkbox"
+                                       ng-model="periode.comparison"
+                                ><span ng-init="periode.name = getI18nPeriode(periode); ">
+                        [[::periode.name]]</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="six cell twelve-mobile  horizontal-spacing">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   ng-model="graphMat.darkness"
+                            /><span>
+                            <i18n>evaluation.comparison.darkness</i18n>
+                        </span></label>
+                    </div>
+                    <div class="six cell twelve-mobile  horizontal-spacing">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   ng-model="graphMat.infoGrouped"
+                            /><span>
+                            <i18n>evaluation.comparison.tooltip.group</i18n>
+                        </span></label>
+                    </div>
+                </fieldset>
+                <div class="twelve cell" ng-show="graphMat.comparison" style="top:10px">
+                    <button type="button" ng-click="drawComparison(filteredPeriode,false,graphMat.darkness, graphMat.infoGrouped)">
+                        <i18n>evaluation.comparison.draw</i18n>
+                    </button>
+                </div>
+            </div>
+            <container ng-show="!graphMat.opened && !graphMat.comparison" template="graphMatiere"></container>
+            <container ng-show="!graphMat.opened && graphMat.comparison"  template="comparisonGraphMatiere"></container>
+        </article>
 
-<section>
-    <container template="synthese"></container>
-</section>
+        <article class="twelve cell">
+            <h3 ng-class="{'openedElem' : graphDom.opened}"
+                class="margin-top-05em chevron"
+                data-ng-click="graphDom.opened = !graphDom.opened; switchOpenDomaine(graphDom.opened);">
+                <i18n>evaluations.bilan.by.domaine</i18n>
+            </h3>
+            <div ng-if="!graphDom.opened">
+                <div class="fancyCheck three cell">
+                    <input type="checkbox" id="domaineComparison" class="cell"
+                           ng-model="graphDom.comparison">
+                    <label class="cell twelve" for="domaineComparison">
+                        <h5 class=" ten "> <span><i18n>evaluation.bilan.periodique.open.comparison</i18n></span></h5>
+                    </label>
+                </div>
+                <fieldset class="twelve cell twelve-mobile" ng-show="graphDom.comparison">
+                    <legend><i18n>evaluation.comparison.options</i18n></legend>
+
+                    <div class="twelve cell twelve-mobile horizontal-spacing">
+                        <div class="row display-inline-block">
+                            <label class="checkbox ten"
+                                   ng-repeat="periode in filteredPeriode | orderBy:'id_type'">
+                                <input type="checkbox"
+                                       ng-model="periode.comparisonDom"
+                                ><span ng-init="periode.name = getI18nPeriode(periode); ">
+                        [[::periode.name]]</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="six cell twelve-mobile  horizontal-spacing">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   ng-model="graphDom.darkness"
+                            /><span>
+                            <i18n>evaluation.comparison.darkness</i18n>
+                        </span></label>
+                    </div>
+                    <div class="six cell twelve-mobile  horizontal-spacing">
+                        <label class="checkbox">
+                            <input type="checkbox"
+                                   ng-model="graphDom.infoGrouped"
+                            /><span>
+                            <i18n>evaluation.comparison.tooltip.group</i18n>
+                        </span></label>
+                    </div>
+                </fieldset>
+                <div class="twelve cell" ng-show="graphDom.comparison" style="top:10px">
+                    <button type="button"
+                            ng-click="drawComparison(filteredPeriode,true,graphDom.darkness, graphDom.infoGrouped)">
+                        <i18n>evaluation.comparison.draw</i18n>
+                    </button>
+                </div>
+            </div>
+            <container ng-show="!graphDom.opened && !graphDom.comparison" template="graphDomaine"></container>
+            <container ng-show="!graphDom.opened && graphDom.comparison"  template="comparisonGraphDom"></container>
+        </article>
+    </section>
+
+    <section>
+        <container template="synthese"></container>
+    </section>
 </div>

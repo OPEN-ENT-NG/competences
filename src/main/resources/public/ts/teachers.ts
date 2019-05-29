@@ -23,6 +23,7 @@ import { evaluations } from './models/teacher';
 
 ng.addRequiredModule('chart.js');
 
+
 //CONTROLLERS
 import {evaluationsController} from './controllers/eval_teacher_ctl';
 import {evalAcuTeacherController} from './controllers/eval_acu_teacher_ctl';
@@ -120,9 +121,9 @@ routes.define(function($routeProvider){
 });
 
 declare let require: any;
+export let Color = require('color');
 
 model.build = async function () {
     await model.me.workflow.load(['viescolaire']);
-    require('angular-chart.js');
     (this as any).evaluations = evaluations;
 };

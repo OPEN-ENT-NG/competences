@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, idiom as lang, _, Behaviours} from 'entcore';
+import {model, idiom as lang, _, Behaviours, template} from 'entcore';
 import * as utils from '../../utils/teacher';
 import {BilanFinDeCycle, Classe, CompetenceNote} from './index';
 import {evaluations} from "./model";
@@ -650,6 +650,44 @@ export class Utils {
             await utils.safeApply($scope);
         }
         await utils.safeApply($scope);
+    };
+
+    static awaitAndDisplay = async function (allPromise, $scope, templates?) {
+      await Promise.all(allPromise);
+      if(templates !== undefined){
+          _.mapObject(templates, function(val, key) {
+              template.open(key, val);
+          });
+      }
+      await this.stopMessageLoader($scope);
+    };
+
+
+    static helperTooltipsForGraph = function (tooltipModel, forDomaine, currentChart,  graphToSet, widthToAdd){
+        // Récupération de l'index du tooltip
+        let data = currentChart.informations.eleve[graphToSet].data;
+        let labels = (data!==undefined)? data.labels : currentChart.informations.eleve[graphToSet].labels;
+        let idx_label = labels.indexOf(tooltipModel.title[0]);
+
+        if(idx_label=== -1) {
+            return;
+        }
+
+        tooltipModel.width += widthToAdd;
+        // Modification de l'affichage de chaque ligne du tooltip
+        for (let i = 0; i < tooltipModel.body.length; i++) {
+            let split_label = tooltipModel.body[i].lines[0].split(':');
+            let datasetOveride = (data!== undefined)?data.datasetOverride :
+                currentChart.informations.eleve[graphToSet].datasetsOveride;
+            let datasets = _.findWhere(datasetOveride, {label: split_label[0]});
+
+            if(datasets !== undefined){
+                let percent = datasets.tooltipsPercentage[idx_label];
+                if( percent !== undefined) {
+                    tooltipModel.body[i].lines[0] = `${split_label[0]} : ${percent}`;
+                }
+            }
+        }
     };
 
 }

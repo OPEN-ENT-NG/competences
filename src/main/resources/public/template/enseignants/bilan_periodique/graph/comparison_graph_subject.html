@@ -1,0 +1,14 @@
+<div ng-if="informations.eleve.comparisonGraph !== undefined"
+     class="twelve">
+    <div class=" twelve cell twelve-mobile">
+        <div class="chart-container" >
+            <canvas id="comparisonGraphfalse"
+                    class="chart chart-bar" width="400" height="400"
+                    chart-labels="informations.eleve.comparisonGraph.data.labels"
+                    chart-options="informations.eleve.comparisonGraph.options"
+                    chart-type="informations.eleve.comparisonGraph.type"
+                    chart-data="informations.eleve.comparisonGraph.data.data"
+                    chart-dataset-override="informations.eleve.comparisonGraph.data.datasetOverride"></canvas>
+        </div>
+    </div>
+</div>

@@ -1,22 +1,23 @@
 import {Defaultcolors} from "../eval_niveau_comp";
-import {_, http, idiom as lang, Model} from "entcore";
+import {_, angular, http, idiom as lang, Model} from "entcore";
+import {Utils} from "../teacher";
 
 
-declare  let Chart: any;
+declare  let Chart, Color: any;
 
 export class Graph extends Model{
 
     static _metas : any;
 
-    static getDataForGraph(that, eleve, forDomaine?): any {
+    static getDataForGraph(that, eleve, forDomaine?, niveauCompetences?, forComparison?): any {
         return new Promise((resolve, reject) => {
             let uri = (forDomaine === true) ? that.api.GET_DATA_FOR_GRAPH_DOMAINE : that.api.GET_DATA_FOR_GRAPH;
             uri += '&idEleve=' + eleve.id;
             uri += (that.idPeriode !== null) ? ('&idPeriode=' + that.idPeriode) : '';
             http().getJson(uri)
                 .done(async (res) => {
-                    this.configCharts(eleve, res, forDomaine);
-                    resolve();
+                    resolve(_.extend(this.configCharts(eleve, res, forDomaine, niveauCompetences, forComparison),
+                        {idPeriode: that.idPeriode}));
                 })
                 .error((err) => {
                     reject(err);
@@ -34,6 +35,51 @@ export class Graph extends Model{
         });
 
         return (summ === 0) ? 0 : parseFloat((res / summ).toFixed(2));
+    }
+
+    static buildDatasets(configMixedChart, niveauCompetences) : Array<object> {
+        return [
+            {
+                label: _.clone(configMixedChart.averageStudent.label),
+                type: 'line',
+                data: _.clone(configMixedChart.averageStudent.data),
+                tooltipsPercentage : _.clone(configMixedChart.averageStudent.data),
+                fill: false,
+            },
+            {
+                label: _.clone(configMixedChart.averageClass.label),
+                type: 'line',
+                data: _.clone(configMixedChart.averageClass.data),
+                tooltipsPercentage: _.clone(configMixedChart.averageClass.data),
+                fill: false,
+                borderWidth : 1 + Chart.defaults.global.elements.line.borderWidth,
+            },
+            {
+                label: _.clone(niveauCompetences[3].libelle),
+                backgroundColor: _.clone(niveauCompetences[3].couleur),
+                borderColor :`rgb(${Color(niveauCompetences[3].couleur).darken(0.25).values.rgb.toString()})`,
+                data: _.clone(configMixedChart.datasets.data_set1),
+                tooltipsPercentage: _.clone(configMixedChart.datasets.percentage_set1),
+            }, {
+                label: _.clone(niveauCompetences[2].libelle),
+                backgroundColor: _.clone(niveauCompetences[2].couleur),
+                borderColor :`rgb(${Color(niveauCompetences[2].couleur).darken(0.25).values.rgb.toString()})`,
+                data: _.clone(configMixedChart.datasets.data_set2),
+                tooltipsPercentage: _.clone(configMixedChart.datasets.percentage_set2)
+            }, {
+                label: _.clone(niveauCompetences[1].libelle),
+                backgroundColor: _.clone(niveauCompetences[1].couleur),
+                borderColor :`rgb(${Color(niveauCompetences[1].couleur).darken(0.25).values.rgb.toString()})`,
+                data: _.clone(configMixedChart.datasets.data_set3),
+                tooltipsPercentage: _.clone(configMixedChart.datasets.percentage_set3)
+            }, {
+                label: _.clone(niveauCompetences[0].libelle),
+                backgroundColor: _.clone(niveauCompetences[0].couleur),
+                borderColor :`rgb(${Color(niveauCompetences[0].couleur).darken(0.25).values.rgb.toString()})`,
+                data: _.clone(configMixedChart.datasets.data_set4),
+                tooltipsPercentage: _.clone(configMixedChart.datasets.percentage_set4)
+            }
+        ];
     }
 
     static moyenneNote(notes): number {
@@ -56,7 +102,80 @@ export class Graph extends Model{
         return parseFloat(res.toFixed(2));
     }
 
-    static configCharts(eleve, _datas, forDomaine?): any {
+    static tooltipsFunction(tooltipModel, forDomaine) : any{
+        if (tooltipModel.body !== undefined) {
+            let graphToSet = forDomaine? 'configMixedChartDomaine' : 'configMixedChart';
+            let currentChart = angular.element('#mixedChart' + forDomaine).scope();
+            Utils.helperTooltipsForGraph(tooltipModel, forDomaine, currentChart, graphToSet, 60);
+        }
+    }
+
+    static buildOption(configMixedChart, forDomaine){
+        return  {
+            maintainAspectRatio: false,
+            title: {
+                display: true,
+                text: ' '
+            },
+            legend: {
+                display: true,
+                position: 'bottom',
+                pointStyle: 'circle'
+            },
+            tooltips: {
+                mode: 'label',
+                custom: (tooltipModel) => {
+                    this.tooltipsFunction(tooltipModel, forDomaine);
+                }
+            },
+            responsive: true,
+            scales: {
+                xAxes: [{
+                    stacked: true,
+                    gridLines: {
+                        display: false
+                    },
+                    ticks: {
+                        autoSkip: false
+                    }
+                }],
+                yAxes: [
+                    {
+                        stacked: false,
+                        position: "left",
+                        id: "y-axis-0",
+                        scaleLabel: {
+                            display: true,
+                            labelString: configMixedChart.labelyAxes[0]
+                        },
+                        ticks: {
+                            beginAtZero:true
+                        }
+                    },
+                    {
+                        stacked: false,
+                        position: "right",
+                        id: "y-axis-1",
+                        scaleLabel: {
+                            display: false,
+                            labelString: configMixedChart.labelyAxes[1]
+                        }
+                        ,
+                        gridLines: {
+                            display:false
+                        },
+                        ticks: {
+                            callback: function(value, index, values) {
+                                return ' ';
+                            }
+                        }
+                    }
+                ]
+            }
+        };
+    }
+
+    static configCharts(eleve, _datas, forDomaine?, niveauCompetences?, forComparison?): object {
         // CompetenceNotes
         let data = [];
         let dataStudent = [];  // Moyenne CompetenceNotes par matiere de l'élève
@@ -69,10 +188,10 @@ export class Graph extends Model{
 
 
         let labels = []; //Nom des matières
-        let data_set1 = [];
-        let data_set2 = [];
-        let data_set3 = [];
-        let data_set4 = [];
+        let data_set1 = [], percentage_set1 = [];
+        let data_set2 = [], percentage_set2 = [];
+        let data_set3 = [], percentage_set3 = [];
+        let data_set4 = [], percentage_set4 = [];
         let colors = ['#00ADF9',
             '#fd9236',
             '#dc151c',
@@ -93,6 +212,18 @@ export class Graph extends Model{
                 text: lang.translate(i18nTitleView)
             }
         };
+        let tooltips = {tooltips: {
+                mode: 'label',
+                custom: function (tooltipModel) {
+                    if (tooltipModel.body !== undefined) {
+                        console.dir(tooltipModel);
+                        tooltipModel.width += 20;
+                        for (let i = 0; i < tooltipModel.body.length; i++) {
+                            tooltipModel.body[i].lines[0] += `${tooltipModel.dataPoints[i].yLabel}`;
+                        }
+                    }
+                }
+            }};
         let averageOption = {
             scale: {scaleOverride : true,
                 ticks: {
@@ -104,8 +235,6 @@ export class Graph extends Model{
         };
         let levelOption = {
             scale: {scaleOverride : true,
-                //       scaleSteps : 1,
-                //       scaleStartValue : 0,
                 ticks: {
                     min: 0,
                     max: 4,
@@ -113,8 +242,10 @@ export class Graph extends Model{
                 }
             }
         };
-        _.extend(averageOption, commonOption);
+        _.extend(commonOption, tooltips);
+        _.extend(averageOption,commonOption);
         _.extend(levelOption, commonOption);
+
         let options = {average : averageOption, level : levelOption};
         let configRadarChart = {
             datasets: {
@@ -134,13 +265,20 @@ export class Graph extends Model{
             colors: colors,
             niveau: Defaultcolors,
             labelyAxes: [lang.translate('level.items'), lang.translate('averages')],
+            datasetsOveride : undefined,
+            options: undefined,
+            _datas: [],
             datasets: {
                 test: undefined,
-                average: average,
+                average: data,
                 data_set1: data_set1,
                 data_set2: data_set2,
                 data_set3: data_set3,
-                data_set4: data_set4
+                data_set4: data_set4,
+                percentage_set1: percentage_set1,
+                percentage_set2: percentage_set2,
+                percentage_set3: percentage_set3,
+                percentage_set4: percentage_set4
             },
             averageStudent: {
                 label: lang.translate('level.student'),
@@ -202,8 +340,6 @@ export class Graph extends Model{
                 }else{
                     averageClass.push(0);
                 }
-                // averageStudent.push(this.moyenneNote(matiereOrDomaine.notesEleve));
-                //averageClass.push(this.moyenneNote(matiereOrDomaine.notes));
 
                 let nbrCompNotesUnevaluated = _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: -1});
                 nbrCompNotesUnevaluated = (!nbrCompNotesUnevaluated) ? nbrCompNotesUnevaluated.length : 0;
@@ -215,45 +351,75 @@ export class Graph extends Model{
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 0}));
                 nbrCompNotes_set1 = !(nbrCompNotes_set1) ? 0 : nbrCompNotes_set1.length;
                 let set1_val = Math.min(diviseur, diviseur * (nbrCompNotes_set1 / (nbrCompNotes)));
+                let set1_percent = `${(nbrCompNotes_set1 * 100 / (nbrCompNotes)).toFixed(2)} %`;
 
                 let nbrCompNotes_set2 = _.union(
                     _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 1, niveau_final: null}),
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 1}));
                 nbrCompNotes_set2 = !(nbrCompNotes_set2) ? 0 : nbrCompNotes_set2.length;
                 let set2_val = Math.min(diviseur, diviseur * (nbrCompNotes_set2 / (nbrCompNotes)) + set1_val);
+                let set2_percent = `${(nbrCompNotes_set2 * 100 / (nbrCompNotes)).toFixed(2)} %`;
 
                 let nbrCompNotes_set3 = _.union(
                     _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 2, niveau_final: null}),
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 2}));
                 nbrCompNotes_set3 = !(nbrCompNotes_set3) ? 0 : nbrCompNotes_set3.length;
                 let set3_val = Math.min(diviseur, diviseur * (nbrCompNotes_set3 / (nbrCompNotes)) + set2_val);
+                let set3_percent = `${(nbrCompNotes_set3 * 100 / (nbrCompNotes)).toFixed(2)} %`;
 
                 let nbrCompNotes_set4 = _.union(
                     _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: 3, niveau_final: null}),
                     _.where(matiereOrDomaine.competencesNotesEleve, {niveau_final: 3}));
                 nbrCompNotes_set4 = !(nbrCompNotes_set4) ? 0 : nbrCompNotes_set4.length;
                 let set4_val = Math.min(diviseur, diviseur * (nbrCompNotes_set4 / (nbrCompNotes)) + set3_val);
+                let set4_percent = `${(nbrCompNotes_set4 * 100 / (nbrCompNotes)).toFixed(2)} %`;
 
+                // données des niveaux de maitrise
                 data_set1.push(set1_val.toFixed(2));
                 data_set2.push(set2_val.toFixed(2));
                 data_set3.push(set3_val.toFixed(2));
                 data_set4.push(set4_val.toFixed(2));
 
+                // Pourcentage des niveaux de maitrise
+                percentage_set1.push(set1_percent);
+                percentage_set2.push(set2_percent);
+                percentage_set3.push(set3_percent);
+                percentage_set4.push(set4_percent);
             }
         });
-        data.push(dataStudent);
-        data.push(dataClass);
+        data.push(_.clone(dataStudent));
+        data.push(_.clone(dataClass));
 
-        average.push(averageStudent);
-        average.push(averageClass);
+        average.push(_.clone(averageStudent));
+        average.push(_.clone(averageClass));
 
-        if (forDomaine === true) {
-            eleve.configRadarChartDomaine = configRadarChart;
-            eleve.configMixedChartDomaine = configMixedChart;
+        if( forComparison !== true) {
+            if (forDomaine === true) {
+                eleve.configRadarChartDomaine = configRadarChart;
+                eleve.configMixedChartDomaine = configMixedChart;
+            }
+            else {
+                eleve.configRadarChart = configRadarChart;
+                eleve.configMixedChart = configMixedChart;
+            }
+            if(niveauCompetences !== undefined) {
+                configMixedChart.datasetsOveride = this.buildDatasets(configMixedChart, niveauCompetences);
+                configMixedChart.options = this.buildOption(configMixedChart, forDomaine);
+                configMixedChart._datas = [averageStudent, averageClass, data_set1, data_set2, data_set3, data_set4];
+            }
+        }
+
+        if(niveauCompetences !== undefined && forComparison == true){
+
+            return {
+                configMixedChart: configMixedChart,
+                datasets: this.buildDatasets(configMixedChart, niveauCompetences),
+                forDomaine : forDomaine
+            };
         }
         else {
-            eleve.configRadarChart = configRadarChart;
-            eleve.configMixedChart = configMixedChart;
+            return {};
         }
+
     }
 }

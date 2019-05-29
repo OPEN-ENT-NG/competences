@@ -21,7 +21,11 @@ module.exports = {
     },
     resolve: {
         modulesDirectories: ['node_modules'],
-        extensions: ['', '.ts', '.js']
+        extensions: ['', '.ts', '.js'],
+        alias: {
+            'chart.js': path.resolve(__dirname, './node_modules/chart.js'),
+            'color': path.resolve(__dirname, './node_modules/color')
+        }
     },
     devtool: "source-map",
     module: {

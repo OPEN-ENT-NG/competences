@@ -1,0 +1,117 @@
+/*!
+ * Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+ *     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as
+ *   published by the Free Software Foundation (version 3 of the License).
+ *   For the sake of explanation, any module that communicate over native
+ *   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+ *   license and could be license under its own terms. This is merely considered
+ *   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
+/* 1 Cachons la case à cocher */
+div.fancyCheck {
+  [type="checkbox"]:not(:checked),
+  [type="checkbox"]:checked {
+    position: absolute;
+    left: -9999px;
+  }
+
+  /* on prépare le label */
+  [type="checkbox"]:not(:checked) + label,
+  [type="checkbox"]:checked + label {
+    position: relative; /* permet de positionner les pseudo-éléments */
+    padding-left: 25px; /* fait un peu d'espace pour notre case à venir */
+    cursor: pointer;    /* affiche un curseur adapté */
+  }
+
+
+  /* 2 Aspect des checkboxes */
+  /* :before sert à créer la case à cocher */
+
+  [type="checkbox"]:not(:checked),
+  [type="checkbox"]:checked {
+    position: absolute;
+    left: -9999px;
+  }
+  [type="checkbox"]:not(:checked) + label,
+  [type="checkbox"]:checked + label {
+    position: relative;
+    padding-left: 65px;
+    cursor: pointer;
+  }
+  [type="checkbox"]:not(:checked) + label:before,
+  [type="checkbox"]:checked + label:before,
+  [type="checkbox"]:not(:checked) + label:after,
+  [type="checkbox"]:checked + label:after {
+    content: '';
+    position: absolute;
+  }
+  [type="checkbox"]:not(:checked) + label:before,
+  [type="checkbox"]:checked + label:before {
+    left:0; top: 15px;
+    width: 45px; height: 20px;
+    background: #DDDDDD;
+    border-radius: 15px;
+    -webkit-transition: background-color .2s;
+    -moz-transition: background-color .2s;
+    -ms-transition: background-color .2s;
+    transition: background-color .2s;
+  }
+  [type="checkbox"]:not(:checked) + label:after,
+  [type="checkbox"]:checked + label:after {
+    width: 16px; height: 16px;
+    -webkit-transition: all .2s;
+    -moz-transition: all .2s;
+    -ms-transition: all .2s;
+    transition: all .2s;
+    border-radius: 50%;
+    background: #7F8C9A;
+    top: 17px; left: 2px;
+  }
+
+  /* on checked */
+  [type="checkbox"]:checked + label:before {
+    background:#34495E;
+  }
+  [type="checkbox"]:checked + label:after {
+    background: #39D2B4;
+    top: 17px; left: 27px;
+  }
+
+  [type="checkbox"]:checked + label .ui,
+  [type="checkbox"]:not(:checked) + label .ui:before,
+  [type="checkbox"]:checked + label .ui:after {
+    position: absolute;
+    left: 6px;
+    width: 45px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 22px;
+    -webkit-transition: all .2s;
+    -moz-transition: all .2s;
+    -ms-transition: all .2s;
+    transition: all .2s;
+  }
+  [type="checkbox"]:not(:checked) + label .ui:before {
+    left: 32px
+  }
+  [type="checkbox"]:checked + label .ui:after {
+    color: #39D2B4;
+  }
+  [type="checkbox"]:focus + label:before {
+    border: 1px dashed #777;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -ms-box-sizing: border-box;
+    box-sizing: border-box;
+    margin-top: -1px;
+  }
+}

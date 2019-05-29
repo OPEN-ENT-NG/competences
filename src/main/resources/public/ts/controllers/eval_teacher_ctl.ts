@@ -27,6 +27,7 @@ declare let document: any;
 declare let window: any;
 declare let console: any;
 declare let location: any;
+declare let Chart: any;
 
 export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
@@ -4298,18 +4299,49 @@ export let evaluationsController = ng.controller('EvaluationsController', [
           }
         };
 
+        angular.merge = function (s1,s2) {
+            return $.extend(true,s1,s2);
+        };
 
-        $scope.$on('chart-create', function (event, chart) {
-            let oldChart = $scope.myCharts[chart.chart.canvas.id];
-            //If id is the same, reference will be updated
-            if(oldChart !== undefined) {
-                for (let i = 0; i < chart.data.datasets.length; i++) {
-                    chart.getDatasetMeta(i).hidden = oldChart.getDatasetMeta(i).hidden;
+        Chart.plugins.register({
+            afterDatasetUpdate: function ( chart, easing) {
+                if ($location.path() === '/conseil/de/classe' || $location.path() === '/releve') {
+            let currentChart = $scope.myCharts[chart.chart.canvas.id];
+
+                for (let i = 0; i < chart.data.datasets.length&& currentChart!==undefined; i++) {
+                    let currentLabel =chart.data.datasets[i].label;
+                        let currentDatasets = _.findWhere(currentChart.datasets, {label : currentLabel});
+                        let hidden = chart.getDatasetMeta(i).hidden;
+                if (currentDatasets !== undefined){
+                currentDatasets.hidden = hidden;
+                        }
+                        else{
+                            currentChart.datasets.push({label: currentLabel, hidden : hidden});
+                        }
+                    }
                 }
-                chart.update();
-            }
-            $scope.myCharts[chart.chart.canvas.id] = chart;
-        });
+            },
+            afterInit:  function (chart, easing){
+            let haveToUpdate = false;
+            let oldChart =$scope.myCharts[chart.chart.canvas.id] ;
+                let newChart = {datasets: []};
 
+                for (let i = 0; i < chart.data.datasets.length; i++) {
+
+                    let currentlabel = chart.data.datasets[i].label;
+                    let hidden = chart.getDatasetMeta(i).hidden;
+                    if(oldChart!==undefined){
+                        let datasets = _.findWhere(oldChart.datasets, {label: currentlabel});
+                        if(datasets!== undefined){
+                            hidden = datasets.hidden; chart.getDatasetMeta(i).hidden = hidden;
+                            haveToUpdate = true;
+                        }
+        }
+
+                    newChart.datasets.push({label: currentlabel, hidden: hidden});
+                }
+                $scope.myCharts[chart.chart.canvas.id] = newChart;
+            }
+        });
     }
 ]);

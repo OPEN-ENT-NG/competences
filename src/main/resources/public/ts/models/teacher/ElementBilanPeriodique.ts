@@ -68,8 +68,9 @@ export class ElementBilanPeriodique extends Model {
     }
 
 
-    async getDataForGraph(eleve, forDomaine?) {
-        await Graph.getDataForGraph(this, eleve, forDomaine);
+    async getDataForGraph(eleve, forDomaine?, niveauCompetences?, idPeriode?) {
+        if(idPeriode!==undefined) {this.idPeriode = idPeriode;}
+        await Graph.getDataForGraph(this, eleve, forDomaine, niveauCompetences);
     }
 
 }
