@@ -123,6 +123,8 @@ public class VieScolaire {
      *     
      */
     public void setNbRetards(BigInteger value) {
+        if(value != null)
+            value =  value.min(BigInteger.valueOf(999));
         this.nbRetards = value;
     }
 
@@ -147,6 +149,8 @@ public class VieScolaire {
      *     
      */
     public void setNbAbsJustifiees(BigInteger value) {
+        if(value != null)
+            value =  value.min(BigInteger.valueOf(999));
         this.nbAbsJustifiees = value;
     }
 
@@ -171,6 +175,8 @@ public class VieScolaire {
      *     
      */
     public void setNbAbsInjustifiees(BigInteger value) {
+        if(value != null)
+            value =  value.min(BigInteger.valueOf(999));
         this.nbAbsInjustifiees = value;
     }
 
@@ -195,6 +201,8 @@ public class VieScolaire {
      *     
      */
     public void setNbHeuresManquees(BigInteger value) {
+        if(value != null)
+            value =  value.min(BigInteger.valueOf(999));
         this.nbHeuresManquees = value;
     }
 
