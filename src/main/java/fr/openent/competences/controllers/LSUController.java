@@ -1299,16 +1299,19 @@ public class LSUController extends ControllerHelper {
                                 CodeLangueCultureRegionale codeLangueCultureRegionale = null;
                                 Integer niveauLcr = null;
                                 try {
-                                    codeLangueCultureRegionale =  CodeLangueCultureRegionale.fromValue(ensCplEleve.getString("code_lcr"));
-                                    niveauLcr = ensCplEleve.getInteger("niveau_lcr");
+                                    String codeLCR = ensCplEleve.getString("code_lcr");
+                                    if(codeLCR != null) {
+                                        codeLangueCultureRegionale = CodeLangueCultureRegionale.fromValue(codeLCR);
+                                        niveauLcr = ensCplEleve.getInteger("niveau_lcr");
 
-                                    if(codeLangueCultureRegionale != null
-                                            && !codeLangueCultureRegionale.equals(CodeLangueCultureRegionale.AUC)
-                                            && niveauLcr != null) {
-                                        LangueCultureRegionale langueCultureRegionale = new LangueCultureRegionale();
-                                        langueCultureRegionale.setCode(codeLangueCultureRegionale);
-                                        langueCultureRegionale.setPositionnement(BigInteger.valueOf(niveauLcr));
-                                        bilanCycle.setLangueCultureRegionale(langueCultureRegionale);
+                                        if (codeLangueCultureRegionale != null
+                                                && !codeLangueCultureRegionale.equals(CodeLangueCultureRegionale.AUC)
+                                                && niveauLcr != null) {
+                                            LangueCultureRegionale langueCultureRegionale = new LangueCultureRegionale();
+                                            langueCultureRegionale.setCode(codeLangueCultureRegionale);
+                                            langueCultureRegionale.setPositionnement(BigInteger.valueOf(niveauLcr));
+                                            bilanCycle.setLangueCultureRegionale(langueCultureRegionale);
+                                        }
                                     }
                                 } catch (Exception e) {
                                     log.error("error setting langueCultureRegionale fo user " + idEleve, e);

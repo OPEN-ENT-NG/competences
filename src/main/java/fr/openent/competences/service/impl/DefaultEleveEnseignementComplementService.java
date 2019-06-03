@@ -95,7 +95,7 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
                             "ON notes.eleve_enseignement_complement.id_enscpl = notes.enseignement_complement.id " +
                             "INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".niveau_ens_complement ON niveau_ens_complement.id = eleve_enseignement_complement.id_niveau "+
 
-                            "INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".langues_culture_regionale ON eleve_enseignement_complement.id_langue = langues_culture_regionale.id "+
+                            "LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".langues_culture_regionale ON eleve_enseignement_complement.id_langue = langues_culture_regionale.id "+
 
                             " WHERE id_eleve IN " + Sql.listPrepared(idsEleve);
                     for (String idEleve : idsEleve) {

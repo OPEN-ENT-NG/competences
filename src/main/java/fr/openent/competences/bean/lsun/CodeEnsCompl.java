@@ -59,7 +59,8 @@ public enum CodeEnsCompl {
     PRO,
     LSF,
     LVE,
-    CHK;
+    CHK,
+    LCE;
 
     public String value() {
         return name();
