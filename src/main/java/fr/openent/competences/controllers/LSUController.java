@@ -2331,11 +2331,12 @@ public class LSUController extends ControllerHelper {
             currentEnseignantDiscipline.setDisciplineRef(currentSubj);
             currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
             enseignantDiscipline.add(currentEnseignantDiscipline);
-            disciplineRefs.add(currentSubj);
-            resp1FutureComposite.complete();
-        } else {
-            resp1FutureComposite.complete();
+            // ajout sans doublon sinon rejet de LSU
+            if(!disciplineRefs.contains(currentSubj)) {
+                disciplineRefs.add(currentSubj);
+            }
         }
+        resp1FutureComposite.complete();
     }
 
 
