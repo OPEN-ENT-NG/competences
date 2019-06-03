@@ -1791,7 +1791,7 @@ public class LSUController extends ControllerHelper {
                             periode.setNbPeriodes(periodeList.size());
                             donnees.getPeriodes().getPeriode().add(periode);*/
 
-                                        String millesime = currentPeriode.getString("timestamp_dt").substring(0, 4);
+                                        String millesime = getMillesimeBFC();
                                         Integer indice = new Integer(0);
                                         Integer nbPeriode = new Integer(0);
                                         if (currentPeriode.getInteger("id_type") == 3 ||
