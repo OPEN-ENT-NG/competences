@@ -44,12 +44,14 @@
             <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="suiviClasse.print" value="printRecapAppreciations">
             <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
         </label>
-        <br/>
-        <h4><i18n>evaluations.export.format.csv</i18n>&nbsp;:</h4>
-        <label>
-            <input type="radio" ng-change="changePrintSuiviClasse('printTabMoyPosAppr')" ng-model="suiviClasse.print" value="printTabMoyPosAppr" ng-disabled="suiviClasse.periode.id_type == undefined && printSuiviClasse != 'printTabMoyPosAppr'">
-            <span><i18n>evaluations.tab.moysPos</i18n></span>
-        </label>
+        <div ng-if="isChefEtab()">
+            <br/>
+            <h4><i18n>evaluations.export.format.csv</i18n>&nbsp;:</h4>
+            <label>
+                <input type="radio" ng-change="changePrintSuiviClasse('printTabMoyPosAppr')" ng-model="suiviClasse.print" value="printTabMoyPosAppr" ng-disabled="suiviClasse.periode.id_type == undefined && printSuiviClasse != 'printTabMoyPosAppr'">
+                <span><i18n>evaluations.tab.moysPos</i18n></span>
+            </label>
+        </div>
     </div>
     <div class="row">
         <div class="twelve cell twelve-mobile">
