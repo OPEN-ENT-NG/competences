@@ -83,7 +83,7 @@ export class BfcSynthese extends Model {
         return new Promise((resolve, reject) => {
             if(this.texte != undefined){
                 try{
-                    if(!this.id){
+                    if(!this.id && this.texte != ''){
                         this.createBfcSynthese().then((data)=>{
                             resolve(data);
                         });
