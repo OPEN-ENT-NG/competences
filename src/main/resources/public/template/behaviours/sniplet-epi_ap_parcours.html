@@ -306,6 +306,11 @@
                     <i class="asterisk obligatoire"></i>
                     <i18n ng-if="selected.EPI" class="champsRequis italic">evaluations.nb.intervenant.requis</i18n>
                 </h4>
+                <section ng-if="hasTwoTimesSubject" class="row twelve-mobile ng-scope">
+                    <div class="twelve cell warning">
+                        <i18n>evaluations.elements.subject.appear.two.times</i18n>
+                    </div>
+                </section>
                 <div class="five cell twelve-mobile">
                     <label class="select">
                         <select ng-model="search.enseignant"
@@ -321,7 +326,7 @@
                            ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
                         <select ng-model="search.matiere"
                                 ng-change="pushData(search.enseignant, search.matiere)"
-                                ng-options="matiere.name for matiere in matieres"
+                                ng-options="matiere.name for matiere in (filteredSubjects = (options.matieres | filter:notYetSelected()))"
                                 ng-disabled="search.enseignant == null">
                             <option class="header-opt" disabled value="">[[translate('viescolaire.utils.subject')]]
                             </option>

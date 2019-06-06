@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {notify, template, _, $} from 'entcore';
+import {notify, _, $} from 'entcore';
 import http from "axios";
 import {evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
@@ -24,70 +24,75 @@ import * as utils from '../utils/teacher';
 export const bilanPeriodique = {
 
 
-title: 'Bilan périodique',
+    title: 'Bilan périodique',
     description: 'Permet de paramétrer les éléments nécessaires à la construction des bilans périodiques',
     that: undefined,
     controller: {
         init: async function () {
             console.log("bilanPeriodique");
-            this.displayMessageLoader = true;
-            this.elementAll = {selected: false};
-            this.idStructure = this.source.idStructure;
-            this.selected = {EPI: true, AP: false, parcours: false};
+            bilanPeriodique.that = this;
+            bilanPeriodique.that.displayMessageLoader = true;
+            bilanPeriodique.that.elementAll = {selected: false};
+            bilanPeriodique.that.idStructure = bilanPeriodique.that.source.idStructure;
+            bilanPeriodique.that.selected = {EPI: true, AP: false, parcours: false};
             await evaluations.sync();
             await evaluations.structure.sync();
-            this.selectedElements = [];
-            this.search.enseignant = null;
-            this.search.matiere = null;
-            this.search.classe = null;
-            this.dataELem = {
+            bilanPeriodique.that.selectedElements = [];
+            bilanPeriodique.that.search.enseignant = null;
+            bilanPeriodique.that.search.matiere = null;
+            bilanPeriodique.that.search.classe = null;
+            bilanPeriodique.that.dataELem = {
                 idEtablissement: evaluations.structure.id,
                 classes: [],
                 ens_mat: []
             };
-            this.thematique = {
+            bilanPeriodique.that.options = {};
+            bilanPeriodique.that.thematique = {
                 libelle: ""
             };
-            this.theme = {
+            bilanPeriodique.that.theme = {
                 libelle: ""
             };
-            this.propertyName = 'theme.libelle';
-            this.reverse = true;
-            this.supprTheme = false;
-            await this.getElements();
+            bilanPeriodique.that.propertyName = 'theme.libelle';
+            bilanPeriodique.that.reverse = true;
+            bilanPeriodique.that.supprTheme = false;
+            await bilanPeriodique.that.getElements();
             bilanPeriodique.that = this;
-            this.enableWatchers();
-            this.displayMessageLoader = false;
-            utils.safeApply(this);
+            bilanPeriodique.that.enableWatchers();
+            bilanPeriodique.that.displayMessageLoader = false;
+            bilanPeriodique.that.themeListe = {
+                open:false
+            };
+            await utils.safeApply(this);
         },
 
         openElementLigthbox: async function (param?) {
-            await this.getThematique(this.getTypeElement());
+            await bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
             bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
             bilanPeriodique.that.openedLightbox = true;
             if (param) {
                 bilanPeriodique.that.dataELem = {
-                    id: this.selectedElements[0].id,
+                    id: bilanPeriodique.that.selectedElements[0].id,
                     idEtablissement: evaluations.structure.id,
-                    theme: this.selectedElements[0].theme,
-                    type: this.selectedElements[0].type,
-                    classes: this.selectedElements[0].groupes,
-                    ens_mat: this.selectedElements[0].intervenantsMatieres,
-                    libelle: this.selectedElements[0].libelle,
-                    description: this.selectedElements[0].description
+                    theme: bilanPeriodique.that.selectedElements[0].theme,
+                    type: bilanPeriodique.that.selectedElements[0].type,
+                    classes: bilanPeriodique.that.selectedElements[0].groupes,
+                    ens_mat: bilanPeriodique.that.selectedElements[0].intervenantsMatieres,
+                    libelle: bilanPeriodique.that.selectedElements[0].libelle,
+                    description: bilanPeriodique.that.selectedElements[0].description
                 };
                 bilanPeriodique.that.search.classe = null;
                 bilanPeriodique.that.search.enseignant = null;
                 bilanPeriodique.that.search.matiere = null;
             } else {
-                bilanPeriodique.that.emptyCheckbox(this.elements);
-                bilanPeriodique.that.emptyLightbox();
+                bilanPeriodique.that.emptyCheckbox(bilanPeriodique.that.elements);
+                await bilanPeriodique.that.emptyLightbox();
             }
             bilanPeriodique.that.opened.lightboxCreatePE = true;
             bilanPeriodique.that.showAddtheme = false;
-            utils.safeApply(bilanPeriodique.that);
+            await utils.safeApply(bilanPeriodique.that);
         },
 
 
@@ -137,9 +142,9 @@ title: 'Bilan périodique',
                 // Si le thème est unique on récupère le thème créé
                 if (!notThemeUnique) {
                     await http.post('/competences/thematique',
-                        { libelle: thematique.libelle, type: this.getTypeElement(), idEtablissement: evaluations.structure.id});
-                     bilanPeriodique.that.getThematique(this.getTypeElement());
-                     bilanPeriodique.that.showAddtheme = false;
+                        { libelle: thematique.libelle, type: bilanPeriodique.that.getTypeElement(), idEtablissement: evaluations.structure.id});
+                    bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
+                    bilanPeriodique.that.showAddtheme = false;
                 }
                 else {
                     // Si le thème n'est pas unique : affichage de la lightbox avec message d'erreur
@@ -161,8 +166,8 @@ title: 'Bilan périodique',
         updateThematique: async function (thematique) {
             try {
                 await http.put(`/competences/thematique?idThematique=${thematique.id}`,
-                    {code: thematique.code, libelle: thematique.libelle, type: this.getTypeElement()});
-                bilanPeriodique.that.getThematique(this.getTypeElement());
+                    {code: thematique.code, libelle: thematique.libelle, type: bilanPeriodique.that.getTypeElement()});
+                bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
                 bilanPeriodique.that.getElements();
                 bilanPeriodique.that.showAddtheme = false;
             } catch (e) {
@@ -175,12 +180,12 @@ title: 'Bilan périodique',
         /////       Suppression d'un thème personnalisé      /////
 
         tryDeleteTheme: async function (theme) {
-            let elements = await this.getElementsOnThematique(theme.id);
+            let elements = await bilanPeriodique.that.getElementsOnThematique(theme.id);
             if (elements.length > 0) {
                 bilanPeriodique.that.supprTheme = true;
                 bilanPeriodique.that.opened.lightboxConfirmDelete = true;
             } else {
-                await this.deleteThematique(theme);
+                await bilanPeriodique.that.deleteThematique(theme);
                 bilanPeriodique.that.supprTheme = true;
             }
             utils.safeApply(bilanPeriodique.that);
@@ -188,11 +193,11 @@ title: 'Bilan périodique',
 
         deleteThematique: async function (thematique) {
             try {
-                if (this.dataELem.theme === thematique) {
-                    delete this.dataELem.theme;
+                if (bilanPeriodique.that.dataELem.theme === thematique) {
+                    delete bilanPeriodique.that.dataELem.theme;
                 }
                 await http.delete(`/competences/thematique?idThematique=${thematique.id}`);
-                bilanPeriodique.that.getThematique(this.getTypeElement());
+                bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
                 bilanPeriodique.that.showAddtheme = false;
             }
             catch (e) {
@@ -203,8 +208,8 @@ title: 'Bilan périodique',
 
 
         addTheme: function (theme) {
-            this.dataELem.theme = theme;
-            this.themeListe.open = false;
+            bilanPeriodique.that.dataELem.theme = theme;
+            bilanPeriodique.that.themeListe.open = false;
         },
 
 
@@ -212,16 +217,19 @@ title: 'Bilan périodique',
 
         createElementBilanPeriodique: async function (dataELem) {
             try {
-                if (this.dataELem !== undefined && this.dataELem !== null) {
-                    this.dataELem.type = this.getTypeElement();
-                    if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
-                        this.dataELem.id_theme = this.dataELem.theme.id;
+                if (bilanPeriodique.that.dataELem !== undefined && bilanPeriodique.that.dataELem !== null) {
+                    bilanPeriodique.that.dataELem.type = bilanPeriodique.that.getTypeElement();
+                    if (bilanPeriodique.that.dataELem.theme !== undefined
+                        && bilanPeriodique.that.dataELem.theme.id !== undefined) {
+                        bilanPeriodique.that.dataELem.id_theme = bilanPeriodique.that.dataELem.theme.id;
 
-                        let libelleExistOnThematique = this.elements.find(theme => (theme.libelle === dataELem.libelle) && (theme.theme.libelle === dataELem.theme.libelle));
+                        let libelleExistOnThematique = bilanPeriodique.that.elements.find(theme =>
+                            (theme.libelle === dataELem.libelle) && (theme.theme.libelle === dataELem.theme.libelle));
                         // Si le libellé est unique sur le thème choisi, on récupère le thème créé
                         if (!libelleExistOnThematique) {
-                            const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
-                            this.elements.push(data);
+                            let url = `/competences/elementBilanPeriodique?type=${bilanPeriodique.that.dataELem.type}`;
+                            const {data} = await http.post(url, bilanPeriodique.that.dataELem);
+                            bilanPeriodique.that.elements.push(data);
                             bilanPeriodique.that.showAddtheme = false;
                             bilanPeriodique.that.opened.lightboxCreatePE = false;
                             bilanPeriodique.that.openedLightbox = false;
@@ -235,16 +243,18 @@ title: 'Bilan périodique',
                         }
                     }
                     else {
-                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle);
+                        let libelleExist = bilanPeriodique.that.elements.find(theme =>
+                            theme.libelle === dataELem.libelle);
                         // Si le libellé est unique on récupère le thème créé
                         if (!libelleExist) {
-                            const {data} = await http.post(`/competences/elementBilanPeriodique?type=${this.dataELem.type}`, this.dataELem);
-                            this.elements.push(data);
+                            let url = `/competences/elementBilanPeriodique?type=${bilanPeriodique.that.dataELem.type}`;
+                            const {data} = await http.post(url, bilanPeriodique.that.dataELem);
+                            bilanPeriodique.that.elements.push(data);
                             bilanPeriodique.that.showAddtheme = false;
                             bilanPeriodique.that.opened.lightboxCreatePE = false;
                             bilanPeriodique.that.openedLightbox = false;
-                            bilanPeriodique.that.emptyLightbox();
-                            bilanPeriodique.that.getElements();
+                            await bilanPeriodique.that.emptyLightbox();
+                            await bilanPeriodique.that.getElements();
                         }
                         else {
                             // Si le libellé n'est pas unique : affichage de la lightbox avec message d'erreur
@@ -264,7 +274,8 @@ title: 'Bilan périodique',
 
         getThematique: async function (type) {
             try {
-                let data = await http.get(`/competences/thematique?type=${type}&idEtablissement=${evaluations.structure.id}`);
+                let url = `/competences/thematique?type=${type}&idEtablissement=${evaluations.structure.id}`;
+                let data = await http.get(url);
                 bilanPeriodique.that.themes = data.data;
             } catch (e) {
                 notify.error('evaluations.theme.get.error');
@@ -296,7 +307,8 @@ title: 'Bilan périodique',
 
         getAppreciationsOnClasse: async function (idClasse, idElement) {
             try {
-                let data = await http.get(`/competences/elementsAppreciations?idClasse=${idClasse}&idElement=${idElement}`);
+                let url = `/competences/elementsAppreciations?idClasse=${idClasse}&idElement=${idElement}`;
+                let data = await http.get(url);
                 return data.data;
             } catch (e) {
                 notify.error('evaluations.appreciations.get.error');
@@ -313,26 +325,39 @@ title: 'Bilan périodique',
 
         syncMatieresEnseignant: async function (enseignant) {
             try {
-                let data = await http.get(`/viescolaire/matieres?idEnseignant=${enseignant.id}&idEtablissement=${evaluations.structure.id}`);
-                this.matieres = data.data;
-                utils.safeApply(this);
+                let data = await http.get(`/viescolaire/matieres?idEnseignant=${
+                    enseignant.id}&idEtablissement=${evaluations.structure.id}`);
+                bilanPeriodique.that.options.matieres = data.data;
+                await utils.safeApply(this);
             } catch (e) {
+                console.dir(e);
                 notify.error('evaluations.matiere.get.error');
             }
         },
 
+        notYetSelected : function () {
+            return (subject) => {
+                if (subject === undefined){
+                    return false;
+                }
+                return !_.contains(bilanPeriodique.that.distinctSubjects, subject.id);
+            };
+        },
 
-        pushData: function (param1, param2?) {
-            if (param2) {
+        pushData: function (teacher, subject?) {
+            if (subject) {
 
-                let foundEM = this.dataELem.ens_mat.find(EM => EM.intervenant.id === param1.id && EM.matiere.id === param2.id);
-                if (!foundEM) {
-                    this.dataELem.ens_mat.push({intervenant: param1, matiere: param2});
+                let foundEM = bilanPeriodique.that.dataELem.ens_mat.find(
+                    EM => EM.intervenant.id === teacher.id && EM.matiere.id === subject.id);
+
+                if (!foundEM && subject.id !== undefined) {
+                    bilanPeriodique.that.dataELem.ens_mat.push({intervenant: teacher, matiere: subject});
                 }
             } else {
-                let foundClasse = this.dataELem.classes.find(classe => classe.id === param1.id);
+                let foundClasse = bilanPeriodique.that.dataELem.classes.find(classe =>
+                    classe.id === teacher.id);
                 if (!foundClasse) {
-                    this.dataELem.classes.push(param1);
+                    bilanPeriodique.that.dataELem.classes.push(teacher);
                 }
             }
         },
@@ -340,13 +365,14 @@ title: 'Bilan périodique',
 
         getElements: async function () {
             try {
-                let {data} = await http.get(`/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`);
-                this.elements = data;
-                _.map(this.elements, (element) => {
+                let url = `/competences/elementsBilanPeriodique?idEtablissement=${evaluations.structure.id}`;
+                let {data} = await http.get(url);
+                bilanPeriodique.that.elements = data;
+                _.map(bilanPeriodique.that.elements, (element) => {
                     element.old_groupes = _.clone(element.groupes);
                     element.old_intervenantsMatieres = _.clone(element.intervenantsMatieres);
                 });
-                this.$apply();
+                bilanPeriodique.that.$apply();
             } catch (e) {
                 notify.error('evaluations.elements.get.error');
             }
@@ -384,9 +410,9 @@ title: 'Bilan périodique',
 
         getTypeElement: function () {
             let type = null;
-            if (this.selected.EPI) type = 1;
-            if (this.selected.AP) type = 2;
-            if (this.selected.parcours) type = 3;
+            if (bilanPeriodique.that.selected.EPI) type = 1;
+            if (bilanPeriodique.that.selected.AP) type = 2;
+            if (bilanPeriodique.that.selected.parcours) type = 3;
             return type;
         },
 
@@ -394,10 +420,10 @@ title: 'Bilan périodique',
         /////       Suppression d'un EPI/AP/Parcours      /////
 
         tryDeleteElements: async function (elements) {
-            await this.getAppreciations(elements);
-            if (this.appreciations !== undefined) {
-                if (this.appreciations.length > 0) {
-                    this.opened.lightboxConfirmDelete = true;
+            await bilanPeriodique.that.getAppreciations(elements);
+            if (bilanPeriodique.that.appreciations !== undefined) {
+                if (bilanPeriodique.that.appreciations.length > 0) {
+                    bilanPeriodique.that.opened.lightboxConfirmDelete = true;
                     bilanPeriodique.that.supprElemAppr = true;
                 }
                 else {
@@ -405,14 +431,14 @@ title: 'Bilan périodique',
                     bilanPeriodique.that.opened.lightboxConfirmDelete = true;
                 }
             }
-            utils.safeApply(this);
+            await utils.safeApply(this);
         },
 
 
         deleteElements: async function (elements) {
             try {
                 let url = "/competences/elementsBilanPeriodique?idEtablissement=" + evaluations.structure.id;
-                for (var i = 0; i < elements.length; i++) {
+                for (let i = 0; i < elements.length; i++) {
                     url += "&idElement=" + elements[i].id;
                 }
                 await http.delete(url);
@@ -444,76 +470,104 @@ title: 'Bilan périodique',
 
         updateElement: async function (dataELem) {
             try {
-                if (this.dataELem !== undefined && this.dataELem !== null
-                    && this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
-                    this.dataELem.id_theme = this.dataELem.theme.id;
-                    }
+                if (bilanPeriodique.that.dataELem !== undefined && bilanPeriodique.that.dataELem !== null
+                    && bilanPeriodique.that.dataELem.theme !== undefined
+                    && bilanPeriodique.that.dataELem.theme.id !== undefined) {
+                    bilanPeriodique.that.dataELem.id_theme = bilanPeriodique.that.dataELem.theme.id;
+                }
 
-                    if (this.dataELem.description === null || this.dataELem.description === '') {
-                        delete(this.dataELem.description);
-                    }
+                if (bilanPeriodique.that.dataELem.description === null
+                    || bilanPeriodique.that.dataELem.description === '') {
+                    delete(bilanPeriodique.that.dataELem.description);
+                }
 
-                    if (this.dataELem.theme !== undefined && this.dataELem.theme.id !== undefined) {
-                        this.dataELem.id_theme = this.dataELem.theme.id;
-                        let libelleExistOnThematique = this.elements.find(theme => (theme.libelle === dataELem.libelle)
-                            && (theme.theme.libelle === dataELem.theme.libelle) && theme.id !== dataELem.id);
-                        // Si le libellé est unique sur le thème choisi, on récupère le thème créé
-                        if (!libelleExistOnThematique) {
-                            await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
-                            bilanPeriodique.that.showAddtheme = false;
-                            bilanPeriodique.that.opened.lightboxCreatePE = false;
-                            bilanPeriodique.that.openedLightbox = false;
-                            bilanPeriodique.that.emptyLightbox();
-                            bilanPeriodique.that.getElements();
-                        }
-                        else {
-                            // Si le libellé n'est pas unique sur le thème : affichage de la lightbox avec message d'erreur
-                            bilanPeriodique.that.createElementBP = true;
-                            bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                        }
+                if (bilanPeriodique.that.dataELem.theme !== undefined
+                    && bilanPeriodique.that.dataELem.theme.id !== undefined) {
+                    bilanPeriodique.that.dataELem.id_theme = bilanPeriodique.that.dataELem.theme.id;
+                    let libelleExistOnThematique = bilanPeriodique.that.elements.find(theme =>
+                        (theme.libelle === dataELem.libelle)
+                        && (theme.theme.libelle === dataELem.theme.libelle) && theme.id !== dataELem.id);
+                    // Si le libellé est unique sur le thème choisi, on récupère le thème créé
+                    if (!libelleExistOnThematique) {
+                        let url = `/competences/elementBilanPeriodique?idElement=${
+                            bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`;
+                        await http.put(url, bilanPeriodique.that.dataELem);
+                        bilanPeriodique.that.showAddtheme = false;
+                        bilanPeriodique.that.opened.lightboxCreatePE = false;
+                        bilanPeriodique.that.openedLightbox = false;
+                        bilanPeriodique.that.emptyLightbox();
+                        bilanPeriodique.that.getElements();
                     }
-
                     else {
-                        let libelleExist = this.elements.find(theme => theme.libelle === dataELem.libelle  && theme.id !== dataELem.id);
-                        // Si le libellé est unique on récupère le thème créé
-                        if (!libelleExist) {
-                            await http.put(`/competences/elementBilanPeriodique?idElement=${bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`, this.dataELem);
-                            bilanPeriodique.that.showAddtheme = false;
-                            bilanPeriodique.that.opened.lightboxCreatePE = false;
-                            bilanPeriodique.that.openedLightbox = false;
-                            bilanPeriodique.that.emptyLightbox();
-                            bilanPeriodique.that.getElements();
-                        }
-                        else {
-                            // Si le libellé n'est pas unique : affichage de la lightbox avec message d'erreur
-                            bilanPeriodique.that.createElementBP = true;
-                            bilanPeriodique.that.opened.lightboxConfirmDelete = true;
-                        }
-                        utils.safeApply(bilanPeriodique.that);
+                        // Si le libellé n'est pas unique sur le thème : affichage de la lightbox avec message d'erreur
+                        bilanPeriodique.that.createElementBP = true;
+                        bilanPeriodique.that.opened.lightboxConfirmDelete = true;
                     }
+                }
+
+                else {
+                    let libelleExist = bilanPeriodique.that.elements.find(theme =>
+                        theme.libelle === dataELem.libelle  && theme.id !== dataELem.id);
+                    // Si le libellé est unique on récupère le thème créé
+                    if (!libelleExist) {
+                        let url = `/competences/elementBilanPeriodique?idElement=${
+                            bilanPeriodique.that.dataELem.id}&type=${bilanPeriodique.that.dataELem.type}`;
+                        await http.put(url, bilanPeriodique.that.dataELem);
+                        bilanPeriodique.that.showAddtheme = false;
+                        bilanPeriodique.that.opened.lightboxCreatePE = false;
+                        bilanPeriodique.that.openedLightbox = false;
+                        await bilanPeriodique.that.emptyLightbox();
+                        await bilanPeriodique.that.getElements();
+                    }
+                    else {
+                        // Si le libellé n'est pas unique : affichage de la lightbox avec message d'erreur
+                        bilanPeriodique.that.createElementBP = true;
+                        bilanPeriodique.that.opened.lightboxConfirmDelete = true;
+                    }
+                    await utils.safeApply(bilanPeriodique.that);
+                }
             }catch (e) {
                 notify.error('evaluations.elements.update.error');
             }
-            utils.safeApply(bilanPeriodique.that);
+            await utils.safeApply(bilanPeriodique.that);
+        },
+
+        distinctSubject: function () {
+            let distinctSubjects = _.groupBy(_.pluck(bilanPeriodique.that.dataELem.ens_mat, 'matiere'), 'id');
+            bilanPeriodique.that.distinctSubjects = _.keys(distinctSubjects);
+            let size = _.size(bilanPeriodique.that.distinctSubjects);
+            bilanPeriodique.that.hasTwoTimesSubject = _.some(_.values(distinctSubjects), function(subjectGrouped){
+                return _.size(subjectGrouped) > 1;});
+            return {size : size, hasTwoTimesSubject: bilanPeriodique.that.hasTwoTimesSubject};
         },
 
 
         /////       Champs obligatoire      /////
 
         requiredElement: function () {
-            if (this.dataELem) {
-                if (this.getTypeElement() === 1) {
-                    return this.dataELem.theme === undefined || this.dataELem.libelle === null
-                        || this.dataELem.libelle === undefined || this.dataELem.libelle === ""
-                        || this.dataELem.ens_mat.length < 2 || this.dataELem.classes.length === 0
+            if (bilanPeriodique.that.dataELem) {
+                if (bilanPeriodique.that.getTypeElement() === 1) {
+                    let distinctSubject = bilanPeriodique.that.distinctSubject();
+                    return (bilanPeriodique.that.dataELem.theme === undefined
+                        || bilanPeriodique.that.dataELem.libelle === null
+                        || bilanPeriodique.that.dataELem.libelle === undefined
+                        || bilanPeriodique.that.dataELem.libelle === ""
+                        || bilanPeriodique.that.dataELem.ens_mat.length < 2
+                        || bilanPeriodique.that.dataELem.classes.length === 0
+                        || distinctSubject.size < 2 || distinctSubject.hasTwoTimesSubject);
                 }
-                else if (this.getTypeElement() === 2) {
-                    return this.dataELem.libelle === null || this.dataELem.libelle === undefined
-                        || this.dataELem.libelle === "" || this.dataELem.ens_mat.length < 1
-                        || this.dataELem.classes.length === 0
+                else if (bilanPeriodique.that.getTypeElement() === 2) {
+                    let distinctSubject = bilanPeriodique.that.distinctSubject();
+                    return (bilanPeriodique.that.dataELem.libelle === null
+                        || bilanPeriodique.that.dataELem.libelle === undefined
+                        || bilanPeriodique.that.dataELem.libelle === ""
+                        || bilanPeriodique.that.dataELem.ens_mat.length < 1
+                        || bilanPeriodique.that.dataELem.classes.length === 0
+                        || distinctSubject.hasTwoTimesSubject);
                 }
                 else {
-                    return this.dataELem.theme === null || this.dataELem.classes.length === 0
+                    return (bilanPeriodique.that.dataELem.theme === null
+                        || bilanPeriodique.that.dataELem.classes.length === 0);
                 }
             }
         },
@@ -526,7 +580,7 @@ title: 'Bilan périodique',
                 }
                 return bilanPeriodique.that.thematique.libelle === undefined
                     || bilanPeriodique.that.thematique.libelle === null
-                    || bilanPeriodique.that.thematique.libelle === ''
+                    || bilanPeriodique.that.thematique.libelle === '';
             }
         },
 
@@ -534,25 +588,25 @@ title: 'Bilan périodique',
         /////       Selection checkbox      /////
 
         selectUnselectElement: function (element) {
-            if (!_.contains(this.selectedElements, element)) {
-                this.selectedElements.push(element);
+            if (!_.contains(bilanPeriodique.that.selectedElements, element)) {
+                bilanPeriodique.that.selectedElements.push(element);
             } else {
-                this.selectedElements = _.without(this.selectedElements, element);
+                bilanPeriodique.that.selectedElements = _.without(bilanPeriodique.that.selectedElements, element);
             }
         },
 
 
         checkSelectedElements: function (elements) {
-            this.selectedElements = _.filter(elements, function (element) {
+            bilanPeriodique.that.selectedElements = _.filter(elements, function (element) {
                 return element.selected === true;
             });
-            return this.selectedElements;
+            return bilanPeriodique.that.selectedElements;
         },
 
 
         selectAllElements: function (elements) {
             _.forEach(elements, (element) => {
-                if (this.itemFiltered(element)) {
+                if (bilanPeriodique.that.itemFiltered(element)) {
                     element.selected = bilanPeriodique.that.elementAll.selected;
                 }
             });
@@ -561,21 +615,21 @@ title: 'Bilan périodique',
 
         filterItem: function () {
             return (item) => {
-                return this.itemFiltered(item);
+                return bilanPeriodique.that.itemFiltered(item);
             }
         },
 
 
         itemFiltered: function (item) {
-            if (this.selected.EPI) {
+            if (bilanPeriodique.that.selected.EPI) {
                 if (item.theme && item.libelle)
                     return item;
             }
-            else if (this.selected.AP) {
+            else if (bilanPeriodique.that.selected.AP) {
                 if (!item.theme && item.libelle)
                     return item;
             }
-            else if (this.selected.parcours) {
+            else if (bilanPeriodique.that.selected.parcours) {
                 if (item.theme && !item.libelle)
                     return item;
             }
@@ -585,17 +639,18 @@ title: 'Bilan périodique',
         /////       Suppression des chips enseignants / matières et classe   /////
 
         delete: function () {
-            if (this.supprElemAppr || bilanPeriodique.that.supprElemAppr || this.supprElem || bilanPeriodique.that.supprElem) {
-                bilanPeriodique.that.deleteElements(this.selectedElements);
+            if (bilanPeriodique.that.supprElemAppr || bilanPeriodique.that.supprElemAppr
+                || bilanPeriodique.that.supprElem || bilanPeriodique.that.supprElem) {
+                bilanPeriodique.that.deleteElements(bilanPeriodique.that.selectedElements);
                 bilanPeriodique.that.opened.lightboxConfirmDelete = false;
             }
-            else if (bilanPeriodique.that.supprEnseignant || this.supprEnseignant) {
+            else if (bilanPeriodique.that.supprEnseignant || bilanPeriodique.that.supprEnseignant) {
                 bilanPeriodique.that.openedLightbox = true;
                 bilanPeriodique.that.deleteEnseignantMatiere();
             }
             else if (bilanPeriodique.that.supprClasse
                 || bilanPeriodique.that.modifElemSupprClasse
-                || this.supprClasse || this.modifElemSupprClasse) {
+                || bilanPeriodique.that.supprClasse || bilanPeriodique.that.modifElemSupprClasse) {
                 bilanPeriodique.that.openedLightbox = true;
                 bilanPeriodique.that.deleteClasse();
             }
@@ -614,10 +669,13 @@ title: 'Bilan périodique',
 
 
         deleteEnseignantMatiere: function () {
-            this.ensei_matieres = this.dataELem.ens_mat;
-            for (let i = 0; i < this.ensei_matieres.length; i++) {
-                if (this.ensei_matieres[i].selected) {
-                    this.dataELem.ens_mat = _.without(this.dataELem.ens_mat, this.dataELem.ens_mat[i]);
+            bilanPeriodique.that.ensei_matieres = bilanPeriodique.that.dataELem.ens_mat;
+            for (let i = 0; i < bilanPeriodique.that.ensei_matieres.length; i++) {
+                if (bilanPeriodique.that.ensei_matieres[i].selected) {
+                    bilanPeriodique.that.dataELem.ens_mat = _.without(bilanPeriodique.that.dataELem.ens_mat,
+                        bilanPeriodique.that.dataELem.ens_mat[i]);
+                    let matiere = _.pluck(bilanPeriodique.that.dataELem.ens_mat, 'matiere');
+                    bilanPeriodique.that.options.matieres = _.union(bilanPeriodique.that.options.matieres, [matiere]);
                 }
             }
             bilanPeriodique.that.search.enseignant = null;
@@ -628,7 +686,8 @@ title: 'Bilan périodique',
 
         tryDeleteClasse: async function (classe) {
             if (bilanPeriodique.that.modifElem) {
-                let appreciations = await this.getAppreciationsOnClasse(classe.id, this.dataELem.id);
+                let appreciations = await bilanPeriodique.that.getAppreciationsOnClasse(classe.id,
+                    bilanPeriodique.that.dataELem.id);
                 if (appreciations) {
                     if (appreciations.length > 0) {
                         bilanPeriodique.that.opened.lightboxConfirmDelete = true;
@@ -636,15 +695,15 @@ title: 'Bilan périodique',
                         bilanPeriodique.that.modifElemSupprClasse = true;
                     } else {
                         classe.selected = true;
-                        this.opened.lightboxConfirmDelete = true;
+                        bilanPeriodique.that.opened.lightboxConfirmDelete = true;
                         bilanPeriodique.that.opened.lightboxCreatePE = false;
                         bilanPeriodique.that.supprClasse = true;
                     }
                 }
-                utils.safeApply(this);
+                await utils.safeApply(this);
             } else {
                 classe.selected = true;
-                this.opened.lightboxConfirmDelete = true;
+                bilanPeriodique.that.opened.lightboxConfirmDelete = true;
                 bilanPeriodique.that.opened.lightboxCreatePE = false;
                 bilanPeriodique.that.supprClasse = true;
             }
@@ -652,9 +711,10 @@ title: 'Bilan périodique',
 
 
         deleteClasse: function () {
-            for (let i = 0; i < this.dataELem.classes.length; i++) {
-                if (this.dataELem.classes[i].selected) {
-                    this.dataELem.classes = _.without(this.dataELem.classes, this.dataELem.classes[i]);
+            for (let i = 0; i < bilanPeriodique.that.dataELem.classes.length; i++) {
+                if (bilanPeriodique.that.dataELem.classes[i].selected) {
+                    bilanPeriodique.that.dataELem.classes = _.without(bilanPeriodique.that.dataELem.classes,
+                        bilanPeriodique.that.dataELem.classes[i]);
                 }
             }
             bilanPeriodique.that.search.classe = null;
@@ -664,10 +724,10 @@ title: 'Bilan périodique',
 
         /////       Réinitialise la lightbox       /////
 
-        emptyLightbox: function () {
-            this.search.enseignant = null;
-            this.search.matiere = null;
-            this.search.classe = null;
+        emptyLightbox: async function () {
+            bilanPeriodique.that.search.enseignant = null;
+            bilanPeriodique.that.search.matiere = null;
+            bilanPeriodique.that.search.classe = null;
             bilanPeriodique.that.search.enseignant = null;
             bilanPeriodique.that.search.matiere = null;
             bilanPeriodique.that.search.classe = null;
@@ -676,7 +736,6 @@ title: 'Bilan périodique',
                 classes: [],
                 ens_mat: []
             };
-            this.dataELem = bilanPeriodique.that.dataELem;
             bilanPeriodique.that.createTheme = false;
             bilanPeriodique.that.createElementBP = false;
             bilanPeriodique.that.supprElem = false;
@@ -685,24 +744,26 @@ title: 'Bilan périodique',
             bilanPeriodique.that.supprClasse = false;
             bilanPeriodique.that.supprTheme = false;
             bilanPeriodique.that.modifElemSupprClasse = false;
-            utils.safeApply(bilanPeriodique.that);
+            await utils.safeApply(bilanPeriodique.that);
         },
 
 
         /////       Scroll jusqu'à l'input de création/modification dans la liste des thèmes       /////
 
         getFocus: function () {
-            $("#scrollto").blur();
-            $("#scrollto").focus();
+            let el = $("#scrollto");
+            el.blur();
+            el.focus();
         },
 
 
-        sortBy: function (propertyName) {
-            bilanPeriodique.that.reverse = (this.propertyName === propertyName) ? !this.reverse : false;
+        sortBy: async function (propertyName) {
+            let isPropertyName = (bilanPeriodique.that.propertyName === propertyName);
+            bilanPeriodique.that.reverse = (isPropertyName) ? !bilanPeriodique.that.reverse : false;
             bilanPeriodique.that.propertyName = propertyName;
-            utils.safeApply(bilanPeriodique.that);
+            await utils.safeApply(bilanPeriodique.that);
         }
 
     }
 
-}
+};
