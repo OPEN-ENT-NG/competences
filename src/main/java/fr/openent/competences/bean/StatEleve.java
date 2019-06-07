@@ -58,7 +58,7 @@ public class StatEleve {
         if(averageAuto != null) {
             return averageAuto;
         }
-        averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false,20).getDouble("moyenne");
+        averageAuto = utilsService.calculMoyenne(this.noteDevoirList,false,20,false).getDouble("moyenne");
 
         return averageAuto;
     }

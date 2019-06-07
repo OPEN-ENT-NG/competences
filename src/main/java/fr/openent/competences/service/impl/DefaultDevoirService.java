@@ -704,7 +704,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void listDevoirs(String idEleve, String idEtablissement, String idClasse, String idMatiere, Long idPeriode,boolean historise, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-        String matiere = idMatiere;
 
         query.append("SELECT devoirs.*, ")
                 .append("type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre, users.username as teacher ");
@@ -718,6 +717,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("inner join "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ");
         if(idClasse != null) {
             query.append("inner join " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes on rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe =? ");
+            values.add(idClasse);
         }
         if (idEleve != null) {
             query.append(" left join "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs ")
@@ -726,46 +726,31 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
         query.append("WHERE ")
                 .append("devoirs.id_etablissement = ? ");
-        if( matiere != null ) {
+        values.add(idEtablissement);
+        if( idMatiere != null ) {
             query.append("AND ")
                     .append("devoirs.id_matiere = ? ");
+            values.add(idMatiere);
         }
         if (idEleve !=  null){
             query.append(" AND  notes.id_eleve = ? AND date_publication <= Now() ");
+            values.add(idEleve);
         }
-
         if (idPeriode != null) {
             query.append("AND ")
                     .append("devoirs.id_periode = ? ");
+            values.add(idPeriode);
         }
-
-        if(idClasse != null) {
-            values.add(idClasse);
-        }
-
         if (historise) {
             query.append(" AND ")
                     .append("devoirs.eval_lib_historise = ? ");
-        }
-
-        values.add(idEtablissement);
-
-        if (matiere != null) {
-            values.add(idMatiere);
+            values.add(historise);
         }
         if (idEleve != null) {
             query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, users.username ")
                     .append(" ORDER BY devoirs.date ASC, devoirs.id ASC ");
-            values.add(idEleve);
-        }
-        else {
+        } else {
             query.append("ORDER BY devoirs.date ASC, devoirs.id ASC ");
-        }
-        if(idPeriode != null) {
-            values.add(idPeriode);
-        }
-        if (historise) {
-            values.add(historise);
         }
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }

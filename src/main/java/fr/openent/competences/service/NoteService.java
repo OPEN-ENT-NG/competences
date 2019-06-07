@@ -190,7 +190,7 @@ public interface NoteService extends CrudService {
                                             final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                             final JsonObject result );
 
-    void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result);
+    void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result, Boolean annual);
 
     void getMoyennesFinal(String[] idEleves, Integer idPeriode, String[] idMatieres, String[] idClasses, Handler<Either<String, JsonArray>> handler);
 
@@ -243,9 +243,11 @@ public interface NoteService extends CrudService {
     /**
      * Réalise l'export totale (dans toutes les matières passé en paramètres) d'un relevé
      * @param param objet contenant les informations relative au releve
+     * @param idPeriode periode sur laquelle réaliser l'export
+     * @param annual booléen pour savoir si on se situe dans le cas annuel
      * @param handler handler portant le résultat de la requête
      */
-    void getTotaleDatasReleve(final JsonObject param, final Handler<Either<String, JsonObject>> handler);
+    void getTotaleDatasReleve(final JsonObject param, final Long idPeriode, final boolean annual, final Handler<Either<String, JsonObject>> handler);
 
     /**
      * Renseigne les libéllés et paramètre ne nécessaire à ll'xport

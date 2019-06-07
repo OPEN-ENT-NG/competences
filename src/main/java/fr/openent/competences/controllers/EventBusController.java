@@ -105,7 +105,7 @@ public class EventBusController extends ControllerHelper {
                         .put("result",
                                 utilsService.calculMoyenne(listeNoteDevoirs,
                                         message.body().getBoolean("statistiques"),
-                                        (Integer) message.body().getInteger("diviseurM"))));
+                                        (Integer) message.body().getInteger("diviseurM"),false)));
             }
             break;
             default: {

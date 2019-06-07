@@ -2861,7 +2861,7 @@ public class LSUController extends ControllerHelper {
                                     if (positionnementAuto != null && positionnementAuto.containsKey("hasNote")) {
                                         // BigInteger positionnementToSet;
                                         String valuePositionnementAuto = utilsService.convertPositionnement(
-                                                positionnementAuto.getFloat("moyenne"), tableConversion, null);
+                                                positionnementAuto.getFloat("moyenne"), tableConversion, null,true);
 
                                         positionnementToSet = (valuePositionnementFinal.intValue() != 0) ? BigInteger.valueOf(valuePositionnementFinal) :
                                                 new BigInteger(valuePositionnementAuto);

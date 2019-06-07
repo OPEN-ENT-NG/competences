@@ -384,7 +384,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
-        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result);
+        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
         noteService.calculAndSetMoyenneClasseByPeriode(idsEleves,moyFinalesEleves,
                 notesByDevoirByPeriodeClasse, result);
 

@@ -58,8 +58,7 @@
             <br/><label><i18n class="titre-libelle">viescolaire.utils.periode</i18n></label><br/>
             <label class=" six select">
                 <select ng-model="suiviClasse.periode"
-                        ng-init="suiviClasse.periode = search.periode"
-                        ng-change="exportRelCompObj.errExport = false; closeWarningMessages(); disableExportCSV();"
+                        ng-change="exportRelCompObj.errExport = false; closeWarningMessages(); disableAppreciation();"
                         ng-options="periode as getI18nPeriode(periode) for periode in search.classe.periodes.all">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
@@ -143,7 +142,7 @@
         <div class="vertical-spacing" ng-if="suiviClasse.print === 'printTabMoyPosAppr'">
             <label class="checkbox">
                 <input type="checkbox"
-                       ng-model="suiviClasse.withAppreciations">
+                       ng-model="suiviClasse.withAppreciations" ng-disabled="suiviClasse.periode.id_type == undefined">
                 <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
             </label>
         </div>

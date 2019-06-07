@@ -58,6 +58,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibellePeriode;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.List;
 
@@ -294,7 +295,312 @@ public class NoteController extends ControllerHelper {
     @ResourceFilter(AccessReleveFilter.class)
     public void exportTotaleRelevePeriodique(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, param -> {
-                notesService.getTotaleDatasReleve(param, notEmptyResponseHandler(request));
+            boolean annual = false;
+            if(param.getJsonArray("idPeriodes").size() == 0) {
+                final Long idPeriode = param.getLong(Competences.ID_PERIODE_KEY);
+                notesService.getTotaleDatasReleve(param, idPeriode, annual, notEmptyResponseHandler(request));
+            }else{
+                annual = true;
+                final JsonObject resultHandler = new JsonObject();
+                List<Future> listFuturesEachPeriode = new ArrayList<>();
+                for (Object idPeriode : param.getJsonArray("idPeriodes")){
+                    // Récupération du  nombre de devoirs avec évaluation numérique
+                    Long periode = ((Integer)idPeriode).longValue();
+                    Future<JsonObject> exportPeriode = Future.future();
+                    notesService.getTotaleDatasReleve(param,periode, annual, event -> {
+                        FormateFutureEvent.formate(exportPeriode, event);
+                    });
+                    listFuturesEachPeriode.add(exportPeriode);
+                }
+                CompositeFuture.all(listFuturesEachPeriode)
+                        .setHandler( exportPeriodeEvent -> {
+                            if (exportPeriodeEvent.succeeded()) {
+                                for (int i=0; i< param.getJsonArray("idPeriodes").size();i++) {
+                                    resultHandler.put(param.getJsonArray("idPeriodes").getLong(i).toString(),
+                                            ((JsonObject) listFuturesEachPeriode.get(i).result()));
+                                }
+                                JsonObject eleves = new JsonObject().put("eleves",((JsonObject) listFuturesEachPeriode.get(0).result()).getJsonArray("eleves").copy());
+                                resultHandler.put("annual",eleves);
+                                for (int i=1; i< param.getJsonArray("idPeriodes").size();i++) {
+                                    JsonArray elevesAutresPeriodes = ((JsonObject) listFuturesEachPeriode.get(i).result()).getJsonArray("eleves");
+                                    for(Object eleve : resultHandler.getJsonObject("annual").getJsonArray("eleves")){
+                                        for (Object eleveAutrePeriode : elevesAutresPeriodes){
+                                            if(((JsonObject)eleve).getString("id").equals(((JsonObject)eleveAutrePeriode).getString("id"))){
+                                                for(Object idMatiere : param.getJsonArray("idMatieres")){
+
+                                                    if(((JsonObject)eleve).getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
+                                                    ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
+                                                            !(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))) {
+                                                        if (((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals("")) {
+                                                                ((JsonObject) eleve).getJsonObject("moyenneFinale")
+                                                                        .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
+                                                        }else {
+                                                                ((JsonObject) eleve).getJsonObject("moyenneFinale")
+                                                                        .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()) +
+                                                                                Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
+                                                                if (((JsonObject) eleve).containsKey("nbPeriodeMoyenne")) {
+                                                                    if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").containsKey(idMatiere.toString())) {
+                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").put(idMatiere.toString(),
+                                                                                ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").getLong(idMatiere.toString()) + 1);
+                                                                    } else {
+                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").put(idMatiere.toString(), 2);
+                                                                    }
+                                                                } else {
+                                                                    JsonObject jsonToAdd = new JsonObject().put(idMatiere.toString(), 2);
+                                                                    ((JsonObject) eleve).put("nbPeriodeMoyenne", jsonToAdd);
+                                                                }
+                                                        }
+                                                    }else if(((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) &&
+                                                            ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
+                                                            !(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))){
+                                                            ((JsonObject) eleve).getJsonObject("moyenneFinale")
+                                                                    .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
+                                                    }
+
+                                                    if(((JsonObject)eleve).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
+                                                    ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
+                                                            !(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))) {
+                                                        if (((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).equals("")) {
+                                                                ((JsonObject) eleve).getJsonObject("positionnement")
+                                                                        .put(idMatiere.toString(),Long.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
+                                                        }else {
+                                                                ((JsonObject) eleve).getJsonObject("positionnement")
+                                                                        .put(idMatiere.toString(), Float.valueOf(((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()) +
+                                                                                Float.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
+                                                                if (((JsonObject) eleve).containsKey("nbPeriodeMoyennePos")) {
+                                                                    if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").containsKey(idMatiere.toString())) {
+                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").put(idMatiere.toString(),
+                                                                                ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").getLong(idMatiere.toString()) + 1);
+                                                                    } else {
+                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").put(idMatiere.toString(), 2);
+                                                                    }
+                                                                } else {
+                                                                    JsonObject jsonToAdd = new JsonObject().put(idMatiere.toString(), 2);
+                                                                    ((JsonObject) eleve).put("nbPeriodeMoyennePos", jsonToAdd);
+                                                                }
+                                                        }
+                                                    }else if(((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
+                                                                !(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))){
+                                                            ((JsonObject) eleve).getJsonObject("positionnement")
+                                                                    .put(idMatiere.toString(),Float.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
+                                                    }
+                                                }
+
+                                                if(((JsonObject)eleve).containsKey("moyenne_generale") && ((JsonObject)eleve).getValue("moyenne_generale") != null &&
+                                                        ((JsonObject)eleveAutrePeriode).containsKey("moyenne_generale") && ((JsonObject)eleveAutrePeriode).getValue("moyenne_generale") != null &&
+                                                        !(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(""))) {
+                                                    if (((JsonObject) eleve).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleve).getValue("moyenne_generale").equals("")) {
+                                                        ((JsonObject) eleve).put("moyenne_generale",Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
+                                                        ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
+                                                    }else {
+                                                        ((JsonObject) eleve).put("moyenne_generale", Double.valueOf(((JsonObject) eleve).getValue("moyenne_generale").toString()) +
+                                                                        Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
+                                                        if (((JsonObject) eleve).containsKey("nbPeriodesMoyenne")) {
+                                                                ((JsonObject) eleve).put("nbPeriodesMoyenne",((JsonObject) eleve).getLong("nbPeriodesMoyenne") + 1);
+                                                        } else {
+                                                            ((JsonObject) eleve).put("nbPeriodesMoyenne", 2);
+                                                        }
+                                                    }
+                                                }else if(((JsonObject)eleveAutrePeriode).containsKey("moyenne_generale") && ((JsonObject)eleveAutrePeriode).getValue("moyenne_generale") != null &&
+                                                        !(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(""))){
+                                                    ((JsonObject) eleve).put("moyenne_generale",Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
+                                                    ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
+                                                }else if(((JsonObject)eleve).containsKey("moyenne_generale") && ((JsonObject)eleve).getValue("moyenne_generale") != null &&
+                                                        !(((JsonObject) eleve).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleve).getValue("moyenne_generale").equals(""))){
+                                                    ((JsonObject) eleve).put("moyenne_generale",Double.valueOf(((JsonObject) eleve).getValue("moyenne_generale").toString()));
+                                                    ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
+                                                }
+                                                ((JsonObject)eleveAutrePeriode).put("addAnnual",true);
+                                            }
+                                        }
+                                    }
+                                    for (Object eleveAutrePeriode : elevesAutresPeriodes){
+                                        if(!((JsonObject)eleveAutrePeriode).containsKey("addAnnual")){
+                                            resultHandler.getJsonObject("annual").getJsonArray("eleves").add(((JsonObject)eleveAutrePeriode));
+                                        }
+                                    }
+                                }
+
+                                DecimalFormat decimalFormat = new DecimalFormat("#.00");
+
+                                for (int i=0; i< param.getJsonArray("idPeriodes").size();i++) {
+                                    JsonArray elevesAutresPeriodes = ((JsonObject) listFuturesEachPeriode.get(i).result()).getJsonArray("eleves");
+                                        for (Object eleveAutrePeriode : elevesAutresPeriodes) {
+                                            if(((JsonObject)eleveAutrePeriode).containsKey("moyenne_generale") && ((JsonObject)eleveAutrePeriode).getValue("moyenne_generale") != null &&
+                                                    !(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(""))) {
+                                                ((JsonObject) eleveAutrePeriode)
+                                                        .put("moyenne_generale", decimalFormat.format(Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString())));
+                                            }
+                                        }
+                                }
+
+                                Boolean init = false;
+                                Double min = 0.0;
+                                Double max = 0.0;
+                                int nbElevesMoyenne = 0;
+                                Double moyenneDeMoyenne = 0.0;
+
+                                for(Object eleve : resultHandler.getJsonObject("annual").getJsonArray("eleves")) {
+                                    JsonObject jsonEleve = ((JsonObject) eleve);
+
+                                    for (Object idMatiere : param.getJsonArray("idMatieres")) {
+                                        if (jsonEleve.getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null) {
+                                            if (!(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))) {
+                                                if (jsonEleve.containsKey("nbPeriodeMoyenne") && jsonEleve.getJsonObject("nbPeriodeMoyenne").containsKey(idMatiere.toString())) {
+                                                    jsonEleve.getJsonObject("moyenneFinale")
+                                                            .put(idMatiere.toString(),
+                                                                    jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()) / jsonEleve.getJsonObject("nbPeriodeMoyenne").getLong(idMatiere.toString()));
+                                                } else {
+                                                    jsonEleve.getJsonObject("moyenneFinale")
+                                                            .put(idMatiere.toString(), Double.valueOf(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
+                                                }
+                                            }
+                                        }
+                                        if (jsonEleve.getJsonObject("positionnement").containsKey(idMatiere.toString()) && jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()) != null) {
+                                            if (!(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))) {
+                                                if (jsonEleve.containsKey("nbPeriodeMoyennePos") && jsonEleve.getJsonObject("nbPeriodeMoyennePos").containsKey(idMatiere.toString())) {
+                                                    jsonEleve.getJsonObject("positionnement")
+                                                            .put(idMatiere.toString(),
+                                                                    utilsService.convertPositionnement(jsonEleve.getJsonObject("positionnement").getFloat(idMatiere.toString()) / jsonEleve.getJsonObject("nbPeriodeMoyennePos").getLong(idMatiere.toString()),
+                                                                            ((JsonObject) listFuturesEachPeriode.get(0).result()).getJsonArray("tableConversions"),null,true));
+                                                } else {
+                                                    jsonEleve.getJsonObject("positionnement")
+                                                            .put(idMatiere.toString(),
+                                                                    utilsService.convertPositionnement(Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()),
+                                                                            ((JsonObject) listFuturesEachPeriode.get(0).result()).getJsonArray("tableConversions"),null,true));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (jsonEleve.containsKey("nbPeriodesMoyenne") && jsonEleve.containsKey("moyenne_generale") && jsonEleve.getValue("moyenne_generale") != null
+                                            && !(jsonEleve.getValue("moyenne_generale").equals(NN) || jsonEleve.getValue("moyenne_generale").equals(""))) {
+                                        moyenneDeMoyenne += Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                        nbElevesMoyenne++;
+                                        if (!init) {
+                                            min = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                            max = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                            init = true;
+                                        } else {
+                                            if (min > Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))
+                                                min = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                            if (max < Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))
+                                                max = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                        }
+                                        jsonEleve.put("moyenne_generale", decimalFormat.format((Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))));
+                                    } else if (!jsonEleve.containsKey("moyenne_generale") || jsonEleve.getValue("moyenne_generale") == null
+                                            || (jsonEleve.getValue("moyenne_generale").equals(NN) || jsonEleve.getValue("moyenne_generale").equals(""))) {
+                                        jsonEleve.put("moyenne_generale", NN);
+                                    }
+                                }
+                                if(nbElevesMoyenne == 0){
+                                    JsonObject minMoy = new JsonObject().put("minimum", NN);
+                                    JsonObject moyenneJson = new JsonObject().put("moyenne_generale",minMoy);
+                                    resultHandler.getJsonObject("annual").put("statistiques",moyenneJson);
+                                    resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("maximum", NN);
+                                    resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", NN);
+                                }else{
+                                    JsonObject minMoy = new JsonObject().put("minimum", decimalFormat.format(min));
+                                    JsonObject moyenneJson = new JsonObject().put("moyenne_generale",minMoy);
+                                    resultHandler.getJsonObject("annual").put("statistiques",moyenneJson);
+                                    resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("maximum", decimalFormat.format(max));
+                                    resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", decimalFormat.format((moyenneDeMoyenne / nbElevesMoyenne)));
+                                }
+
+                                for(Object idMatiere : param.getJsonArray("idMatieres")){
+                                    Double moyenne = 0.0;
+                                    Float moyennePos = new Float(0);
+                                    nbElevesMoyenne = 0;
+                                    int nbElevesMoyennePos = 0;
+                                    min = 0.0;
+                                    max = 0.0;
+                                    Float minPos = new Float(0);
+                                    Float maxPos = new Float(0);
+                                    init = false;
+                                    Boolean initPos = false;
+
+                                    for(Object eleve : resultHandler.getJsonObject("annual").getJsonArray("eleves")){
+                                        JsonObject jsonEleve = ((JsonObject)eleve);
+                                        if(jsonEleve.getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null
+                                        && !(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))) {
+                                                moyenne += jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                                nbElevesMoyenne++;
+                                                if(!init){
+                                                    min = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                                    max =  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                                    init = true;
+                                                }else{
+                                                    if(min >  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()))
+                                                        min = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                                    if(max <  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()))
+                                                        max = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                                }
+                                                jsonEleve.getJsonObject("moyenneFinale")
+                                                        .put(idMatiere.toString(),
+                                                                decimalFormat.format(jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString())));
+                                        }
+                                        if(jsonEleve.getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("positionnement").getValue(idMatiere.toString()) != null
+                                        && !(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))) {
+                                                moyennePos += Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                nbElevesMoyennePos++;
+                                                if(!initPos){
+                                                    minPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                    maxPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                    initPos = true;
+                                                }else{
+                                                    if(minPos >  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
+                                                        minPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                    if(maxPos <  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
+                                                        maxPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                }
+                                            }
+                                    }
+                                    if(nbElevesMoyenne == 0){
+                                        JsonObject minMoy = new JsonObject().put("minimum", NN);
+                                        JsonObject moyenneMatJson = new JsonObject().put("moyenne",minMoy);
+                                        if(resultHandler.getJsonObject("annual").getJsonObject("statistiques").containsKey(idMatiere.toString()))
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).put("moyenne",minMoy);
+                                        else
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").put(idMatiere.toString(),moyenneMatJson);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").put(idMatiere.toString(),moyenneMatJson);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("moyenne").put("maximum", NN);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("moyenne").put("moyenne", NN);
+                                    }else{
+                                        JsonObject minMoy = new JsonObject().put("minimum", decimalFormat.format(min));
+                                        JsonObject moyenneMatJson = new JsonObject().put("moyenne",minMoy);
+                                        if(resultHandler.getJsonObject("annual").getJsonObject("statistiques").containsKey(idMatiere.toString()))
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).put("moyenne",minMoy);
+                                        else
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").put(idMatiere.toString(),moyenneMatJson);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("moyenne").put("maximum", decimalFormat.format(max));
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("moyenne").put("moyenne", decimalFormat.format((moyenne / nbElevesMoyenne)));
+                                    }
+                                    if(nbElevesMoyennePos == 0){
+                                        JsonObject minMoy = new JsonObject().put("minimum", NN);
+                                        JsonObject moyenneMatJson = new JsonObject().put("positionnement",minMoy);
+                                        if(resultHandler.getJsonObject("annual").getJsonObject("statistiques").containsKey(idMatiere.toString()))
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).put("positionnement",minMoy);
+                                        else
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").put(idMatiere.toString(),moyenneMatJson);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("positionnement").put("maximum", NN);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("positionnement").put("moyenne", NN);
+                                    }else{
+                                        JsonObject minMoy = new JsonObject().put("minimum", minPos);
+                                        JsonObject moyenneMatJson = new JsonObject().put("positionnement",minMoy);
+                                        if(resultHandler.getJsonObject("annual").getJsonObject("statistiques").containsKey(idMatiere.toString()))
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).put("positionnement",minMoy);
+                                        else
+                                            resultHandler.getJsonObject("annual").getJsonObject("statistiques").put(idMatiere.toString(),moyenneMatJson);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("positionnement").put("maximum", maxPos);
+                                        resultHandler.getJsonObject("annual").getJsonObject("statistiques").getJsonObject(idMatiere.toString()).getJsonObject("positionnement")
+                                                .put("moyenne", utilsService.convertPositionnement(moyennePos / nbElevesMoyennePos, ((JsonObject) listFuturesEachPeriode.get(0).result()).getJsonArray("tableConversions") ,null,false));
+                                    }
+                                }
+                                Renders.renderJson(request, resultHandler);
+                            } else {
+                                Renders.badRequest(request, "export of each periodes doesn't work");
+                            }
+                        });
+            }
         });
     }
 
@@ -352,7 +658,7 @@ public class NoteController extends ControllerHelper {
                                                 Double.parseDouble(note.getString("coefficient"))));
                                     }
                                 }
-                                Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20));
+                                Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20,false));
                             } else {
                                 renderError(request, new JsonObject().put("error", event.left().getValue()));
                             }
@@ -803,7 +1109,7 @@ public class NoteController extends ControllerHelper {
                                                                         entryPeriode.getValue().entrySet()) {
                                                                     JsonObject moyenne = utilsService.calculMoyenne(
                                                                             entry.getValue(),
-                                                                            false, 20);
+                                                                            false, 20,false);
                                                                     moyenne.put("id_periode", entry.getKey());
                                                                     moyenne.put("id_eleve", idEleve);
                                                                     listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
@@ -952,7 +1258,7 @@ public class NoteController extends ControllerHelper {
                     public void handle(Either<String, JsonArray> event) {
                         if (event.isRight()) {
                             JsonArray listNotes = event.right().getValue();
-                            notesService.calculPositionnementAutoByEleveByMatiere(listNotes,result);
+                            notesService.calculPositionnementAutoByEleveByMatiere(listNotes,result,false);
 //si idEleves.size()=0 alors aucune note sur les élèves => il faut voir s'il y a des moyennes finales => dans tous les cas on récupère les moyennes finales
                             notesService.getColonneReleve(null, null, idMatiere,
                                     new JsonArray().add(idClasse), "moyenne",

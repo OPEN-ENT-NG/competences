@@ -165,9 +165,10 @@ public class DefaultUtilsService  implements UtilsService {
      * @param listeNoteDevoirs : contient une liste de NoteDevoir.
      *                         La formule suivante est utilisée :(SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
      * @param diviseurM        : diviseur de la moyenne. Par défaut, cette valeur est égale à 20 (optionnel).
+     * @param annual        : permet de savoir si on doit faire l'arrondi à la fin.
      **/
     @Override
-    public JsonObject calculMoyenne(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques, Integer diviseurM) {
+    public JsonObject calculMoyenne(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques, Integer diviseurM, Boolean annual) {
         if (diviseurM == null) {
             diviseurM = 20;
         }
@@ -221,7 +222,11 @@ public class DefaultUtilsService  implements UtilsService {
             if (moyenne.isNaN()) {
                 moyenne = null;
             } else {
-                moyenne = Double.valueOf(df.format(moyenne));
+                if(!annual)
+                    moyenne = Double.valueOf(df.format(moyenne));
+                else
+                    moyenne = Double.valueOf(moyenne);
+
             }
 
         } catch (NumberFormatException e) {
@@ -1052,10 +1057,15 @@ public class DefaultUtilsService  implements UtilsService {
         return value;
     }
 
-    public String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere) {
+    public String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere, Boolean translation) {
         String val = "";
+        Float moyenneToSend;
         if (moyenne != null && moyenne != -1 && tableauDeconversion != null) {
-            int posConverti = getPositionnementValue(moyenne + 1,
+            if(translation)
+                moyenneToSend = moyenne + 1;
+            else
+                moyenneToSend = moyenne ;
+            int posConverti = getPositionnementValue(moyenneToSend,
                     tableauDeconversion);
             if (posConverti != -1) {
                 val = String.valueOf(posConverti);

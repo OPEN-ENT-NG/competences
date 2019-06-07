@@ -4253,6 +4253,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     idClasse: $scope.search.classe.id,
                     idPeriode: null,
                     periodeName: null,
+                    periodes:[],
                     exportOptions: {
                         appreciation:$scope.suiviClasse.withAppreciations,
                         averageFinal: $scope.suiviClasse.withMoyGeneraleByEleve,
@@ -4267,8 +4268,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     p.idPeriode = $scope.suiviClasse.periode.id_type;
                     p.periodeName = $scope.getI18nPeriode($scope.suiviClasse.periode);
                 }
-                let releve = new ReleveNoteTotale(p);
-                $scope.releveNoteTotale = releve;
+                if ($scope.suiviClasse.periode.id_type == undefined) {
+                    _.forEach($scope.search.classe.periodes.all, periode => {
+                        if(periode.id_type != undefined){
+                            p.periodes.push({
+                                idPeriode: periode.id_type,
+                                periodeName: $scope.getI18nPeriode(periode)
+                            })
+                        }
+                    });
+                }
+                $scope.releveNoteTotale = new ReleveNoteTotale(p);
                 await $scope.releveNoteTotale.export();
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
@@ -4281,12 +4291,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         };
 
-        $scope.disableExportCSV = function(){
-            if($scope.suiviClasse.periode.id_type == undefined) {
-                $scope.changePrintSuiviClasse('printRecapEval');
-                utils.safeApply($scope);
-            }
+        $scope.disableAppreciation = function (){
+          if($scope.suiviClasse.periode.id_type == undefined){
+              $scope.suiviClasse.withAppreciations = false;
+              utils.safeApply($scope);
+          }
         };
+
 
         $scope.$on('chart-create', function (event, chart) {
             let oldChart = $scope.myCharts[chart.chart.canvas.id];

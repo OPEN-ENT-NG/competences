@@ -84,9 +84,10 @@ public interface UtilsService {
      *                         Dans le cas ou les objets seraient des moyennes, toutes les propriétés ramener sur devront
      *                         être à false.
      * @param diviseurM        : diviseur de la moyenne. Par défaut, cette valeur est égale à 20 (optionnel).
+     * @param annual        : permet de savoir si on doit faire l'arrondi à la fin.
      * @return Double : moyenne calculée
      **/
-    public JsonObject calculMoyenne(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques, Integer diviseurM);
+    public JsonObject calculMoyenne(List<NoteDevoir> listeNoteDevoirs, Boolean statistiques, Integer diviseurM, Boolean annual);
 
     /**
      * Fonction de calcul générique de la moyenne
@@ -253,7 +254,8 @@ public interface UtilsService {
      * @param moyenne
      * @param tableauDeconversion
      * @param printMatiere
+     * @param translation
      * @return
      */
-    String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere);
+    String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere, Boolean translation);
 }

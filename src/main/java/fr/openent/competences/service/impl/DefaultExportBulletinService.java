@@ -1521,7 +1521,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Float pos = positionnement.getFloat(MOYENNE);
                 JsonArray tableauDeconversion = classe
                         .getJsonArray("tableauDeConversion");
-                String val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere);
+                String val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere,true);
                 matiere.put(POSITIONNEMENT, val);
             }
         }

@@ -249,7 +249,7 @@ public class ExportPDFController extends ControllerHelper {
 
         if (hasDevoirs) {
             // calcul de la moyenne de l'eleve pour la matiere
-            JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, false, 20);// TODO recuper le diviseur de la matiere
+            JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, false, 20,false);// TODO recuper le diviseur de la matiere
             // ajout sur l'objet json
             if( moyenneMatiere.getLong("moyenne") != null){
                 matiereInter.put("moyenne", moyenneMatiere.getLong("moyenne").toString());
@@ -1891,11 +1891,11 @@ public class ExportPDFController extends ControllerHelper {
                         if (moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve)) {
                             matGrpNotes.add(moyennesFinales.get(matGrp).get(idEleve));
                         } else if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve)) {
-                            matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null).getDouble("moyenne"), false, new Double(1)));
+                            matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getDouble("moyenne"), false, new Double(1)));
                         }
                     });
 
-                    JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null);
+                    JsonObject resultCalc = utilsService.calculMoyenne(matGrpNotes, true, null,false);
                     if (resultCalc.getDouble("noteMin") > resultCalc.getDouble("moyenne")) {
                         moyObject.put("min", "");
                         moyObject.put("max", "");
