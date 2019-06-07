@@ -786,7 +786,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.devoirs.sync().then(() => {
                             $scope.resetSelected();
                             $scope.opened.lightboxs.duplication = false;
-                            utils.safeApply($scope);
                         });
                     })
                     .catch(() => {
@@ -3628,6 +3627,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             $scope.opened.recapEval = true;
             $scope.suiviClasse.periode = $scope.search.periode;
+            $scope.disableAppreciation();
             $scope.disabledExportSuiviClasse = typeof($scope.suiviClasse.periode) === 'undefined';
             $scope.closeWarningMessages();
             utils.safeApply($scope);
