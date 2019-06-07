@@ -121,7 +121,7 @@ public class LSUController extends ControllerHelper {
         this.ebController = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
         elementBilanPeriodiqueService = new DefaultElementBilanPeriodiqueService(eb);
-        utilsService = new DefaultUtilsService();
+        utilsService = new DefaultUtilsService(eb);
         bfcService = new DefaultBFCService(eb);
         syntheseBilanPeriodiqueService = new DefaultSyntheseBilanPeriodiqueService();
         bfcSynthseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
@@ -1706,7 +1706,82 @@ public class LSUController extends ControllerHelper {
 
     private void getBalisePeriodes(final Donnees donnees, final List<Integer> wantedPeriodes, final Map<String, JsonArray> periodesByClass,
                                    final String idStructure, final List<String> idClasse, final Handler<String> handler) {
-        JsonObject action = new JsonObject()
+        utilsService.getPeriodes(idClasse, idStructure, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> responsePeriodes) {
+                AtomicBoolean answer = new AtomicBoolean(false);
+                AtomicInteger count = new AtomicInteger(0);
+                final String thread = "("  + idStructure + ", "+ idClasse.toString()+ " )";
+                final String method = "getBalisePeriodes";
+
+                if(responsePeriodes.isLeft()){
+                    String error = responsePeriodes.left().getValue();
+                    lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+                    if (error!=null && error.contains(TIME)) {
+                        utilsService.getPeriodes(idClasse, idStructure,this);
+                    }
+                    else {
+                        log.error("method getBalisePeriodes : error eb periode.getPeriodes ko");
+                        handler.handle("getBalisePeriodes : error eb periode.getPeriodes ko");
+                    }
+                }else{
+                    try {
+                        JsonArray periodeList = responsePeriodes.right().getValue();
+                        donnees.setPeriodes(objectFactory.createDonneesPeriodes());
+                        periodeList.forEach(item -> {
+                            JsonObject currentPeriode = (JsonObject) item;
+                            Integer targetPeriode = wantedPeriodes.stream()
+                                    .filter(el -> el == currentPeriode.getInteger("id_type"))
+                                    .findFirst()
+                                    .orElse(null);
+                            if (targetPeriode != null) {
+
+                                String millesime = currentPeriode.getString("timestamp_dt").substring(0, 4);
+                                Integer indice = new Integer(0);
+                                Integer nbPeriode = new Integer(0);
+                                if (currentPeriode.getInteger("id_type") == 3 ||
+                                        currentPeriode.getInteger("id_type") == 4 ||
+                                        currentPeriode.getInteger("id_type") == 5) {
+                                    indice = currentPeriode.getInteger("id_type") - 2;
+                                    nbPeriode = 3;
+                                } else {
+                                    indice = currentPeriode.getInteger("id_type");
+                                    nbPeriode = 2;
+                                }
+
+                                Periode periode = donnees.getPeriodes().getOnePeriode(millesime, indice, nbPeriode);
+
+                                if (periode == null) {
+                                    periode = objectFactory.createPeriode();
+                                    periode.setId("P_" + currentPeriode.getInteger("id").toString());
+                                    periode.setMillesime(millesime);
+                                    periode.setTypePeriode(currentPeriode.getInteger("id_type"));
+                                    periode.setNbPeriodes(nbPeriode);
+                                    periode.setIndice(indice);
+                                    donnees.getPeriodes().getPeriode().add(periode);
+                                }
+
+                                //set map periodesByClasse
+                                if (periodesByClass != null && periodesByClass.containsKey(currentPeriode.getString("id_classe"))) {
+                                    JsonArray periodes = periodesByClass.get(currentPeriode.getString("id_classe"));
+                                    periodes.add(currentPeriode);
+                                } else {
+                                    periodesByClass.put(currentPeriode.getString("id_classe"), new JsonArray().add(currentPeriode));
+                                }
+                            }
+                        });
+                        // log for time-out
+                        answer.set(true);
+                        lsuService.serviceResponseOK(answer, count.get(), thread, method);
+                        handler.handle("success");
+                    } catch (Throwable e) {
+                        handler.handle("method getBalisePeriodes : " + e.getMessage());
+                        log.error("method getBalisePeriodes : " + e.getMessage());
+                    }
+                }
+            }
+        });
+      /*JsonObject action = new JsonObject()
                 .put("action", "periode.getPeriodes")
                 .put("idGroupes", idClasse)
                 .put("idEtablissement", idStructure);
@@ -1723,6 +1798,7 @@ public class LSUController extends ControllerHelper {
 
                         JsonObject body = message.body();
                         if ("ok".equals(body.getString("status"))) {
+
                             try {
                                 JsonArray periodeList = body.getJsonArray("result");
                                 donnees.setPeriodes(objectFactory.createDonneesPeriodes());
@@ -1733,13 +1809,6 @@ public class LSUController extends ControllerHelper {
                                             .findFirst()
                                             .orElse(null);
                                     if (targetPeriode != null) {
-                           /* periodesAdded.put("P_"+currentPeriode.getInteger("id").toString(), currentPeriode);
-                            Periode periode = objectFactory.createPeriode();
-                            periode.setId("P_"+currentPeriode.getInteger("id").toString());
-                            periode.setMillesime(currentPeriode.getString("timestamp_dt").substring(0, 4));
-                            periode.setIndice(currentPeriode.getInteger("id_type"));
-                            periode.setNbPeriodes(periodeList.size());
-                            donnees.getPeriodes().getPeriode().add(periode);*/
 
                                         String millesime = getMillesimeBFC();
                                         Integer indice = new Integer(0);
@@ -1795,7 +1864,7 @@ public class LSUController extends ControllerHelper {
                                 handler.handle("getBalisePeriodes : error eb periode.getPeriodes ko");
                             }
                         }
-                    }}));
+                    }}));*/
     }
 
     private void getBaliseEnseignants(final Donnees donnees, final String structureId, List<String> idsClasse,

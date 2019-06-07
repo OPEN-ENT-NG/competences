@@ -619,6 +619,33 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
+    public void getPeriodes(List<String> idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler){
+
+        JsonObject action = new JsonObject()
+                .put("action", "periode.getPeriodes")
+                .put("idGroupes", idClasse)
+                .put("idEtablissement", idEtablissement);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                    @Override
+                    public void handle(Message<JsonObject> message) {
+                        JsonObject body = message.body();
+                        JsonArray periodes = body.getJsonArray("result");
+                        if ("ok".equals(body.getString("status"))) {
+                            handler.handle(new Either.Right<String,JsonArray>(periodes) );
+                        }else{
+                            handler.handle(new Either.Left<String,JsonArray>("no periode for this class : " + body.getString("message")) );
+                        }
+
+                    }
+                })
+
+        );
+
+
+    }
+
     protected void calculAvailableId(String idClasse, Integer typeClasse, Long idPeriode,
                                      Date dateDebutPeriode, Date dateFinPeriode,
                                      Handler<Either<String, JsonArray>> handler) {

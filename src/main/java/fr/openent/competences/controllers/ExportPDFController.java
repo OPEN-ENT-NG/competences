@@ -2605,7 +2605,7 @@ public class ExportPDFController extends ControllerHelper {
 
                     Integer idPeriode = null;
                     try {
-                        if (request.params().contains("idPeriode")) {
+                        if (request.params().contains("idPeriode") && request.params().get("idPeriode")!= null ) {
                             idPeriode = Integer.parseInt(request.params().get("idPeriode"));
                         }
                     } catch (NumberFormatException err) {
@@ -2617,8 +2617,89 @@ public class ExportPDFController extends ControllerHelper {
 
                     SortedMap<String, Set<String>> mapAllidMatAndidTeachers = new TreeMap<>();
                     Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve = new LinkedHashMap<>();
+                    final JsonObject[] resultElevesTab = new JsonObject[1];
 
-                    noteService.getMoysEleveByMat(idClasse, idPeriode,
+                    Handler<Either<String, JsonObject>> getMatEvaluatedAndStatHandler = event -> {
+                        if(!event.isRight()) {
+                            leftToResponse(request, event.left());
+                        }else {
+
+                            JsonObject resultMatieres = event.right().getValue();
+                            JsonObject resultEleves = resultElevesTab[0];
+                            resultEleves.getMap().putAll(resultMatieres.getMap());
+
+                            JsonObject result = new JsonObject(resultEleves.getMap());
+
+                            if(idPeriodeFinal != null) {
+
+                                Utils.getLibellePeriode(eb, request, idPeriodeFinal, new Handler<Either<String, String>>() {
+                                    @Override
+                                    public void handle(Either<String, String> event) {
+                                        if (!event.isRight()) {
+                                            leftToResponse(request, event.left());
+                                        } else {
+                                            String libellePeriode = event.right().getValue();
+                                            result.put("periode", libellePeriode);
+                                            String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClasse");
+                                            result.put("nameClass", prefix);
+                                            prefix += "_" + libellePeriode;
+                                            prefix = prefix.replaceAll(" ", "_");
+                                            setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
+                                                    text, request, prefix);
+
+                                        }
+                                    }
+                                });
+                            }else{
+                                result.put("periode", "Année");
+                                String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClasse");
+                                result.put("nameClass", prefix);
+                                prefix = prefix.replaceAll(" ", "_") + "_" + "Année";
+                                setParamsExportMoys(result, withMoyGeneraleByEleve, withMoyMinMaxByMat,
+                                        text, request, prefix);
+
+                            }
+                        }
+                    };
+
+
+                    Handler<Either<String, JsonObject>> getMoysEleveByMatHandler = event -> {
+                        if(!event.isRight()) {
+                            leftToResponse(request, event.left());
+                            log.error(event.left());
+                        }else {
+                            resultElevesTab[0] = event.right().getValue();
+                            noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, getMatEvaluatedAndStatHandler);
+
+                        }
+                    };
+
+
+                    if(idPeriode != null){
+                        //in this case, in mapIdMatListMoyByEleve, this average is the average of the periode
+                        noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, mapAllidMatAndidTeachers,
+                                mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
+                    }else{
+                        List<String> listIdClasse =new ArrayList<>();
+                        listIdClasse.add(idClasse);
+                        utilsService.getPeriodes(listIdClasse, null, new Handler<Either<String, JsonArray>>() {
+                            @Override
+                            public void handle(Either<String, JsonArray> event) {
+                                if(event.isLeft()){
+                                    leftToResponse(request, event.left());
+                                    log.error(event.left().getValue());
+                                }else{
+                                    JsonArray periodes = event.right().getValue();
+                                    //in this case, in mapIdMatListMoyByEleve, this average is the average of the year
+                                    noteService.getMoysEleveByMatByYear(periodes,mapAllidMatAndidTeachers,mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
+
+                                }
+                            }
+                        });
+                    }
+
+
+                    /*noteService.getMoysEleveByMat(idClasse, idPeriode,
                             mapAllidMatAndidTeachers,
                             mapIdMatListMoyByEleve ,
                             new Handler<Either<String, JsonObject>>() {
@@ -2642,6 +2723,7 @@ public class ExportPDFController extends ControllerHelper {
                                                     JsonObject resultMatieres = event.right().getValue();
 
                                                     resultEleves.getMap().putAll(resultMatieres.getMap());
+
                                                     JsonObject result = new JsonObject(resultEleves.getMap());
 
                                                     if(idPeriodeFinal != null) {
@@ -2695,10 +2777,25 @@ public class ExportPDFController extends ControllerHelper {
                                     }
                                 }
                             });
-
+*/
                 }
             }
 
         });
     }
+
+    void setParamsExportMoys (JsonObject result, Boolean withMoyGeneraleByEleve, Boolean withMoyMinMaxByMat,
+                              Boolean text, HttpServerRequest request, String prefix){
+        result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
+        result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
+        result.put("text", text);
+        exportService.genererPdf(request,
+                result,
+                "recap_moys_eleves_par_matiere_classe.pdf.xhtml",
+                prefix,
+                vertx,
+                config);
+
+    }
+
 }

@@ -177,6 +177,14 @@ public interface UtilsService {
                                        Handler<Either<String, JsonArray>> handler);
 
     /**
+     *
+     * @param idClasse id Class
+     * @param idEtablissement id Eteblissement
+     * @param handler periodes of the class
+     */
+    void getPeriodes(List<String> idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler);
+
+    /**
      * Ajouter un élement concernant les absences ou retard d'un élève sur une  période donnée
      * @param idEleve
      * @param colonne

@@ -17,6 +17,8 @@
 
 package fr.openent.competences.bean;
 
+import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultUtilsService;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -27,7 +29,7 @@ import java.util.*;
  *
  * Classe correspondant a un eleve. Permet la generation d'un JsonObject contenant ses evaluations par domaines.
  */
-public class Eleve {
+public class Eleve implements Comparable<Eleve>{
 
     private String idEleve;
 
@@ -57,6 +59,14 @@ public class Eleve {
 
     private boolean isNotesReady;
 
+    private Map<String,List<NoteDevoir>> mapIdMatListNote;
+
+    private JsonArray jsonArrayIdMatMoy;
+
+    private UtilsService utilsService;
+
+    private List<NoteDevoir> listNotes;
+
     /**
      * Constructeur de l'Eleve. Initialise les collections domainesRacines, notes et libelleNiveau avec des
      * collections vides. Initialise les booleens isNotesReady, isNiveauxReady et isDomainessReady a false.
@@ -80,6 +90,10 @@ public class Eleve {
         this.isNotesReady = false;
         this.isNiveauxReady = false;
         this.isDomainessReady = false;
+        utilsService = new DefaultUtilsService();
+        this.jsonArrayIdMatMoy = new fr.wseduc.webutils.collections.JsonArray();
+        this.mapIdMatListNote = new LinkedHashMap<>();
+        listNotes = new ArrayList<>();
     }
 
     /**
@@ -291,5 +305,116 @@ public class Eleve {
         result.put("domaines", evaluations);
 
         return result;
+    }
+
+
+    public void setIdMatListNote(JsonArray idsMatMoy, String field1, String field2) {
+
+        for( int i = 0; i < idsMatMoy.size(); i++){
+
+            JsonObject idMatMoyObjet = idsMatMoy.getJsonObject(i);
+            if(this.mapIdMatListNote.containsKey(idMatMoyObjet.getString(field1))){
+
+                List<NoteDevoir> listNoteByMat = this.mapIdMatListNote.get(idMatMoyObjet.getString(field1));
+                if(idMatMoyObjet.getValue(field2) != null &&
+                       !"".equals(idMatMoyObjet.getValue(field2))&& !"NN".equals(idMatMoyObjet.getValue(field2))){
+                    listNoteByMat.add(new NoteDevoir((Double)idMatMoyObjet.getValue(field2),
+                            new Double(20) , false, 1.0) );
+
+                }
+            }else{
+                List<NoteDevoir> listNoteByMat = new ArrayList<>();
+                if(idMatMoyObjet.getValue(field2) != null && !"".equals(idMatMoyObjet.getValue(field2))
+                        && !"NN".equals(idMatMoyObjet.getValue(field2))){
+                    listNoteByMat.add(new NoteDevoir((Double) idMatMoyObjet.getValue(field2),
+                            new Double(20) , false, 1.0) );
+                }
+                this.mapIdMatListNote.put(idMatMoyObjet.getString(field1),listNoteByMat);
+            }
+
+        }
+    }
+
+    public Map<String, List<NoteDevoir>> getMapIdMatListNote() {
+        return this.mapIdMatListNote;
+    }
+
+    public JsonArray getJsonArrayIdMatMoy() {
+        return this.jsonArrayIdMatMoy;
+    }
+
+    public void setJsonArrayIdMatMoyWithParams(Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                                     SortedMap<String, Set<String>> mapAllidMatAndidTeachers) {
+
+
+        for (Map.Entry<String, Set<String>> mapEntry : mapAllidMatAndidTeachers.entrySet()) {
+
+            String idMatAllMat = mapEntry.getKey();
+            if(this.mapIdMatListNote.containsKey(idMatAllMat)){
+                List<NoteDevoir> listNoteDevoir = this.mapIdMatListNote.get(idMatAllMat);
+
+                if (!listNoteDevoir.isEmpty()) {
+                    Double moy = utilsService.calculMoyenneParDiviseur(listNoteDevoir,
+                            false).getDouble("moyenne");
+                    this.jsonArrayIdMatMoy.add(new JsonObject().put("id_matiere", idMatAllMat)
+                            .put("moyenneByMat", moy));
+
+                    if (mapIdMatListMoyByEleve.containsKey(idMatAllMat)) {
+                        List<NoteDevoir> moyList = mapIdMatListMoyByEleve.get(idMatAllMat);
+                        moyList.add(new NoteDevoir(moy, new Double(20), false, 1.0));
+                    } else {
+                        List<NoteDevoir> moyList = new ArrayList<>();
+                        moyList.add(new NoteDevoir(moy, new Double(20), false, 1.0));
+                        mapIdMatListMoyByEleve.put(idMatAllMat, moyList);
+                    }
+
+                } else {
+                    this.jsonArrayIdMatMoy.add(new JsonObject().put("id_matiere", idMatAllMat)
+                            .put("moyenneByMat", "NN"));
+                }
+
+            }else{
+                this.jsonArrayIdMatMoy.add(new JsonObject().put("id_matiere", idMatAllMat)
+                        .put("moyenneByMat", "NN"));
+            }
+
+        }
+
+    }
+
+    public void setJsonArrayIdMatMoy(){
+        for (Map.Entry<String, List<NoteDevoir>> idMatNotes : this.mapIdMatListNote.entrySet()) {
+            String idMat = idMatNotes.getKey();
+            List<NoteDevoir> listNoteDevoir = idMatNotes.getValue();
+            if (!listNoteDevoir.isEmpty()) {
+                Double moy = utilsService.calculMoyenneParDiviseur(listNoteDevoir,
+                        false).getDouble("moyenne");
+                this.jsonArrayIdMatMoy.add(new JsonObject().put("id_matiere", idMat)
+                        .put("moyenneByMat", moy));
+
+            } else {
+                this.jsonArrayIdMatMoy.add(new JsonObject().put("id_matiere", idMat)
+                        .put("moyenneByMat", "NN"));
+            }
+        }
+    }
+
+    public List<NoteDevoir> getListNotes() {
+        return this.listNotes;
+    }
+
+    public void setListNotes(NoteDevoir note) {
+       listNotes.add(note);
+    }
+
+    public int compareTo(Eleve eleve){
+        int valCmpName = this.getLastName().compareTo(eleve.getLastName());
+        if(valCmpName == 0 ){
+            return this.getFirstName().compareTo(eleve.getFirstName());
+        }else{
+            return valCmpName;
+        }
+
+
     }
 }
