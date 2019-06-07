@@ -1735,8 +1735,7 @@ public class LSUController extends ControllerHelper {
                                     .findFirst()
                                     .orElse(null);
                             if (targetPeriode != null) {
-
-                                String millesime = currentPeriode.getString("timestamp_dt").substring(0, 4);
+                                String millesime = getMillesimeBFC();
                                 Integer indice = new Integer(0);
                                 Integer nbPeriode = new Integer(0);
                                 if (currentPeriode.getInteger("id_type") == 3 ||
@@ -1781,90 +1780,6 @@ public class LSUController extends ControllerHelper {
                 }
             }
         });
-      /*JsonObject action = new JsonObject()
-                .put("action", "periode.getPeriodes")
-                .put("idGroupes", idClasse)
-                .put("idEtablissement", idStructure);
-
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    AtomicBoolean answer = new AtomicBoolean(false);
-                    AtomicInteger count = new AtomicInteger(0);
-                    final String thread = "("  + idStructure + ", "+ idClasse.toString()+ " )";
-                    final String method = "getBalisePeriodes";
-
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-
-                        JsonObject body = message.body();
-                        if ("ok".equals(body.getString("status"))) {
-
-                            try {
-                                JsonArray periodeList = body.getJsonArray("result");
-                                donnees.setPeriodes(objectFactory.createDonneesPeriodes());
-                                periodeList.forEach(item -> {
-                                    JsonObject currentPeriode = (JsonObject) item;
-                                    Integer targetPeriode = wantedPeriodes.stream()
-                                            .filter(el -> el == currentPeriode.getInteger("id_type"))
-                                            .findFirst()
-                                            .orElse(null);
-                                    if (targetPeriode != null) {
-
-                                        String millesime = getMillesimeBFC();
-                                        Integer indice = new Integer(0);
-                                        Integer nbPeriode = new Integer(0);
-                                        if (currentPeriode.getInteger("id_type") == 3 ||
-                                                currentPeriode.getInteger("id_type") == 4 ||
-                                                currentPeriode.getInteger("id_type") == 5) {
-                                            indice = currentPeriode.getInteger("id_type") - 2;
-                                            nbPeriode = 3;
-                                        } else {
-                                            indice = currentPeriode.getInteger("id_type");
-                                            nbPeriode = 2;
-                                        }
-
-                                        Periode periode = donnees.getPeriodes().getOnePeriode(millesime, indice, nbPeriode);
-
-                                        if (periode == null) {
-                                            periode = objectFactory.createPeriode();
-                                            periode.setId("P_" + currentPeriode.getInteger("id").toString());
-                                            periode.setMillesime(millesime);
-                                            periode.setTypePeriode(currentPeriode.getInteger("id_type"));
-                                            periode.setNbPeriodes(nbPeriode);
-                                            periode.setIndice(indice);
-                                            donnees.getPeriodes().getPeriode().add(periode);
-                                        }
-
-                                        //set map periodesByClasse
-                                        if (periodesByClass != null && periodesByClass.containsKey(currentPeriode.getString("id_classe"))) {
-                                            JsonArray periodes = periodesByClass.get(currentPeriode.getString("id_classe"));
-                                            periodes.add(currentPeriode);
-                                        } else {
-                                            periodesByClass.put(currentPeriode.getString("id_classe"), new JsonArray().add(currentPeriode));
-                                        }
-                                    }
-                                });
-                                // log for time-out
-                                answer.set(true);
-                                lsuService.serviceResponseOK(answer, count.get(), thread, method);
-                                handler.handle("success");
-                            } catch (Throwable e) {
-                                handler.handle("method getBalisePeriodes : " + e.getMessage());
-                                log.error("method getBalisePeriodes : " + e.getMessage());
-                            }
-                        } else {
-                            String error = body.getString(MESSAGE);
-                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
-                            if (error!=null && error.contains(TIME)) {
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                                        handlerToAsyncHandler(this));
-                            }
-                            else {
-                                log.error("method getBalisePeriodes : error eb periode.getPeriodes ko");
-                                handler.handle("getBalisePeriodes : error eb periode.getPeriodes ko");
-                            }
-                        }
-                    }}));*/
     }
 
     private void getBaliseEnseignants(final Donnees donnees, final String structureId, List<String> idsClasse,

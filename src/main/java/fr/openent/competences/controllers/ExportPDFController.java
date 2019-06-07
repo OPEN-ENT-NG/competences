@@ -2582,7 +2582,6 @@ public class ExportPDFController extends ControllerHelper {
                             }
                         }
                         ));
-
             }
         });
     }
@@ -2697,87 +2696,6 @@ public class ExportPDFController extends ControllerHelper {
                             }
                         });
                     }
-
-
-                    /*noteService.getMoysEleveByMat(idClasse, idPeriode,
-                            mapAllidMatAndidTeachers,
-                            mapIdMatListMoyByEleve ,
-                            new Handler<Either<String, JsonObject>>() {
-                                @Override
-                                public void handle(Either<String, JsonObject> event) {
-
-                                    if(!event.isRight()){
-                                        leftToResponse(request, event.left());
-                                        log.error(event.left());
-                                    }else {
-                                        JsonObject resultEleves = event.right().getValue();
-
-                                        noteService.getMatEvaluatedAndStat(mapAllidMatAndidTeachers, mapIdMatListMoyByEleve, new Handler<Either<String, JsonObject>>() {
-                                            @Override
-                                            public void handle(Either<String, JsonObject> event) {
-
-                                                if(!event.isRight()) {
-                                                    leftToResponse(request, event.left());
-                                                }else {
-
-                                                    JsonObject resultMatieres = event.right().getValue();
-
-                                                    resultEleves.getMap().putAll(resultMatieres.getMap());
-
-                                                    JsonObject result = new JsonObject(resultEleves.getMap());
-
-                                                    if(idPeriodeFinal != null) {
-
-                                                        Utils.getLibellePeriode(eb, request, idPeriodeFinal, new Handler<Either<String, String>>() {
-                                                            @Override
-                                                            public void handle(Either<String, String> event) {
-                                                                if (!event.isRight()) {
-                                                                    leftToResponse(request, event.left());
-                                                                } else {
-                                                                    String libellePeriode = event.right().getValue();
-
-                                                                    result.put("periode", libellePeriode);
-
-
-                                                                    String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClasse");
-                                                                    result.put("nameClass", prefix);
-                                                                    prefix += "_" + libellePeriode;
-                                                                    result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
-                                                                    result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
-                                                                    result.put("text", text);
-                                                                    exportService.genererPdf(request,
-                                                                            result,
-                                                                            "recap_moys_eleves_par_matiere_classe.pdf.xhtml",
-                                                                            prefix,
-                                                                            vertx,
-                                                                            config);
-
-                                                                }
-                                                            }
-                                                        });
-                                                    }else{
-                                                        result.put("periode", "Année");
-                                                        String prefix = result.getJsonArray("eleves").getJsonObject(0).getString("nameClass");
-                                                        result.put("nameClass", prefix);
-                                                        prefix += "_" + "Année";
-                                                        result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
-                                                        result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
-                                                        result.put("text", text);
-                                                        exportService.genererPdf(request,
-                                                                result,
-                                                                "recap_moys_eleves_par_matiere_classe.pdf.xhtml",
-                                                                prefix,
-                                                                vertx,
-                                                                config);
-
-                                                    }
-                                                }
-                                            }
-                                        });
-                                    }
-                                }
-                            });
-*/
                 }
             }
 
