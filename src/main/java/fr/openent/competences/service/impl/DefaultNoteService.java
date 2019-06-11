@@ -2586,10 +2586,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             JsonObject minPos = new JsonObject().put("minimum", positionnementMin);
             statsToAdd.put("positionnement",minPos);
             statsToAdd.getJsonObject("positionnement").put("maximum", positionnementMax);
-            if(!annual)
-                statsToAdd.getJsonObject("positionnement").put("moyenne", Double.valueOf(utilsService.convertPositionnement(Float.valueOf(String.valueOf(moyennePos/nbElevesPositionnement)),
-                        tableauDeConversion, null,false)));
-            else
+            if(!annual) {
+                if (moyennePos.compareTo(new Double(0)) != 0) {
+                    statsToAdd.getJsonObject("positionnement").put("moyenne", Double.valueOf(utilsService.convertPositionnement(Float.valueOf(String.valueOf(moyennePos / nbElevesPositionnement)),
+                            tableauDeConversion, null, false)));
+                }else {
+                    statsToAdd.getJsonObject("positionnement").put("moyenne", Double.valueOf(0));
+                }
+            }else
                 statsToAdd.getJsonObject("positionnement").put("moyenne", (moyennePos/nbElevesPositionnement));
 
         }
