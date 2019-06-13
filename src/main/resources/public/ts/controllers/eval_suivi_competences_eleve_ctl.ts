@@ -487,35 +487,35 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             });
         };
 
-         $scope.initEnsCplt = async function(){
-             $scope.suiviCompetence.niveauLangueCultRegs = new NiveauLangueCultRegs();
-             await Promise.all([$scope.suiviCompetence.ensCpls.sync(),
-                 $scope.suiviCompetence.niveauEnsCpls.sync(),
-                 $scope.suiviCompetence.eleveEnsCpl.sync(),
-                 $scope.suiviCompetence.langues.sync()]);
-             if ( $scope.suiviCompetence.eleveEnsCpl.id ) {
-                 $scope.suiviCompetence.ensCplSelected = _.findWhere($scope.suiviCompetence.ensCpls.all,
-                     {id: $scope.suiviCompetence.eleveEnsCpl.id_enscpl});
-                 $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
-                     $scope.suiviCompetence.niveauEnsCpls.all, {id:
-                         $scope.suiviCompetence.eleveEnsCpl.id_niveau});
-                 // si il y a une langue régionale de precisée, on la sélectionne
-                 if ($scope.suiviCompetence.eleveEnsCpl.id_langue !== undefined &&
-                     $scope.suiviCompetence.eleveEnsCpl.id_langue !== null) {
-                     $scope.suiviCompetence.langueSelected = _.findWhere($scope.suiviCompetence.langues.all,
-                         {id: $scope.suiviCompetence.eleveEnsCpl.id_langue});
-                     // sélection du niveau si renseigné
-                     if ( $scope.suiviCompetence.eleveEnsCpl.niveau_lcr !== undefined ) {
-                         $scope.suiviCompetence.niveauLangueCultRegSelected = _.findWhere(
-                             $scope.suiviCompetence.niveauLangueCultRegs.all,
-                             {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau_lcr});
-                     }
-                 }
-                 await utils.safeApply($scope);
-             } else {
-                 $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.eleveEnsCpl;
-                 await utils.safeApply($scope);
-             }
+        $scope.initEnsCplt = async function(){
+            $scope.suiviCompetence.niveauLangueCultRegs = new NiveauLangueCultRegs();
+            await Promise.all([$scope.suiviCompetence.ensCpls.sync(),
+                $scope.suiviCompetence.niveauEnsCpls.sync(),
+                $scope.suiviCompetence.eleveEnsCpl.sync(),
+                $scope.suiviCompetence.langues.sync()]);
+            if ( $scope.suiviCompetence.eleveEnsCpl.id ) {
+                $scope.suiviCompetence.ensCplSelected = _.findWhere($scope.suiviCompetence.ensCpls.all,
+                    {id: $scope.suiviCompetence.eleveEnsCpl.id_enscpl});
+                $scope.suiviCompetence.niveauEnsCplSelected = _.findWhere(
+                    $scope.suiviCompetence.niveauEnsCpls.all, {id:
+                        $scope.suiviCompetence.eleveEnsCpl.id_niveau});
+                // si il y a une langue régionale de precisée, on la sélectionne
+                if ($scope.suiviCompetence.eleveEnsCpl.id_langue !== undefined &&
+                    $scope.suiviCompetence.eleveEnsCpl.id_langue !== null) {
+                    $scope.suiviCompetence.langueSelected = _.findWhere($scope.suiviCompetence.langues.all,
+                        {id: $scope.suiviCompetence.eleveEnsCpl.id_langue});
+                    // sélection du niveau si renseigné
+                    if ( $scope.suiviCompetence.eleveEnsCpl.niveau_lcr !== undefined ) {
+                        $scope.suiviCompetence.niveauLangueCultRegSelected = _.findWhere(
+                            $scope.suiviCompetence.niveauLangueCultRegs.all,
+                            {niveau: $scope.suiviCompetence.eleveEnsCpl.niveau_lcr});
+                    }
+                }
+                await utils.safeApply($scope);
+            } else {
+                $scope.suiviCompetence.niveauEnsCplSelected = $scope.suiviCompetence.eleveEnsCpl;
+                await utils.safeApply($scope);
+            }
         };
 
         $scope.onChangeEns = () => {
@@ -535,7 +535,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         $scope.suiviCompetence.niveauEnsCpls.all,
                         {niveau: $scope.suiviCompetence.niveauEnsCpls.niveau = 1});
                 }
-                 // si l'enseignement sélectionné est avec le code LCR, alors, on affiche la liste déroulante
+                // si l'enseignement sélectionné est avec le code LCR, alors, on affiche la liste déroulante
                 // de choix de la langue de culture régionale et on positionne sur la 1ère langue par défaut
                 if ( $scope.suiviCompetence.ensCplSelected !== undefined && $scope.suiviCompetence.ensCplSelected.code === 'LCR') {
                     $scope.suiviCompetence.langueSelected = $scope.suiviCompetence.langues.all[0];
@@ -836,19 +836,22 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          * @param refresh
          * @returns {Promise<any>}
          */
-        $scope.refreshAndOpenBFC = async function (refresh?, init?) {
+        $scope.refreshAndOpenBFC = async function (refresh?, init?, periode? ) {
             return new Promise (async resolve => {
                 try {
                     if (init === true) {
                         Utils.initFilterMine($scope);
+                        $scope.isCycle = (periode.isCycle !== undefined)? periode.isCycle : false;
                         await $scope.search.eleve.getCycles();
                         $scope.currentCycle = _.findWhere($scope.search.eleve.cycles,
                             {id_cycle: $scope.search.classe.id_cycle});
-                        $scope.isCycle = true;
-                        $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve,
-                            {libelle: "cycle", id: null}, $scope.search.classe, $scope.currentCycle,
-                            $scope.isCycle, $scope.evaluations.structure);
                         $scope.selectedCycleRadio = $scope.currentCycle;
+                        if(periode.id_type < 0){
+                            periode = _.omit(periode,'id_type');
+                        }
+                        $scope.suiviCompetence = new SuiviCompetence($scope.search.eleve,periode,
+                            $scope.search.classe, $scope.currentCycle, $scope.isCycle, $scope.evaluations.structure);
+
                         await Promise.all([$scope.suiviCompetence.bilanFinDeCycles.sync(),
                             $scope.updateColorAndLetterForSkills(), $scope.baremeBrevet()]);
                     }

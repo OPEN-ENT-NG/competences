@@ -35,6 +35,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc: false};
         $scope.graphDom = {opened: true, comparison: false, darkness:true, infoGrouped: false};
         $scope.graphMat = {opened: true, comparison: false, darkness:true, infoGrouped: false};
+        $scope.opened.bfcPeriode = undefined;
         $scope.displayBilanPeriodique = async() => {
             if(model.me.type === 'PERSRELELEVE'){
                 $scope.critereIsEmpty = !($scope.search.periode !== '*' && $scope.search.periode !== null && $scope.search.periode !== undefined);
@@ -55,7 +56,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.fiterTrimestres = () => {
             return ( item ) => {
-                return item.id_type > -1;
+                return item.id_type > -1 || $scope.selected.bfc ===true;
             }
         };
 
@@ -89,6 +90,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.openSuiviAcquis = async () => {
             $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc :false};
             closeTemplateButNot('suivi-acquis');
+            if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
+                || $scope.search.periode.id_type === undefined){
+                await utils.safeApply($scope);
+                return;
+            }
             utils.safeApply($scope);
 
             if(model.me.type === 'PERSRELELEVE'){
@@ -113,6 +119,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.openProjet = async () => {
             $scope.selected = {projet: true};
             closeTemplateButNot('projet');
+            if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
+                || $scope.search.periode.id_type === undefined){
+                await utils.safeApply($scope);
+                return;
+            }
             $scope.canUpdateAppreciations = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                 "canUpdateAppreciations") && finSaisieBilan;
             utils.safeApply($scope);
@@ -124,6 +135,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.openVieScolaire = async function () {
             $scope.selected = {vieScolaire: true};
             closeTemplateButNot('vie-scolaire');
+            if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
+                || $scope.search.periode.id_type === undefined){
+                await utils.safeApply($scope);
+                return;
+            }
             utils.safeApply($scope);
             $scope.canUpdateRetardAndAbscence = model.me.hasWorkflow(
                 Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbscence) && finSaisieBilan;
@@ -161,7 +177,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.search.eleve.evenements.pop();
 
             }
-            _.forEach($scope.filteredPeriode, (periode) => {
+            _.forEach(_.filter($scope.filteredPeriode, (p) => {return p.id_type > -1}), (periode) => {
                 let evenement = _.findWhere($scope.search.eleve.evenements, {id_periode: periode.id_type});
                 let pushIt = false;
                 if (evenement === undefined) {
@@ -206,10 +222,16 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.openGraphique = async function () {
             try {
+
                 $scope.selected = {graphique: true};
                 template.close('suivi-acquis');
                 template.close('projet');
                 template.close('vie-scolaire');
+                if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
+                    || $scope.search.periode.id_type === undefined){
+                    await utils.safeApply($scope);
+                    return;
+                }
                 await Utils.runMessageLoader($scope);
                 $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique(
                     $scope.search.classe,"canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
@@ -225,13 +247,44 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 await Utils.stopMessageLoader($scope);
             }
         };
+        $scope.buildCycle =  function(){
+            return {libelle: lang.translate('viescolaire.utils.cycle.tolower'), id: null, isCycle: true, id_type: -2};
+        };
+        $scope.buildYear = function(){
+            return {libelle: lang.translate('viescolaire.utils.annee'), id: null, isCycle: false, id_type: -1};
+        };
 
-        $scope.openBFC = async function () {
+        $scope.openBFC = async function (bfcPeriode?) {
+            await Utils.runMessageLoader($scope);
             $scope.selected = { bfc: false };
-            closeTemplateButNot([]);
-            await utils.safeApply($scope);
-            template.open('bfc', 'enseignants/suivi_competences_eleve/content');
-            $scope.selected = { bfc: true };
+
+            try {
+                if (bfcPeriode === undefined) {
+                    await $scope.search.eleve.getCycles();
+                    let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});
+                    let year = _.findWhere($scope.filteredPeriode, {isCycle: false});
+                    if (year === undefined) {
+                        $scope.filteredPeriode.push($scope.buildYear());
+                    }
+                    if (cycle === undefined) {
+                        cycle = $scope.buildCycle();
+                        $scope.filteredPeriode.push(cycle);
+                    }
+                    bfcPeriode = cycle;
+                    $scope.search.periode = cycle;
+                }
+
+                $scope.opened.bfcPeriode = bfcPeriode;
+                closeTemplateButNot([]);
+                await utils.safeApply($scope);
+                template.open('bfc', 'enseignants/suivi_competences_eleve/content');
+                $scope.selected = {bfc: true};
+                await utils.safeApply($scope);
+            }
+            catch (e){
+                console.error(e);
+                await Utils.stopMessageLoader($scope);
+            }
         };
 
         //////            Graph de l'onglet graphique            //////
@@ -326,8 +379,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
                 $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
-                allPromise.push($scope.changeContent());
-                await Utils.awaitAndDisplay(allPromise, $scope);
+                await $scope.changeContent();
                 delete $scope.informations.competencesNotes;
                 $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
             }
@@ -338,7 +390,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             let allPromise = [];
             if (!$scope.critereIsEmpty) {
                 $scope.updateColorAndLetterForSkills();
-                finSaisieBilan = !_.find($scope.search.classe.periodes.all, {id_type : $scope.search.periode.id_type}).publication_bulletin;
+                if($scope.selected.bfc !== true) {
+                    finSaisieBilan = !_.find($scope.search.classe.periodes.all,
+                        {id_type: $scope.search.periode.id_type}).publication_bulletin;
+                }
+
                 if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve,
                         $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
@@ -355,7 +411,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                         $scope.search.periode.id_type,$scope.structure, $scope.filteredPeriode);
                     allPromise.push($scope.openGraphique());
                 }
-                await Utils.awaitAndDisplay(allPromise, $scope);
 
                 if ($scope.selected.suiviAcquis) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
@@ -374,8 +429,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     await $scope.openProjet();
                 }
                 if ($scope.selected.bfc){
-                    await $scope.openBFC();
+                    await $scope.openBFC($scope.search.periode);
                 }
+                await Utils.awaitAndDisplay(allPromise, $scope, undefined, $scope.selected.bfc);
 
                 $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id, $scope.search.periode.id_type);
                 $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id, $scope.search.periode.id_type);
@@ -457,7 +513,23 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if ($scope.search.classe.periodes.length() === 0) {
                     await $scope.search.classe.periodes.sync();
                 }
-                $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+                $scope.filteredPeriode = $filter('customClassPeriodeFilters')
+                ($scope.structure.typePeriodes.all, $scope.search);
+                if($scope.selected.bfc === true){
+                    let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});
+                    let year = _.findWhere($scope.filteredPeriode, {isCycle: false});
+                    if(year === undefined){
+                        $scope.filteredPeriode.push($scope.buildYear());
+                    }
+                    if(cycle === undefined){
+                        $scope.filteredPeriode.push($scope.buildCycle());
+                    }
+
+                    if($scope.search.periode === undefined){
+                        $scope.search.periode = _.findWhere($scope.filteredPeriode, {isCycle: true});
+                    }
+                }
+
             }
             if (param === "isBilanPeriodique" && $scope.bilanPeriodique !== undefined) {
                 _.forEach($scope.bilanPeriodique.appreciations, (appreciation) => {
@@ -532,7 +604,23 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if ($scope.search.classe.periodes.all.length === 0) {
                 await $scope.search.classe.periodes.sync();
             }
-            $scope.filteredPeriode = $filter('customClassPeriodeFilters')($scope.structure.typePeriodes.all, $scope.search);
+            $scope.filteredPeriode = $filter('customClassPeriodeFilters')
+            ($scope.structure.typePeriodes.all, $scope.search);
+            $scope.filteredPeriode = $filter('customClassPeriodeFilters')
+            ($scope.structure.typePeriodes.all, $scope.search);
+            if($scope.selected.bfc === true){
+                let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});
+                let year = _.findWhere($scope.filteredPeriode, {isCycle: false});
+                if(year === undefined){
+                    $scope.filteredPeriode.push($scope.buildYear());
+                }
+                if(cycle === undefined){
+                    $scope.filteredPeriode.push($scope.buildCycle());
+                }
+                if($scope.search.periode === undefined){
+                    $scope.search.periode = _.findWhere($scope.filteredPeriode, {isCycle: true});
+                }
+            }
             $scope.getCurrentPeriodeBP = function (classe, res) {
                 if($location.path() === '/conseil/de/classe'){
                     let selectedPeriode = undefined;

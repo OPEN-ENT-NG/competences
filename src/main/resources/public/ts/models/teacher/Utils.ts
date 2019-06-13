@@ -652,14 +652,16 @@ export class Utils {
         await utils.safeApply($scope);
     };
 
-    static awaitAndDisplay = async function (allPromise, $scope, templates?) {
+    static awaitAndDisplay = async function (allPromise, $scope, templates?, noStop?) {
       await Promise.all(allPromise);
       if(templates !== undefined){
           _.mapObject(templates, function(val, key) {
               template.open(key, val);
           });
       }
-      await this.stopMessageLoader($scope);
+      if(noStop !== true) {
+          await this.stopMessageLoader($scope);
+      }
     };
 
 

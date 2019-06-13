@@ -43,7 +43,7 @@
                 <select ng-model="search.periode"
                         ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
                         ng-change="displayBilanPeriodique(); changeContent();"
-                        ng-options="getI18nPeriode(periode) for periode in filteredPeriode">
+                        ng-options="getI18nPeriode(periode) for periode in filteredPeriode | filter:fiterTrimestres()">
                     <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
                 </select>
             </label>

@@ -477,6 +477,7 @@
   "viescolaire.utils.undersubject":"Sous matière",
   "viescolaire.utils.school":"Établissement",
   "viescolaire.utils.cycle":"Cycle",
+  "viescolaire.utils.cycle.tolower":"cycle",
   "viescolaire.utils.student":"Élève",
   "viescolaire.utils.class":"Classe",
   "viescolaire.utils.description":"Description",
