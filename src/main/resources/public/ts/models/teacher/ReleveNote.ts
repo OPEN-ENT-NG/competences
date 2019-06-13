@@ -586,8 +586,8 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    getDataForGraph(eleve, forDomaine?): any {
-        return Graph.getDataForGraph(this, eleve, forDomaine);
+    getDataForGraph(eleve, forDomaine?,niveauCompetences?): any {
+        return Graph.getDataForGraph(this, eleve, forDomaine, niveauCompetences);
     }
 
     addColumnForExportCsv (line, key): any {

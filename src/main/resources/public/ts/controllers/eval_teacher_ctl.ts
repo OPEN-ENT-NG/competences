@@ -4051,7 +4051,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if(template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view')) {
                 template.close('contentDetails');
                 utils.safeApply($scope);
-                await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine);
+                await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine,
+                    $scope.niveauCompetences);
                 template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
                 utils.safeApply($scope);
             }
@@ -4087,7 +4088,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if(template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view')) {
                 template.close('contentDetails');
                 await utils.safeApply($scope);
-                await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine);
+                await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine,
+                    $scope.niveauCompetences);
                 template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
                 await utils.safeApply($scope);
             }
@@ -4210,7 +4212,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.displayDomaine = displayDomaine;
             template.close('contentDetails');
             await utils.safeApply($scope);
-            await $scope.releveNote.getDataForGraph($scope.informations.eleve, displayDomaine);
+            await $scope.releveNote.getDataForGraph($scope.informations.eleve, displayDomaine,$scope.niveauCompetences);
             template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
             await utils.safeApply($scope);
             $scope.displayBoxAboveTheHeadBand();
@@ -4323,6 +4325,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
             afterInit:  function (chart, easing){
                 if ($location.path() !== '/bulletin' && $location.path() !== '/competences/eleve' ) {
+                    if($scope.myCharts === undefined){
+                        $scope.myCharts = {};
+                    }
                     let haveToUpdate = false;
                     let oldChart = $scope.myCharts[chart.chart.canvas.id];
                     let newChart = {datasets: []};

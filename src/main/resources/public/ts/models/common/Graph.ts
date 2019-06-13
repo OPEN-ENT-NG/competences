@@ -102,15 +102,20 @@ export class Graph extends Model{
         return parseFloat(res.toFixed(2));
     }
 
-    static tooltipsFunction(tooltipModel, forDomaine) : any{
+    static tooltipsFunction(tooltipModel, forDomaine, eleve) : any{
         if (tooltipModel.body !== undefined) {
             let graphToSet = forDomaine? 'configMixedChartDomaine' : 'configMixedChart';
             let currentChart = angular.element('#mixedChart' + forDomaine).scope();
+            if(currentChart === undefined){
+                currentChart = {
+                    informations : {eleve : eleve}
+                };
+            }
             Utils.helperTooltipsForGraph(tooltipModel, forDomaine, currentChart, graphToSet, 60);
         }
     }
 
-    static buildOption(configMixedChart, forDomaine){
+    static buildOption(configMixedChart, forDomaine, eleve){
         return  {
             maintainAspectRatio: false,
             title: {
@@ -125,7 +130,7 @@ export class Graph extends Model{
             tooltips: {
                 mode: 'label',
                 custom: (tooltipModel) => {
-                    this.tooltipsFunction(tooltipModel, forDomaine);
+                    this.tooltipsFunction(tooltipModel, forDomaine, eleve);
                 }
             },
             responsive: true,
@@ -149,7 +154,8 @@ export class Graph extends Model{
                             labelString: configMixedChart.labelyAxes[0]
                         },
                         ticks: {
-                            beginAtZero:true
+                            beginAtZero:true,
+                            max: 4,
                         }
                     },
                     {
@@ -216,7 +222,6 @@ export class Graph extends Model{
                 mode: 'label',
                 custom: function (tooltipModel) {
                     if (tooltipModel.body !== undefined) {
-                        console.dir(tooltipModel);
                         tooltipModel.width += 20;
                         for (let i = 0; i < tooltipModel.body.length; i++) {
                             tooltipModel.body[i].lines[0] += `${tooltipModel.dataPoints[i].yLabel}`;
@@ -404,8 +409,8 @@ export class Graph extends Model{
             }
             if(niveauCompetences !== undefined) {
                 configMixedChart.datasetsOveride = this.buildDatasets(configMixedChart, niveauCompetences);
-                configMixedChart.options = this.buildOption(configMixedChart, forDomaine);
                 configMixedChart._datas = [averageStudent, averageClass, data_set1, data_set2, data_set3, data_set4];
+                configMixedChart.options = this.buildOption(configMixedChart, forDomaine, eleve);
             }
         }
 

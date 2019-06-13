@@ -19,119 +19,12 @@
      class="twelve">
     <div class=" twelve cell twelve-mobile solid-bottom">
         <div class="chart-container" style="position: relative; height:40vh; width:76vw; margin: auto;" >
-            <canvas id="myChart" width="400" height="400"  class="chart-bar"></canvas>
-            <script>
-                var ctx = document.getElementById("myChart").getContext('2d');
-                var $scope = angular.element('#myChart').scope();
-                if($scope.informations.eleve.configMixedChartDomaine !== undefined) {
-                    var myChart = new Chart(ctx, {
-                        type: 'bar',
-                        data: {
-                            labels: $scope.informations.eleve.configMixedChartDomaine.labels,
-                            datasets: [
-                                $scope.informations.eleve.configMixedChartDomaine.averageStudent,
-                                $scope.informations.eleve.configMixedChartDomaine.averageClass,
-                                {
-                                    label: $scope.niveauCompetences[3].libelle,
-                                    backgroundColor: $scope.niveauCompetences[3].couleur,
-                                    stack: 'Stack 0',
-                                    data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set1,
-                                }, {
-                                    label: $scope.niveauCompetences[2].libelle,
-                                    backgroundColor: $scope.niveauCompetences[2].couleur,
-                                    stack: 'Stack 0',
-                                    data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set2,
-                                }, {
-                                    label: $scope.niveauCompetences[1].libelle,
-                                    backgroundColor: $scope.niveauCompetences[1].couleur,
-                                    stack: 'Stack 0',
-                                    data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set3,
-                                }, {
-                                    label: $scope.niveauCompetences[0].libelle,
-                                    backgroundColor: $scope.niveauCompetences[0].couleur,
-                                    stack: 'Stack 0',
-                                    data: $scope.informations.eleve.configMixedChartDomaine.datasets.data_set4,
-                                }
-                            ]
-
-                        },
-                        options: {
-                            maintainAspectRatio: false,
-                            title: {
-                                display: true,
-                                text: ' '
-                            },
-                            legend: {
-                                display: true,
-                                position: 'bottom',
-                                pointStyle: 'circle'
-                            },
-                            layout: {
-                                padding: {
-                                    left: 100,
-                                    right: 0,
-                                    top: 100,
-                                    bottom: 50
-                                }
-                            },
-                            tooltips: {
-                                mode: 'label',
-                                custom: function (tooltipModel) {
-                                    if (tooltipModel.body !== undefined) {
-                                        for (var i = 0; i < tooltipModel.body.length; i++) {
-                                            var split_label = tooltipModel.body[i].lines[0].split(':');
-                                            var dim = 0;
-                                            var idx_label = myChart.data.labels.indexOf(tooltipModel.title[0]);
-                                            var idx_datasets = myChart.data.datasets.indexOf(
-                                                _.findWhere(myChart.data.datasets, {label: split_label[0]}));
-                                            if (idx_datasets >= 2 ) {
-                                                if (idx_datasets > 2) {
-                                                    dim = parseFloat(myChart.data.datasets[idx_datasets - 1]
-                                                        .data[idx_label]);
-                                                }
-                                                var percentage = parseFloat(myChart.data.datasets[idx_datasets]
-                                                    .data[idx_label]) - dim;
-                                                var display = (parseFloat(percentage * 100 / 4)).toFixed(2);
-                                                tooltipModel.body[i].lines[0] = split_label[0] +
-                                                    ' : ' + (isNaN(parseFloat(display)) ? 0 : display) + ' %';
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                            responsive: true,
-                            scales: {
-                                xAxes: [{
-                                    stacked: true,
-                                    gridLines: {
-                                        display: false
-                                    }
-                                }],
-                                yAxes: [{
-                                    stacked: false,
-                                    position: "left",
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: $scope.informations.eleve.configMixedChartDomaine.labelyAxes[0]
-                                    }
-                                }]
-                            }
-                        }
-                    });
-                    var init = false;
-                    if(oldChart === undefined) {
-                        var oldChart = myChart;
-                        init = true;
-                    }
-                    if(!init) {
-                        for (var i = 0; i < myChart.data.datasets.length; i++) {
-                            myChart.getDatasetMeta(i).hidden = oldChart.getDatasetMeta(i).hidden;
-                        }
-                        myChart.update();
-                        oldChart = myChart;
-                    }
-                }
-            </script>
+            <canvas id="mixedCharttrue"
+                    class="chart chart-bar" width="400" height="400"
+                    chart-labels="informations.eleve.configMixedChartDomaine.labels"
+                    chart-options="informations.eleve.configMixedChartDomaine.options"
+                    chart-data="informations.eleve.configMixedChartDomaine._datas"
+                    chart-dataset-override="informations.eleve.configMixedChartDomaine.datasetsOveride"></canvas>
         </div>
     </div>
 </div>
