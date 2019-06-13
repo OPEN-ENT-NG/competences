@@ -4322,25 +4322,28 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             },
             afterInit:  function (chart, easing){
-            let haveToUpdate = false;
-            let oldChart =$scope.myCharts[chart.chart.canvas.id] ;
-                let newChart = {datasets: []};
+                if ($location.path() !== '/bulletin') {
+                    let haveToUpdate = false;
+                    let oldChart = $scope.myCharts[chart.chart.canvas.id];
+                    let newChart = {datasets: []};
 
-                for (let i = 0; i < chart.data.datasets.length; i++) {
+                    for (let i = 0; i < chart.data.datasets.length; i++) {
 
-                    let currentlabel = chart.data.datasets[i].label;
-                    let hidden = chart.getDatasetMeta(i).hidden;
-                    if(oldChart!==undefined){
-                        let datasets = _.findWhere(oldChart.datasets, {label: currentlabel});
-                        if(datasets!== undefined){
-                            hidden = datasets.hidden; chart.getDatasetMeta(i).hidden = hidden;
-                            haveToUpdate = true;
+                        let currentlabel = chart.data.datasets[i].label;
+                        let hidden = chart.getDatasetMeta(i).hidden;
+                        if (oldChart !== undefined) {
+                            let datasets = _.findWhere(oldChart.datasets, {label: currentlabel});
+                            if (datasets !== undefined) {
+                                hidden = datasets.hidden;
+                                chart.getDatasetMeta(i).hidden = hidden;
+                                haveToUpdate = true;
+                            }
                         }
-        }
 
-                    newChart.datasets.push({label: currentlabel, hidden: hidden});
+                        newChart.datasets.push({label: currentlabel, hidden: hidden});
+                    }
+                    $scope.myCharts[chart.chart.canvas.id] = newChart;
                 }
-                $scope.myCharts[chart.chart.canvas.id] = newChart;
             }
         });
     }

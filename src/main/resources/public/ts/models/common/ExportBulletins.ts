@@ -177,10 +177,10 @@ export class ExportBulletins {
                         },
                         layout: {
                             padding: {
-                                left: 100,
+                                left: 0,
                                 right: 0,
-                                top: 100,
-                                bottom: 50
+                                top: 0,
+                                bottom: 20
                             }
                         },
                         responsive: false,
@@ -198,7 +198,26 @@ export class ExportBulletins {
                                     display: true,
                                     labelString: student.configMixedChartDomaine.labelyAxes[0]
                                 }
-                            }]
+                            },
+                                {
+                                    stacked: false,
+                                    position: "right",
+                                    id: "y-axis-1",
+                                    scaleLabel: {
+                                        display: false,
+                                        labelString: student.configMixedChartDomaine.labelyAxes[0]
+                                    }
+                                    ,
+                                    gridLines: {
+                                        display:false
+                                    },
+                                    ticks: {
+                                        callback: function(value, index, values) {
+                                            return ' ';
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
 
@@ -240,7 +259,7 @@ export class ExportBulletins {
                         .append('' +
                             '<canvas ' +
                             '   id="myChart' + student.id + '"' +
-                            '   width="700" height="218" ' +
+                            '   width="1267" height="400" ' +
                             '   class="chart-bar">' +
                             '</canvas>');
 
