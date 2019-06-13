@@ -46,8 +46,9 @@ export let initChartsEval = async function ($scope) {
             if (ListEval[i].formative) {
                 libelle += " (F)"
             }
-            $scope.chartOptionsEval.tooltipLabels.push(libelle + ' : ' + ListEval[i].owner_name);
-
+            let ownerName = ListEval[i].owner_name;
+            let tooltipLabel = (ownerName !== undefined)? `${libelle} : ${ownerName}` : libelle;
+            $scope.chartOptionsEval.tooltipLabels.push(tooltipLabel);
         }
 
         //rajout de la dernière colomn vide

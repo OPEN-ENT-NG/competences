@@ -4322,7 +4322,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             },
             afterInit:  function (chart, easing){
-                if ($location.path() !== '/bulletin') {
+                if ($location.path() !== '/bulletin' && $location.path() !== '/competences/eleve' ) {
                     let haveToUpdate = false;
                     let oldChart = $scope.myCharts[chart.chart.canvas.id];
                     let newChart = {datasets: []};
