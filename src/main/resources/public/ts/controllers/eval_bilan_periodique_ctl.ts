@@ -92,6 +92,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             closeTemplateButNot('suivi-acquis');
             if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
                 || $scope.search.periode.id_type === undefined){
+                if( $scope.search.periode.id_type < 0) {
+                    notify.info('evaluations.choose.periode');
+                }
                 await utils.safeApply($scope);
                 return;
             }
@@ -121,6 +124,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             closeTemplateButNot('projet');
             if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
                 || $scope.search.periode.id_type === undefined){
+                if( $scope.search.periode.id_type < 0) {
+                    notify.info('evaluations.choose.periode');
+                }
                 await utils.safeApply($scope);
                 return;
             }
@@ -138,6 +144,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
                 || $scope.search.periode.id_type === undefined){
                 await utils.safeApply($scope);
+                if( $scope.search.periode.id_type < 0) {
+                    notify.info('evaluations.choose.periode');
+                }
                 return;
             }
             utils.safeApply($scope);
@@ -229,6 +238,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 template.close('vie-scolaire');
                 if($scope.search.periode === undefined ||  $scope.search.periode.id_type < 0
                     || $scope.search.periode.id_type === undefined){
+                    if( $scope.search.periode.id_type < 0) {
+                        notify.info('evaluations.choose.periode');
+                    }
                     await utils.safeApply($scope);
                     return;
                 }
