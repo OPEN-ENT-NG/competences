@@ -34,6 +34,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import static org.entcore.common.sql.SqlResult.validResultHandler;
+
 public class DefaultAnnotationService extends SqlCrudService implements AnnotationService {
     private final NoteService noteService;
     private final CompetenceNoteService competenceNoteService;
@@ -211,5 +213,21 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
         values.add(idDevoir).add(idEleve);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validRowsResultHandler(handler));
+    }
+
+    @Override
+    public void getAnnotationByEleveByDevoir(Long[] ids_devoir, String[] ids_eleve, Handler<Either<String, JsonArray>> handler) {
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs "+
+                "WHERE rel_annotations_devoirs.id_devoir IN "+ Sql.listPrepared(ids_devoir)+
+                " AND rel_annotations_devoirs.id_eleve IN " + Sql.listPrepared(ids_eleve);
+        for(Long idDevoir : ids_devoir){
+            values.add(idDevoir);
+        }
+        for(String idEleve : ids_eleve){
+            values.add(idEleve);
+        }
+
+        Sql.getInstance().prepared(query,values, validResultHandler(handler));
     }
 }

@@ -138,6 +138,33 @@ public class NoteController extends ControllerHelper {
     }
 
     /**
+     * Créer une note avec les données passées en POST
+     *
+     * @param request
+     */
+    @Post("/note")
+    @ApiDoc("Créer une note")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(CreateEvaluationWorkflow.class)
+    public void createAndUpdateNote(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_NOTES_CREATE, new Handler<JsonObject>() {
+                        @Override
+                        public void handle(JsonObject jo) {
+                            notesService.createNoteDevoir(jo, user.getUserId(), defaultResponseHandler(request));
+                        }
+                    });
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+    /**
      * Modifie une note avec les données passées en PUT
      *
      * @param request

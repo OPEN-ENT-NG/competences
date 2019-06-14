@@ -19,7 +19,6 @@
   "required": [
     "id_eleve",
     "id_devoir",
-    "valeur",
-    "id"
+    "valeur"
   ]
 }

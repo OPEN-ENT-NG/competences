@@ -81,4 +81,6 @@ public interface AnnotationService extends CrudService {
      * @param handler
      */
     public void deleteAnnotation(Long idDevoir, String idEleve, Handler<Either<String, JsonObject>> handler);
+
+    public void getAnnotationByEleveByDevoir(Long[] ids_devoir, String[] ids_eleve, Handler<Either<String, JsonArray>> handler);
 }

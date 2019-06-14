@@ -2667,7 +2667,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                                 $scope.opened.lightbox = false;
                                                 delete $scope.selected.eleve;
                                                 utils.safeApply($scope);
-                                            });
+                                            })
                                         } else {
                                             notify.error(lang.translate("error.note.outbound") + devoir.diviseur);
                                             evaluation.valeur = evaluation.oldValeur;

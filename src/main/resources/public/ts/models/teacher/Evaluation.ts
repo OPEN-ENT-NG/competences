@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, IModel, Collection, http } from 'entcore';
+import {Model, IModel, Collection, http, notify} from 'entcore';
 import { CompetenceNote } from './index';
 
 export class Evaluation extends Model implements IModel {
@@ -37,7 +37,7 @@ export class Evaluation extends Model implements IModel {
     get api () {
         return {
             create : '/competences/note',
-            update : '/competences/note?idNote=' + this.id,
+           // update : '/competences/note?idNote=' + this.id,
             delete : '/competences/note?idNote=' + this.id,
             createAppreciation : '/competences/appreciation',
             updateAppreciation : '/competences/appreciation?idAppreciation=' + this.id_appreciation,
@@ -78,18 +78,10 @@ export class Evaluation extends Model implements IModel {
                     });
                 });
             }else {
-                if (!this.id) {
-                    this.create().then((data) => {
-                        resolve(data);
-                    });
-                } else {
-                    this.update().then((data) =>  {
-                        resolve(data);
-                    });
-                }
+                this.create().then((data) => {
+                    resolve(data);
+                });
             }
-
-
         });
     }
 
@@ -112,19 +104,6 @@ export class Evaluation extends Model implements IModel {
             delete _noteData.appreciation;
             delete _noteData.id_appreciation;
             http().postJson(this.api.create, _noteData).done(function (data) {
-                if(resolve && (typeof(resolve) === 'function')) {
-                    resolve(data);
-                }
-            });
-        });
-    }
-
-    update () : Promise<Evaluation> {
-        return new Promise((resolve) => {
-            let _noteData = this.toJSON();
-            delete _noteData.appreciation;
-            delete _noteData.id_appreciation;
-            http().putJson(this.api.update, _noteData).done(function (data) {
                 if(resolve && (typeof(resolve) === 'function')) {
                     resolve(data);
                 }

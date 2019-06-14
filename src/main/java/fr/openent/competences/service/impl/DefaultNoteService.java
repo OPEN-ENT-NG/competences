@@ -23,6 +23,7 @@ import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.Eleves;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.bean.StatClass;
+import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.utils.FormateFutureEvent;
@@ -39,6 +40,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
@@ -81,6 +83,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private EventBus eb;
     private UtilsService utilsService;
+    private AnnotationService annotationService;
     public DefaultNoteService(String schema, String table) {
         super(schema, table);
     }
@@ -90,6 +93,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         super(schema, table);
         this.eb = eb;
         utilsService = new DefaultUtilsService(eb);
+        annotationService = new DefaultAnnotationService(COMPETENCES_SCHEMA, REL_ANNOTATIONS_DEVOIRS_TABLE);
     }
 
 
@@ -97,6 +101,59 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     @Override
     public void createNote(JsonObject note, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         super.create(note, user, handler);
+    }
+
+    @Override
+    public void createNoteDevoir(JsonObject jo, String id_user, final Handler<Either<String, JsonObject>> handler) {
+        Long id_devoir = jo.getLong("id_devoir");
+        String id_eleve = jo.getString("id_eleve");
+        Object valeur = jo.getValue("valeur");
+
+       annotationService.getAnnotationByEleveByDevoir(new Long[]{id_devoir}, new String[]{id_eleve}, new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> event) {
+
+                if(event.isLeft()){
+                    handler.handle(new Either.Left<>(event.left().getValue()));
+                    log.error(event.left().getValue());
+                }else{
+                    JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
+                    JsonArray resultAnnotation = event.right().getValue();
+
+                    if( resultAnnotation != null && !resultAnnotation.isEmpty()){
+                        addStatmentDeleteAnnotation(statements, id_devoir, id_eleve);
+                    }
+
+                    addStatmentNote(statements, id_devoir, id_eleve, valeur, id_user);
+                    Sql.getInstance().transaction(statements, SqlResult.validRowsResultHandler(handler));
+                }
+            }
+        });
+
+    }
+    private void addStatmentDeleteAnnotation(JsonArray statements, Long id_devoir, String id_eleve ){
+        String query = "DELETE FROM "+ Competences.COMPETENCES_SCHEMA +".rel_annotations_devoirs " +
+                "WHERE id_devoir = ? AND id_eleve = ? ;";
+        JsonArray paramsDeleteAnnotation = new fr.wseduc.webutils.collections.JsonArray();
+        paramsDeleteAnnotation.add(id_devoir).add(id_eleve);
+        statements.add(new JsonObject()
+                .put("statement", query)
+                .put("values",paramsDeleteAnnotation)
+                .put("action", "prepared"));
+    }
+
+    private void addStatmentNote(JsonArray statements, Long id_devoir, String id_eleve, Object valeur, String id_user){
+
+        String query = "INSERT INTO " + COMPETENCES_SCHEMA + ".notes " +
+                "( id_eleve, id_devoir, valeur, owner ) VALUES ( ?, ?, ?, ? ) ON CONFLICT ( id_devoir, id_eleve ) " +
+                "DO UPDATE SET valeur = ?, owner = ?";
+        JsonArray paramsNote = new JsonArray();
+        paramsNote.add( id_eleve ).add( id_devoir ).add( valeur ).add( id_user).add( valeur ).add( id_user );
+
+        statements.add( new JsonObject()
+                .put("statement", query)
+                .put("values", paramsNote)
+                .put("action", "prepared"));
     }
 
     @Override
