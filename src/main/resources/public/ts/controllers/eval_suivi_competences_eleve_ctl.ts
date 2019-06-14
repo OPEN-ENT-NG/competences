@@ -701,7 +701,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             } else if (object instanceof Eleve) {
                 url += "idEleve=" + object.id + "&idEtablissement=" + $scope.structure.id;
             }
-            if (periode && periode !== "*" && periode.id_type) {
+            if (periode && periode !== "*" && periode.id_type && periode.id_type > -1) {
                 url += "&idPeriode=" + periode.id_type;
             } else if ($scope.suiviCompetence.isCycle === true) {
                 url += "&idCycle="+$scope.suiviCompetence.cycle.id_cycle;
