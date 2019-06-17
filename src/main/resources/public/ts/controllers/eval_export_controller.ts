@@ -143,7 +143,8 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     if($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
                         && ($scope.lsu.errorsLSU.all.length > 0
                             || $scope.lsu.errorsLSU.errorCode.length > 0
-                            || $scope.lsu.errorsLSU.emptyDiscipline)
+                            || $scope.lsu.errorsLSU.emptyDiscipline
+                            || $scope.lsu.errorsLSU.errorEPITeachers.length > 0)
                     ){
                         $scope.opened.lightboxErrorsLSU = true;
                     }

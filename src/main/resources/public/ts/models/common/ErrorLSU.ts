@@ -29,6 +29,7 @@ export class ErrorLSU extends Model {
 }
 export class ErrorsLSU {
 
+    errorEPITeachers : any[];
     errorCode : any[];
     all : ErrorLSU[];
     emptyDiscipline : boolean;
@@ -38,6 +39,7 @@ export class ErrorsLSU {
         this.all = [];
         this.errorCode = [];
         this.emptyDiscipline = false;
+        this.errorEPITeachers = [];
     }
 
     setErrorsLSU(data: any){
@@ -69,7 +71,12 @@ export class ErrorsLSU {
             if(!_.isEmpty(errorBadRequest)){
                this.errorMessageBadRequest = errorBadRequest;
             }
-            this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode', 'emptyDiscipline','error')));
+            let errorEPITeachers = _.values(_.pick(obj, 'errorEPITeachers'));
+            if(!_.isEmpty(errorEPITeachers)){
+                this.errorEPITeachers = errorEPITeachers[0];
+            }
+            this.all = Mix.castArrayAs(ErrorLSU,_.values(_.omit(obj, 'errorCode', 'emptyDiscipline','error',
+                'errorEPITeachers')));
         }
     }
 

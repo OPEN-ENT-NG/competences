@@ -96,7 +96,7 @@
             </tbody>
         </table>
     </div>
-    <button class="marginFive" ng-click="exportLSU(false)" ng-disabled="controleExportLSU()">
+    <button class="marginFive" ng-click="exportLSU(false); lsu.hasUnheededStudents = false;" ng-disabled="controleExportLSU()">
         <i18n>continue</i18n>
     </button>
     <button class="marginFive" ng-click="lsu.hasUnheededStudents = !lsu.hasUnheededStudents;">

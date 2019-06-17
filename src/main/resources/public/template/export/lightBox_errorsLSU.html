@@ -37,9 +37,34 @@
             </tbody>
         </table>
     </div>
+    <h2 ng-if="lsu.errorsLSU.errorEPITeachers.length > 0" class="center">
+        <i18n>evaluations.lsu.errors.errorEPITeachers.title</i18n></h2>
+    <div ng-if="lsu.errorsLSU.errorEPITeachers.length > 0" class="twelve">
+        <table class="twelve">
+            <thead>
+            <tr>
+                <th ><i18n>evaluations.enseignements.pratiques.interdisciplinaires</i18n></th>
+                <th class="center"><i18n>evaluations.intervenants</i18n></th>
+                <th ><i18n>evaluations.classe.groupe</i18n></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="epi in lsu.errorsLSU.errorEPITeachers | orderBy:['name']">
+                <td>[[::epi.name]]</td>
+                <td class="center"><span ng-repeat="intervenantMatiere in epi.intervenantsMatieres | orderBy:'intervenant.displayName'">
+                    [[:: intervenantMatiere.intervenant.displayName ]] (<span class="bold">[[:: intervenantMatiere.matiere.name ]]</span>)[[$last ? '' : ' - ']] </span>
+                </td>
+                <td><span ng-repeat="groupe in epi.groupes">
+                    [[groupe.name]]<span ng-if="$index < epi.groupes.length-1">,</span>
+                </span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
     <h2 ng-if="lsu.errorsLSU.all.length > 0" class="center">
         <i18n>evaluations.lsu.errors.eleves.bilan.periodique.title</i18n></h2>
-    <section class="twelve center">
+    <section ng-if="lsu.errorsLSU.all.length > 0" class="twelve center">
         <infotip name="lsu-error-unheeded-student-tutorial" class="info marginFive bottomInfo" >
             <strong><i18n>tuto.lsu.title</i18n></strong>
             <ul>

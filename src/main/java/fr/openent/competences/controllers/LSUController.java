@@ -2156,13 +2156,32 @@ public class LSUController extends ControllerHelper {
                             CompositeFuture.all(futureMyResponse1Lst).setHandler(event -> {
                                 epiGroupe.setId(EPI_GROUPE + element.getInteger("id"));
                                 epiGroupe.setEpiRef(epi);
+                                String libelle = element.getString("libelle");
                                 epiGroupe.setEnseignantsDisciplines(enseignantsDisciplinesEpi);
-                                epiGroupe.setIntitule(element.getString("libelle"));
+                                epiGroupe.setIntitule(libelle);
+                                JsonArray groupes = element.getJsonArray("groupes");
 
-                                for (int i = 0; i < element.getJsonArray("groupes").size(); i++) {
+                                // Si l'EPI a moins de deux (intervenant-disciplines)
+                                if(enseignantsDisciplinesEpi != null &&
+                                        enseignantsDisciplinesEpi.getEnseignantDiscipline().size() < 2){
+                                    String errorEPITeachersKey = "errorEPITeachers";
+                                    if(!errorsExport.containsKey(errorEPITeachersKey)){
+                                        errorsExport.put(errorEPITeachersKey, new JsonArray());
+                                    }
+                                    errorsExport.getJsonArray(errorEPITeachersKey).add(
+                                            new JsonObject().put(NAME,libelle)
+                                                    .put("groupes", groupes)
+                                                    .put("intervenantsMatieres", intervenantsMatieres));
+                                    futureEltBilanPeriodique.complete();
+                                    return;
+                                }
+
+                                for (int i = 0; i < groupes.size(); i++) {
                                     JsonObject currentClass = element.getJsonArray("groupes").getJsonObject(i);
                                     epiGroupAdded.put(currentClass.getString("id"), epiGroupe.getId());
                                 }
+
+
                                 if(epiThematique.getCode() != null){
                                     if(donnees.getEpisThematiques() == null){
                                         donnees.setEpisThematiques(objectFactory.createEpisThematiques());
@@ -2240,7 +2259,10 @@ public class LSUController extends ControllerHelper {
                 });
     }
 
-    private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere, List<EnseignantDiscipline> enseignantDiscipline, List<Object> disciplineRefs, final Donnees donnees,final JsonArray enseignantFromSts, final Future<JsonObject> resp1FutureComposite) {
+    private void addEnseignantDiscipline(JsonObject currentIntervenantMatiere,
+                                         List<EnseignantDiscipline> enseignantDiscipline,
+                                         List<Object> disciplineRefs, final Donnees donnees,
+                                         final JsonArray enseignantFromSts, final Future<JsonObject> resp1FutureComposite) {
         Discipline currentSubj = getDisciplineInXML(currentIntervenantMatiere.getJsonObject("matiere").getString("id"), donnees);
         if (currentSubj != null) {
             Enseignant currentEnseignant = getEnseignantInXML(currentIntervenantMatiere.getJsonObject("intervenant").getString("id"), donnees);
@@ -2267,7 +2289,11 @@ public class LSUController extends ControllerHelper {
             EnseignantDiscipline currentEnseignantDiscipline = objectFactory.createEnseignantDiscipline();
             currentEnseignantDiscipline.setDisciplineRef(currentSubj);
             currentEnseignantDiscipline.setEnseignantRef(currentEnseignant);
-            enseignantDiscipline.add(currentEnseignantDiscipline);
+            Boolean hasDiscipline = enseignantDiscipline.stream().anyMatch((teacher) ->
+                    ((Discipline)teacher.getDisciplineRef()).getId().equals(currentSubj.getId()));
+            if(!hasDiscipline) {
+                enseignantDiscipline.add(currentEnseignantDiscipline);
+            }
             // ajout sans doublon sinon rejet de LSU
             if(!disciplineRefs.contains(currentSubj)) {
                 disciplineRefs.add(currentSubj);
