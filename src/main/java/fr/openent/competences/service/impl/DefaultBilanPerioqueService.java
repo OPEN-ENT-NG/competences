@@ -66,9 +66,9 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             FormateFutureEvent.formate(subjectFuture,event);
         });
 
-        // Récupération des groupes de la classe
+        // Récupération des groupes de l'élève
         Future<JsonArray> idsGroupsFuture = Future.future();
-        Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), event -> {
+        Utils.getGroupsEleve(eb, idEleve,idEtablissement, event -> {
             FormateFutureEvent.formate(idsGroupsFuture, event);
         });
 
@@ -160,8 +160,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
             idsGroups.add(idClasse);
         } else {
-            idsGroups.add(idClasseGroups.getJsonObject(0).getString("id_classe"));
-            idsGroups.addAll(idClasseGroups.getJsonObject(0).getJsonArray("id_groupes"));
+            idsGroups.addAll(idClasseGroups);
         }
 
         // For each subject build the result
