@@ -400,15 +400,21 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         header += `${enseignants[j]}`;
                 }
                 if(this.periodes.length > 0){
-                    for (let periode of this.periodes){
-                        header += `;${periode.periodeName.substring(0,periode.periodeName.length-1)}`;
+                    if (this.exportOptions.averageFinal) {
+                        for (let periode of this.periodes) {
+                            header += `;${periode.periodeName.substring(0, periode.periodeName.length - 1)}`;
+                        }
+                        header += `;${lang.translate('viescolaire.utils.annee')}`;
                     }
-                    header += `;${lang.translate('viescolaire.utils.annee')}`;
-                    for (let periode of this.periodes){
-                        header += `;${periode.periodeName.substring(0,periode.periodeName.length-1)}`;
+                    if (this.exportOptions.avisConseil) {
+                        for (let periode of this.periodes) {
+                            header += `;${periode.periodeName.substring(0, periode.periodeName.length - 1)}`;
+                        }
                     }
-                    for (let periode of this.periodes){
-                        header += `;${periode.periodeName.substring(0,periode.periodeName.length-1)}`;
+                    if (this.exportOptions.avisOrientation) {
+                        for (let periode of this.periodes) {
+                            header += `;${periode.periodeName.substring(0, periode.periodeName.length - 1)}`;
+                        }
                     }
                 }
                 header += `\r\n${lang.translate('students')};`;
@@ -421,15 +427,21 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     }
                 }
                 if(this.periodes.length > 0){
-                    for (let periode of this.periodes){
-                        header += `${periode.periodeName[periode.periodeName.length -1]};`;
+                    if (this.exportOptions.averageFinal) {
+                        for (let periode of this.periodes) {
+                            header += `${periode.periodeName[periode.periodeName.length - 1]};`;
+                        }
+                        header += ";";
                     }
-                    header += ";";
-                    for (let periode of this.periodes){
-                        header += `${periode.periodeName[periode.periodeName.length -1]};`;
+                    if (this.exportOptions.avisConseil) {
+                        for (let periode of this.periodes) {
+                            header += `${periode.periodeName[periode.periodeName.length - 1]};`;
+                        }
                     }
-                    for (let periode of this.periodes){
-                        header += `${periode.periodeName[periode.periodeName.length -1]};`;
+                    if (this.exportOptions.avisOrientation) {
+                        for (let periode of this.periodes) {
+                            header += `${periode.periodeName[periode.periodeName.length - 1]};`;
+                        }
                     }
                 }
                 this.format = {header: header, column: column};
