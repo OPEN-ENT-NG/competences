@@ -328,6 +328,8 @@ public class Eleve implements Comparable<Eleve>{
                 }
                 result.put("langueCultureRegionales", langueCultureRegionales);
                 result.put("haslangueCultureRegionales", true);
+                if(langueCultureRegionales.size() == 1 && langueCultureRegionales.getJsonObject(0).getString("langueCultureRegionale").equals("Aucun"))
+                    result.put("haslangueCultureRegionales", false);
             } else {
                 result.put("haslangueCultureRegionales", false);
             }
