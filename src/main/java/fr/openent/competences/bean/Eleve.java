@@ -49,6 +49,8 @@ public class Eleve implements Comparable<Eleve>{
 
     private Map<String, Long> enseignmentComplements;
 
+    private Map<String, Long> langueCultureRegionale;
+
     private Map<Long, Integer> notes;
 
     private Map<Integer, String> libelleNiveau;
@@ -85,6 +87,7 @@ public class Eleve implements Comparable<Eleve>{
         this.nomClasse = nomClasse;
         this.domainesRacines = new LinkedHashMap<>();
         this.enseignmentComplements = new LinkedHashMap<>();
+        this.langueCultureRegionale = new LinkedHashMap<>();
         this.notes = new HashMap<>();
         this.libelleNiveau = new HashMap<>();
         this.isNotesReady = false;
@@ -205,6 +208,22 @@ public class Eleve implements Comparable<Eleve>{
     }
 
     /**
+     * getter de la langue de culture régionale : Libellé de l'enseignement et id de l'objectif
+     * @return enseignements de compléments
+     */
+    public Map<String, Long> getLangueCultureRegionale() {
+        return langueCultureRegionale;
+    }
+
+    /**
+     * setter de la langue de culture régionale : Libellé de l'enseignement et id de l'objectif
+     * @param langueCultureRegionale
+     */
+    public void setLangueCultureRegionale(Map<String, Long> langueCultureRegionale) {
+        this.langueCultureRegionale = langueCultureRegionale;
+    }
+
+    /**
      * getter de la synthèse du BFC
      * @return synthèse du BFC
      */
@@ -290,6 +309,28 @@ public class Eleve implements Comparable<Eleve>{
             }
             result.put("enseignementComplements", enseignementComplements);
             result.put("hasEnseignementComplements", true);
+            JsonArray langueCultureRegionales = new fr.wseduc.webutils.collections.JsonArray();
+            if(this.langueCultureRegionale != null
+                    && this.langueCultureRegionale.size() > 0 && !this.langueCultureRegionale.containsKey(null)){
+                for(Map.Entry<String, Long> langue : this.langueCultureRegionale.entrySet()) {
+                    JsonObject langueCultureRegionaleJson = new JsonObject();
+                    //si l'élève n'a aucun enseignement de complément et que si dans le pdf on ne veut pas que cela n'apparaisse
+                    //alors
+                    //if(enseignementComplement.getValue()!=0) {
+                    langueCultureRegionaleJson.put("langueCultureRegionale", langue.getKey());
+                    //}
+                    List<Object> objectifs = new ArrayList<Object>(Collections.nCopies(2, false));
+                    if(langue.getValue()!=0) {
+                        objectifs.set(langue.getValue().intValue() - 1, true);
+                    }
+                    langueCultureRegionaleJson.put("objectifs", new fr.wseduc.webutils.collections.JsonArray(objectifs));
+                    langueCultureRegionales.add(langueCultureRegionaleJson);
+                }
+                result.put("langueCultureRegionales", langueCultureRegionales);
+                result.put("haslangueCultureRegionales", true);
+            } else {
+                result.put("haslangueCultureRegionales", false);
+            }
         } else {
             result.put("hasEnseignementComplements", false);
         }

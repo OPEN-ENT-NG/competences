@@ -595,6 +595,7 @@ public class ExportPDFController extends ControllerHelper {
                                         public void handle(Either<String, JsonArray> repSynthese) {
                                             if (repSynthese.isRight()) {
                                                 Map<String, Map<String, Long>> niveauEnseignementComplementEleve = new HashMap<>();
+                                                Map<String, Map<String, Long>> niveauLangueCultureRegionaleEleve = new HashMap<>();
                                                 Map<String, String> syntheseEleve = new HashMap<>();
                                                 // On récupère les enseignements de complément par élève
                                                 JsonArray niveauEnseignementComplementEleveResultArray = eventNCPL.right().getValue();
@@ -605,7 +606,11 @@ public class ExportPDFController extends ControllerHelper {
                                                     if (!niveauEnseignementComplementEleve.containsKey(id_eleve)) {
                                                         niveauEnseignementComplementEleve.put(id_eleve, new HashMap<String, Long>());
                                                     }
+                                                    if (!niveauLangueCultureRegionaleEleve.containsKey(id_eleve)) {
+                                                        niveauLangueCultureRegionaleEleve.put(id_eleve, new HashMap<String, Long>());
+                                                    }
                                                     niveauEnseignementComplementEleve.get(id_eleve).put(_o.getString("libelle"), _o.getLong("niveau"));
+                                                    niveauLangueCultureRegionaleEleve.get(id_eleve).put(_o.getString("libelle_lcr"), _o.getLong("niveau_lcr"));
                                                 }
                                                 // On récupère les synthèses des bfcs par cycle par élève
                                                 JsonArray syntheseEleveResultArray = repSynthese.right().getValue();
@@ -632,6 +637,7 @@ public class ExportPDFController extends ControllerHelper {
                                                 for (Eleve e : classe.getValue()) {
                                                     e.setNotes(resultatsEleves.get(e.getIdEleve()));
                                                     e.setEnseignmentComplements(niveauEnseignementComplementEleve.get(e.getIdEleve()));
+                                                    e.setLangueCultureRegionale(niveauLangueCultureRegionaleEleve.get(e.getIdEleve()));
                                                     e.setSyntheseCycle(syntheseEleve.get(e.getIdEleve()));
                                                 }
                                                 JsonArray classeResult = formatBFC(classe.getValue());

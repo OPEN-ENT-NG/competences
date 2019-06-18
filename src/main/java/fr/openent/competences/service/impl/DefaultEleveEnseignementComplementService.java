@@ -90,7 +90,7 @@ public class DefaultEleveEnseignementComplementService extends SqlCrudService im
                 Long nbEnsCpl = SqlResult.countResult(sqlResultCount);
                 if(nbEnsCpl > 0){
                     JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
-                    String query = "SELECT langues_culture_regionale.code as code_lcr ,eleve_enseignement_complement.*, enseignement_complement.libelle,enseignement_complement.code, niveau_ens_complement.niveau FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement" +
+                    String query = "SELECT langues_culture_regionale.code as code_lcr, langues_culture_regionale.libelle as libelle_lcr ,eleve_enseignement_complement.*, enseignement_complement.libelle,enseignement_complement.code, niveau_ens_complement.niveau FROM " + Competences.COMPETENCES_SCHEMA + ".eleve_enseignement_complement" +
                             " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".enseignement_complement " +
                             "ON notes.eleve_enseignement_complement.id_enscpl = notes.enseignement_complement.id " +
                             "INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".niveau_ens_complement ON niveau_ens_complement.id = eleve_enseignement_complement.id_niveau "+

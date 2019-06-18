@@ -184,6 +184,16 @@
             {{/objectifs}}
         </tr>
         {{/enseignementComplements}}
+        {{#haslangueCultureRegionales}}
+            {{#langueCultureRegionales}}
+            <tr>
+                <td class="left-align">{{langueCultureRegionale}}</td>
+                {{#objectifs}}
+                <td>{{#.}}X{{/.}}</td>
+                {{/objectifs}}
+            </tr>
+            {{/langueCultureRegionales}}
+        {{/haslangueCultureRegionales}}
     </table>
     {{/hasEnseignementComplements}}
     {{#hasSynthese}}
