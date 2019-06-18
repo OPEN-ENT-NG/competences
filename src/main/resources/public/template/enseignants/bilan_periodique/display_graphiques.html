@@ -38,7 +38,7 @@
                     <div class="twelve cell twelve-mobile horizontal-spacing">
                         <div class="row display-inline-block">
                             <label class="checkbox ten"
-                                   ng-repeat="periode in filteredPeriode | orderBy:'id_type'">
+                                   ng-repeat="periode in filteredPeriode | filter:fiterTrimestres() | orderBy:'id_type'">
                                 <input type="checkbox"
                                        ng-model="periode.comparison"
                                 ><span ng-init="periode.name = getI18nPeriode(periode); ">
@@ -93,7 +93,7 @@
                     <div class="twelve cell twelve-mobile horizontal-spacing">
                         <div class="row display-inline-block">
                             <label class="checkbox ten"
-                                   ng-repeat="periode in filteredPeriode | orderBy:'id_type'">
+                                   ng-repeat="periode in filteredPeriode | filter:fiterTrimestres() | orderBy:'id_type'">
                                 <input type="checkbox"
                                        ng-model="periode.comparisonDom"
                                 ><span ng-init="periode.name = getI18nPeriode(periode); ">
