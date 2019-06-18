@@ -15,8 +15,12 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-@import "specifics/mixins";
-@import "specifics/competences";
-@import "specifics/slider";
-@import "specifics/fancyCheckBox";
-@import "specifics/messageLoading";
+.ml2 {
+  font-weight: 900;
+  font-size: 3.5em;
+}
+
+.ml2 .letter {
+  display: inline-block;
+  line-height: 1em;
+}

@@ -24,7 +24,8 @@ module.exports = {
         extensions: ['', '.ts', '.js'],
         alias: {
             'chart.js': path.resolve(__dirname, './node_modules/chart.js'),
-            'color': path.resolve(__dirname, './node_modules/color')
+            'color': path.resolve(__dirname, './node_modules/color'),
+            'animejs': path.resolve(__dirname, './node_modules/animejs'),
         }
     },
     devtool: "source-map",

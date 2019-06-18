@@ -36,9 +36,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         await model.me.workflow.load(['viescolaire']);
 
         $scope.buildLoadingMessageStructure = function (libelle) {
-            return lang.translate("viescolaire.structure.load") + " "
-                + libelle + " "
-                + lang.translate("viescolaire.structure.load.end");
+            return  `${  libelle  }`;
         };
 
         $scope.selectCycleForView = function (id_cycle?) {
