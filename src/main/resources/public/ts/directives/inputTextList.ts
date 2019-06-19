@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { ng , appPrefix, template, _ } from 'entcore';
+import { ng , appPrefix, template, _ ,$} from 'entcore';
 
 export let inputTextList = ng.directive('inputTextList', function() {
     return {
@@ -58,6 +58,7 @@ export let inputTextList = ng.directive('inputTextList', function() {
                 if (inputElement !== undefined && inputElement.length > 0) {
                     inputElement.get(0).focus();
                 }
+                $('.tooltip').remove();
             };
 
             /**
