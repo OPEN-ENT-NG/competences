@@ -18,6 +18,7 @@
 import {Model, Collection, http, idiom as lang, _} from 'entcore';
 import { Eleve, Periode, SuiviCompetenceClasse, Utils, BaremeBrevetEleves } from './index';
 import * as utils from '../../utils/teacher';
+import {TypePeriode} from "../common/TypePeriode";
 declare let bundle:any;
 
 export class Classe extends Model {
@@ -149,9 +150,16 @@ export class Classe extends Model {
         let res = _.omit(this, 'eleves');
 
         if (periode !== undefined) {
+            let classePeriode = periode;
+            if(periode instanceof TypePeriode){
+                classePeriode = _.findWhere(this.periodes.all, {id_type: periode.id});
+            }
+            if(classePeriode === undefined) {
+                return res;
+            }
             res.eleves = {
                 all: _.reject(this.eleves.all, function (eleve) {
-                    return !eleve.isEvaluable(periode);
+                    return !eleve.isEvaluable(classePeriode);
                 })
             };
         }

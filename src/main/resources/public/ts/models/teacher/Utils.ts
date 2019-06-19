@@ -685,7 +685,8 @@ export class Utils {
 
             if(datasets !== undefined){
                 let percent = datasets.tooltipsPercentage[idx_label];
-                if( percent !== undefined) {
+
+                if( percent !== undefined && percent.split(' %')[0] instanceof Number) {
                     tooltipModel.body[i].lines[0] = `${split_label[0]} : ${percent}`;
                 }
             }

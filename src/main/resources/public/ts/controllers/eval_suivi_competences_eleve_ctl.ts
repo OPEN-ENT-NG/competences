@@ -18,7 +18,7 @@
 /**
  * Created by ledunoiss on 27/10/2016.
  */
-import {ng, template, model, moment, idiom as lang} from "entcore";
+import {ng, template, model, moment, idiom as lang, notify} from "entcore";
 import {
     SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve, Utils
 } from "../models/teacher";
@@ -377,13 +377,16 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 }
                 if ($scope.search.eleve !== undefined && $scope.search.classe.eleves.empty()) {
                     await $scope.search.classe.eleves.sync();
+                    $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
                 }
-                if ($scope.search.eleve !== undefined &&
-                    $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined) {
+
+                if ($scope.search.eleve !== undefined && $scope.filteredEleves !== undefined &&
+                    _.findWhere($scope.filteredEleves.all, {id: $scope.search.eleve.id}) === undefined) {
                     $scope.search.eleve = "";
                     $scope.informations.eleve = $scope.search.eleve;
                     delete $scope.suiviCompetence;
                     await utils.safeApply($scope);
+                    notify.info('evaluations.student.is.no.more.evaluable');
                     resolve();
                     return;
                 }
@@ -788,11 +791,16 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          */
         $scope.incrementEleve = async function (num) {
             $scope.selected.grey = true;
-            let index = _.findIndex($scope.search.classe.eleves.all, {id: $scope.search.eleve.id});
-            if (index !== -1 && index + parseInt(num) >= 0
-                && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
+            if (_.isEmpty($scope.search.classe.eleves.all)) {
+                await $scope.search.classe.eleves.sync();
+            }
+            $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
 
-                $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
+            let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
+            if (index !== -1 && index + parseInt(num) >= 0
+                && index + parseInt(num) < $scope.filteredEleves.all.length) {
+
+                $scope.search.eleve = $scope.$scope.filteredEleves.all[index + parseInt(num)];
                 await $scope.changeContent();
             }
         };
@@ -801,6 +809,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
                 if(template.containers['suivi-competence-content'] !== undefined) {
+                    await Utils.runMessageLoader($scope);
                     let content = $scope.template.containers['suivi-competence-content']
                         .split('.html?hash=')[0].split('template/')[1];
 
@@ -821,11 +830,14 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         $scope.currentCycle = cycle;
                         $scope.isCycle = true;
                     }
-                    Utils.runMessageLoader($scope);
+                    if (_.isEmpty($scope.search.classe.eleves.all)) {
+                        await $scope.search.classe.eleves.sync();
+                    }
+                    $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
                     $scope.template.close('suivi-competence-content');
                     await $scope.selectSuivi($scope.route.current.$$route.originalPath);
                     $scope.template.open('suivi-competence-content', content);
-                    Utils.stopMessageLoader($scope);
+                    await Utils.stopMessageLoader($scope);
                 }
                 resolve();
             });

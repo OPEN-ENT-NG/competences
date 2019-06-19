@@ -23,14 +23,18 @@
     </div>
 </article>
 <!-- A afficher dans la vue cycle à la place de la RechercheBar -->
-<article ng-show="search.periode.libelle === 'cycle'"
+<article ng-show="search.periode.libelle === 'cycle' && currentCycle !== undefined"
          ng-class="{'twelve' : $location.path() === '/conseil/de/classe','ten' : $location.path() !== '/conseil/de/classe'}"
          class="titre-widget centered">
     <div class="row twelve">
         <h2 class="cell two cycleTitle">[[currentCycle.libelle]]</h2>
     </div>
 </article>
-
+<article ng-if="suiviCompetence === undefined &&  informations.eleve !== '' && informations.eleve !== '*' && informations.eleve !== undefined"
+         ng-class="{'twelve' : $location.path() === '/conseil/de/classe','ten' : $location.path() !== '/conseil/de/classe'}"
+         class="card"
+><i18n>no.bfc.for.criteres</i18n>
+</article>
 <lightbox show="opened.releveComp" on-close="opened.releveComp = false; exportRelCompObj.errExport = false;"
           ng-if="informations.eleve !== '' && informations.eleve !== undefined && suiviCompetence !== undefined">
     <h2>

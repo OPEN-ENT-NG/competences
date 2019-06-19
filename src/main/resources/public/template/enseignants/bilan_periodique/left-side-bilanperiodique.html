@@ -51,7 +51,7 @@
         <section>
             <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
                 <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
-                        ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in search.classe.eleves.all track by eleve.id"
+                        ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in filteredEleves.all track by eleve.id"
                         ng-change="displayBilanPeriodique(); changeContent();">
                     <option disabled value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
                 </select>
