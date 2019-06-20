@@ -59,6 +59,7 @@ import java.text.DecimalFormat;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.USE_MODEL_KEY;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -642,7 +643,73 @@ public class ExportPDFController extends ControllerHelper {
                                                 }
                                                 JsonArray classeResult = formatBFC(classe.getValue());
                                                 if (classeResult != null) {
-                                                    collectBFCEleve(classe.getKey(), new JsonObject().put("eleves", classeResult), result, handler);
+                                                    List<Future> listeFutures = new ArrayList<>();
+                                                    for(Object eleve : classeResult){
+                                                        JsonObject eleveJson = ((JsonObject)eleve).put("idEtablissement", idStructure);
+
+                                                        exportBulletinService.setLevel(eleveJson);
+                                                        exportBulletinService.setBirthDate(eleveJson);
+                                                        eleveJson.put("familyVisa", getLibelle("evaluations.export.bulletin.visa.libelle"))
+                                                                .put("signature", getLibelle("evaluations.export.bulletin.date.name.visa.responsable"))
+                                                                .put("ceVisa", getLibelle("evaluations.export.bfc.visa.ce.libelle"))
+                                                                .put("headteacherVisa", getLibelle("evaluations.export.bfc.visa.headteacher.libelle"))
+                                                                .put("signatureSample",getLibelle("evaluations.add.file.signature"))
+                                                                .put("bornAt", getLibelle("born.on"))
+                                                                .put("classeOf", getLibelle("classe.of"))
+                                                                .put("today",new SimpleDateFormat("dd/MM/yyyy").format(new Date().getTime()));
+
+                                                        Future<JsonObject> structureFuture = Future.future();
+                                                        exportBulletinService.getStructure(eleveJson.getString("idEleve"),eleveJson, event -> {
+                                                            FormateFutureEvent.formate(structureFuture, event);
+                                                        });
+                                                        listeFutures.add(structureFuture);
+
+                                                        Future<JsonObject> AnneeScolaireFuture = Future.future();
+                                                        exportBulletinService.getAnneeScolaire(eleveJson.getString("idEleve"),classe.getValue().get(0).getIdClasse(),eleveJson, event -> {
+                                                            FormateFutureEvent.formate(AnneeScolaireFuture, event);
+                                                        });
+                                                        listeFutures.add(AnneeScolaireFuture);
+
+                                                        Future<JsonObject> HeadTeachersFuture = Future.future();
+                                                        exportBulletinService.getHeadTeachers(eleveJson.getString("idEleve"),classe.getValue().get(0).getIdClasse(),eleveJson, event -> {
+                                                            FormateFutureEvent.formate(HeadTeachersFuture, event);
+                                                        });
+                                                        listeFutures.add(HeadTeachersFuture);
+                                                    }
+
+                                                    // Récupération du logo de l'établissment
+                                                    Future<JsonObject> imageStructureFuture = Future.future();
+                                                    utilsService.getParametersForExport(idStructure, event -> {
+                                                        FormateFutureEvent.formate(imageStructureFuture, event);
+                                                    });
+                                                    listeFutures.add(imageStructureFuture);
+
+                                                    CompositeFuture.all(listeFutures).setHandler( event -> {
+                                                        if(event.failed()){
+                                                            collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des adresses et de l'image de l'établissement : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.toString()), result, handler);
+                                                            log.error("getBFC : buildBFC (Array of idEleves, " + classe.getKey() + ", " + idStructure + ") : " + event.toString());
+                                                        }else{
+                                                            for(Object eleve : classeResult){
+                                                                JsonObject eleveJson = ((JsonObject)eleve);
+                                                                Future<JsonObject> structureFuture = Future.future();
+                                                                JsonObject imgStructure =  imageStructureFuture.result();
+                                                                if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
+                                                                    eleveJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
+                                                                            .getValue("path"));
+                                                                    eleveJson.put("hasImgStructure", true);
+                                                                }
+                                                                if (imgStructure != null && imgStructure.containsKey("nameAndBrad")) {
+                                                                    eleveJson.put("nameCE", imgStructure.getJsonObject("nameAndBrad")
+                                                                            .getValue("name"));
+                                                                    eleveJson.put("signatureCE", imgStructure.getJsonObject("nameAndBrad")
+                                                                            .getValue("path"));
+                                                                    eleveJson.put("hasNameAndBrad", true);
+                                                                }
+                                                            }
+                                                            collectBFCEleve(classe.getKey(), new JsonObject().put("eleves", classeResult), result, handler);
+                                                        }
+
+                                                    });
                                                 }
                                             }else{
                                                 collectBFCEleve(classe.getKey(), new JsonObject().put("error", "Une erreur est survenue lors de la recuperation des notes pour la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue()), result, handler);

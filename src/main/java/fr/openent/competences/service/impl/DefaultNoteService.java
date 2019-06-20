@@ -2859,7 +2859,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         mapEleve.put(key, new JsonObject().put(ID_ETABLISSEMENT_KEY, idStructure));
 
         // Récupération des informations sur l'établissment
-        new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve, event -> {
+        new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve.get(key), event -> {
             FormateFutureEvent.formate(structureFuture, event);
         });
 

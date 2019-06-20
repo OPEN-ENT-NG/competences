@@ -103,20 +103,20 @@ public interface ExportBulletinService {
     /**
      * Récupère le libelle de l'établissement de l'élève
      * @param idEleve idEleve
-     * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+     * @param elevesObject contient le json object de l'élève idEleve
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getStructure( String idEleve, Map<String,JsonObject> elevesMap,
+    void getStructure( String idEleve, JsonObject elevesObject,
                               Handler<Either<String, JsonObject>> finalHandler);
 
     /**
      * Récupère le(s) professeur(s) princip(al/aux) de la classe de l'élève
      * @param idEleve identifiant de l'élève
      * @param idClasse identifiant de la classe
-     * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+     * @param eleveObject contient le json object de l'élève idEleve
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getHeadTeachers( String idEleve, String idClasse, Map<String,JsonObject> elevesMap,
+    void getHeadTeachers( String idEleve, String idClasse, JsonObject eleveObject,
                                  Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -149,10 +149,10 @@ public interface ExportBulletinService {
      * le résultat est
      * @param idEleve idEleve
      * @param idClasse id de la classe
-     * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
+     * @param eleve contient le jsonObject des informations concernant l'élève référencé par l'idEleve
      * @param finalHandler handler servant à la synchronisation des services
      */
-     void getAnneeScolaire(String idEleve, String idClasse, Map<String, JsonObject> elevesMap,
+     void getAnneeScolaire(String idEleve, String idClasse, JsonObject eleve,
                                  Handler<Either<String, JsonObject>> finalHandler) ;
 
     /**

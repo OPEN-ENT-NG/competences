@@ -203,10 +203,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 putLibelleForExport(idEleve, elevesMap, params, finalHandler);
                 getEvenements(idEleve, elevesMap, idPeriode, finalHandler);
                 getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, finalHandler);
-                getStructure(idEleve, elevesMap, finalHandler);
-                getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap, finalHandler);
+                getStructure(idEleve, elevesMap.get(idEleve), finalHandler);
+                getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getLibellePeriode(request, idEleve, elevesMap, idPeriode, finalHandler);
-                getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap, finalHandler);
+                getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE), finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
                 getAvisConseil(idEleve, elevesMap, idPeriode, finalHandler);
@@ -408,9 +408,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void getAnneeScolaire(String idEleve, String idClasse,
-                                 Map<String, JsonObject> elevesMap,
+                                 JsonObject eleve,
                                  Handler<Either<String, JsonObject>> finalHandler) {
-        JsonObject eleve = elevesMap.get(idEleve);
         logBegin(GET_ANNEE_SCOLAIRE_METHOD, idEleve);
         if (eleve == null) {
             logStudentNotFound(idEleve, GET_ANNEE_SCOLAIRE_METHOD);
@@ -903,10 +902,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
     @Override
-    public void getStructure( String idEleve, Map<String,JsonObject> elevesMap,
+    public void getStructure( String idEleve, JsonObject eleveObject,
                               Handler<Either<String, JsonObject>> finalHandler) {
         logBegin(GET_STRUCTURE_METHOD, idEleve);
-        JsonObject eleveObject = elevesMap.get(idEleve);
         if (eleveObject == null) {
             logStudentNotFound(idEleve,"getStructure");
             finalHandler.handle(new Either.Right<>(null));
@@ -990,10 +988,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getHeadTeachers( String idEleve, String idClasse, Map<String,JsonObject> elevesMap,
+    public void getHeadTeachers( String idEleve, String idClasse, JsonObject eleveObject,
                                  Handler<Either<String, JsonObject>> finalHandler) {
         logBegin(GET_HEAD_TEACHERS_METHOD, idEleve);
-        JsonObject eleveObject = elevesMap.get(idEleve);
         if (eleveObject == null) {
             logStudentNotFound(idEleve, GET_HEAD_TEACHERS_METHOD);
             finalHandler.handle(new Either.Right<>(null));

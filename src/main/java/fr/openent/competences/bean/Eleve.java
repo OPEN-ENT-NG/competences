@@ -45,6 +45,10 @@ public class Eleve implements Comparable<Eleve>{
 
     private String syntheseCycle;
 
+    private String level;
+
+    private String birthDate;
+
     private Map<Long, Map<String, String>> domainesRacines;
 
     private Map<String, Long> enseignmentComplements;
@@ -85,6 +89,28 @@ public class Eleve implements Comparable<Eleve>{
         this.firstName = firstName;
         this.idClasse = idClasse;
         this.nomClasse = nomClasse;
+        this.domainesRacines = new LinkedHashMap<>();
+        this.enseignmentComplements = new LinkedHashMap<>();
+        this.langueCultureRegionale = new LinkedHashMap<>();
+        this.notes = new HashMap<>();
+        this.libelleNiveau = new HashMap<>();
+        this.isNotesReady = false;
+        this.isNiveauxReady = false;
+        this.isDomainessReady = false;
+        utilsService = new DefaultUtilsService();
+        this.jsonArrayIdMatMoy = new fr.wseduc.webutils.collections.JsonArray();
+        this.mapIdMatListNote = new LinkedHashMap<>();
+        listNotes = new ArrayList<>();
+    }
+
+    public Eleve(String idEleve, String lastName, String firstName, String idClasse, String nomClasse, String level, String birthDate) {
+        this.idEleve = idEleve;
+        this.lastName = lastName;
+        this.firstName = firstName;
+        this.idClasse = idClasse;
+        this.nomClasse = nomClasse;
+        this.level = level;
+        this.birthDate = birthDate;
         this.domainesRacines = new LinkedHashMap<>();
         this.enseignmentComplements = new LinkedHashMap<>();
         this.langueCultureRegionale = new LinkedHashMap<>();
@@ -264,6 +290,8 @@ public class Eleve implements Comparable<Eleve>{
         result.put("firstName", this.firstName);
         result.put("nomClasse", this.nomClasse);
         result.put("cycle", this.cycle);
+        result.put("level", this.level);
+        result.put("birthDate", this.birthDate);
 
         List<Object> listNiveaux = new ArrayList<Object>(this.libelleNiveau.values());
         result.put("niveau", new fr.wseduc.webutils.collections.JsonArray(listNiveaux));

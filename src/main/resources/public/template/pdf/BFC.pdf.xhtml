@@ -31,7 +31,7 @@
 
         .page {
             page-break-after: always;
-            padding: 20px;
+            padding: 0px;
         }
 
         .page:last-child{
@@ -41,12 +41,13 @@
         img {
             width: auto;
             height: 150px;
-            margin-bottom: 20px;
-            margin-left: 30px;
+            margin-bottom: 5px;
+            margin-left: 5px;
         }
 
         h1 {
-            margin-top: 30px;
+            margin-top: 10px;
+            margin-bottom: 5px;
             padding: 5px;
             text-align: center;
             color: #FFFFFF;
@@ -98,31 +99,82 @@
             width: 60%;
         }
 
-        .blank_row {
-            height: 20px !important;
-        }
-
         .eleve {
-            margin-left: 30px;
-            padding: 10px;
-            background-color: #c7eff9;
-            width: 30%;
+            padding: 15px;
+            background-color: #e2f3fb;
+            min-height : 60px;
             font-size: 14px;
         }
 
         .eleve > div {
-            margin: 5px 0;
+            margin: 2px 1px;
+            text-align: center;
         }
-
         .left-align {
             text-align: left;
             font-weight: normal;
         }
 
+        .structure {
+            max-width : 30%;
+            height: 90px;
+            font-size: small;
+            font-family: "Calibri", sans-serif;
+            float:left;
+        }
+        .structure > p {
+            margin: 4px;
+            margin-left : 5px;
+            margin-top : 0px;
+        }
+
+        #education {
+            max-width: 15%;
+            height: 160px;
+            margin-bottom: 5px;
+            margin-left: -2px;
+            float:left;
+        }
+
+        #imgStruct {
+            height: 160px;
+            position: relative;
+        }
+
+        .imgStructSize {
+            max-width : 25%;
+            max-height : 160px;
+            display : inline-block;
+            overflow : hidden;
+            float : right;
+            margin-bottom: 5px;
+
+        }
+
+        #niveau {
+            max-width: 25%;
+            height: 160px;
+            margin-bottom: 5px;
+            margin-left: 4px;
+            margin-top: 0px;
+            float:right;
+        }
+
         .synthese {
             margin-top: 10px;
-            background-color: #ffe0a7;
+            background-color: #eeffd6 !important;
             padding: 10px;
+            visibility: visible !important;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .visa {
+            padding-top: 0px;
+            background-color: #ffd0a0 !important;
+            text-align: left !important;
+            vertical-align: top !important;
+            width: 33% !important;
         }
 
     </style>
@@ -135,13 +187,45 @@
 {{#eleves}}
 <div class="page">
 
-    <img src="img/education_nationale.png" alt="Logo"/>
+    <div style= "height: 170px;">
+        <img id="education" src="img/education_nationale.png" alt="Logo"/>
+        <div class="structure">
+            {{#structureLibelle}}
+            <p style="font-weight: bold">{{academy}}</p>
+
+            <p style="font-weight: bold">{{nameStructure}}</p>
+            <p>{{address}}</p>
+            <p>{{town}}</p>
+            <p>{{phone}}</p>
+            <p>{{email}}</p>
+            {{/structureLibelle}}
+        </div>
+
+        {{#hasLevel}}
+        <div class="imgStructSize">
+            <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
+        </div>
+        {{/hasLevel}}
+
+        {{#hasImgStructure}}
+        <div class="imgStructSize">
+            <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
+        </div>
+        {{/hasImgStructure}}
+    </div>
 
     <div class="eleve">
-        <div>Nom : {{lastName}}</div>
-        <div>Prenom : {{firstName}}</div>
-        <div>Classe : {{nomClasse}}</div>
-        <div>Cycle : {{cycle}}</div>
+        <div style="font-size: small">{{schoolYear}}</div>
+        <div style="font-size: small;">Bilan de Fin de {{cycle}}</div>
+        <div style="font-weight: bold">{{firstName}} &nbsp; {{lastName}}  </div>
+        <div style="font-size: small;">{{bornAt}} {{birthDateLibelle}}</div>
+        <br/>
+        <div style="font-size: small;">   {{headTeacherLibelle}}
+            {{#headTeachers}}
+            {{civility}}&nbsp; {{initial}} {{name}}
+            {{/headTeachers}}
+        </div>
+        <div style="font-size: small;">{{classeOf}} {{nomClasse}}</div>
     </div>
 
     <h1 color="blue">Maîtrise des composantes du socle de fin de cycle</h1>
@@ -196,10 +280,56 @@
         {{/haslangueCultureRegionales}}
     </table>
     {{/hasEnseignementComplements}}
-    {{#hasSynthese}}
+    {{^hasEnseignementComplements}}
+    <h1 color="green">Enseignement de complément</h1>
+    <table>
+        <tr>
+            <td></td>
+            <td>Objectifs atteints</td>
+            <td>Objectifs dépassés</td>
+        </tr>
+        <tr>
+            <td class="left-align">Aucun</td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+    {{/hasEnseignementComplements}}
     <h1 color="orange">Synthèse des acquis de l'élève en fin de cycle</h1>
     <div class="synthese">{{syntheseBFC}}</div>
-    {{/hasSynthese}}
+
+    <div>
+            <table style="height: 5px !important;">
+                <tr>
+                    <td style="visibility:visible; margin-bottom: 0px !important;" class="visa">
+                        <span style="float: left; margin-left: 5px; margin-top: 3px !important; margin-bottom: 5px !important;font-size: small;">{{headteacherVisa}}</span>
+                        {{#headTeachers}}
+                        <span style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">{{civility}}&nbsp; {{initial}} {{name}}</span>
+                        {{/headTeachers}}
+                        <span style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">  </span>
+                        <span style="float: left; margin-left: 5px; margin-top: 5px !important;font-size: small;">Le {{today}}</span>
+                        <span style="float: left; margin-left: 5px; margin-top: 5px !important;font-size: small;">{{signatureSample}} :</span>
+                    </td>
+                    <td style="margin-bottom: 0px; !important;" class="visa">
+                        <span style="float: left; margin-left: 5px; margin-top: 3px !important; margin-bottom: 5px !important;font-size: small;">{{ceVisa}}</span>
+                        {{#hasNameAndBrad}}
+                        <span  style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">
+                            {{nameCE}}
+                        </span>
+                        <span style="float: left; margin-left: 5px; margin-top: 5px !important;font-size: small;">Le {{today}}</span>
+                        <span style="float: left; margin-left: 5px; margin-top: 5px !important;font-size: small;">{{signatureSample}} :</span>
+                        <div style=" margin-top: 5px" class="imgSignatureSize">
+                            <img id="imgSignature" src="{{signatureCE}}" alt="LogoSignature"/>
+                        </div>
+                        {{/hasNameAndBrad}}
+                    </td>
+                    <td style="margin-bottom: 0px; !important;"  class="visa">
+                        <span style="float: left; margin-left: 5px; margin-top: 3px !important;font-size: small;">{{familyVisa}}</span>
+                        <span style="float: left; margin-left: 5px; margin-top: 10px !important;font-size: small;">{{signature}} :</span>
+                    </td>
+                </tr>
+            </table>
+    </div>
 
 </div>
 {{/eleves}}

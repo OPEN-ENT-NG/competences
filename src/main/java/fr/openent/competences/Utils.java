@@ -329,7 +329,9 @@ public class Utils {
                                     eleveBase.getString("lastName"),
                                     eleveBase.getString("firstName"),
                                     eleveBase.getString("idClasse"),
-                                    eleveBase.getString("classeName"));
+                                    eleveBase.getString("classeName"),
+                                    eleveBase.getString("level"),
+                                    eleveBase.getString("birthDate"));
                             classes.add(eleveObj.getIdClasse());
                             result.add(eleveObj);
                         }
@@ -368,7 +370,9 @@ public class Utils {
                                                 eleveBase.getString("lastName"),
                                                 eleveBase.getString("firstName"),
                                                 eleveBase.getString("idClasse"),
-                                                eleveBaseClasseName);
+                                                eleveBaseClasseName,
+                                                eleveBase.getString("level"),
+                                                eleveBase.getString("birthDate"));
                                         classes.add(eleveObj.getIdClasse());
                                         result.add(eleveObj);
                                     }
