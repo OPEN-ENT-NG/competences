@@ -252,13 +252,14 @@ export class Utils {
     }
 
     static findCompetenceRec (piIdCompetence, poDomaine) {
-        for (var i = 0; i < poDomaine.competences.all.length; i++) {
-            // si compétences trouvée on arrete le traitement
-            if(poDomaine.competences.all[i].id === piIdCompetence) {
-                return poDomaine.competences.all[i];
+        if(poDomaine.competences !== undefined) {
+            for (var i = 0; i < poDomaine.competences.all.length; i++) {
+                // si compétences trouvée on arrete le traitement
+                if (poDomaine.competences.all[i].id === piIdCompetence) {
+                    return poDomaine.competences.all[i];
+                }
             }
         }
-
         // recherche dans les sous-domaines
         if(poDomaine.domaines) {
             for(var i=0; i<poDomaine.domaines.all.length; i++) {

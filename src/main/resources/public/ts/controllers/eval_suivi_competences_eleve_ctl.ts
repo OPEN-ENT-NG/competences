@@ -382,11 +382,13 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
                 if ($scope.search.eleve !== undefined && $scope.filteredEleves !== undefined &&
                     _.findWhere($scope.filteredEleves.all, {id: $scope.search.eleve.id}) === undefined) {
+                    if($scope.search.eleve.id !== undefined){
+                        notify.info('evaluations.student.is.no.more.evaluable');
+                    }
                     $scope.search.eleve = "";
                     $scope.informations.eleve = $scope.search.eleve;
                     delete $scope.suiviCompetence;
                     await utils.safeApply($scope);
-                    notify.info('evaluations.student.is.no.more.evaluable');
                     resolve();
                     return;
                 }
@@ -799,8 +801,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.filteredEleves.all.length) {
-
-                $scope.search.eleve = $scope.$scope.filteredEleves.all[index + parseInt(num)];
+                $scope.search.eleve = $scope.filteredEleves.all[index + parseInt(num)];
                 await $scope.changeContent();
             }
         };
