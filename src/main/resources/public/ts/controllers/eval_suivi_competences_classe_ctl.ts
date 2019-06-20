@@ -19,7 +19,8 @@
  * Created by ledunoiss on 27/10/2016.
  */
 
-import { ng, template, model, http } from 'entcore';
+import {ng, template, model, http, moment, notify} from 'entcore';
+import httpAxios from "axios";
 import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import { Defaultcolors } from "../models/eval_niveau_comp";
@@ -268,7 +269,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
-        $scope.exportRecapEval = (textMod, printSuiviClasse, idPeriode, exportByEnseignement,
+        $scope.exportRecapEval = async (textMod, printSuiviClasse, idPeriode, exportByEnseignement,
                                   withMoyGeneraleByEleve, withMoyMinMaxByMat ) => {
             switch (printSuiviClasse) {
                 case 'printRecapAppreciations' : {
@@ -309,6 +310,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     break;
                 }
                 case 'printReleveComp' : {
+                    if( $scope.opened.recapEval ) $scope.opened.recapEval = false;
+                    await Utils.runMessageLoader($scope);
+
                     let url = "/competences/releveComp/print/export?text=" + !textMod;
                     url += "&idEtablissement=" + $scope.structure.id;
                     for (var m = 0; m < $scope.allMatieresSorted.length; m++) {
@@ -322,19 +326,35 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     url += "&idClasse=" + $scope.search.classe.id;
                     url += "&byEnseignement=" + exportByEnseignement;
                     http().getJson(url + "&json=true")
-                        .error((result) => {
+                        .error( async (result) => {
+                            await Utils.stopMessageLoader($scope);
+                            $scope.opened.recapEval = true;
+                            console.log(result);
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
-                        .done(() => {
+                        .done( async () => {
+
                             delete $scope.releveComp;
                             $scope.releveComp = {
                                 textMod: true
                             };
-                            $scope.opened.releveComp = false;
-                            location.replace(url);
-                            utils.safeApply($scope);
+                            await httpAxios.get(url, {responseType: 'arraybuffer' }).then(async(data) => {
+                                let blob;
+                                let link = document.createElement('a');
+                                let response = data.data;
+                                blob = new Blob([response]);
+                                link = document.createElement('a');
+                                link.href = window.URL.createObjectURL(blob);
+                                link.download = data.headers['content-disposition'].split('filename=')[1];
+                                document.body.appendChild(link);
+                                link.click();
+                                await Utils.stopMessageLoader($scope);
+                                notify.success('evaluations.export.bulletin.success');
+                            });
+
                         });
+
                     break;
                 }
                 case 'printTabMoys': {
@@ -349,7 +369,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
-                        .done(() => {
+                        .done((result) => {
                             delete $scope.recapEval;
                             $scope.opened.recapEval = false;
                             location.replace(url);

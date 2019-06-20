@@ -21,6 +21,7 @@ import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
 import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
+import httpAxios from "axios";
 
 declare let $: any;
 declare let document: any;
@@ -3478,23 +3479,51 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
             if ($scope.forClasse) {
                 url += "&idClasse=" + $scope.search.classe.id;
+                $scope.opened.releveComp = false;
+                await Utils.runMessageLoader($scope);
             }
 
             ($scope.search.periode.libelle  === "cycle") ? url += "&isCycle=" + true : "&isCycle=" + false;
 
             url += "&byEnseignement=" + exportByEnseignement;
+
             await http().getJson(url + "&json=true")
-                .error((result) => {
+                .error( async(result)=>{
+                    if(url.includes('&idClasse=')){
+                        await Utils.stopMessageLoader($scope);
+                        $scope.opened.releveComp = true;
+                    }
                     $scope.errorResult(result);
+                    console.log(result);
                     utils.safeApply($scope);
+
                 })
-                .done(() => {
+                .done( async() => {
+
                     delete $scope.releveComp;
                     $scope.releveComp = {
                         textMod: true
                     };
-                    $scope.opened.releveComp = false;
-                    location.replace(url);
+                    if($scope.opened.releveComp) $scope.opened.releveComp = false;
+
+                    await httpAxios.get(url, {responseType: 'arraybuffer' }).then(async(data) => {
+                        let blob;
+                        let link = document.createElement('a');
+                        let response = data.data;
+                        blob = new Blob([response]);
+                        link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = data.headers['content-disposition'].split('filename=')[1];
+                        document.body.appendChild(link);
+                        link.click();
+                        if(url.includes('&idClasse=')){
+                            await Utils.stopMessageLoader($scope);
+                            notify.success('evaluations.export.bulletin.success');
+                        }
+
+                    });
+
+
                 });
             utils.safeApply($scope);
         };
@@ -4274,7 +4303,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         if(periode.id_type != undefined){
                             p.periodes.push({
                                 idPeriode: periode.id_type,
-                                periodeName: $scope.getI18nPeriode(periode)
+                                hperiodeName: $scope.getI18nPeriode(periode)
                             })
                         }
                     });
