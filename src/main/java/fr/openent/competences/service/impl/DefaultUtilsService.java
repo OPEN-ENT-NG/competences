@@ -815,7 +815,7 @@ public class DefaultUtilsService  implements UtilsService {
                 event -> {
                     if (event.succeeded()) {
                         JsonObject result = new JsonObject();
-                        result.put("imageStucture", imageStructureFuture.result());
+                        result.put("imgStructure", imageStructureFuture.result());
                         result.put("nameAndBrad", infosCEFuture.result());
                         handler.handle(new Either.Right<>(result));
                     } else {

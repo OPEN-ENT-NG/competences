@@ -38,13 +38,6 @@
             page-break-after: avoid;
         }
 
-        img {
-            width: auto;
-            height: 150px;
-            margin-bottom: 5px;
-            margin-left: 5px;
-        }
-
         h1 {
             margin-top: 10px;
             margin-bottom: 5px;
@@ -116,7 +109,7 @@
         }
 
         .structure {
-            max-width : 30%;
+            max-width : 140px;
             height: 90px;
             font-size: small;
             font-family: "Calibri", sans-serif;
@@ -129,35 +122,30 @@
         }
 
         #education {
-            max-width: 15%;
+            width: auto;
             height: 160px;
-            margin-bottom: 5px;
             margin-left: -2px;
             float:left;
         }
-
+        #niveau {
+            width: 180px;
+            height: auto;
+            margin-left: 4px;
+            margin-top: 0px;
+            float:right;
+        }
         #imgStruct {
-            height: 160px;
+            height: auto;
+            width: 180px;
             position: relative;
         }
 
         .imgStructSize {
-            max-width : 25%;
-            max-height : 160px;
+            max-width : 180px;
             display : inline-block;
             overflow : hidden;
             float : right;
-            margin-bottom: 5px;
 
-        }
-
-        #niveau {
-            max-width: 25%;
-            height: 160px;
-            margin-bottom: 5px;
-            margin-left: 4px;
-            margin-top: 0px;
-            float:right;
         }
 
         .synthese {
@@ -175,6 +163,21 @@
             text-align: left !important;
             vertical-align: top !important;
             width: 33% !important;
+        }
+
+        #imgSignature {
+            width: 190px;
+            height: auto;
+            /*float:right;*/
+        }
+
+        .imgSignatureSize {
+            width : 190px;
+            max-height : 75px;
+            display : block;
+            overflow : hidden;
+            margin-left: auto;
+            margin-right: auto;
         }
 
     </style>
@@ -201,17 +204,17 @@
             {{/structureLibelle}}
         </div>
 
-        {{#hasLevel}}
-        <div class="imgStructSize">
-            <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
-        </div>
-        {{/hasLevel}}
-
         {{#hasImgStructure}}
         <div class="imgStructSize">
             <img id="imgStruct" src="{{imgStructure}}" alt="LogoStructure"/>
         </div>
         {{/hasImgStructure}}
+
+        {{#hasLevel}}
+        <div class="imgStructSize">
+            <img id="niveau" src="img/niveau/niveau_{{level}}.png" alt="LogoLevel"/>
+        </div>
+        {{/hasLevel}}
     </div>
 
     <div class="eleve">
@@ -299,7 +302,7 @@
     <div class="synthese">{{syntheseBFC}}</div>
 
     <div>
-            <table style="height: 5px !important;">
+            <table style="height: 50px !important;">
                 <tr>
                     <td style="visibility:visible; margin-bottom: 0px !important;" class="visa">
                         <span style="float: left; margin-left: 5px; margin-top: 3px !important; margin-bottom: 5px !important;font-size: small;">{{headteacherVisa}}</span>
@@ -311,14 +314,14 @@
                         <span style="float: left; margin-left: 5px; margin-top: 5px !important;font-size: small;">{{signatureSample}} :</span>
                     </td>
                     <td style="margin-bottom: 0px; !important;" class="visa">
-                        <span style="float: left; margin-left: 5px; margin-top: 3px !important; margin-bottom: 5px !important;font-size: small;">{{ceVisa}}</span>
+                        <span style="float: left;  display : block; margin-left: 5px; margin-top: 3px !important; margin-bottom: 5px !important;font-size: small;">{{ceVisa}}</span>
                         {{#hasNameAndBrad}}
-                        <span  style="float: left; margin-left: 5px; margin-top: 0px !important;font-size: small;">
+                        <span  style="float: left;  display : block; margin-left: 5px; margin-top: 0px !important;font-size: small;">
                             {{nameCE}}
                         </span>
-                        <span style="float: left; margin-left: 5px; margin-top: 5px !important;font-size: small;">Le {{today}}</span>
-                        <span style="float: left; margin-left: 5px; margin-top: 5px !important;font-size: small;">{{signatureSample}} :</span>
-                        <div style=" margin-top: 5px" class="imgSignatureSize">
+                        <span style="float: left;  display : block; margin-left: 5px; margin-top: 5px !important;font-size: small;">Le {{today}}</span>
+                        <span style="float: left;  display : block; margin-left: 5px; margin-top: 5px !important;font-size: small;">{{signatureSample}} :</span>
+                        <div style=" margin-top: 80px" class="imgSignatureSize">
                             <img id="imgSignature" src="{{signatureCE}}" alt="LogoSignature"/>
                         </div>
                         {{/hasNameAndBrad}}
