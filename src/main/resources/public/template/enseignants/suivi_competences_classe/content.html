@@ -44,7 +44,7 @@
             <input type="radio" ng-change="changePrintSuiviClasse('printRecapAppreciations')"  ng-model="suiviClasse.print" value="printRecapAppreciations">
             <span><i18n>evaluations.recapAppreciations.classe</i18n></span>
         </label>
-        <div ng-if="isChefEtab()">
+        <div ng-if="isChefEtab(informations.classe)">
             <br/>
             <h4><i18n>evaluations.export.format.csv</i18n>&nbsp;:</h4>
             <label>

@@ -2466,12 +2466,32 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param moyennesFinales
          * @returns {string}
          */
-        $scope.getMoyenne = function (idPeriode,moyennes, moyennesFinales) {
-            let _moyenneFinale = _.findWhere(moyennesFinales, {id_periode: idPeriode});
+        $scope.getMoyenne = function (idPeriode,eleve) {
+            if(idPeriode == null){
+                let periodes = 0;
+                let sum = 0;
+                for(let i=1;i<6;i++){
+                    let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: i});
+                    if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined) {
+                        sum += Number(_moyenneFinale.moyenne);
+                        periodes ++;
+                    }else {
+                        let _moyenne = _.findWhere(eleve.moyennes, {id_periode: i});
+                        if (_moyenne !== undefined && _moyenne !== null && _moyenne.moyenne !== undefined) {
+                            sum += Number(_moyenne.moyenne);
+                            periodes++;
+                        }
+                    }
+                }
+                if(periodes != 0){
+                    return (Number(sum/periodes).toFixed(2));
+                }
+            }
+            let _moyenneFinale = _.findWhere(eleve.moyennesFinales, {id_periode: idPeriode});
             if (_moyenneFinale !== undefined && _moyenneFinale !== null && _moyenneFinale.moyenne !== undefined) {
                 return _moyenneFinale.moyenne;
             }
-            let _moyenne = _.findWhere(moyennes, {id_periode: idPeriode});
+            let _moyenne = _.findWhere(eleve.moyennes, {id_periode: idPeriode});
             if (_moyenne !== undefined && _moyenne !== null && _moyenne.moyenne !== undefined) {
                 return _moyenne.moyenne;
             }
@@ -3992,7 +4012,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         nbMoyenneAnnee++;
                         if (details_moyennes_finales !== undefined) {
                             isMoyenneFinaleAnnee = true;
-                            moyennneAnnee += parseInt(moyenneFinale);
+                            moyennneAnnee += parseFloat(moyenneFinale);
                         } else {
                             moyennneAnnee += moyenne;
                         }
@@ -4303,7 +4323,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         if(periode.id_type != undefined){
                             p.periodes.push({
                                 idPeriode: periode.id_type,
-                                hperiodeName: $scope.getI18nPeriode(periode)
+                                periodeName: $scope.getI18nPeriode(periode)
                             })
                         }
                     });

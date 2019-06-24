@@ -355,7 +355,7 @@
                                 </td>
                                 <td class="colMoyenne" ng-repeat="periode in filteredPeriode | orderBy:'-type'"
                                     ng-class="{changedAverage: hasMoyenneFinale(periode.id, eleve.moyennesFinales)}">
-                                    [[getMoyenne(periode.id,eleve.moyennes, eleve.moyennesFinales)]]
+                                    [[getMoyenne(periode.id,eleve)]]
                                 </td>
                                 <td class="colMoyenne">
                                     <i class="pencil"
