@@ -318,8 +318,7 @@ public class NoteController extends ControllerHelper {
 
     @Post("/releve/exportTotale")
     @ApiDoc("Exporte un relevé périodique")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void exportTotaleRelevePeriodique(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, param -> {
             boolean annual = false;
@@ -633,8 +632,7 @@ public class NoteController extends ControllerHelper {
 
     @Get("/releve/export/checkDevoirs")
     @ApiDoc("Vérifie s'il y a des devoirs dans la matière")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
-    @ResourceFilter(AccessReleveFilter.class)
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void exportCheckDevoirs(final HttpServerRequest request) {
         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
         String idEtablissement = request.params().get("idEtablissement");
