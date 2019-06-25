@@ -81,7 +81,7 @@ public class NoteController extends ControllerHelper {
         this.eb = eb;
         notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
         devoirsService = new DefaultDevoirService(this.eb);
-        utilsService = new DefaultUtilsService();
+        utilsService = new DefaultUtilsService(this.eb);
         elementProgramme = new DefaultElementProgramme();
     }
 
@@ -355,60 +355,60 @@ public class NoteController extends ControllerHelper {
                                                 for(Object idMatiere : param.getJsonArray("idMatieres")){
 
                                                     if(((JsonObject)eleve).getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
-                                                    ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
+                                                            ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
                                                             !(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))) {
                                                         if (((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals("")) {
-                                                                ((JsonObject) eleve).getJsonObject("moyenneFinale")
-                                                                        .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
+                                                            ((JsonObject) eleve).getJsonObject("moyenneFinale")
+                                                                    .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
                                                         }else {
-                                                                ((JsonObject) eleve).getJsonObject("moyenneFinale")
-                                                                        .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()) +
-                                                                                Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
-                                                                if (((JsonObject) eleve).containsKey("nbPeriodeMoyenne")) {
-                                                                    if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").containsKey(idMatiere.toString())) {
-                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").put(idMatiere.toString(),
-                                                                                ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").getLong(idMatiere.toString()) + 1);
-                                                                    } else {
-                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").put(idMatiere.toString(), 2);
-                                                                    }
+                                                            ((JsonObject) eleve).getJsonObject("moyenneFinale")
+                                                                    .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()) +
+                                                                            Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
+                                                            if (((JsonObject) eleve).containsKey("nbPeriodeMoyenne")) {
+                                                                if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").containsKey(idMatiere.toString())) {
+                                                                    ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").put(idMatiere.toString(),
+                                                                            ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").getLong(idMatiere.toString()) + 1);
                                                                 } else {
-                                                                    JsonObject jsonToAdd = new JsonObject().put(idMatiere.toString(), 2);
-                                                                    ((JsonObject) eleve).put("nbPeriodeMoyenne", jsonToAdd);
+                                                                    ((JsonObject) eleve).getJsonObject("nbPeriodeMoyenne").put(idMatiere.toString(), 2);
                                                                 }
+                                                            } else {
+                                                                JsonObject jsonToAdd = new JsonObject().put(idMatiere.toString(), 2);
+                                                                ((JsonObject) eleve).put("nbPeriodeMoyenne", jsonToAdd);
+                                                            }
                                                         }
                                                     }else if(((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) &&
                                                             ((JsonObject)eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null &&
                                                             !(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))){
-                                                            ((JsonObject) eleve).getJsonObject("moyenneFinale")
-                                                                    .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
+                                                        ((JsonObject) eleve).getJsonObject("moyenneFinale")
+                                                                .put(idMatiere.toString(),Double.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("moyenneFinale").getValue(idMatiere.toString()).toString()));
                                                     }
 
                                                     if(((JsonObject)eleve).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
-                                                    ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
+                                                            ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
                                                             !(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))) {
                                                         if (((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).equals("")) {
-                                                                ((JsonObject) eleve).getJsonObject("positionnement")
-                                                                        .put(idMatiere.toString(),Long.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
+                                                            ((JsonObject) eleve).getJsonObject("positionnement")
+                                                                    .put(idMatiere.toString(),Long.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
                                                         }else {
-                                                                ((JsonObject) eleve).getJsonObject("positionnement")
-                                                                        .put(idMatiere.toString(), Float.valueOf(((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()) +
-                                                                                Float.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
-                                                                if (((JsonObject) eleve).containsKey("nbPeriodeMoyennePos")) {
-                                                                    if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").containsKey(idMatiere.toString())) {
-                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").put(idMatiere.toString(),
-                                                                                ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").getLong(idMatiere.toString()) + 1);
-                                                                    } else {
-                                                                        ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").put(idMatiere.toString(), 2);
-                                                                    }
+                                                            ((JsonObject) eleve).getJsonObject("positionnement")
+                                                                    .put(idMatiere.toString(), Float.valueOf(((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()) +
+                                                                            Float.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
+                                                            if (((JsonObject) eleve).containsKey("nbPeriodeMoyennePos")) {
+                                                                if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").containsKey(idMatiere.toString())) {
+                                                                    ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").put(idMatiere.toString(),
+                                                                            ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").getLong(idMatiere.toString()) + 1);
                                                                 } else {
-                                                                    JsonObject jsonToAdd = new JsonObject().put(idMatiere.toString(), 2);
-                                                                    ((JsonObject) eleve).put("nbPeriodeMoyennePos", jsonToAdd);
+                                                                    ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").put(idMatiere.toString(), 2);
                                                                 }
+                                                            } else {
+                                                                JsonObject jsonToAdd = new JsonObject().put(idMatiere.toString(), 2);
+                                                                ((JsonObject) eleve).put("nbPeriodeMoyennePos", jsonToAdd);
+                                                            }
                                                         }
                                                     }else if(((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()) != null &&
-                                                                !(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))){
-                                                            ((JsonObject) eleve).getJsonObject("positionnement")
-                                                                    .put(idMatiere.toString(),Float.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
+                                                            !(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || ((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))){
+                                                        ((JsonObject) eleve).getJsonObject("positionnement")
+                                                                .put(idMatiere.toString(),Float.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
                                                     }
                                                 }
 
@@ -420,9 +420,9 @@ public class NoteController extends ControllerHelper {
                                                         ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
                                                     }else {
                                                         ((JsonObject) eleve).put("moyenne_generale", Double.valueOf(((JsonObject) eleve).getValue("moyenne_generale").toString()) +
-                                                                        Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
+                                                                Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
                                                         if (((JsonObject) eleve).containsKey("nbPeriodesMoyenne")) {
-                                                                ((JsonObject) eleve).put("nbPeriodesMoyenne",((JsonObject) eleve).getLong("nbPeriodesMoyenne") + 1);
+                                                            ((JsonObject) eleve).put("nbPeriodesMoyenne",((JsonObject) eleve).getLong("nbPeriodesMoyenne") + 1);
                                                         } else {
                                                             ((JsonObject) eleve).put("nbPeriodesMoyenne", 2);
                                                         }
@@ -451,13 +451,13 @@ public class NoteController extends ControllerHelper {
 
                                 for (int i=0; i< param.getJsonArray("idPeriodes").size();i++) {
                                     JsonArray elevesAutresPeriodes = ((JsonObject) listFuturesEachPeriode.get(i).result()).getJsonArray("eleves");
-                                        for (Object eleveAutrePeriode : elevesAutresPeriodes) {
-                                            if(((JsonObject)eleveAutrePeriode).containsKey("moyenne_generale") && ((JsonObject)eleveAutrePeriode).getValue("moyenne_generale") != null &&
-                                                    !(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(""))) {
-                                                ((JsonObject) eleveAutrePeriode)
-                                                        .put("moyenne_generale", decimalFormat.format(Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString())));
-                                            }
+                                    for (Object eleveAutrePeriode : elevesAutresPeriodes) {
+                                        if(((JsonObject)eleveAutrePeriode).containsKey("moyenne_generale") && ((JsonObject)eleveAutrePeriode).getValue("moyenne_generale") != null &&
+                                                !(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(NN) || ((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").equals(""))) {
+                                            ((JsonObject) eleveAutrePeriode)
+                                                    .put("moyenne_generale", decimalFormat.format(Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString())));
                                         }
+                                    }
                                 }
 
                                 Boolean init = false;
@@ -547,38 +547,38 @@ public class NoteController extends ControllerHelper {
                                     for(Object eleve : resultHandler.getJsonObject("annual").getJsonArray("eleves")){
                                         JsonObject jsonEleve = ((JsonObject)eleve);
                                         if(jsonEleve.getJsonObject("moyenneFinale").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("moyenneFinale").getValue(idMatiere.toString()) != null
-                                        && !(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))) {
-                                                moyenne += jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
-                                                nbElevesMoyenne++;
-                                                if(!init){
+                                                && !(jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("moyenneFinale").getValue(idMatiere.toString()).equals(""))) {
+                                            moyenne += jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                            nbElevesMoyenne++;
+                                            if(!init){
+                                                min = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                                max =  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                                init = true;
+                                            }else{
+                                                if(min >  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()))
                                                     min = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
-                                                    max =  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
-                                                    init = true;
-                                                }else{
-                                                    if(min >  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()))
-                                                        min = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
-                                                    if(max <  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()))
-                                                        max = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
-                                                }
-                                                jsonEleve.getJsonObject("moyenneFinale")
-                                                        .put(idMatiere.toString(),
-                                                                decimalFormat.format(jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString())));
+                                                if(max <  jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString()))
+                                                    max = jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString());
+                                            }
+                                            jsonEleve.getJsonObject("moyenneFinale")
+                                                    .put(idMatiere.toString(),
+                                                            decimalFormat.format(jsonEleve.getJsonObject("moyenneFinale").getDouble(idMatiere.toString())));
                                         }
                                         if(jsonEleve.getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("positionnement").getValue(idMatiere.toString()) != null
-                                        && !(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))) {
-                                                moyennePos += Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
-                                                nbElevesMoyennePos++;
-                                                if(!initPos){
+                                                && !(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))) {
+                                            moyennePos += Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                            nbElevesMoyennePos++;
+                                            if(!initPos){
+                                                minPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                maxPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                initPos = true;
+                                            }else{
+                                                if(minPos >  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
                                                     minPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                if(maxPos <  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
                                                     maxPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
-                                                    initPos = true;
-                                                }else{
-                                                    if(minPos >  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
-                                                        minPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
-                                                    if(maxPos <  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
-                                                        maxPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
-                                                }
                                             }
+                                        }
                                     }
                                     if(nbElevesMoyenne == 0){
                                         JsonObject minMoy = new JsonObject().put("minimum", NN);
@@ -1337,13 +1337,8 @@ public class NoteController extends ControllerHelper {
                 });
     }
 
-    private void getDataGraph(final HttpServerRequest request, JsonArray groupIds) {
-        final String idEleve = request.params().get("idEleve");
-        final String idEtablissement = request.params().get("idEtablissement");
-        final String idClasse = request.params().get("idClasse");
-        final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
-        final String idPeriodeString = request.params().get("idPeriode");
-        final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
+    private void getDataGraph(final String idEleve, final String idEtablissement, final String idClasse, final Integer typeClasse,  final Long idPeriode  , JsonArray groupIds,
+                              Handler<Either<String, JsonArray>> handler){
         // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
         notesService.getCompetencesNotesReleve(idEtablissement,idClasse,
                 groupIds,
@@ -1357,7 +1352,7 @@ public class NoteController extends ControllerHelper {
                     public void handle(Either<String, JsonArray> event) {
                         if(event.isLeft()) {
                             String message = "[getReleveDataForGraph] error while getCompetencesNotesReleve";
-                            badRequest(request, message);
+                            handler.handle(new Either.Left<String, JsonArray>(message));
                             log.error(message);
                         }
                         else {
@@ -1371,7 +1366,7 @@ public class NoteController extends ControllerHelper {
                                             if(event.isLeft()) {
                                                 String message = "[getReleveDataForGraph] " +
                                                         "error while getNotesReleve";
-                                                badRequest(request, message);
+                                                handler.handle(new Either.Left<String, JsonArray>(message));
                                                 log.error(message);
                                             }
                                             else {
@@ -1402,7 +1397,20 @@ public class NoteController extends ControllerHelper {
                                                 linkIdSubjectToLibelle(idEleve, getMaxByItem(matieresCompNotes),
                                                         getMaxByItem(matieresCompNotesEleve),
                                                         matieresNotes,
-                                                        matieresNotesEleve, mapMatieresStatClasseAndEleve, idMatieres, request);
+                                                        matieresNotesEleve, mapMatieresStatClasseAndEleve, idMatieres, new Handler<Either<String, JsonArray>>() {
+                                                            @Override
+                                                            public void handle(Either<String, JsonArray> event) {
+                                                                if (event.isLeft()) {
+                                                                    String message = "[getReleveDataForGraph] error while getCompetencesNotesReleve";
+                                                                    handler.handle(new Either.Left<String, JsonArray>(message));
+                                                                    log.error(message);
+                                                                } else {
+                                                                    final JsonArray matieres = event.right().getValue();
+
+                                                                    handler.handle(new Either.Right<String, JsonArray>(matieres));
+                                                                }
+                                                            }
+                                                        });
                                             }
                                         }
                                     });
@@ -1474,6 +1482,10 @@ public class NoteController extends ControllerHelper {
     public void getBilanPeriodiqueDataForGraph(final HttpServerRequest request) {
         final String idEleve = request.params().get("idEleve");
         final String idEtablissement = request.params().get(Competences.ID_ETABLISSEMENT_KEY);
+        final String idClasse = request.params().get("idClasse");
+        final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+        final String idPeriodeString = request.params().get("idPeriode");
+        final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
         Utils.getGroupsEleve(eb, idEleve, idEtablissement, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle( Either<String, JsonArray> responseQuerry) {
@@ -1484,7 +1496,20 @@ public class NoteController extends ControllerHelper {
                 } else {
                     JsonArray idGroups = responseQuerry.right().getValue();
                     //idGroups null si l'eleve n'est pas dans un groupe
-                    getDataGraph(request, idGroups);
+                    getDataGraph(idEleve,idEtablissement,idClasse,typeClasse, idPeriode  , idGroups, new Handler<Either<String, JsonArray>>() {
+                        @Override
+                        public void handle( Either<String, JsonArray> responseQuerry) {
+                            if (!responseQuerry.isRight()) {
+                                String error = responseQuerry.left().getValue();
+                                log.error(error);
+                                badRequest(request, error);
+                            } else {
+                                JsonArray matieres = responseQuerry.right().getValue();
+                                //idGroups null si l'eleve n'est pas dans un groupe
+                                Renders.renderJson(request, matieres);
+                            }
+                        }
+                    });
                 }
             }
         });
@@ -1525,7 +1550,118 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void getReleveDataForGraph(final HttpServerRequest request) {
-        getDataGraph(request, null);
+        final String idEleve = request.params().get("idEleve");
+        final String idEtablissement = request.params().get("idEtablissement");
+        final String idClasse = request.params().get("idClasse");
+        final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
+        final String idPeriodeString = request.params().get("idPeriode");
+        final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
+        if(idPeriode != null) {
+            getDataGraph(idEleve,idEtablissement,idClasse,typeClasse, idPeriode  , null, new Handler<Either<String, JsonArray>>() {
+                @Override
+                public void handle( Either<String, JsonArray> responseQuerry) {
+                    if (!responseQuerry.isRight()) {
+                        String error = responseQuerry.left().getValue();
+                        log.error(error);
+                        badRequest(request, error);
+                    } else {
+                        JsonArray matieres = responseQuerry.right().getValue();
+                        //idGroups null si l'eleve n'est pas dans un groupe
+                        Renders.renderJson(request, matieres);
+                    }
+                }
+            });
+        }else{
+            List<String> listIdClasse =new ArrayList<>();
+            listIdClasse.add(idClasse);
+            utilsService.getPeriodes(listIdClasse, idEtablissement, new Handler<Either<String, JsonArray>>() {
+                @Override
+                public void handle(Either<String, JsonArray> event) {
+                    if(event.isLeft()){
+                        leftToResponse(request, event.left());
+                        log.error(event.left().getValue());
+                        badRequest(request, event.left().getValue());
+                    }else{
+                        JsonArray periodes = event.right().getValue();
+                        int nbPeriodes = periodes.size();
+                        List<Future> listFuturesEachPeriode = new ArrayList<>();
+                        for (Object periode : periodes){
+                            Long idPeriodeFuture = ((JsonObject)periode).getLong("id_type");
+                            Future<JsonArray> exportPeriode = Future.future();
+                            getDataGraph(idEleve,idEtablissement,idClasse,typeClasse, idPeriodeFuture  , null, eventFuture -> {
+                                FormateFutureEvent.formate(exportPeriode, eventFuture);
+                            });
+                            listFuturesEachPeriode.add(exportPeriode);
+                        }
+                        CompositeFuture.all(listFuturesEachPeriode)
+                                .setHandler( exportPeriodeEvent -> {
+                                    if (exportPeriodeEvent.succeeded()) {
+                                        JsonArray matieres = ((JsonArray)listFuturesEachPeriode.get(0).result());
+                                        for (int i = 1; i<nbPeriodes; i++){
+                                            JsonArray matieresPeriode = ((JsonArray)listFuturesEachPeriode.get(i).result());
+                                            for(Object matiere : matieresPeriode) {
+                                                JsonObject matiereJson = (JsonObject) matiere;
+                                                if (!matiereJson.getString("name").equals("null")) {
+                                                    boolean trouve = false;
+                                                    for (Object matiereBase : matieres) {
+                                                        JsonObject matiereBaseJson = (JsonObject) matiereBase;
+                                                        if (!matiereBaseJson.getString("name").equals("null")) {
+                                                            if (matiereBaseJson.getString("id").equals(matiereJson.getString("id"))) {
+                                                                trouve = true;
+                                                                if (matiereJson.getDouble("studentAverage") != null) {
+                                                                    if (matiereBaseJson.getDouble("studentAverage") != null) {
+                                                                        matiereBaseJson.put("studentAverage", matiereBaseJson.getDouble("studentAverage") + matiereJson.getDouble("studentAverage"));
+                                                                        if (!matiereBaseJson.containsKey("nbPeriodesStudent"))
+                                                                            matiereBaseJson.put("nbPeriodesStudent", new Long(2));
+                                                                        else
+                                                                            matiereBaseJson.put("nbPeriodesStudent", new Long(3));
+                                                                    } else {
+                                                                        matiereBaseJson.put("studentAverage", matiereJson.getDouble("studentAverage"));
+                                                                    }
+                                                                }
+                                                                if (matiereJson.getDouble("classAverage") != null) {
+                                                                    if (matiereBaseJson.getDouble("classAverage") != null) {
+                                                                        matiereBaseJson.put("classAverage", matiereBaseJson.getDouble("classAverage") + matiereJson.getDouble("classAverage"));
+                                                                        if (!matiereBaseJson.containsKey("nbPeriodesClass"))
+                                                                            matiereBaseJson.put("nbPeriodesClass", new Long(2));
+                                                                        else
+                                                                            matiereBaseJson.put("nbPeriodesClass", new Long(3));
+                                                                    } else {
+                                                                        matiereBaseJson.put("classAverage", matiereJson.getDouble("classAverage"));
+                                                                    }
+                                                                }
+                                                            }
+                                                        } else {
+                                                            trouve = true;
+                                                        }
+                                                    }
+                                                    if (!trouve) {
+                                                        matieres.add(matiereJson);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+                                        for(Object matiere : matieres) {
+                                            JsonObject matiereJson = (JsonObject) matiere;
+                                            if (matiereJson.getDouble("studentAverage") != null && matiereJson.containsKey("nbPeriodesStudent")) {
+                                                matiereJson.put("studentAverage", decimalFormat.format(matiereJson.getDouble("studentAverage") / matiereJson.getLong("nbPeriodesStudent")));
+                                            }
+                                            if (matiereJson.getDouble("classAverage") != null && matiereJson.containsKey("nbPeriodesClass")) {
+                                                matiereJson.put("classAverage", decimalFormat.format(matiereJson.getDouble("classAverage") / matiereJson.getLong("nbPeriodesClass")));
+                                            }
+                                        }
+                                        Renders.renderJson(request, matieres);
+                                    }else{
+                                        log.error("List of Futures getDataGraph of each periodes doesn't work");
+                                        badRequest(request, "List of Futures getDataGraph of each periodes doesn't work");
+                                    }
+                                });
+
+                    }
+                }
+            });
+        }
     }
 
     private JsonArray groupDataByMatiere(JsonArray datas, Map<String,JsonArray> mapDataClasse,
@@ -1625,7 +1761,7 @@ public class NoteController extends ControllerHelper {
                                         Map<String, JsonArray> matieresNotes,
                                         Map<String, JsonArray> matieresNotesEleve,
                                         Map<String, StatClass> mapMatieresStatClasseAndEleve,
-                                        JsonArray idMatieres, final HttpServerRequest request) {
+                                        JsonArray idMatieres, Handler<Either<String, JsonArray>> handler){
 
         JsonObject action = new JsonObject()
                 .put("action", "matiere.getMatieres")
@@ -1637,7 +1773,9 @@ public class NoteController extends ControllerHelper {
                 JsonObject body = message.body();
 
                 if (!"ok".equals(body.getString("status"))) {
-
+                    String messageToSend = "[getReleveDataForGraph] error while getCompetencesNotesReleve";
+                    handler.handle(new Either.Left<String, JsonArray>(messageToSend+body.getString("message")));
+                    log.error(messageToSend+body.getString("message"));
                 } else {
                     final JsonArray matieres = body.getJsonArray("results");
                     for (int i = 0 ; i < matieres.size(); i++) {
@@ -1667,7 +1805,7 @@ public class NoteController extends ControllerHelper {
                                     .put("notesEleve", matieresNotesEleve.get("no_id_matiere"))
                     );
 
-                    Renders.renderJson(request, matieres);
+                    handler.handle(new Either.Right<String, JsonArray>(matieres));
 
                 }
             }

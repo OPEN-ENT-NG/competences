@@ -222,7 +222,7 @@ export class Graph extends Model{
                 mode: 'label',
                 custom: function (tooltipModel) {
                     if (tooltipModel.body !== undefined) {
-                        tooltipModel.width += 20;
+                        tooltipModel.width += 30;
                         for (let i = 0; i < tooltipModel.body.length; i++) {
                             tooltipModel.body[i].lines[0] += `${tooltipModel.dataPoints[i].yLabel}`;
                         }
