@@ -1416,10 +1416,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 " ON (competences_notes.id_devoir = devoirs.id AND competences_notes.id_eleve = ?) "+
                 footerQuery +
 
+                " UNION " + headQuery +
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode " +
+                " ON (appreciation_matiere_periode.id_matiere = devoirs.id_matiere AND appreciation_matiere_periode.id_eleve = ?) "+
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
+                " ON (rel_devoirs_groupes.id_groupe = appreciation_matiere_periode.id_classe AND devoirs.id = rel_devoirs_groupes.id_devoir) "+
+                footerQuery +
+
                 " ) AS res " +
                 " ORDER BY res.id_matiere ";
 
-        values.add(id_eleve).add(id_eleve).add(id_eleve);
+        values.add(id_eleve).add(id_eleve).add(id_eleve).add(id_eleve);
 
         sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
     }
