@@ -288,7 +288,8 @@ export class ReleveNoteTotale extends  Model implements IModel {
 
                 if (columnCsv.length > 0) {
                     let csvData = Utils.ConvertToCSV(columnCsv, this.format['header'], this.format['column']);
-                    blob = new Blob([csvData]);
+                    csvData = "\ufeff"+csvData;
+                    blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
                     let link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
                     if(this.exportOptions.positionnementFinal && this.exportOptions.moyenneMat)

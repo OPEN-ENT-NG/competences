@@ -650,10 +650,8 @@ export class ReleveNote extends  Model implements IModel {
                         csvData += (`${lang.translate('average.class')};${
                             response.moyenne_classe}\r\n`);
                     }
-
-
-
-                    blob = new Blob([csvData]);
+                    csvData = "\ufeff"+csvData;
+                    blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
                     link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
                     link.download =  `releve_periodique_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.csv`;
