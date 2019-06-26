@@ -567,7 +567,7 @@
   "evaluations.export.bulletin.legendMaxWidthStructure": "Largeur max conseillée: 230px",
   "evaluations.export.bulletin.legendMaxHeightStructure": "Hauteur max conseillée: 90px",
 
-  "add.annotation":"Ajouter une annotation. Sélectionner 'Évaluer' pour enlever l'annotation.",
+  "add.annotation":"Dérouler pour ajouter une annotation. Sélectionner 'Évaluer' pour enlever l'annotation.",
   "keyboard.button":"Raccourci clavier" ,
   "no.annotation":"Évaluer",
   "evaluations.add":"Ajouter",
