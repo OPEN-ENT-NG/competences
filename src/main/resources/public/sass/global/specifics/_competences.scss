@@ -260,6 +260,10 @@ body.evaluations {
     }
   }
 
+  i.withoutPointer::before {
+    cursor: unset !important;
+  }
+
   //    Suivi élève : Vue Liste    //
 
   table thead tr, ul.list-view thead tr {
