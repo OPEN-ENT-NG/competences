@@ -83,48 +83,66 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                     if (vListIdEtabActifs.size() > 0 && null != idStructures && idStructures.size() > 0) {
                         // Si l'établissement à traiter est actif on comme la transition d'année pour cet établissement
                         if(vListIdEtabActifs.contains(idStructureATraiter)){
-                            JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
-                            valuesCount.add(idStructureATraiter);
-                            String isTransitionCount = "SELECT COUNT(*) FROM notes.transition WHERE id_etablissement = ? ";
-                            Sql.getInstance().prepared(isTransitionCount, valuesCount, new Handler<Message<JsonObject>>() {
+                            conditionsToDoTransition(idStructureATraiter, new Handler<Either<String, JsonObject>>() {
                                 @Override
-                                public void handle(Message<JsonObject> sqlResultCount) {
-                                    Long nbTransition = SqlResult.countResult(sqlResultCount);
-                                    if (nbTransition > 0) {
-                                        log.warn("transition année : établissement déjà effectuée : id Etablissement : " + idStructureATraiter);
+                                public void handle(Either<String, JsonObject> event) {
+                                    if(event.isLeft()){
+                                        log.error(event.left().getValue());
                                         endTransition(nbStructureATraiter, finalHandler, idStructures);
-                                    } else {
-                                        Map<String,List<String>> classeIdsEleves = new HashMap<String,List<String>> ();
-                                        List<String> vListIdsGroupesATraiter = new ArrayList<>();
-                                        Map<String,String> vMapGroupesATraiter = new HashMap<String,String>();
-                                        if (structure.containsKey("classes")){
-                                            JsonArray vJsonArrayClass = structure.getJsonArray("classes");
-                                            // On récupère la liste des classes à traiter
-                                            for (int i = 0; i < vJsonArrayClass.size() ; i++) {
-                                                JsonObject vJsonObjectClasse = vJsonArrayClass.getJsonObject(i);
-                                                if(vJsonObjectClasse.containsKey("classId")) {
-                                                    String classId = vJsonObjectClasse.getString("classId");
-                                                    vListIdsGroupesATraiter.add(classId);
-                                                    vMapGroupesATraiter.put(classId, vJsonObjectClasse.getString("className"));
-                                                    // On récupère la liste des élèves de chaque classe
-                                                    if(vJsonObjectClasse.containsKey("users")) {
-                                                        JsonArray vJsonArrayIdUsersClasse = vJsonObjectClasse.getJsonArray("users");
-                                                        List<String> vListIdUsersClasse = new ArrayList<String>();
-                                                        if(vJsonArrayIdUsersClasse.size()>0){
-                                                            for (int j = 0; j < vJsonArrayIdUsersClasse.size() ; j++) {
-                                                                vListIdUsersClasse.add(vJsonArrayIdUsersClasse.getString(j));
+                                    }else {
+                                        log.info(event.right().getValue());
+                                        Boolean hasDevoir = event.right().getValue().getBoolean("has_devoir");
+                                        Boolean hasPeriode = event.right().getValue().getBoolean("has_periode");
+                                        Boolean hasTransition = event.right().getValue().getBoolean("has_transition");
+
+                                        if (hasTransition) {
+                                            log.warn("transition année : établissement déjà effectuée : " +
+                                                    "id Etablissement : " + idStructureATraiter);
+                                            endTransition(nbStructureATraiter, finalHandler, idStructures);
+                                        } else {
+                                            if (!hasDevoir || !hasPeriode) {
+                                                if (!hasDevoir)
+                                                    log.warn("transition année : établissement n'a pas de devoir :" +
+                                                            " id Etablissement : " + idStructureATraiter);
+                                                if (!hasPeriode)
+                                                    log.warn("transition année : établissement n'a pas de periode " +
+                                                            "paramétrée : id Etablissement : " + idStructureATraiter);
+                                                endTransition(nbStructureATraiter, finalHandler, idStructures);
+                                            } else {
+                                                Map<String, List<String>> classeIdsEleves = new HashMap<String, List<String>>();
+                                                List<String> vListIdsGroupesATraiter = new ArrayList<>();
+                                                Map<String, String> vMapGroupesATraiter = new HashMap<String, String>();
+                                                if (structure.containsKey("classes")) {
+                                                    JsonArray vJsonArrayClass = structure.getJsonArray("classes");
+                                                    // On récupère la liste des classes à traiter
+                                                    for (int i = 0; i < vJsonArrayClass.size(); i++) {
+                                                        JsonObject vJsonObjectClasse = vJsonArrayClass.getJsonObject(i);
+                                                        if (vJsonObjectClasse.containsKey("classId")) {
+                                                            String classId = vJsonObjectClasse.getString("classId");
+                                                            vListIdsGroupesATraiter.add(classId);
+                                                            vMapGroupesATraiter.put(classId, vJsonObjectClasse.getString("className"));
+                                                            // On récupère la liste des élèves de chaque classe
+                                                            if (vJsonObjectClasse.containsKey("users")) {
+                                                                JsonArray vJsonArrayIdUsersClasse = vJsonObjectClasse.getJsonArray("users");
+                                                                List<String> vListIdUsersClasse = new ArrayList<String>();
+                                                                if (vJsonArrayIdUsersClasse.size() > 0) {
+                                                                    for (int j = 0; j < vJsonArrayIdUsersClasse.size(); j++) {
+                                                                        vListIdUsersClasse.add(vJsonArrayIdUsersClasse.getString(j));
+                                                                    }
+                                                                }
+                                                                classeIdsEleves.put(classId, vListIdUsersClasse);
                                                             }
                                                         }
-                                                        classeIdsEleves.put(classId,vListIdUsersClasse);
+
                                                     }
+                                                } else {
+                                                    log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
+                                                    endTransition(nbStructureATraiter, finalHandler, idStructures);
                                                 }
+                                                executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter, vMapGroupesATraiter, idStructureATraiter, 1, finalHandler, idStructures);
 
                                             }
-                                        }else {
-                                            log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
-                                            endTransition(nbStructureATraiter, finalHandler, idStructures);
                                         }
-                                        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter,idStructureATraiter, 1, finalHandler, idStructures);
                                     }
                                 }
                             });
@@ -143,6 +161,30 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 }
             }}));
 
+    }
+
+    @Override
+    public void conditionsToDoTransition(String idStructureATraiter, Handler<Either<String, JsonObject>> handler) {
+        JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
+
+        String queryNbDevoir = "(SELECT count(*) as nb_devoir FROM notes.devoirs d " +
+                "WHERE id_etablissement= ? AND d.owner !='id-user-transition-annee' )";
+
+        String queryNbPeriode = "SELECT count(*) as nb_periode FROM viesco.periode p " +
+                "WHERE id_etablissement = ? ";
+
+        String queryNbTransition = "SELECT count(*) as nb_transition FROM notes.transition WHERE id_etablissement = ? ";
+
+        String query = " SELECT CASE nb_devoir WHEN 0 THEN FALSE ELSE TRUE END as has_devoir, " +
+                "CASE nb_periode WHEN 0 THEN FALSE ELSE TRUE END as has_periode, " +
+                "CASE nb_transition WHEN 0 THEN FALSE ELSE TRUE END as has_transition FROM ( " + queryNbDevoir +" ) as t_nbdevoir , "+
+                "( " + queryNbPeriode + ") as t_nbperiode, ( " + queryNbTransition + ") as t_nbtransition " +
+                "WHERE nb_devoir = 0 OR nb_periode = 0 OR nb_transition > 0 ";
+
+
+        valuesCount.add(idStructureATraiter).add(idStructureATraiter).add(idStructureATraiter);
+
+        Sql.getInstance().prepared(query, valuesCount, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override

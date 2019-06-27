@@ -43,4 +43,13 @@ public interface TransitionService  extends CrudService {
      */
     public void transitionAnneeStructure(EventBus eb, final JsonObject structure, final Handler<Either<String, JsonArray>> finalHandler);
 
+    /**
+     * get conditions to do transition : get nb devoir > 0 has_devoir = true else false,
+     * nb periode > 0 has_periode = true else false
+     * and nb transition > 0 has_transition = true else false
+     * @param idStructureATraiter id structure
+     * @param handler response
+     */
+    public void conditionsToDoTransition( String idStructureATraiter, final Handler<Either<String, JsonObject>> handler);
+
 }
