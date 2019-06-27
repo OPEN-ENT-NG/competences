@@ -419,7 +419,7 @@ public class DefaultExportService implements ExportService  {
                                     getIntermediateHandler(domainesArray, finalHandler));
                             enseignementService.getEnseignementsOrdered(
                                     getIntermediateHandler(enseignementArray, finalHandler));
-                        } else if (stringJsonArrayEither.right().getValue().getValue(0) instanceof String){
+                        } else if (stringJsonArrayEither.isRight() && stringJsonArrayEither.right().getValue().getValue(0) instanceof String){
                             if (pByEnseignement){
                                 competencesService.getDevoirCompetencesByEnseignement(null,
                                         getIntermediateHandler(null, competencesArray, finalHandler));
