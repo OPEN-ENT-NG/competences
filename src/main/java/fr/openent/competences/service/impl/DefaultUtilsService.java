@@ -41,7 +41,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.text.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 
@@ -593,8 +592,8 @@ public class DefaultUtilsService  implements UtilsService {
                                 for (int i = 0; i < periodes.size(); i++) {
 
                                     if (idPeriode.intValue()
-                                            == ((JsonObject) periodes.getJsonObject(i)).getInteger("id_type").intValue()) {
-                                        periode = (JsonObject) periodes.getJsonObject(i);
+                                            == periodes.getJsonObject(i).getInteger("id_type").intValue()) {
+                                        periode = periodes.getJsonObject(i);
                                         break;
                                     }
                                 }
@@ -627,6 +626,9 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
+    public void getPeriodes(JsonArray idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler){
+        getPeriodes((List<String>)idClasse.getList(), idEtablissement, handler);
+    }
     public void getPeriodes(List<String> idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler){
 
         JsonObject action = new JsonObject()
@@ -661,58 +663,54 @@ public class DefaultUtilsService  implements UtilsService {
             handler.handle(new Either.Left<>("bad Request"));
             return;
         }
-        studentAvailableForPeriode(idClasse, null, typeClasse,
-                new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        JsonArray students = body.getJsonArray("results");
-                        JsonArray idAvailableEleve = new JsonArray();
+        studentAvailableForPeriode(idClasse, null, typeClasse, message -> {
+            JsonObject body = message.body();
+            JsonArray students = body.getJsonArray("results");
+            JsonArray idAvailableEleve = new JsonArray();
 
-                        if ("ok".equals(body.getString("status"))) {
-                            // Si aucune période n'est sélectionnée, on rajoute tous les élèves
-                            for (int i = 0; i < students.size(); i++) {
-                                JsonObject student = (JsonObject) students.getValue(i);
-                                // Sinon Si l'élève n'est pas Supprimé on l'ajoute
-                                if (idPeriode == null ||
-                                        student.getValue("deleteDate") == null) {
-                                    idAvailableEleve.add(student.getString("id"));
-                                }
-                                // Sinon S'il sa date sa suppression survient avant la fin de
-                                // la période, on l'ajoute aussi
-                                else {
-                                    Date deleteDate = new Date();
-
-                                    if (student.getValue("deleteDate")
-                                            instanceof Number) {
-                                        deleteDate = new Date(student.getLong("deleteDate"));
-                                    } else {
-                                        try {
-
-                                            deleteDate = new SimpleDateFormat("yy-MM-dd")
-                                                    .parse(student.getString("deleteDate").split("T")[0]);
-
-                                        } catch (ParseException e) {
-                                            String messageLog = "PB While read date of deleted Student : "
-                                                    + student.getString("id");
-                                            log.error(messageLog);
-                                        }
-
-                                    }
-                                    if ((deleteDate.after(dateFinPeriode) || deleteDate.equals(dateFinPeriode))
-                                            ||
-                                            ((deleteDate.after(dateDebutPeriode)
-                                                    || deleteDate.equals(dateDebutPeriode))
-                                                    && (deleteDate.before(dateFinPeriode)
-                                                    || deleteDate.equals(dateFinPeriode)))) {
-                                        idAvailableEleve.add(student.getString("id"));
-                                    }
-                                }
-                            }
-                        }
-                        handler.handle(new Either.Right<>(idAvailableEleve));
+            if ("ok".equals(body.getString("status"))) {
+                // Si aucune période n'est sélectionnée, on rajoute tous les élèves
+                for (int i = 0; i < students.size(); i++) {
+                    JsonObject student = (JsonObject) students.getValue(i);
+                    // Sinon Si l'élève n'est pas Supprimé on l'ajoute
+                    if (idPeriode == null ||
+                            student.getValue("deleteDate") == null) {
+                        idAvailableEleve.add(student.getString("id"));
                     }
-                });
+                    // Sinon S'il sa date sa suppression survient avant la fin de
+                    // la période, on l'ajoute aussi
+                    else {
+                        Date deleteDate = new Date();
+
+                        if (student.getValue("deleteDate")
+                                instanceof Number) {
+                            deleteDate = new Date(student.getLong("deleteDate"));
+                        } else {
+                            try {
+
+                                deleteDate = new SimpleDateFormat("yy-MM-dd")
+                                        .parse(student.getString("deleteDate").split("T")[0]);
+
+                            } catch (ParseException e) {
+                                String messageLog = "PB While read date of deleted Student : "
+                                        + student.getString("id");
+                                log.error(messageLog);
+                            }
+
+                        }
+                        if ((deleteDate.after(dateFinPeriode) || deleteDate.equals(dateFinPeriode))
+                                ||
+                                ((deleteDate.after(dateDebutPeriode)
+                                        || deleteDate.equals(dateDebutPeriode))
+                                        && (deleteDate.before(dateFinPeriode)
+                                        || deleteDate.equals(dateFinPeriode)))) {
+                            idAvailableEleve.add(student.getString("id"));
+                        }
+                    }
+                }
+            }
+            handler.handle(new Either.Right<>(idAvailableEleve));
+        });
 
     }
 
@@ -1093,9 +1091,7 @@ public class DefaultUtilsService  implements UtilsService {
         if (idPeriode != null) {
             action.put(ID_PERIODE_KEY, idPeriode);
         }
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(handler));
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(handler));
 
     }
 }

@@ -97,6 +97,23 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
+    public void getNiveauDeMaitriseofClasse(String idClasse, Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT niveau_competences.libelle, niveau_competences.ordre, ")
+                .append(" niveau_competences.couleur couleurDefault, niveau_competences.id_cycle  ")
+                .append(" FROM notes.niveau_competences")
+                .append(" INNER JOIN " +   Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ")
+                .append(" ON id_groupe = ? AND rel_groupe_cycle.id_cycle = niveau_competences.id_cycle ")
+                .append(" order By (ordre);" );
+
+
+        values.add(idClasse);
+
+        Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS, validResultHandler(handler));
+    }
+
     public void getPersoNiveauMaitrise(String idUser,Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();

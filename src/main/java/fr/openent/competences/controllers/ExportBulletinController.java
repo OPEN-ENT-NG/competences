@@ -1,25 +1,42 @@
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessExportBulletinFilter;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.storage.Storage;
+import org.entcore.common.user.UserUtils;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Competences.ACTION;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
     private UtilsService utilsService;
+    private final Storage storage;
 
-    public ExportBulletinController(EventBus eb) {
+    public ExportBulletinController(EventBus eb, Storage storage) {
         utilsService = new DefaultUtilsService(eb);
+        this.storage = storage;
     }
 
 
@@ -76,5 +93,57 @@ public class ExportBulletinController extends ControllerHelper {
         else {
             badRequest(request);
         }
+    }
+
+
+    /**
+     * Genere le releve
+     */
+    @Get("/generate/archive/bulletin")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void archiveBulletin(final HttpServerRequest request){
+        JsonObject action = new JsonObject()
+                .put(ACTION, ArchiveBulletinWorker.ARCHIVE_BULLETIN)
+                .put(HOST, getHost(request))
+                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
+                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
+                .put(PATH, request.path());
+        eb.send(ArchiveBulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+        Renders.ok(request);
+    }
+
+    @Get("/archive/bulletin/:idEleve/:idPeriode/:idClasse")
+    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    public void getArchive(final HttpServerRequest request){
+        String idEleve = request.params().get(ID_ELEVE_KEY);
+        String idClasse = request.params().get(ID_CLASSE_KEY);
+        Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
+        new DefaultExportBulletinService(eb, storage, vertx).getArchiveBulletin(idEleve, idClasse, idPeriode,
+                bufferEither -> {
+                if(bufferEither.isLeft()){
+                    Renders.notFound(request, bufferEither.left().getValue());
+                }
+                else {
+                    Buffer file = bufferEither.right().getValue();
+                    if(file == null){
+                        Renders.notFound(request, "in table");
+                        return;
+                    }
+                    request.response().putHeader("Content-Type", "application/pdf");
+                    request.response().putHeader("Content-Disposition",
+                            "attachment; filename=archive.pdf");
+                    request.response().end(file);
+                    log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
+                            + " -> Fin Generation PDF du template ");
+                }
+                });
+    }
+
+    @Get("/delete/archive/bulletin")
+    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    public void deleteArchive(final HttpServerRequest request){
+        new DefaultExportBulletinService(eb, storage, vertx).deleteAll( response -> {
+            Renders.renderJson(request, response);
+        });
     }
 }

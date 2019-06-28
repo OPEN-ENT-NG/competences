@@ -1,6 +1,7 @@
 package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -23,19 +24,19 @@ public interface ExportBulletinService {
 
     /**
      * Service de récupération des donnéees nécessaires pour générer un bulletin
-     * @param request requête
      * @param answered Atomic booléen seté lorsqu'on lance l'export
      * @param idEleve idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idPeriode
      * @param classe Object contenant les information sur la classe
      * @param params paramètres de la requête
+     * @param host de la request
+     * @param acceptLanguage de la request
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getExportBulletin(final HttpServerRequest request,
-                           final AtomicBoolean answered, String idEleve,
+    void getExportBulletin(final AtomicBoolean answered, String idEleve,
                            Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
-                           final JsonObject classe,
+                           final JsonObject classe, String host, String acceptLanguage,
                            Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -133,15 +134,15 @@ public interface ExportBulletinService {
 
     /**
      * récupère le libelle de la periode idPeriode est passé en paramètre
-     * @param request request
      * @param idEleve idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idperiode
+     * @param host de la reqquest
+     * @param acceptLanguage de la request
      * @param finalHandler handler servant à la synchronisation des services
      */
-     void getLibellePeriode(final HttpServerRequest request, String idEleve,
-                                  Map<String, JsonObject> elevesMap, Long idPeriode,
-                                  Handler<Either<String, JsonObject>> finalHandler);
+     void getLibellePeriode(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
+                            String host, String acceptLanguage, Handler<Either<String, JsonObject>> finalHandler);
 
 
     /**
@@ -193,7 +194,7 @@ public interface ExportBulletinService {
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param vertx nécessaire pour lancer la génération du pdf
      * @param config la config du module
-     * @param nbrEleves le nombre d'élèves pour l'export
+     * @param elevesFuture Future le nombre d'élèves pour l'export
      * @param answered Atomic booléen seté à true si tous les services ont répondu
      * @param params paramètres de la requête
      * @return
@@ -201,7 +202,7 @@ public interface ExportBulletinService {
     Handler<Either<String, JsonObject>>  getFinalBulletinHandler(final HttpServerRequest request,
                                                                         Map<String, JsonObject> elevesMap,
                                                                         Vertx vertx, JsonObject config,
-                                                                        final int nbrEleves,
+                                                                        Future<JsonArray> elevesFuture,
                                                                         final AtomicBoolean answered,
                                                                             JsonObject params);
 
@@ -226,7 +227,6 @@ public interface ExportBulletinService {
 
     /**
      *
-     * @param request
      * @param answered
      * @param eleves
      * @param elevesMap
@@ -234,10 +234,32 @@ public interface ExportBulletinService {
      * @param params
      * @param classe
      * @param showBilanPerDomaines
+     * @param host de la request
+     * @param acceptLanguage de la request
      * @param finalHandler
      */
-    void buildDataForStudent(final HttpServerRequest request, final AtomicBoolean answered, JsonArray eleves,
+    void buildDataForStudent(final AtomicBoolean answered, JsonArray eleves,
                              Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject params,
                              final JsonObject classe, Boolean showBilanPerDomaines,
-                             Handler<Either<String, JsonObject>> finalHandler);
+                             String host, String acceptLanguage, Handler<Either<String, JsonObject>> finalHandler);
+
+    /**
+     *
+     * @param idEtablissement
+     * @param idClasse
+     * @param idStudents
+     * @param idPeriode
+     * @param params
+     * @param elevesFuture
+     * @param elevesMap
+     * @param answered
+     * @param host de la request
+     * @param acceptLanguage de la request
+     * @param finalHandler
+     * @param future
+     */
+    void runExportBulletin(String idEtablissement, String idClasse, JsonArray idStudents, Long idPeriode,
+                           JsonObject params,Future<JsonArray> elevesFuture , final Map<String, JsonObject> elevesMap,
+                           final AtomicBoolean answered,String host, String acceptLanguage,
+                           final Handler<Either<String, JsonObject>> finalHandler, Future<JsonObject> future);
 }

@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
@@ -58,8 +59,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     public void getSuiviAcquis(final String idEtablissement, final Long idPeriode,
-                                         final String idEleve, final String idClasse ,
-                                         Handler<Either<String, JsonArray>> handler) {
+                               final String idEleve, final String idClasse ,
+                               Handler<Either<String, JsonArray>> handler) {
         Future<JsonArray> subjectFuture = Future.future();
         // Récupération des matières
         devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, event -> {
@@ -230,17 +231,17 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         CompositeFuture.all(subjectsFuture).setHandler(event -> {
             if (event.succeeded()) {
-                        String [] sortedField = new  String[1];
-                        sortedField[0] = "libelleMatiere";
-                        handler.handle(new Either.Right<>(
-                                new DefaultUtilsService().sortArray(results,
-                                        sortedField)));
+                String [] sortedField = new  String[1];
+                sortedField[0] = "libelleMatiere";
+                handler.handle(new Either.Right<>(
+                        new DefaultUtilsService().sortArray(results,
+                                sortedField)));
 
-                } else {
-                    String error = event.cause().getMessage();
-                    log.error(error);
-                    handler.handle(new Either.Left<>(error));
-                }
+            } else {
+                String error = event.cause().getMessage();
+                log.error(error);
+                handler.handle(new Either.Left<>(error));
+            }
         });
     }
 
@@ -387,5 +388,22 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         noteService.calculAndSetMoyenneClasseByPeriode(idsEleves,moyFinalesEleves,
                 notesByDevoirByPeriodeClasse, result);
 
+    }
+    public void getBilanPeriodiqueDomaineForGraph(final String idEleve,String idEtablissement,
+                                                  final String idClasse,final Integer typeClasse, final String idPeriodeString,
+                                                  final Handler<Either<String, JsonArray>> handler){
+        Utils.getGroupsEleve(eb, idEleve, idEtablissement,  responseQuerry -> {
+            if (!responseQuerry.isRight()) {
+                String error = responseQuerry.left().getValue();
+                log.error(error);
+                handler.handle(new Either.Left<>(error));
+            } else {
+                JsonArray idGroups = responseQuerry.right().getValue();
+                //idGroups null si l'eleve n'est pas dans un groupe
+                new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb)
+                        .getDataGraphDomaine(idEleve, idGroups, idEtablissement, idClasse,
+                                typeClasse, idPeriodeString, handler);
+            }
+        });
     }
 }

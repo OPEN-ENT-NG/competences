@@ -22,4 +22,17 @@ public interface BilanPeriodiqueService {
     void getSuiviAcquis(final String idEtablissement, final Long idPeriode,
                         final String idEleve, final String idClasse,
                         Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *
+     * @param idEleve
+     * @param idEtablissement
+     * @param idClasse
+     * @param typeClasse
+     * @param idPeriodeString
+     * @param handler
+     */
+    void getBilanPeriodiqueDomaineForGraph(final String idEleve, final String idEtablissement ,
+                                           final String idClasse,final Integer typeClasse, final String idPeriodeString,
+                                           final Handler<Either<String, JsonArray>> handler);
 }

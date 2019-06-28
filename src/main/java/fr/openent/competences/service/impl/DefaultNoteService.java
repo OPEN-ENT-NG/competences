@@ -19,10 +19,7 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.bean.Eleve;
-import fr.openent.competences.bean.Eleves;
-import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.bean.StatClass;
+import fr.openent.competences.bean.*;
 import fr.openent.competences.service.AnnotationService;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
@@ -30,11 +27,13 @@ import fr.openent.competences.utils.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -52,6 +51,7 @@ import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibellePeriode;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
@@ -109,7 +109,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         String id_eleve = jo.getString("id_eleve");
         Object valeur = jo.getValue("valeur");
 
-       annotationService.getAnnotationByEleveByDevoir(new Long[]{id_devoir}, new String[]{id_eleve}, new Handler<Either<String, JsonArray>>() {
+        annotationService.getAnnotationByEleveByDevoir(new Long[]{id_devoir}, new String[]{id_eleve}, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> event) {
 
@@ -505,7 +505,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                           Handler<Either<String, JsonArray>> handler) {
         if(typeClasse == null){
             runGetCompetencesNotesReleve(etablissementId,classeId, groupIds, matiereId, null,periodeId,eleveId,
-                    new ArrayList<String>(), withDomaineInfo, handler);
+                    new ArrayList<>(), withDomaineInfo, handler);
 
         }
         else {
@@ -1379,9 +1379,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     @Override
     public void getMoysEleveByMatByPeriode(String idClasse, Integer idPeriode,
-                                  SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
-                                  Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
-                                  Handler<Either<String,JsonObject>> handler) {
+                                           SortedMap<String, Set<String>> mapAllidMatAndidTeachers,
+                                           Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
+                                           Handler<Either<String,JsonObject>> handler) {
 
 
         List<String> idsEleve = new ArrayList();
@@ -2810,10 +2810,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             resulHandler.getJsonObject("statistiques").getJsonObject("moyenne_generale").put("maximum", NN);
             resulHandler.getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", NN);
         }else{
-                JsonObject minMoy = new JsonObject().put("minimum", decimalFormat.format(moyenneMin));
-                resulHandler.getJsonObject("statistiques").put("moyenne_generale",minMoy);
-                resulHandler.getJsonObject("statistiques").getJsonObject("moyenne_generale").put("maximum", decimalFormat.format(moyenneMax));
-                resulHandler.getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", decimalFormat.format((moyenneDeMoyenne / nbElevesMoyenne)));
+            JsonObject minMoy = new JsonObject().put("minimum", decimalFormat.format(moyenneMin));
+            resulHandler.getJsonObject("statistiques").put("moyenne_generale",minMoy);
+            resulHandler.getJsonObject("statistiques").getJsonObject("moyenne_generale").put("maximum", decimalFormat.format(moyenneMax));
+            resulHandler.getJsonObject("statistiques").getJsonObject("moyenne_generale").put("moyenne", decimalFormat.format((moyenneDeMoyenne / nbElevesMoyenne)));
         }
     }
 
@@ -2898,4 +2898,302 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     }
                 }));
     }
+    public void getDataGraph(final String idEleve, JsonArray groupIds, final String idEtablissement ,
+                              final String idClasse,final Integer typeClasse, final String idPeriodeString,
+                              final Handler<Either<String, JsonArray>> handler) {
+        final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
+        // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
+        getCompetencesNotesReleve(idEtablissement,idClasse,
+                groupIds,
+                null,
+                idPeriode,
+                null,
+                typeClasse,
+                false, eventReleve -> {
+                    if(eventReleve.isLeft()) {
+                        String message = "[getReleveDataForGraph] error while getCompetencesNotesReleve";
+                        handler.handle(new Either.Left<>(message));
+                        log.error(message);
+                    }
+                    else {
+                        final JsonArray listCompNotes = eventReleve.right().getValue();
+                        // 2. On récupère les Notes de toutes les matières et de tous les élèves
+                        getNotesReleve(idEtablissement, idClasse, null,
+                                idPeriode, typeClasse, true, groupIds,
+                                event -> {
+                                    if(event.isLeft()) {
+                                        String message = "[getReleveDataForGraph] " +
+                                                "error while getNotesReleve";
+                                        handler.handle(new Either.Left<>(message));
+                                        log.error(message);
+                                    }
+                                    else {
+                                        final JsonArray listNotes = event.right().getValue();
+                                        Map<String,JsonArray> matieresCompNotes = new HashMap<>();
+                                        Map<String,JsonArray> matieresCompNotesEleve = new HashMap<>();
+                                        JsonArray idMatieres;
+
+                                        // 3. On regroupe  les compétences notes par idMatière
+                                        idMatieres = groupDataByMatiere(listCompNotes,
+                                                matieresCompNotes,
+                                                matieresCompNotesEleve, idEleve, true);
+
+                                        // 4. On regroupe les notes par idMatière
+                                        Map<String,JsonArray> matieresNotes = new HashMap<>();
+                                        Map<String,JsonArray> matieresNotesEleve = new HashMap<>();
+                                        idMatieres = utilsService.saUnion(groupDataByMatiere(listNotes,
+                                                matieresNotes,
+                                                matieresNotesEleve, idEleve, false), idMatieres);
+
+                                        StatMat statMat = new StatMat();
+                                        statMat.setMapIdMatStatclass(listNotes);
+                                        Map<String, StatClass> mapMatieresStatClasseAndEleve =
+                                                statMat.getMapIdMatStatclass();
+                                        // 5. On récupère tous les libelles des matières de
+                                        // l'établissement et on fait correspondre aux résultats par
+                                        // idMatière
+                                        linkIdSubjectToLibelle(idEleve, getMaxByItem(matieresCompNotes),
+                                                getMaxByItem(matieresCompNotesEleve),
+                                                matieresNotes,
+                                                matieresNotesEleve, mapMatieresStatClasseAndEleve, idMatieres, handler);
+                                    }
+                                });
+                    }
+                });
+    }
+    public void getDataGraphDomaine(final String idEleve, JsonArray groupIds, final String idEtablissement ,
+                                    final String idClasse,final Integer typeClasse, final String idPeriodeString,
+                                    final Handler<Either<String, JsonArray>> handler) {
+
+
+        // 1. On récupère les Compétences-Notes de tous les domaines et de tous les élèves
+        Future<JsonArray> compNotesFuture = Future.future();
+        getCompetencesNotesReleve(idEtablissement, idClasse, groupIds, null,
+                (idPeriodeString != null)? Long.parseLong(idPeriodeString) : null,
+                null,
+                typeClasse,
+                true, event -> {
+                    if (event.isLeft()) {
+                        String message = "[DomaineDataForGraph] error while getCompetencesNotesReleve";
+                        handler.handle(new Either.Left<>(message));
+                    }
+                    else {
+                        compNotesFuture.complete(event.right().getValue());
+                    }
+                });
+
+        // 2. En parallèle, On récupère les domaines du cycle auquel la classe est rattachée
+        Future<JsonArray> domainesCycleFuture = Future.future();
+        new DefaultDomaineService().getDomaines(idClasse, event -> {
+            if (event.isLeft()) {
+                String message = "[DomaineDataForGraph] error while getting domaines";
+                domainesCycleFuture.fail(message);
+            }
+            else {
+                domainesCycleFuture.complete(event.right().getValue());
+            }
+        });
+
+        // 3. On Lie les compétences-Notes à leur libellé
+        CompositeFuture.all(compNotesFuture, domainesCycleFuture).setHandler(event -> {
+            if (event.succeeded()) {
+                handler.handle(new Either.Right<>(linkCompNoteToLibelle(domainesCycleFuture.result(),
+                        compNotesFuture.result(), idEleve)));
+            } else {
+                String message = event.cause().getMessage();
+                handler.handle(new Either.Left<>(message));
+                log.error(message);
+            }
+        });
+
+    }
+
+    private JsonArray linkCompNoteToLibelle(JsonArray domaines,
+                                            JsonArray compNotes,
+                                            String idEleve ) {
+        Map<Long,JsonObject> domainesMap = new HashMap<>();
+        JsonArray res = new JsonArray();
+
+        // On groupe Competences-notes par domaine
+        for (int i=0; i<compNotes.size(); i++) {
+            JsonObject compNote = compNotes.getJsonObject(i);
+            if(!compNote.getBoolean("formative")) {
+                Long idDomaine = compNote.getLong("id_domaine");
+                if (!domainesMap.containsKey(idDomaine)) {
+                    domainesMap.put(idDomaine, new JsonObject()
+                            .put("competencesNotes", new JsonArray())
+                            .put("competencesNotesEleve", new JsonArray()));
+                }
+                JsonObject domaine = domainesMap.get(idDomaine);
+                if (domaine != null) {
+                    if (idEleve.equals(compNote.getString("id_eleve"))) {
+                        domaine.getJsonArray("competencesNotesEleve").add(compNote);
+                    }
+                    domaine.getJsonArray("competencesNotes").add(compNote);
+                }
+            }
+        }
+        // On Lie les competences-notes groupées aux domaines
+        for (int i=0; i<domaines.size(); i++) {
+            JsonObject domaine = domaines.getJsonObject(i);
+            JsonObject data = domainesMap.get(domaine.getLong("id"));
+            JsonArray competencesNotesEleve =
+                    (data!=null)? data.getJsonArray("competencesNotesEleve"): new JsonArray();
+            JsonArray competencesNotes =
+                    (data!=null)?data.getJsonArray("competencesNotes"): new JsonArray();
+            if (data!= null) {
+                res.add(domaine.put("competencesNotes",   getMaxByItemDomaine(competencesNotes))
+                        .put("competencesNotesEleve", getMaxByItemDomaine(competencesNotesEleve)));
+            }
+        }
+        return res;
+    }
+
+    private JsonArray groupDataByMatiere(JsonArray datas, Map<String,JsonArray> mapDataClasse,
+                                         Map<String,JsonArray> mapDataEleve, String idEleve, boolean checkFormative){
+        JsonArray result = new JsonArray();
+        for (int i=0; i< datas.size(); i++ ) {
+            JsonObject data = datas.getJsonObject(i);
+            if ( (checkFormative && data != null && data.getBoolean("formative") != null && !data.getBoolean("formative").booleanValue())
+                    || !checkFormative) {
+                String idMatiere = data.getString("id_matiere");
+                idMatiere = (idMatiere!= null)? idMatiere : "no_id_matiere";
+                if (!mapDataClasse.containsKey(idMatiere)) {
+                    mapDataClasse.put(idMatiere, new JsonArray());
+                    mapDataEleve.put(idMatiere, new JsonArray());
+                    result.add(idMatiere);
+                }
+                mapDataClasse.get(idMatiere).add(data);
+                if(idEleve.equals(data.getString("id_eleve")) || idEleve.equals(data.getString("id_eleve_moyenne_finale")) ) {
+                    mapDataEleve.get(idMatiere).add(data);
+                }
+            }
+
+        }
+        return result;
+    }
+
+    // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Matière
+    private Map<String,JsonArray> getMaxByItem(Map<String,JsonArray> mapData){
+        Map<String,JsonArray> result = new HashMap<>();
+
+        for (Map.Entry<String,JsonArray> entry: mapData.entrySet()) {
+            String idEntry = entry.getKey();
+            JsonArray currentEntry = entry.getValue();
+            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry);
+            result.put(idEntry, new JsonArray());
+            for (Map.Entry<String,JsonObject> max: maxComp.entrySet()) {
+                result.get(idEntry).add(max.getValue());
+            }
+
+
+        }
+        return result;
+    }
+
+    // Permet de Calculer le Max des Niveaux Atteints par Items regroupés par Domaine
+    private JsonArray getMaxByItemDomaine(JsonArray compNotes){
+        JsonArray result = new JsonArray();
+
+        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes);
+        for (Map.Entry<String,JsonObject> max: maxCompNote.entrySet()) {
+            result.add(max.getValue());
+        }
+
+        return result;
+    }
+
+    private Map<String, JsonObject> calculMaxCompNoteItem (JsonArray compNotes) {
+        Map<String, JsonObject> maxComp = new HashMap<>();
+        for (int i = 0; i < compNotes.size(); i++) {
+            JsonObject compNote = compNotes.getJsonObject(i);
+            Long idCompetence = compNote.getLong("id_competence");
+            String idEleve = compNote.getString("id_eleve");
+
+            idEleve = (idEleve!= null)? idEleve : "null";
+
+            String idItem = (idCompetence != null)? idCompetence.toString() : "null";
+            idItem += idEleve;
+
+            if (!maxComp.containsKey(idItem)) {
+                maxComp.put(idItem, compNote);
+            } else {
+
+                Long evaluation = compNote.getLong("evaluation");
+                Long niveauFinal = compNote.getLong("niveau_final");
+                Long valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
+
+
+                JsonObject maxCompetence = maxComp.get(idItem);
+                Long maxEvaluation = maxCompetence.getLong("evaluation");
+                Long maxNiveauFinal = maxCompetence.getLong("niveau_final");
+                Long maxToTake = (maxNiveauFinal != null) ? maxNiveauFinal : maxEvaluation;
+
+                if(maxToTake == null) {
+                    maxComp.replace(idItem, compNote);
+                }
+                else if ((valueToTake != null && maxToTake != null) && (valueToTake > maxToTake)) {
+                    maxComp.replace(idItem, compNote);
+                }
+            }
+
+        }
+        return maxComp;
+    }
+
+    private void linkIdSubjectToLibelle(String idEleve, Map<String, JsonArray> matieresCompNotes,
+                                        Map<String, JsonArray> matieresCompNotesEleve,
+                                        Map<String, JsonArray> matieresNotes,
+                                        Map<String, JsonArray> matieresNotesEleve,
+                                        Map<String, StatClass> mapMatieresStatClasseAndEleve,
+                                        JsonArray idMatieres,
+                                        Handler<Either<String, JsonArray>> handler) {
+
+        JsonObject action = new JsonObject()
+                .put("action", "matiere.getMatieres")
+                .put("idMatieres", idMatieres);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+
+                if (!"ok".equals(body.getString("status"))) {
+
+                } else {
+                    final JsonArray matieres = body.getJsonArray("results");
+                    for (int i = 0 ; i < matieres.size(); i++) {
+                        JsonObject matiere = matieres.getJsonObject(i);
+                        Double classAverage = null;
+                        Double averageStudent = null;
+                        StatClass statClasse = mapMatieresStatClasseAndEleve.get(matiere.getString("id"));
+                        if(statClasse != null) {
+                            classAverage = statClasse.getAverageClass();
+                            averageStudent = statClasse.getMoyenneEleve(idEleve);
+                        }
+                        matiere.put("competencesNotes",  matieresCompNotes
+                                .get(matiere.getString("id")))
+                                .put("competencesNotesEleve", matieresCompNotesEleve
+                                        .get(matiere.getString("id")))
+                                .put("notes", matieresNotes.get(matiere.getString("id")))
+                                .put("notesEleve", matieresNotesEleve.get(matiere.getString("id")))
+                                .put("studentAverage",averageStudent)
+                                .put("classAverage", classAverage);
+
+                    }
+                    matieres.add(
+                            new JsonObject().put("name", "null")
+                                    .put("competencesNotes", matieresCompNotes.get("no_id_matiere"))
+                                    .put("competencesNotesEleve", matieresCompNotesEleve.get("no_id_matiere"))
+                                    .put("notes", matieresNotes.get("no_id_matiere"))
+                                    .put("notesEleve", matieresNotesEleve.get("no_id_matiere"))
+                    );
+
+                    handler.handle(new Either.Right<>( matieres));
+
+                }
+            }
+        }));
+    }
+
 }

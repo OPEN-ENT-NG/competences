@@ -26,6 +26,10 @@
         },
         "transition" : {
            "timeout-transaction" : 600
+        },
+        "node-pdf-generator" : {
+           "authorization" : $pdfGeneratorAuth,
+           "url": $pdfGeneratorUrl
         }
       }
     }

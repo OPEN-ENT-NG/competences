@@ -272,4 +272,32 @@ public interface NoteService extends CrudService {
      */
     void exportPDFRelevePeriodique(JsonObject param, final HttpServerRequest request, Vertx vertx,
                                    JsonObject config );
+
+    /**
+     * Récupère les données pour un graph par domaine
+     * @param idEleve
+     * @param groupIds
+     * @param idEtablissement
+     * @param idClasse
+     * @param typeClasse
+     * @param idPeriodeString
+     * @param handler
+     */
+    void getDataGraphDomaine(final String idEleve, JsonArray groupIds, final String idEtablissement ,
+                             final String idClasse,final Integer typeClasse, final String idPeriodeString,
+                             final Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Récupère les donnée pour un graph par matière
+     * @param idEleve
+     * @param groupIds
+     * @param idEtablissement
+     * @param idClasse
+     * @param typeClasse
+     * @param idPeriodeString
+     * @param handler
+     */
+    void getDataGraph(final String idEleve, JsonArray groupIds, final String idEtablissement ,
+                             final String idClasse,final Integer typeClasse, final String idPeriodeString,
+                             final Handler<Either<String, JsonArray>> handler);
 }

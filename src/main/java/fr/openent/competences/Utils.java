@@ -37,6 +37,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static fr.openent.competences.Competences.MOYENNE;
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -202,8 +203,7 @@ public class Utils {
                 .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
                 .put("idEleves", new fr.wseduc.webutils.collections.JsonArray().add(idEleve));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action,DELIVERY_OPTIONS,
                 handlerToAsyncHandler (new Handler<Message<JsonObject>>() {
                     @Override
                     public void handle(Message<JsonObject> message) {
@@ -288,7 +288,25 @@ public class Utils {
             }
         }));
     }
+    public static void getElevesClasse(EventBus eb, String idClasse, Long idPeriode,
+                                        final Handler<Either<String, JsonArray>> handler) {
+        JsonObject action = new JsonObject()
+                .put("action", "classe.getElevesClasses")
+                .put("idPeriode", idPeriode)
+                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
+                JsonObject body = message.body();
+
+                if ("ok".equals(body.getString("status"))) {
+                    JsonArray queryResult = body.getJsonArray("results");
+                    handler.handle(new Either.Right<>(queryResult));
+                } else {
+                    handler.handle(new Either.Left<>(body.getString("message")));
+                    log.error("getElevesClasses : " + body.getString("message"));
+                }
+        }));
+    }
     /**
      * Recupere les informations relatives a chaque eleve dont l'identifiant est passe en parametre, et cree un objet
      * Eleve correspondant a cet eleve.
@@ -704,4 +722,13 @@ public class Utils {
         return periode;
     }
 
+    public static Boolean isNotNull(Object o){
+        return o != null;
+    }
+
+    public static Boolean isNull(Object o){
+        return o == null;
+    }
+
 }
+

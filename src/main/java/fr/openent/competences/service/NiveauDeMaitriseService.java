@@ -35,21 +35,29 @@ public interface NiveauDeMaitriseService extends CrudService {
      * @param idCycle           identifiant du cycle (opt)
      * @param handler handler portant le resultat de la requête
      */
-    public void getNiveauDeMaitrise(String idEtablissement, Long idCycle, Handler<Either<String, JsonArray>> handler);
+    void getNiveauDeMaitrise(String idEtablissement, Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Recupère l'ensemble des couleurs des niveaux de maitrise pour  un cycle
      * @param Cycle
      * @param handler
      */
-    public void getNiveauDeMaitriseofCycle(Long Cycle, Handler<Either<String, JsonArray>> handler);
+    void getNiveauDeMaitriseofCycle(Long Cycle, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * Recupère l'ensemble des couleurs des niveaux de maitrise pour  une classe
+     * @param idClasse
+     * @param handler
+     */
+    void getNiveauDeMaitriseofClasse(String  idClasse, Handler<Either<String, JsonArray>> handler);
+
     /**
      * Créer un niveau de maitrise pour un établissement
      * @param maitrise objet contenant les informations relative à la note
      * @param user utilisateur
      * @param handler handler portant le résultat de la requête
      */
-    public void createMaitrise(final JsonObject maitrise, final UserInfos user, final Handler<Either<String, JsonArray>> handler);
+    void createMaitrise(final JsonObject maitrise, final UserInfos user, final Handler<Either<String, JsonArray>> handler);
 
     /**
      * Mise à jour d'un niveau de maitrise
@@ -57,7 +65,7 @@ public interface NiveauDeMaitriseService extends CrudService {
      * @param user user
      * @param handler handler portant le resultat de la requête
      */
-    public void update(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void update(JsonObject data, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * Suppression d'un niveau de maitrise
@@ -65,7 +73,7 @@ public interface NiveauDeMaitriseService extends CrudService {
      * @param user user
      * @param handler handler portant le résultat de la requête
      */
-    public void delete(String idEtablissement, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void delete(String idEtablissement, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
 
 }

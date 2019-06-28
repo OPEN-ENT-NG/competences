@@ -18,8 +18,10 @@
 package fr.openent.competences;
 
 import fr.openent.competences.controllers.*;
+import fr.openent.competences.service.impl.ArchiveBulletinWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.wseduc.webutils.email.EmailSender;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonArray;
@@ -40,6 +42,7 @@ public class Competences extends BaseServer {
 
     public static JsonObject LSUN_CONFIG;
     public static JsonObject TRANSITION_CONFIG;
+    public static JsonObject NODE_PDF_GENERATOR;
 
     public static final String ANNOTATIONS = "annotations";
     public static final String APPRECIATION_CLASSE_TABLE = "appreciation_classe";
@@ -237,6 +240,7 @@ public class Competences extends BaseServer {
         TRANSITION_CONFIG = config.getJsonObject("transition");
         DELIVERY_OPTIONS = new DeliveryOptions()
                 .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L);
+        NODE_PDF_GENERATOR = config.getJsonObject("node-pdf-generator");
 
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender notification = emailFactory.getSender();
@@ -244,7 +248,8 @@ public class Competences extends BaseServer {
         final EventBus eb = getEventBus(vertx);
         final Storage storage = new StorageFactory(vertx).getStorage();
 
-		addController(new CompetencesController());
+		// Controller
+        addController(new CompetencesController());
         addController(new ServicesController());
         addController(new AnnotationController());
 		addController(new AppreciationController());
@@ -252,15 +257,7 @@ public class Competences extends BaseServer {
 		addController(new CompetenceController(eb));
 		addController(new CompetenceNoteController(eb));
 		addController(new ModaliteController());
-		addController(new ExportBulletinController(eb));
-
-
-        // devoir controller
-        DevoirController devoirController = new DevoirController(eb);
-        SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE, new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
-        devoirController.setCrudService(devoirSqlCrudService);
-        devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions, null));
-        addController(devoirController);
+		addController(new ExportBulletinController(eb,storage));
 		addController(new DomaineController(eb));
 		addController(new EnseignementController(eb));
 		addController(new ExportPDFController(eb, notification, storage));
@@ -272,13 +269,24 @@ public class Competences extends BaseServer {
 		addController(new UtilsController(storage));
         addController(new BilanPeriodiqueController(eb));
         addController(new MatiereController(eb));
+        addController(new ElementBilanPeriodiqueController(eb));
+        addController(new EventBusController());
 
-		addController(new EventBusController());
+        // Devoir Controller
+        DevoirController devoirController = new DevoirController(eb);
+        SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
+                new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
+        devoirController.setCrudService(devoirSqlCrudService);
+        devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
+                null));
+        addController(devoirController);
 
+        // Repository Events
         setRepositoryEvents(new CompetenceRepositoryEvents(eb));
 
-        addController(new ElementBilanPeriodiqueController(eb));
-
+        // Worker
+        log.info("WORKER : "+ ArchiveBulletinWorker.class.getSimpleName());
+        vertx.deployVerticle(ArchiveBulletinWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
 }

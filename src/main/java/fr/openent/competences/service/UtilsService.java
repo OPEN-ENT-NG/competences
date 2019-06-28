@@ -19,6 +19,7 @@ package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.user.UserInfos;
 import io.vertx.core.Handler;
@@ -76,7 +77,6 @@ public interface UtilsService {
      * @param handler handler portant la résultat de la requête
      */
     void getEnfants(String id, Handler<Either<String, JsonArray>> handler);
-
     /**
      * Fonction de calcul générique de la moyenne
      * La formule suivante est utilisée :(SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
@@ -185,6 +185,13 @@ public interface UtilsService {
      */
     void getPeriodes(List<String> idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler);
 
+    /**
+     *
+     * @param idClasse
+     * @param idEtablissement
+     * @param handler
+     */
+    void getPeriodes(JsonArray idClasse, String idEtablissement, Handler<Either<String,JsonArray>> handler);
     /**
      * Ajouter un élement concernant les absences ou retard d'un élève sur une  période donnée
      * @param idEleve

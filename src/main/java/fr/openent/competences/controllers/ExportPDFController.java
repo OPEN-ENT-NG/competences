@@ -39,6 +39,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -310,95 +311,95 @@ public class ExportPDFController extends ControllerHelper {
                                 // Récupération de la liste des devoirs de la personne avec ses notes associées
                                 devoirService.listDevoirs(idUser, idEtablissement, idClasse, null,
                                         idPeriode,false, new Handler<Either<String, JsonArray>>() {
-                                    @Override
-                                    public void handle(final Either<String, JsonArray> eventListDevoirs) {
-                                        if (eventListDevoirs.isRight()) {
+                                            @Override
+                                            public void handle(final Either<String, JsonArray> eventListDevoirs) {
+                                                if (eventListDevoirs.isRight()) {
 
-                                            // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
-                                            final JsonArray devoirsJSON = eventListDevoirs.right().getValue();
-                                            final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
-                                            final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
-                                            for (int i = 0; i < devoirsJSON.size(); i++) {
-                                                JsonObject devoir = devoirsJSON.getJsonObject(i);
-                                                idMatieres.add(devoir.getValue("id_matiere"));
-                                                idEnseignants.add(devoir.getValue("owner"));
-                                            }
-                                            // récupération de l'ensemble des matières de l'élève
-
-                                            JsonObject action = new JsonObject()
-                                                    .put("action", "matiere.getMatieres")
-                                                    .put("idMatieres", idMatieres);
-
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                                                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                @Override
-                                                public void handle(Message<JsonObject> message) {
-                                                    JsonObject body = message.body();
-
-                                                    if ("ok".equals(body.getString("status"))) {
-                                                        JsonArray r = body.getJsonArray("results");
-                                                        final ArrayList<String> classesFieldOfStudy = new ArrayList<String>();
-                                                        String key = new String();
-                                                        JsonObject f = new JsonObject();
-                                                        final JsonArray matieres = r;
-
-                                                        for (int i = 0; i < r.size(); i++) {
-                                                            JsonObject o = r.getJsonObject(i);
-                                                            key = classeEleve + "$" + o.getString("externalId");
-                                                            classesFieldOfStudy.add(key);
-                                                        }
-
-
-                                                        // recuperation etablissement
-                                                        utilsService.getStructure(idEtablissement, new Handler<Either<String, JsonObject>>() {
-
-                                                            @Override
-                                                            public void handle(Either<String, JsonObject> eventStructure) {
-                                                                if (eventStructure.isRight()) {
-                                                                    final JsonObject etabJSON = eventStructure.right().getValue().getJsonObject("s").getJsonObject("data");
-                                                                    final JsonObject periodeJSON = new JsonObject();
-
-                                                                    if (null != params.get("idTypePeriode")
-                                                                            && null != params.get("ordrePeriode")) {
-                                                                        final Long idTypePeriode =
-                                                                                Long.parseLong(params.get("idTypePeriode"));
-                                                                        final Long ordrePeriode =
-                                                                                Long.parseLong(params.get("ordrePeriode"));
-                                                                        StringBuilder keyI18nPeriodeType =
-                                                                                new StringBuilder()
-                                                                                        .append("viescolaire.periode.")
-                                                                                        .append(idTypePeriode);
-                                                                        String libellePeriode = I18n.getInstance()
-                                                                                .translate(keyI18nPeriodeType.toString(),
-                                                                                        getHost(request),
-                                                                                        I18n.acceptLanguage(request));
-                                                                        libellePeriode += (" " + ordrePeriode);
-                                                                        periodeJSON.put("libelle", libellePeriode);
-                                                                    } else {
-                                                                        // Construction de la période année
-                                                                        periodeJSON.put("libelle", "Ann\u00E9e");
-                                                                    }
-                                                                    getEnseignantsMatieres(request, user, matieres,
-                                                                            classeEleve, idEnseignants, devoirsJSON,
-                                                                            periodeJSON, userJSON, etabJSON);
-                                                                }
-                                                            }
-
-                                                        }); // fin getPeriode
-
-
-                                                    } else {
-                                                        leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
+                                                    // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
+                                                    final JsonArray devoirsJSON = eventListDevoirs.right().getValue();
+                                                    final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
+                                                    final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
+                                                    for (int i = 0; i < devoirsJSON.size(); i++) {
+                                                        JsonObject devoir = devoirsJSON.getJsonObject(i);
+                                                        idMatieres.add(devoir.getValue("id_matiere"));
+                                                        idEnseignants.add(devoir.getValue("owner"));
                                                     }
+                                                    // récupération de l'ensemble des matières de l'élève
+
+                                                    JsonObject action = new JsonObject()
+                                                            .put("action", "matiere.getMatieres")
+                                                            .put("idMatieres", idMatieres);
+
+                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                            handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+                                                                @Override
+                                                                public void handle(Message<JsonObject> message) {
+                                                                    JsonObject body = message.body();
+
+                                                                    if ("ok".equals(body.getString("status"))) {
+                                                                        JsonArray r = body.getJsonArray("results");
+                                                                        final ArrayList<String> classesFieldOfStudy = new ArrayList<String>();
+                                                                        String key = new String();
+                                                                        JsonObject f = new JsonObject();
+                                                                        final JsonArray matieres = r;
+
+                                                                        for (int i = 0; i < r.size(); i++) {
+                                                                            JsonObject o = r.getJsonObject(i);
+                                                                            key = classeEleve + "$" + o.getString("externalId");
+                                                                            classesFieldOfStudy.add(key);
+                                                                        }
+
+
+                                                                        // recuperation etablissement
+                                                                        utilsService.getStructure(idEtablissement, new Handler<Either<String, JsonObject>>() {
+
+                                                                            @Override
+                                                                            public void handle(Either<String, JsonObject> eventStructure) {
+                                                                                if (eventStructure.isRight()) {
+                                                                                    final JsonObject etabJSON = eventStructure.right().getValue().getJsonObject("s").getJsonObject("data");
+                                                                                    final JsonObject periodeJSON = new JsonObject();
+
+                                                                                    if (null != params.get("idTypePeriode")
+                                                                                            && null != params.get("ordrePeriode")) {
+                                                                                        final Long idTypePeriode =
+                                                                                                Long.parseLong(params.get("idTypePeriode"));
+                                                                                        final Long ordrePeriode =
+                                                                                                Long.parseLong(params.get("ordrePeriode"));
+                                                                                        StringBuilder keyI18nPeriodeType =
+                                                                                                new StringBuilder()
+                                                                                                        .append("viescolaire.periode.")
+                                                                                                        .append(idTypePeriode);
+                                                                                        String libellePeriode = I18n.getInstance()
+                                                                                                .translate(keyI18nPeriodeType.toString(),
+                                                                                                        getHost(request),
+                                                                                                        I18n.acceptLanguage(request));
+                                                                                        libellePeriode += (" " + ordrePeriode);
+                                                                                        periodeJSON.put("libelle", libellePeriode);
+                                                                                    } else {
+                                                                                        // Construction de la période année
+                                                                                        periodeJSON.put("libelle", "Ann\u00E9e");
+                                                                                    }
+                                                                                    getEnseignantsMatieres(request, user, matieres,
+                                                                                            classeEleve, idEnseignants, devoirsJSON,
+                                                                                            periodeJSON, userJSON, etabJSON);
+                                                                                }
+                                                                            }
+
+                                                                        }); // fin getPeriode
+
+
+                                                                    } else {
+                                                                        leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
+                                                                    }
+                                                                }
+                                                            }));
+
+                                                } else {
+                                                    leftToResponse(request, eventListDevoirs.left());
                                                 }
-                                            }));
 
-                                        } else {
-                                            leftToResponse(request, eventListDevoirs.left());
-                                        }
-
-                                    } // fin handle listDevoirs
-                                }); // fin lisDevoirs
+                                            } // fin handle listDevoirs
+                                        }); // fin lisDevoirs
                             }
                         }
                     }); // fin récupération élève
@@ -2651,89 +2652,22 @@ public class ExportPDFController extends ControllerHelper {
     @Post("/export/bulletins")
     @SecuredAction(value = "export.bulletins.periodique", type = ActionType.WORKFLOW)
     public void exportBulletins(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-            @Override
-            public void handle(JsonObject params) {
-                Long idPeriode = params.getLong(ID_PERIODE_KEY);
-                JsonArray idStudents = params.getJsonArray("idStudents");
+        RequestUtils.bodyToJson(request,  params -> {
+            Long idPeriode = params.getLong(ID_PERIODE_KEY);
+            JsonArray idStudents = params.getJsonArray("idStudents");
+            String idClasse = params.getString(ID_CLASSE_KEY);
+            String idEtablissement = params.getString(ID_STRUCTURE_KEY);
+            Future<JsonArray> elevesFuture = Future.future();
+            final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
+            final AtomicBoolean answered = new AtomicBoolean();
 
-                Boolean showBilanPerDomaines = params.getBoolean("showBilanPerDomaines");
-                Boolean threeLevel = params.getBoolean("threeLevel");
-                Boolean threeMoyenneClasse = params.getBoolean("threeMoyenneClasse");
-                Boolean threeMoyenneEleve = params.getBoolean("threeMoyenneEleve");
-                Boolean threePage = params.getBoolean("threePage");
+            final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
+                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, params);
 
-                String idClasse = params.getString(ID_CLASSE_KEY);
-                String idEtablissement = params.getString(ID_STRUCTURE_KEY);
-                Boolean useModel = params.getBoolean(USE_MODEL_KEY);
+            exportBulletinService.runExportBulletin(idEtablissement,  idClasse,  idStudents,  idPeriode,  params,
+                    elevesFuture , elevesMap, answered,   getHost(request),I18n.acceptLanguage(request),
+                    finalHandler, null);
 
-                // On récupère le tableau de conversion des compétences notes pour Lire le positionnement
-                Future<JsonArray> tableauDeConversionFuture = Future.future();
-                competenceNoteService.getConversionNoteCompetence(idEtablissement, idClasse,
-                        tableau -> FormateFutureEvent.formate(tableauDeConversionFuture, tableau));
-
-                // On récupère les informations basic des élèves (nom, Prenom, niveau, date de naissance,  ...)
-                JsonObject action = new JsonObject()
-                        .put("action", "eleve.getInfoEleve")
-                        .put(ID_ETABLISSEMENT_KEY, idEtablissement)
-                        .put("idEleves", idStudents);
-                Future<JsonArray> elevesFuture = Future.future();
-                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
-                        message -> {
-                            if ("ok".equals(message.body().getString("status"))) {
-                                elevesFuture.complete( message.body().getJsonArray("results"));
-
-                            }
-                            else {
-                                elevesFuture.fail(message.body().getString("message"));
-                            }
-                        }));
-                // Si on doit utiliser un model de libelle, On le récupère
-                Future<JsonArray> modelsLibelleFuture = Future.future();
-                Long idModel;
-                if(useModel) {
-                    idModel = params.getLong("idModel");
-                    new DefaultMatiereService(eb).getModels(idEtablissement, idModel, models -> {
-                        FormateFutureEvent.formate(modelsLibelleFuture, models);
-                    });
-                }
-                else {
-                    modelsLibelleFuture.complete(new JsonArray());
-                }
-                // Lorsqu'on a le suivi des Acquis et le tableau de conversion, on lance la récupération
-                // complète des données de l'export
-                CompositeFuture.all(tableauDeConversionFuture, elevesFuture, modelsLibelleFuture)
-                        .setHandler( (event -> {
-                            if (event.succeeded()) {
-                                final JsonArray eleves = elevesFuture.result();
-                                final JsonObject classe =
-                                        new JsonObject().put("tableauDeConversion", tableauDeConversionFuture.result());
-
-                                if(useModel) {
-                                    JsonArray models = modelsLibelleFuture.result();
-                                    if(!models.isEmpty()){
-                                        models = models.getJsonObject(0).getJsonArray(SUBJECTS);
-                                    }
-                                    classe.put("models", models);
-                                }
-
-                                classe.put("idClasse", idClasse);
-
-                                final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
-                                final AtomicBoolean answered = new AtomicBoolean();
-                                final Handler<Either<String, JsonObject>> finalHandler
-                                        = exportBulletinService.getFinalBulletinHandler(request, elevesMap, vertx,
-                                        config, eleves.size(), answered, params);
-
-                                exportBulletinService.buildDataForStudent(request, answered, eleves,
-                                         elevesMap,  idPeriode,  params, classe,  showBilanPerDomaines, finalHandler);
-                            }
-                            else {
-                                Renders.notFound(request, event.cause().getMessage());
-                            }
-                        }
-                        ));
-            }
         });
     }
 

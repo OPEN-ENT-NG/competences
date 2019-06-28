@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -287,10 +288,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .append(" GROUP BY elt_bilan_periodique.id) ");
         params.add(idEtablissement);
 
-        Sql.getInstance().prepared(query.toString(), params,
-                new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                        .getInteger("timeout-transaction") * 1000L),
-                SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params,DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
 
@@ -298,12 +296,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
     public void getElementsBilanPeriodique (String idEnseignant, List<String> idClasse, String idEtablissement,
                                             Handler<Either<String, JsonArray>> handler) {
 
-        getElementBilanPeriodique(idEnseignant,
-                idClasse,
-                idEtablissement,
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
+        getElementBilanPeriodique(idEnseignant, idClasse, idEtablissement, event -> {
                         if (event.isRight()) {
                             JsonArray result = event.right().getValue();
 
@@ -343,7 +336,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                         } else{
                             handler.handle(event.left());
                         }
-                    }
                 });
     }
 
@@ -356,10 +348,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .put("action", "matiere.getMatieres")
                 .put("idMatieres", new fr.wseduc.webutils.collections.JsonArray(idMatieres));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler(message -> {
                         JsonObject body = message.body();
 
                         if ("ok".equals(body.getString("status"))) {
@@ -381,7 +371,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                             log.error(_message);
                             handler.handle(new Either.Left<>(_message));
                         }
-                    }
                 }));
     }
 
@@ -393,10 +382,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .put("idClasses",
                         new fr.wseduc.webutils.collections.JsonArray(idClasses));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler( message -> {
                         JsonObject body = message.body();
 
                         if ("ok".equals(body.getString("status"))) {
@@ -422,7 +409,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                             log.error(_message);
                             handler.handle(new Either.Left<>(_message));
                         }
-                    }
                 }));
 
     }
@@ -437,12 +423,8 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                 .put("action", "user.getUsers")
                 .put("idUsers", idUsers);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                handlerToAsyncHandler(
-                        new Handler<Message<JsonObject>>() {
-                            @Override
-                            public void handle(
-                                    Message<JsonObject> message) {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler( message -> {
                                 JsonObject body = message.body();
 
                                 if ("ok".equals(body
@@ -524,7 +506,6 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                     log.error(_message);
                                     handler.handle(new Either.Left<>(_message));
                                 }
-                            }
                         }));
     }
     @Override

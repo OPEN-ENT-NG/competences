@@ -275,7 +275,7 @@ public class UtilsController extends ControllerHelper {
                     Renders.renderJson(request, uploaded);
                 } else {
                     badRequest(request, "Format de fichier incorrect");
-}
+                }
 
             });
         });
