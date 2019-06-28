@@ -133,7 +133,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                                 classeIdsEleves.put(classId, vListIdUsersClasse);
                                                             }
                                                         }
-
                                                     }
                                                 } else {
                                                     log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
@@ -179,7 +178,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 "CASE nb_periode WHEN 0 THEN FALSE ELSE TRUE END as has_periode, " +
                 "CASE nb_transition WHEN 0 THEN FALSE ELSE TRUE END as has_transition FROM ( " + queryNbDevoir +" ) as t_nbdevoir , "+
                 "( " + queryNbPeriode + ") as t_nbperiode, ( " + queryNbTransition + ") as t_nbtransition " +
-                "WHERE nb_devoir = 0 OR nb_periode = 0 OR nb_transition > 0 ";
+                "WHERE nb_devoir = 0 OR nb_periode = 0 OR nb_transition = 0 ";
 
 
         valuesCount.add(idStructureATraiter).add(idStructureATraiter).add(idStructureATraiter);
@@ -571,24 +570,58 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
             List<String> vListEleves = classeIdsEleves.get(idClasse);
             if(null != vListEleves && vListEleves.size() > 0) {
-                values = new fr.wseduc.webutils.collections.JsonArray();
+                JsonArray valuesMaxCompetence = new fr.wseduc.webutils.collections.JsonArray();
                 for (String idEleve : vListEleves) {
-                    values.add(idEleve);
+                    valuesMaxCompetence.add(idEleve);
                 }
-                // Ajout du max des compétences pour chaque élève
-                String queryInsertMaxCompetenceNote = "" +
+                for (String idEleve : vListEleves) {
+                    valuesMaxCompetence.add(idEleve);
+                }
+
+                String queryMaxCompNoteByPeriode = "(SELECT competences_notes.id_competence, " +
+                        "MAX(competences_notes.evaluation) AS max_comp, competences_notes.id_eleve, devoirs.id_periode "+
+                        "FROM notes.competences_notes " +
+                        "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
+                        "LEFT JOIN notes.competence_niveau_final " +
+                        "ON devoirs.id_periode = competence_niveau_final.id_periode " +
+                        "AND competences_notes.id_competence = competence_niveau_final.id_competence " +
+                        "AND competences_notes.id_eleve = competence_niveau_final.id_eleve " +
+                        "WHERE competences_notes.owner != '" + _id_user_transition_annee +
+                        "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
+                        " AND competence_niveau_final.id_eleve IS NULL " +
+                        "GROUP BY competences_notes.id_competence, competences_notes.id_eleve, devoirs.id_periode)";
+
+                String queryMaxNiveauFinalByPeriode = "(SELECT competence_niveau_final.id_competence,  " +
+                        "MAX(competence_niveau_final.niveau_final) AS max_comp ,competence_niveau_final.id_eleve, " +
+                        "competence_niveau_final.id_periode FROM notes.competences_notes " +
+                        "INNER JOIN notes.devoirs ON devoirs.id = competences_notes.id_devoir " +
+                        "INNER JOIN notes.competence_niveau_final " +
+                        "ON devoirs.id_periode = competence_niveau_final.id_periode " +
+                        "AND competences_notes.id_competence = competence_niveau_final.id_competence "+
+                        "AND competences_notes.id_eleve = competence_niveau_final.id_eleve " +
+                        "WHERE competences_notes.owner != '" + _id_user_transition_annee +
+                        "' AND competences_notes.id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
+                        " GROUP BY competence_niveau_final.id_competence, competence_niveau_final.id_eleve, competence_niveau_final.id_periode)";
+
+                // Ajout du max des compétences ou du niveau final pour chaque élève
+                String queryInsertMaxCompetenceNoteG = "" +
                         "INSERT INTO notes.competences_notes(id, id_devoir, id_competence, evaluation, owner, id_eleve) " +
-                        " (" +
-                        "  SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) + " ,id_competence,max(evaluation),'" + _id_user_transition_annee + "',id_eleve" +
+                        "(" +
+                       /* "  SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) + " ,id_competence,max(evaluation),'" + _id_user_transition_annee + "',id_eleve" +
                         "  FROM notes.competences_notes" +
                         "  WHERE " +
                         "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
                         "  GROUP BY id_competence,id_eleve" +
-                        " )";
+                        " )"; */
+                       "SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) +
+                        ", id_competence, MAX(max_comp), '" + _id_user_transition_annee + "',id_eleve " +
+                        "FROM (" + queryMaxCompNoteByPeriode +
+                        " UNION ALL" + queryMaxNiveauFinalByPeriode +
+                        ") AS tmax GROUP BY id_competence, id_eleve )";
 
                 statements.add(new JsonObject()
-                        .put("statement", queryInsertMaxCompetenceNote)
-                        .put("values", values)
+                        .put("statement", queryInsertMaxCompetenceNoteG)
+                        .put("values", valuesMaxCompetence)
                         .put("action", "prepared"));
 
                 // Suppression Dispenses domaine
@@ -598,10 +631,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         "  FROM notes.dispense_domaine_eleve" +
                         "  WHERE " +
                         "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray());
-
+               JsonArray valuesDeleteDispenseEleve = new fr.wseduc.webutils.collections.JsonArray();
+                for (String idEleve : vListEleves) {
+                    valuesDeleteDispenseEleve.add(idEleve);
+                }
                 statements.add(new JsonObject()
                         .put("statement", querySuppressionDispenseDomaine)
-                        .put("values", values)
+                        .put("values", valuesDeleteDispenseEleve)
                         .put("action", "prepared"));
             }
         }
