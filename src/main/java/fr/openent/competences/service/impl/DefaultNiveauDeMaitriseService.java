@@ -20,6 +20,9 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.NiveauDeMaitriseService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -30,6 +33,7 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
 
@@ -37,6 +41,9 @@ import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
  * Created by anabah on 30/08/2017.
  */
 public class DefaultNiveauDeMaitriseService extends SqlCrudService implements NiveauDeMaitriseService {
+
+    protected static final Logger log = LoggerFactory.getLogger(DefaultExportService.class);
+
 
 
     public DefaultNiveauDeMaitriseService() {
@@ -71,7 +78,8 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
         query.append(" ORDER BY ordre");
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                .getInteger("timeout-transaction") * 1000L), validResultHandler(handler));
     }
 
     public void getNiveauDeMaitriseofCycle(Long Cycle, Handler<Either<String, JsonArray>> handler){

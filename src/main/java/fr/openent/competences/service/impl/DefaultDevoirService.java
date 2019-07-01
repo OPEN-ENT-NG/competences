@@ -904,7 +904,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.delete(query.length() - 3, query.length());
 
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                .getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
 
     @Override

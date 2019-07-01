@@ -371,27 +371,22 @@ public class DefaultExportService implements ExportService  {
     @Override
     public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve, final String[] idGroupes,
                                     String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
-                                    Long idPeriodeType, Boolean isCycle, final Handler<Either<String, JsonObject>> handler) {
-
+                                    Long idPeriodeType, Boolean isCycle, final JsonArray enseignementsOrdered,  final JsonArray domainesRacines, final Handler<Either<String, JsonObject>> handler) {
         final AtomicBoolean answered = new AtomicBoolean();
         final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
         final JsonArray maitriseArray = new fr.wseduc.webutils.collections.JsonArray();
-        final JsonArray enseignementArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray devoirsArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray competencesArray = new fr.wseduc.webutils.collections.JsonArray();
-        final JsonArray domainesArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray competencesNotesArray = new fr.wseduc.webutils.collections.JsonArray();
         String[] idMatieresTab = idMatieres.toArray(new String[0]);
 
         final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, idEleve, devoirsArray,
-                maitriseArray, competencesArray, domainesArray, competencesNotesArray,enseignementArray,  answered,byEnseignement, handler);
+                maitriseArray, competencesArray, domainesRacines, competencesNotesArray,enseignementsOrdered,  answered,byEnseignement, handler);
 
         //on recupere la liste des devoirs des classes mais aussi des groupes de l'eleve
         final List<String> idClasseAndFunctionnalGroups = new ArrayList<>();
         Collections.addAll(idClasseAndFunctionnalGroups, idGroupes);
         Collections.addAll(idClasseAndFunctionnalGroups, idFunctionalGroupes);
-
-
         devoirService.listDevoirs(idEleve, idClasseAndFunctionnalGroups.toArray(new String[0]), null,
                 idPeriodeType != null ? new Long[]{idPeriodeType} : null,
                 idEtablissement != null ? new String[]{idEtablissement} : null,
@@ -415,10 +410,6 @@ public class DefaultExportService implements ExportService  {
                                         true,
                                         getIntermediateHandler(idDevoir, competencesNotesArray, finalHandler));
                             }
-                            domaineService.getDomainesRacines(idGroupes[0],
-                                    getIntermediateHandler(domainesArray, finalHandler));
-                            enseignementService.getEnseignementsOrdered(
-                                    getIntermediateHandler(enseignementArray, finalHandler));
                         } else if (stringJsonArrayEither.isRight() && stringJsonArrayEither.right().getValue().getValue(0) instanceof String){
                             if (pByEnseignement){
                                 competencesService.getDevoirCompetencesByEnseignement(null,
@@ -430,10 +421,6 @@ public class DefaultExportService implements ExportService  {
                             competenceNoteService.getCompetencesNotes(null, idEleve,
                                     true,
                                     getIntermediateHandler(null, competencesNotesArray, finalHandler));
-                            domaineService.getDomainesRacines(idGroupes[0],
-                                    getIntermediateHandler(domainesArray, finalHandler));
-                            enseignementService.getEnseignementsOrdered(
-                                    getIntermediateHandler(enseignementArray, finalHandler));
                         } else {
                             finalHandler.handle(stringJsonArrayEither.left());
                         }
@@ -443,7 +430,7 @@ public class DefaultExportService implements ExportService  {
             @Override
             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                 if (stringJsonArrayEither.isRight()) {
-                    Long idCycle = new Long( ((JsonObject) stringJsonArrayEither.right().getValue().getJsonObject(0))
+                    Long idCycle = new Long(((JsonObject) stringJsonArrayEither.right().getValue().getJsonObject(0))
                             .getLong("id_cycle"));
 
                     for (int i = 0; i < stringJsonArrayEither.right().getValue().size(); i++) {

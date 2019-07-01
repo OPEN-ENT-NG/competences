@@ -30,6 +30,7 @@ import {
     FilterNotEvaluatedEnseignement
 } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
+import {ErrorsLSU} from "../models/common/ErrorLSU";
 
 declare let _:any;
 
@@ -325,36 +326,32 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     }
                     url += "&idClasse=" + $scope.search.classe.id;
                     url += "&byEnseignement=" + exportByEnseignement;
-                    http().getJson(url + "&json=true")
-                        .error( async (result) => {
-                            await Utils.stopMessageLoader($scope);
-                            $scope.opened.recapEval = true;
-                            console.log(result);
-                            $scope.errorResult(result);
-                            utils.safeApply($scope);
-                        })
-                        .done( async () => {
-
-                            delete $scope.releveComp;
-                            $scope.releveComp = {
-                                textMod: true
-                            };
-                            await httpAxios.get(url, {responseType: 'arraybuffer' }).then(async(data) => {
-                                let blob;
-                                let link = document.createElement('a');
-                                let response = data.data;
-                                blob = new Blob([response]);
-                                link = document.createElement('a');
-                                link.href = window.URL.createObjectURL(blob);
-                                link.download = data.headers['content-disposition'].split('filename=')[1];
-                                document.body.appendChild(link);
-                                link.click();
+                    delete $scope.releveComp;
+                    $scope.releveComp = {
+                        textMod: true
+                    };
+                    await httpAxios.get(url, {responseType: 'arraybuffer' }).then(async(data) => {
+                        let blob;
+                        let link = document.createElement('a');
+                        let response = data.data;
+                        blob = new Blob([response]);
+                        link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = data.headers['content-disposition'].split('filename=')[1];
+                        document.body.appendChild(link);
+                        link.click();
+                        await Utils.stopMessageLoader($scope);
+                        notify.success('evaluations.export.bulletin.success');
+                    })
+                        .catch(async(data) =>{
+                            if(data.response != undefined && data.response.status === 400){
                                 await Utils.stopMessageLoader($scope);
-                                notify.success('evaluations.export.bulletin.success');
-                            });
-
+                                $scope.opened.recapEval = true;
+                                console.log(data.response.data);
+                                $scope.errorResult(data.response.data);
+                                utils.safeApply($scope);
+                            }
                         });
-
                     break;
                 }
                 case 'printTabMoys': {

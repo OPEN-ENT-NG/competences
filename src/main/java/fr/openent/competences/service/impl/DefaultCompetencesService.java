@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.CompetencesService;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.DeliveryOptions;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -34,8 +35,7 @@ import io.vertx.core.logging.LoggerFactory;
 import java.util.Arrays;
 import java.util.Map;
 
-import static fr.openent.competences.Competences.COMPETENCES_SCHEMA;
-import static fr.openent.competences.Competences.PERSO_COMPETENCES_TABLE;
+import static fr.openent.competences.Competences.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
@@ -202,7 +202,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " GROUP BY compDevoir.id, COALESCE(compPerso.nom, comp.nom), comp.id_type, comp.id_parent, comp.id" +
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
-        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId).add(devoirId),
+        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId).add(devoirId),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                        .getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));
     }
 
@@ -219,7 +220,8 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " WHERE compDevoir.id_devoir = ?" +
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
-        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId),
+        Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                        .getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));
     }
 

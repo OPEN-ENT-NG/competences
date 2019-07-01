@@ -90,6 +90,7 @@ public class ExportPDFController extends ControllerHelper {
     private DispenseDomaineEleveService dispenseDomaineEleveService;
     private AppreciationService appreciationService;
     private ExportBulletinService exportBulletinService;
+    private EnseignementService enseignementService;
     private final Storage storage;
 
     public ExportPDFController(EventBus eb, EmailSender notification, Storage storage) {
@@ -107,6 +108,7 @@ public class ExportPDFController extends ControllerHelper {
         eleveEnseignementComplementService = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
         appreciationService = new DefaultAppreciationService(Competences.COMPETENCES_SCHEMA, Competences.APPRECIATIONS_TABLE);
+        enseignementService = new DefaultEnseignementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENTS_TABLE);
         this.storage = storage;
     }
 
@@ -1684,8 +1686,30 @@ public class ExportPDFController extends ControllerHelper {
                                                 JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                                                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
                                                         libellePeriode, json, answered, resultFinal);
-                                                exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), _iGroupesdArr, idEtablissement, listIdMatieres,
-                                                        finalIdPeriode, isCycle, finalHandler);
+                                                List<Future> listeFutures = new ArrayList<>();
+
+                                                Future<JsonArray> domainesRacinesFutures = Future.future();
+                                                domaineService.getDomainesRacines(finalIdClasse, event -> {
+                                                    FormateFutureEvent.formate(domainesRacinesFutures, event);
+                                                });
+                                                listeFutures.add(domainesRacinesFutures);
+
+                                                Future<JsonArray> enseignementOrderedFuture = Future.future();
+                                                enseignementService.getEnseignementsOrdered( event -> {
+                                                    FormateFutureEvent.formate(enseignementOrderedFuture, event);
+                                                });
+                                                listeFutures.add(enseignementOrderedFuture);
+
+                                                CompositeFuture.all(listeFutures).setHandler( event -> {
+                                                    if(event.failed()){
+                                                        leftToResponse(request, new Either.Left<String, Object>(event.toString()));
+                                                        log.error("Récupération des enseignenements future doesn't work : " + event.toString());
+                                                    }else{
+                                                        exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), _iGroupesdArr, idEtablissement, listIdMatieres,
+                                                                finalIdPeriode, isCycle,enseignementOrderedFuture.result(),domainesRacinesFutures.result(), finalHandler);
+                                                    }
+
+                                                });
                                             } else {
                                                 leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                             }
@@ -1746,25 +1770,49 @@ public class ExportPDFController extends ControllerHelper {
                                                                             = getReleveCompetences(request, elevesMap,
                                                                             nomGroupes, matieres,
                                                                             libellePeriode, json, answered, resultFinal);
-                                                                    for (int i = 0; i < eleves.size(); i++) {
-                                                                        String [] _idGroupes = new String[1];
-                                                                        _idGroupes[0] = idGroupes.get(i);
 
-                                                                        JsonObject o = result.getJsonObject(i);
+                                                                    List<Future> listeFutures = new ArrayList<>();
 
-                                                                        JsonArray idManualGroupes = UtilsConvert
-                                                                                .strIdGroupesToJsonArray(o.getValue("idManualGroupes"));
-                                                                        JsonArray idFunctionalGroupes = UtilsConvert
-                                                                                .strIdGroupesToJsonArray(o.getValue("idGroupes"));
+                                                                    Future<JsonArray> domainesRacinesFutures = Future.future();
+                                                                    domaineService.getDomainesRacines(finalIdClasse, event -> {
+                                                                        FormateFutureEvent.formate(domainesRacinesFutures, event);
+                                                                    });
+                                                                    listeFutures.add(domainesRacinesFutures);
 
-                                                                        JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
-                                                                                idManualGroupes);
-                                                                        String[] idGroupesArr =
-                                                                                UtilsConvert.jsonArrayToStringArr(idGroupes);
-                                                                        exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
-                                                                                _idGroupes , idGroupesArr, idEtablissement.get(i),
-                                                                                listIdMatieres, finalIdPeriode, isCycle, finalHandler);
-                                                                    }
+                                                                    Future<JsonArray> enseignementOrderedFuture = Future.future();
+                                                                    enseignementService.getEnseignementsOrdered( event -> {
+                                                                        FormateFutureEvent.formate(enseignementOrderedFuture, event);
+                                                                    });
+                                                                    listeFutures.add(enseignementOrderedFuture);
+
+                                                                    CompositeFuture.all(listeFutures).setHandler( event -> {
+                                                                        if(event.failed()){
+                                                                            leftToResponse(request, new Either.Left<String, Object>(event.toString()));
+                                                                            log.error("Récupération des enseignenements future doesn't work : " + event.toString());
+                                                                        }else{
+                                                                            for (int i = 0; i < eleves.size(); i++) {
+                                                                                String [] _idGroupes = new String[1];
+                                                                                _idGroupes[0] = idGroupes.get(i);
+
+                                                                                JsonObject o = result.getJsonObject(i);
+
+                                                                                JsonArray idManualGroupes = UtilsConvert
+                                                                                        .strIdGroupesToJsonArray(o.getValue("idManualGroupes"));
+                                                                                JsonArray idFunctionalGroupes = UtilsConvert
+                                                                                        .strIdGroupesToJsonArray(o.getValue("idGroupes"));
+
+                                                                                JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
+                                                                                        idManualGroupes);
+                                                                                String[] idGroupesArr =
+                                                                                        UtilsConvert.jsonArrayToStringArr(idGroupes);
+                                                                                exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
+                                                                                        _idGroupes , idGroupesArr, idEtablissement.get(i),
+                                                                                        listIdMatieres, finalIdPeriode, isCycle, enseignementOrderedFuture.result(), domainesRacinesFutures.result(), finalHandler);
+                                                                            }
+                                                                        }
+
+                                                                    });
+
                                                                 } else {
                                                                     leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
                                                                 }

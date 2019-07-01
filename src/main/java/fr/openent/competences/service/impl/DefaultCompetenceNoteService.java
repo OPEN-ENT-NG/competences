@@ -20,6 +20,7 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.eventbus.DeliveryOptions;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -32,6 +33,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
+
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -145,7 +148,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         }
 
         query.append(" ORDER BY id ASC ");
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                .getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
 
     @Override

@@ -25,6 +25,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
@@ -45,6 +46,7 @@ import java.util.regex.Pattern;
 
 
 import static fr.openent.competences.Competences.ID_PERIODE_KEY;
+import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -414,7 +416,8 @@ public class DefaultUtilsService  implements UtilsService {
         for (String id : idClasse) {
             params.add(id);
         }
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
+                .getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
 
     /**
