@@ -1818,6 +1818,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                             leftToResponse(request, new Either.Left<String, Object>(event.toString()));
                                                                             log.error("Récupération des enseignenements future doesn't work : " + event.toString());
                                                                         }else{
+                                                                            log.info("lancement des requêtes pour chaque élève");
                                                                             for (int i = 0; i < eleves.size(); i++) {
                                                                                 String [] _idGroupes = new String[1];
                                                                                 _idGroupes[0] = idGroupes.get(i);
