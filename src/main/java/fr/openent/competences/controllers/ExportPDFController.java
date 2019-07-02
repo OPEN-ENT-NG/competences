@@ -1700,13 +1700,27 @@ public class ExportPDFController extends ControllerHelper {
                                                 });
                                                 listeFutures.add(enseignementOrderedFuture);
 
+                                                Future<JsonArray> competencesFuture = Future.future();
+                                                if (byEnseignement) {
+                                                    competencesService.getAllDevoirCompetencesByEnseignement(idStructure,
+                                                            event -> {
+                                                                FormateFutureEvent.formate(competencesFuture, event);
+                                                            });
+                                                } else {
+                                                    competencesService.getAllDevoirCompetences(idStructure,
+                                                            event -> {
+                                                                FormateFutureEvent.formate(competencesFuture, event);
+                                                            });
+                                                }
+                                                listeFutures.add(competencesFuture);
+
                                                 CompositeFuture.all(listeFutures).setHandler( event -> {
                                                     if(event.failed()){
                                                         leftToResponse(request, new Either.Left<String, Object>(event.toString()));
                                                         log.error("Récupération des enseignenements future doesn't work : " + event.toString());
                                                     }else{
                                                         exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), _iGroupesdArr, idEtablissement, listIdMatieres,
-                                                                finalIdPeriode, isCycle,enseignementOrderedFuture.result(),domainesRacinesFutures.result(), finalHandler);
+                                                                finalIdPeriode, isCycle,enseignementOrderedFuture.result(),domainesRacinesFutures.result(), competencesFuture.result(), finalHandler);
                                                     }
 
                                                 });
@@ -1785,6 +1799,20 @@ public class ExportPDFController extends ControllerHelper {
                                                                     });
                                                                     listeFutures.add(enseignementOrderedFuture);
 
+                                                                    Future<JsonArray> competencesFuture = Future.future();
+                                                                    if (byEnseignement) {
+                                                                        competencesService.getAllDevoirCompetencesByEnseignement(idStructure,
+                                                                                event -> {
+                                                                                    FormateFutureEvent.formate(competencesFuture, event);
+                                                                                });
+                                                                    } else {
+                                                                        competencesService.getAllDevoirCompetences(idStructure,
+                                                                                event -> {
+                                                                                    FormateFutureEvent.formate(competencesFuture, event);
+                                                                                });
+                                                                    }
+                                                                    listeFutures.add(competencesFuture);
+
                                                                     CompositeFuture.all(listeFutures).setHandler( event -> {
                                                                         if(event.failed()){
                                                                             leftToResponse(request, new Either.Left<String, Object>(event.toString()));
@@ -1807,7 +1835,8 @@ public class ExportPDFController extends ControllerHelper {
                                                                                         UtilsConvert.jsonArrayToStringArr(idGroupes);
                                                                                 exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
                                                                                         _idGroupes , idGroupesArr, idEtablissement.get(i),
-                                                                                        listIdMatieres, finalIdPeriode, isCycle, enseignementOrderedFuture.result(), domainesRacinesFutures.result(), finalHandler);
+                                                                                        listIdMatieres, finalIdPeriode, isCycle, enseignementOrderedFuture.result(), domainesRacinesFutures.result(),
+                                                                                        competencesFuture.result(), finalHandler);
                                                                             }
                                                                         }
 

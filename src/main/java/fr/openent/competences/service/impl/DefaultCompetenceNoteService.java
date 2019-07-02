@@ -149,7 +149,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
 
         query.append(" ORDER BY id ASC ");
         Sql.getInstance().prepared(query.toString(), params,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                .getInteger("timeout-transaction") * 2000L), SqlResult.validResultHandler(handler));
+                .getInteger("timeout-transaction") * 4000L), SqlResult.validResultHandler(handler));
     }
 
     @Override
