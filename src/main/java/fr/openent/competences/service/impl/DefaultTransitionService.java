@@ -25,7 +25,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -38,7 +37,6 @@ import java.util.*;
 
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static fr.wseduc.webutils.http.Renders.getHost;
 
 public class DefaultTransitionService extends SqlCrudService implements TransitionService{
     protected static final Logger log = LoggerFactory.getLogger(DefaultTransitionService.class);
@@ -178,7 +176,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 "CASE nb_periode WHEN 0 THEN FALSE ELSE TRUE END as has_periode, " +
                 "CASE nb_transition WHEN 0 THEN FALSE ELSE TRUE END as has_transition FROM ( " + queryNbDevoir +" ) as t_nbdevoir , "+
                 "( " + queryNbPeriode + ") as t_nbperiode, ( " + queryNbTransition + ") as t_nbtransition " +
-                "WHERE nb_devoir = 0 OR nb_periode = 0 OR nb_transition = 0 ";
+                "WHERE nb_devoir = 0 OR nb_periode = 0 OR nb_transition = 0 OR nb_devoir > 0";
 
 
         valuesCount.add(idStructureATraiter).add(idStructureATraiter).add(idStructureATraiter);
@@ -422,7 +420,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             log.warn("WARN : transactions pour la transition année vListIdsGroupesATraiter : Aucun groupe ");
         }
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+
 
         // Sauvegarde BDD : Si le schéma n'existe pas : sera fait à part
         //        String queryCloneNotes ="SELECT notes.clone_schema('notes','notes_2017_2018')";
@@ -430,38 +428,106 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         //        String queryCloneVieSCo ="SELECT notes.clone_schema('viesco','viesco_2017_2018')";
         //        statements.add(new JsonObject().put("statement", queryCloneVieSCo).put("values", values).put("action", "prepared"));
 
-        values = new fr.wseduc.webutils.collections.JsonArray();
+        JsonArray valuesForDeletion = new fr.wseduc.webutils.collections.JsonArray();
         for (String idGroupe:vListIdsGroupesATraiter) {
-            values.add(idGroupe);
+            valuesForDeletion.add(idGroupe);
         }
-        values.add(idStructureATraiter);
+        valuesForDeletion.add(idStructureATraiter);
 
         // Suppresssion : appreciation_matiere_periode
-        supressionTransition(vListIdsGroupesATraiter, statements, values ,"appreciation_matiere_periode");
+        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_CLASSE,
+                vListIdsGroupesATraiter, statements, valuesForDeletion ,
+                Competences.APPRECIATION_MATIERE_PERIODE_TABLE, Competences.ID_PERIODE);
 
         // Suppresssion : element_programme
-        supressionTransition(vListIdsGroupesATraiter, statements, values ,"element_programme");
+        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_CLASSE,
+                vListIdsGroupesATraiter, statements, valuesForDeletion ,
+                Competences.ELEMENT_PROGRAMME_TABLE,Competences.ID_PERIODE);
 
         // Suppresssion : moyenne_finale
-        supressionTransition(vListIdsGroupesATraiter, statements, values ,"moyenne_finale");
-
-        // Suppresssion : moyenne_finale
-        supressionTransition(vListIdsGroupesATraiter, statements, values ,"positionnement");
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_CLASSE,
+                vListIdsGroupesATraiter, statements, valuesForDeletion ,
+                Competences.MOYENNE_FINALE_TABLE, Competences.ID_PERIODE);
 
         // Suppresssion : appreciation_classe
-        supressionTransition(vListIdsGroupesATraiter, statements, values ,"appreciation_classe");
+        supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_CLASSE,
+                vListIdsGroupesATraiter, statements, valuesForDeletion ,
+                Competences.APPRECIATION_CLASSE_TABLE,Competences.ID_PERIODE);
 
         // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
         manageDevoirsAndCompetences(idStructureATraiter, vListIdsGroupesATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter, classeIdsEleves, statements);
 
+        //suppression des elts thematiques créés par l'etab
+        JsonArray valuesIdEtab = new fr.wseduc.webutils.collections.JsonArray();
+        valuesIdEtab.add(idStructureATraiter);
+        suppressionTransitionParamIdStructure(statements,valuesIdEtab,
+                Competences.THEMATIQUE_BILAN_PERIODIQUE_TABLE, Competences.COMPETENCES_SCHEMA);
         // Suppresion des remplacants, notes.users, notes.members, notes.groups, rel_group_cycle, périodes
+
+
+        //Suppresion des tables avec id_eleve
+        for(Map.Entry<String,List<String>> idClassIdsEleve : classeIdsEleves.entrySet()){
+            List<String> idsEleve = idClassIdsEleve.getValue();
+            if(!idsEleve.isEmpty()){
+                JsonArray valuesForSuppressionIdEleve = new fr.wseduc.webutils.collections.JsonArray();
+                for(String idEleve: idsEleve){
+                    valuesForSuppressionIdEleve.add(idEleve);
+                }
+                valuesForSuppressionIdEleve.add(idStructureATraiter);
+
+                supressionTransitionCheckPeriode(Competences.VSCO_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.VSCO_ABSENCES_ET_RETARDS, Competences.ID_PERIODE);
+
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements, valuesForSuppressionIdEleve,
+                        Competences.APPRECIATION_CPE_BILAN_PERIODIQUE, Competences.ID_PERIODE);
+
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE, Competences.ID_PERIODE);
+
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.AVIS_CONSEIL_DE_CLASSE_TABLE, Competences.ID_PERIODE);
+
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.AVIS_CONSEIL_ORIENTATION_TABLE, Competences.ID_PERIODE);
+
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.COMPETENCE_NIVEAU_FINAL, Competences.ID_PERIODE);
+
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve, statements, valuesForSuppressionIdEleve,
+                        Competences.POSITIONNEMENT, Competences.ID_PERIODE);
+
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE,"id_typeperiode");
+
+                //Suppression rel_groupe_appreciation_elt_eleve
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE ,
+                        idsEleve, statements, valuesForSuppressionIdEleve ,
+                        Competences.ELEVES_IGNORES_LSU_TABLE, Competences.ID_PERIODE);
+                //Suppression élèves ignorés LSU
+                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
+                        idsEleve,statements,valuesForSuppressionIdEleve,
+                        Competences.REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE, Competences.ID_PERIODE);
+
+            }
+        }
+
+
+
         deleteUsersGroups(idStructureATraiter, statements);
 
         // Transition pour l'établissement effectué
-        values = new fr.wseduc.webutils.collections.JsonArray();
-        values.add(idStructureATraiter);
+        JsonArray valuesTransition = new fr.wseduc.webutils.collections.JsonArray();
+        valuesTransition.add(idStructureATraiter);
         String queryInsertTransition ="INSERT INTO notes.transition(id_etablissement) VALUES (?)";
-        statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", values).put("action", "prepared"));
+        statements.add(new JsonObject().put("statement", queryInsertTransition).put("values", valuesTransition).put("action", "prepared"));
 
         Sql.getInstance().transaction(statements,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
 
@@ -479,11 +545,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Suppresion des remplacants
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(idStructureATraiter);
-        String queryDeleteRemplacant = "" +
-                "DELETE FROM notes.rel_professeurs_remplacants  " +
-                "WHERE " +
-                " id_etablissement = ? ";
-        statements.add(new JsonObject().put("statement", queryDeleteRemplacant).put("values", values).put("action", "prepared"));
+        suppressionTransitionParamIdStructure(statements,values, "rel_professeurs_remplacants",
+                Competences.COMPETENCES_SCHEMA);
 
         // Suppresion des members, groups et relations groupes d'enseignement - cycle
         values = new fr.wseduc.webutils.collections.JsonArray();
@@ -512,12 +575,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Suppresion des remplacants
         values = new fr.wseduc.webutils.collections.JsonArray();
         values.add(idStructureATraiter);
-        String queryDeletePeriodes = "" +
-                "DELETE FROM viesco.periode  " +
-                " WHERE " +
-                "  id_etablissement = ? ";
-        statements.add(new JsonObject().put("statement", queryDeletePeriodes).put("values", values).put("action", "prepared"));
-
+        suppressionTransitionParamIdStructure(statements, values,"periode", Competences.VSCO_SCHEMA);
     }
 
     /**
@@ -550,9 +608,11 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             values = new fr.wseduc.webutils.collections.JsonArray();
             values.add(true).add(idStructureATraiter).add(idStructureATraiter).add(idClasse);
             String queryInsertDevoir = "INSERT INTO " +
-                    "  notes.devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication, is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) " +
+                    "  notes.devoirs(id,owner, name, id_type, id_etablissement, diviseur, ramener_sur, date_publication," +
+                    " is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) " +
                     "  (" +
-                    "   SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ",'" + _id_user_transition_annee + "','" + classname + entry.getValue() + "', type.id,periode.id_etablissement, 20, false, current_date, false, 1, 0, false, true , MAX(periode.id_type),MAX(periode.timestamp_fn) " +
+                    "   SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ",'" + _id_user_transition_annee + "','" +
+                    classname + entry.getValue() + "', type.id,periode.id_etablissement, 20, false, current_date, false, 1, 0, false, true , MAX(periode.id_type),MAX(periode.timestamp_fn) " +
                     "   FROM notes.type , viesco.periode " +
                     "    WHERE " +
                     "     type.default_type = ? " +
@@ -607,12 +667,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 String queryInsertMaxCompetenceNoteG = "" +
                         "INSERT INTO notes.competences_notes(id, id_devoir, id_competence, evaluation, owner, id_eleve) " +
                         "(" +
-                       /* "  SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) + " ,id_competence,max(evaluation),'" + _id_user_transition_annee + "',id_eleve" +
-                        "  FROM notes.competences_notes" +
-                        "  WHERE " +
-                        "   id_eleve IN " + Sql.listPrepared(vListEleves.toArray()) +
-                        "  GROUP BY id_competence,id_eleve" +
-                        " )"; */
                        "SELECT nextval('notes.competences_notes_id_seq'), " + vMapGroupesIdsDevoirATraiter.get(idClasse) +
                         ", id_competence, MAX(max_comp), '" + _id_user_transition_annee + "',id_eleve " +
                         "FROM (" + queryMaxCompNoteByPeriode +
@@ -678,12 +732,12 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     /**
      * Suppression pour la transition année : appreciation_matiere_periode, element_programme, moyenne_finale, positionnement, appreciation_classe
      * Pour les groupes an paramètres (établissement en cours de traitement)
-     * @param vListIdsGroupesATraiter
+     * * @param vListIdsGroupesATraiter
      * @param statements
      * @param values
      * @param table
      */
-    private void supressionTransition(List<String> vListIdsGroupesATraiter, JsonArray statements, JsonArray values,String table) {
+   /* private void supressionTransition(List<String> vListIdsGroupesATraiter, JsonArray statements, JsonArray values,String table) {
         String query =
                 " DELETE  " +
                         " FROM notes." + table +
@@ -702,5 +756,35 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("statement", query)
                 .put("values", values)
                 .put("action", "prepared"));
+    }*/
+    private void supressionTransitionCheckPeriode(String schema, String idGroupOrIdClassOrIdEleve, List<String> idGroupOrIdELeve, JsonArray statements,
+                                                  JsonArray values, String table, String idPeriode) {
+        String query =
+                " DELETE  " +
+                        " FROM "+ schema +"." + table +
+                        " WHERE  " +
+                        idGroupOrIdClassOrIdEleve + " IN " + Sql.listPrepared(idGroupOrIdELeve.toArray()) +
+                        "  AND EXISTS " +
+                        "   ( " +
+                        "     SELECT 1 " +
+                        "     FROM viesco.periode " +
+                        "     WHERE  " +
+                        "      periode.id_type = " + table +"." + idPeriode +
+                        "      AND periode.id_etablissement = ? " +
+                        "   )";
+
+        statements.add(new JsonObject()
+                .put("statement", query)
+                .put("values", values)
+                .put("action", "prepared"));
+    }
+
+    private void suppressionTransitionParamIdStructure( JsonArray statements, JsonArray values, String table, String schema){
+        String query = "DELETE FROM " + schema + "." + table +
+                " WHERE id_etablissement = ?";
+        statements.add(new JsonObject()
+                .put("statement", query).put("values",values)
+                .put("action", "prepared"));
+
     }
 }

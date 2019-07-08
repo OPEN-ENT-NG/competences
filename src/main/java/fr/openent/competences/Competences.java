@@ -20,18 +20,16 @@ package fr.openent.competences;
 import fr.openent.competences.controllers.*;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
 import fr.wseduc.webutils.email.EmailSender;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.email.EmailFactory;
 import org.entcore.common.http.BaseServer;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.share.impl.SqlShareService;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.core.eventbus.DeliveryOptions;
 import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
-
-import java.math.BigInteger;
 
 public class Competences extends BaseServer {
 
@@ -43,40 +41,69 @@ public class Competences extends BaseServer {
     public static JsonObject LSUN_CONFIG;
     public static JsonObject TRANSITION_CONFIG;
 
-    public static final String NOTES_TABLE = "notes";
     public static final String ANNOTATIONS = "annotations";
+    public static final String APPRECIATION_CLASSE_TABLE = "appreciation_classe";
+    public static final String APPRECIATION_CPE_BILAN_PERIODIQUE = "appreciation_cpe_bilan_periodique";
+    public static final String APPRECIATION_ELT_BILAN_PERIODIQUE_CLASSE_TABLE = "appreciation_elt_bilan_periodique_classe";
+    public static final String APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE = "appreciation_elt_bilan_periodique_eleve";
+    public static final String APPRECIATION_MATIERE_PERIODE_TABLE = "appreciation_matiere_periode";
+    public static final String APPRECIATIONS_TABLE = "appreciations";
+    public static final String AVIS_CONSEIL_DE_CLASSE_TABLE = "avis_conseil_de_classe";
+    public static final String AVIS_CONSEIL_ORIENTATION_TABLE ="avis_conseil_orientation";
+
+    public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
+    public static final String BFC_TABLE = "bilan_fin_cycle";
+
+    public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
     public static final String COMPETENCES_TABLE = "competences";
+    public static final String COMPETENCES_DEVOIRS = "competences_devoirs";
+    public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
+    public static final String CYCLE_TABLE = "cycle";
+
+    public static final String DEVOIR_TABLE = "devoirs";
+    public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
+    public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
+    public static final String DOMAINES_TABLE = "domaines";
+
+    public static final String ELEMENT_PROGRAMME_TABLE = "element_programme";
+    public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
+    public static final String ELEVES_IGNORES_LSU_TABLE = "eleves_ignores_lsu";
+    public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
+    public static final String ENSEIGNEMENTS_TABLE = "enseignements";
+
+    public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
+
+    public static final String MATIERE_TABLE = "matiere";
+    public static final String MODALITES_TABLE = "modalites";
+    public static final String MOYENNE_FINALE_TABLE = "moyenne_finale";
+
+    public static final String NIVEAU_COMPETENCES_TABLE = "niveau_competences";
+    public static final String NIVEAU_ENS_COMPLEMENT = "niveau_ens_complement";
+    public static final String NOTES_TABLE = "notes";
+
     public static final String PERSO_COMPETENCES_TABLE = "perso_competences";
+    public static final String PERSO_NIVEAU_COMPETENCES_TABLE = "perso_niveau_competences";
     public static final String PERSO_COMPETENCES_ORDRE_TABLE = "perso_order_item_enseignement";
+
+    public static final String REL_ANNOTATIONS_DEVOIRS_TABLE = "rel_annotations_devoirs";
     public static final String REL_COMPETENCES_DOMAINES_TABLE = "rel_competences_domaines";
     public static final String REL_COMPETENCES_ENSEIGNEMENTS_TABLE = "rel_competences_enseignements";
-    public static final String COMPETENCES_NOTES_TABLE = "competences_notes";
-    public static final String ENSEIGNEMENTS_TABLE = "enseignements";
-    public static final String DOMAINES_TABLE = "domaines";
-    public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
-    public static final String REL_ANNOTATIONS_DEVOIRS_TABLE = "rel_annotations_devoirs";
-    public static final String APPRECIATIONS_TABLE = "appreciations";
-    public static final String BFC_TABLE = "bilan_fin_cycle";
-    public static final String PERSO_NIVEAU_COMPETENCES_TABLE = "perso_niveau_competences";
-    public static final String NIVEAU_COMPETENCES_TABLE = "niveau_competences";
-    public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
-    public static final String CYCLE_TABLE = "cycle";
-    public static final String BFC_SYNTHESE_TABLE = "bfc_synthese";
-    public static final String SERVICES_TABLE = "services";
-    public static final String MODALITES_TABLE = "modalites";
     public static final String REL_DEVOIRS_GROUPES = "rel_devoirs_groupes";
-    public static final String COMPETENCES_DEVOIRS = "competences_devoirs";
-    public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
-    public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
-    public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
-    public static final String NIVEAU_ENS_COMPLEMENT = "niveau_ens_complement";
-    public static final String DISPENSE_DOMAINE_ELEVE = "dispense_domaine_eleve";
-    public static final String COMPETENCE_NIVEAU_FINAL = "competence_niveau_final";
-    public static final String MATIERE_TABLE = "matiere";
+    public static final String REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE = "rel_groupe_appreciation_elt_eleve";
+    public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
+
+    public static final String SERVICES_TABLE = "services";
+    public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
+
+    public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
+    public static final String TRANSITION_TABLE = "transition";
+
+    public static final String USE_PERSO_NIVEAU_COMPETENCES_TABLE = "use_perso";
+
+    public static final String VSCO_ABSENCES_ET_RETARDS = "absences_et_retards";
     public final static String VSCO_MATIERE_LIBELLE_TABLE = "subject_libelle";
     public final static String VSCO_MODEL_MATIERE_LIBELLE_TABLE = "model_subject_libelle";
     public final static String VSCO_MATIERE_TABLE = "matiere";
-
 
     public static final String SCHEMA_ANNOTATION_UPDATE = "eval_updateAnnotation";
     public static final String SCHEMA_APPRECIATIONS_CREATE = "eval_createAppreciation";
@@ -109,9 +136,6 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
     public static final String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
     public static final String SCHEMA_SERVICE = "eval_service";
-    public static final String DEVOIR_TABLE = "devoirs";
-    public static final String TRANSITION_TABLE = "transition";
-    public static final String DEVOIR_SHARE_TABLE = "devoirs_shares";
     public static final String SCHEMA_COMPETENCE_CREATE = "eval_createCompetence";
     public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
     public static final String SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE = "eval_createDispenseDomaineEleve";
@@ -169,6 +193,7 @@ public class Competences extends BaseServer {
 
     public static final String NAME = "name";
     public static final String ID_ELEVE = "id_eleve";
+    public static final String ID_CLASSE = "id_classe";
     public static final String FORMATIVE = "formative";
     public static final String ID_PERIODE = "id_periode";
     public static final String ID_MATIERE = "id_matiere";
