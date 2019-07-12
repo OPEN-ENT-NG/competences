@@ -36,6 +36,7 @@ import org.entcore.common.sql.SqlResult;
 import java.util.*;
 
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Competences.VSCO_SCHEMA;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class DefaultTransitionService extends SqlCrudService implements TransitionService{
@@ -111,32 +112,49 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                 List<String> vListIdsGroupesATraiter = new ArrayList<>();
                                                 Map<String, String> vMapGroupesATraiter = new HashMap<String, String>();
                                                 if (structure.containsKey("classes")) {
-                                                    JsonArray vJsonArrayClass = structure.getJsonArray("classes");
-                                                    // On récupère la liste des classes à traiter
-                                                    for (int i = 0; i < vJsonArrayClass.size(); i++) {
-                                                        JsonObject vJsonObjectClasse = vJsonArrayClass.getJsonObject(i);
-                                                        if (vJsonObjectClasse.containsKey("classId")) {
-                                                            String classId = vJsonObjectClasse.getString("classId");
-                                                            vListIdsGroupesATraiter.add(classId);
-                                                            vMapGroupesATraiter.put(classId, vJsonObjectClasse.getString("className"));
-                                                            // On récupère la liste des élèves de chaque classe
-                                                            if (vJsonObjectClasse.containsKey("users")) {
-                                                                JsonArray vJsonArrayIdUsersClasse = vJsonObjectClasse.getJsonArray("users");
-                                                                List<String> vListIdUsersClasse = new ArrayList<String>();
-                                                                if (vJsonArrayIdUsersClasse.size() > 0) {
-                                                                    for (int j = 0; j < vJsonArrayIdUsersClasse.size(); j++) {
-                                                                        vListIdUsersClasse.add(vJsonArrayIdUsersClasse.getString(j));
+                                                    List<String> listIdClassWithPeriode = new ArrayList<>();
+                                                    classesWithPeriode(idStructureATraiter, new Handler<Either<String, JsonArray>>() {
+                                                        @Override
+                                                        public void handle(Either<String, JsonArray> event) {
+                                                           if(event.isRight()){
+                                                               JsonArray idClassWithPeriodeja = event.right().getValue();
+                                                               for(int i=0 ; i < idClassWithPeriodeja.size(); i++){
+                                                                   listIdClassWithPeriode.add(idClassWithPeriodeja
+                                                                           .getJsonObject(i).getString("id_classe"));
+                                                               }
+                                                           }
+
+                                                            JsonArray vJsonArrayClass = structure.getJsonArray("classes");
+                                                            // On récupère la liste des classes à traiter si elles ont une période d'initialisée
+                                                            for (int i = 0; i < vJsonArrayClass.size(); i++) {
+                                                                JsonObject vJsonObjectClasse = vJsonArrayClass.getJsonObject(i);
+                                                                if (vJsonObjectClasse.containsKey("classId")) {
+                                                                    String classId = vJsonObjectClasse.getString("classId");
+                                                                    if(listIdClassWithPeriode.contains(classId)) {
+                                                                        vListIdsGroupesATraiter.add(classId);
+                                                                        vMapGroupesATraiter.put(classId, vJsonObjectClasse.getString("className"));
+                                                                        // On récupère la liste des élèves de chaque classe
+                                                                        if (vJsonObjectClasse.containsKey("users")) {
+                                                                            JsonArray vJsonArrayIdUsersClasse = vJsonObjectClasse.getJsonArray("users");
+                                                                            List<String> vListIdUsersClasse = new ArrayList<String>();
+                                                                            if (vJsonArrayIdUsersClasse.size() > 0) {
+                                                                                for (int j = 0; j < vJsonArrayIdUsersClasse.size(); j++) {
+                                                                                    vListIdUsersClasse.add(vJsonArrayIdUsersClasse.getString(j));
+                                                                                }
+                                                                            }
+                                                                            classeIdsEleves.put(classId, vListIdUsersClasse);
+                                                                        }
                                                                     }
                                                                 }
-                                                                classeIdsEleves.put(classId, vListIdUsersClasse);
                                                             }
+                                                            executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter, vMapGroupesATraiter, idStructureATraiter, 1, finalHandler, idStructures);
                                                         }
-                                                    }
+                                                    });
                                                 } else {
                                                     log.warn("transition année :  erreur lors de la récupération des groupes : id Etablissement : " + idStructureATraiter);
                                                     endTransition(nbStructureATraiter, finalHandler, idStructures);
                                                 }
-                                                executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter, vMapGroupesATraiter, idStructureATraiter, 1, finalHandler, idStructures);
+
 
                                             }
                                         }
@@ -182,6 +200,13 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         valuesCount.add(idStructureATraiter).add(idStructureATraiter).add(idStructureATraiter);
 
         Sql.getInstance().prepared(query, valuesCount, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
+    public void classesWithPeriode(String id_etablissement, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT DISTINCT id_classe FROM "+ Competences.VSCO_SCHEMA +".periode WHERE id_etablissement = ?";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id_etablissement);
+        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -457,14 +482,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         // Suppresssion : Conservation des  compétences max par l'élève, suppresion des devoirs
         manageDevoirsAndCompetences(idStructureATraiter, vListIdsGroupesATraiter, vMapGroupesATraiter, vMapGroupesIdsDevoirATraiter, classeIdsEleves, statements);
 
-        //suppression des elts thematiques créés par l'etab
-        JsonArray valuesIdEtab = new fr.wseduc.webutils.collections.JsonArray();
-        valuesIdEtab.add(idStructureATraiter);
-        suppressionTransitionParamIdStructure(statements,valuesIdEtab,
-                Competences.THEMATIQUE_BILAN_PERIODIQUE_TABLE, Competences.COMPETENCES_SCHEMA);
-        // Suppresion des remplacants, notes.users, notes.members, notes.groups, rel_group_cycle, périodes
-
-
         //Suppresion des tables avec id_eleve
         for(Map.Entry<String,List<String>> idClassIdsEleve : classeIdsEleves.entrySet()){
             List<String> idsEleve = idClassIdsEleve.getValue();
@@ -511,6 +528,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE ,
                         idsEleve, statements, valuesForSuppressionIdEleve ,
                         Competences.ELEVES_IGNORES_LSU_TABLE, Competences.ID_PERIODE);
+
                 //Suppression élèves ignorés LSU
                 supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
                         idsEleve,statements,valuesForSuppressionIdEleve,
@@ -519,8 +537,15 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
             }
         }
 
+        JsonArray valuesIdEtab = new fr.wseduc.webutils.collections.JsonArray();
+        valuesIdEtab.add(idStructureATraiter);
+        suppressionTransitionParamIdStructure(statements,valuesIdEtab,
+                Competences.THEMATIQUE_BILAN_PERIODIQUE_TABLE, Competences.COMPETENCES_SCHEMA);
+        //suppression elt_bilan_periodique after appreciation_elt_bilan_periodique_classe et eleve
+        suppressionTransitionParamIdStructure(statements,valuesIdEtab,
+                Competences.ELT_BILAN_PERIODIQUE_TABLE, Competences.COMPETENCES_SCHEMA);
 
-
+        // Suppresion des remplacants, notes.users, notes.members, notes.groups, rel_group_cycle, périodes
         deleteUsersGroups(idStructureATraiter, statements);
 
         // Transition pour l'établissement effectué

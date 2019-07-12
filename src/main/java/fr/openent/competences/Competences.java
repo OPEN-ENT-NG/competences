@@ -68,8 +68,10 @@ public class Competences extends BaseServer {
     public static final String ELEMENT_PROGRAMME_TABLE = "element_programme";
     public static final String ELEVE_ENSEIGNEMENT_COMPLEMENT = "eleve_enseignement_complement";
     public static final String ELEVES_IGNORES_LSU_TABLE = "eleves_ignores_lsu";
+    public static final String ELT_BILAN_PERIODIQUE_TABLE = "elt_bilan_periodique";
     public static final String ENSEIGNEMENT_COMPLEMENT = "enseignement_complement";
     public static final String ENSEIGNEMENTS_TABLE = "enseignements";
+
 
     public static final String LANGUES_CULTURE_REGIONALE = "langues_culture_regionale";
 

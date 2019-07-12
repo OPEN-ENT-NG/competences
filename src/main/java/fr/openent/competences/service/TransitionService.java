@@ -32,7 +32,8 @@ public interface TransitionService  extends CrudService {
      * @param idsStructures
      * @param handler
      */
-    public void transitionAnnee(EventBus eb, final List<String> idsStructures, final Handler<Either<String, JsonArray>> handler);
+    public void transitionAnnee(EventBus eb, final List<String> idsStructures,
+                                final Handler<Either<String, JsonArray>> handler);
 
     /**
      * Effectue la transition d'année pour une structure
@@ -40,7 +41,8 @@ public interface TransitionService  extends CrudService {
      * @param structure
      * @param finalHandler
      */
-    public void transitionAnneeStructure(EventBus eb, final JsonObject structure, final Handler<Either<String, JsonArray>> finalHandler);
+    public void transitionAnneeStructure(EventBus eb, final JsonObject structure,
+                                         final Handler<Either<String, JsonArray>> finalHandler);
 
     /**
      * get conditions to do transition : get nb devoir > 0 has_devoir = true else false,
@@ -50,5 +52,12 @@ public interface TransitionService  extends CrudService {
      * @param handler response
      */
     public void conditionsToDoTransition( String idStructureATraiter, final Handler<Either<String, JsonObject>> handler);
+
+    /**
+     * get ids_classe with periode
+     * @param id_etablissement ids_etablissement
+     * @param handler response
+     */
+    public void classesWithPeriode(String id_etablissement, final Handler<Either<String,JsonArray>> handler);
 
 }
