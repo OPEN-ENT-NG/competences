@@ -207,7 +207,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
     public void classesWithPeriode(String id_etablissement, Handler<Either<String, JsonArray>> handler) {
         String query = "SELECT DISTINCT id_classe FROM "+ Competences.VSCO_SCHEMA +".periode WHERE id_etablissement = ?";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray().add(id_etablissement);
-        Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, values,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                getInteger("timeout-transaction") * 1000L), SqlResult.validResultHandler(handler));
     }
 
     @Override
