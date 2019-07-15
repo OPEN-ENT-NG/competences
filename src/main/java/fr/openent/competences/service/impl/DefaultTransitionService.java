@@ -199,7 +199,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
 
         valuesCount.add(idStructureATraiter).add(idStructureATraiter).add(idStructureATraiter);
 
-        Sql.getInstance().prepared(query, valuesCount, SqlResult.validUniqueResultHandler(handler));
+        Sql.getInstance().prepared(query, valuesCount, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                getInteger("timeout-transaction") * 1000L), SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
@@ -299,7 +300,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                                                                             vListIdsGroupesATraiter.add(vGroupe.getString("id"));
                                                                             vMapGroupesATraiter.put(vGroupe.getString("id"),vGroupe.getString("name"));
                                                                         }
-                                                                        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter, idStructureATraiter, nbStructureATraiter, finalHandler, idStructures);
+                                                                        executeTransitionForStructure(classeIdsEleves, vListIdsGroupesATraiter,vMapGroupesATraiter,
+                                                                                idStructureATraiter, nbStructureATraiter, finalHandler, idStructures);
                                                                     }
                                                                 }
                                                             }));
@@ -621,12 +623,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         String query = "INSERT INTO notes.users(id, username) VALUES (?, ?) ON CONFLICT (id) DO UPDATE SET username = ?";
         statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
 
-//        values = new fr.wseduc.webutils.collections.JsonArray();
-//        values.add(idStructureATraiter).add(_id_periode_transition_annee);
-//        query = "INSERT INTO viesco.periode(id_etablissement, timestamp_dt, timestamp_fn, date_fin_saisie, id_classe,id_type) " +
-//                " VALUES (?, now(), now(), now(), ?, 1)";
-//        statements.add(new JsonObject().put("statement", query).put("values", values).put("action", "prepared"));
-
         for (Map.Entry<String, String> entry : vMapGroupesATraiter.entrySet()){
             String idClasse = entry.getKey();
             // Création des évaluations libre par classe de l'établissement
@@ -754,34 +750,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 .put("action", "prepared"));
     }
 
-    /**
-     * Suppression pour la transition année : appreciation_matiere_periode, element_programme, moyenne_finale, positionnement, appreciation_classe
-     * Pour les groupes an paramètres (établissement en cours de traitement)
-     * * @param vListIdsGroupesATraiter
-     * @param statements
-     * @param values
-     * @param table
-     */
-   /* private void supressionTransition(List<String> vListIdsGroupesATraiter, JsonArray statements, JsonArray values,String table) {
-        String query =
-                " DELETE  " +
-                        " FROM notes." + table +
-                        " WHERE  " +
-                        "  id_classe IN " + Sql.listPrepared(vListIdsGroupesATraiter.toArray()) +
-                        "  AND EXISTS " +
-                        "   ( " +
-                        "     SELECT 1 " +
-                        "     FROM viesco.periode " +
-                        "     WHERE  " +
-                        "      periode.id_type = " + table +".id_periode " +
-                        "      AND periode.id_etablissement = ? " +
-                        "   )";
-
-        statements.add(new JsonObject()
-                .put("statement", query)
-                .put("values", values)
-                .put("action", "prepared"));
-    }*/
     private void supressionTransitionCheckPeriode(String schema, String idGroupOrIdClassOrIdEleve, List<String> idGroupOrIdELeve, JsonArray statements,
                                                   JsonArray values, String table, String idPeriode) {
         String query =
