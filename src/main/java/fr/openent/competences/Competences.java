@@ -18,8 +18,9 @@
 package fr.openent.competences;
 
 import fr.openent.competences.controllers.*;
-import fr.openent.competences.service.impl.ArchiveBulletinWorker;
+import fr.openent.competences.service.impl.ArchiveWorker;
 import fr.openent.competences.service.impl.CompetenceRepositoryEvents;
+import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.email.EmailSender;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.eventbus.DeliveryOptions;
@@ -215,19 +216,24 @@ public class Competences extends BaseServer {
     public static final String NOTES = "notes";
     public static final String HAS_NOTE = "hasNote";
     public static final String NN = "NN";
-    public static String ID_KEY = "id";
-    public static String ID_STRUCTURE_KEY = "idStructure";
-    public static String EXTERNAL_ID_SUBJECT = "external_id_subject";
-    public static String EXTERNAL_ID_KEY = "externalId";
-    public static String TITLE =  "title";
-    public static String LIBELLE =  "libelle";
-    public static String CODE = "code";
-    public static String SUBJECTS = "subjects";
-    public static String STATUS = "status";
-    public static String RESULTS = "results";
-    public static String OK = "ok";
-    public static String MESSAGE = "message";
-    public static String LIBELLE_MATIERE = "libelleMatiere";
+    public static final String ID_KEY = "id";
+    public static final String ID_STRUCTURE_KEY = "idStructure";
+    public static final String EXTERNAL_ID_SUBJECT = "external_id_subject";
+    public static final String EXTERNAL_ID_KEY = "externalId";
+    public static final String TITLE =  "title";
+    public static final String LIBELLE =  "libelle";
+    public static final String CODE = "code";
+    public static final String SUBJECTS = "subjects";
+    public static final String STATUS = "status";
+    public static final String RESULTS = "results";
+    public static final String RESULT = "result";
+    public static final String OK = "ok";
+    public static final String MESSAGE = "message";
+    public static final String LIBELLE_MATIERE = "libelleMatiere";
+    public static final String BLANK_SPACE = " ";
+    public static final String UNDERSCORE = "_";
+    public static final String ORDRE = "ordre";
+    public static  String TEMPLATE_PATH;
 
 
     @Override
@@ -241,7 +247,8 @@ public class Competences extends BaseServer {
         DELIVERY_OPTIONS = new DeliveryOptions()
                 .setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L);
         NODE_PDF_GENERATOR = config.getJsonObject("node-pdf-generator");
-
+        TEMPLATE_PATH =  FileResolver.absolutePath(config.getJsonObject("exports")
+                .getString("template-path")).toString();
         EmailFactory emailFactory = new EmailFactory(vertx, config);
         EmailSender notification = emailFactory.getSender();
 
@@ -253,7 +260,7 @@ public class Competences extends BaseServer {
         addController(new ServicesController());
         addController(new AnnotationController());
 		addController(new AppreciationController());
-		addController(new BFCController(eb));
+		addController(new BFCController(eb, storage));
 		addController(new CompetenceController(eb));
 		addController(new CompetenceNoteController(eb));
 		addController(new ModaliteController());
@@ -285,8 +292,8 @@ public class Competences extends BaseServer {
         setRepositoryEvents(new CompetenceRepositoryEvents(eb));
 
         // Worker
-        log.info("WORKER : "+ ArchiveBulletinWorker.class.getSimpleName());
-        vertx.deployVerticle(ArchiveBulletinWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
+        log.info("WORKER : "+ ArchiveWorker.class.getSimpleName());
+        vertx.deployVerticle(ArchiveWorker.class, new DeploymentOptions().setConfig(config).setWorker(true));
     }
 
 }

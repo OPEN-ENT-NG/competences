@@ -25,6 +25,8 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
+import io.vertx.core.VertxException;
+import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
@@ -43,7 +45,10 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 
-import static fr.openent.competences.Competences.ID_PERIODE_KEY;
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
+import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -413,7 +418,7 @@ public class DefaultUtilsService  implements UtilsService {
         for (String id : idClasse) {
             params.add(id);
         }
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
     /**
@@ -439,42 +444,61 @@ public class DefaultUtilsService  implements UtilsService {
     }
 
 
-    @Override
-    public void getNameEntity(String[] name, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
-        JsonObject params = new JsonObject();
+    private  Handler<Message<JsonObject>> nameHandler (String[] name, String field,
+                                                       Handler<Either<String, JsonArray>> handler){
+        return event -> {
+            if (!OK.equals(( event.body()).getString(STATUS))) {
+                String error = event.body().getString(MESSAGE);
+                log.error(error);
+                if(error.contains(CONNECTION_WAS_CLOSED) || error.contains(TIME)){
+                    log.info("RESTART "+ name);
+                    getNameEntity(name, field, handler);
+                    return ;
+                }
+                handler.handle(new Either.Left<>("Error While get User in Neo4J "));
+            } else {
 
-        query.append("MATCH (s) WHERE s.id IN {id} RETURN CASE WHEN s.name IS NULL THEN s.lastName ELSE s.name END AS name");
-        params.put("id", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(name)));
-
-        neo4j.execute(query.toString(), params, new Handler<Message<JsonObject>>() {
-            public void handle(Message<JsonObject> event) {
-                if (!"ok".equals(((JsonObject) event.body()).getString("status"))) {
-                    handler.handle(new Either.Left<>("Error While get User in Neo4J "));
+                JsonArray rNeo =  event.body().getJsonArray(RESULT, new fr.wseduc.webutils.collections.JsonArray());
+                if (rNeo.size() > 0) {
+                    handler.handle(new Either.Right<>(rNeo));
                 } else {
+                    // Si l'id n'est pas retrouvé dans l'annuaire, on le récupère dans Postgres
+                    String queryPostgres = " SELECT  personnes_supp.last_name as name " +
+                            " FROM " + Competences.VSCO_SCHEMA + ".personnes_supp" +
+                            " WHERE id_user IN " + Sql.listPrepared(Arrays.asList(name));
 
-                    JsonArray rNeo = ((JsonObject) event.body()).getJsonArray("result",
-                            new fr.wseduc.webutils.collections.JsonArray());
-                    if (rNeo.size() > 0) {
-                        handler.handle(new Either.Right<>(rNeo));
-                    } else {
-                        // Si l'id n'est pas retrouvé dans l'annuaire, on le récupère dans Postgres
-                        StringBuilder queryPostgres = new StringBuilder();
-                        JsonArray paramsPostgres = new JsonArray();
-
-                        queryPostgres.append(" SELECT  personnes_supp.last_name as name ")
-                                .append(" FROM " + Competences.VSCO_SCHEMA + ".personnes_supp")
-                                .append(" WHERE id_user IN " + Sql.listPrepared(Arrays.asList(name)));
-                        for (int i = 0; i < name.length; i++) {
-                            paramsPostgres.add(name[i]);
-                        }
-
-                        Sql.getInstance().prepared(queryPostgres.toString(), paramsPostgres,
-                                SqlResult.validResultHandler(handler));
+                    JsonArray paramsPostgres = new JsonArray();
+                    for (int i = 0; i < name.length; i++) {
+                        paramsPostgres.add(name[i]);
                     }
+
+                    Sql.getInstance().prepared(queryPostgres, paramsPostgres,SqlResult.validResultHandler(handler));
                 }
             }
-        });
+        };
+    }
+    @Override
+    public void getNameEntity(String[] name, String field,  Handler<Either<String, JsonArray>> handler) {
+
+        String returning = "WHERE s.id IN {id} RETURN CASE WHEN s.name IS NULL THEN s.lastName ELSE s.name END AS name";
+        String query = "";
+        if(field.equals(ID_STRUCTURE_KEY)){
+            query= "MATCH (s:Structure) " + returning;
+        } else if(field.equals(ID_CLASSE_KEY)){
+            query= " MATCH (s:Class) " + returning + " UNION MATCH (s:FunctionalGroup) " +  returning +
+            " UNION MATCH (s:ManualGroup) " + returning;
+        } else if(field.equals(ID_ELEVE_KEY)){
+            query= " MATCH (s:User {profiles: ['Student']}) " + returning;
+        }
+        JsonObject params = new JsonObject();
+        params.put(ID_KEY, new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(name)));
+        try {
+            neo4j.execute(query, params, nameHandler(name, field, handler));
+        }
+        catch( VertxException e) {
+            log.error("getNameEntity " + e.getMessage() + " stack : " + e.getStackTrace());
+            getNameEntity(name, field, handler);
+        }
     }
 
     @Override
@@ -1074,6 +1098,26 @@ public class DefaultUtilsService  implements UtilsService {
         }
         return val;
     }
+
+    @Override
+    public void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler) {
+
+        JsonObject action = new JsonObject()
+                .put(ACTION, "structure.getStructuresActives")
+                .put("module","notes");
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler( message -> {
+                    JsonObject body = message.body();
+                    if (OK.equals(body.getString(STATUS))) {
+                        JsonArray idsStructure = body.getJsonArray(RESULTS);
+                        handler.handle(new Either.Right<>( idsStructure));
+                    } else {
+                        log.error("GetActivesStructures : can not get actives Structures ");
+                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                    }
+                }));
+    }
+
     public void studentAvailableForPeriode(final String idClasse, final Long idPeriode, final Integer typeClasse,
                                            Handler<Message<JsonObject>> handler) {
         JsonObject action = new JsonObject();

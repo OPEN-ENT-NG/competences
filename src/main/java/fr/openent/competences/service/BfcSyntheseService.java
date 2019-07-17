@@ -34,7 +34,7 @@ public interface BfcSyntheseService extends CrudService {
      * @param user
      * @param handler
      */
-    public void createBfcSynthese(JsonObject synthese, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void createBfcSynthese(JsonObject synthese, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     /**
      * met à jour la synthese d'un eleve
@@ -44,7 +44,7 @@ public interface BfcSyntheseService extends CrudService {
      * @param handler
      */
 
-   public void updateBfcSynthese(String id, JsonObject synthese, Handler<Either<String, JsonObject>> handler);
+   void updateBfcSynthese(String id, JsonObject synthese, Handler<Either<String, JsonObject>> handler);
 
     /**
      * supprime la synthese d'un eleve
@@ -59,7 +59,7 @@ public interface BfcSyntheseService extends CrudService {
      * @param idEleve
      * @param handler
      */
-    public void getBfcSyntheseByEleve(String idEleve, Integer idCycle, Handler<Either<String, JsonObject>> handler);
+    void getBfcSyntheseByEleve(String idEleve, Integer idCycle, Handler<Either<String, JsonObject>> handler);
 
     /**
      *
@@ -67,7 +67,7 @@ public interface BfcSyntheseService extends CrudService {
      * @param idCycle cycle des élèves sélectionnés
      * @param handler
      */
-    public void getBfcSyntheseByIdsEleve(String[] idsEleve, Long idCycle, Handler<Either<String, JsonArray>> handler);
+    void getBfcSyntheseByIdsEleve(String[] idsEleve, Long idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      *
@@ -75,13 +75,13 @@ public interface BfcSyntheseService extends CrudService {
      * @param idClasse classe des élèves sélectionnés
      * @param handler
      */
-    public void getBfcSyntheseByIdsEleveAndClasse(String[] idsEleve, String idClasse, Handler<Either<String, JsonArray>> handler);
+    void getBfcSyntheseByIdsEleveAndClasse(String[] idsEleve, String idClasse, Handler<Either<String, JsonArray>> handler);
 
     /**
      * return idCycle
      * @param IdEleve
      * @param handler
      */
-    public void getIdCycleWithIdEleve(String IdEleve, Handler<Either<String, Integer>> handler);
+    void getIdCycleWithIdEleve(String IdEleve, Handler<Either<String, Integer>> handler);
 
 }

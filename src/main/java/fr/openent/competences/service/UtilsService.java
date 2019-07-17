@@ -156,7 +156,7 @@ public interface UtilsService {
      * Récupère le nom de l'entité à qui appartient l'identifiant passé en paramètre.
      * @param name  l'identifiant de l'entité
      */
-    void getNameEntity(String[] name, Handler<Either<String, JsonArray>> handler);
+    void getNameEntity(String[] name, String field, Handler<Either<String, JsonArray>> handler);
 
     /**
      *
@@ -265,4 +265,12 @@ public interface UtilsService {
      * @return
      */
     String convertPositionnement(Float moyenne, JsonArray tableauDeconversion, Boolean printMatiere, Boolean translation);
+
+    /**
+     * get actives structures
+     *
+     * @param event   event Bus to viescolaire
+     * @param handler response
+     */
+    void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler);
 }

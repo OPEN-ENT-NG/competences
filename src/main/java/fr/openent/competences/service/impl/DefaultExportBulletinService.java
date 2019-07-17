@@ -32,6 +32,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.*;
 
 import java.io.StringReader;
@@ -75,12 +76,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     // Keys Utils
     private static final String APPRECIATION_KEY = "appreciation";
     private static final String PRINT_MATIERE_KEY = "printMatiere";
-    private static final String ID = "id";
+    public static final String ID = "id";
     private static final String ID_PARENT = "id_parent";
     private static final String ID_PERIODE ="id_periode";
     private static final String ID_CLASSE = "idClasse";
     private static final String ID_ELEVE = "idEleve";
-    private static final String ID_ETABLISSEMENT = "id_etablissement";
+    public static final String ID_ETABLISSEMENT = "id_etablissement";
     private static final String GET_RESPONSABLE = "getResponsable";
     private static final String MOYENNE = "moyenne";
     private static final String MOYENNE_CLASSE = "moyenneClasse";
@@ -93,24 +94,24 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String ACTION = "action";
     private static final String STATUS = "status";
     private static final String MESSAGE = "message";
-    private static final String RESULT = "result";
+    public static final String RESULT = "result";
     private static final String RESULTS = "results";
     private static final String NAME = Competences.NAME;
     private static final String CLASSE_NAME = CLASSE_NAME_KEY;
     private static final String ADDRESSE_POSTALE = "addressePostale";
     private static final String GRAPH_PER_DOMAINE = "graphPerDomaine";
     private static final String LIBELLE = "libelle";
-    private static final String ERROR = "errors";
-    private static final String TIME = "Time";
+    public static final String ERROR = "errors";
+    public static final String TIME = "Time";
     private static final String HAS_PROJECT = "hasProject";
     private static final String ID_IMAGES_FILES = "idImagesFiles";
     private static final String IS_DOMAINE_PARENT = "isDomaineParent";
-    private static final String CLASSE_NAME_TO_SHOW = "classeNameToShow";
+    public static final String CLASSE_NAME_TO_SHOW = "classeNameToShow";
     private static final String NAME_STRUCTURE = "nameStructure";
 
-    private static final String PERIODE = "periode";
+    public static final String PERIODE = "periode";
     private static final String STRUCTURE_LIBELLE = "structureLibelle";
-    private static final String STRUCTURE = "structure";
+    public static final String STRUCTURE = "structure";
 
     public static final String USE_MODEL_KEY = "useModel";
     public static final String TYPE_PERIODE = "typePeriode";
@@ -118,6 +119,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String ACCEPT_LANGUAGE = "accept-language";
     public static final String HOST = "host";
     public static final String X_FORWARDED_FOR = "X-Forwarded-For";
+    public static final String SCHEME = "scheme";
     public static final String PATH = "path";
     public static final String FIRST_NAME_KEY = "firstName";
     public static final String LAST_NAME_KEY = "lastName";
@@ -2043,8 +2045,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         if (mess.contains(TIME) && !answer.get()) {
             count++;
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                    Competences.DELIVERY_OPTIONS,
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(currentHandler));
         }
         else {
@@ -2483,27 +2484,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         } else {
             student.put(CLASSE_NAME_TO_SHOW, student.getString("classeName"));
         }
-
-
     }
 
-    private String getFileNameForStudent(JsonObject student, Long idPeriode){
-        String filename = StringUtils.EMPTY_STRING;
-        String separator = "_";
-        String end = ".pdf";
 
-        filename += student.getString(STRUCTURE);
-        filename += separator;
-        filename += student.getString(CLASSE_NAME_TO_SHOW);
-        filename += separator;
-        filename += student.getString(LAST_NAME_KEY);
-        filename += separator;
-        filename += student.getString(FIRST_NAME_KEY);
-        filename += separator;
-        filename += student.getString(PERIODE);
-        filename += end;
-        return filename;
-    }
 
     private void generateArchiveForStudent(JsonArray students,final  int index, AsyncResult<Buffer> fileResult,
                                            Vertx vertx, JsonObject config,
@@ -2538,7 +2521,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         bytes = processedTemplate.getBytes();
                         log.error(e.getMessage(), e);
                     }
-                    String fileName = getFileNameForStudent(student, idPeriode);
+                    String fileName = getFileNameForStudent(student);
                     String idEleve = student.getString(ID_ELEVE);
                     String externalIdClasse = student.getString(EXTERNAL_ID_KEY);
                     Future eleveFuture = Future.future();
@@ -2625,14 +2608,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         return;
                     }
 
-                    final String templatePath =  FileResolver.absolutePath(config.getJsonObject("exports")
-                            .getString("template-path")).toString();
                     final String templateName = "archiveBulletin.xhtml";
-                    vertx.fileSystem().readFile(templatePath + templateName, result -> {
+                    vertx.fileSystem().readFile(TEMPLATE_PATH + templateName, result -> {
 
                         if (!result.succeeded()) {
                             periodeFuture.complete();
-                            log.error("Error while reading template : " + templatePath + templateName);
+                            log.error("Error while reading template : " + TEMPLATE_PATH + templateName);
                             return;
                         }
                         log.info(">>>> BEGIN GENERATION WITH MUSTACHE AND POST TO NODE PDF GENERATOR "+ idPeriode);
@@ -2718,7 +2699,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 });
     }
 
-    private void getExternalIdClasse(String idClasse,  Handler<Either<String, JsonObject>> handler) {
+    public static void getExternalIdClasse(String idClasse,  Handler<Either<String, JsonObject>> handler) {
         String query = "MATCH (c:Class {id:{idClasse}}) return c.externalId as externalId ";
         JsonObject params = new JsonObject().put(ID_CLASSE_KEY, idClasse);
         Neo4j.getInstance().execute(query.toString(), params, Neo4jResult.validUniqueResultHandler(handler));
@@ -2802,82 +2783,5 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 });
     }
 
-    private void getIdFileArchive(String idEleve, String idClasse, Long idPeriode,
-                                  Handler<Either<String,JsonObject>> handler){
-        String query = " SELECT id_file " +
-                " FROM notes.archive_bulletins " +
-                " WHERE id_eleve=? AND id_classe = ? AND id_periode=? " +
-                " ORDER by created  DESC limit 1;";
-        JsonArray values = new JsonArray().add(idEleve).add(idClasse).add(idPeriode);
-        Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
-                SqlResult.validUniqueResultHandler(handler));
 
-    }
-
-    private void clearArchiveTable(JsonArray ids, Handler<Either<String,JsonObject>> handler){
-        String query = "DELETE FROM notes.archive_bulletins WHERE id_file IN "+ Sql.listPrepared(ids.getList()) + " ;";
-        Sql.getInstance().prepared(query, ids, Competences.DELIVERY_OPTIONS,
-                SqlResult.validUniqueResultHandler(handler));
-    }
-    private void getAllIdFileArchive(Handler<Either<String,JsonObject>> handler){
-        String query = " SELECT array_agg(id_file) as ids FROM notes.archive_bulletins; ";
-        JsonArray values = new JsonArray();
-        Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
-                SqlResult.validUniqueResultHandler(handler));
-    }
-
-    public void deleteAll(Handler<JsonObject> handler){
-        Future<JsonObject> idFileFuture = Future.future();
-        getAllIdFileArchive(event -> {
-            FormateFutureEvent.formate(idFileFuture, event);
-            JsonArray results = idFileFuture.result().getJsonArray("ids");
-            if(results == null){
-                handler.handle(new JsonObject().put(RESULT, "NO files archived "));
-                return;
-            }
-            JsonArray removesFiles = new JsonArray();
-            results.stream().forEach(
-                    files -> removesFiles.add(((JsonArray)files).getValue(1)));
-
-            if(idFileFuture.failed() ||  removesFiles == null) {
-                String error = (removesFiles == null) ? idFileFuture.cause().getMessage() : " no result";
-                log.error("deleteAll : " + error);
-                handler.handle(new JsonObject().put(ERROR, error));
-                return;
-            }
-            storage.removeFiles(removesFiles, remove -> {
-                log.info(" [Remove graph Images] " + remove.encode());
-                clearArchiveTable(removesFiles, deleteEvent -> {
-                    JsonObject response = new JsonObject().put(RESULT,remove.encode());
-                    if (deleteEvent.isRight()) {
-                        handler.handle(response.put("deleteOK", deleteEvent.right().getValue()));
-                    }
-                    else {
-                        handler.handle(response.put("deleteKO", deleteEvent.left().getValue()));
-                    }
-                });
-
-            });
-        });
-    }
-
-    public void getArchiveBulletin(final String idEleve, final String idClasse, final Long idPeriode,
-                                   Handler<Either<String, Buffer>> bufferEither){
-        Future<JsonObject> idFileFuture = Future.future();
-        getIdFileArchive(idEleve, idClasse, idPeriode, event -> {
-            FormateFutureEvent.formate(idFileFuture, event);
-            JsonObject result = idFileFuture.result();
-            if(idFileFuture.failed() ||  result == null){
-                String error = (result == null)? idFileFuture.cause().getMessage() : " no result";
-
-                log.error("getArchiveBulletin : " + error);
-                bufferEither.handle(new Either.Left<>(error));
-                return;
-            }
-            storage.readFile(result.getString("id_file"), fileBuffer -> {
-                bufferEither.handle(new Either.Right<>(fileBuffer));
-            });
-        });
-
-    }
 }

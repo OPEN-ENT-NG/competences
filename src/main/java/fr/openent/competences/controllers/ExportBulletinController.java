@@ -4,7 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.security.AccessExportBulletinFilter;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.utils.FormateFutureEvent;
+import fr.openent.competences.utils.ArchiveUtils;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -20,7 +20,6 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.storage.Storage;
-import org.entcore.common.user.UserUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,6 +27,7 @@ import java.util.Date;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.ACTION;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
+import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class ExportBulletinController extends ControllerHelper {
@@ -103,12 +103,12 @@ public class ExportBulletinController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void archiveBulletin(final HttpServerRequest request){
         JsonObject action = new JsonObject()
-                .put(ACTION, ArchiveBulletinWorker.ARCHIVE_BULLETIN)
+                .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
                 .put(HOST, getHost(request))
                 .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
                 .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
                 .put(PATH, request.path());
-        eb.send(ArchiveBulletinWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
         Renders.ok(request);
     }
 
@@ -118,32 +118,13 @@ public class ExportBulletinController extends ControllerHelper {
         String idEleve = request.params().get(ID_ELEVE_KEY);
         String idClasse = request.params().get(ID_CLASSE_KEY);
         Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
-        new DefaultExportBulletinService(eb, storage, vertx).getArchiveBulletin(idEleve, idClasse, idPeriode,
-                bufferEither -> {
-                if(bufferEither.isLeft()){
-                    Renders.notFound(request, bufferEither.left().getValue());
-                }
-                else {
-                    Buffer file = bufferEither.right().getValue();
-                    if(file == null){
-                        Renders.notFound(request, "in table");
-                        return;
-                    }
-                    request.response().putHeader("Content-Type", "application/pdf");
-                    request.response().putHeader("Content-Disposition",
-                            "attachment; filename=archive.pdf");
-                    request.response().end(file);
-                    log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
-                            + " -> Fin Generation PDF du template ");
-                }
-                });
+        Boolean isCycle = false;
+        ArchiveUtils.getArchiveBulletin(idEleve, idClasse, idPeriode,storage, ARCHIVE_BULLETIN_TABLE, isCycle, request);
     }
 
     @Get("/delete/archive/bulletin")
     @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
     public void deleteArchive(final HttpServerRequest request){
-        new DefaultExportBulletinService(eb, storage, vertx).deleteAll( response -> {
-            Renders.renderJson(request, response);
-        });
+        ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage,  response -> Renders.renderJson(request, response));
     }
 }

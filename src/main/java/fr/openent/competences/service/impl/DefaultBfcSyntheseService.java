@@ -112,20 +112,20 @@ public class DefaultBfcSyntheseService extends SqlCrudService implements BfcSynt
 
     @Override
     public void getBfcSyntheseByIdsEleveAndClasse(final String[] idsEleve, final String idClasse,final Handler<Either<String, JsonArray>> handler) {
-        JsonArray valuesCount = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         String query = "SELECT bfc_synthese.*, rel_groupe_cycle.id_groupe " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".bfc_synthese " +
-                "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle ON rel_groupe_cycle.id_cycle = bfc_synthese.id_cycle " +
-                "WHERE bfc_synthese.id_eleve IN "+ Sql.listPrepared(idsEleve)+"  " +
-                "AND rel_groupe_cycle.id_groupe = ? ";
+                " FROM " + Competences.COMPETENCES_SCHEMA + ".bfc_synthese " +
+                " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle " +
+                "     ON rel_groupe_cycle.id_cycle = bfc_synthese.id_cycle " +
+                " WHERE bfc_synthese.id_eleve IN "+ Sql.listPrepared(idsEleve)+"  " +
+                " AND rel_groupe_cycle.id_groupe = ? ";
 
         for(String s:idsEleve){
             values.add(s);
         }
         values.add(idClasse);
 
-        Sql.getInstance().prepared(query,values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
 

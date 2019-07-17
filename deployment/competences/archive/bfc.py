@@ -19,7 +19,7 @@ def closeConnection(sql, cur):
 
 def getArchiveList():
     print('(' + str(datetime.now()) + ') [Start] Get all paths')
-    cur.execute("""SELECT id_file, file_name FROM notes.archive_bulletins""")
+    cur.execute("""SELECT id_file, file_name FROM notes.archive_bfc""")
     print('(' + str(datetime.now()) + ') [Done] Get all paths')
     return cur.fetchall()
 
@@ -28,7 +28,7 @@ def creatFolders(row):
   global nbStructure
   global nbStudent
   nameSplit = row[1].split('_', 3)
-  structure = 'archive/bulletins'+ '/' + nameSplit[0]
+  structure = 'archive/bfc'+ '/' + nameSplit[0]
   classe = nameSplit[1]
   student = nameSplit[2]
   periode = nameSplit[3]

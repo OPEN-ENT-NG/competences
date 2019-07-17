@@ -37,9 +37,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
-import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.MOYENNE;
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Competences.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
@@ -62,7 +60,7 @@ public class Utils {
      */
     public static void getStructClasses(EventBus eb, String[] idClasses, final Handler<Either<String, String>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "classe.getEtabClasses")
+                .put(ACTION, "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idClasses)));
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -70,8 +68,8 @@ public class Utils {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray queryResult = body.getJsonArray("results");
+                if (OK.equals(body.getString(STATUS))) {
+                    JsonArray queryResult = body.getJsonArray(RESULTS);
                     if (queryResult.size() == 0) {
                         handler.handle(new Either.Left<String, String>("Aucune classe n'a ete trouvee."));
                         log.error("getStructClasses : No classes found with these ids");
@@ -99,7 +97,7 @@ public class Utils {
      */
     public static void getGroupesClasse(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, JsonArray>> handler){
         JsonObject action = new JsonObject()
-                .put("action", "classe.getGroupesClasse")
+                .put(ACTION, "classe.getGroupesClasse")
                 .put("idClasses", idsClasses);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -107,8 +105,8 @@ public class Utils {
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
 
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray queryResult = body.getJsonArray("results");
+                        if (OK.equals(body.getString(STATUS))) {
+                            JsonArray queryResult = body.getJsonArray(RESULTS);
                             handler.handle(new Either.Right<String, JsonArray>(queryResult));
                         } else {
                             handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
@@ -120,13 +118,13 @@ public class Utils {
 
     public static void getInfosGroupes(EventBus eb, final JsonArray idsClasses, final Handler<Either<String, Map<String, String>>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "classe.getClassesInfo")
+                .put(ACTION, "classe.getClassesInfo")
                 .put("idClasses", idsClasses);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
             JsonObject body = message.body();
 
-            if ("ok".equals(body.getString("status"))) {
-                JsonArray queryResult = body.getJsonArray("results");
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray queryResult = body.getJsonArray(RESULTS);
 
                 if (queryResult != null) {
                     Map<String, String> result = queryResult.stream()
@@ -151,14 +149,14 @@ public class Utils {
 
         JsonObject action = new JsonObject();
         if(typeClasse == 0) {
-            action.put("action", "classe.getEleveClasse")
-                    .put("idClasse", idGroupe);
+            action.put(ACTION, "classe.getEleveClasse")
+                    .put(ID_CLASSE_KEY, idGroupe);
 
             if(idPeriode != null)  action.put("idPeriode", idPeriode);
 
         }
         else if(typeClasse == 1 || typeClasse == 2){
-            action.put("action", "groupe.listUsersByGroupeEnseignementId")
+            action.put(ACTION, "groupe.listUsersByGroupeEnseignementId")
                     .put("groupEnseignementId", idGroupe)
                     .put("profile", "Student");
 
@@ -171,8 +169,8 @@ public class Utils {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
                 List<String> idEleves = new ArrayList<String>();
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray queryResult = body.getJsonArray("results");
+                if (OK.equals(body.getString(STATUS))) {
+                    JsonArray queryResult = body.getJsonArray(RESULTS);
                     if(queryResult != null) {
                         for (int i =0; i< queryResult.size(); i++) {
                             idEleves.add(((JsonObject)queryResult.getJsonObject(i)).getString("id"));
@@ -199,7 +197,7 @@ public class Utils {
     public static void getGroupsEleve (EventBus eb, String idEleve, String idEtablissement,
                                        Handler<Either<String, JsonArray>> handler){
         JsonObject action = new JsonObject()
-                .put("action", "eleve.getInfoEleve")
+                .put(ACTION, "eleve.getInfoEleve")
                 .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissement)
                 .put("idEleves", new fr.wseduc.webutils.collections.JsonArray().add(idEleve));
 
@@ -209,22 +207,22 @@ public class Utils {
                     public void handle(Message<JsonObject> message) {
 
                         JsonObject body = message.body();
-                        if (!"ok".equals(body.getString("status"))) {
+                        if (!OK.equals(body.getString(STATUS))) {
                             handler.handle(new Either.Left<String, JsonArray>(body.getString("message")));
                             log.error("getGroupsEleve : " + body.getString("message"));
                         } else {
 
-                            JsonArray result = body.getJsonArray("results");
+                            JsonArray result = body.getJsonArray(RESULTS);
                             JsonArray idGroupsResult = new JsonArray();
 
-                            if ("ok".equals(body.getString("status"))
+                            if (OK.equals(body.getString(STATUS))
                                     && result.size() > 0) {
                                 for (int i = 0; i < result.size(); i++) {
-                                    JsonObject eleve = body.getJsonArray("results")
+                                    JsonObject eleve = body.getJsonArray(RESULTS)
                                             .getJsonObject(i);
 
                                     final String idClasse =
-                                            eleve.getString("idClasse");
+                                            eleve.getString(ID_CLASSE_KEY);
 
 
                                     JsonObject o = result.getJsonObject(i);
@@ -257,54 +255,51 @@ public class Utils {
      * @param idClasses Identifiant de la classe dont on souhaite recuperer les eleves.
      * @param handler   Handler contenant la liste des identifiants des eleves recuperees.
      */
-    public static void getElevesClasses(EventBus eb, String[] idClasses,
-                                        Long idPeriode,
+    public static void getElevesClasses(EventBus eb, String[] idClasses, Long idPeriode,
                                         final Handler<Either<String, Map<String, List<String>>>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "classe.getElevesClasses")
-                .put("idPeriode", idPeriode)
+                .put(ACTION, "classe.getElevesClasses")
+                .put(ID_PERIODE_KEY, idPeriode)
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idClasses)));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler( message ->  {
+                    JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    Map<String, List<String>> result = new LinkedHashMap<>();
-                    JsonArray queryResult = body.getJsonArray("results");
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject eleve = queryResult.getJsonObject(i);
-                        if (!result.containsKey(eleve.getString("idClasse"))) {
-                            result.put(eleve.getString("idClasse"), new ArrayList<String>());
+                    if (OK.equals(body.getString(STATUS))) {
+                        Map<String, List<String>> result = new LinkedHashMap<>();
+                        JsonArray queryResult = body.getJsonArray(RESULTS);
+                        for (int i = 0; i < queryResult.size(); i++) {
+                            JsonObject eleve = queryResult.getJsonObject(i);
+                            if (!result.containsKey(eleve.getString(ID_CLASSE_KEY))) {
+                                result.put(eleve.getString(ID_CLASSE_KEY), new ArrayList<>());
+                            }
+                            result.get(eleve.getString(ID_CLASSE_KEY)).add(eleve.getString(ID_ELEVE_KEY));
                         }
-                        result.get(eleve.getString("idClasse")).add(eleve.getString("idEleve"));
+                        handler.handle(new Either.Right<>(result));
+                    } else {
+                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                        log.error("getElevesClasses : " + body.getString(MESSAGE));
                     }
-                    handler.handle(new Either.Right<String, Map<String, List<String>>>(result));
-                } else {
-                    handler.handle(new Either.Left<String, Map<String, List<String>>>(body.getString("message")));
-                    log.error("getElevesClasses : " + body.getString("message"));
-                }
-            }
-        }));
+                }));
     }
     public static void getElevesClasse(EventBus eb, String idClasse, Long idPeriode,
-                                        final Handler<Either<String, JsonArray>> handler) {
+                                       final Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "classe.getElevesClasses")
-                .put("idPeriode", idPeriode)
+                .put(ACTION, "classe.getElevesClasses")
+                .put(ID_PERIODE_KEY, idPeriode)
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
-                JsonObject body = message.body();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler( message -> {
+            JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    JsonArray queryResult = body.getJsonArray("results");
-                    handler.handle(new Either.Right<>(queryResult));
-                } else {
-                    handler.handle(new Either.Left<>(body.getString("message")));
-                    log.error("getElevesClasses : " + body.getString("message"));
-                }
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray queryResult = body.getJsonArray(RESULTS);
+                handler.handle(new Either.Right<>(queryResult));
+            } else {
+                handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                log.error("getElevesClasses : " + body.getString(MESSAGE));
+            }
         }));
     }
     /**
@@ -319,54 +314,52 @@ public class Utils {
     public static void getInfoEleve(EventBus eb, String[] idEleves, String idEtablissment,
                                     final Handler<Either<String, List<Eleve>>> handler) {
         JsonObject action = new JsonObject()
-                .put("action", "eleve.getInfoEleve")
+                .put(ACTION, "eleve.getInfoEleve")
                 .put(Competences.ID_ETABLISSEMENT_KEY, idEtablissment)
                 .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idEleves)));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler(response -> {
+                    JsonObject bodyResponse = response.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    final Set<String> classes = new HashSet<>();
-                    final List<Eleve> result = new ArrayList<>();
-                    JsonArray queryResult = body.getJsonArray("results");
+                    if (OK.equals(bodyResponse.getString(STATUS))) {
+                        final Set<String> classes = new HashSet<>();
+                        final List<Eleve> result = new ArrayList<>();
+                        JsonArray queryResult = bodyResponse.getJsonArray(RESULTS);
 
-                    // récupération des noms des classes des élèves supprimés et stockés dans postgres
-                    JsonArray idClasses = new JsonArray();
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        if(null == queryResult.getJsonObject(i).getString("classeName") ) {
-                            idClasses.add(queryResult.getJsonObject(i).getString("idClasse"));
-                        }
-                    }
-                    if (idClasses.size() == 0) {
+                        // récupération des noms des classes des élèves supprimés et stockés dans postgres
+                        JsonArray idClasses = new JsonArray();
                         for (int i = 0; i < queryResult.size(); i++) {
-                            JsonObject eleveBase = queryResult.getJsonObject(i);
-                            Eleve eleveObj = new Eleve(eleveBase.getString("idEleve"),
-                                    eleveBase.getString("lastName"),
-                                    eleveBase.getString("firstName"),
-                                    eleveBase.getString("idClasse"),
-                                    eleveBase.getString("classeName"),
-                                    eleveBase.getString("level"),
-                                    eleveBase.getString("birthDate"));
-                            classes.add(eleveObj.getIdClasse());
-                            result.add(eleveObj);
+                            if(null == queryResult.getJsonObject(i).getString("classeName") ) {
+                                idClasses.add(queryResult.getJsonObject(i).getString(ID_CLASSE_KEY));
+                            }
                         }
-                        getCycleElevesForBfcCycle(classes,result, handler);
-                    }
-                    // S'il existe des élèves stockés dans postgres, on va récupérer le nom des classes dans Neo
-                    else{
-                        StringBuilder query = new StringBuilder();
-                        JsonObject params = new JsonObject();
-                        query.append("MATCH (c:Class) WHERE c.id IN {idClasses} return c.id as id, c.name as name");
-                        params.put("idClasses", idClasses);
+                        if (idClasses.size() == 0) {
+                            for (int i = 0; i < queryResult.size(); i++) {
+                                JsonObject eleveBase = queryResult.getJsonObject(i);
+                                Eleve eleveObj = new Eleve(eleveBase.getString(ID_ELEVE_KEY),
+                                        eleveBase.getString("lastName"),
+                                        eleveBase.getString("firstName"),
+                                        eleveBase.getString(ID_CLASSE_KEY),
+                                        eleveBase.getString("classeName"),
+                                        eleveBase.getString(LEVEL),
+                                        eleveBase.getString("birthDate"));
+                                classes.add(eleveObj.getIdClasse());
+                                result.add(eleveObj);
+                            }
+                            getCycleElevesForBfcCycle(classes,result, handler);
+                        }
+                        // S'il existe des élèves stockés dans postgres, on va récupérer le nom des classes dans Neo
+                        else{
+                            StringBuilder query = new StringBuilder();
+                            JsonObject params = new JsonObject();
+                            query.append("MATCH (c:Class) WHERE c.id IN {idClasses} return c.id as id, c.name as name");
+                            params.put("idClasses", idClasses);
 
-                        Neo4j.getInstance().execute(query.toString(), params,new Handler<Message<JsonObject>>() {
-                            public void handle(Message<JsonObject> event) {
+                            Neo4j.getInstance().execute(query.toString(), params, event -> {
                                 JsonObject body = event.body();
 
-                                if (!"ok".equals(body.getString("status"))) {
+                                if (!OK.equals(body.getString(STATUS))) {
                                     String message = "PB while getting classeName for BFc export";
                                     log.error(message);
                                     handler.handle(new Either.Left<>(message));
@@ -382,12 +375,12 @@ public class Utils {
                                         JsonObject eleveBase = queryResult.getJsonObject(i);
                                         String eleveBaseClasseName = eleveBase.getString("classeName");
                                         if (null == eleveBaseClasseName) {
-                                            eleveBaseClasseName = classeName.get(eleveBase.getString("idClasse"));
+                                            eleveBaseClasseName = classeName.get(eleveBase.getString(ID_CLASSE_KEY));
                                         }
-                                        Eleve eleveObj = new Eleve(eleveBase.getString("idEleve"),
+                                        Eleve eleveObj = new Eleve(eleveBase.getString(ID_ELEVE_KEY),
                                                 eleveBase.getString("lastName"),
                                                 eleveBase.getString("firstName"),
-                                                eleveBase.getString("idClasse"),
+                                                eleveBase.getString(ID_CLASSE_KEY),
                                                 eleveBaseClasseName,
                                                 eleveBase.getString("level"),
                                                 eleveBase.getString("birthDate"));
@@ -396,18 +389,15 @@ public class Utils {
                                     }
                                     getCycleElevesForBfcCycle(classes,result, handler);
                                 }
-                            }
-                        });
+                            });
 
+                        }
+
+                    } else {
+                        handler.handle(new Either.Left<>(bodyResponse.getString(MESSAGE)));
+                        log.error("getInfoEleve : getInfoEleve : " + bodyResponse.getString(MESSAGE));
                     }
-
-
-                } else {
-                    handler.handle(new Either.Left<String, List<Eleve>>(body.getString("message")));
-                    log.error("getInfoEleve : getInfoEleve : " + body.getString("message"));
-                }
-            }
-        }));
+                }));
 
     }
 
@@ -441,30 +431,29 @@ public class Utils {
      * @param idStructure Identifiant de la structure dont on souhaite recuperer les classes.
      * @param handler     Handler contenant la liste des identifiants des classes recuperees.
      */
-    public static void getClassesStruct(EventBus eb, final String idStructure, final Handler<Either<String, List<String>>> handler) {
+    public static void getClassesStruct(EventBus eb, final String idStructure,
+                                        final Handler<Either<String, List<String>>> handler) {
+
         JsonObject action = new JsonObject()
-                .put("action", "classe.getClasseEtablissement")
-                .put("idEtablissement", idStructure);
+                .put(ACTION, "classe.getClasseEtablissement")
+                .put(ID_ETABLISSEMENT_KEY, idStructure);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
-
-                if ("ok".equals(body.getString("status"))) {
-                    List<String> result = new ArrayList<>();
-                    JsonArray queryResult = body.getJsonArray("results");
-                    for (int i = 0; i < queryResult.size(); i++) {
-                        JsonObject classe = queryResult.getJsonObject(i);
-                        result.add(classe.getString("idClasse"));
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler( message -> {
+                    JsonObject body = message.body();
+                    if (OK.equals(body.getString(STATUS))) {
+                        List<String> result = new ArrayList<>();
+                        JsonArray queryResult = body.getJsonArray(RESULTS);
+                        for (int i = 0; i < queryResult.size(); i++) {
+                            JsonObject classe = queryResult.getJsonObject(i);
+                            result.add(classe.getString(ID_CLASSE_KEY));
+                        }
+                        handler.handle(new Either.Right<>(result));
+                    } else {
+                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                        log.error("getClassesStruct : " + body.getString(MESSAGE));
                     }
-                    handler.handle(new Either.Right<String, List<String>>(result));
-                } else {
-                    handler.handle(new Either.Left<String, List<String>>(body.getString("message")));
-                    log.error("getClassesStruct : " + body.getString("message"));
-                }
-            }
-        }));
+                }));
     }
 
     /**
@@ -479,7 +468,7 @@ public class Utils {
      */
     public static void getDatesCreationVerrouByClasses(EventBus eb, final String idStructure, final List<String> idClasses, final Handler<Either<String,Map<String,JsonObject>>> handler){
         JsonObject action = new JsonObject()
-                .put("action","periode.getDatesDtFnAnneeByClasse")
+                .put(ACTION,"periode.getDatesDtFnAnneeByClasse")
                 .put("idEtablissement", idStructure)
                 .put("idClasses",new fr.wseduc.webutils.collections.JsonArray(idClasses));
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -487,8 +476,8 @@ public class Utils {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
                 Map<String,JsonObject> datesCreationVerrouByClasse = new HashMap<String,JsonObject>();
-                if("ok".equals(body.getString("status"))) {
-                    JsonArray requestDateByClasse = body.getJsonArray("results");
+                if(OK.equals(body.getString(STATUS))) {
+                    JsonArray requestDateByClasse = body.getJsonArray(RESULTS);
                     if( requestDateByClasse != null && requestDateByClasse.size() > 0){
                         for(int i = 0; i < requestDateByClasse.size(); i++){
                             JsonObject jsonObjectRep = requestDateByClasse.getJsonObject(i);
@@ -522,7 +511,7 @@ public class Utils {
     public static void getLibelleMatiere(EventBus eb, final JsonArray idsMatieres,
                                          final Handler<Either<String,Map<String,JsonObject>>> handler){
         JsonObject action = new JsonObject()
-                .put("action","matiere.getMatieres")
+                .put(ACTION,"matiere.getMatieres")
                 .put("idMatieres", idsMatieres);
         eb.send(Competences.VIESCO_BUS_ADDRESS,action, Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -531,9 +520,9 @@ public class Utils {
                         JsonObject body = message.body();
                         Map<String,JsonObject> idsMatLibelle = new HashMap<>();
 
-                        if("ok".equals(body.getString("status"))) {
+                        if(OK.equals(body.getString(STATUS))) {
 
-                            JsonArray requestMats = body.getJsonArray("results");
+                            JsonArray requestMats = body.getJsonArray(RESULTS);
 
                             if( requestMats != null && requestMats.size() > 0 ){
                                 matiereService.getLibellesCourtsMatieres(true,new Handler<Either<String, Map<String,String>>>() {
@@ -546,7 +535,7 @@ public class Utils {
 
                                             if (!idsMatLibelle.containsKey(requestMat.getString("id"))) {
 
-                                               // String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
+                                                // String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
                                                 String codeMatiere = requestMat.getJsonObject("data").getJsonObject("data").getString("code");
                                                 try{
                                                     Integer.valueOf(codeMatiere);
@@ -586,7 +575,7 @@ public class Utils {
     public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers,
                                                 final Handler<Either<String,Map<String,JsonObject>>> handler){
         JsonObject action = new JsonObject()
-                .put("action","eleve.getUsers")
+                .put(ACTION,"eleve.getUsers")
                 .put("idUsers", idsUsers);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action,Competences.DELIVERY_OPTIONS,
                 handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -596,8 +585,8 @@ public class Utils {
                         JsonObject body = message.body();
                         Map<String, JsonObject> idsUserNamePrenom = new HashMap<>();
 
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray requestUsers = body.getJsonArray("results");
+                        if (OK.equals(body.getString(STATUS))) {
+                            JsonArray requestUsers = body.getJsonArray(RESULTS);
                             if(requestUsers != null && requestUsers.size() > 0 ){
 
                                 for(int i = 0; i < requestUsers.size(); i++){
@@ -633,8 +622,8 @@ public class Utils {
     public static void getEleveClasse(EventBus eb, List<String> idsEleve, final String idClasse, final Integer idPeriode,
                                       final Handler<Either<String, List<Eleve>>> handler){
         JsonObject action = new JsonObject()
-                .put("action","classe.getEleveClasse")
-                .put("idClasse", idClasse)
+                .put(ACTION,"classe.getEleveClasse")
+                .put(ID_CLASSE_KEY, idClasse)
                 .put("idPeriode", idPeriode);
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -642,11 +631,11 @@ public class Utils {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
                 List<Eleve> eleves = new ArrayList<Eleve>();
-                if(!"ok".equals(body.getString("status"))){
+                if(!OK.equals(body.getString(STATUS))){
                     handler.handle(new Either.Left<>(body.getString("message")));
                     log.error("getEleveClasse :  " + body.getString("message") );
                 }else{
-                    JsonArray requesteleves = body.getJsonArray("results");
+                    JsonArray requesteleves = body.getJsonArray(RESULTS);
                     if( requesteleves != null && requesteleves.size() > 0){
                         for(int i=0 ; i < requesteleves.size(); i++ ){
                             JsonObject requestEleve = requesteleves.getJsonObject(i);
@@ -676,7 +665,7 @@ public class Utils {
                 .put("Host", getHost(request));
 
         JsonObject action = new JsonObject()
-                .put("action", "periode.getLibellePeriode")
+                .put(ACTION, "periode.getLibellePeriode")
                 .put("idType", idPeriode)
                 .put("request", jsonRequest);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -684,7 +673,7 @@ public class Utils {
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
 
-                if (!"ok".equals(body.getString("status"))) {
+                if (!OK.equals(body.getString(STATUS))) {
                     handler.handle(new Either.Left<>("periode not found " + idPeriode));
                     log.error("getLibellePeriode : periode not found: " + idPeriode);
                 } else {
@@ -704,20 +693,20 @@ public class Utils {
         Integer biggestTypePeriode = periodesByClass.getJsonObject(0).getInteger("id_type");
 
 
-            for (int i = 0; i < periodesByClass.size(); i++) {
-                //get the begining periode
-                if (wantedBegenningPeriode) {
-                    if (periodesByClass.getJsonObject(i).getInteger("id_type") <= smallestTypeOfPeriode) {
-                        smallestTypeOfPeriode = periodesByClass.getJsonObject(i).getInteger("id_type");
-                        periode = periodesByClass.getJsonObject(i).getString("timestamp_dt");
-                    }
-                } else {
-                    if (periodesByClass.getJsonObject(i).getInteger("id_type") >= biggestTypePeriode) {
-                        biggestTypePeriode = periodesByClass.getJsonObject(i).getInteger("id_type");
-                        periode = periodesByClass.getJsonObject(i).getString("timestamp_fn");
-                    }
+        for (int i = 0; i < periodesByClass.size(); i++) {
+            //get the begining periode
+            if (wantedBegenningPeriode) {
+                if (periodesByClass.getJsonObject(i).getInteger("id_type") <= smallestTypeOfPeriode) {
+                    smallestTypeOfPeriode = periodesByClass.getJsonObject(i).getInteger("id_type");
+                    periode = periodesByClass.getJsonObject(i).getString("timestamp_dt");
+                }
+            } else {
+                if (periodesByClass.getJsonObject(i).getInteger("id_type") >= biggestTypePeriode) {
+                    biggestTypePeriode = periodesByClass.getJsonObject(i).getInteger("id_type");
+                    periode = periodesByClass.getJsonObject(i).getString("timestamp_fn");
                 }
             }
+        }
 
         return periode;
     }

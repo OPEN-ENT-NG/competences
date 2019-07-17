@@ -24,6 +24,9 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.*;
 
+import static fr.openent.competences.Competences.ID_ELEVE_KEY;
+import static fr.openent.competences.Competences.ID_ETABLISSEMENT_KEY;
+
 /**
  * @author rollinq
  *
@@ -292,6 +295,7 @@ public class Eleve implements Comparable<Eleve>{
         result.put("cycle", this.cycle);
         result.put("level", this.level);
         result.put("birthDate", this.birthDate);
+        result.put(ID_ELEVE_KEY, this.idEleve);
 
         List<Object> listNiveaux = new ArrayList<Object>(this.libelleNiveau.values());
         result.put("niveau", new fr.wseduc.webutils.collections.JsonArray(listNiveaux));

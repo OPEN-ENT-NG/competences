@@ -2,25 +2,26 @@ package fr.openent.competences.utils;
 
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.Server;
 import fr.wseduc.webutils.collections.JsonUtils;
 import fr.wseduc.webutils.data.FileResolver;
-import fr.wseduc.webutils.http.HookProcess;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.List;
+import java.io.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static fr.openent.competences.Competences.*;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 public class MustachHelper {
 
@@ -29,7 +30,6 @@ public class MustachHelper {
     private final I18n i18n;
     protected Vertx vertx;
     private static final ConcurrentMap<String, Template> templates = new ConcurrentHashMap();
-    private List<HookProcess> hookRenderProcess;
     protected JsonObject config;
 
     public MustachHelper (Vertx vertx, JsonObject config) {
@@ -63,6 +63,56 @@ public class MustachHelper {
             }
 
         });
+    }
+
+    private Handler<Writer> handlerGeneratePdf(final JsonObject templateProps,
+                                               final String templateName, String host, String scheme,
+                                               EventBus eb, Handler<Either<String, Buffer>> handler) {
+        return  writer -> {
+            String processedTemplate = ((StringWriter) writer).getBuffer().toString();
+            if (processedTemplate == null) {
+                if (templateProps != null) {
+                    log.error("processing error : \ntemplateProps : " + templateProps.toString()
+                            + "\ntemplateName : " + templateName);
+                }
+                return;
+            }
+            JsonObject actionObject = new JsonObject();
+            byte[] bytes;
+            try {
+                bytes = processedTemplate.getBytes("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                bytes = processedTemplate.getBytes();
+                log.error(e.getMessage(), e);
+            }
+            final String baseUrl = scheme + "://" + host + config.getString("app-address") + "/public/";
+
+            String node = (String) vertx.sharedData().getLocalMap("server").get("node");
+            if (node == null) {
+                node = "";
+            }
+            final String _node = node;
+            actionObject
+                    .put("content", bytes)
+                    .put("baseUrl", baseUrl);
+            eb.send(_node + "entcore.pdf.generator", actionObject, DELIVERY_OPTIONS,
+                    handlerToAsyncHandler( reply -> {
+                        JsonObject pdfResponse = reply.body();
+                        if (!OK.equals(pdfResponse.getString(STATUS))) {
+                            String error = pdfResponse.getString(MESSAGE);
+                            handler.handle(new Either.Left<>(error));
+                            return;
+                        }
+                        byte[] pdf = pdfResponse.getBinary("content");
+                        handler.handle(new Either.Right<>(Buffer.buffer(pdf)));
+                    }));
+        };
+    }
+    public void generatePdf(JsonObject p, String resourceName, Reader r, String path, String host,
+                            String acceptLanguage, Boolean forwardedFor, String scheme,
+                            EventBus eb, final Handler<Either<String, Buffer>> handler) {
+        this.processTemplate(p, resourceName, r, path, host, acceptLanguage, forwardedFor,
+                handlerGeneratePdf(p, resourceName, host, scheme, eb, handler ));
     }
 
     protected void setLambdaTemplateRequest(Map<String, Object> ctx, String host, String acceptLanguage,
@@ -154,7 +204,7 @@ public class MustachHelper {
     }
 
     private String staticResource(boolean https, String infraPort, String publicDir, String path, String host,
-     Boolean forwardedFor) {
+                                  Boolean forwardedFor) {
         String protocol = https ? "https://" : "http://";
         if (infraPort != null && forwardedFor) {
             host = host.split(":")[0] + ":" + infraPort;

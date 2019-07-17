@@ -23,10 +23,12 @@ import fr.openent.competences.security.AccessControleContinuFilter;
 import fr.openent.competences.security.CanUpdateBFCSyntheseRight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.ArchiveUtils;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
@@ -36,11 +38,17 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.storage.Storage;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.util.List;
 
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Competences.ACTION;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
+import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BFC_TABLE;
+import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
@@ -56,15 +64,19 @@ public class BFCController extends ControllerHelper {
     private final LanguesCultureRegionaleService languesCultureRegionaleService;
     private final EleveEnseignementComplementService eleveEnseignementComplement;
     private final NiveauEnsComplementService niveauEnsComplementService;
+    private final Storage storage;
 
-    public BFCController(EventBus eb) {
+    public BFCController(EventBus eb, Storage storage) {
         this.eb = eb;
-        bfcService = new DefaultBFCService(eb);
-        syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
-        enseignementComplement = new DefaultEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ENSEIGNEMENT_COMPLEMENT);
-        languesCultureRegionaleService = new DefaultLanguesCultureRegionaleService(Competences.COMPETENCES_SCHEMA, Competences.LANGUES_CULTURE_REGIONALE);
-        eleveEnseignementComplement = new DefaultEleveEnseignementComplementService(Competences.COMPETENCES_SCHEMA, Competences.ELEVE_ENSEIGNEMENT_COMPLEMENT);
-        niveauEnsComplementService = new DefaultNiveauEnsComplement(Competences.COMPETENCES_SCHEMA,Competences.NIVEAU_ENS_COMPLEMENT);
+        bfcService = new DefaultBFCService(eb, storage);
+        syntheseService = new DefaultBfcSyntheseService(COMPETENCES_SCHEMA, BFC_SYNTHESE_TABLE, eb);
+        enseignementComplement = new DefaultEnseignementComplementService(COMPETENCES_SCHEMA, ENSEIGNEMENT_COMPLEMENT);
+        languesCultureRegionaleService = new DefaultLanguesCultureRegionaleService(COMPETENCES_SCHEMA,
+                LANGUES_CULTURE_REGIONALE);
+        eleveEnseignementComplement = new DefaultEleveEnseignementComplementService(COMPETENCES_SCHEMA,
+                ELEVE_ENSEIGNEMENT_COMPLEMENT);
+        niveauEnsComplementService = new DefaultNiveauEnsComplement(COMPETENCES_SCHEMA,NIVEAU_ENS_COMPLEMENT);
+        this.storage = storage;
     }
 
 
@@ -550,6 +562,36 @@ public class BFCController extends ControllerHelper {
             Renders.badRequest(request);
         }
 
+    }
+
+    @Get("/generate/archive/bfc")
+    @SecuredAction(value = "",type = ActionType.AUTHENTICATED)
+    public void archiveBFC(final HttpServerRequest request){
+        JsonObject action = new JsonObject()
+                .put(ACTION, ArchiveWorker.ARCHIVE_BFC)
+                .put(HOST, getHost(request))
+                .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
+                .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
+                .put(SCHEME, getScheme(request))
+                .put(PATH, request.path());
+        eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+        Renders.ok(request);
+    }
+
+    @Get("/archive/bfc/:idEleve/:idCycle/:idClasse")
+    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    public void getArchive(final HttpServerRequest request){
+        String idEleve = request.params().get(ID_ELEVE_KEY);
+        String idClasse = request.params().get(ID_CLASSE_KEY);
+        Long idCycle = Long.valueOf(request.params().get("idCycle"));
+        Boolean isCycle = true;
+        ArchiveUtils.getArchiveBulletin(idEleve, idClasse, idCycle, storage, ARCHIVE_BFC_TABLE, isCycle, request);
+    }
+
+    @Get("/delete/archive/bfc")
+    @SecuredAction(value ="", type = ActionType.AUTHENTICATED)
+    public void deleteArchive(final HttpServerRequest request){
+        ArchiveUtils.deleteAll(ARCHIVE_BFC_TABLE, storage,  response -> Renders.renderJson(request, response));
     }
 
 }
