@@ -67,7 +67,8 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         JsonObject action = new JsonObject()
                 .put("action", "structure.getStructuresActives")
                 .put("module","notes");
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.
+                getInteger("timeout-transaction") * 1000L), handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
             @Override
             public void handle(Message<JsonObject> message) {
                 JsonObject body = message.body();
