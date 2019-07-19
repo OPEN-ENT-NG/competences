@@ -25,6 +25,7 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
+import org.entcore.common.utils.StringUtils;
 
 
 import static fr.openent.competences.Competences.*;
@@ -38,7 +39,6 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLTimeoutException;
 import java.util.*;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -105,6 +105,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String HAS_PROJECT = "hasProject";
     private static final String ID_IMAGES_FILES = "idImagesFiles";
     private static final String IS_DOMAINE_PARENT = "isDomaineParent";
+    private static final String CLASSE_NAME_TO_SHOW = "classeNameToShow";
+    private static final String NAME_STRUCTURE = "nameStructure";
+
+    private static final String PERIODE = "periode";
+    private static final String STRUCTURE_LIBELLE = "structureLibelle";
+    private static final String STRUCTURE = "structure";
 
     public static final String USE_MODEL_KEY = "useModel";
     public static final String TYPE_PERIODE = "typePeriode";
@@ -113,6 +119,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String HOST = "host";
     public static final String X_FORWARDED_FOR = "X-Forwarded-For";
     public static final String PATH = "path";
+    public static final String FIRST_NAME_KEY = "firstName";
+    public static final String LAST_NAME_KEY = "lastName";
+
 
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
@@ -689,7 +698,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                             } else {
                                 String periodeName = body.getString(RESULT);
-                                eleve.put("periode", periodeName);
+                                eleve.put(PERIODE, periodeName);
                                 serviceResponseOK(answer, finalHandler, count, idEleve, GET_LIBELLE_PERIOD_METHOD);
                             }
                         }
@@ -1249,8 +1258,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             structureLibelle.add(new JsonObject().put("academy", academy));}
                                         if(type != null) {
                                             structureLibelle.add(new JsonObject().put("type", type));}
-                                        if(name != null) {structureLibelle.add(
-                                                new JsonObject().put("nameStructure",name));}
+                                        if(name != null) {
+                                            structureLibelle.add(new JsonObject().put(NAME_STRUCTURE,name));
+                                            eleveObject.put(STRUCTURE, name);
+                                        }
                                         if(address != null) {
                                             structureLibelle.add(new JsonObject().put("address", address));}
                                         String town = null;
@@ -1268,7 +1279,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             structureLibelle.add(new JsonObject().put("couriel", email));}
                                     }
                                 }
-                                eleveObject.put("structureLibelle", structureLibelle);
+                                eleveObject.put(STRUCTURE_LIBELLE, structureLibelle);
                                 serviceResponseOK(answer, finalHandler, count, idEleve, GET_STRUCTURE_METHOD);
                             }
                         }
@@ -1314,7 +1325,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     if (headTeachers != null) {
                                         for(int i=0; i< headTeachers.size(); i++){
                                             JsonObject headTeacher =  headTeachers.getJsonObject(i);
-                                            String firstName = headTeacher.getString("firstName");
+                                            String firstName = headTeacher.getString(FIRST_NAME_KEY);
                                             String initial = "";
 
                                             if(firstName != null && firstName.length() > 0) {
@@ -1831,7 +1842,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if (teachers != null && teachers.size() > 0) {
             for(int j=0; j< teachers.size(); j++) {
                 JsonObject teacher = teachers.getJsonObject(j);
-                String initial = teacher.getString("firstName");
+                String initial = teacher.getString(FIRST_NAME_KEY);
                 if( initial == null ) {
                     initial = "";
                 }
@@ -2081,7 +2092,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             Boolean hasGraphPerDomaine = (img != null);
             eleve.put("hasGraphPerDomaine", hasGraphPerDomaine);
             if(hasGraphPerDomaine) {
-                eleve.put("graphPerDomaine", img);
+                eleve.put(GRAPH_PER_DOMAINE, img);
             }
         }
     }
@@ -2089,7 +2100,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public void setLevel(JsonObject eleve) {
         String level = eleve.getString(LEVEL);
         if(level == null) {
-            level = eleve.getString("classeNameToShow");
+            level = eleve.getString(CLASSE_NAME_TO_SHOW);
         }
         if(level != null) {
             level = String.valueOf(level.charAt(0));
@@ -2252,7 +2263,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         String imgsStructureObjLibelle = "imgsStructureObj";
         CompositeFuture.all(imgsStructureFuture, Future.succeededFuture()).setHandler(event -> {
             if (event.failed()) {
-                log.error("[runArchiveForStructure] :: " +event.cause());
+                log.error("[runArchiveForStructure] :: " + event.cause());
             } else {
                 JsonObject imgsStructureObj = imgsStructureFuture.result();
                 JsonObject imgStructure = imgsStructureObj.getJsonObject(IMG_STRUCTURE);
@@ -2468,25 +2479,28 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if(!student.getString("idClasse").equals(idClasseExporte) &&
                 student.getJsonObject("oldClasses") != null &&
                 student.getJsonObject("oldClasses").getString(idClasseExporte) != null) {
-            student.put("classeNameToShow", student.getJsonObject("oldClasses").getString(idClasseExporte));
+            student.put(CLASSE_NAME_TO_SHOW, student.getJsonObject("oldClasses").getString(idClasseExporte));
         } else {
-            student.put("classeNameToShow", student.getString("classeName"));
+            student.put(CLASSE_NAME_TO_SHOW, student.getString("classeName"));
         }
 
 
     }
 
     private String getFileNameForStudent(JsonObject student, Long idPeriode){
-        String filename = "";
+        String filename = StringUtils.EMPTY_STRING;
         String separator = "_";
         String end = ".pdf";
-        filename += student.getString(ID_ELEVE);
+
+        filename += student.getString(STRUCTURE);
         filename += separator;
-        filename += student.getString(EXTERNAL_ID_KEY);
+        filename += student.getString(CLASSE_NAME_TO_SHOW);
         filename += separator;
-        filename += student.getString(ID_ETABLISSEMENT_KEY);
+        filename += student.getString(LAST_NAME_KEY);
         filename += separator;
-        filename += idPeriode;
+        filename += student.getString(FIRST_NAME_KEY);
+        filename += separator;
+        filename += student.getString(PERIODE);
         filename += end;
         return filename;
     }
@@ -2716,7 +2730,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         this.storage.writeBuffer(file, "application/pdf", name,  uploaded -> {
             String idFile = uploaded.getString("_id");
-            if (!"ok".equals(uploaded.getString(STATUS)) || idFile ==  null) {
+            if (!OK.equals(uploaded.getString(STATUS)) || idFile ==  null) {
                 String error = uploaded.getString(MESSAGE);
                 log.error("saveArchivePdf : " + error);
                 handler.handle(new Either.Right<>(uploaded));
@@ -2749,14 +2763,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             }
                             else {
                                 String externalId = result.getString(EXTERNAL_ID_KEY);
-                                saveIdArchive(idEleve, idClasse, externalId,
-                                        idEtablissement, idPeriode, idFile, saveHandler);
+                                saveIdArchive(idEleve, idClasse, externalId, idEtablissement, idPeriode, idFile,
+                                        name, saveHandler);
                             }
                         }
                     });
                 }
                 else {
-                    saveIdArchive(idEleve, idClasse, externalIdClasse, idEtablissement, idPeriode, idFile, saveHandler);
+                    saveIdArchive(idEleve, idClasse, externalIdClasse, idEtablissement, idPeriode, idFile, name,
+                            saveHandler);
                 }
             }
             else {
@@ -2768,13 +2783,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void saveIdArchive(String idEleve, String idClasse, String externalIdClasse,
-                               String idEtablissement, Long idPeriode, String idFile,
+                               String idEtablissement, Long idPeriode, String idFile, String name,
                                Handler<Either<String, JsonObject>> handler){
         String query = " INSERT INTO " + COMPETENCES_SCHEMA + ".archive_bulletins " +
-                " (id_classe, id_eleve, id_etablissement, external_id_classe, id_periode,  id_file) " +
-                " VALUES (?, ?, ?, ?, ?, ?);";
+                " (id_classe, id_eleve, id_etablissement, external_id_classe, id_periode,  id_file, file_name) " +
+                " VALUES (?, ?, ?, ?, ?, ?, ?);";
         JsonArray values = new JsonArray().add(idClasse).add( idEleve).add( idEtablissement).add( externalIdClasse)
-                .add(idPeriode).add( idFile);
+                .add(idPeriode).add( idFile).add(name);
         Sql.getInstance().prepared(query, values, Competences.DELIVERY_OPTIONS,
                 result -> {
                     JsonObject body = result.body();
@@ -2834,12 +2849,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 log.info(" [Remove graph Images] " + remove.encode());
                 clearArchiveTable(removesFiles, deleteEvent -> {
                     JsonObject response = new JsonObject().put(RESULT,remove.encode());
-                   if (deleteEvent.isRight()) {
-                       handler.handle(response.put("deleteOK", deleteEvent.right().getValue()));
-                   }
-                   else {
-                       handler.handle(response.put("deleteKO", deleteEvent.left().getValue()));
-                   }
+                    if (deleteEvent.isRight()) {
+                        handler.handle(response.put("deleteOK", deleteEvent.right().getValue()));
+                    }
+                    else {
+                        handler.handle(response.put("deleteKO", deleteEvent.left().getValue()));
+                    }
                 });
 
             });
