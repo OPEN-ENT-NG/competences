@@ -223,8 +223,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " GROUP BY compDevoir.id, COALESCE(compPerso.nom, comp.nom), comp.id_type, comp.id_parent, comp.id" +
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
-        Sql.getInstance().prepared(query,new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                .getInteger("timeout-transaction") * 4000L),SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query,new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement),SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -255,8 +254,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " LEFT JOIN (SELECT nom, id_competence FROM " + COMPETENCES_PERSO_TABLE + " WHERE id_etablissement = ? ) AS compPerso ON comp.id = compPerso.id_competence" +
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
-        Sql.getInstance().prepared(query,new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                .getInteger("timeout-transaction") * 4000L),SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query,new fr.wseduc.webutils.collections.JsonArray().add(idEtablissement),SqlResult.validResultHandler(handler));
     }
 
     @Override
