@@ -66,23 +66,11 @@ public interface CompetencesService extends CrudService {
     void getDevoirCompetences(Long devoirId,  Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Getter : Récupération des compétences pour tous les devoirs
-     * @param handler handler portant le résultat de la requête
-     */
-    void getAllDevoirCompetences(String idEtablissement, final Handler<Either<String, JsonArray>> handler);
-
-    /**
      * Getter : Récupération des compétences par enseignement pour un devoir donné
      * @param devoirId
      * @param handler
      */
     void getDevoirCompetencesByEnseignement(Long devoirId, final Handler<Either<String, JsonArray>> handler);
-
-    /**
-     * Getter : Récupération des compétences par enseignement pour tous les devoirs
-     * @param handler
-     */
-    void getAllDevoirCompetencesByEnseignement(String idEtablissement, final Handler<Either<String, JsonArray>> handler);
 
     /**
      * Getter : Récupération des compétences sélectionné sur le dernier devoir créé par

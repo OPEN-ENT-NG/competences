@@ -274,46 +274,38 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                                   withMoyGeneraleByEleve, withMoyMinMaxByMat ) => {
             switch (printSuiviClasse) {
                 case 'printRecapAppreciations' : {
-                    if( $scope.opened.recapEval ) $scope.opened.recapEval = false;
-                    await Utils.runMessageLoader($scope);
                     let url = "/competences/recapAppreciations/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }
                     url += "&idStructure=" + $scope.structure.id;
                     http().getJson(url + "&json=true")
-                        .error(async (result) => {
-                            await Utils.stopMessageLoader($scope);
+                        .error((result) => {
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
-                        .done(async () => {
+                        .done(() => {
                             delete $scope.recapEval;
                             $scope.opened.recapEval = false;
                             location.replace(url);
-                            await Utils.stopMessageLoader($scope);
                             utils.safeApply($scope);
                         });
                     break;
                 }
                 case 'printRecapEval' : {
-                    if( $scope.opened.recapEval ) $scope.opened.recapEval = false;
-                    await Utils.runMessageLoader($scope);
                     let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }
                     http().getJson(url + "&json=true")
-                        .error(async (result) => {
-                            await Utils.stopMessageLoader($scope);
+                        .error((result) => {
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
-                        .done(async () => {
+                        .done(() => {
                             delete $scope.recapEval;
                             $scope.opened.recapEval = false;
                             location.replace(url);
-                            await Utils.stopMessageLoader($scope);
                             utils.safeApply($scope);
                         });
                     break;
@@ -363,8 +355,6 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     break;
                 }
                 case 'printTabMoys': {
-                    if( $scope.opened.recapEval ) $scope.opened.recapEval = false;
-                    await Utils.runMessageLoader($scope);
                     let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id ;
                     url +=  "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
                     url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat+ "&text=" + !textMod;
@@ -372,16 +362,14 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         url += "&idPeriode=" + idPeriode ;
                     }
                     http().getJson(url)
-                        .error(async (result) => {
-                            await Utils.stopMessageLoader($scope);
+                        .error((result) => {
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
-                        .done(async () => {
+                        .done((result) => {
                             delete $scope.recapEval;
                             $scope.opened.recapEval = false;
                             location.replace(url);
-                            await Utils.stopMessageLoader($scope);
                             utils.safeApply($scope);
                         });
                     break;

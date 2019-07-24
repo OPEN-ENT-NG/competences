@@ -55,8 +55,6 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static fr.wseduc.webutils.http.Renders.getHost;
@@ -373,8 +371,7 @@ public class DefaultExportService implements ExportService  {
     @Override
     public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve, final String[] idGroupes,
                                     String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
-                                    Long idPeriodeType, Boolean isCycle, final JsonArray enseignementsOrdered,  final JsonArray domainesRacines, final JsonArray competences,
-                                    final Handler<Either<String, JsonObject>> handler) {
+                                    Long idPeriodeType, Boolean isCycle, final JsonArray enseignementsOrdered,  final JsonArray domainesRacines, final Handler<Either<String, JsonObject>> handler) {
         final AtomicBoolean answered = new AtomicBoolean();
         final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
         final JsonArray maitriseArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -402,14 +399,28 @@ public class DefaultExportService implements ExportService  {
                             for (int i = 0; i < stringJsonArrayEither.right().getValue().size(); i++) {
                                 Long idDevoir = ((JsonObject) stringJsonArrayEither.right().getValue().getJsonObject(i))
                                         .getLong("id");
-                                getDevoirCompetences(idDevoir,competences, getIntermediateHandler(idDevoir, competencesArray, finalHandler));
+                                if (pByEnseignement) {
+                                    competencesService.getDevoirCompetencesByEnseignement(idDevoir,
+                                            getIntermediateHandler(idDevoir, competencesArray, finalHandler));
+                                } else {
+                                    competencesService.getDevoirCompetences(idDevoir,
+                                            getIntermediateHandler(idDevoir, competencesArray, finalHandler));
+                                }
                                 competenceNoteService.getCompetencesNotes(idDevoir, idEleve,
                                         true,
                                         getIntermediateHandler(idDevoir, competencesNotesArray, finalHandler));
                             }
                         } else if (stringJsonArrayEither.isRight() && stringJsonArrayEither.right().getValue().getValue(0) instanceof String){
-                            getNullIntermediateHandler(competencesArray, finalHandler);
-                            getNullIntermediateHandler(competencesNotesArray, finalHandler);
+                            if (pByEnseignement){
+                                competencesService.getDevoirCompetencesByEnseignement(null,
+                                        getIntermediateHandler(null, competencesArray, finalHandler));
+                            } else {
+                                competencesService.getDevoirCompetences(null,
+                                        getIntermediateHandler(null, competencesArray, finalHandler));
+                            }
+                            competenceNoteService.getCompetencesNotes(null, idEleve,
+                                    true,
+                                    getIntermediateHandler(null, competencesNotesArray, finalHandler));
                         } else {
                             finalHandler.handle(stringJsonArrayEither.left());
                         }
@@ -465,26 +476,6 @@ public class DefaultExportService implements ExportService  {
         });
     }
 
-    private void getDevoirCompetences(final Long idDevoir, final JsonArray competences,
-                                                                    final Handler<Either<String, JsonArray>> finalHandler) {
-
-        JsonArray devoirInfos = new JsonArray();
-        for(int i = 0; i<competences.size();i++){
-            JsonObject json = (JsonObject) competences.getJsonObject(i);
-            if(json.getLong("id_devoir").equals(idDevoir)) {
-                devoirInfos.add(json);
-                break;
-            }
-        }
-        //List<Object> result = competences.stream().parallel().filter(json -> ((JsonObject) json).getLong("id_devoir").equals(idDevoir)).collect(Collectors.toList());
-        /*if(result.size()>0) {
-            JsonObject jsonToFind = (JsonObject) result.get(0);
-            devoirInfos.add(jsonToFind);
-        }*/
-        finalHandler.handle(new Either.Right<>(devoirInfos));
-
-    }
-
     private Handler<Either<String, JsonArray>>
     getIntermediateHandler(final JsonArray collection,
                            final Handler<Either<String, JsonArray>> finalHandler) {
@@ -501,18 +492,6 @@ public class DefaultExportService implements ExportService  {
                 finalHandler.handle(stringJsonArrayEither);
             }
         };
-    }
-
-    private void getNullIntermediateHandler(final JsonArray collection,
-                           final Handler<Either<String, JsonArray>> finalHandler) {
-
-            JsonArray result = new JsonArray();
-            if(result.size() == 0) {
-                result.add("empty");
-            }
-            utilsService.saUnion(collection, result);
-            finalHandler.handle(new Either.Right<>(result));
-
     }
 
     private Handler<Either<String, JsonArray>>
