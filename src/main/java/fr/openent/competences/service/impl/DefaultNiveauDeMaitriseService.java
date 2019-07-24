@@ -79,7 +79,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         query.append(" ORDER BY ordre");
 
         Sql.getInstance().prepared(query.toString(), values,new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                .getInteger("timeout-transaction") * 4000L), validResultHandler(handler));
+                .getInteger("timeout-transaction") * 2000L), validResultHandler(handler));
     }
 
     public void getNiveauDeMaitriseofCycle(Long Cycle, Handler<Either<String, JsonArray>> handler){
