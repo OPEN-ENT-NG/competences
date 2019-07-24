@@ -20,8 +20,6 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.DomainesService;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
@@ -29,7 +27,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
 public class DefaultDomaineService extends SqlCrudService implements DomainesService {
-
     public DefaultDomaineService(String schema, String table) {
         super(schema, table);
     }

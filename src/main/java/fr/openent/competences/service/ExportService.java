@@ -36,7 +36,7 @@ public interface ExportService {
 
     void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve,
                              String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
-                             final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle, final JsonArray enseignementsOrdered, final JsonArray domainesRacines,
+                             final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle,
                              final Handler<Either<String, JsonObject>> handler);
 
     void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement,
