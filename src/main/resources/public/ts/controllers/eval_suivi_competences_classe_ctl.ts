@@ -344,7 +344,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         notify.success('evaluations.export.bulletin.success');
                     })
                         .catch(async(data) =>{
-                            if(data.response != undefined && data.response.status != 200){
+                            if(data.response != undefined && data.response.status === 400){
                                 await Utils.stopMessageLoader($scope);
                                 $scope.opened.recapEval = true;
                                 console.log(data.response.data);

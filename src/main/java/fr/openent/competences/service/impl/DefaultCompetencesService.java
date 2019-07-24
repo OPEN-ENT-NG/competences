@@ -203,7 +203,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
         Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId).add(devoirId),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                        .getInteger("timeout-transaction") * 2000L),
+                        .getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));
     }
 
@@ -221,7 +221,7 @@ public class DefaultCompetencesService extends SqlCrudService implements Compete
                 " ORDER BY (compDevoir.index ,compDevoir.id);";
 
         Sql.getInstance().prepared(query, new fr.wseduc.webutils.collections.JsonArray().add(devoirId),new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
-                        .getInteger("timeout-transaction") * 2000L),
+                        .getInteger("timeout-transaction") * 1000L),
                 SqlResult.validResultHandler(handler));
     }
 
