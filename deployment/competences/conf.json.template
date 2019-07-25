@@ -28,8 +28,8 @@
            "timeout-transaction" : 1000
         },
         "node-pdf-generator" : {
-           "authorization" : ${pdfGeneratorAuth},
-           "url": ${pdfGeneratorUrl}
+           "authorization" : "${pdfGeneratorAuth}",
+           "url": "${pdfGeneratorUrl}"
         }
       }
     }
