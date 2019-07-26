@@ -52,9 +52,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.ACTION;
-import static fr.openent.competences.Utils.getLibelle;
-import static fr.openent.competences.Utils.isNotNull;
-import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.RESULT;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.getExternalIdClasse;
@@ -87,6 +85,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private static final String ID_DOMAINE = "id_domaine";
     private static final String EMPTY = "empty";
     private static final String CLASSES = "classes";
+    private static final String NOM_CLASSE ="nomClasse";
 
 
     public DefaultBFCService(EventBus eb, Storage storage) {
@@ -775,22 +774,17 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private void getNameEntity(String[] name, String fieldUsed, Long idPeriode, JsonObject result,
                                Handler<Either<String, JsonObject>> handler){
 
-        try {
-            utilsService.getNameEntity(name, fieldUsed, nameEvent -> {
-                if (nameEvent.isRight()) {
-                    final String structureName = nameEvent.right().getValue().getJsonObject(0)
-                            .getString(NAME).replace(BLANK_SPACE, UNDERSCORE);
-                    result.put(NAME, structureName).put(ID_PERIODE, idPeriode);
-                    handler.handle(new Either.Right<>(result));
-                } else {
-                    handler.handle(new Either.Left(nameEvent.left().getValue()));
-                    log.error("getNameEntity : Unable to get the name of the specified entity (" + fieldUsed + ").");
-                }
-            });
-        }catch (Exception e){
-            log.error(" GET NAME ENTITY RESTART : " + e.getMessage());
-            getNameEntity(name, fieldUsed, idPeriode, result, handler);
-        }
+        utilsService.getNameEntity(name, fieldUsed, nameEvent -> {
+            if (nameEvent.isRight()) {
+                final String structureName = nameEvent.right().getValue().getJsonObject(0)
+                        .getString(NAME).replace(BLANK_SPACE, UNDERSCORE);
+                result.put(NAME, structureName).put(ID_PERIODE, idPeriode);
+                handler.handle(new Either.Right<>(result));
+            } else {
+                handler.handle(new Either.Left(nameEvent.left().getValue()));
+                log.error("getNameEntity : Unable to get the name of the specified entity (" + fieldUsed + ").");
+            }
+        });
     }
 
     public void generateBFC(final String idStructure, final JsonArray idClassesArray, final JsonArray idElevesArray,
@@ -820,10 +814,10 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     if (idStructure != null) {
                         getNameEntity(new String[]{idStructureGot}, ID_STRUCTURE_KEY, idPeriode, result, handler);
-                        return;
                     }
-                    if (idClasses!= null && !idClasses.isEmpty()) {
-                        getNameEntity(classes.keySet().toArray(new String[1]), ID_CLASSE_KEY, idPeriode, result,handler);
+                    else if (!idClasses.isEmpty()) {
+                        getNameEntity(classes.keySet().toArray(new String[1]), ID_CLASSE_KEY, idPeriode, result,
+                                handler);
                     }
                     else {
                         getNameEntity(idEleves.toArray(new String[1]), ID_ELEVE_KEY, idPeriode, result, handler);
@@ -967,50 +961,47 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         });
 
     }
-    private void getConversionNoteCompetence(String idStructure, Map.Entry<String, List<Eleve>> classe,
-                                             final Map<String, JsonObject> result,
-                                             final Map<Integer, String> libelleEchelle,
-                                             final Handler<Either<String, JsonArray>> handler){
+    private void formatConversionNote(String idStructure, Map.Entry<String, List<Eleve>> classe,
+                                      final Map<String, JsonObject> result,final Map<Integer, String> libelleEchelle,
+                                      JsonArray conversion){
+        if (conversion.size() == 0) {
+            String logError = "getBFC : getConversionNoteCompetence (" +
+                    classe.getValue().get(0).getNomClasse() + ", " +
+                    classe.getKey() + ") : aucune echelle de conversion pour cette classe.";
+            log.error(logError);
+            return;
+        }
+
+        for (int i = 0; i <conversion.size(); i++) {
+            JsonObject _o = conversion.getJsonObject(i);
+            libelleEchelle.put(_o.getInteger(ORDRE), _o.getString(LIBELLE));
+        }
+        for (Eleve e : classe.getValue()) {
+            e.setLibelleNiveau(libelleEchelle);
+        }
+    }
+    private void getConversionNoteCompetenceClasse(String idStructure, Map.Entry<String, List<Eleve>> classe,
+                                                   final Map<String, JsonObject> result,
+                                                   final Map<Integer, String> libelleEchelle,
+                                                   final Handler<Either<String, JsonArray>> handler){
+
         competenceNoteService.getConversionNoteCompetence(idStructure, classe.getKey(),  event -> {
             if (event.isRight()) {
-                if (event.right().getValue().size() == 0) {
-                    String error = "Une erreur est survenue lors de la recuperation de l'échelle de conversion " +
-                            "pour la classe " + classe.getValue().get(0).getNomClasse() + " : aucune echelle de " +
-                            "conversion pour cette classe.";
-
-                    collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR,error), result, handler);
-                    String logError = "getBFC : getConversionNoteCompetence (" + idStructure + ", " +
-                            classe.getKey() + ") : aucune echelle de conversion pour cette classe.";
-                    log.error(logError);
-                }
-                for (int i = 0; i < event.right().getValue().size(); i++) {
-                    JsonObject _o = event.right().getValue().getJsonObject(i);
-                    libelleEchelle.put(_o.getInteger(ORDRE), _o.getString(LIBELLE));
-                }
-                for (Eleve e : classe.getValue()) {
-                    e.setLibelleNiveau(libelleEchelle);
-                }
-                JsonArray classeResult = formatBFC(classe.getValue());
-                // classeResult est différent de null si tous les élèves de la classe ont tous les paramètres
-                if (isNotNull(classeResult)) {
-                    collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result, handler);
-                }
-                else {
-                    // log.error(" NO classeResult ");
-                }
+                formatConversionNote(idStructure,classe, result, libelleEchelle, event.right().getValue());
+                handler.handle(event);
             } else {
-                String error = "Une erreur est survenue lors de la recuperation de l'échelle de conversion pour " +
-                        "la classe : " + classe.getValue().get(0).getNomClasse() + ";\n" + event.left().getValue();
-                collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
+                String error = event.left().getValue();
+                log.error(error);
 
-                String logError = "getBFC : getConversionNoteCompetence (" + idStructure + ", " + classe.getKey() +
-                        ") : " + event.left().getValue();
-                log.error(logError);
+                if(error.contains(TIME)){
+                    getConversionNoteCompetenceClasse(idStructure,classe, result, libelleEchelle, handler);
+                }
             }
         });
     }
 
-    private void formatEleve (JsonObject eleveJson, String idClasse,List<Future> listeFutures) {
+    private void formatEleve (JsonObject eleveJson, String idClasse, Future formatFuture) {
+        eleveJson.put(CLASSE_NAME_TO_SHOW, eleveJson.getValue(NOM_CLASSE));
         exportBulletinService.setLevel(eleveJson);
         exportBulletinService.setBirthDate(eleveJson);
         eleveJson.put("familyVisa", getLibelle("evaluations.export.bulletin.visa.libelle"))
@@ -1020,24 +1011,29 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 .put("signatureSample",getLibelle("evaluations.add.file.signature"))
                 .put("bornAt", getLibelle("born.on"))
                 .put("classeOf", getLibelle("classe.of"))
-                .put("today",new SimpleDateFormat("dd/MM/yyyy")
-                        .format(new Date().getTime()));
+                .put("today",new SimpleDateFormat("dd/MM/yyyy").format(new Date().getTime()));
+
         final String idEleve = eleveJson.getString(ID_ELEVE_KEY);
 
         Future<JsonObject> structureFuture = Future.future();
-        listeFutures.add(structureFuture);
-        exportBulletinService.getStructure(idEleve,eleveJson, st ->   FormateFutureEvent.formate(structureFuture, st));
+        exportBulletinService.getStructure(idEleve, eleveJson, st -> FormateFutureEvent.formate(structureFuture, st));
 
-        Future<JsonObject> AnneeScolaireFuture = Future.future();
-        listeFutures.add(AnneeScolaireFuture);
-        exportBulletinService.getAnneeScolaire(idEleve,idClasse, eleveJson, year ->
-                FormateFutureEvent.formate(AnneeScolaireFuture, year));
+        Future<JsonObject> anneeScolaireFuture = Future.future();
+        exportBulletinService.getAnneeScolaire(idEleve, idClasse, eleveJson, year ->
+                FormateFutureEvent.formate(anneeScolaireFuture, year));
 
-        Future<JsonObject> HeadTeachersFuture = Future.future();
-        listeFutures.add(HeadTeachersFuture);
-        exportBulletinService.getHeadTeachers(idEleve,idClasse, eleveJson, hdTeacher ->
-                FormateFutureEvent.formate(HeadTeachersFuture, hdTeacher));
+        Future<JsonObject> headTeachersFuture = Future.future();
+        exportBulletinService.getHeadTeachers(idEleve, idClasse, eleveJson, hdTeacher ->
+                FormateFutureEvent.formate(headTeachersFuture, hdTeacher));
 
+        CompositeFuture.all(structureFuture, anneeScolaireFuture, headTeachersFuture).setHandler(
+                event -> {
+                    if(event.failed()) {
+                        log.error(event.cause().getMessage());
+                    }
+                    formatFuture.complete();
+                }
+        );
     }
 
     private void getEnsComplByStudent(Map<String, Map<String, Long>> niveauEnseignementComplementEleve,
@@ -1064,6 +1060,16 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                    final Map<String, Map<Long, Integer>> resultatsEleves,
                                    final Handler<Either<String, JsonArray>> handler){
 
+        final Map<Integer, String> libelleEchelle = new HashMap<>();
+
+
+        Future conversionNoteFuture = Future.future();
+        getConversionNoteCompetenceClasse(idStructure, classe, result, libelleEchelle,
+                event -> FormateFutureEvent.formate(conversionNoteFuture, event ));
+
+        Future domaineRacineFuture = Future.future();
+        getDomainesRacinesByClass(classe, result, libelleEchelle, idEleves,
+                event -> FormateFutureEvent.formate(domaineRacineFuture, event ));
 
         Future<JsonObject> buildBfcFuture = Future.future();
         final Boolean recapEvalForBfc = false;
@@ -1079,7 +1085,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 repSynthese -> FormateFutureEvent.formate(syntheseFuture, repSynthese));
 
 
-        CompositeFuture.all(buildBfcFuture, listCplByEleveFuture, syntheseFuture).setHandler(
+        CompositeFuture.all(buildBfcFuture, listCplByEleveFuture, syntheseFuture, conversionNoteFuture,
+                domaineRacineFuture).setHandler(
                 event -> {
                     if(event.failed()){
                         String error = classe.getValue().get(0).getNomClasse() + ";\n" + event.cause().getMessage();
@@ -1128,14 +1135,17 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         e.setSyntheseCycle(syntheseEleve.get(e.getIdEleve()));
                     }
                     JsonArray classeResult = formatBFC(classe.getValue());
+                    final String idClasse = classe.getValue().get(0).getIdClasse();
                     if (classeResult != null) {
                         List<Future> listeFutures = new ArrayList<>();
-                        for(Object eleve : classeResult){
-                            JsonObject eleveJson = ((JsonObject)eleve).put(ID_ETABLISSEMENT_KEY, idStructure);
-                            final String idClasse = classe.getValue().get(0).getIdClasse();
+                        for(int i=0; i < classeResult.size(); i++ ){
+                            JsonObject eleveJson = classeResult.getJsonObject(i);
+                            eleveJson.put(ID_ETABLISSEMENT_KEY, idStructure);
                             // formatEleve se charge de lancer la récupération des informations manquants et rajoute
                             // les appels dans la listeFutures
-                            formatEleve(eleveJson, idClasse, listeFutures);
+                            Future formatEleveFuture = Future.future();
+                            listeFutures.add(formatEleveFuture);
+                            formatEleve(eleveJson, idClasse, formatEleveFuture);
                         }
 
                         // Récupération du logo de l'établissment
@@ -1181,9 +1191,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         );
 
     }
-    private void getDomainesRacinesByClasse( Map.Entry<String, List<Eleve>> classe, final Map<String, JsonObject> result,
-                                             final Map<Integer, String> libelleEchelle, final List<String> idEleves,
-                                             final Handler<Either<String, JsonArray>> handler){
+    private void getDomainesRacinesByClass( Map.Entry<String, List<Eleve>> classe, final Map<String, JsonObject> result,
+                                            final Map<Integer, String> libelleEchelle, final List<String> idEleves,
+                                            final Handler<Either<String, JsonArray>> handler){
 
         Future<JsonArray> domsFuture = Future.future();
         domaineService.getDomainesRacines(classe.getKey(), event -> FormateFutureEvent.formate(domsFuture, event));
@@ -1195,7 +1205,11 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         CompositeFuture.all(domsFuture, dispenseDomaineFuture).setHandler(event -> {
             if(event.failed()){
                 String error = event.cause().getMessage();
-                collectBFCEleve(classe.getKey(),new JsonObject().put(ERROR, error), result, handler);
+                if(error.contains(TIME)){
+                    getDomainesRacinesByClass(classe, result, libelleEchelle, idEleves, handler);
+                    return;
+                }
+                handler.handle(new Either.Right<>((new JsonArray())));
                 log.error("getDomainesRacinesByClasse (" + classe.getKey() + ") : " + error);
                 return ;
             }
@@ -1206,11 +1220,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 String error = "Une erreur est survenue lors de la recuperation des domaines pour " +
                         "la classe " + classe.getValue().get(0).getNomClasse() +
                         " : aucun domaine racine pour cette classe.";
-                collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
-
-                String logError = "getBFC : getDomainesRacines (" + classe.getKey() +
-                        ") : aucun domaine racine pour cette classe.";
-                log.error(logError);
+                log.error(error);
+                handler.handle(new Either.Right<>((new JsonArray())));
                 return;
             }
             //On récupère les domaines dispensés pour tous les élèves de la classe
@@ -1240,13 +1251,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 e.setDomainesRacines(domainesRacines);
             }
 
-            JsonArray classeResult = formatBFC(classe.getValue());
-            if (classeResult != null) {
-                collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result, handler);
-            }
-            else {
-               // log.error("getDomainesRacinesByClasse  classeResut empty ");
-            }
+            handler.handle(new Either.Right<>((new JsonArray())));
         });
     }
     /**
@@ -1267,9 +1272,12 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     private void getBFCParClasse(final Map<String, List<Eleve>> classes, final String idStructure, Long idPeriode,
                                  Long idCycle, final Handler<Either<String, JsonArray>> handler) {
 
-// Contient toutes les classes sous forme JsonObject, indexant en fontion de l'identifiant de la classe
-// correspondante.
+        // Contient toutes les classes sous forme JsonObject, indexant en fontion de l'identifiant de la classe
+        // correspondante.
 
+        if(idStructure == null ){
+            log.info(" \n  getBFCParClasse idSTRUCTURE NULL  \n " );
+        }
         final Map<String, JsonObject> result = new LinkedHashMap<>();
 
         // La map result avec les identifiants des classes, contenus dans "classes", afin de s'assurer qu'aucune ne
@@ -1285,7 +1293,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         for (final Map.Entry<String, List<Eleve>> classe : classes.entrySet()) {
 
-            final Map<Integer, String> libelleEchelle = new HashMap<>();
             final Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
 
             final List<String> idEleves = new ArrayList<>();
@@ -1295,11 +1302,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                 idEleves.add(e.getIdEleve());
             }
 
-            getConversionNoteCompetence(idStructure, classe, result, libelleEchelle, handler );
-
-            getDomainesRacinesByClasse(classe, result, libelleEchelle, idEleves, handler);
-
-            buildBFCParClasse(idEleves,idStructure, idPeriode, idCycle, classe, result, resultatsEleves, handler);
+            buildBFCParClasse(idEleves, idStructure, idPeriode, idCycle, classe, result, resultatsEleves, handler);
 
         }
     }
@@ -1355,6 +1358,36 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         });
     }
 
+    private void getInfoEleveForClasses(String[] idStudents, String idStructure, String idClasse,
+                                        Map<String, Map<String, List<Eleve>>> population,
+                                        final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
+        Utils.getInfoEleve(eb, idStudents, idStructure,
+                info -> {
+                    if (info.isRight()) {
+                        if(isNull(idStructure)){
+                            log.error(" getInfoEleveForClasses null ");
+                        }
+                        population.get(idStructure).put(idClasse, info.right().getValue());
+                        // Si population.get(idStructure).values() contient une valeur null,
+                        // cela signifie qu'une classe n'a pas encore recupere sa liste d'eleves
+                        if (!population.get(idStructure).values().contains(null)) {
+                            handler.handle(new Either.Right(population));
+                        } else {
+                            log.error(" not get yet population ");
+                            handler.handle(new Either.Right(population));
+                        }
+                    } else {
+                        String error = info.left().getValue();
+                        log.error("getParamClasses : getInfoEleve : " + error);
+                        if(error.contains(TIME)){
+                            getInfoEleveForClasses(idStudents, idStructure, idClasse, population, handler);
+                            return;
+                        }
+                        handler.handle(new Either.Left<>(error));
+                    }
+                });
+    }
+
     /**
      * Recupere les parametres manquant afin de pouvoir generer le BFC dans le cas ou seul des identifiants de classes
      * sont fournis.
@@ -1364,53 +1397,65 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      */
     private void  getParamClasses(final List<String> idClasses, final Long idPeriode,
                                   final Handler<Either<String, Map<String, Map<String, List<Eleve>>>>> handler) {
-        final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
 
-        Utils.getStructClasses(eb, idClasses.toArray(new String[0]), classesEvent -> {
-            if (classesEvent.isRight()) {
-                final String idStructure = classesEvent.right().getValue();
-                population.put(idStructure, new LinkedHashMap());
+        // Récupération de l'idStructure  de la classe
+        Future<String> structureFucture = Future.future();
+        Utils.getStructClasses(eb, idClasses.toArray(new String[0]),
+                event -> FormateFutureEvent.formate(structureFucture, event));
 
-                Utils.getElevesClasses(eb, idClasses.toArray(new String[0]),
-                        idPeriode, event -> {
-                            if (event.isRight()) {
-                                Map<String, List<String>> mapEleves =  event.right().getValue();
-                                if(mapEleves.isEmpty()){
-                                    log.info("getParamClasses  NO student ");
-                                    handler.handle(new Either.Right(population));
-                                    return;
-                                }
-                                for (Map.Entry<String, List<String>> classe : mapEleves.entrySet()) {
-                                    population.get(idStructure).put(classe.getKey(), null);
-                                    Utils.getInfoEleve(eb, classe.getValue().toArray(new String[0]),
-                                            idStructure, info -> {
-                                                if (info.isRight()) {
-                                                    population.get(idStructure).put(classe.getKey(),
-                                                            info.right().getValue());
-                                                    // Si population.get(idStructure).values() contient une valeur null,
-                                                    // cela signifie qu'une classe n'a pas encore recupere sa liste d'eleves
-                                                    if (!population.get(idStructure).values().contains(null)) {
-                                                        handler.handle(new Either.Right(population));
-                                                    }
-                                                    else {
-                                                        log.error(" not get yet population ");
-                                                        handler.handle(new Either.Right(population));
-                                                    }
-                                                } else {
-                                                    handler.handle(new Either.Left(info.left().getValue()));
-                                                    log.error("getParamClasses : getInfoEleve : "
-                                                            + info.left().getValue());
-                                                }
-                                            });
-                                }
-                            } else {
-                                handler.handle(new Either.Left(event.left().getValue()));
-                                log.error("getParamClasses : getElevesClasses : " + event.left().getValue());
-                            }
-                        });
+        // Récupération des élèves de la classe
+        Future<Map<String, JsonArray>> studentsFuture = Future.future();
+        getClassesEleves(eb, idClasses.toArray(new String[0]), idPeriode,
+                event -> FormateFutureEvent.formate(studentsFuture, event));
+
+        // Récupération du cycle
+        Future<JsonArray> cycleFuture = Future.future();
+        utilsService.getCycle(idClasses, event -> FormateFutureEvent.formate(cycleFuture, event));
+
+        CompositeFuture.all(structureFucture, studentsFuture,cycleFuture).setHandler(event -> {
+
+            if (event.failed()) {
+                String error = event.cause().getMessage();
+                log.error(error);
+                handler.handle(new Either.Left<>(error));
+                return;
+            }
+            // Construction de la Map des libelle de cycle <idClasse, libelle>
+            Map<String, String> mapCycleLibelle = new HashMap<>();
+            JsonArray cycleResult = cycleFuture.result();
+            for (int i = 0; i < cycleResult.size(); i++) {
+                JsonObject cycle = cycleResult.getJsonObject(i);
+                String idClasse = cycle.getString("id_groupe");
+                String libelleCycle = cycle.getString(LIBELLE);
+                if(!mapCycleLibelle.containsKey(idClasse)){
+                    mapCycleLibelle.put(idClasse, libelleCycle);
+                }
+            }
+
+            final String idStructure = structureFucture.result();
+            final Map<String, Map<String, List<Eleve>>> population = new HashMap<>();
+            population.put(idStructure, new LinkedHashMap());
+
+            Map<String, JsonArray> mapEleves =  studentsFuture.result();
+            if(mapEleves.isEmpty()){
+                log.info("getParamClasses  NO student ");
+                handler.handle(new Either.Right(population));
+                return;
+            }
+            for (Map.Entry<String, JsonArray> classe : mapEleves.entrySet()) {
+                final String idClasse = classe.getKey();
+                JsonArray eleves = classe.getValue();
+                population.get(idStructure).put(idClasse, null);
+                List<Eleve> eleveList = toListEleve(eleves, mapCycleLibelle);
+                population.get(idStructure).put(idClasse, eleveList);
+            }
+            // Si population.get(idStructure).values() contient une valeur null,
+            // cela signifie qu'une classe n'a pas encore recupere sa liste d'eleves
+            if (!population.get(idStructure).values().contains(null)) {
+                handler.handle(new Either.Right(population));
             } else {
-                handler.handle(new Either.Left(classesEvent.left().getValue()));
-                log.error("getParamClasses : getStructClasses : " + classesEvent.left().getValue());
+                log.error(" not get yet population ");
+                handler.handle(new Either.Right(population));
             }
         });
     }
@@ -1484,7 +1529,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         int index = structures.size() - nbStructure.get();
         log.info(" \n\n");
         log.info("                          :-------------------------------: ");
-        log.info("                          :      BFC STRUCTURE " + index + "/" + structures.size()+ "       : ");
+        log.info("                          :      BFC STRUCTURE " + index + "/" + structures.size()
+                + "      " + ((index<=9)?" :":":"));
         log.info("                          :-------------------------------: \n");
         log.info("                          " +  structure.encode() + "\n");
 
@@ -1677,9 +1723,9 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     JsonObject studentTemplate = new JsonObject()
                             .put(CLASSES, new JsonArray().add(new JsonObject().put(ELEVES,
                                     new JsonArray().add(student))))
-                            .put(NAME, student.getValue("nomClasse"));
+                            .put(NAME, student.getValue(NOM_CLASSE));
                     generateBfcByStudent(studentTemplate, idClasse, idCycle, idStructure, template, vertx, config, path,
-                             host,scheme, acceptLanguage, forwardedFor, futureStudent, i+1);
+                            host,scheme, acceptLanguage, forwardedFor, futureStudent, i+1);
                 }
 
                 CompositeFuture.all(futureList).setHandler( allStudents -> {

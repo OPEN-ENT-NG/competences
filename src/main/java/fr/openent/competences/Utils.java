@@ -38,6 +38,7 @@ import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
@@ -58,33 +59,37 @@ public class Utils {
      * @param idClasses Tableau contenant l'identifiant des classes dont on souhaite connaitre la structure.
      * @param handler   Handler contenant l'identifiant de la structure.
      */
-    public static void getStructClasses(EventBus eb, String[] idClasses, final Handler<Either<String, String>> handler) {
+    public static void getStructClasses(EventBus eb, String[] idClasses,
+                                        final Handler<Either<String, String>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "classe.getEtabClasses")
                 .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idClasses)));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler( message -> {
+            JsonObject body = message.body();
 
-                if (OK.equals(body.getString(STATUS))) {
-                    JsonArray queryResult = body.getJsonArray(RESULTS);
-                    if (queryResult.size() == 0) {
-                        handler.handle(new Either.Left<String, String>("Aucune classe n'a ete trouvee."));
-                        log.error("getStructClasses : No classes found with these ids");
-                    } else if (queryResult.size() > 1) {
-                        // Il est impossible de demander un BFC pour des classes n'appartenant pas au meme etablissement.
-                        handler.handle(new Either.Left<String, String>("Les classes n'appartiennent pas au meme etablissement."));
-                        log.error("getStructClasses : provided classes are not from the same structure.");
-                    } else {
-                        JsonObject structure = queryResult.getJsonObject(0);
-                        handler.handle(new Either.Right<String, String>(structure.getString("idStructure")));
-                    }
+            if (OK.equals(body.getString(STATUS))) {
+                JsonArray queryResult = body.getJsonArray(RESULTS);
+                if (queryResult.size() == 0) {
+                    handler.handle(new Either.Left<>("Aucune classe n'a ete trouvee."));
+                    log.error("getStructClasses : No classes found with these ids");
+                } else if (queryResult.size() > 1) {
+                    // Il est impossible de demander un BFC pour des classes n'appartenant pas au meme etablissement.
+                    handler.handle(new Either.Left<>("Les classes n'appartiennent pas au meme etablissement."));
+                    log.error("getStructClasses : provided classes are not from the same structure.");
                 } else {
-                    handler.handle(new Either.Left<String, String>(body.getString("message")));
-                    log.error("getStructClasses : " + body.getString("message"));
+                    JsonObject structure = queryResult.getJsonObject(0);
+                    String idStrucutre = structure.getString("idStructure");
+                    handler.handle(new Either.Right<>(idStrucutre));
                 }
+            } else {
+                String error = body.getString(MESSAGE);
+                log.error("getStructClasses : " + error);
+                if (error.contains(TIME)){
+                    getStructClasses(eb, idClasses, handler);
+                    return;
+                }
+                handler.handle(new Either.Left<>(error));
             }
         }));
     }
@@ -278,8 +283,50 @@ public class Utils {
                         }
                         handler.handle(new Either.Right<>(result));
                     } else {
-                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
-                        log.error("getElevesClasses : " + body.getString(MESSAGE));
+                        String error = body.getString(MESSAGE);
+                        log.error("getElevesClasses : " + error);
+                        if(error.contains(TIME)){
+                            getElevesClasses(eb, idClasses, idPeriode, handler);
+                            return;
+                        }
+                        handler.handle(new Either.Left<>(error));
+                    }
+                }));
+    }
+
+    // Méthode réalisé pour que les élèves ayant changé d'établissement est bien le nom de leur classe correspondant
+    // au nom de l'export.
+    public static void getClassesEleves(EventBus eb, String[] idsClasse, Long idPeriode,
+                                  final Handler<Either<String, Map<String, JsonArray>>> handler) {
+       log.info("");
+        JsonObject action = new JsonObject()
+                .put(ACTION, "classe.getElevesClasses")
+                .put(ID_PERIODE_KEY, idPeriode)
+                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray(Arrays.asList(idsClasse)));
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
+                handlerToAsyncHandler( message ->  {
+                    JsonObject body = message.body();
+
+                    if (OK.equals(body.getString(STATUS))) {
+                        JsonArray queryResult = body.getJsonArray(RESULTS);
+                        Map<String, JsonArray> result = new LinkedHashMap<>();
+                        for (int i = 0; i < queryResult.size(); i++) {
+                            JsonObject eleve = queryResult.getJsonObject(i);
+                            if (!result.containsKey(eleve.getString(ID_CLASSE_KEY))) {
+                                result.put(eleve.getString(ID_CLASSE_KEY), new JsonArray());
+                            }
+                            result.get(eleve.getString(ID_CLASSE_KEY)).add(eleve);
+                        }
+                        handler.handle(new Either.Right<>(result));
+                    } else {
+                        String error = body.getString(MESSAGE);
+                        log.error("getElevesClasses : " + error);
+                        if(error.contains(TIME)){
+                            getClassesEleves(eb, idsClasse, idPeriode, handler);
+                            return;
+                        }
+                        handler.handle(new Either.Left<>(error));
                     }
                 }));
     }
@@ -301,6 +348,22 @@ public class Utils {
                 log.error("getElevesClasses : " + body.getString(MESSAGE));
             }
         }));
+    }
+    public static List<Eleve> toListEleve(JsonArray queryResult, Map<String, String> mapCycleLibelle){
+        final List<Eleve> result = new ArrayList<>();
+        for (int i = 0; i < queryResult.size(); i++) {
+            JsonObject eleveBase = queryResult.getJsonObject(i);
+            Eleve eleveObj = new Eleve(eleveBase.getString(ID_ELEVE_KEY),
+                    eleveBase.getString(LAST_NAME_KEY),
+                    eleveBase.getString(FIRST_NAME_KEY),
+                    eleveBase.getString(ID_CLASSE_KEY),
+                    eleveBase.getString(NAME),
+                    eleveBase.getString(LEVEL),
+                    eleveBase.getString("birthDate"));
+                eleveObj.setCycle(mapCycleLibelle.get(eleveObj.getIdClasse()));
+            result.add(eleveObj);
+        }
+        return result;
     }
     /**
      * Recupere les informations relatives a chaque eleve dont l'identifiant est passe en parametre, et cree un objet
@@ -403,25 +466,28 @@ public class Utils {
 
     private static void getCycleElevesForBfcCycle(final Set<String> classes, final List<Eleve> result,
                                                   final Handler<Either<String, List<Eleve>>> handler) {
-        utilsService.getCycle(new ArrayList<>(classes), new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> event) {
+        utilsService.getCycle(new ArrayList<>(classes), event -> {
                 if (event.isRight()) {
                     JsonArray queryResult = event.right().getValue();
                     for (int i = 0; i < queryResult.size(); i++) {
                         JsonObject cycle = queryResult.getJsonObject(i);
                         for (Eleve eleve : result) {
                             if (Objects.equals(eleve.getIdClasse(), cycle.getString("id_groupe"))) {
-                                eleve.setCycle(cycle.getString("libelle"));
+                                eleve.setCycle(cycle.getString(LIBELLE));
                             }
                         }
                     }
-                    handler.handle(new Either.Right<String, List<Eleve>>(result));
+                    handler.handle(new Either.Right<>(result));
                 } else {
-                    handler.handle(new Either.Left<String, List<Eleve>>(event.left().getValue()));
-                    log.error("getInfoEleve : getCycle : " + event.left().getValue());
+                    String error = event.left().getValue();
+                    log.error("getInfoEleve : getCycle : " + event);
+                    if(error.contains(TIME)){
+                        getCycleElevesForBfcCycle(classes, result, handler);
+                        return;
+                    }
+                    handler.handle(new Either.Left<>(event.left().getValue()));
+
                 }
-            }
         });
 
     }

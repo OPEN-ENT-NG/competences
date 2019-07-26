@@ -1212,11 +1212,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         else {
             JsonObject action = new JsonObject();
             String idStructure = eleveObject.getString(ID_ETABLISSEMENT_KEY);
-            action.put(ACTION, "structure.getStructure")
-                    .put("idStructure", idStructure);
+            action.put(ACTION, "structure.getStructure").put("idStructure", idStructure);
 
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                    Competences.DELIVERY_OPTIONS,
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
                         private int count = 1;
                         private AtomicBoolean answer = new AtomicBoolean(false);

@@ -107,8 +107,7 @@ public interface ExportBulletinService {
      * @param elevesObject contient le json object de l'élève idEleve
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getStructure( String idEleve, JsonObject elevesObject,
-                              Handler<Either<String, JsonObject>> finalHandler);
+    void getStructure( String idEleve, JsonObject elevesObject, Handler<Either<String, JsonObject>> finalHandler);
 
     /**
      * Récupère le(s) professeur(s) princip(al/aux) de la classe de l'élève
@@ -118,7 +117,7 @@ public interface ExportBulletinService {
      * @param finalHandler handler servant à la synchronisation des services
      */
     void getHeadTeachers( String idEleve, String idClasse, JsonObject eleveObject,
-                                 Handler<Either<String, JsonObject>> finalHandler);
+                          Handler<Either<String, JsonObject>> finalHandler);
 
     /**
      * Récupère le cycle de la classe de l'élève
