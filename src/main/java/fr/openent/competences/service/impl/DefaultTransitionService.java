@@ -635,7 +635,7 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                     " is_evaluated, id_etat, percent, apprec_visible, eval_lib_historise,id_periode, date) " +
                     "  (" +
                     "   SELECT " + vMapGroupesIdsDevoirATraiter.get(idClasse) + ",'" + _id_user_transition_annee + "','" +
-                    classname + entry.getValue() + "', type.id,periode.id_etablissement, 20, false, current_date, false, 1, 0, false, true , MAX(periode.id_type),MAX(periode.timestamp_fn) " +
+                    classname + entry.getValue() + "', type.id,periode.id_etablissement, 20, false, current_date, false, 1, 0, false, true , MAX(periode.id_type),MAX(periode.date_fin_saisie) " +
                     "   FROM notes.type , viesco.periode " +
                     "    WHERE " +
                     "     type.default_type = ? " +
