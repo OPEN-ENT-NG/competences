@@ -2262,7 +2262,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         int index = structures.size() - nbStructure.get();
         log.info(" \n\n");
         log.info("                          :-------------------------------: ");
-        log.info("                          : BULLETIN STRUCTURE " + index + "/" + structures.size()+ "       " +
+        log.info("                          :    BULLETIN STRUCTURE " + index + "/" + structures.size()+ "   " +
                  ((index<=9)?" :":":"));
         log.info("                          :-------------------------------: \n(structure : " +  idStructure + ")\n");
 
@@ -2439,8 +2439,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     else {
                         JsonArray structures = body.getJsonArray(RESULTS);
                         log.info(" --- ARCHIVE ETABLISSEMENT COMPLET GETS --- : " + structures.size());
-
-                        handler.handle(new Either.Right<>(structures));
+                        JsonArray res = new JsonArray();
+                        structures.stream().forEach( str -> res.add(((JsonArray)str).getString(0)));
+                        handler.handle(new Either.Right<>(res));
                     }
                 });
     }
@@ -2476,6 +2477,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
     }
 
+    private JsonArray getActivatedAndNotCompleted(JsonArray activatedStructures, JsonArray completedStructures){
+        JsonArray result = new JsonArray();
+        for(int i =0; i < activatedStructures.size() && isNotNull(completedStructures); i++){
+            JsonObject strucuture = activatedStructures.getJsonObject(i);
+            if(!completedStructures.contains(strucuture.getString(ID_ETABLISSEMENT))){
+                result.add(strucuture);
+            }
+        }
+        return result;
+    }
     public void archiveBulletin(Vertx vertx, JsonObject config, String path, String host,
                                 String acceptLanguage, Boolean forwardedFor ){
 
@@ -2499,18 +2510,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             // On supprime  les établissements dont l'archivage a été complet de la liste des
             // établissements à passer
             JsonArray completedStructures = completedStructuresFuture.result();
-            Set<JsonObject> setCompleted = new HashSet<JsonObject>(completedStructures.getList());
             JsonArray activatedStructures = activatedStructuresFuture.result();
-            Set<JsonObject> setActivated = new HashSet<JsonObject>(activatedStructures.getList());
-            Boolean allStructuresAreCompleted = setActivated.removeAll(setCompleted);
+            JsonArray structures = getActivatedAndNotCompleted(activatedStructures, completedStructures);
 
-            if(allStructuresAreCompleted){
+            if(isNull(structures) || structures.isEmpty()){
                 log.info("*************** ALL STRUCTURES ARE COMPLETED ***************");
                 return;
             }
 
 
-            JsonArray structures = new JsonArray(Arrays.asList(setActivated.toArray()));
+
             log.info(" --- ETABLISSEMENT ACTIF NOT COMPLETE GETS --- : " + structures.size());
             runArchiveBulletin(structures, vertx, config, path, host, acceptLanguage, forwardedFor);
         });
