@@ -19,6 +19,9 @@ import org.entcore.common.utils.StringUtils;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Competences.FIRST_NAME_KEY;
+import static fr.openent.competences.Competences.LAST_NAME_KEY;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 
@@ -40,10 +43,30 @@ public class ArchiveUtils {
 
     }
 
+    private static void clearCompletedTable(){
+        String query = "DELETE FROM " + Competences.EVAL_SCHEMA
+                + ".arhive_bulletins_complet WHERE true ;";
+        Sql.getInstance().prepared(query, new JsonArray(), Competences.DELIVERY_OPTIONS,
+                event -> {
+                    JsonObject body = event.body();
+                    if(!body.getString(STATUS).equals(OK)){
+                        String message = body.getString(MESSAGE);
+                        log.error("[clearCompletedTable] :: " + message);
+                    }
+                    else{
+                        JsonArray structures = body.getJsonArray(RESULTS);
+                        log.info("[clearCompletedTable] :: " + structures.encode());
+                    }
+                });
+    }
+
     private static void clearArchiveTable(JsonArray ids, String table, Handler<Either<String,JsonObject>> handler){
         String query = "DELETE FROM notes." + table+ " WHERE id_file IN "+ Sql.listPrepared(ids.getList()) + " ;";
         Sql.getInstance().prepared(query, ids, Competences.DELIVERY_OPTIONS,
                 SqlResult.validUniqueResultHandler(handler));
+        if(table.equals(ARCHIVE_BULLETIN_TABLE)){
+            clearCompletedTable();
+        }
     }
 
     private static void getAllIdFileArchive(String table, Handler<Either<String,JsonObject>> handler){

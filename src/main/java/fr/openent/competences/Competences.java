@@ -186,6 +186,7 @@ public class Competences extends BaseServer {
     public static final String ID_ELEVES_KEY = "idEleves";
     public static final String ID_CLASSE_KEY = "idClasse";
     public static final String ID_CLASSES_KEY = "idClasses";
+    public static final String ID_STRUCTURES_KEY = "idStructures";
     public static final String TYPE_CLASSE_KEY = "typeClasse";
     public static final String ID_PERIODE_KEY = "idPeriode";
     public static final String ID_MATIERE_KEY = "idMatiere";

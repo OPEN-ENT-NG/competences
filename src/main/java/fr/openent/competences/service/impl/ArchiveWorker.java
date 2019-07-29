@@ -2,6 +2,7 @@ package fr.openent.competences.service.impl;
 
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -9,6 +10,7 @@ import org.entcore.common.storage.Storage;
 import org.entcore.common.storage.StorageFactory;
 import org.vertx.java.busmods.BusModBase;
 
+import static fr.openent.competences.Competences.ID_STRUCTURES_KEY;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 
@@ -40,8 +42,9 @@ public class ArchiveWorker extends BusModBase {
                  switch (action) {
 
                      case ARCHIVE_BULLETIN:
-                         new DefaultExportBulletinService(eb, storage, vertx).archiveBulletin(vertx, config, path, host,
-                                 acceptLanguage, forwardedFor);
+                         final JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
+                         new DefaultExportBulletinService(eb, storage, vertx).archiveBulletin(idStructures, vertx,
+                                 config, path, host, acceptLanguage, forwardedFor);
                          break;
 
                      case ARCHIVE_BFC:

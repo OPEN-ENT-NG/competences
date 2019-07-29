@@ -4,12 +4,10 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
 import fr.openent.competences.service.*;
-import fr.openent.competences.utils.FormateFutureEvent;
 import fr.openent.competences.utils.MustachHelper;
 import fr.openent.competences.utils.NodePdfGeneratorClientHelper;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import fr.wseduc.webutils.data.FileResolver;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
@@ -23,9 +21,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
-import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
-import org.entcore.common.utils.StringUtils;
 
 
 import static fr.openent.competences.Competences.*;
@@ -33,6 +29,7 @@ import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.*;
 
 import java.io.StringReader;
@@ -92,10 +89,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String NIVEAU_COMPETENCE = "niveauCompetences";
     private static final String EVALUATED = "evaluated";
     public static final String ACTION = "action";
-    private static final String STATUS = "status";
-    private static final String MESSAGE = "message";
-    public static final String RESULT = "result";
-    private static final String RESULTS = "results";
     private static final String NAME = Competences.NAME;
     private static final String CLASSE_NAME = CLASSE_NAME_KEY;
     private static final String ADDRESSE_POSTALE = "addressePostale";
@@ -284,7 +277,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         if (useModel) {
             Long idModel = params.getLong("idModel");
             new DefaultMatiereService(eb).getModels(idEtablissement, idModel, models -> {
-                FormateFutureEvent.formate(modelsLibelleFuture, models);
+                formate(modelsLibelleFuture, models);
             });
         } else {
             modelsLibelleFuture.complete(new JsonArray());
@@ -2160,7 +2153,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private void getPeriodes(String idClasse, Future<JsonArray> periodesFuture){
 
         utilsService.getPeriodes(new JsonArray().add(idClasse), null, periodeEvent ->
-                FormateFutureEvent.formate(periodesFuture, periodeEvent));
+                formate(periodesFuture, periodeEvent));
     }
 
     private void initialiseStrucutureData(JsonObject params) {
@@ -2227,6 +2220,26 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Neo4jResult.validResultHandler(handler));
     }
 
+    private void markAsComplete(final String idStructure) {
+        String query = "INSERT INTO " + EVAL_SCHEMA + ".arhive_bulletins_complet (id_etablissement, date_archive) "
+                + " VALUES (?, NOW())  ON CONFLICT (id_etablissement) DO UPDATE SET date_archive = NOW() ";
+        JsonArray values = new JsonArray().add(idStructure);
+        Sql.getInstance().prepared(query, values, DELIVERY_OPTIONS,
+                event -> {
+                    JsonObject body = event.body();
+                    if(!body.getString(STATUS).equals(OK)){
+                        String message = body.getString(MESSAGE);
+                        log.error("[markAsComplete] :: " + message);
+                        if(message.contains(TIME)){
+                            markAsComplete(idStructure);
+                        }
+                    }
+                    else {
+                        log.info("[markAsComplete] :: " + idStructure + " is completed ");
+                    }
+                });
+    }
+
     private void runArchiveForStructure(JsonArray structures, AtomicInteger nbStructure,String path,String host,
                                         String acceptLanguage, Boolean forwardedFor, Vertx vertx, JsonObject config,
                                         Future structureFuture){
@@ -2238,24 +2251,31 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
 
         // Sinon on va traiter l'archivage classe par classe de l' établissement en cours
-        JsonObject structure =  structures.getJsonObject(nbStructure.getAndDecrement()-1);
+        Object structure =  structures.getValue(nbStructure.getAndDecrement()-1);
+        String  idStructure;
+        if(structure instanceof  JsonObject) {
+            idStructure = ((JsonObject) structure).getString(ID_ETABLISSEMENT);
+        }
+        else{
+            idStructure = (String) structure;
+        }
         int index = structures.size() - nbStructure.get();
         log.info(" \n\n");
         log.info("                          :-------------------------------: ");
-        log.info("                          : BULLETIN STRUCTURE " + index + "/" + structures.size()+ "       : ");
-        log.info("                          :-------------------------------: \n" +  structure.encode() + "\n");
+        log.info("                          : BULLETIN STRUCTURE " + index + "/" + structures.size()+ "       " +
+                 ((index<=9)?" :":":"));
+        log.info("                          :-------------------------------: \n(structure : " +  idStructure + ")\n");
 
 
         // On récupère les classes de l'établissement en cours
-        String  idStructure = structure.getString(ID_ETABLISSEMENT);
         Future<JsonArray> structureidClassesFuture = Future.future();
         getClasseStructure(idStructure, classeEvent ->
-                FormateFutureEvent.formate(structureidClassesFuture, classeEvent));
+                formate(structureidClassesFuture, classeEvent));
 
         // On récupère récupère le nom et l'emplacement de la  signature du CE, l'emplacement du logo de l'etab
         Future<JsonObject> imgsStructureFuture = Future.future();
         utilsService.getParametersForExport(idStructure,
-                eventImgsStructure -> FormateFutureEvent.formate(imgsStructureFuture, eventImgsStructure));
+                eventImgsStructure -> formate(imgsStructureFuture, eventImgsStructure));
         Future srcStructure = Future.future();
         Future srcSignature = Future.future();
         final JsonObject _imgsStructureObj = new JsonObject();
@@ -2307,10 +2327,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     String errorClasses = event.cause().getMessage();
                                     log.error(" FAIL TO GET CLASSES " + errorClasses);
                                 }
-                                // Lorsque toutes les classes sont archivées, on passe à la structure suivante
-                                runArchiveForStructure(structures, nbStructure, path, host,
-                                        acceptLanguage, forwardedFor, vertx, config,
-                                        structureFuture);
+                                // Lorsque toutes les classes sont archivées, on marque la structure courante comme
+                                // terminée et on passe à la structure suivante
+                                markAsComplete(idStructure);
+                                runArchiveForStructure(structures, nbStructure, path, host, acceptLanguage,
+                                        forwardedFor, vertx, config, structureFuture);
                             });
 
                 });
@@ -2340,7 +2361,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         // On récupère le niveau de maitrise de la classe courante
         Future<JsonArray> niveauDeMaitriseFuture = Future.future();
         defaultNiveauDeMaitriseService.getNiveauDeMaitriseofClasse(idClasse, event ->
-                FormateFutureEvent.formate(niveauDeMaitriseFuture, event));
+                formate(niveauDeMaitriseFuture, event));
 
         // Avec les périodes et le niveau de maitrise, l'archivage de la classe courante peut commencer
         CompositeFuture.all(periodesFuture,  niveauDeMaitriseFuture)
@@ -2381,10 +2402,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 });
     }
 
-    public void archiveBulletin(Vertx vertx, JsonObject config, String path,String host, String acceptLanguage,
-                                Boolean forwardedFor ){
-
-        log.info(" ***************   START ARCHIVE BULLETIN  ***************");
+    private void getStructureActiveForArchive (Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put(ACTION, "structure.getStructuresActives")
                 .put("module","notes");
@@ -2396,27 +2414,106 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     if(!body.getString(STATUS).equals(OK)){
                         String message = body.getString(MESSAGE);
                         log.error("[getStructuresActives] :: " + message);
-                        return;
+                        handler.handle(new Either.Left<>(message));
                     }
-                    JsonArray structures = body.getJsonArray(RESULTS);
-                    log.info(" --- ETABLISSEMENT ACTIF GETS --- : " + structures.size());
-                    AtomicInteger nbStructure = new AtomicInteger(structures.size());
-                    Future structuresFuture = Future.future();
+                    else {
+                        JsonArray structures = body.getJsonArray(RESULTS);
+                        log.info(" --- ETABLISSEMENT ACTIF GETS --- : " + structures.size());
 
-                    //  On lance  l'archivage des bulletins etab par etab
-                    runArchiveForStructure(structures, nbStructure, path, host,  acceptLanguage,
-                            forwardedFor, vertx, config, structuresFuture);
-
-                    // Lorsque le traitement est terminé, pour tous les etabs, on log la fin de l'archivage
-                    CompositeFuture.all(structuresFuture, Future.succeededFuture())
-                            .setHandler( archiveStructure -> {
-                                if(archiveStructure.failed()){
-                                    String error = archiveStructure.cause().getMessage();
-                                    log.error("[ARCHIVE | structuresFuture] :: " + error);
-                                }
-                                log.info("*************** END ARCHIVE BULLETIN ***************");
-                            });
+                        handler.handle(new Either.Right<>(structures));
+                    }
                 }));
+
+    }
+
+    private void getArchiveComplet(Handler<Either<String, JsonArray>> handler){
+        String query = " SELECT id_etablissement FROM "+ Competences.EVAL_SCHEMA + ".arhive_bulletins_complet;";
+        Sql.getInstance().prepared(query, new JsonArray(), DELIVERY_OPTIONS,
+                event -> {
+                    JsonObject body = event.body();
+                    if(!body.getString(STATUS).equals(OK)){
+                        String message = body.getString(MESSAGE);
+                        log.error("[getArchiveComplet] :: " + message);
+                        handler.handle(new Either.Left<>(message));
+                    }
+                    else {
+                        JsonArray structures = body.getJsonArray(RESULTS);
+                        log.info(" --- ARCHIVE ETABLISSEMENT COMPLET GETS --- : " + structures.size());
+
+                        handler.handle(new Either.Right<>(structures));
+                    }
+                });
+    }
+
+    private void runArchiveBulletin(JsonArray structures, Vertx vertx, JsonObject config, String path, String host,
+                               String acceptLanguage, Boolean forwardedFor ){
+
+        AtomicInteger nbStructure = new AtomicInteger(structures.size());
+        Future structuresFuture = Future.future();
+
+        //  On lance  l'archivage des bulletins etab par etab
+        runArchiveForStructure(structures, nbStructure, path, host,  acceptLanguage,
+                forwardedFor, vertx, config, structuresFuture);
+
+        // Lorsque le traitement est terminé, pour tous les etabs, on log la fin de l'archivage
+        CompositeFuture.all(structuresFuture, Future.succeededFuture())
+                .setHandler( archiveStructure -> {
+                    if(archiveStructure.failed()){
+                        String error = archiveStructure.cause().getMessage();
+                        log.error("[ARCHIVE | structuresFuture] :: " + error);
+                    }
+                    log.info("*************** END ARCHIVE BULLETIN ***************");
+                });
+    }
+    public void archiveBulletin(JsonArray idStructures, Vertx vertx, JsonObject config, String path, String host,
+                                String acceptLanguage, Boolean forwardedFor ){
+        log.info(" ***************   START ARCHIVE BULLETIN  ***************");
+        if(isNotNull(idStructures)) {
+            runArchiveBulletin(idStructures, vertx, config, path, host, acceptLanguage, forwardedFor);
+        }
+        else{
+            archiveBulletin(vertx, config, path, host, acceptLanguage, forwardedFor);
+        }
+    }
+
+    public void archiveBulletin(Vertx vertx, JsonObject config, String path, String host,
+                                String acceptLanguage, Boolean forwardedFor ){
+
+
+        // On récupère tout d'abord la liste des établissements actifs
+        Future<JsonArray> activatedStructuresFuture = Future.future();
+        getStructureActiveForArchive( event -> formate(activatedStructuresFuture, event));
+
+        // On récupère en parallele les etablissement qui ont déjà été archivés
+        Future<JsonArray> completedStructuresFuture = Future.future();
+        getArchiveComplet( event -> formate(completedStructuresFuture, event));
+
+        CompositeFuture.all(activatedStructuresFuture, completedStructuresFuture).setHandler(event -> {
+
+            if(event.failed()){
+                String message = event.cause().getMessage();
+                log.error("[archiveBulletin] :: " + message);
+                return;
+            }
+
+            // On supprime  les établissements dont l'archivage a été complet de la liste des
+            // établissements à passer
+            JsonArray completedStructures = completedStructuresFuture.result();
+            Set<JsonObject> setCompleted = new HashSet<JsonObject>(completedStructures.getList());
+            JsonArray activatedStructures = activatedStructuresFuture.result();
+            Set<JsonObject> setActivated = new HashSet<JsonObject>(activatedStructures.getList());
+            Boolean allStructuresAreCompleted = setActivated.removeAll(setCompleted);
+
+            if(allStructuresAreCompleted){
+                log.info("*************** ALL STRUCTURES ARE COMPLETED ***************");
+                return;
+            }
+
+
+            JsonArray structures = new JsonArray(Arrays.asList(setActivated.toArray()));
+            log.info(" --- ETABLISSEMENT ACTIF NOT COMPLETE GETS --- : " + structures.size());
+            runArchiveBulletin(structures, vertx, config, path, host, acceptLanguage, forwardedFor);
+        });
     }
 
     private void endWithNOsrcImg(Future srcSignature, JsonObject imgsStructureObj,String hasImg, String imgStr){
@@ -2689,7 +2786,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     } else {
                         Buffer file = bufferEither.right().getValue();
                         saveArchivePdf(fileName, file, idEleve, idClasse, externalIdClasse, idEtablissement, idPeriode,
-                                event -> FormateFutureEvent.formate(future, event));
+                                event -> formate(future, event));
 
                         log.debug(" -> End post node-pdf-generator : (eleve: " + idEleve + ", classe: " + idClasse +
                                 ", periode: " + idPeriode + ") ");

@@ -54,11 +54,8 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.ACTION;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.RESULT;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.getExternalIdClasse;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static java.util.jar.Pack200.Packer.ERROR;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
 
 /**

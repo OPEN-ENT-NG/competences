@@ -16,6 +16,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -119,7 +120,7 @@ public class ExportBulletinController extends ControllerHelper {
         String idClasse = request.params().get(ID_CLASSE_KEY);
         Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
         Boolean isCycle = false;
-        ArchiveUtils.getArchiveBulletin(idEleve, idClasse, idPeriode,storage, ARCHIVE_BULLETIN_TABLE, isCycle, request);
+        ArchiveUtils.getArchiveBulletin(idEleve, idClasse, idPeriode, storage, ARCHIVE_BULLETIN_TABLE, isCycle, request);
     }
 
     @Get("/delete/archive/bulletin")
@@ -127,4 +128,24 @@ public class ExportBulletinController extends ControllerHelper {
     public void deleteArchive(final HttpServerRequest request){
         ArchiveUtils.deleteAll(ARCHIVE_BULLETIN_TABLE, storage,  response -> Renders.renderJson(request, response));
     }
+
+    @Post("/generate/archive/bulletin")
+    @ApiDoc("Retourne tous les types de devoir par etablissement")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(AccessExportBulletinFilter.class)
+    public void ArvhiveBulletinPost(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, body -> {
+            JsonArray idStructures = body.getJsonArray(ID_STRUCTURES_KEY);
+            JsonObject action = new JsonObject()
+                    .put(ACTION, ArchiveWorker.ARCHIVE_BULLETIN)
+                    .put(HOST, getHost(request))
+                    .put(ACCEPT_LANGUAGE, I18n.acceptLanguage(request))
+                    .put(X_FORWARDED_FOR, request.headers().get(X_FORWARDED_FOR) == null)
+                    .put(PATH, request.path())
+                    .put(ID_STRUCTURES_KEY, idStructures);
+            eb.send(ArchiveWorker.class.getSimpleName(), action, Competences.DELIVERY_OPTIONS);
+            Renders.ok(request);
+        });
+    }
+
 }
