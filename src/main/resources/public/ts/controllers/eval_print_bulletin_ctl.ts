@@ -49,7 +49,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             try {
                 let infosStructure = await ExportBulletins.getInfosStructure($scope.structure.id);
 
-                $scope.print.imgStructure = infosStructure.data.imageStucture.path;
+                $scope.print.imgStructure = infosStructure.data.imgStructure.path;
                 $scope.print.nameCE = infosStructure.data.nameAndBrad.name;
                 $scope.print.imgSignature = infosStructure.data.nameAndBrad.path;
                 let models = await http.get(`/competences/matieres/models/${$scope.structure.id}`);
