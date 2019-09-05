@@ -330,6 +330,7 @@
   "evaluations.competences.poor":"Maîtrise insuffisante",
   "evaluations.competence.evaluate" : "Évaluation de la compétence",
   "evaluations.competence.unevaluated":"Compétence non évaluée",
+  "evaluations.competence.level.and.number":"Niveau des compétences et Nombre d'évaluations",
   "evaluation.not.exist":"Il n'existe aucune évaluation sur cette compétence pour le moment.",
   "evaluations.competences.proficiency.abreviation":"TB",
   "evaluations.competences.satisfying.abreviation":"MS",

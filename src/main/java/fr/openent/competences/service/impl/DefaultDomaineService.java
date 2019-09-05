@@ -26,6 +26,8 @@ import org.entcore.common.sql.SqlResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
+
 public class DefaultDomaineService extends SqlCrudService implements DomainesService {
     public DefaultDomaineService(String schema, String table) {
         super(schema, table);
@@ -137,7 +139,7 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
                 .append("FROM evaluated_domaines AS t1, evaluated_domaines AS t2 ")
                 .append("WHERE t1.id_parent = t2.id) ORDER BY codification;");
 
-        Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -155,6 +157,6 @@ public class DefaultDomaineService extends SqlCrudService implements DomainesSer
                 .append(" ORDER BY codification ");
 
         params.add(idClasse);
-        Sql.getInstance().prepared(query.toString(), params , SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 }

@@ -26,6 +26,8 @@ import org.entcore.common.sql.SqlResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
+
 /**
  * Created by ledunoiss on 05/08/2016.
  */
@@ -49,6 +51,6 @@ public class DefaultEnseignementService extends SqlCrudService implements Enseig
                 .append("FROM "+ Competences.COMPETENCES_SCHEMA +".enseignements ")
                 .append("ORDER BY nom ASC");
 
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 }

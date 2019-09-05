@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
@@ -904,7 +905,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.delete(query.length() - 3, query.length());
 
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
     @Override

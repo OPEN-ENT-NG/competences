@@ -33,6 +33,8 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.util.*;
 
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
+
 /**
  * Created by ledunoiss on 05/08/2016.
  */
@@ -145,8 +147,66 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         }
 
         query.append(" ORDER BY id ASC ");
-        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
+
+    public void getCompetencesNotes(JsonArray idDevoirs, String idEleve, Boolean returnNotEvaluatedcompetences,
+                                    Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        String idDevoirsForQuery = Sql.listPrepared(idDevoirs.getList());
+
+        query.append("SELECT competences_notes.*,competences.nom as nom, competences.id_type as id_type, ")
+                .append(" competences.id_parent as id_parent, ")
+                .append(" competence_niveau_final.niveau_final AS niveau_final  ")
+                .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_notes, ")
+                .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
+                .append( Competences.COMPETENCES_SCHEMA +".competences ")
+
+                // Jointure pour le niveau final
+                .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                .append(" competence_niveau_final.id_competence = competences.id ")
+                .append(" AND competence_niveau_final.id_eleve = ? ")
+
+                .append(" WHERE competences_notes.id_competence = competences.id ")
+                .append(" AND competences_notes.id_devoir IN " + idDevoirsForQuery)
+                .append(" AND competences_notes.id_eleve = ? ")
+                .append(" AND devoirs.id = competences_notes.id_devoir ")
+                .append(" AND (devoirs.id_matiere = competence_niveau_final.id_matiere " )
+                .append(" OR  competence_niveau_final.id_matiere IS NULL) ");
+
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+        params.add(idEleve).addAll(idDevoirs).add(idEleve);
+        if (returnNotEvaluatedcompetences) {
+            query.append(" UNION SELECT null as id, competences_devoirs.id_devoir, ")
+                    .append(" competences_devoirs.id_competence, null as evaluation, ")
+                    .append(" null as owner, ? as id_eleve,null as created, null as modified, competences.nom as nom, ")
+                    .append(" competences.id_type as id_type, competences.id_parent as id_parent,  ")
+                    .append(" competence_niveau_final.niveau_final AS niveau_final  ")
+                    .append(" FROM "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs, ")
+                    .append( Competences.COMPETENCES_SCHEMA +".devoirs, ")
+                    .append( Competences.COMPETENCES_SCHEMA +".competences ")
+
+                    // Jointure pour le niveau final
+                    .append(" LEFT JOIN notes.competence_niveau_final ON ")
+                    .append(" competence_niveau_final.id_competence = competences.id ")
+                    .append(" AND competence_niveau_final.id_eleve = ? ")
+
+                    .append(" WHERE competences_devoirs.id_competence = competences.id  ")
+                    .append(" AND devoirs.id = competences_devoirs.id_devoir  ")
+                    .append(" AND (devoirs.id_matiere = competence_niveau_final.id_matiere ")
+                    .append("       OR  competence_niveau_final.id_matiere IS NULL) ")
+                    .append(" AND competences_devoirs.id_devoir  IN " + idDevoirsForQuery)
+                    .append(" AND  NOT competences_devoirs.id_competence IN  ")
+                    .append(" (SELECT id_competence FROM notes.competences_notes ")
+                    .append("  WHERE competences_notes.id_eleve = ? AND competences_notes.id_devoir IN ")
+                    .append(idDevoirsForQuery + " )");
+            params.add(idEleve).add(idEleve).addAll(idDevoirs).add(idEleve).addAll(idDevoirs);
+        }
+
+        query.append(" ORDER BY id ASC ");
+        Sql.getInstance().prepared(query.toString(), params, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
+    }
+
 
     @Override
     public void getCompetencesNotesDevoir(Long idDevoir, Handler<Either<String, JsonArray>> handler) {
@@ -298,7 +358,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         }
 
         values.add(idEtablissement);
-        Sql.getInstance().prepared(query.toString(), values, Competences.DELIVERY_OPTIONS,
+        Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS,
                 SqlResult.validResultHandler(handler));
     }
 

@@ -19,13 +19,11 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
-import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.utils.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
@@ -39,7 +37,6 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -60,8 +57,8 @@ import java.text.DecimalFormat;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.ACCEPT_LANGUAGE;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.HOST;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
@@ -927,6 +924,7 @@ public class ExportPDFController extends ControllerHelper {
     @Get("/releveComp/print/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportReleveComp(final HttpServerRequest request) {
+        log.info(" BEGIN getExportReleveComp ");
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean byEnseignement = Boolean.parseBoolean(request.params().get("byEnseignement"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
@@ -968,183 +966,81 @@ public class ExportPDFController extends ControllerHelper {
         final Map<String, String> nomGroupes = new LinkedHashMap<>();
         final List<String> idEtablissement = new ArrayList<>();
 
-        JsonObject action = new JsonObject()
-                .put("action", "matiere.getMatieres")
-                .put("idMatieres", idMatieres);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        // Récupération des matières
+        Future<String> matieresFuture = Future.future();
+        exportService.getMatiereExportReleveComp(idMatieres, event -> formate(matieresFuture, event));
 
-                if ("ok".equals(body.getString("status"))) {
-                    final JsonArray results = body.getJsonArray("results");
-                    String mat = ((JsonObject) results.getJsonObject(0)).getString("name");
-                    for (int i = 1; i < results.size(); i++) {
-                        mat = mat + ", " + ((JsonObject) results.getJsonObject(i)).getString("name");
-                    }
-                    final String matieres = mat;
-                    JsonObject jsonRequest = new JsonObject()
-                            .put("headers", new JsonObject().put("Accept-Language",
-                                    request.headers().get("Accept-Language")))
-                            .put("Host", getHost(request));
-                    JsonObject action = new JsonObject()
-                            .put("action", "periode.getLibellePeriode")
-                            .put("request", jsonRequest);
-                    if (!"undefined".equals(finalIdPeriode)) {
-                        action.put("idType", finalIdPeriode);
-                    }
-                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                        @Override
-                        public void handle(Message<JsonObject> message) {
-                            final JsonObject body = message.body();
-                            if ("ok".equals(body.getString("status"))) {
-                                String _libellePeriode = body.getString("result")
-                                        .replace("é", "e")
-                                        .replace("è", "e");
-                                if (isCycle) {
-                                    _libellePeriode = I18n.getInstance().translate("viescolaire.utils.cycle",
-                                            I18n.DEFAULT_DOMAIN, Locale.FRANCE);
-                                }
-                                final String libellePeriode = _libellePeriode;
+        // Récupération du libelle des périodes
+        Future<String> periodeFuture = Future.future();
+        exportService.getLibellePeriodeExportReleveComp(request, finalIdPeriode, isCycle, event ->
+                formate(periodeFuture, event));
 
-                                if (finalIdClasse == null) {
-                                    JsonObject action = new JsonObject()
-                                            .put("action", "eleve.getInfoEleve")
-                                            .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
-                                            .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(
-                                                    Arrays.asList(new String[]{finalIdEleve})));
+        // Récuoération des élèves
+        Future<Object> elevesFuture = Future.future();
+        final Map<String, String> elevesMap = new LinkedHashMap<>();
+        exportService.getElevesExportReleveComp(finalIdClasse, idStructure, finalIdEleve, finalIdPeriode,
+                elevesMap, event -> formate(elevesFuture, event));
 
-                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                        @Override
-                                        public void handle(Message<JsonObject> message) {
-                                            JsonObject body = message.body();
-
-                                            if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() > 0) {
-                                                JsonObject eleve = body.getJsonArray("results").getJsonObject(0);
-                                                final String nomClasse = eleve.getString("classeName");
-                                                final String idClasse = eleve.getString("idClasse");
-                                                final String idEtablissement = eleve.getString("idEtablissement");
-                                                JsonArray idManualGroupes = UtilsConvert
-                                                        .strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
-                                                JsonArray idFunctionalGroupes = UtilsConvert
-                                                        .strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
-
-                                                JsonArray _idGroupes = utilsService.saUnion(idFunctionalGroupes,
-                                                        idManualGroupes);
-                                                String[] _iGroupesdArr = UtilsConvert.jsonArrayToStringArr(_idGroupes);
-
-                                                final String[] idEleves = new String[1];
-                                                idEleves[0] = finalIdEleve;
-                                                idGroupes.add(idClasse);
-                                                nomGroupes.put(eleve.getString("idEleve"), nomClasse);
-                                                final Map<String, String> elevesMap = new LinkedHashMap<>();
-                                                elevesMap.put(finalIdEleve, eleve.getString("lastName") + " " + eleve.getString("firstName"));
-                                                final AtomicBoolean answered = new AtomicBoolean();
-                                                JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
-                                                final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap, nomGroupes, matieres,
-                                                        libellePeriode, json, answered, resultFinal);
-                                                exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]), _iGroupesdArr, idEtablissement, listIdMatieres,
-                                                        finalIdPeriode, isCycle, finalHandler);
-                                            } else {
-                                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                            }
-                                        }
-                                    }));
-                                } else {
-                                    final JsonObject action = new JsonObject()
-                                            .put("action", "classe.getEleveClasse")
-                                            .put("idClasse", finalIdClasse)
-                                            .put("idPeriode", finalIdPeriode);
-                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                        @Override
-                                        public void handle(Message<JsonObject> message) {
-                                            if ("ok".equals(message.body().getString("status"))) {
-                                                final JsonArray eleves = message.body().getJsonArray("results");
-                                                final String[] idEleves = new String[eleves.size()];
-
-                                                final Map<String, String> elevesMap = new LinkedHashMap<>();
-
-                                                for (int i = 0; i < eleves.size(); i++) {
-                                                    elevesMap.put(((JsonObject) eleves.getJsonObject(i)).getString("id"),
-                                                            ((JsonObject) eleves.getJsonObject(i)).getString("lastName")
-                                                                    + " " + ((JsonObject) eleves.getJsonObject(i)).getString("firstName"));
-                                                    idEleves[i] = ((JsonObject) eleves.getJsonObject(i)).getString("id");
-                                                }
-
-                                                JsonObject action = new JsonObject()
-                                                        .put("action", "eleve.getInfoEleve")
-                                                        .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
-                                                        .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(
-                                                                Arrays.asList(idEleves)));
-                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
-                                                        new Handler<Message<JsonObject>>() {
-                                                            @Override
-                                                            public void handle(Message<JsonObject> message) {
-                                                                JsonObject body = message.body();
-                                                                JsonArray result = body.getJsonArray("results");
-                                                                if ("ok".equals(body.getString("status"))
-                                                                        && result.size() > 0) {
-                                                                    for (int i = 0; i< result.size(); i++ ) {
-                                                                        JsonObject eleve = body.getJsonArray("results")
-                                                                                .getJsonObject(i);
-                                                                        final String nomClasse =
-                                                                                eleve.getString("classeName");
-                                                                        final String idClasse =
-                                                                                eleve.getString("idClasse");
-                                                                        idEtablissement.add(
-                                                                                eleve.getString("idEtablissement"));
-                                                                        idGroupes.add(idClasse);
-
-                                                                        nomGroupes.put(((JsonObject)eleves.getJsonObject(i)).
-                                                                                getString("id"),nomClasse);
-                                                                    }
-
-                                                                    final AtomicBoolean answered = new AtomicBoolean();
-                                                                    JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
-                                                                    final Handler<Either<String, JsonObject>> finalHandler
-                                                                            = getReleveCompetences(request, elevesMap,
-                                                                            nomGroupes, matieres,
-                                                                            libellePeriode, json, answered, resultFinal);
-                                                                    for (int i = 0; i < eleves.size(); i++) {
-                                                                        String [] _idGroupes = new String[1];
-                                                                        _idGroupes[0] = idGroupes.get(i);
-
-                                                                        JsonObject o = result.getJsonObject(i);
-
-                                                                        JsonArray idManualGroupes = UtilsConvert
-                                                                                .strIdGroupesToJsonArray(o.getValue("idManualGroupes"));
-                                                                        JsonArray idFunctionalGroupes = UtilsConvert
-                                                                                .strIdGroupesToJsonArray(o.getValue("idGroupes"));
-
-                                                                        JsonArray idGroupes = utilsService.saUnion(idFunctionalGroupes,
-                                                                                idManualGroupes);
-                                                                        String[] idGroupesArr =
-                                                                                UtilsConvert.jsonArrayToStringArr(idGroupes);
-                                                                        exportService.getExportReleveComp(text, byEnseignement, idEleves[i],
-                                                                                _idGroupes , idGroupesArr, idEtablissement.get(i),
-                                                                                listIdMatieres, finalIdPeriode, isCycle, finalHandler);
-                                                                    }
-                                                                } else {
-                                                                    leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                                                }
-                                                            }
-                                                        }));
-                                            } else {
-                                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                                            }
-                                        }
-                                    }));
-                                }
-                            } else {
-                                leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                            }
-                        }
-                    }));
-                } else {
-                    leftToResponse(request, new Either.Left<String, Object>(body.getString("message")));
-                }
+        // Une fois la récupération effectuée, lancement de l'export
+        CompositeFuture.all(matieresFuture, periodeFuture, elevesFuture).setHandler(event -> {
+            if (event.failed()) {
+                String error = event.cause().getMessage();
+                log.error(error);
+                leftToResponse(request, new Either.Left<>(error));
+                return;
             }
-        }));
+            final String matieres = matieresFuture.result();
+            final String libellePeriode = periodeFuture.result();
+
+            if (finalIdClasse == null) {
+                JsonObject eleve = (JsonObject) elevesFuture.result();
+                final String nomClasse = eleve.getString("classeName");
+                final String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
+                JsonArray idManualGroupes = strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
+                JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
+
+                JsonArray _idGroupes = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
+                String[] _iGroupesdArr = UtilsConvert.jsonArrayToStringArr(_idGroupes);
+
+                final String[] idEleves = new String[1];
+                idEleves[0] = finalIdEleve;
+                idGroupes.add(eleve.getString(ID_CLASSE_KEY));
+                nomGroupes.put(eleve.getString(ID_ELEVE_KEY), nomClasse);
+                elevesMap.put(finalIdEleve, eleve.getString("lastName") + " " + eleve.getString("firstName"));
+                final AtomicBoolean answered = new AtomicBoolean();
+                JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
+                final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
+                        nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
+                exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]),
+                        _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+            } else {
+                JsonArray eleves = (JsonArray) elevesFuture.result();
+                final AtomicBoolean answered = new AtomicBoolean();
+                JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
+                final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
+                        nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
+                for (int i = 0; i < eleves.size(); i++) {
+                    JsonObject eleve = eleves.getJsonObject(i);
+                    String idEleveEl = eleve.getString(ID_ELEVE_KEY);
+                    String idEtablissementEl = eleve.getString(ID_ETABLISSEMENT_KEY);
+                    idEtablissement.add(idEtablissementEl);
+                    idGroupes.add(eleve.getString(ID_CLASSE_KEY));
+                    final String nomClasse = eleve.getString("classeName");
+                    nomGroupes.put(idEleveEl, nomClasse);
+                    String[] _idGroupes = new String[1];
+                    _idGroupes[0] = idGroupes.get(i);
+                    JsonArray idManualGroupes = strIdGroupesToJsonArray(eleve.getValue("idManualGroupes"));
+                    JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
+                    JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
+                    String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
+                    exportService.getExportReleveComp(text, byEnseignement, idEleveEl, _idGroupes, idGroupesArr,
+                            idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
+                }
+
+
+            }
+        });
+
     }
 
 
@@ -1818,7 +1714,6 @@ public class ExportPDFController extends ControllerHelper {
                                     exportService.genererPdf(request, resultFinal,
                                             "releve-competences.pdf.xhtml", fileName, vertx, config);
                                 }
-
                             }
                         } catch (Error err) {
                             leftToResponse(request,

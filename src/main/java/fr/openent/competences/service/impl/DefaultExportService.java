@@ -38,11 +38,14 @@ import io.vertx.core.logging.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.entcore.common.storage.Storage;
-import org.entcore.common.user.UserInfos;
 
 import javax.imageio.ImageIO;
 
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Competences.RESULTS;
+import static fr.openent.competences.Utils.getLibelle;
+import static fr.openent.competences.Utils.isNotNull;
+import static fr.openent.competences.Utils.isNull;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.awt.image.BufferedImage;
@@ -52,15 +55,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static fr.wseduc.webutils.http.Renders.getHost;
 import static fr.wseduc.webutils.http.Renders.getScheme;
 
-public class DefaultExportService implements ExportService  {
+public class DefaultExportService implements ExportService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultExportService.class);
 
@@ -101,7 +102,7 @@ public class DefaultExportService implements ExportService  {
                               final String idEtablissement,
                               HttpServerRequest request, final Handler<Either<String, JsonObject>> handler) {
 
-        Long idDevoir = devoir.getLong("id");
+        Long idDevoir = devoir.getLong(ID_KEY);
         final AtomicBoolean answered = new AtomicBoolean();
         final JsonArray elevesArray = new fr.wseduc.webutils.collections.JsonArray();
         JsonArray notesArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -125,7 +126,7 @@ public class DefaultExportService implements ExportService  {
                 getIntermediateHandler(elevesArray, finalHandler).handle(new Either.Right<String, JsonArray>(eleves));
             }
         }));
-        if(!only_evaluation){
+        if (!only_evaluation) {
             competencesService.getDevoirCompetences(idDevoir,
                     getIntermediateHandler(competencesArray, finalHandler));
             competenceNoteService.getCompetencesNotesDevoir(idDevoir,
@@ -177,7 +178,7 @@ public class DefaultExportService implements ExportService  {
                         competencesNotesDone.set(competencesNotes.size() > 0);
                         annotationsDone.set(annotations.size() > 0);
 
-                        if(!only_evaluation){
+                        if (!only_evaluation) {
                             if (elevesDone.get()
                                     && maitriseDone.get()
                                     && competencesDone.get()
@@ -199,7 +200,7 @@ public class DefaultExportService implements ExportService  {
                                         public void handle(Either<String, JsonObject> stringJsonObjectEither) {
                                             if (stringJsonObjectEither.isRight()) {
                                                 Map<String, Map<String, JsonObject>> competenceNoteElevesMap = new HashMap<>();
-                                                if(!competencesNotes.contains("empty")) {
+                                                if (!competencesNotes.contains("empty")) {
                                                     for (int i = 0; i < competencesNotes.size(); i++) {
                                                         JsonObject competenceNote = competencesNotes.getJsonObject(i);
                                                         if (!competenceNoteElevesMap.containsKey(competenceNote.getString("id_eleve"))) {
@@ -215,10 +216,10 @@ public class DefaultExportService implements ExportService  {
                                                         formatJsonObjectExportDevoir(text,
                                                                 stringJsonObjectEither.right().getValue(),
                                                                 extractData(orderBy(eleves, "lastName"), "idEleve"),
-                                                                extractData(orderBy(addMaitriseNE(maitrises), "ordre", true), "ordre"),
-                                                                extractData(competences,"id_competence"),
+                                                                extractData(orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE),
+                                                                extractData(competences, "id_competence"),
                                                                 extractData(notes, "id_eleve"),
-                                                                extractData(annotations, "id"),
+                                                                extractData(annotations, ID_KEY),
                                                                 competenceNoteElevesMap)));
 
                                             } else {
@@ -232,7 +233,7 @@ public class DefaultExportService implements ExportService  {
                             if (elevesDone.get() && notesDone.get() && annotationsDone.get()) {
                                 answered.set(true);
 
-                                if (eleves.contains("empty") ||  notes.contains("empty") || annotations.contains("empty")) {
+                                if (eleves.contains("empty") || notes.contains("empty") || annotations.contains("empty")) {
                                     answered.set(true);
                                     responseHandler.handle(new Either.Left<String, JsonObject>("exportDevoir : empty result."));
                                 } else {
@@ -247,10 +248,10 @@ public class DefaultExportService implements ExportService  {
                                                         formatJsonObjectExportDevoir(text,
                                                                 stringJsonObjectEither.right().getValue(),
                                                                 extractData(orderBy(eleves, "lastName"), "idEleve"),
-                                                                extractData(orderBy(addMaitriseNE(maitrises), "ordre", true), "ordre"),
-                                                                extractData(competences,"id_competence"),
+                                                                extractData(orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE),
+                                                                extractData(competences, "id_competence"),
                                                                 extractData(notes, "id_eleve"),
-                                                                extractData(annotations, "id"),
+                                                                extractData(annotations, ID_KEY),
                                                                 competenceNoteElevesMap)));
 
                                             } else {
@@ -290,7 +291,7 @@ public class DefaultExportService implements ExportService  {
         }
 
         //Devoir
-        devoir.remove("id");
+        devoir.remove(ID_KEY);
         result.put("devoir", devoir);
 
         //Maitrise
@@ -298,7 +299,7 @@ public class DefaultExportService implements ExportService  {
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject();
             _maitrise.put("libelle", maitrise.getString("libelle"));
-            _maitrise.put("visu", text ? getMaitrise(maitrise.getString("lettre"), String.valueOf(maitrise.getLong("ordre"))) : String.valueOf(maitrise.getLong("ordre")));
+            _maitrise.put("visu", text ? getMaitrise(maitrise.getString("lettre"), String.valueOf(maitrise.getLong(ORDRE))) : String.valueOf(maitrise.getLong(ORDRE)));
             maitrisesArray.add(_maitrise);
         }
         result.put("maitrise", maitrisesArray);
@@ -368,13 +369,118 @@ public class DefaultExportService implements ExportService  {
 
         return result;
     }
-    @Override
-    public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve, final String[] idGroupes,
-                                    String[] idFunctionalGroupes, final String idEtablissement, final List<String> idMatieres,
-                                    Long idPeriodeType, Boolean isCycle, final Handler<Either<String, JsonObject>> handler) {
 
-        final AtomicBoolean answered = new AtomicBoolean();
-        final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
+    private  void buildDevoirExport(final Boolean pByEnseignement, final String idEleve, final String[] idGroupes,
+                                    String[] idFunctionalGroupes, final String idEtablissement,
+                                    final List<String> idMatieres, Long idPeriodeType, Boolean isCycle,
+                                    final JsonArray enseignementArray, final JsonArray devoirsArray,
+                                    final JsonArray competencesArray, final JsonArray domainesArray,
+                                    final JsonArray competencesNotesArray, String[] idMatieresTab,
+                                    final Handler<Either<String, JsonArray>> finalHandler){
+
+
+        //on recupere la liste des devoirs des classes mais aussi des groupes de l'eleve
+        final List<String> idClasseAndFunctionnalGroups = new ArrayList<>();
+        Collections.addAll(idClasseAndFunctionnalGroups, idGroupes);
+        Collections.addAll(idClasseAndFunctionnalGroups, idFunctionalGroupes);
+
+        devoirService.listDevoirs(idEleve, idClasseAndFunctionnalGroups.toArray(new String[0]), null,
+                idPeriodeType != null ? new Long[]{idPeriodeType} : null,
+                idEtablissement != null ? new String[]{idEtablissement} : null,
+                idMatieres != null ? idMatieresTab : null, null, isCycle,
+                getIntermediateHandler(devoirsArray,  stringJsonArrayEither -> {
+                    if (stringJsonArrayEither.isRight() && isNotNull(stringJsonArrayEither.right().getValue()) &&
+                            !stringJsonArrayEither.right().getValue().isEmpty() &&
+                            !(stringJsonArrayEither.right().getValue().getValue(0) instanceof String)) {
+                        JsonArray idDevoirs = new JsonArray();
+                        for (int i = 0; i < stringJsonArrayEither.right().getValue().size(); i++) {
+                            Long idDevoir = stringJsonArrayEither.right().getValue().getJsonObject(i).getLong(ID_KEY);
+                            idDevoirs.add(idDevoir);
+                        }
+                        
+                        if (pByEnseignement) {
+                            competencesService.getDevoirCompetencesByEnseignement(idDevoirs,
+                                    getIntermediateHandler(idDevoirs, competencesArray, finalHandler));
+                        } else {
+                            competencesService.getDevoirCompetences(idDevoirs, idEtablissement,
+                                    getIntermediateHandler(idDevoirs, competencesArray, finalHandler));
+                        }
+                        competenceNoteService.getCompetencesNotes(idDevoirs, idEleve,
+                                true,
+                                getIntermediateHandler(idDevoirs, competencesNotesArray, finalHandler));
+                        domaineService.getDomainesRacines(idGroupes[0],
+                                getIntermediateHandler(domainesArray, finalHandler));
+                        enseignementService.getEnseignementsOrdered(
+                                getIntermediateHandler(enseignementArray, finalHandler));
+                    } else if (isNotNull(stringJsonArrayEither.right()) &&
+                            isNotNull(stringJsonArrayEither.right().getValue()) &&
+                            !stringJsonArrayEither.right().getValue().isEmpty() &&
+                            stringJsonArrayEither.right().getValue().getValue(0) instanceof String) {
+                        if (pByEnseignement) {
+                            competencesService.getDevoirCompetencesByEnseignement((Long) null,
+                                    getIntermediateHandler((Long)null, competencesArray, finalHandler));
+                        } else {
+                            competencesService.getDevoirCompetences(null,
+                                    getIntermediateHandler((Long)null, competencesArray, finalHandler));
+                        }
+                        competenceNoteService.getCompetencesNotes((Long)null, idEleve,true,
+                                getIntermediateHandler((Long)null, competencesNotesArray, finalHandler));
+                        domaineService.getDomainesRacines(idGroupes[0],
+                                getIntermediateHandler(domainesArray, finalHandler));
+                        enseignementService.getEnseignementsOrdered(
+                                getIntermediateHandler(enseignementArray, finalHandler));
+                    } else {
+                        String error = stringJsonArrayEither.left().getValue();
+                        log.error("getExportReleveComp | buildDevoirExport " + error);
+                        if(error.contains("Timeout") || error.contains("Timed out")){
+                            log.info(" reset buildDevoirExport");
+                            buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
+                                    idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
+                                    competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
+                        }
+                        else {
+                            finalHandler.handle(stringJsonArrayEither.left());
+                        }
+                    }
+                }));
+    }
+
+    private void buildNiveauReleveComp(final String[] idGroupes, final String idEtablissement, JsonArray maitriseArray,
+                                      final Handler<Either<String, JsonArray>> finalHandler){
+        utilsService.getCycle(Arrays.asList(idGroupes),  stringJsonArrayEither -> {
+            if (stringJsonArrayEither.isRight() && isNotNull(stringJsonArrayEither.right().getValue()) &&
+                    !stringJsonArrayEither.right().getValue().isEmpty()) {
+                Long idCycle = new Long(stringJsonArrayEither.right().getValue().getJsonObject(0)
+                        .getLong("id_cycle"));
+
+                for (int i = 0; i < stringJsonArrayEither.right().getValue().size(); i++) {
+                    JsonObject cycleObj = stringJsonArrayEither.right().getValue().getJsonObject(i);
+                    if (!idCycle.equals(cycleObj.getLong("id_cycle"))) {
+                        finalHandler.handle(new Either.Left<String, JsonArray>(
+                                "getExportReleveComp : Given groups belong to different cycle."));
+                    }
+                }
+                niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle,
+                        getIntermediateHandler(maitriseArray, finalHandler));
+            } else {
+                String error = stringJsonArrayEither.left().getValue();
+                log.error("getExportReleveComp | getCycle " + error);
+                if(error.contains("Timeout") || error.contains("Timed out")){
+                    log.info(" reset getCycle");
+                    buildNiveauReleveComp(idGroupes, idEtablissement, maitriseArray, finalHandler);
+                }
+                else {
+                    finalHandler.handle(new Either.Left<>(error));
+                }
+            }
+        });
+    }
+
+    @Override
+    public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve,
+                                    final String[] idGroupes, String[] idFunctionalGroupes,
+                                    final String idEtablissement, final List<String> idMatieres,
+                                    Long idPeriodeType, Boolean isCycle, final Handler<Either<String, JsonObject>> handler) {
         final JsonArray maitriseArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray enseignementArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray devoirsArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -382,89 +488,22 @@ public class DefaultExportService implements ExportService  {
         final JsonArray domainesArray = new fr.wseduc.webutils.collections.JsonArray();
         final JsonArray competencesNotesArray = new fr.wseduc.webutils.collections.JsonArray();
         String[] idMatieresTab = idMatieres.toArray(new String[0]);
-
+        final AtomicBoolean answered = new AtomicBoolean();
+        final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
         final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, idEleve, devoirsArray,
-                maitriseArray, competencesArray, domainesArray, competencesNotesArray,enseignementArray,  answered,byEnseignement, handler);
+                maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
+                byEnseignement, handler);
 
-        //on recupere la liste des devoirs des classes mais aussi des groupes de l'eleve
-        final List<String> idClasseAndFunctionnalGroups = new ArrayList<>();
-        Collections.addAll(idClasseAndFunctionnalGroups, idGroupes);
-        Collections.addAll(idClasseAndFunctionnalGroups, idFunctionalGroupes);
+        buildDevoirExport(pByEnseignement, idEleve, idGroupes, idFunctionalGroupes, idEtablissement,
+                idMatieres, idPeriodeType, isCycle, enseignementArray, devoirsArray,
+                competencesArray, domainesArray, competencesNotesArray, idMatieresTab, finalHandler);
 
-
-        devoirService.listDevoirs(idEleve, idClasseAndFunctionnalGroups.toArray(new String[0]), null,
-                idPeriodeType != null ? new Long[]{idPeriodeType} : null,
-                idEtablissement != null ? new String[]{idEtablissement} : null,
-                idMatieres != null ? idMatieresTab : null, null ,isCycle,
-                getIntermediateHandler(devoirsArray, new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                        if(stringJsonArrayEither.isRight() &&
-                                !(stringJsonArrayEither.right().getValue().getValue(0) instanceof String)) {
-                            for (int i = 0; i < stringJsonArrayEither.right().getValue().size(); i++) {
-                                Long idDevoir = ((JsonObject) stringJsonArrayEither.right().getValue().getJsonObject(i))
-                                        .getLong("id");
-                                if (pByEnseignement) {
-                                    competencesService.getDevoirCompetencesByEnseignement(idDevoir,
-                                            getIntermediateHandler(idDevoir, competencesArray, finalHandler));
-                                } else {
-                                    competencesService.getDevoirCompetences(idDevoir,
-                                            getIntermediateHandler(idDevoir, competencesArray, finalHandler));
-                                }
-                                competenceNoteService.getCompetencesNotes(idDevoir, idEleve,
-                                        true,
-                                        getIntermediateHandler(idDevoir, competencesNotesArray, finalHandler));
-                            }
-                            domaineService.getDomainesRacines(idGroupes[0],
-                                    getIntermediateHandler(domainesArray, finalHandler));
-                            enseignementService.getEnseignementsOrdered(
-                                    getIntermediateHandler(enseignementArray, finalHandler));
-                        } else if (stringJsonArrayEither.right().getValue().getValue(0) instanceof String){
-                            if (pByEnseignement){
-                                competencesService.getDevoirCompetencesByEnseignement(null,
-                                        getIntermediateHandler(null, competencesArray, finalHandler));
-                            } else {
-                                competencesService.getDevoirCompetences(null,
-                                        getIntermediateHandler(null, competencesArray, finalHandler));
-                            }
-                            competenceNoteService.getCompetencesNotes(null, idEleve,
-                                    true,
-                                    getIntermediateHandler(null, competencesNotesArray, finalHandler));
-                            domaineService.getDomainesRacines(idGroupes[0],
-                                    getIntermediateHandler(domainesArray, finalHandler));
-                            enseignementService.getEnseignementsOrdered(
-                                    getIntermediateHandler(enseignementArray, finalHandler));
-                        } else {
-                            finalHandler.handle(stringJsonArrayEither.left());
-                        }
-                    }
-                }));
-        utilsService.getCycle(Arrays.asList(idGroupes), new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                if (stringJsonArrayEither.isRight()) {
-                    Long idCycle = new Long( ((JsonObject) stringJsonArrayEither.right().getValue().getJsonObject(0))
-                            .getLong("id_cycle"));
-
-                    for (int i = 0; i < stringJsonArrayEither.right().getValue().size(); i++) {
-                        JsonObject cycleObj = stringJsonArrayEither.right().getValue().getJsonObject(i);
-                        if(!idCycle.equals(cycleObj.getLong("id_cycle"))) {
-                            finalHandler.handle(new Either.Left<String, JsonArray>(
-                                    "getExportReleveComp : Given groups belong to different cycle."));
-                        }
-                    }
-                    niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle,
-                            getIntermediateHandler(maitriseArray, finalHandler));
-                } else {
-                    finalHandler.handle(new Either.Left<String, JsonArray>(stringJsonArrayEither.left().getValue()));
-                }
-            }
-        });
+        buildNiveauReleveComp(idGroupes, idEtablissement, maitriseArray, finalHandler);
     }
 
     @Override
     public void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement,
-                                   final Handler<Either<String, JsonArray>> handler){
+                                   final Handler<Either<String, JsonArray>> handler) {
 
         niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle, new Handler<Either<String, JsonArray>>() {
             @Override
@@ -472,13 +511,13 @@ public class DefaultExportService implements ExportService  {
                 if (stringJsonArrayEither.isRight()) {
                     JsonArray legende = new fr.wseduc.webutils.collections.JsonArray();
                     JsonArray result = stringJsonArrayEither.right().getValue();
-                    for (int i = result.size() - 1; i >= 0 ; i--){
+                    for (int i = result.size() - 1; i >= 0; i--) {
                         JsonObject niveau = new JsonObject();
                         JsonObject o = result.getJsonObject(i);
                         niveau.put("libelle", o.getString("libelle"));
                         niveau.put("visu", text ? getMaitrise(o.getString("lettre"),
-                                o.getInteger("ordre").toString()) : o.getString("default"));
-                        niveau.put("ordre", o.getInteger("ordre"));
+                                o.getInteger(ORDRE).toString()) : o.getString("default"));
+                        niveau.put(ORDRE, o.getInteger(ORDRE));
                         legende.add(niveau);
                     }
                     handler.handle(new Either.Right<String, JsonArray>(legende));
@@ -490,14 +529,13 @@ public class DefaultExportService implements ExportService  {
     }
 
     private Handler<Either<String, JsonArray>>
-    getIntermediateHandler(final JsonArray collection,
-                           final Handler<Either<String, JsonArray>> finalHandler) {
+    getIntermediateHandler(final JsonArray collection, final Handler<Either<String, JsonArray>> finalHandler) {
         return new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                 if (stringJsonArrayEither.isRight()) {
                     JsonArray result = stringJsonArrayEither.right().getValue();
-                    if(result.size() == 0) {
+                    if (result.size() == 0) {
                         result.add("empty");
                     }
                     utilsService.saUnion(collection, result);
@@ -508,7 +546,7 @@ public class DefaultExportService implements ExportService  {
     }
 
     private Handler<Either<String, JsonArray>>
-    getIntermediateHandler(final Long idDevoir,final JsonArray collection,
+    getIntermediateHandler(final Long idDevoir, final JsonArray collection,
                            final Handler<Either<String, JsonArray>> finalHandler) {
         return new Handler<Either<String, JsonArray>>() {
             @Override
@@ -526,7 +564,28 @@ public class DefaultExportService implements ExportService  {
             }
         };
     }
-
+    private Handler<Either<String, JsonArray>>
+    getIntermediateHandler(final JsonArray idDevoirs, final JsonArray collection,
+                           final Handler<Either<String, JsonArray>> finalHandler) {
+        return new Handler<Either<String, JsonArray>>() {
+            @Override
+            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
+                if (stringJsonArrayEither.isRight()) {
+                    for(int i=0; i<idDevoirs.size(); i++) {
+                        long idDevoir = idDevoirs.getLong(i);
+                        JsonArray res = stringJsonArrayEither.right().getValue();
+                        if (res.size() == 0 && isNotNull(idDevoir)) {
+                            JsonObject obj = new JsonObject();
+                            obj.put("id_devoir", idDevoir);
+                            obj.put("empty", true);
+                            res.add(obj);
+                        }
+                    }
+                }
+                getIntermediateHandler(collection, finalHandler).handle(stringJsonArrayEither);
+            }
+        };
+    }
     private int getNbDiffKey(JsonArray collection, String key) {
         Set<String> keyShown = new HashSet<>();
         int jsonShown = 0;
@@ -537,9 +596,8 @@ public class DefaultExportService implements ExportService  {
                 if (!keyShown.contains(keyValue)) {
                     keyShown.add(keyValue);
                 }
-            }
-            else {
-                jsonShown ++;
+            } else {
+                jsonShown++;
             }
         }
         return keyShown.size() + jsonShown;
@@ -550,12 +608,12 @@ public class DefaultExportService implements ExportService  {
         Map<String, JsonObject> result = new LinkedHashMap<>();
 
         for (int i = 0; i < collection.size(); i++) {
-            if(collection.getValue(i) instanceof String) {
+            if (collection.getValue(i) instanceof String) {
                 continue;
             }
             JsonObject item = collection.getJsonObject(i);
             String itemKey = String.valueOf(item.getValue(key));
-            if(!result.containsKey(itemKey)) {
+            if (!result.containsKey(itemKey)) {
                 result.put(itemKey, item);
             }
         }
@@ -571,7 +629,7 @@ public class DefaultExportService implements ExportService  {
         for (int i = 0; i < collection.size(); i++) {
             JsonObject item = collection.getJsonObject(i);
             String itemKey = String.valueOf(item.getValue(key));
-            if(!unsortedMap.containsKey(itemKey)) {
+            if (!unsortedMap.containsKey(itemKey)) {
                 unsortedMap.put(itemKey, new fr.wseduc.webutils.collections.JsonArray());
             }
             unsortedMap.get(itemKey).add(item);
@@ -585,14 +643,14 @@ public class DefaultExportService implements ExportService  {
     }
 
     private JsonArray orderBy(JsonArray collection, String key) {
-        return orderBy (collection, key, false);
+        return orderBy(collection, key, false);
     }
 
     private Handler<Either<String, JsonArray>>
     getReleveCompFinalHandler(final Boolean text, final String idEleve, final JsonArray devoirs,
                               final JsonArray maitrises, final JsonArray competences,
-                              final JsonArray domaines, final JsonArray competencesNotes,final JsonArray enseignements ,
-                              final AtomicBoolean answered,final AtomicBoolean byEnseignement,
+                              final JsonArray domaines, final JsonArray competencesNotes, final JsonArray enseignements,
+                              final AtomicBoolean answered, final AtomicBoolean byEnseignement,
                               final Handler<Either<String, JsonObject>> responseHandler) {
         final AtomicBoolean devoirsDone = new AtomicBoolean();
         final AtomicBoolean maitriseDone = new AtomicBoolean();
@@ -611,32 +669,27 @@ public class DefaultExportService implements ExportService  {
                         maitriseDone.set(maitrises.size() > 0);
                         domainesDone.set(domaines.size() > 0);
                         enseignementsDone.set(enseignements.size() > 0);
-                        competencesDone.set(competences.size() > 0
-                                && getNbDiffKey(competences, "id_devoir") == devoirs.size());
-                        competencesNotesDone.set(competencesNotes.size() > 0
-                                && getNbDiffKey(competencesNotes, "id_devoir") == devoirs.size());
+                        competencesDone.set(competences.size() > 0);
+                        competencesNotesDone.set(competencesNotes.size() > 0);
 
-                        if (devoirsDone.get()
-                                && maitriseDone.get()
-                                && ((domainesDone.get() && !byEnseignement.get())
+                        if (devoirsDone.get() && maitriseDone.get() && ((domainesDone.get() && !byEnseignement.get())
                                 || (byEnseignement.get() && enseignementsDone.get()))
-                                && competencesDone.get()
-                                && competencesNotesDone.get()
+                                && competencesDone.get() && competencesNotesDone.get()
                                 ) {
                             answered.set(true);
 
                             if (maitrises.contains("empty")) {
-                                responseHandler.handle(new Either.Left<String, JsonObject>("devoirs not found"));
+                                responseHandler.handle(new Either.Left<>("devoirs not found"));
                             } else if (domaines.contains("empty") && !byEnseignement.get()) {
-                                responseHandler.handle(new Either.Left<String, JsonObject>("domaines not found"));
+                                responseHandler.handle(new Either.Left<>("domaines not found"));
                             } else if (enseignements.contains("empty") && byEnseignement.get()) {
-                                responseHandler.handle(new Either.Left<String, JsonObject>("enseignements not found"));
+                                responseHandler.handle(new Either.Left<>("enseignements not found"));
                             } else {
                                 if (!devoirs.contains("empty")) {
                                     Map<String, Map<String, Long>> competenceNotesMap = new HashMap<>();
 
                                     for (int i = 0; i < competencesNotes.size(); i++) {
-                                        if(competencesNotes.getJsonObject(i) instanceof JsonObject) {
+                                        if (competencesNotes.getJsonObject(i) instanceof JsonObject) {
                                             JsonObject row = competencesNotes.getJsonObject(i);
                                             if (row.containsKey("empty")) {
                                                 continue;
@@ -646,7 +699,7 @@ public class DefaultExportService implements ExportService  {
                                             Long eval = row.getLong("evaluation");
                                             Long niv_final = row.getLong("niveau_final");
                                             if (!competenceNotesMap.containsKey(devoirKey)) {
-                                                competenceNotesMap.put(devoirKey, new HashMap<String, Long>());
+                                                competenceNotesMap.put(devoirKey, new HashMap<>());
                                             }
                                             if (!competenceNotesMap.get(devoirKey).containsKey(compKey)) {
                                                 if (eval != null || niv_final != null) {
@@ -657,25 +710,23 @@ public class DefaultExportService implements ExportService  {
                                         }
                                     }
 
-                                    List<String> devoirsList =  new ArrayList<>(extractData(devoirs, "id").keySet());
+                                    List<String> devoirsList = new ArrayList<>(extractData(devoirs, ID_KEY).keySet());
                                     Map<String, JsonObject> maitrisesMap = extractData(
-                                            orderBy(addMaitriseNE(maitrises),"ordre", true), "ordre");
-                                    Map<String, JsonObject> competencesMap = extractData(competences, "id");
-                                    Map<String, JsonObject> domainesMap = extractData(domaines, "id");
-                                    Map<String, JsonObject> enseignementsMap = extractData(enseignements, "id");
-                                    Map<String, Map<String, Long>> competenceNotesByDevoir = competenceNotesMap;
+                                            orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE);
+                                    Map<String, JsonObject> competencesMap = extractData(competences, ID_KEY);
+                                    Map<String, JsonObject> domainesMap = extractData(domaines, ID_KEY);
+                                    Map<String, JsonObject> enseignementsMap = extractData(enseignements, ID_KEY);
 
                                     JsonObject resToAdd = formatJsonObjectExportReleveComp(
-                                            text,Boolean.valueOf(byEnseignement.get()), idEleve,devoirsList,
-                                            maitrisesMap,competencesMap,domainesMap,
+                                            text, Boolean.valueOf(byEnseignement.get()), idEleve, devoirsList,
+                                            maitrisesMap, competencesMap, domainesMap,
                                             enseignementsMap,
                                             competenceNotesMap)
-                                            .put("noDevoir",false);
+                                            .put("noDevoir", false);
 
-                                    responseHandler.handle(new Either.Right<String, JsonObject>(resToAdd));
-                                }
-                                else {
-                                    responseHandler.handle(new Either.Right<String, JsonObject>(
+                                    responseHandler.handle(new Either.Right<>(resToAdd));
+                                } else {
+                                    responseHandler.handle(new Either.Right<>(
                                             new JsonObject().put("text", text)
                                                     .getJsonObject("header", new JsonObject())
                                                     .put("noDevoir", true)
@@ -697,9 +748,9 @@ public class DefaultExportService implements ExportService  {
 
     private JsonArray addMaitriseNE(JsonArray maitrises) {
         JsonObject nonEvalue = new JsonObject();
-        String libelle = new String("Compétence non évaluée".getBytes(), StandardCharsets.UTF_8);
+        String libelle = getLibelle("evaluations.competence.unevaluated");
         nonEvalue.put("libelle", libelle);
-        nonEvalue.put("ordre", 0);
+        nonEvalue.put(ORDRE, 0);
         nonEvalue.put("default", "grey");
         nonEvalue.put("lettre", "NE");
         maitrises.add(nonEvalue);
@@ -707,7 +758,7 @@ public class DefaultExportService implements ExportService  {
         return maitrises;
     }
 
-    private JsonObject formatJsonObjectExportReleveComp(Boolean text,Boolean byEnseignement, String idEleve,
+    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean byEnseignement, String idEleve,
                                                         List<String> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
@@ -729,7 +780,7 @@ public class DefaultExportService implements ExportService  {
                     .put("libelle", maitrise.getString("libelle"))
                     .put("visu", text ? getMaitrise(maitrise
                             .getString("lettre"), String.valueOf(maitrise
-                            .getLong("ordre"))) : String.valueOf(maitrise.getLong("ordre")));
+                            .getLong(ORDRE))) : String.valueOf(maitrise.getLong(ORDRE)));
             headerMiddle.add(_maitrise);
         }
         header.put("right", headerMiddle);
@@ -738,7 +789,7 @@ public class DefaultExportService implements ExportService  {
         final Map<String, JsonObject> competencesObjByIdComp = new HashMap<>();
 
         Map<String, Set<String>> competencesByDomainOrEnsei = new LinkedHashMap<>();
-        for (String idEntity : (byEnseignement)? enseignements.keySet(): domaines.keySet()) {
+        for (String idEntity : (byEnseignement) ? enseignements.keySet() : domaines.keySet()) {
             competencesByDomainOrEnsei.put(idEntity, new TreeSet<String>(new Comparator<String>() {
                 @Override
                 public int compare(String o1, String o2) {
@@ -750,15 +801,15 @@ public class DefaultExportService implements ExportService  {
         }
 
         Map<String, List<String>> devoirByCompetences = new HashMap<>();
-        for(JsonObject competence : competences.values()) {
+        for (JsonObject competence : competences.values()) {
             competencesObjByIdComp.put(String.valueOf(competence.getLong("id_competence")), competence);
 
-            if(competence.containsKey("empty")) {
+            if (competence.containsKey("empty")) {
                 continue;
             }
             String idDevoir = String.valueOf(competence.getLong("id_devoir"));
             String idComp = String.valueOf(competence.getLong("id_competence"));
-            if(!devoirByCompetences.containsKey(idComp)) {
+            if (!devoirByCompetences.containsKey(idComp)) {
                 devoirByCompetences.put(idComp, new ArrayList<String>());
             }
             devoirByCompetences.get(idComp).add(idDevoir);
@@ -769,7 +820,7 @@ public class DefaultExportService implements ExportService  {
                 }
             } else {
                 String[] idsDomain = competence.getString("ids_domaine").split(",");
-                for(String idDomain : idsDomain) {
+                for (String idDomain : idsDomain) {
                     if (null != competencesByDomainOrEnsei.get(idDomain)) {
                         competencesByDomainOrEnsei.get(idDomain).add(idComp);
                     }
@@ -780,18 +831,18 @@ public class DefaultExportService implements ExportService  {
         JsonObject bodyHeader = new JsonObject();
         if (byEnseignement) {
             bodyHeader.put("left", "Enseignements / items");
-        } else  {
+        } else {
             bodyHeader.put("left", "Domaines / items");
         }
-        String right = new String("Niveau des compétences et Nombre d'évaluations".getBytes(), StandardCharsets.UTF_8);
+        String right = getLibelle("evaluations.competence.level.and.number");
         bodyHeader.put("right", right);
         body.put("header", bodyHeader);
 
         JsonArray bodyBody = new fr.wseduc.webutils.collections.JsonArray();
-        for(Map.Entry<String, Set<String>> competencesInDomain : competencesByDomainOrEnsei.entrySet()) {
+        for (Map.Entry<String, Set<String>> competencesInDomain : competencesByDomainOrEnsei.entrySet()) {
             JsonObject domainObj = new JsonObject();
             if (byEnseignement) {
-                if(enseignements.get(competencesInDomain.getKey()) != null){
+                if (enseignements.get(competencesInDomain.getKey()) != null) {
                     domainObj.put("domainHeader", enseignements.get(competencesInDomain.getKey())
                             .getString("nom"));
                 }
@@ -801,7 +852,7 @@ public class DefaultExportService implements ExportService  {
                         .getString("libelle"));
             }
             JsonArray competencesInDomainArray = new fr.wseduc.webutils.collections.JsonArray();
-            for(String competence : competencesInDomain.getValue()) {
+            for (String competence : competencesInDomain.getValue()) {
                 List<Long> valuesByComp = new ArrayList<>();
                 for (String devoir : devoirByCompetences.get(competence)) {
                     if (competenceNotesByDevoir.containsKey(devoir) && competenceNotesByDevoir.get(devoir)
@@ -855,7 +906,7 @@ public class DefaultExportService implements ExportService  {
         String[] date = devoir.getString("date").substring(0, devoir.getString("date").indexOf(" ")).split("-");
         devoirMap.put("date", date[2] + '/' + date[1] + '/' + date[0]);
 
-        devoirMap.put("id", devoir.getLong("id"));
+        devoirMap.put(ID_KEY, devoir.getLong(ID_KEY));
         devoirMap.put("nom", devoir.getString("name"));
         devoirMap.put("coeff", devoir.getString("coefficient"));
         devoirMap.put("sur", devoir.getLong("diviseur"));
@@ -879,7 +930,7 @@ public class DefaultExportService implements ExportService  {
                 } else {
                     finalHandler.handle(
                             new Either.Left<String, Map<String, Object>>(
-                                    "getDevoirsInfos : devoir '" + devoirMap.get("id") + "), couldn't get class name."));
+                                    "getDevoirsInfos : devoir '" + devoirMap.get(ID_KEY) + "), couldn't get class name."));
                 }
             }
         }));
@@ -900,7 +951,7 @@ public class DefaultExportService implements ExportService  {
                 } else {
                     finalHandler.handle(
                             new Either.Left<String, Map<String, Object>>(
-                                    "getDevoirsInfos : devoir '" + devoirMap.get("id") + "), couldn't get matiere name."));
+                                    "getDevoirsInfos : devoir '" + devoirMap.get(ID_KEY) + "), couldn't get matiere name."));
                 }
             }
         }));
@@ -923,15 +974,15 @@ public class DefaultExportService implements ExportService  {
 
     private JsonArray calcWidthNote(Boolean text, Map<String, JsonObject> maitrises, List<Long> competenceNotes, Integer nbDevoir) {
         Map<Long, Integer> occNote = new HashMap<>();
-        for(Long competenceNote : competenceNotes) {
-            if(!occNote.containsKey(competenceNote)) {
+        for (Long competenceNote : competenceNotes) {
+            if (!occNote.containsKey(competenceNote)) {
                 occNote.put(competenceNote, 0);
             }
             occNote.put(competenceNote, occNote.get(competenceNote) + 1);
         }
 
         JsonArray resultList = new fr.wseduc.webutils.collections.JsonArray();
-        for(Map.Entry<Long, Integer> notesMaitrises : occNote.entrySet()) {
+        for (Map.Entry<Long, Integer> notesMaitrises : occNote.entrySet()) {
             JsonObject competenceNotesObj = new JsonObject();
             String number = (text ? getMaitrise(maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("lettre"), String.valueOf(notesMaitrises.getKey())) + " - " : "") + String.valueOf(notesMaitrises.getValue());
             competenceNotesObj.put("number", number);
@@ -939,12 +990,12 @@ public class DefaultExportService implements ExportService  {
             competenceNotesObj.put("color", color);
 
             String width = "100"; // gestion cas 0 devoir
-            if(nbDevoir > 0) {
+            if (nbDevoir > 0) {
                 double tempWidth = notesMaitrises.getValue() / (double) nbDevoir * 100D;
-                if(tempWidth < 1){
+                if (tempWidth < 1) {
                     tempWidth = 1;
                 }
-                width =  String.valueOf(tempWidth);
+                width = String.valueOf(tempWidth);
             }
             competenceNotesObj.put("width", width);
 
@@ -953,17 +1004,17 @@ public class DefaultExportService implements ExportService  {
         return resultList;
     }
 
-    private String getMaitrise(String maitrise, String key){
-        if(maitrise == null){
+    private String getMaitrise(String maitrise, String key) {
+        if (maitrise == null) {
             return getMaitrise(key);
-        } else if(maitrise.equals("  ")) {
+        } else if (maitrise.equals("  ")) {
             return getMaitrise(key);
         } else {
             return maitrise;
         }
     }
 
-    private String getMaitrise(String key){
+    private String getMaitrise(String key) {
         switch (key) {
             case "1":
                 return "MI";
@@ -977,8 +1028,6 @@ public class DefaultExportService implements ExportService  {
     }
 
 
-
-
     /**
      * Generation d'un PDF à partir d'un template xhtml
      *
@@ -988,8 +1037,8 @@ public class DefaultExportService implements ExportService  {
      * @param prefixPdfName prefixe du nom du pdf (qui sera complété de la date de génération)
      */
     @Override
-    public void  genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
-                            final String prefixPdfName, Vertx vertx, JsonObject config) {
+    public void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,
+                           final String prefixPdfName, Vertx vertx, JsonObject config) {
 
         final String dateDebut = new SimpleDateFormat("dd.MM.yyyy").format(new Date().getTime());
         if (templateProps.containsKey("image") && templateProps.getBoolean("image")) {
@@ -1000,7 +1049,7 @@ public class DefaultExportService implements ExportService  {
             log.info(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
                     + " -> Debut Generation PDF du template " + templateName);
         }
-        if (null != templateProps){
+        if (null != templateProps) {
             log.debug(new SimpleDateFormat("HH:mm:ss:S").format(new Date().getTime())
                     + " -> Detail Generation du template templateProps : " + templateProps.toString());
         } else {
@@ -1030,7 +1079,7 @@ public class DefaultExportService implements ExportService  {
                             return;
                         }
                         StringReader reader = new StringReader(result.result().toString("UTF-8"));
-                        Renders render = new Renders(vertx,config);
+                        Renders render = new Renders(vertx, config);
                         render.processTemplate(request, templateProps, templateName, reader, new Handler<Writer>() {
 
                             @Override
@@ -1168,5 +1217,126 @@ public class DefaultExportService implements ExportService  {
                     }
                 });
 
+    }
+
+    public void getMatiereExportReleveComp(final JsonArray idMatieres, Handler<Either<String, String>> handler) {
+        JsonObject action = new JsonObject().put(ACTION, "matiere.getMatieres").put("idMatieres", idMatieres);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                handlerToAsyncHandler(message -> {
+                    JsonObject body = message.body();
+
+                    if (OK.equals(body.getString(STATUS))) {
+                        final JsonArray results = body.getJsonArray(RESULTS);
+                        String mat = "";
+                        if (isNotNull(results) && !results.isEmpty()) {
+                            mat = results.getJsonObject(0).getString(NAME);
+                            for (int i = 1; i < results.size(); i++) {
+                                mat = mat + ", " + results.getJsonObject(i).getString(NAME);
+                            }
+                        }
+                        handler.handle(new Either.Right<>(mat));
+                    } else {
+                        handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                    }
+                }));
+    }
+
+    public void getLibellePeriodeExportReleveComp(final HttpServerRequest request, final Long finalIdPeriode,
+                                                  Boolean isCycle, Handler<Either<String, String>> handler) {
+
+        if (isCycle) {
+            handler.handle(new Either.Right(getLibelle("viescolaire.utils.cycle")));
+            return;
+        }
+
+        JsonObject jsonRequest = new JsonObject()
+                .put("headers", new JsonObject().put("Accept-Language",
+                        request.headers().get("Accept-Language")))
+                .put("Host", getHost(request));
+        JsonObject action = new JsonObject()
+                .put(ACTION, "periode.getLibellePeriode")
+                .put("request", jsonRequest);
+        if (!"undefined".equals(finalIdPeriode)) {
+            action.put("idType", finalIdPeriode);
+        }
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            final JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                String libellePeriode = body.getString(RESULT)
+                        .replace("é", "e")
+                        .replace("è", "e");
+                handler.handle(new Either.Right<>(libellePeriode));
+            } else {
+                handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+            }
+        }));
+    }
+
+    public void getElevesExportReleveComp(final String finalIdClasse, String idStructure, String finalIdEleve,
+                                          final Long finalIdPeriode, final Map<String, String> elevesMap,
+                                          Handler<Either<String, Object>> handler) {
+        if (finalIdClasse == null) {
+            JsonObject action = new JsonObject()
+                    .put("action", "eleve.getInfoEleve")
+                    .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
+                    .put("idEleves", new fr.wseduc.webutils.collections.JsonArray(
+                            Arrays.asList(new String[]{finalIdEleve})));
+
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
+                    handlerToAsyncHandler(message -> {
+                        JsonObject body = message.body();
+
+                        if (OK.equals(body.getString(STATUS))) {
+                            JsonArray results = body.getJsonArray(RESULTS);
+                            if (isNull(results) || results.isEmpty()) {
+                                handler.handle(new Either.Left<>(" No student found "));
+                                return;
+                            }
+                            JsonObject eleve = body.getJsonArray(RESULTS).getJsonObject(0);
+                            handler.handle(new Either.Right<>(eleve));
+                        } else {
+                            handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                        }
+                    }));
+        } else {
+            final JsonObject action = new JsonObject()
+                    .put(ACTION, "classe.getEleveClasse")
+                    .put(ID_CLASSE_KEY, finalIdClasse)
+                    .put(ID_PERIODE_KEY, finalIdPeriode);
+            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(
+                    message -> {
+                        if (OK.equals(message.body().getString(STATUS))) {
+                            final JsonArray eleves = message.body().getJsonArray(RESULTS);
+                            final String[] idEleves = new String[eleves.size()];
+
+                            for (int i = 0; i < eleves.size(); i++) {
+                                elevesMap.put( eleves.getJsonObject(i).getString(ID_KEY),
+                                        eleves.getJsonObject(i).getString("lastName")
+                                                + " " + eleves.getJsonObject(i).getString("firstName"));
+                                idEleves[i] = eleves.getJsonObject(i).getString(ID_KEY);
+                            }
+
+                            JsonObject infosAction = new JsonObject()
+                                    .put("action", "eleve.getInfoEleve")
+                                    .put(Competences.ID_ETABLISSEMENT_KEY, idStructure)
+                                    .put("idEleves", new JsonArray(Arrays.asList(idEleves)));
+                            eb.send(Competences.VIESCO_BUS_ADDRESS, infosAction, Competences.DELIVERY_OPTIONS,
+                                    handlerToAsyncHandler(event -> {
+                                        JsonObject body = event.body();
+
+                                        if (OK.equals(body.getString(STATUS))) {
+                                            JsonArray results = body.getJsonArray(RESULTS);
+                                            if (isNull(results) || results.isEmpty()) {
+                                                handler.handle(new Either.Left<>(" No student's info found"));
+                                                return;
+                                            }
+                                            handler.handle(new Either.Right<>(results));
+                                        } else {
+                                            handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                                        }
+                                    }));
+                        }
+                    }));
+        }
     }
 }
