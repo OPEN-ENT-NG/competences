@@ -30,7 +30,7 @@ import {cSkillsBubble} from "./directives/cSkillsBubble";
 import {proportionSuiviCompetence} from "./directives/ProportionSuiviCompetence";
 import {evalBilanPeriodiqueCtl} from './controllers/eval_bilan_periodique_ctl';
 import {messageLoader} from "./utils/directives/messageLoading";
-
+import{teachingsSkills} from "./directives/teachingsSkills";
 
 ng.addRequiredModule('chart.js');
 // controllers
@@ -45,6 +45,7 @@ ng.directives.push(cFilAriane);
 ng.directives.push(proportionSuiviCompetence);
 ng.directives.push(cSkillsBubble);
 ng.directives.push(messageLoader);
+ng.directives.push(teachingsSkills);
 
 
 // filters

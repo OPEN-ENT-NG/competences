@@ -44,7 +44,6 @@
             </options>
         </dropdown-buttons>
     </h2>
-
 </div>
 
 
@@ -128,31 +127,25 @@
 <div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve') && searchBilan.parDomaine === 'true'"
         ng-repeat="domaine in suiviCompetence.domaines.all" ng-include="'tree_item_renderer.html'">
 </div>
-<div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve') && searchBilan.parDomaine === 'false'">
+<div ng-if="!template.contains('main', 'enseignants/releve_notes/display_releve') && searchBilan.parDomaine === 'false'" >
     <div ng-repeat="enseignement in filteredEnseignements = (suiviCompetence.enseignements.all | filter:FilterNotEvaluatedEnseignement)">
-        <h4 ng-class="{'openedDom' : enseignement.OpenDom, 'Domaine' : enseignement.competences.all.length > 0 }" class="margin-top-1em twelve cell " ng-click="enseignement.OpenDom = !enseignement.OpenDom" ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
+        <h4 ng-class="{'openedDom' : enseignement.OpenDom, 'Domaine' : enseignement.competences.all.length > 0 }" class="margin-top-1em twelve cell "
+            ng-click="enseignement.OpenDom = !enseignement.OpenDom" ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
         <div ng-class="{'openedSectionDom' : enseignement.OpenDom}" class="twelve cell" style='height: auto;'>
-            <div ng-repeat="connaissance in enseignement.competences.all | filter:FilterNotEvaluatedConnaissance">
-                <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}" class="margin-top-1em Domaine" ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom" ng-init="connaissance.OpenSousDom = false">[[connaissance.nom]]</h3>
-                <div ng-class="{'margin-top-1em' : connaissance.competences.length > 0, 'openedSectionDom' : connaissance.OpenSousDom}" style='height: auto;'>
-                    <div  ng-click="openDetailCompetence(competence)" ng-repeat="competence in connaissance.competences.all | filter:FilterNotEvaluated">
-
-                        <div ng-class="{whiteSpaceNormal : competence.hovering}"
-                             ng-mouseenter="showIt(competence)"
-                             ng-mouseleave="hideIt(competence)" class="six inline-block ellipsis competence">
-                            [[competence.nom]]
-                        </div>
-                        <div class="five inline-block align-center align-top">
-                            <proportion-suivi-competence evaluations="competence.competencesEvaluations"
-                                                         filter="suiviFilter" user="me"
-                                                         is-classe="false"
-                                                         map-couleurs="mapCouleurs"
-                                                         map-lettres="mapLettres">
-
-                            </proportion-suivi-competence>
-                        </div>
-
-                    </div>
+            <teachings-skills ng-if="enseignement.matieres.all.length === 0" data ="enseignement"
+                              suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                              function-filter-not-evaluated="FilterNotEvaluated"
+                              function-open-detail-competence="openDetailCompetence">
+            </teachings-skills>
+            <div  ng-if="enseignement.matieres.all.length > 0" ng-repeat=" matiere in enseignement.matieres.all | orderBy:['name']">
+                <h2 class="changedAverage" ng-class="{'openedDom' : matiere.OpenMat}" ng-click =" matiere.OpenMat = !matiere.OpenMat"
+                    ng-init= "matiere.OpenMat = false">[[matiere.name]]</h2>
+                <div ng-class="{'openedSectionDom' : matiere.OpenMat}" style='height: auto;'>
+                    <teachings-skills data="matiere"
+                                      suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
+                                      function-open-detail-competence="openDetailCompetence"
+                                      function-filter-not-evaluated="FilterNotEvaluated">
+                    </teachings-skills>
                 </div>
             </div>
         </div>

@@ -1,0 +1,21 @@
+<div  ng-repeat="connaissance in data.competences.all | filter:FilterNotEvaluatedConnaissance">
+    <h3 ng-class="{'openedDom' : connaissance.OpenSousDom}" class="margin-top-1em Domaine"
+        ng-click="connaissance.OpenSousDom = !connaissance.OpenSousDom" ng-init="connaissance.OpenSousDom = false">[[connaissance.nom]]</h3>
+    <div ng-class="{'margin-top-1em' : connaissance.competences.all.length > 0, 'openedSectionDom' : connaissance.OpenSousDom}" style='height: auto;'>
+        <div class="competence-line" ng-click="functionOpenDetailCompetence(competence)" ng-repeat="competence in connaissance.competences.all | filter:functionFilterNotEvaluated">
+            <div ng-class="{whiteSpaceNormal : competence.hovering}"
+                 ng-mouseenter="showIt(competence)"
+                 ng-mouseleave="hideIt(competence)" class="six inline-block ellipsis competence">
+                [[competence.nom]]
+            </div>
+            <div class="five inline-block align-center align-top">
+                <proportion-suivi-competence evaluations="competence.competencesEvaluations"
+                                             filter="suiviFilter" user="me"
+                                             is-classe="isClasse"
+                                             map-couleurs="mapCouleurs"
+                                             map-lettres="mapLettres">
+                </proportion-suivi-competence>
+            </div>
+        </div>
+    </div>
+</div>

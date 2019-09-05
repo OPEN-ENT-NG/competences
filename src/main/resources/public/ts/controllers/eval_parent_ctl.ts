@@ -436,9 +436,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.FilterNotEvaluated = function (maCompetence) {
             return FilterNotEvaluated(maCompetence);
         };
-        $scope.FilterNotEvaluatedConnaissance = function (maConnaissance) {
-            return FilterNotEvaluatedConnaissance(maConnaissance);
-        };
 
         $scope.FilterNotEvaluatedDomaine = function (monDomaineCompetence) {
             if (monDomaineCompetence.domaines.all.length > 0 ) {
@@ -800,13 +797,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return $scope.search.matiere;
         };
 
-
         $scope.filterCycle = () => {
             return (item) => {
                 return item.id_type > -2;
             };
         };
     }
-
-
 ]);

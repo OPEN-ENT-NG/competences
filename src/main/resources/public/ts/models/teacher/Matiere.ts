@@ -16,9 +16,10 @@
  */
 
 import { Model } from 'entcore';
-import { SousMatiere } from './index';
+import {Competence, SousMatiere} from './index';
+import {DefaultMatiere} from "../common/DefaultMatiere";
 
-export class Matiere extends Model {
+export class Matiere extends DefaultMatiere {
     id: any;
     sousMatieres: any;
     name: string;
@@ -26,5 +27,6 @@ export class Matiere extends Model {
     constructor () {
         super();
         this.collection(SousMatiere);
+        this.collection(Competence);
     }
 }

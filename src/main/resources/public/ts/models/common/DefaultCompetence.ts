@@ -17,6 +17,7 @@
 
 import { Model, Collection } from 'entcore';
 import { Competence } from "../teacher";
+import {Matiere} from "../parent_eleve/Matiere";
 
 export class DefaultCompetence extends Model {
     competences: Collection<Competence>;
@@ -27,4 +28,6 @@ export class DefaultCompetence extends Model {
     code_domaine: string;
     ids_domaine: string;
     composer: any;
+   ids_matiere: string[];
+
 }

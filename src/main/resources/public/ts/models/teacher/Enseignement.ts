@@ -16,14 +16,16 @@
  */
 
 import { Model, Collection } from 'entcore';
-import { Competence } from './index';
+import {Competence, Matiere} from './index';
+import {DefaultEnseignant} from "../common/DefaultEnseignant";
 
-export class Enseignement extends Model {
+export class Enseignement extends DefaultEnseignant {
     competences : Collection<Competence>;
     id;
 
     constructor () {
         super();
         this.collection(Competence);
+        this.collection(Matiere);
     }
 }

@@ -16,7 +16,7 @@
  */
 
 import { Model, Collection } from 'entcore';
-import { Domaine, CompetenceNote, Periode, Classe, Utils } from './index';
+import {Domaine, CompetenceNote, Periode, Classe, Utils, Matiere, Structure} from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
 import http from "axios";
 
@@ -25,6 +25,7 @@ export class SuiviCompetenceClasse extends Model {
     enseignements: Collection<Enseignement>;
     competenceNotes : Collection<CompetenceNote>;
     periode : Periode;
+    matieres: Collection<Matiere>;
 
     get api() {
         return {
@@ -33,10 +34,11 @@ export class SuiviCompetenceClasse extends Model {
         }
     }
 
-    constructor (classe : Classe, periode : any) {
+    constructor (classe : Classe, periode : any,structure : Structure) {
         super();
         this.periode = periode;
         var that = this;
+        this.collection(Matiere);
 
         this.collection(Domaine, {
             sync: () => {
@@ -75,6 +77,7 @@ export class SuiviCompetenceClasse extends Model {
                     ]);
                     this.enseignements.load(response[0].data);
                     let competences = response[1].data;
+                    if(structure.matieres.all !== undefined)this.matieres.load(structure.matieres.all);
                     await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
                     resolve();
                 });

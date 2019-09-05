@@ -17,6 +17,8 @@
 
 import { DefaultEnseignement } from "../common/DefaultEnseignement";
 import { Competence } from "./Competence";
+import {Matiere} from "./Matiere";
+
 
 
 export class Enseignement extends DefaultEnseignement {
@@ -25,5 +27,9 @@ export class Enseignement extends DefaultEnseignement {
         super();
         if (p) this.updateData(p);
         this.collection(Competence);
+        this.collection(Matiere);
+
     }
+
+
 }

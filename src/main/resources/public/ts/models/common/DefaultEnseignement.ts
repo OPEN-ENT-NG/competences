@@ -15,10 +15,11 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, Collection, _} from 'entcore';
+import {Model, Collection, _ ,angular} from 'entcore';
 import { Competence } from "../parent_eleve/Competence";
 import { Evaluations} from "../eval_parent_mdl";
 import http from "axios";
+import {DefaultMatiere} from "./DefaultMatiere";
 
 export class DefaultEnseignement extends Model {
     id;
@@ -39,7 +40,12 @@ export class DefaultEnseignement extends Model {
                             model.load(enseignements.data);
                         }
                     }
+                    let matieresStructure = model.composer.matieres.all;
+
                     model.each(function (enseignement) {
+
+                        let idsMatiereEns : string[] = [];
+
                         if (enseignement['competences_1'] !== undefined) {
                             enseignement.competences.load(enseignement['competences_1']);
                         }
@@ -47,18 +53,53 @@ export class DefaultEnseignement extends Model {
                             return competence.composer = enseignement;
                         });
                         enseignement.competences.each(function (competence) {
+                            let idsMatiereComp_1 : string[]= [];
                             if (competence['competences_2']!== undefined && competence['competences_2'].length > 0) {
                                 competence.competences.load(competence['competences_2']);
+
                                 _.map(competence.competences.all, function (sousCompetence) {
+                                    let idsMatiereSousComp : string[] = [];
                                     sousCompetence.competencesEvaluations = _.where(competences, {
                                         id_competence: sousCompetence.id
                                     });
+                                    if(enseignement.id === 6 && sousCompetence.competencesEvaluations.length > 0){//Langues
+                                        idsMatiereSousComp =  _.chain(idsMatiereSousComp).union(_.pluck(sousCompetence.competencesEvaluations,'id_matiere')).value();
+                                        idsMatiereComp_1 = _.chain(idsMatiereComp_1).union( _.pluck(sousCompetence.competencesEvaluations,'id_matiere')).value();
+                                        idsMatiereEns = _.chain(idsMatiereEns).union( _.pluck(sousCompetence.competencesEvaluations,'id_matiere')).value();
+                                    }
+                                    sousCompetence.ids_matieres =_.unique(idsMatiereSousComp);
                                     return sousCompetence.composer = competence;
                                 });
                             }
+                            competence.ids_matieres = _.unique(idsMatiereComp_1);
                             delete competence['competences_2'];
                         });
+
+                        enseignement.matieres.load(enseignement.getListObjectMatEnseignement(idsMatiereEns, matieresStructure));
                         delete enseignement['competences_1'];
+
+                        _.each(enseignement.matieres.all, (matiere) => {
+
+                            matiere.competences = angular.copy(enseignement.competences);
+
+                            matiere.competences.all=  _.chain(matiere.competences.all)
+                                .filter((comp) => {
+                                    return _.contains(comp.ids_matieres, matiere.id) || _.isEmpty(comp.ids_matieres);
+                                })
+                                .each((comp) => {
+                                     comp.competences.all = _.chain(comp.competences.all)
+                                         .filter((sousComp) => {
+                                             return _.contains(sousComp.ids_matieres, matiere.id) || _.isEmpty(sousComp.ids_matieres);
+                                         })
+                                         .each((sousComp)=> {
+                                             sousComp.competencesEvaluations = _.where(sousComp.competencesEvaluations,
+                                                 { id_matiere : matiere.id}
+                                             );
+                                         })
+                                         .value();
+                                 }).value();
+                        });
+
                     });
                     if (resolve && typeof (resolve) === 'function') {
                         resolve();
@@ -93,5 +134,19 @@ export class DefaultEnseignement extends Model {
                 reject(e);
             }
         });
+    }
+    getListObjectMatEnseignement (idsMatiereEns, matieresStructure) : DefaultMatiere[]{
+
+        let matEnseignement : Array<DefaultMatiere> = [];
+
+        _.each(idsMatiereEns, (idMat)=> {
+            if(_.findWhere(matieresStructure,{id: idMat}) != undefined ){
+                let matiere = _.findWhere(matieresStructure,{id: idMat});
+                matiere.composer = this;
+                matEnseignement.push(matiere);
+            }
+
+        });
+        return matEnseignement
     }
 }

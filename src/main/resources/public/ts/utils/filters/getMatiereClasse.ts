@@ -28,28 +28,28 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
             let classe = classes.findWhere({id : idClasse});
             if (classe !== undefined) {
                 let matieresClasse = matieres.filter((matiere) => {
-            if (classe.hasOwnProperty('services')) {
-                let services = classe.services;
-                let evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true});
-                if (services !== null) {
-                    hasService = true;
-                }
-                return evaluables !== undefined;
-            }
-            else {
-                if (matiere.hasOwnProperty('libelleClasses')) {
-                    return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
-                } else {
-                    return false;
-                }
-            }
-        });
+                    if (classe.hasOwnProperty('services')) {
+                        let services = classe.services;
+                        let evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true});
+                        if (services !== null) {
+                            hasService = true;
+                        }
+                        return evaluables !== undefined;
+                    }
+                    else {
+                        if (matiere.hasOwnProperty('libelleClasses')) {
+                            return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
+                        } else {
+                            return false;
+                        }
+                    }
+                });
                 if (matieresClasse.length > 0) {
                      return matieresClasse;
                 }
                 let matieresList = (hasService)? matieresClasse : matieres;
                 return matieresList;
-    }
+            }
         }
     }
 });

@@ -25,10 +25,8 @@ import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import { Defaultcolors } from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
-import {
-    FilterNotEvaluated, FilterNotEvaluatedConnaissance,
-    FilterNotEvaluatedEnseignement
-} from "../utils/filters/filterNotEvaluatedEnseignement";
+import { FilterNotEvaluated, FilterNotEvaluatedEnseignement
+    } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 
 declare let _:any;
@@ -120,7 +118,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 if ($scope.informations.classe.eleves !== undefined && $scope.informations.classe.eleves.all.length > 0) {
                     $scope.suiviCompetence = new SuiviCompetenceClasse(
                         $scope.search.classe.filterEvaluableEleve($scope.search.periode)
-                        , $scope.search.periode);
+                        , $scope.search.periode, $scope.structure);
                    await endSelectSuivi();
                 } else {
                     // cas 1ère sélection de période : on attend le chargement des élèves avant de passer
@@ -128,7 +126,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     $scope.informations.classe.on('synchronize-students', async function () {
                         $scope.suiviCompetence = new SuiviCompetenceClasse(
                             $scope.search.classe.filterEvaluableEleve($scope.search.periode)
-                            , $scope.search.periode);
+                            , $scope.search.periode, $scope.structure);
                      await  endSelectSuivi();
                     });
                 }
@@ -414,9 +412,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         $scope.FilterNotEvaluatedEnseignement = function (monEnseignement) {
             return FilterNotEvaluatedEnseignement(monEnseignement, $scope.Display.EvaluatedCompetences);
         };
-        $scope.FilterNotEvaluatedConnaissance = function (maConnaissance) {
-            return FilterNotEvaluatedConnaissance(maConnaissance);
-        };
+
         $scope.initController = async () => {
             template.open('container', 'layouts/2_10_layout');
             // create the timer variable
@@ -495,7 +491,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             else {
                 return true;
             }
-        }
+        };
         /** --------------------------------------  Fin définition des fonctions usuelles  --------------        */
 
     }

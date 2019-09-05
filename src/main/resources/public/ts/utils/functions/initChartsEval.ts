@@ -42,7 +42,7 @@ export let initChartsEval = async function ($scope) {
             }
             $scope.chartOptionsEval.colors.push(colorValue);
 
-            let libelle = ListEval[i].evaluation_libelle;
+            let libelle = (ListEval[i].evaluation_libelle !== undefined)? ListEval[i].evaluation_libelle : ListEval[i].name ;
             if (ListEval[i].formative) {
                 libelle += " (F)"
             }

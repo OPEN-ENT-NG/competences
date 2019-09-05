@@ -25,8 +25,7 @@ import {
 import * as utils from "../utils/teacher";
 import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../models/teacher/index";
 import {Mix} from "entcore-toolkit";
-import { FilterNotEvaluatedConnaissance,FilterNotEvaluatedEnseignement
-} from "../utils/filters/filterNotEvaluatedEnseignement";
+import {FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 
 
@@ -1050,16 +1049,12 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             return FilterNotEvaluatedEnseignement(monEnseignement, $scope.selected.grey);
         };
 
-        $scope.FilterNotEvaluatedConnaissance = function (maConnaissance) {
-            return FilterNotEvaluatedConnaissance(maConnaissance);
-        };
-
-        $scope.initView = async function () {
+         $scope.initView = async function () {
             if ($scope.searchBilan !== undefined  && $scope.searchBilan.parDomaine ===  'false') {
                 $scope.searchBilan.parDomaine = 'true';
                 await $scope.changeContent();
             }
-        };
+         };
 
         $scope.showEnseignementChoice = (parDomaine?) => {
             let hideFilterMine = true;
@@ -1070,7 +1065,6 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             return hideFilterMine && $scope.template.contains('suivi-competence-content',
                 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
         };
-
 
 
 

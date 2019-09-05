@@ -16,12 +16,20 @@
  */
 
 import { http, Model, _ } from 'entcore';
-export class Matiere extends Model {
+import {DefaultMatiere} from "../common/DefaultMatiere";
+import {Competence} from "./Competence";
+
+export class Matiere extends DefaultMatiere {
     id: string;
     name: string;
     externalId: string;
     ens: any = [];
     moyenne: number;
+
+    constructor () {
+        super()
+        this.collection(Competence);
+    }
 
     get api () {
         return {

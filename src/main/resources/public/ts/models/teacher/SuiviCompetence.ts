@@ -31,6 +31,7 @@ import {
     LanguesCultRegs,
     LangueCultReg,
     BfcSynthese,
+    Matiere,
     EleveEnseignementCpl, EnsCpls, EnsCpl, NiveauEnseignementCpls,
 } from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
@@ -54,6 +55,7 @@ export class SuiviCompetence extends Model {
     eleveEnsCpl: EleveEnseignementCpl;
     niveauEnsCpls : NiveauEnseignementCpls;
     baremeBrevetEleves : BaremeBrevetEleves;
+    matieres: Collection<Matiere>;
 
     static get api() {
         return {
@@ -80,6 +82,7 @@ export class SuiviCompetence extends Model {
 
         let that = this;
         this.collection(TableConversion);
+        this.collection(Matiere);
         this.collection(Domaine, {
             sync: () => {
                 return new Promise(async (resolve) => {
@@ -142,6 +145,7 @@ export class SuiviCompetence extends Model {
                     ]);
                     this.enseignements.load(response[0].data);
                     let competences = response[1].data;
+                    if(structure.matieres.all !== undefined)this.matieres.load(structure.matieres.all);
                     await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
                     resolve();
                 });

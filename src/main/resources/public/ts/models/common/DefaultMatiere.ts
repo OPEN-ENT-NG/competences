@@ -15,11 +15,13 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model } from 'entcore';
+import {Collection, Model} from 'entcore';
+import {DefaultCompetence} from "./DefaultCompetence";
 
 export class DefaultMatiere extends Model {
     id: string;
     idEtablissement: string;
     name: string;
     subjectCode: string;
+    competences: Collection<DefaultCompetence>;
 }
