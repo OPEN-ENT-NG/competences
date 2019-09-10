@@ -18,7 +18,8 @@
 /**
  * Created by anabah on 09/05/2017.
  */
-import { Model } from 'entcore';
+import {_, Model} from 'entcore';
+import {getNN} from "../../utils/functions/utilsNN";
 
 
 export class DefaultEleve extends Model {
@@ -27,4 +28,24 @@ export class DefaultEleve extends Model {
     lastName: string;
     idClasse: string;
     displayName: string;
+
+    findAverage(tab, key, idSousMatiere) {
+        let res = undefined;
+        if(tab !== undefined) {
+            if (tab["_moyenne"] !== undefined && tab["_moyenne"][key] !== undefined) {
+                res = tab["_moyenne"][key][idSousMatiere];
+            }
+        }
+        return res;
+    }
+
+    getAverageSousMatiere(key, idSousMatiere, useDetails?){
+        let average = this.findAverage((!useDetails)? this: this["details"] , key, idSousMatiere);
+        average = (average !==undefined)? average.moyenne : ((useDetails === true)? '' : getNN());
+        return average;
+    }
+
+    getEvaluation(evaluations, devoir){
+        return _.findWhere(evaluations, {id_devoir: devoir.id});
+    }
 }

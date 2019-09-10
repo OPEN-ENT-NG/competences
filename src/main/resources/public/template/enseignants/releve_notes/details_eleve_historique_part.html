@@ -22,8 +22,14 @@
         <tr>
             <th class="titleCenter"><i18n>viescolaire.utils.periode</i18n></th>
             <th class="titleCenter"><i18n>average.min</i18n>&nbsp;<i18n>student</i18n></th>
+            <th class="titleCenter" ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+                <i18n>average.min</i18n>&nbsp;<span>[[sousMatiere.libelle]]</span>
+            </th>
             <th class="titleCenter"><i18n>average.min</i18n>&nbsp;<i18n>viescolaire.utils.classe</i18n></th>
             <th class="titleCenter"><i18n>evaluations.releve.positionnement.min</i18n></th>
+            <th class="titleCenter" ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+                <i18n>evaluations.releve.positionnement.min</i18n>&nbsp;<span>[[sousMatiere.libelle]]</span>
+            </th>
             <th class="titleCenter"><i18n>viescolaire.utils.appreciation</i18n></th>
         </tr>
         </thead>
@@ -34,10 +40,16 @@
                 data-label="[[translate('student')]]" >
                 [[(historique.moyenneFinale !== "")? historique.moyenneFinale : historique.moyenne]]
             </td>
+            <td class="width-td-0" ng-repeat="sousMatiere in releveNote.matiere.sousMatieres.all">
+                <span style="margin-left: 2px">[[(historique.moyenneSousMatieres[sousMatiere.id_type_sousmatiere] )]]
+                </span>
             <td class="width-td-0" data-label="[[translate('viescolaire.utils.classe')]]" >[[historique.moyenneClasse]] </td>
             <td class="width-td-0" data-label="[[translate('evaluations.releve.positionnement')]]"
                 ng-class="{changedAverage: historique.positionnementFinal !== ''}">
                 [[(historique.positionnementFinal !== "")? historique.positionnementFinal : historique.positionnement]]
+            </td>
+            <td class="width-td-0" ng-repeat="sousMatiere in releveNote.matiere.sousMatieres.all">
+                <span style="margin-left: 2px">[[ (historique.posSousMatieres[sousMatiere.id_type_sousmatiere]) ]]</span>
             </td>
             <td class="width-td-0 text-align-left" data-label="[[translate('viescolaire.utils.appreciation')]]" > [[historique.appreciation]] </td>
         </tr>

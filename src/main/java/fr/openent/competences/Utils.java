@@ -722,7 +722,8 @@ public class Utils {
         }));
     }
 
-    public static void getLibellePeriode(EventBus eb, HttpServerRequest request,Integer idPeriode, Handler<Either<String,String>> handler){
+    public static void getLibellePeriode(EventBus eb, HttpServerRequest request, Integer idPeriode,
+                                         Handler<Either<String,String>> handler){
 
 
         JsonObject jsonRequest = new JsonObject()
@@ -748,6 +749,7 @@ public class Utils {
             }
         }));
     }
+
     public static String getLibelle(String key) {
         return I18n.getInstance().translate(key,
                 I18n.DEFAULT_DOMAIN, Locale.FRANCE);

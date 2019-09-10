@@ -481,7 +481,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             @Override
             public void handle(Either<String, JsonObject> event) {
                 if (answered.get()) {
-                    log.debug(" THREAD STELL BUSY ");
+                    log.debug(" THREAD STILL BUSY ");
                 }
                 if (event.isRight()) {
                     CompositeFuture.all(elevesFuture, Future.succeededFuture()).setHandler( elevesEvent -> {

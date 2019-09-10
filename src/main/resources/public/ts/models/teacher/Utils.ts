@@ -665,6 +665,9 @@ export class Utils {
       }
     };
 
+    static isFunction = function (functionToCheck) {
+        return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+    };
 
     static helperTooltipsForGraph = function (tooltipModel, forDomaine, currentChart,  graphToSet, widthToAdd){
         // Récupération de l'index du tooltip
@@ -687,11 +690,22 @@ export class Utils {
             if(datasets !== undefined){
                 let percent = datasets.tooltipsPercentage[idx_label];
 
-                if( percent !== undefined && percent.split(' %')[0] instanceof Number) {
+                if( percent !== undefined && this.isFunction(percent.split)) {
                     tooltipModel.body[i].lines[0] = `${split_label[0]} : ${percent}`;
                 }
             }
         }
     };
 
+    static basicMoy = (tab) => {
+        let nbMoy = 0;
+        let moy = 0;
+
+        _.forEach(tab, (num) => {
+            ++nbMoy;
+            moy += num;
+        });
+
+        return (nbMoy > 0)? (moy/ nbMoy) : 0;
+    }
 }

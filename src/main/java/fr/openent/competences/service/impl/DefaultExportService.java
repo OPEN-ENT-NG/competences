@@ -535,6 +535,9 @@ public class DefaultExportService implements ExportService {
             public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                 if (stringJsonArrayEither.isRight()) {
                     JsonArray result = stringJsonArrayEither.right().getValue();
+                    if(isNull(result)){
+                        result = new JsonArray();
+                    }
                     if (result.size() == 0) {
                         result.add("empty");
                     }

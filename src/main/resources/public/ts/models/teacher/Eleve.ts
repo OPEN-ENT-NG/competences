@@ -20,17 +20,13 @@ import http  from 'axios';
 import { Evaluation, SuiviCompetence } from './index';
 import {ElementBilanPeriodique} from "./ElementBilanPeriodique";
 import {ExportBulletins} from "../common/ExportBulletins";
+import {DefaultEleve} from "../common/DefaultEleve";
 
-export class Eleve extends Model {
+export class Eleve extends DefaultEleve  {
     moyenne: number;
     evaluations : Collection<Evaluation>;
     evaluation : Evaluation;
-    id : string;
-    firstName: string;
-    lastName: string;
     suiviCompetences : Collection<SuiviCompetence>;
-    displayName: string;
-    idClasse: string;
     idEtablissement :string;
     details : any;
     cycles : any;

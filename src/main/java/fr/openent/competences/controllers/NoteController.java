@@ -56,6 +56,7 @@ import io.vertx.core.json.JsonObject;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibellePeriode;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.text.DecimalFormat;
@@ -267,33 +268,30 @@ public class NoteController extends ControllerHelper {
 
 
                 new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
-                        new Handler<Boolean>() {
-                            @Override
-                            public void handle(final Boolean hasAccessToMatiere) {
+                        hasAccessToMatiere -> {
 
-                                Long idPeriode = null;
-                                if (!hasAccessToMatiere) {
-                                    unauthorized(request);
-                                } else {
-                                    if (idPeriodeString != null) {
-                                        try {
-                                            idPeriode = Long.parseLong(idPeriodeString);
-                                        } catch (NumberFormatException e) {
-                                            log.error("Error : idPeriode must be a long object", e);
-                                            badRequest(request, e.getMessage());
-                                            return;
-                                        }
+                            Long idPeriode = null;
+                            if (!hasAccessToMatiere) {
+                                unauthorized(request);
+                            } else {
+                                if (idPeriodeString != null) {
+                                    try {
+                                        idPeriode = Long.parseLong(idPeriodeString);
+                                    } catch (NumberFormatException e) {
+                                        log.error("Error : idPeriode must be a long object", e);
+                                        badRequest(request, e.getMessage());
+                                        return;
                                     }
-                                    JsonObject params = new JsonObject().put(ID_ELEVE_KEY, idEleve)
-                                            .put(ID_CLASSE_KEY, idClasse)
-                                            .put(ID_PERIODE_KEY, idPeriode)
-                                            .put(ID_ETABLISSEMENT_KEY, idEtablissement)
-                                            .put(ID_MATIERE_KEY, idMatiere)
-                                            .put(TYPE_CLASSE_KEY, typeClasse);
-
-                                    notesService.getDatasReleve(params, notEmptyResponseHandler(request));
-
                                 }
+                                JsonObject params = new JsonObject().put(ID_ELEVE_KEY, idEleve)
+                                        .put(ID_CLASSE_KEY, idClasse)
+                                        .put(ID_PERIODE_KEY, idPeriode)
+                                        .put(ID_ETABLISSEMENT_KEY, idEtablissement)
+                                        .put(ID_MATIERE_KEY, idMatiere)
+                                        .put(TYPE_CLASSE_KEY, typeClasse);
+
+                                notesService.getDatasReleve(params, notEmptyResponseHandler(request));
+
                             }
                         });
             }
@@ -334,7 +332,7 @@ public class NoteController extends ControllerHelper {
                     Long periode = ((Integer)idPeriode).longValue();
                     Future<JsonObject> exportPeriode = Future.future();
                     notesService.getTotaleDatasReleve(param,periode, annual, event -> {
-                        FormateFutureEvent.formate(exportPeriode, event);
+                        formate(exportPeriode, event);
                     });
                     listFuturesEachPeriode.add(exportPeriode);
                 }
@@ -694,117 +692,6 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-    // méthode permettant de récupérer les éléments du programme, les moyennes finales et les appréciations pour:
-    // - une classe
-    // - une matière
-    // - une période
-    // le résultat de la récupération est greffé à la réponse de la request
-    private void addMoyenneFinalAndAppreciation(final HttpServerRequest request, final JsonObject res) {
-        final String idClasse = request.params().get("idClasse");
-        final String idMatiere = request.params().get("idMatiere");
-        final String idPeriodeString = request.params().get("idPeriode");
-
-        final JsonObject action = new JsonObject()
-                .put("action", "classe.getElevesClasses")
-                .put("idPeriode", Long.valueOf(idPeriodeString))
-                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idClasse));
-
-        if (idPeriodeString != null) {
-            try {
-                final long idPeriode = Long.parseLong(idPeriodeString);
-                elementProgramme.getElementProgramme(idPeriode,idMatiere,idClasse,new Handler<Either<String, JsonObject>>() {
-                    @Override
-                    public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                        if (stringJsonObjectEither.isRight()) {
-
-                            res.put("elementProgramme",stringJsonObjectEither.right().getValue());
-
-                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                @Override
-                                public void handle(Message<JsonObject> message) {
-                                    JsonObject body = message.body();
-
-                                    if ("ok".equals(body.getString("status"))) {
-                                        Map<String, List<String>> result = new LinkedHashMap<>();
-                                        final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
-                                        JsonArray queryResult = body.getJsonArray("results");
-
-                                        for (int i = 0; i < queryResult.size(); i++) {
-                                            JsonObject eleve = queryResult.getJsonObject(i);
-                                            idEleves.add(eleve.getString("idEleve"));
-                                        }
-                                        notesService.getColonneReleve(
-                                                idEleves,
-                                                idPeriode,
-                                                idMatiere,
-                                                new JsonArray().add(idClasse),
-                                                "moyenne",
-                                                new Handler<Either<String, JsonArray>>() {
-                                                    @Override
-                                                    public void handle(Either<String, JsonArray> event) {
-                                                        if (event.isRight()) {
-                                                            res.put("moyennes",
-                                                                    event.right().getValue());
-                                                            addAppreciationsElevesPeriodeMatiere(request, idEleves,
-                                                                    idPeriodeString, idMatiere,
-                                                                    idClasse, res);
-
-                                                        } else {
-                                                            JsonObject error = new JsonObject()
-                                                                    .put("error",
-                                                                            event.left().getValue());
-                                                            Renders.renderJson(request, error, 400);
-                                                        }
-                                                    }
-                                                });
-                                    } else {
-                                        log.error("getRelevePeriodique " + body.getString("message"));
-                                        JsonObject error = (new JsonObject()).put("error",
-                                                "failed get Moyenne Finale");
-                                        Renders.renderJson(request, error, 400);
-                                    }
-                                }
-                            }));
-                        }
-                    }
-                });
-            } catch (NumberFormatException e) {
-                log.error("Error : idPeriode  must be a long object ", e);
-                badRequest(request, e.getMessage());
-                return;
-            }
-        }
-    }
-
-    // Méthode permettant de récupérer les appréciation d'un ensemble d'élève et de greffer le résultat
-    // à la réponse de la request
-    private void addAppreciationsElevesPeriodeMatiere(final HttpServerRequest request, JsonArray idEleves,
-                                                      String idPeriodeString,
-                                                      String idMatiere, String idClasse, final JsonObject res) {
-        Long idPeriode = Long.parseLong(idPeriodeString);
-        notesService.getColonneReleve(
-                idEleves,
-                idPeriode,
-                idMatiere,
-                new JsonArray().add(idClasse),
-                "appreciation_matiere_periode",
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            Renders.renderJson(request, res.put("appreciations",
-                                    event.right().getValue()));
-                        } else {
-                            JsonObject error = new JsonObject()
-                                    .put("error", event.left().getValue());
-                            Renders.renderJson(request, error, 400);
-                        }
-                    }
-                });
-    }
-
-
-
 
     @Post("/releve/element/programme")
     @ApiDoc("Ajoute ou modifie un élément du programme")
@@ -869,19 +756,12 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void setColonneRelevePeriode(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            RequestUtils.bodyToJson(request, resource -> {
+                final String idClasse = resource.getString("idClasse");
 
-                RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-                    @Override
-                    public void handle(final JsonObject resource) {
-                        final String idClasse = resource.getString("idClasse");
-
-                        saveColonneRelevePeriode(request, user, resource);
-                    }
-                });
-            }
+                saveColonneRelevePeriode(request, user, resource);
+            });
         });
     }
 
@@ -889,37 +769,27 @@ public class NoteController extends ControllerHelper {
     @ApiDoc("Créé, met à jour ou supprime une donnée du relevé périodique pour un élève. Les données traitées ici sont:"
             +" - moyenne finale, - appréciation, -positionnement ")
     @SecuredAction(value="bilan.periodique.save.appMatiere.positionnement",type = ActionType.WORKFLOW)
-    public void saveAppreciationMatiereAndPositionnement(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-
-                RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-                    @Override
-                    public void handle(final JsonObject resource) {
-                        final String idClasse = resource.getString("idClasse");
-                        FilterUser.isChefEtabAndHeadTeacher(user, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Boolean>() {
-                            @Override
-                            public void handle(Boolean isChefEtabAndHeadTeacher) {
-                                if(isChefEtabAndHeadTeacher){
-                                    saveColonneRelevePeriode(request, user, resource);
-                                }else{
-                                    Renders.unauthorized(request);
-                                }
-
+    public void saveAppreciationMatiereAndPositionnement(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            RequestUtils.bodyToJson(request, resource -> {
+                final String idClasse = resource.getString("idClasse");
+                FilterUser.isChefEtabAndHeadTeacher(user, new JsonArray().add(idClasse),
+                        isChefEtabAndHeadTeacher -> {
+                            if (isChefEtabAndHeadTeacher) {
+                                saveColonneRelevePeriode(request, user, resource);
+                            } else {
+                                Renders.unauthorized(request);
                             }
                         });
-
-                    }
-                });
-            }
+            });
         });
     }
 
 
 
 
-    private void saveColonneRelevePeriode (final HttpServerRequest request, final UserInfos user, final JsonObject resource){
+    private void saveColonneRelevePeriode (final HttpServerRequest request, final UserInfos user,
+                                           final JsonObject resource){
 
         final String idClasse = resource.getString("idClasse");
         final String idMatiere = resource.getString("idMatiere");
@@ -932,47 +802,29 @@ public class NoteController extends ControllerHelper {
 
         // Vérification de l'accès à la matière
         new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,isBilanPeriodique,
-                new Handler<Boolean>() {
-                    @Override
-                    public void handle(final Boolean hasAccessToMatiere) {
-                        if (hasAccessToMatiere) {
-                            // Vérification de la date de fin de saisie
-                            new FilterPeriodeUtils(eb, user).validateEndSaisie(request,
-                                    idClasse, idPeriode.intValue(),
-                                    new Handler<Boolean>() {
-                                        @Override
-                                        public void handle(Boolean isUpdatable) {
-                                            //verif date fin de saisie
-                                            if (isUpdatable) {
+                hasAccessToMatiere -> {
+                    if (hasAccessToMatiere) {
+                        // Vérification de la date de fin de saisie
+                        new FilterPeriodeUtils(eb, user).validateEndSaisie(request, idClasse, idPeriode.intValue(),
+                                isUpdatable -> {
+                                    //verif date fin de saisie
+                                    if (isUpdatable) {
 
-                                                if (resource.getBoolean("delete")) {
-                                                    notesService.deleteColonneReleve(
-                                                            idEleve,
-                                                            idPeriode,
-                                                            idMatiere,
-                                                            idClasse,
-                                                            table,
-                                                            arrayResponseHandler(request));
-                                                } else {
-                                                    notesService.setColonneReleve(
-                                                            idEleve,
-                                                            idPeriode,
-                                                            idMatiere,
-                                                            idClasse,
-                                                            resource,
-                                                            table,
-                                                            arrayResponseHandler(request));
-                                                }
-                                            } else {
-                                                log.error("Not access to API because of end of saisie");
-                                                unauthorized(request);
-                                            }
+                                        if (resource.getBoolean("delete")) {
+                                            notesService.deleteColonneReleve(idEleve, idPeriode, idMatiere,
+                                                    idClasse, table, arrayResponseHandler(request));
+                                        } else {
+                                            notesService.setColonneReleve( idEleve, idPeriode, idMatiere,
+                                                    idClasse, resource, table, arrayResponseHandler(request));
                                         }
-                                    });
-                        } else {
-                            log.error("Not access to Matiere");
-                            unauthorized(request);
-                        }
+                                    } else {
+                                        log.error("Not access to API because of end of saisie");
+                                        unauthorized(request);
+                                    }
+                                });
+                    } else {
+                        log.error("Not access to Matiere");
+                        unauthorized(request);
                     }
                 });
     }
@@ -983,56 +835,22 @@ public class NoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(AccessReleveFilter.class)
     public void getInfosEleve(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+        UserUtils.getUserInfos(eb, request,  user -> {
+                    final String idEtablissement = request.params().get("idEtablissement");
+                    final String idClasse = request.params().get("idClasse");
+                    final String idMatiere = request.params().get("idMatiere");
+                    final String idEleve = request.params().get("idEleve");
 
-            @Override
-            public void handle(UserInfos user) {
-                final String idEtablissement = request.params().get("idEtablissement");
-                final String idClasse = request.params().get("idClasse");
-                final String idMatiere = request.params().get("idMatiere");
-                final String idEleve = request.params().get("idEleve");
-                final Integer typeClasse = null;
-
-                new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
-                        new Handler<Boolean>() {
-                            @Override
-                            public void handle(final Boolean hasAccessToMatiere) {
-
-                                Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
-                                    @Override
-                                    public void handle(Either<String, JsonArray> event) {
-                                        if (event.isRight()) {
-
-                                            final JsonObject result = new JsonObject();
-                                            JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
-                                            HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
-                                                    notesService.calculMoyennesEleveByPeriode(event.right().getValue(), result, idEleve, idEleves);
-
-                                            addMoyenneFinalAndAppreciationPositionnementEleve(
-                                                    idEleve, idClasse,
-                                                    idMatiere, idEtablissement,
-                                                    request,
-                                                    result, idEleves, notesByDevoirByPeriodeClasse);
-                                        } else {
-                                            JsonObject error = (new JsonObject()).put("error",
-                                                    (String) event.left().getValue());
-                                            Renders.renderJson(request, error, 400);
-                                        }
-                                    }
-                                };
+                    new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere,
+                            false, hasAccessToMatiere -> {
                                 if (!hasAccessToMatiere) {
                                     unauthorized(request);
-                                } else {
-                                    notesService.getNoteElevePeriode(null,
-                                            idEtablissement,
-                                            new fr.wseduc.webutils.collections.JsonArray().add(idClasse),
-                                            idMatiere,
-                                            null, handler);
+                                    return;
                                 }
-                            }
-                        });
-            }
-        });
+                                notesService.getDetailsReleve(idEleve, idClasse, idMatiere, idEtablissement, request);
+                            });
+                }
+        );
     }
 
 
@@ -1197,122 +1015,6 @@ public class NoteController extends ControllerHelper {
         });
     }
 
-    private void addMoyenneFinalAndAppreciationPositionnementEleve(final String idEleve, final String idClasse,
-                                                                   final String idMatiere, final String idEtablissement,
-                                                                   final HttpServerRequest request,
-                                                                   final  JsonObject result, final JsonArray IdEleves,
-                                                                   final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse) {
-        notesService.getColonneReleve(
-                new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
-                null,
-                idMatiere,
-                new JsonArray().add(idClasse),
-                "appreciation_matiere_periode",
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            result.put("appreciations",
-                                    event.right().getValue());
-                            notesService.getColonneReleve(
-                                    new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
-                                    null,
-                                    idMatiere,
-                                    new JsonArray().add(idClasse),
-                                    "moyenne",
-                                    new Handler<Either<String, JsonArray>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonArray> event) {
-                                            if (event.isRight()) {
-                                                result.put("moyennes_finales",event.right().getValue());
-                                                notesService.getColonneReleve(
-                                                        new fr.wseduc.webutils.collections.JsonArray().add(idEleve),
-                                                        null,
-                                                        idMatiere,
-                                                        new JsonArray().add(idClasse),
-                                                        "positionnement", new Handler<Either<String, JsonArray>>() {
-                                                            @Override
-                                                            public void handle(Either<String, JsonArray> event) {
-                                                                if (event.isRight()) {
-                                                                    result
-                                                                            .put("positionnements",
-                                                                                    event.right().getValue());
-
-                                                                    // idClasse et typeClass à null car on récupère le positionnement quelque soit sa classe
-                                                                    //On récupère le positionnement seulement par rapport à la matière
-                                                                    //idClass sera mis à null dans le service qu'appelle cette méthode car on a besoin de idClasse
-                                                                    addPositionnementAutoEleve(idEleve, idClasse,
-                                                                            idMatiere, idEtablissement,
-                                                                            request,result, IdEleves,notesByDevoirByPeriodeClasse);
-                                                                } else {
-                                                                    JsonObject error = new JsonObject()
-                                                                            .put("error",
-                                                                                    event.left().getValue());
-                                                                    Renders.renderJson(request, error, 400);
-                                                                }
-                                                            }
-                                                        });
-                                            } else {
-                                                JsonObject error = new JsonObject()
-                                                        .put("error",
-                                                                event.left().getValue());
-                                                Renders.renderJson(request, error, 400);
-                                            }
-                                        }
-                                    });
-                        } else {
-                            JsonObject error = new JsonObject()
-                                    .put("error",
-                                            event.left().getValue());
-                            Renders.renderJson(request, error, 400);
-                        }
-                    }
-                });
-    }
-    private void addPositionnementAutoEleve(final String idEleve, final String idClasse, final String idMatiere,
-                                            final String idEtablissement,
-                                            final HttpServerRequest request,final  JsonObject result, final JsonArray idEleves,
-                                            final HashMap<Long,
-                                                    HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse) {
-        // idClasse et typeClass à null car on récupère le positionnement quelque soit sa classe
-        //On récupère le positionnement seulement par rapport à la matière
-        notesService.getCompetencesNotesReleve( idEtablissement,null,null, idMatiere,null,idEleve,
-                null, false,
-                new Handler<Either<String, JsonArray>>() {
-                    @Override
-                    public void handle(Either<String, JsonArray> event) {
-                        if (event.isRight()) {
-                            JsonArray listNotes = event.right().getValue();
-                            notesService.calculPositionnementAutoByEleveByMatiere(listNotes,result,false);
-//si idEleves.size()=0 alors aucune note sur les élèves => il faut voir s'il y a des moyennes finales => dans tous les cas on récupère les moyennes finales
-                            notesService.getColonneReleve(null, null, idMatiere,
-                                    new JsonArray().add(idClasse), "moyenne",
-                                    new Handler<Either<String, JsonArray>>() {
-                                        @Override
-                                        public void handle(Either<String, JsonArray> event) {
-                                            if (event.isRight()) {
-                                                JsonArray moyFinalesEleves = event.right().getValue();
-                                                // Calcul des moyennes par période pour la classe
-                                                notesService.calculAndSetMoyenneClasseByPeriode(idEleves,moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
-                                                Renders.renderJson(request, result);
-
-                                            } else {
-                                                JsonObject error = (new JsonObject()).put("error",
-                                                        (String) event.left().getValue());
-                                                Renders.renderJson(request, error, 400);
-                                            }
-                                        }
-                                    });
-
-                        } else {
-                            JsonObject error = (new JsonObject()).put("error",
-                                    (String) event.left().getValue());
-                            Renders.renderJson(request, error, 400);
-                        }
-
-                    }
-                });
-    }
 
 
 

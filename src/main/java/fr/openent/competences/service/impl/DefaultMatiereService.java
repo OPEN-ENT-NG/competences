@@ -29,6 +29,9 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     private static final Logger log = LoggerFactory.getLogger(DefaultMatiereService.class);
     private static String subjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MATIERE_LIBELLE_TABLE;
     private static String modelSubjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MODEL_MATIERE_LIBELLE_TABLE;
+    private static String underSubjectTable =  VSCO_SCHEMA + ".sousmatiere";
+    private static String typeUnderSubjectTable =  VSCO_SCHEMA + ".type_sousmatiere"  ;
+
     private  EventBus eb;
     private static final String LIBELLE_COURT = "libelle_court";
 
@@ -352,5 +355,16 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         params.add(Long.valueOf(idModel));
         sql.prepared(query, params, SqlResult.validResultHandler(handler));
 
+    }
+
+    public void getSousMatieres(String idMatiere, Handler<Either<String, JsonArray>> handler){
+        String query = " SELECT id_type_sousmatiere as id_sousmatiere, id_matiere , libelle " +
+                " FROM " +  underSubjectTable + "  INNER JOIN " + typeUnderSubjectTable +
+                " ON id_type_sousmatiere = type_sousmatiere.id " +
+                " WHERE id_matiere = ? ; ";
+
+        JsonArray params = new JsonArray();
+        params.add(idMatiere);
+        sql.prepared(query, params, SqlResult.validResultHandler(handler));
     }
 }

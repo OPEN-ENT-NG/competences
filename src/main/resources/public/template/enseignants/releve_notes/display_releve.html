@@ -59,8 +59,25 @@
                             <i18n>average.class</i18n>
                         </span></label>
         </div>
+        <div  class="four cell twelve-mobile" ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.sousMatieres.moyennes[sousMatiere.id_type_sousmatiere]"/><span>
+            <i18n>average</i18n><span>[[sousMatiere.libelle]]</span>
+                        </span>
+            </label>
+        </div>
+        <div  class="four cell twelve-mobile" ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+
+            <label class="checkbox">
+                <input type="checkbox" ng-model="releveNote.exportOptions.sousMatieres.positionnements_auto[sousMatiere.id_type_sousmatiere]"/><span>
+            <i18n>evaluations.releve.positionnement</i18n><span>[[sousMatiere.libelle]]</span>
+                        </span>
+            </label>
+        </div>
     </fieldset>
     <br/>
+
     <fieldset>
         <legend><i18n>evaluations.export.format</i18n></legend>
 
@@ -235,16 +252,30 @@
                                     </span>
                                 </th>
                                 <th class="colDevoir"
-                                    ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0, 'ellipsis' : true}"
-                                    ng-repeat="devoir in releveNote.devoirs.all" ng-click="getDevoirInfo(devoir)"
+                                    ng-class="{'devoir-with-comp' : (devoir.id_sousmatiere=== null && devoir.nbcompetences > 0),
+                                    'ellipsis' : devoir.id_sousmatiere=== null}"
+                                    ng-repeat="devoir in releveNote.devoirs.all"
+                                    ng-click="getDevoirInfo(devoir)"
+                                    ng-init="devoir.style = (devoir.id_sousmatiere=== null)? {}: {'padding-top': '1px','padding-bottom': '0px', 'height': '38px'};"
+                                    ng-style="devoir.style" ng-dblclick="goTo('/devoir/'+devoir.id)"
                                     ng-dblclick="goTo('/devoir/'+devoir.id)">
-                                    [[devoir.name]]
+                                    <span ng-if="devoir.id_sousmatiere=== null">[[devoir.name]]</span>
+                                    <div ng-if="devoir.id_sousmatiere!== null" class="colDevoir ellipsis"
+                                         style="height: 14px; padding-top: 1px; font-size: smaller">[[devoir.name]]</div>
+                                    <div ng-if="devoir.id_sousmatiere!== null" class="colDevoir ellipsis"
+                                         style="font-size: x-small; height: 10px; padding-bottom: 6px;
+                                         padding-top: 2px; margin-top: 1px"
+                                         ng-class="{'devoir-with-comp' : devoir.nbcompetences > 0}"
+                                    >([[getLibelleSousMatiere(devoir)]])</div>
                                 </th>
                                 <th class="colMoyenne">
                                     <i18n>average.auto.min</i18n>
                                 </th>
                                 <th class="colMoyenne">
                                     <i18n>average.final.min</i18n>
+                                <th class="colMoyenne"
+                                    ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+                                    <i18n>average.min</i18n><span>[[sousMatiere.libelle]]</span>
                                 </th>
                                 <th class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
@@ -305,6 +336,11 @@
                                            ng-blur="saveMoyenneFinaleEleve(eleve,true)"
                                            ng-model="eleve.moyenneFinale"
                                            max="20" min="0" step="0.01">
+                                </td>
+                                <td class="colMoyenne"
+                                    ng-if="search.matiere.sousMatieres.all.length !== 0"
+                                    ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+                                    <span>[[ eleve.getAverageSousMatiere(search.matiere.id, sousMatiere.id_type_sousmatiere) ]]</span>
                                 </td>
                                 <td class="colMoyenne size"
                                     ng-class="{widthMax: releveNote.toogle}"

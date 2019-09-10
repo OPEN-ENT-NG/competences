@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
 
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
@@ -385,6 +386,9 @@ public class DefaultUtilsService  implements UtilsService {
 
     @Override
     public <K, V> void addToMap(K id, HashMap<K, ArrayList<V>> map, V valueToAdd) {
+        if(isNull(id)){
+            return;
+        }
         if (map.containsKey(id)) {
 
             map.get(id).add(valueToAdd);
@@ -397,6 +401,18 @@ public class DefaultUtilsService  implements UtilsService {
         }
     }
 
+    public  void addToMap(String id, Long sousMatiereId,
+                                HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> map,
+                          NoteDevoir valueToAdd) {
+        if (!map.containsKey(id)) {
+            map.put(id, new HashMap<>());
+        }
+        if(!map.get(id).containsKey(sousMatiereId)) {
+            map.get(id).put(sousMatiereId, new ArrayList<>());
+        }
+
+        map.get(id).get(sousMatiereId).add(valueToAdd);
+    }
 
     /**
      * Récupère les cycles des classes dans la relation classe_cycle

@@ -27,6 +27,10 @@
         <ul>
             <li><span class="bold"><i18n>viescolaire.utils.description</i18n></span> : [[informations.devoir.libelle]]</li>
             <li><span class="bold"><i18n>viescolaire.utils.type</i18n></span> : [[informations.devoir._type_libelle]]</li>
+            <li ng-show="informations.devoir.id_sousmatiere!== null">
+                <span><i18n class="bold">viescolaire.utils.undersubject</i18n> : [[getLibelleSousMatiere(informations.devoir)]]
+                </span>
+            </li>
             <li ng-if="informations.devoir.is_evaluated"><span class="bold"><i18n>evaluations.test.coefficient</i18n></span> : [[informations.devoir.coefficient]]</li>
             <li ng-if="informations.devoir.is_evaluated"><span class="bold"><i18n>evaluations.test.grade.on</i18n></span> : [[informations.devoir.diviseur]]</li>
             <li><span class="bold"><i18n>evaluations.test.date</i18n></span>: [[getDateFormated(informations.devoir.date)]]</li>

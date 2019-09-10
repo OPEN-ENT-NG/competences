@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, IModel, _, moment, Collection, http, idiom as lang} from 'entcore';
+import {Model, IModel, _, moment, Collection, http, idiom as lang, notify} from 'entcore';
 import httpAxios from 'axios';
 import {
     AppreciationClasse,
@@ -30,6 +30,7 @@ import {
 import {getNN} from "../../utils/functions/utilsNN";
 import * as utils from "../../utils/teacher";
 import {Graph} from "../common/Graph";
+import {SousMatiere} from "./SousMatiere";
 
 
 export class ReleveNote extends  Model implements IModel {
@@ -101,7 +102,7 @@ export class ReleveNote extends  Model implements IModel {
         this.exportOptions = {
             show : false,
             fileType: 'pdf',
-
+            sousMatieres: {moyennes : {}, positionnements_auto:{}},
             appreciation: true,
             averageFinal: true,
             averageAuto: true,
@@ -109,6 +110,10 @@ export class ReleveNote extends  Model implements IModel {
             appreciationClasse: true,
             moyenneClasse: true
         };
+        _.forEach(this.matiere.sousMatieres.all, (sousMatiere) => {
+           this.exportOptions.sousMatieres.moyennes[sousMatiere.id_type_sousmatiere] = true;
+            this.exportOptions.sousMatieres.positionnements_auto[sousMatiere.id_type_sousmatiere] = true;
+        });
         this.collection(Devoir, {
             sync: () => {
                 if (evaluations.structure.synchronized.devoirs) {
@@ -362,48 +367,57 @@ export class ReleveNote extends  Model implements IModel {
             if (this.classe.periodes.length() === 0) {
                 await this.classe.periodes.sync();
             }
-            await Promise.all([this.syncEvaluations(), this.syncDevoirs()]);
-            this.periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
-            let _notes, _devoirs, _eleves;
-            if (this._tmp) {
-                _notes = this._tmp.notes;
-                _devoirs = this._tmp.devoirs;
-                _eleves = this._tmp.eleves;
-                this.classe.eleves.load(_eleves);
-                if(this.idPeriode !== null ) {
-                    this.elementProgramme = this._tmp.elementProgramme;
-                    this.syncAppreciationClasse(this._tmp.appreciation_classe.appreciation);
+            try {
+                await Promise.all([this.syncEvaluations(), this.syncDevoirs()]);
+                this.periode = _.findWhere(this.classe.periodes.all, {id_type: this.idPeriode});
+                let _notes, _devoirs, _eleves;
+                if (this._tmp) {
+                    _notes = this._tmp.notes;
+                    _devoirs = this._tmp.devoirs;
+                    _eleves = this._tmp.eleves;
+                    this.classe.eleves.load(_eleves);
+                    if (this.idPeriode !== null) {
+                        this.elementProgramme = this._tmp.elementProgramme;
+                        this.syncAppreciationClasse(this._tmp.appreciation_classe.appreciation);
+                    }
+                    this.getConversionTable(this._tmp.tableConversions);
                 }
-                this.getConversionTable(this._tmp.tableConversions);
-            };
-            this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated: true});
-            this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined) ? false : true;
-            _.each(this.classe.eleves.all, (eleve) => {
+                this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated: true});
+                this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined) ? false : true;
+                _.each(this.classe.eleves.all, (eleve) => {
 
-                let _evals = [];
-                let _t = _.where(_notes, {id_eleve: eleve.id});
-                _.each(this.devoirs.all, async (devoir) => {
-                    let periode = _.findWhere(this.classe.periodes.all, {id_type: devoir.id_periode});
-                    let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
-                    let _e;
-                    if (_t && _t.length !== 0) {
-                        _e = _.findWhere(_t, {id_devoir: devoir.id});
+                    let _evals = [];
+                    let _t = _.where(_notes, {id_eleve: eleve.id});
+                    _.each(this.devoirs.all, async (devoir) => {
+                        let periode = _.findWhere(this.classe.periodes.all, {id_type: devoir.id_periode});
+                        let endSaisie = moment(periode.date_fin_saisie).isBefore(moment(), "days");
+                        let _e;
+                        if (_t && _t.length !== 0) {
+                            _e = _.findWhere(_t, {id_devoir: devoir.id});
 
-                        if (_e) {
-                            _e.oldValeur = _e.valeur;
-                            _e.oldAppreciation = _e.appreciation !== undefined ? _e.appreciation : '';
-                            if (_e.annotation !== undefined
-                                && _e.annotation !== null
-                                && _e.annotation > 0) {
-                                _e.oldAnnotation = _e.annotation;
-                                _e.annotation_libelle_court = evaluations.structure.annotations.findWhere(
-                                    {id: _e.annotation}).libelle_court;
-                                _e.is_annotation = true;
+                            if (_e) {
+                                _e.oldValeur = _e.valeur;
+                                _e.oldAppreciation = _e.appreciation !== undefined ? _e.appreciation : '';
+                                if (_e.annotation !== undefined
+                                    && _e.annotation !== null
+                                    && _e.annotation > 0) {
+                                    _e.oldAnnotation = _e.annotation;
+                                    _e.annotation_libelle_court = evaluations.structure.annotations.findWhere(
+                                        {id: _e.annotation}).libelle_court;
+                                    _e.is_annotation = true;
+                                }
+                                _e.endSaisie = endSaisie;
+                                _evals.push(_e);
                             }
-                            _e.endSaisie = endSaisie;
-                            _evals.push(_e);
-                        }
-                        else {
+                            else {
+                                _evals.push(new Evaluation({
+                                    valeur: "", oldValeur: "", appreciation: "",
+                                    oldAppreciation: "", id_devoir: devoir.id, id_eleve: eleve.id,
+                                    ramener_sur: devoir.ramener_sur, coefficient: devoir.coefficient,
+                                    is_evaluated: devoir.is_evaluated, endSaisie: endSaisie
+                                }));
+                            }
+                        } else {
                             _evals.push(new Evaluation({
                                 valeur: "", oldValeur: "", appreciation: "",
                                 oldAppreciation: "", id_devoir: devoir.id, id_eleve: eleve.id,
@@ -411,50 +425,48 @@ export class ReleveNote extends  Model implements IModel {
                                 is_evaluated: devoir.is_evaluated, endSaisie: endSaisie
                             }));
                         }
-                    } else {
-                        _evals.push(new Evaluation({
-                            valeur: "", oldValeur: "", appreciation: "",
-                            oldAppreciation: "", id_devoir: devoir.id, id_eleve: eleve.id,
-                            ramener_sur: devoir.ramener_sur, coefficient: devoir.coefficient,
-                            is_evaluated: devoir.is_evaluated, endSaisie: endSaisie
-                        }));
-                    }
-                });
-                eleve.evaluations.load(_evals, null, false);
+                    });
+                    eleve.evaluations.load(_evals, null, false);
 
-            });
-            _.each(_devoirs, (devoir) => {
-                let d = _.findWhere(this.devoirs.all, {id: devoir.id});
-                if (d) {
-                    d.statistiques = devoir;
-                    if (!d.percent) {
-                        evaluations.devoirs.getPercentDone(d).then(() => {
+                });
+                _.each(_devoirs, (devoir) => {
+                    let d = _.findWhere(this.devoirs.all, {id: devoir.id});
+                    if (d) {
+                        d.statistiques = devoir;
+                        if (!d.percent) {
+                            evaluations.devoirs.getPercentDone(d).then(() => {
+                                d.statistiques.percentDone = d.percent;
+                            });
+                        } else {
                             d.statistiques.percentDone = d.percent;
-                        });
-                    } else {
-                        d.statistiques.percentDone = d.percent;
-                    }
-                }
-            });
-            if (this.hasEvaluatedDevoirs) {
-                _.each(this.classe.eleves.all, (eleve) => {
-                    let e = _.findWhere(_eleves, {id: eleve.id});
-                    if (e !== undefined) {
-                        eleve.moyenne = e.moyenne;
-                    }
-                    else {
-                        eleve.moyenne = getNN();
+                        }
                     }
                 });
+                if (this.hasEvaluatedDevoirs) {
+                    _.each(this.classe.eleves.all, (eleve) => {
+                        let e = _.findWhere(_eleves, {id: eleve.id});
+                        if (e !== undefined) {
+                            eleve.moyenne = e.moyenne;
+                        }
+                        else {
+                            eleve.moyenne = getNN();
+                        }
+                    });
 
+                }
+                else {
+                    this.isNN = true;
+                    _.each(this.classe.eleves.all, (eleve) => {
+                        eleve.moyenne = getNN();
+                    })
+                }
+                resolve();
             }
-            else {
-                this.isNN = true;
-                _.each(this.classe.eleves.all, (eleve) => {
-                    eleve.moyenne = getNN();
-                })
+            catch (e) {
+                console.error(e);
+                notify.error('evaluations.releve.sync.error');
+                reject();
             }
-            resolve();
         });
     }
 
@@ -591,6 +603,7 @@ export class ReleveNote extends  Model implements IModel {
     }
 
     addColumnForExportCsv (line, key): any {
+
         if(line[key] === undefined) {
             line[key] = ' ';
         }
@@ -602,15 +615,20 @@ export class ReleveNote extends  Model implements IModel {
                 }
             }
         }
+        return line[key]
     }
 
     async export  () {
         return new Promise(async (resolve, reject) => {
             let parameter = this.toJson();
             let colspan = _.filter(_.values(this.exportOptions),(val) => { return val === true;}).length;
+            colspan += _.filter(_.values(this.exportOptions.sousMatieres.moyennes),
+                (val) => { return val === true;}).length;
+            colspan += _.filter(_.values(this.exportOptions.sousMatieres.positionnements_auto),
+                (val) => { return val === true;}).length;
             _.extend(parameter, this.exportOptions);
             _.extend(parameter, {typeClasse: this.classe.type_groupe, classeName: this.classe.name,
-            matiere: this.matiere.name,
+                matiere: this.matiere.name,
                 colspan: colspan -1 });
             try {
                 let data = await httpAxios.post(this.api.EXPORT, parameter,
@@ -631,12 +649,27 @@ export class ReleveNote extends  Model implements IModel {
                         if(this.exportOptions.averageFinal) {
                             this.addColumnForExportCsv(line, 'moyenneFinale');
                         }
+                        _.forEach(line.sousMatieres.moyennes, (sousMatiere) => {
+                            if(sousMatiere.print){
+                               let idSousMatiere = sousMatiere.id_sousmatiere;
+                               let key = 'moyenne';
+                               line[key + idSousMatiere] = this.addColumnForExportCsv(sousMatiere, key);
+                            }
+                        });
                         if(this.exportOptions.positionnementFinal) {
                             this.addColumnForExportCsv(line, 'positionnement');
                         }
+                        _.forEach(line.sousMatieres.positionnements_auto, (sousMatiere) => {
+                            if(sousMatiere.printPosi){
+                                let idSousMatiere = sousMatiere.id_sousmatiere;
+                                let key = 'positionnement';
+                                line[key + idSousMatiere] = this.addColumnForExportCsv(sousMatiere, key);
+                            }
+                        });
                         if(this.exportOptions.appreciation) {
                             this.addColumnForExportCsv(line, 'appreciation_matiere_periode');
                         }
+
                         columnCsv.push(_.pick(line, format.column));
                     });
 
@@ -686,14 +719,33 @@ export class ReleveNote extends  Model implements IModel {
             header +=`; ${lang.translate('average.final')}`;
             column.push('moyenneFinale');
         }
+        _.mapObject(this.exportOptions.sousMatieres.moyennes, (printSousMatiere, id) => {
+            if(printSousMatiere){
+                let libelle = _.findWhere(this.matiere.sousMatieres.all , {id_type_sousmatiere:parseInt(id)});
+                libelle = (libelle !== undefined)? `${lang.translate('average')} ${libelle.libelle}`: '';
+                header += `; ${libelle}`;
+                column.push('moyenne' + id);
+            }
+        });
         if(this.exportOptions.positionnementFinal) {
             header += `; ${lang.translate('evaluations.releve.positionnement')}`;
             column.push('positionnement');
         }
+        _.mapObject(this.exportOptions.sousMatieres.positionnements_auto, (printSousMatiere, id) => {
+            if(printSousMatiere){
+                let libelle = _.findWhere(this.matiere.sousMatieres.all , {id_type_sousmatiere:  parseInt(id)});
+                libelle = (libelle !== undefined)? `${lang.translate('evaluations.releve.positionnement')} ${
+                    libelle.libelle}`: '';
+                header += `; ${libelle}`;
+                column.push('positionnement'+ id);
+            }
+        });
+
         if(this.exportOptions.appreciation) {
             header += `; ${lang.translate('viescolaire.utils.appreciations')}`;
             column.push('appreciation_matiere_periode');
         }
+
         return  {header: header, column: column};
     }
 }

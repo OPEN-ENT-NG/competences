@@ -37,4 +37,11 @@ public interface MatiereService extends CrudService {
       * @param handler
       */
      void deleteModeleLibelle(String idModel, Handler<Either<String, JsonArray>> handler);
+
+     /**
+      * Récupère les sous Matières d'une matière
+      * @param idMatiere
+      * @param handler
+      */
+     void getSousMatieres(String idMatiere, Handler<Either<String, JsonArray>> handler);
 }

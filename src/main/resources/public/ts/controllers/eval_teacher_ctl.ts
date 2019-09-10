@@ -2301,7 +2301,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                 $scope.opened.displayMessageLoader = true;
                 let releve = new ReleveNote(p);
-                releve.sync().then(() => {
+                releve.sync().then(async () => {
                     if (releve.devoirs.all.length !== 0) {
                         releve.synchronized.releve = true;
                         evaluations.releveNotes.push(releve);
@@ -2314,19 +2314,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // s'il n'ya que des devoirs sans note, on les masque par défaut
                     if (releve.isNN) {
                         // safeApply avant pour charger le DOM
-                        utils.safeApply($scope);
+                        await utils.safeApply($scope);
                         $scope.toogleDevoirNote();
                     }
                     $scope.opened.displayMessageLoader = false;
-                    utils.safeApply($scope);
+                    await utils.safeApply($scope);
+                }).catch( async () => {
+                    await Utils.stopMessageLoader($scope);
                 });
 
                 $scope.openedStudentInfo = false;
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             }
 
             $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
 
         /**
@@ -2865,11 +2867,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Affiche les informations d'un devoir en fonction de l'objet passé en paramètre
          * @param obj objet de type Evaluation ou de type Devoir
          */
-        $scope.getDevoirInfo = function (obj) {
+        $scope.getDevoirInfo = async function (obj) {
             if (template.isEmpty('leftSide-devoirInfo')) template.open('leftSide-devoirInfo', 'enseignants/informations/display_devoir');
             if (obj instanceof Devoir) $scope.informations.devoir = obj;
             else if (obj instanceof Evaluation) {
-                var devoir = $scope.releveNote.devoirs.findWhere({id: obj.id_devoir});
+                let devoir = $scope.releveNote.devoirs.findWhere({id: obj.id_devoir});
                 if (devoir !== undefined) $scope.informations.devoir = devoir;
             }
 
@@ -2883,7 +2885,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     };
 
                 }
-                utils.safeApply($scope);
+                console.log(obj);
+                await utils.safeApply($scope);
             }
         };
 
@@ -3913,8 +3916,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
         $scope.initDataLightBoxEleve = async function () {
-            if ($scope.informations.eleve.evaluations.extended !== true) {
-                _.forEach($scope.informations.eleve.evaluations.all, (evaluation) => {
+            let eleve =  $scope.informations.eleve;
+            if (eleve.evaluations.extended !== true) {
+                _.forEach(eleve.evaluations.all, (evaluation) => {
                     // On Clone (copie par valeur) les devoirs  et les competencesNotes ici, pour ne pas dénaturer
                     // les objects lors de l'utilisation de la fonction extend
 
@@ -3923,7 +3927,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let devoir = utils.clone(devoirTmp);
 
                     let competencesNotes = [];
-                    _.forEach(_.where($scope.informations.eleve.competencesNotes,
+                    _.forEach(_.where(eleve.competencesNotes,
                         {id_devoir: evaluation.id_devoir}), (competencesNote) => {
                         competencesNotes.push(utils.clone(competencesNote))
                     });
@@ -3932,17 +3936,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     _.extend(evaluation, devoir);
                 });
 
-                $scope.informations.eleve.historiques = [];
+                eleve.historiques = [];
                 try {
-                    await $scope.informations.eleve.getDetails($scope.releveNote.idEtablissement,
-                        $scope.releveNote.idClasse,
-                        $scope.releveNote.idMatiere);
+                    await eleve.getDetails($scope.releveNote.idEtablissement,
+                        $scope.releveNote.idClasse, $scope.releveNote.idMatiere);
                 } catch (e) {
                     console.log(e);
                 }
 
-                let moyennneAnnee = 0;
+                let moyenneAnnee = 0;
                 let nbMoyenneAnnee = 0;
+                let moyenneSousMatiereAnnee = {};
+                let posSousMatiereAnnee = {};
+                _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
+                    moyenneSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = '';
+                    posSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = 0;
+                });
                 // Pour vérifier que si la moyenne finale de l'année a été modifiée
                 let isMoyenneFinaleAnnee = false;
 
@@ -3952,76 +3961,100 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let isPositionnementFinaleAnnee = false;
 
                 let historiqueAnnee;
-                $scope.informations.eleve.historiques = [];
+                eleve.historiques = [];
                 _.forEach($scope.filteredPeriode, function (periode) {
 
+                    let idPeriode = periode.id_type;
                     // get moyenne auto eleve
-                    let details_moyennes = _.findWhere($scope.informations.eleve.details.moyennes, {
-                        id:
-                            (periode.id_type !== null) ? parseInt(periode.id_type) : null
+                    let details_moyennes = _.findWhere(eleve.details.moyennes, {
+                        id: (idPeriode !== null) ? parseInt(idPeriode) : null
                     });
                     let moyenne = (details_moyennes !== undefined) ? details_moyennes.moyenne : "";
 
                     // get moyenne classe
-                    let details_moyennes_classe = _.findWhere($scope.informations.eleve.details.moyennesClasse, {
+                    let details_moyennes_classe = _.findWhere(eleve.details.moyennesClasse, {
                         id:
-                            (periode.id_type !== null) ? parseInt(periode.id_type) : null
+                            (idPeriode !== null) ? parseInt(idPeriode) : null
                     });
                     let moyenneClasse = (details_moyennes_classe !== undefined) ? details_moyennes_classe.moyenne : "";
-                    if ($scope.releveNote.idPeriode === periode.id_type) {
-                        $scope.informations.eleve.moyenneClasse = moyenneClasse;
+                    if ($scope.releveNote.idPeriode === idPeriode) {
+                        eleve.moyenneClasse = moyenneClasse;
                     }
 
                     // get appreciation
-                    let details_appreciations = _.findWhere($scope.informations.eleve.details.appreciations,
-                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
+                    let details_appreciations = _.findWhere(eleve.details.appreciations,
+                        {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
                     let appreciation = (details_appreciations !== undefined) ?
                         details_appreciations.appreciation_matiere_periode : "";
 
                     // get moyenne finale
-                    let details_moyennes_finales = _.findWhere($scope.informations.eleve.details.moyennes_finales,
-                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
+                    let details_moyennes_finales = _.findWhere(eleve.details.moyennes_finales,
+                        {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
                     let moyenneFinale = (details_moyennes_finales !== undefined) ? details_moyennes_finales.moyenne : "";
 
+                    let moyenne_sous_matieres = {};
+                    let pos_sous_matieres = {};
+                    _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
+                        let idSousMatiere = sousMatiere.id_type_sousmatiere;
+                        let moy = eleve.getAverageSousMatiere(idPeriode, idSousMatiere, true);
+                        moyenne_sous_matieres[idSousMatiere] = moy;
+
+                        if(moyenneSousMatiereAnnee[idSousMatiere] === '') {
+                            moyenneSousMatiereAnnee[idSousMatiere] = [];
+                        }
+                        if(moy !== '') {
+                            moyenneSousMatiereAnnee[idSousMatiere].push(moy);
+                        }
+                        let pos_sous_mat = eleve.details._positionnements_auto[idPeriode];
+                        pos_sous_mat = (pos_sous_mat !== undefined)? pos_sous_mat[idSousMatiere] : undefined;
+                        let moyenne_convertie = (pos_sous_mat !== undefined) ? (utils.getMoyenneForBFC(
+                            pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
+                        pos_sous_matieres[idSousMatiere] = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
+                        posSousMatiereAnnee[idSousMatiere] = Math.max(pos_sous_matieres[idSousMatiere],
+                            posSousMatiereAnnee[idSousMatiere]);
+                    });
                     // get positionnement Auto
                     let details_pos_auto = _.findWhere(
-                        $scope.informations.eleve.details.positionnements_auto,
-                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
+                        eleve.details.positionnements_auto,
+                        {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
+
 
                     // Déduction du positionnement par défaut en fonction de l'échelle de convertion
                     // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
                     // (Logique prise au calcul du niveau dans le BFC).
                     let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
-                        details_pos_auto.moyenne + 1,
-                        $scope.releveNote.tableConversions.all)) : 0;
+                        details_pos_auto.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
                     let positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
 
+
+
+
                     // get positionnement final
-                    let details_pos = _.findWhere(
-                        $scope.informations.eleve.details.positionnements,
-                        {id_periode: (periode.id_type !== null) ? parseInt(periode.id_type) : null});
+                    let details_pos = _.findWhere( eleve.details.positionnements,
+                        {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
                     let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement : "";
                     // initialisation du positionnement pour le détail élève
-                    if ($scope.releveNote.idPeriode === periode.id_type) {
-                        $scope.informations.eleve.positionnement =
+                    if ($scope.releveNote.idPeriode === idPeriode) {
+                        eleve.positionnement =
                             (positionnementFinal !== "") ? positionnementFinal : (positionnement);
-                        $scope.informations.eleve.positionnementCalcule = positionnement;
+                        eleve.positionnementCalcule = positionnement;
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
-                    if (periode.id_type !== null &&
+                    if (idPeriode !== null &&
                         (details_moyennes_finales !== undefined || details_moyennes !== undefined)) {
                         nbMoyenneAnnee++;
                         if (details_moyennes_finales !== undefined) {
                             isMoyenneFinaleAnnee = true;
-                            moyennneAnnee += parseFloat(moyenneFinale);
+                            moyenneAnnee += parseFloat(moyenneFinale);
                         } else {
-                            moyennneAnnee += moyenne;
+                            moyenneAnnee += moyenne;
                         }
                     }
                     // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
-                    if (periode.id_type !== null &&
-                        ((positionnement !== undefined && positionnement > 0) || (details_pos !== undefined && details_pos > 0))) {
+                    if (idPeriode !== null &&
+                        ((positionnement !== undefined && positionnement > 0)
+                            || (details_pos !== undefined && details_pos > 0))) {
                         nbPositionnementAnnee++;
                         if (details_pos !== undefined) {
                             isPositionnementFinaleAnnee = true;
@@ -4031,8 +4064,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
 
-                    if (periode.id_type !== null) {
-                        $scope.informations.eleve.historiques.push({
+                    if (idPeriode !== null) {
+                        eleve.historiques.push({
                             periode: $scope.getI18nPeriode(periode),
                             moyenneClasse: moyenneClasse,
                             moyenne: moyenne,
@@ -4040,23 +4073,29 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             positionnement: positionnement,
                             positionnementFinal: positionnementFinal,
                             appreciation: appreciation,
-                            idPeriode: periode.id_type
+                            moyenneSousMatieres: moyenne_sous_matieres,
+                            posSousMatieres: pos_sous_matieres,
+                            idPeriode: idPeriode
                         });
+                        if($scope.search.periode.id_type === idPeriode){
+                            eleve._positionnement = pos_sous_matieres;
+                        }
                     } else {
                         historiqueAnnee = {
                             periode: $scope.getI18nPeriode(periode),
                             moyenneClasse: moyenneClasse,
                             appreciation: appreciation,
-                            idPeriode: periode.id_type
+                            moyenneSousMatieres: moyenneSousMatiereAnnee,
+                            posSousMatieres: posSousMatiereAnnee,
+                            idPeriode: idPeriode
                         }
                     }
-
                 });
 
                 // On calcule la moyenne à l'année
                 let moyenneFinaleAnnee;
                 if (nbMoyenneAnnee !== 0) {
-                    moyenneFinaleAnnee = (moyennneAnnee / nbMoyenneAnnee).toFixed(2);
+                    moyenneFinaleAnnee = (moyenneAnnee / nbMoyenneAnnee).toFixed(2);
                 } else {
                     moyenneFinaleAnnee = "";
                 }
@@ -4080,12 +4119,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     historiqueAnnee.positionnement = positionnementFinaleAnnee;
                     historiqueAnnee.positionnementFinal = "";
                 }
+                _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
+                    let idSousMatiere = sousMatiere.id_type_sousmatiere;
+                    let tabMoy = moyenneSousMatiereAnnee[idSousMatiere];
 
-                $scope.informations.eleve.historiques.push(historiqueAnnee);
+                    if(tabMoy !== '' && !_.isEmpty(tabMoy)){
+                        moyenneSousMatiereAnnee[idSousMatiere] = Utils.basicMoy(moyenneSousMatiereAnnee[idSousMatiere]);
+                    }
+                });
+                eleve.historiques.push(historiqueAnnee);
 
-                $scope.informations.eleve.evaluations.extended = true;
+                eleve.evaluations.extended = true;
                 utils.safeApply($scope);
-            }
+            }.3
         };
 
         $scope.openedLigthboxEleve = async (eleve, filteredPeriode) => {
@@ -4344,10 +4390,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.disableAppreciation = function (){
-          if($scope.suiviClasse.periode.id_type == undefined){
-              $scope.suiviClasse.withAppreciations = false;
-              utils.safeApply($scope);
-          }
+            if($scope.suiviClasse.periode.id_type == undefined){
+                $scope.suiviClasse.withAppreciations = false;
+                utils.safeApply($scope);
+            }
         };
 
         angular.merge = function (s1,s2) {
@@ -4357,14 +4403,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         Chart.plugins.register({
             afterDatasetUpdate: function ( chart, easing) {
                 if ($location.path() === '/conseil/de/classe' || $location.path() === '/releve') {
-            let currentChart = $scope.myCharts[chart.chart.canvas.id];
+                    let currentChart = $scope.myCharts[chart.chart.canvas.id];
 
-                for (let i = 0; i < chart.data.datasets.length&& currentChart!==undefined; i++) {
-                    let currentLabel =chart.data.datasets[i].label;
+                    for (let i = 0; i < chart.data.datasets.length&& currentChart!==undefined; i++) {
+                        let currentLabel =chart.data.datasets[i].label;
                         let currentDatasets = _.findWhere(currentChart.datasets, {label : currentLabel});
                         let hidden = chart.getDatasetMeta(i).hidden;
-                if (currentDatasets !== undefined){
-                currentDatasets.hidden = hidden;
+                        if (currentDatasets !== undefined){
+                            currentDatasets.hidden = hidden;
                         }
                         else{
                             currentChart.datasets.push({label: currentLabel, hidden : hidden});

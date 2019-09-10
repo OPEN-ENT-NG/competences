@@ -300,4 +300,15 @@ public interface NoteService extends CrudService {
     void getDataGraph(final String idEleve, JsonArray groupIds, final String idEtablissement ,
                              final String idClasse,final Integer typeClasse, final String idPeriodeString,
                              final Handler<Either<String, JsonArray>> handler);
+
+    /**
+     *
+     * @param idEleve
+     * @param idClasse
+     * @param idMatiere
+     * @param idEtablissement
+     * @param request
+     */
+    void getDetailsReleve(final String idEleve, final String idClasse, final String idMatiere,
+                          final String idEtablissement, final HttpServerRequest request);
 }

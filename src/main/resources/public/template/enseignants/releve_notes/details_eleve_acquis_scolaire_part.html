@@ -43,7 +43,7 @@
     </div>
 </div>
 <div class="four cell">
-    <div class="eleven moyenne_pos">
+    <div class="six moyenne_pos cell">
         <section>
             <label><i18n class="bold">average.auto</i18n> : </label>
             <span>[[informations.eleve.moyenne]]</span>
@@ -99,6 +99,16 @@
                 </li>
 
             </ul>
+        </section>
+    </div>
+    <div class="four moyenne_pos cell">
+        <section ng-repeat-start="sousMatiere in search.matiere.sousMatieres.all">
+            <label ><i18n class="bold">average</i18n><span  class="bold">[[sousMatiere.libelle]]</span> : </label>
+            <span style="margin-left: 2px">[[ informations.eleve.getAverageSousMatiere(search.matiere.id, sousMatiere.id_type_sousmatiere) ]]</span>
+        </section>
+        <section ng-repeat-end="sousMatiere in search.matiere.sousMatieres.all">
+            <label ><i18n class="bold">evaluations.releve.positionnement</i18n><span  class="bold">[[sousMatiere.libelle]]</span> : </label>
+            <span style="margin-left: 2px">[[( informations.eleve._positionnement[sousMatiere.id_type_sousmatiere]) ]]</span>
         </section>
     </div>
 </div>

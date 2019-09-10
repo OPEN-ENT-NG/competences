@@ -183,9 +183,27 @@
             {{#averageFinal}}
             <td class="pretty center">{{moyenneFinaleLibelle}}</td>
             {{/averageFinal}}
+
+            {{#sousMatieres}}
+            {{#moyennes}}
+            {{#print}}
+            <td class="pretty center">{{moyLibelle}}</td>
+            {{/print}}
+            {{/moyennes}}
+            {{/sousMatieres}}
+
             {{#positionnementFinal}}
             <td class="pretty center">{{positionnementFinaleLibelle}}</td>
             {{/positionnementFinal}}
+
+            {{#sousMatieres}}
+            {{#positionnements_auto}}
+            {{#printPosi}}
+            <td class="pretty center">{{posLibelle}}</td>
+            {{/printPosi}}
+            {{/positionnements_auto}}
+            {{/sousMatieres}}
+
             {{#appreciation}}
             <td class="">{{appreciationLibelle}}</td>
             {{/appreciation}}
@@ -201,9 +219,27 @@
             {{#averageFinal}}
             <td class="center">{{moyenneFinale}}</td>
             {{/averageFinal}}
+
+            {{#sousMatieres}}
+            {{#moyennes}}
+            {{#print}}
+            <td class="pretty center">{{moyenne}}</td>
+            {{/print}}
+            {{/moyennes}}
+            {{/sousMatieres}}
+
             {{#positionnementFinal}}
             <td class="center">{{positionnement}}</td>
             {{/positionnementFinal}}
+
+            {{#sousMatieres}}
+            {{#positionnements_auto}}
+            {{#printPosi}}
+            <td class="pretty center">{{positionnement}}</td>
+            {{/printPosi}}
+            {{/positionnements_auto}}
+            {{/sousMatieres}}
+
             {{#appreciation}}
             <td class="">{{appreciation_matiere_periode}}</td>
             {{/appreciation}}
