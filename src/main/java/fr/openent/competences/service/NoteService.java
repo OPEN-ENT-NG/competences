@@ -193,7 +193,7 @@ public interface NoteService extends CrudService {
      * @param notesByDevoirByPeriodeClasse map<periode map<periode,liste de devoirs>>
      * @param result JsonObject sur lequel est ajouté les moyennes de la classe
      */
-    void calculAndSetMoyenneClasseByPeriode(final JsonArray idsEleve, final JsonArray moyFinalesEleves,
+    void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
                                             final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                             final JsonObject result );
 

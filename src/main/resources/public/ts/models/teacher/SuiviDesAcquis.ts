@@ -4,6 +4,7 @@ import * as utils from '../../utils/teacher';
 import { Mix } from "entcore-toolkit";
 import {notify, _, Collection, Model, http as httpEntcore} from "entcore";
 import {Historique} from "../common/Historique";
+import {getNN} from "../../utils/functions/utilsNN";
 
 
 export class SuiviDesAcquis  {
@@ -25,6 +26,9 @@ export class SuiviDesAcquis  {
     moyennesEleve : any[];
     //moyennes de la classe pour une matière pour les 3 périodes de l'année en cours
     moyennesClasse : any[];
+
+    _positionnements_auto : any[];
+    _moyenne : any[];
 
     idEleve: string;
     idClasse: string;
@@ -103,7 +107,9 @@ export class SuiviDesAcquis  {
     initPositionnement() : any {
         this.positionnement_final = this.getPositionnementDefinitif();
     }
+
 }
+
 export class SuivisDesAcquis extends Model{
 
     all: SuiviDesAcquis[];
@@ -206,6 +212,13 @@ export class SuivisDesAcquis extends Model{
                         suiviDesAcquis.positionnement_final = suiviDesAcquis.positionnement_auto;
                     }
 
+                    // Positionnement et moyenne des sousMatieres
+                    _.forEach(suiviDesAcquis.sousMatieres, (sousMat) => {
+                        sousMat.posi =  this.getPositionnement(suiviDesAcquis, sousMat);
+                        sousMat.moy = this.getMoyenne(suiviDesAcquis, sousMat);
+                        sousMat.moyClasse = this.getMoyenneClasse(suiviDesAcquis, sousMat);
+                    });
+
 
                      // ajout des moyennes par matiere sur les periodes
                     _.each(this.historiques, (histo) => {
@@ -249,5 +262,43 @@ export class SuivisDesAcquis extends Model{
         return _.find( this.historiques, {id_type: id_periode});
     }
 
+    getPositionnement(suivi, sousMat) {
+        let res = undefined;
+        let moy = suivi._positionnements_auto;
+        if(moy !== undefined) {
+            moy = suivi._positionnements_auto[this.idPeriode];
+            if(moy !== undefined) {
+                moy = moy [sousMat.id_type_sousmatiere];
+            }
+        }
+        if(moy !== undefined) {
+            let positionnementConverti = utils.getMoyenneForBFC(moy.moyenne + 1, this.tableConversions.all);
+            res = (positionnementConverti !== -1) ? positionnementConverti : 0;
+        }
+        sousMat.posi = res;
+        return res;
+    }
+
+    getMoyenne(suivi, sousMat) {
+        let moy = suivi._moyenne;
+        if(moy !== undefined) {
+            moy = suivi._moyenne[this.idPeriode];
+            if(moy !== undefined) {
+                moy = moy [sousMat.id_type_sousmatiere];
+            }
+        }
+        return (moy === undefined)? getNN() : moy.moyenne;
+    }
+
+    getMoyenneClasse(suivi, sousMat) {
+        let moy = suivi._moyennesClasse;
+        if(moy !== undefined) {
+            moy = suivi._moyennesClasse[this.idPeriode];
+            if(moy !== undefined) {
+                moy = moy [sousMat.id_type_sousmatiere];
+            }
+        }
+        return (moy === undefined)? getNN() : moy;
+    }
 }
 

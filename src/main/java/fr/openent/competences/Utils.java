@@ -595,32 +595,7 @@ public class Utils {
                                     @Override
                                     public void handle(Either<String, Map<String, String>> event) {
                                         Map mapCodeLibelleCourt = event.right().getValue();
-
-                                        for (int i = 0; i < requestMats.size(); i++) {
-                                            JsonObject requestMat = requestMats.getJsonObject(i);
-
-                                            if (!idsMatLibelle.containsKey(requestMat.getString("id"))) {
-
-                                                // String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
-                                                String codeMatiere = requestMat.getJsonObject("data").getJsonObject("data").getString("code");
-                                                try{
-                                                    Integer.valueOf(codeMatiere);
-                                                    if(!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere) ){
-                                                        requestMat.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
-
-                                                    } else {//si le codeMatiere n'est pas dans la table matiere prendre
-                                                        // les 5 premiers caracteres du libelle de la matiere
-
-                                                        String nameMat = requestMat.getString("name").substring(0, 4);
-                                                        requestMat.put("libelle_court", nameMat);
-                                                    }
-                                                }catch(NumberFormatException e){
-                                                    requestMat.put("libelle_court", codeMatiere);
-                                                }
-
-                                            }
-                                            idsMatLibelle.put(requestMat.getString("id"), requestMat);
-                                        }
+                                        buildMapSubject(requestMats,  idsMatLibelle, mapCodeLibelleCourt);
                                         handler.handle(new Either.Right<>(idsMatLibelle));
                                     }
                                 });
@@ -637,6 +612,40 @@ public class Utils {
                 }));
     }
 
+    public static void buildMapSubject(JsonArray subjects, Map<String,JsonObject> mapSubjects, Map mapCodeLibelleCourt){
+        for (int i = 0; i < subjects.size(); i++) {
+            JsonObject subject = subjects.getJsonObject(i);
+
+            if (!mapSubjects.containsKey(subject.getString("id"))) {
+
+                // String source = requestMat.getJsonObject("data").getJsonObject("data").getString("source");
+                String codeMatiere;
+                if(isNotNull(subject.getJsonObject("data"))) {
+                    codeMatiere = subject.getJsonObject("data").getJsonObject("data").getString("code");
+                }
+                else {
+                    codeMatiere = subject.getString(EXTERNAL_ID_KEY);
+                }
+
+                try {
+                    Integer.valueOf(codeMatiere);
+                    if (!mapCodeLibelleCourt.isEmpty() && mapCodeLibelleCourt.containsKey(codeMatiere)) {
+                        subject.put("libelle_court", mapCodeLibelleCourt.get(codeMatiere));
+
+                    } else {//si le codeMatiere n'est pas dans la table matiere prendre
+                        // les 5 premiers caracteres du libelle de la matiere
+
+                        String nameMat = subject.getString("name").substring(0, 4);
+                        subject.put("libelle_court", nameMat);
+                    }
+                } catch (NumberFormatException e) {
+                    subject.put("libelle_court", codeMatiere);
+                }
+
+            }
+            mapSubjects.put(subject.getString("id"), subject);
+        }
+    }
 
     public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers,
                                                 final Handler<Either<String,Map<String,JsonObject>>> handler){

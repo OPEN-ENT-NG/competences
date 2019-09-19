@@ -64,11 +64,11 @@ public interface ExportBulletinService {
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idPeriode
      * @param classe Object contenant les information sur la classe
-     * @param getProgrammeElement  Booleen pour savoir si on affiche les élement du programme
+     * @param params  paramètre d'export
      * @param finalHandler handler servant à la synchronisation des services
      */
     void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
-                        final JsonObject classe, boolean getProgrammeElement,
+                        final JsonObject classe, JsonObject params,
                         Handler<Either<String, JsonObject>> finalHandler );
 
     /**

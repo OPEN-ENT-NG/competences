@@ -28,6 +28,8 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.service.impl.DefaultNoteService.ID_TYPE_SOUS_MATIERE;
+import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.*;
@@ -69,6 +71,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String GET_IMAGE_GRAPH_METHOD = "getImageGraph";
     private static final String GET_ARBRE_DOMAINE_METHOD = "getArbreDomaines";
     private static final String GET_DATA_FOR_GRAPH_DOMAINE_METHOD = "getBilanPeriodiqueDomaineForGraph";
+    private static final String PRINT_SOUS_MATIERES = "printSousMatieres";
 
     // Keys Utils
     private static final String APPRECIATION_KEY = "appreciation";
@@ -84,6 +87,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String MOYENNE_CLASSE = "moyenneClasse";
     private static final String MOYENNE_ELEVE = "moyenneEleve";
     private static final String POSITIONNEMENT = "positionnement";
+    private static final String MOYENNE_CLASSE_SOUS_MAT = "moyenneClasseSousMat";
+    private static final String MOYENNE_ELEVE_SOUS_MAT = "moyenneEleveSousMat";
+    private static final String POSITIONNEMENT_SOUS_MAT = "positionnementSousMat";
     private static final String ELEMENTS_PROGRAMME = "elementsProgramme";
     private static final String EXTERNAL_ID_KEY = "externalId";
     private static final String NIVEAU_COMPETENCE = "niveauCompetences";
@@ -408,8 +414,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 if (params.getBoolean(SHOW_PROJECTS)) {
                     getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, finalHandler);
                 }
-                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe,  params.getBoolean(GET_PROGRAM_ELEMENT),
-                        finalHandler);
+                getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, finalHandler);
                 if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)!= null){
                     if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
                         getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE),idPeriode,
@@ -1563,10 +1568,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
-                               final JsonObject classe,
-                               boolean getProgrammeElement,
-                               Handler<Either<String, JsonObject>> finalHandler ) {
+    public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
+                               JsonObject params, Handler<Either<String, JsonObject>> finalHandler ) {
+
+        boolean getProgrammeElement = params.getBoolean(GET_PROGRAM_ELEMENT);
 
         logBegin(GET_SUIVI_ACQUIS_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
@@ -1628,7 +1633,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         final JsonObject matiere = suiviAcquis.getJsonObject(i);
                                         // Une matière sera affichée si on a au moins un élement sur la période
                                         final boolean printMatiere = false;
-                                        buildMatiereForSuiviAcquis (matiere, printMatiere, idPeriode, classe);
+                                        buildMatiereForSuiviAcquis (matiere, printMatiere, idPeriode, classe, params);
                                         if(matiere.getBoolean(PRINT_MATIERE_KEY)) {
                                             res.add(matiere);
                                         }
@@ -1740,6 +1745,62 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             }
         }
     }
+
+    private Float getMoyenneForSousMat(Object object, Long idPeriode, Long idSousMat){
+        Float res = null;
+        if (isNotNull(object) && isNotNull(idPeriode)) {
+            object = ((JsonObject)object).getJsonObject(idPeriode.toString());
+            if (isNotNull(object) && isNotNull(idSousMat)) {
+                object  = ((JsonObject)object).getValue(idSousMat.toString());
+                if (isNotNull(object)) {
+                    if(object instanceof Double){
+                        res = ((Double) object).floatValue();
+                    }
+                    else {
+                    res =((JsonObject)object).getFloat(MOYENNE);
+                    }
+
+                }
+            }
+        }
+        return res;
+    }
+
+    private void buildSousMatieres(JsonObject matiere, JsonArray tableauDeConversion, Long idPeriode, JsonObject params){
+        JsonArray sousMatiere = matiere.getJsonArray(SOUS_MATIERES);
+        Boolean printPosi = params.getBoolean(POSITIONNEMENT_SOUS_MAT);
+        Boolean printMoyEl = params.getBoolean(MOYENNE_ELEVE_SOUS_MAT);
+        Boolean printMoyCl = params.getBoolean(MOYENNE_CLASSE_SOUS_MAT);
+        matiere.put(POSITIONNEMENT_SOUS_MAT, printPosi).put(MOYENNE_CLASSE_SOUS_MAT, printMoyCl)
+                .put(MOYENNE_ELEVE_SOUS_MAT, printMoyEl);
+        if(isNotNull(sousMatiere)) {
+            for (int i = 0; i < sousMatiere.size(); i++){
+                JsonObject sousMat = sousMatiere.getJsonObject(i);
+                Long idSousMat = sousMat.getLong(ID_TYPE_SOUS_MATIERE);
+
+                if(isNotNull(idSousMat)) {
+                    // mise en forme du positionnement
+                    JsonObject posSous = matiere.getJsonObject("_" + POSITIONNEMENTS_AUTO);
+                    Float pos = getMoyenneForSousMat(posSous, idPeriode, idSousMat);
+                    String val = NN;
+                    if(isNotNull(pos)){
+                        val = utilsService.convertPositionnement(pos, tableauDeConversion,true,true);
+                    }
+                    sousMat.put(POSITIONNEMENT, val);
+
+                    // Mise en forme de la moyenne Elève des sousMatières
+                    JsonObject moyenSous = matiere.getJsonObject("_" + MOYENNE);
+                    Float moyElv = getMoyenneForSousMat(moyenSous, idPeriode, idSousMat);
+                    sousMat.put(MOYENNE_ELEVE, isNull(moyElv)? NN : moyElv);
+
+                    // Mise en forme de la moyenne Elève des sousMatières
+                    JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
+                    Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
+                    sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
+                }
+            }
+        }
+    }
     /**
      *  Calcule et met en forme les colonnes de la matière passée en paramètre
      * @param matiere matière à traiter
@@ -1747,28 +1808,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
      * @param idPeriode période sélectionnée
      * @param classe JsonObject contenant les informations de la classe de l'élève dont on contruit le bulletin
      */
-    private  JsonObject buildMatiereForSuiviAcquis (final JsonObject matiere,
-                                                    boolean printMatiere, Long idPeriode, final JsonObject classe) {
+    private  JsonObject buildMatiereForSuiviAcquis (final JsonObject matiere, boolean printMatiere, Long idPeriode,
+                                                    final JsonObject classe, JsonObject params) {
 
         JsonArray models = classe.getJsonArray("models");
         if (models != null && !models.isEmpty()){
             setLibelleMatiere(matiere, models);
         }
-        JsonObject moyenneEleve = getObjectForPeriode(
-                matiere.getJsonArray("moyennes"), idPeriode, "id");
-        JsonObject moyenneClasse = getObjectForPeriode(
-                matiere.getJsonArray("moyennesClasse"), idPeriode, "id");
-        JsonObject positionnement = getObjectForPeriode(
-                matiere.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode,
+
+        matiere.put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES));
+        JsonObject moyenneEleve = getObjectForPeriode(matiere.getJsonArray(MOYENNES), idPeriode, ID_KEY);
+        JsonObject moyenneClasse = getObjectForPeriode(matiere.getJsonArray("moyennesClasse"), idPeriode, ID_KEY);
+        JsonObject positionnement = getObjectForPeriode(matiere.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode,
                 ID_PERIODE);
-        JsonObject positionnementFinal = getObjectForPeriode(
-                matiere.getJsonArray("positionnementsFinaux"), idPeriode,
-                ID_PERIODE);
+        JsonObject positionnementFinal = getObjectForPeriode(matiere.getJsonArray("positionnementsFinaux"),
+                idPeriode, ID_PERIODE);
         JsonObject appreciation = null;
-        JsonObject res = getObjectForPeriode(
-                matiere.getJsonArray("appreciations"), idPeriode,
-                ID_PERIODE);
+        JsonObject res = getObjectForPeriode(matiere.getJsonArray("appreciations"), idPeriode, ID_PERIODE);
         JsonArray appreciationByClasse = null;
+
         if (res != null) {
             appreciationByClasse = res.getJsonArray("appreciationByClasse");
         }
@@ -1776,14 +1834,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             printMatiere = true;
             appreciation = appreciationByClasse.getJsonObject(0);
         }
-        JsonObject moyenneFinale = getObjectForPeriode(
-                matiere.getJsonArray("moyennesFinales"), idPeriode,
+        JsonObject moyenneFinale = getObjectForPeriode(matiere.getJsonArray("moyennesFinales"), idPeriode,
                 ID_PERIODE);
 
         if (moyenneFinale != null) {
             printMatiere = true;
-            matiere.put(MOYENNE_ELEVE, (moyenneFinale != null) ?
-                    moyenneFinale.getValue("moyenneFinale") : "");
+            matiere.put(MOYENNE_ELEVE, (moyenneFinale != null) ? moyenneFinale.getValue("moyenneFinale") : "");
         }
         else if (moyenneEleve != null) {
             printMatiere = true;
@@ -1791,42 +1847,38 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         }
 
+        JsonArray tableauDeconversion = classe.getJsonArray("tableauDeConversion");
         if (positionnementFinal != null) {
             printMatiere = true;
-            matiere.put(POSITIONNEMENT,
-                    positionnementFinal.getInteger("positionnementFinal"));
-
+            matiere.put(POSITIONNEMENT, positionnementFinal.getInteger("positionnementFinal"));
         }
         else {
             // On récupère la moyenne des positionements et on la convertie
             // Grâce à l'échelle de conversion du cycle de la classe de l'élève
             if(positionnement != null) {
                 Float pos = positionnement.getFloat(MOYENNE);
-                JsonArray tableauDeconversion = classe
-                        .getJsonArray("tableauDeConversion");
                 String val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere,true);
                 matiere.put(POSITIONNEMENT, val);
             }
         }
+
+        // Mise Remplissage des données des sousMatières
+        buildSousMatieres(matiere, tableauDeconversion, idPeriode , params);
+
         String elementsProgramme = troncateLibelle(
                 matiere.getString(ELEMENTS_PROGRAMME), MAX_SIZE_LIBELLE);
 
         String app = "";
 
         if(appreciation != null) {
-            app = troncateLibelle(
-                    appreciation.getString(APPRECIATION_KEY), MAX_SIZE_LIBELLE);
+            app = troncateLibelle(appreciation.getString(APPRECIATION_KEY), MAX_SIZE_LIBELLE);
             printMatiere = true;
         }
 
         // Construction des libelles et de leur style.
         matiere.put(ELEMENTS_PROGRAMME, elementsProgramme)
-
-                .put(MOYENNE_CLASSE, (moyenneClasse != null) ?
-                        moyenneClasse.getValue(MOYENNE) : "")
-
+                .put(MOYENNE_CLASSE, (moyenneClasse != null) ? moyenneClasse.getValue(MOYENNE) : "")
                 .put(APPRECIATION_KEY,app)
-
                 .put(PRINT_MATIERE_KEY, printMatiere);
 
         JsonArray teachers = matiere.getJsonArray("teachers");

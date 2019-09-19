@@ -173,6 +173,10 @@
             color: black;
         }
 
+        .inlineBlock {
+            display: inline-block;
+        }
+
         .leftCommunication {
             margin-top: 0%!important;
             padding-top: 5px;
@@ -364,9 +368,18 @@
         <tr>
             <td class="left-align emptyClass">
                 <span style="font-size: small; font-weight: bold">{{libelleMatiere}}</span><br/>
-                {{#teachers}}
+
+                <div class="inlineBlock">{{#teachers}}
                 <span style="color: black; font-size: smaller;">{{initial}}.{{name}}</span>
-                {{/teachers}}
+                {{/teachers}}</div>
+                <div class="inlineBlock">
+                {{#printSousMatieres}}
+                    {{#sousMatieres}}
+                    <br/>
+                    <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
+                    {{/sousMatieres}}
+                {{/printSousMatieres}}
+                </div>
             </td>
             {{#getProgramElements}}
             {{#display}}
@@ -380,13 +393,34 @@
                 {{/display}}
                 {{appreciation}}</td>
             {{#getMoyenneEleve}}
-            <td style="font-size: x-small; font-weight: bold" class="fourthSuivi onePadding">{{moyenneEleve}}</td>
+            <td style="font-size: x-small; font-weight: bold" class="fourthSuivi onePadding">
+                {{moyenneEleve}}
+                {{#moyenneEleveSousMat}}
+                {{#sousMatieres}}
+                <br/><span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
+                {{/sousMatieres}}
+                {{/moyenneEleveSousMat}}
+            </td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td style="font-size: x-small;" class="fifthSuivi onePadding">{{moyenneClasse}}</td>
+            <td style="font-size: x-small; font-weight: bold" class="fifthSuivi onePadding">
+                {{moyenneClasse}}
+                {{#moyenneClasseSousMat}}
+                {{#sousMatieres}}
+                <br/><span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
+                {{/sousMatieres}}
+                {{/moyenneClasseSousMat}}
+            </td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td style="font-size: x-small; font-weight: bold" class="sixthSuivi onePadding">{{positionnement}}</td>
+            <td style="font-size: x-small; font-weight: bold" class="sixthSuivi onePadding">
+                {{positionnement}}
+                {{#positionnementSousMat}}
+                {{#sousMatieres}}
+                <br/><span style="font-size: xx-small; font-weight: normal">{{positionnement}}</span>
+                {{/sousMatieres}}
+                {{/positionnementSousMat}}
+            </td>
             {{/getPositionnement}}
         </tr>
         {{/printMatiere}}

@@ -23,7 +23,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Competences.MESSAGE;
+import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
+import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -58,19 +63,62 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 validResultHandler(eitherHandler));
     }
 
-    public void getSuiviAcquis(final String idEtablissement, final Long idPeriode,
-                               final String idEleve, final String idClasse ,
-                               Handler<Either<String, JsonArray>> handler) {
+    private void getSubjectLibelleForSuivi(final String idEtablissement, JsonArray idsMatieres,
+                                           Future<Map<String,JsonObject>> libelleMatiereFuture){
+
+        // Récupération des matières de l'établmissement
+        Future<JsonArray> subjectF = Future.future();
+        JsonObject action = new JsonObject().put("action", "matiere.getMatieresForUser").put("userType", "Personnel")
+                .put("idUser", "null").put("idStructure", idEtablissement).put("onlyId", false);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                subjectF.complete(body.getJsonArray(RESULTS));
+            } else {
+                subjectF.fail(body.getString(MESSAGE));
+            }
+        }));
+
+        // Récupération des libellé court des matières
+        Future<Map<String, String>> libelleCourtsFuture = Future.future();
+        new DefaultMatiereService().getLibellesCourtsMatieres(true,
+                event -> formate(libelleCourtsFuture, event));
+
+        CompositeFuture.all(subjectF, libelleCourtsFuture).setHandler(
+                event -> {
+                    if(event.failed()){
+                        String error = event.cause().getMessage();
+                        log.error("[getSubjectLibelleForSuivi] : " + error);
+                        if(error.contains(TIME)){
+                            getSubjectLibelleForSuivi(idEtablissement, idsMatieres, libelleMatiereFuture);
+                        }
+                        else {
+                            libelleMatiereFuture.fail(error);
+                        }
+                        return;
+                    }
+                    Map mapCodeLibelleCourt = libelleCourtsFuture.result();
+                    JsonArray subjects = subjectF.result();
+                    Map<String,JsonObject> mapSubjects = new HashMap<>();
+
+                    Utils.buildMapSubject(subjects, mapSubjects, mapCodeLibelleCourt);
+                    libelleMatiereFuture.complete(mapSubjects);
+                });
+
+    }
+    public void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
+                               final String idClasse , Handler<Either<String, JsonArray>> handler) {
+
         Future<JsonArray> subjectFuture = Future.future();
         // Récupération des matières
         devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, event -> {
-            FormateFutureEvent.formate(subjectFuture,event);
+            formate(subjectFuture,event);
         });
 
         // Récupération des groupes de l'élève
         Future<JsonArray> idsGroupsFuture = Future.future();
         Utils.getGroupsEleve(eb, idEleve,idEtablissement, event -> {
-            FormateFutureEvent.formate(idsGroupsFuture, event);
+            formate(idsGroupsFuture, event);
         });
 
 
@@ -87,16 +135,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 else {
                     buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres, idsTeachers, responseArray);
 
-                    // Récupération du libelle des matières
+                    // Récupération du libelle des matières et sous Matières
                     Future<Map<String,JsonObject>> libelleMatiereFuture = Future.future();
-                    Utils.getLibelleMatiere( eb, idsMatieres, libelleMatiereEvent -> {
-                        FormateFutureEvent.formate(libelleMatiereFuture, libelleMatiereEvent);
-                    });
+                    getSubjectLibelleForSuivi(idEtablissement, idsMatieres, libelleMatiereFuture);
 
                     // Récupération des noms et prénoms des professeurs
                     Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
                     Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
-                        FormateFutureEvent.formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
+                        formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
                     });
 
                     CompositeFuture.all(libelleMatiereFuture, lastNameAndFirstNameFuture).setHandler( event1 -> {
@@ -127,7 +173,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private void setSubjectLibelle(String idMatiere, JsonObject result, Map<String, JsonObject> idsMatLibelle){
         if (idsMatLibelle != null && !idsMatLibelle.isEmpty() && idsMatLibelle.containsKey(idMatiere)) {
             result.put("id_matiere", idMatiere)
-                    .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString("name"));
+                    .put("libelleMatiere", idsMatLibelle.get(idMatiere).getString(NAME))
+                    .put(SOUS_MATIERES, idsMatLibelle.get(idMatiere).getJsonArray("sous_matieres"));
         } else {
             result.put("id_matiere", idMatiere)
                     .put("libelleMatiere", "no libelle");
@@ -185,31 +232,31 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             Future<JsonArray> elementsProgFuture = Future.future();
             elementProgramme.getElementProgrammeClasses(
                     idPeriode, idMatiere, idsGroups,elementsProgEvent -> {
-                        FormateFutureEvent.formate(elementsProgFuture, elementsProgEvent);
+                        formate(elementsProgFuture, elementsProgEvent);
                     });
 
             // Récupération des appreciation Moyenne Finale et positionnement Finale
             Future<JsonArray> appreciationMoyFinalePosFuture = Future.future();
             noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null, event -> {
-                FormateFutureEvent.formate(appreciationMoyFinalePosFuture, event);
+                formate(appreciationMoyFinalePosFuture, event);
             });
 
             // Récupération des notes
             Future<JsonArray> notesFuture = Future.future();
             noteService.getNoteElevePeriode(null, idEtablissement, idsGroups, idMatiere, null,
-                    notesEvent -> {FormateFutureEvent.formate(notesFuture, notesEvent);});
+                    notesEvent -> formate(notesFuture, notesEvent));
 
             // Récupération des compétences-notes
             Future<JsonArray> compNotesFuture =  Future.future();
             noteService.getCompetencesNotesReleve(idEtablissement, null, null, idMatiere,
                     null, idEleve, null, false, compNotesEvent -> {
-                        FormateFutureEvent.formate(compNotesFuture, compNotesEvent);
+                        formate(compNotesFuture, compNotesEvent);
                     });
 
             // Récupération de la moyenne finale
             Future<JsonArray> moyenneFinaleFuture = Future.future();
             noteService.getColonneReleve(null, null, idMatiere, idsGroups, "moyenne",
-                    moyenneFinaleEvent -> FormateFutureEvent.formate(moyenneFinaleFuture, moyenneFinaleEvent));
+                    moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
             Future<String> subjectFuture = Future.future();
             subjectsFuture.add(subjectFuture);
@@ -385,8 +432,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
-        noteService.calculAndSetMoyenneClasseByPeriode(idsEleves,moyFinalesEleves,
-                notesByDevoirByPeriodeClasse, result);
+        noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
 
     }
     public void getBilanPeriodiqueDomaineForGraph(final String idEleve,String idEtablissement,

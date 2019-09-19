@@ -20,6 +20,9 @@ export class ExportBulletins {
             moyenneClasse: (options.moyenneClasse === true)? options.moyenneClasse:false ,
             moyenneEleve: (options.moyenneEleve === true)? options.moyenneEleve:false ,
             positionnement: (options.positionnement === true)? options.positionnement:false ,
+            moyenneClasseSousMat: (options.moyenneClasseSousMat === true)? options.moyenneClasseSousMat:false ,
+            moyenneEleveSousMat: (options.moyenneEleveSousMat === true)? options.moyenneEleveSousMat:false ,
+            positionnementSousMat: (options.positionnementSousMat === true)? options.positionnementSousMat:false ,
             showBilanPerDomaines: (options.showBilanPerDomaines === true)? options.showBilanPerDomaines:false ,
             showFamily: (options.showFamily === true)? options.showFamily:false ,
             showProjects: (options.showProjects === true)? options.showProjects:false ,
@@ -48,6 +51,7 @@ export class ExportBulletins {
         if(o.useModel === true) {
             _.extend(o, {idModel : options.idModel});
         }
+        _.extend(o, {printSousMatieres : (o.moyenneClasseSousMat || o.moyenneEleveSousMat || o.positionnementSousMat)});
         return o;
     }
 
