@@ -422,10 +422,14 @@
                                            max="20" min="0" step="0.01">
                                 </td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
-                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
-                                <th class="colMoyenne"
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"
+                                    ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+
+                                </td>
+                                <td class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
-                                ></th>
+                                ></td>
                             </tr>
                             <tr class="minClasse">
                                 <td class="col1 text-overflow">
@@ -443,7 +447,11 @@
                                            max="20" min="0" step="0.01">
                                 </td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
-                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"
+                                    ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+
+                                </td>
                                 <th class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
                                 ></th>
@@ -465,9 +473,13 @@
                                 </td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
-                                <th class="colMoyenne"
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne"
+                                    ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
+
+                                </td>
+                                <td class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
-                                ></th>
+                                ></td>
                             </tr>
                             </tbody>
                         </table>
