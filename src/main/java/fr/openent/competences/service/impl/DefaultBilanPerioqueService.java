@@ -68,16 +68,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         // Récupération des matières de l'établmissement
         Future<JsonArray> subjectF = Future.future();
-        JsonObject action = new JsonObject().put("action", "matiere.getMatieresForUser").put("userType", "Personnel")
-                .put("idUser", "null").put("idStructure", idEtablissement).put("onlyId", false);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler(message -> {
-            JsonObject body = message.body();
-            if (OK.equals(body.getString(STATUS))) {
-                subjectF.complete(body.getJsonArray(RESULTS));
-            } else {
-                subjectF.fail(body.getString(MESSAGE));
-            }
-        }));
+        new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
 
         // Récupération des libellé court des matières
         Future<Map<String, String>> libelleCourtsFuture = Future.future();

@@ -56,7 +56,6 @@
         }
         .align-left{
             text-align: left;
-            text-indent: 5px;
         }
         .align-right{
             text-align: right;
@@ -65,12 +64,16 @@
         .matiere{
             border: none !important;
             border-left: solid 1px #000 !important;
+            border-bottom: solid 1px #000 !important;
         }
         .professeur{
             border: none !important;
-            border-bottom: solid 1px #000 !important;
-            border-left: solid 1px #000 !important;
             font-size: 10px;
+        }
+        .sousMat {
+            font-size: 10px;
+            text-align: left;
+            width: 10px;
         }
         .bottom{
             border-bottom: solid 1px #000;
@@ -82,10 +85,16 @@
             border-right: solid 1px #000;
             border-bottom: solid 1px #000;
         }
+        .right{
+            border-right: solid 1px #000;
+        }
         .left-right{
             border-left: solid 1px #000;
             border-right: solid 1px #000;
             border-bottom: solid 1px #000;
+        }
+        .none {
+            border: none;
         }
         .entete-1 td{
             /*border-left: solid 1px #000;*/
@@ -128,15 +137,30 @@
 
 <table class="display-bulletin">
     <tr class="greyscale entete-1">
-        <td class="align-left left"><strong>Matière</strong></td>
+        <td colspan="2" class="align-left left"><strong>Matière</strong></td>
         <td class="left-right"><strong>Notes</strong></td>
         <td class="right-bottom"><strong>Moyenne</strong></td>
     </tr>
 
     {{#matieres}}
     <tr>
-        <td class="upper align-left matiere">{{label}}</td>
-        <td rowspan="3" class="left-right">
+        <td rowspan="{{rowspan}}" class="upper align-left matiere">
+            <span  class="align-left">{{name}}</span>
+            <span  class="align-left professeur">
+                {{#displayNameEnseignant}}
+                <br/><span>{{.}}</span>
+                {{/displayNameEnseignant}}
+            </span>
+        </td>
+
+        {{^hasSousMatiere}}
+        <td class="bottom"><span class="pretty center"></span>   </td>
+        {{/hasSousMatiere}}
+        {{#hasSousMatiere}}
+        <td class="none "><span class="pretty center"></span>   </td>
+        {{/hasSousMatiere}}
+
+        <td rowspan="{{rowspan}}" class="left-right">
             {{#devoirs}}
             <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
@@ -144,16 +168,25 @@
           </span>
             {{/devoirs}}
         </td>
-        <td rowspan="3" class="right-bottom"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        {{^hasSousMatiere}}
+        <td  class="right-bottom"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        {{/hasSousMatiere}}
+        {{#hasSousMatiere}}
+        <td  class="right"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        {{/hasSousMatiere}}
     </tr>
-    <tr></tr>
+    {{#sous_matieres}}
     <tr>
-        <td class="align-left professeur">
-            {{#displayNameEnseignant}}
-            <br/><span>{{.}}</span>
-            {{/displayNameEnseignant}}
-        </td>
+        {{^isLast}}
+        <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+        <td  class="right"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+        {{#isLast}}
+        <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
+        <td  class="right-bottom"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
     </tr>
+    {{/sous_matieres}}
     {{/matieres}}
 
 </table>
