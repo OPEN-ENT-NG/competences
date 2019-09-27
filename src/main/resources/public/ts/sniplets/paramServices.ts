@@ -1,6 +1,7 @@
 import {notify, idiom as lang, angular, _} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
+import {Utils} from "../models/teacher";
 
 export const paramServices = {
     title: 'Configuration des services',
@@ -38,7 +39,6 @@ export const paramServices = {
                     notify.error('evaluation.service.error.create');
                 }
             }
-
             updateServiceModalite(){
 
                 let request = () => {
@@ -47,7 +47,7 @@ export const paramServices = {
                     } catch (e) {
                         notify.error('evaluation.service.error.update');
                     }
-                }
+                };
 
                 if(this.modalite == this.previous_modalite) {
                     return;
@@ -68,7 +68,7 @@ export const paramServices = {
                     } catch (e) {
                         notify.error('evaluation.service.error.update');
                     }
-                }
+                };
 
                 if (this.evaluable == this.previous_evaluable) {
                     return;
@@ -136,9 +136,31 @@ export const paramServices = {
             }
         },
 
-        init: function () {
-            console.log("tic");
-            this.displayMessageLoader = true;
+        initServices: async function () {
+            await this.runMessageLoader();
+
+            paramServices.that.getServices().then(async ({data}) => {
+                paramServices.that.services = _.reject(_.map(data, service => {
+                    let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
+                    let groupe = _.findWhere(paramServices.that.columns.classe.data, {id: service.id_groupe});
+                    let matiere = _.findWhere(paramServices.that.columns.matiere.data, {id: service.id_matiere});
+                    let missingParams = {
+                        id_etablissement: paramServices.that.idStructure,
+                        nom_enseignant: enseignant ? enseignant.displayName : null,
+                        nom_matiere: matiere ? matiere.name : null,
+                        nom_groupe: groupe ? groupe.name : null};
+                    return new paramServices.that.Service(_.defaults(service, missingParams ));
+                }), service => service.hasNullProperty());
+
+                await this.stopMessageLoader();
+            })
+                .catch( async (error) => {
+                    console.error(error);
+                    await this.stopMessageLoader();
+                });
+        },
+        init: async function () {
+            console.log(" ParamServices");
             this.idStructure = this.source.idStructure;
             this.services = [];
             this.search = "";
@@ -172,37 +194,31 @@ export const paramServices = {
             };
 
             paramServices.that = this;
+            await this.runMessageLoader();
 
             Promise.all([this.getClasses(), this.getMatieres(), this.getTeachers(), this.getModalite(), this.getRemplacements()])
-                .then(function([aClasses, aMatieres, aTeachers, aModalite, aRemplacement]) {
+                .then(async function([aClasses, aMatieres, aTeachers, aModalite, aRemplacement]) {
                     paramServices.that.columns.classe.data = aClasses.data;
                     paramServices.that.columns.enseignant.data = _.map(aTeachers.data, teacher => teacher.u.data);
                     paramServices.that.columns.matiere.data = aMatieres.data;
                     paramServices.that.columns.modalite.data = _.pluck(aModalite.data, "id");
                     paramServices.that.remplacements = aRemplacement.data;
 
-                    paramServices.that.getServices().then(function ({data}) {
-                        paramServices.that.services = _.reject(_.map(data, service => {
-                            let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
-                            let groupe = _.findWhere(paramServices.that.columns.classe.data, {id: service.id_groupe});
-                            let matiere = _.findWhere(paramServices.that.columns.matiere.data, {id: service.id_matiere});
-                            let missingParams = {
-                                id_etablissement: paramServices.that.idStructure,
-                                nom_enseignant: enseignant ? enseignant.displayName : null,
-                                nom_matiere: matiere ? matiere.name : null,
-                                nom_groupe: groupe ? groupe.name : null};
-                            return new paramServices.that.Service(_.defaults(service, missingParams ));
-                        }), service => service.hasNullProperty());
-                        paramServices.that.displayMessageLoader = false;
-                        utils.safeApply(paramServices.that)
-                    });
+                    await paramServices.that.initServices();
                 });
         },
 
         translate: function(key) {
             return lang.translate(key);
         },
-
+        runMessageLoader: async function () {
+            paramServices.that.displayMessageLoader = true;
+            await utils.safeApply(paramServices.that);
+        },
+        stopMessageLoader: async function ( ) {
+            paramServices.that.displayMessageLoader = false;
+            await utils.safeApply(paramServices.that);
+        },
         updateFilterEvaluable: function (selectedHeader) {
             _.each(paramServices.that.headers, header => header.isSelected = false);
             selectedHeader.isSelected = true;
@@ -238,31 +254,33 @@ export const paramServices = {
                 id_groupe: service.id_groupe})  ;
         },
 
-        checkDevoirsService: function (service, callback) {
-            service.getDevoirsService().then(function ({data}) {
+        checkDevoirsService: async function (service, callback) {
+            service.getDevoirsService().then(async function ({data}) {
                 if (data.length == 0) {
-                    callback();
+                    await callback();
                 } else {
                     paramServices.that.service = service;
                     paramServices.that.devoirs = data;
                     paramServices.that.callback = callback;
                     paramServices.that.error = paramServices.that.translate("evaluations.service.devoir.error").replace("[nbDevoir]", paramServices.that.devoirs.length);
                     paramServices.that.lightboxes.switchEval = true;
-                    utils.safeApply(paramServices.that)
+                    await utils.safeApply(paramServices.that);
                 }
             })
         },
 
-        switchEvaluableService: function(service) {
+        switchEvaluableService: async function(service) {
             if(service.evaluable) {
-                service.updateServiceEvaluable();
+                await service.updateServiceEvaluable();
             } else {
-                paramServices.that.checkDevoirsService(service, () => service.updateServiceEvaluable())
+                await paramServices.that.checkDevoirsService(service, () => service.updateServiceEvaluable());
             }
         },
 
-        deleteService: function(service) {
-            paramServices.that.checkDevoirsService(service, () => service.deleteService());
+        deleteService: async function(service) {
+            await  paramServices.that.checkDevoirsService(service, () => service.deleteService());
+            notify.success('evaluation.service.delete');
+            await paramServices.that.initServices();
         },
 
         doUpdateOrDelete: function (updateOrDelete, devoirs, service) {
@@ -271,24 +289,40 @@ export const paramServices = {
                 case "update": {
                     if(paramServices.that.matiereSelected) {
                         let matiere = paramServices.that.matiereSelected;
-                        service.updateDevoirsService(id_devoirs, matiere).then(() => {
+                        if(matiere === service.id_matiere){
+                            notify.info('evaluation.service.choose.another.subject');
+                            break;
+                        }
+                        service.updateDevoirsService(id_devoirs, matiere).then(async () => {
                             let nom_matiere = _.findWhere(paramServices.that.columns.matiere.data, {id : matiere}).name;
-                            let newService = new paramServices.that.Service({...service.toJson(), id_matiere: matiere,
-                                nom_matiere: nom_matiere, evaluable: true});
-                            newService.createService();
+                            let newService = new paramServices.that.Service({...service.toJson(),
+                                id_matiere: matiere, nom_matiere: nom_matiere, evaluable: true});
+                            await newService.createService();
                             paramServices.that.services.push(newService);
-                            paramServices.that.callback();
+                            await paramServices.that.callback();
                             paramServices.that.lightboxes.switchEval = false;
-                            utils.safeApply(paramServices.that);
+                            notify.success('evaluation.service.update');
+                            await paramServices.that.initServices();
                         });
                     }
+                    else {
+                        notify.info('evaluation.service.choose.a.subject');
+                    }
                 }
-                break;
+                    break;
                 case "delete" : {
-                    service.deleteDevoirsService(id_devoirs).then(() => {
-                        paramServices.that.callback();
-                        paramServices.that.lightboxes.switchEval = false;
-                        utils.safeApply(paramServices.that);
+                    service.deleteDevoirsService(id_devoirs).then(async () => {
+                        try {
+                            await paramServices.that.callback();
+                            paramServices.that.lightboxes.switchEval = false;
+                            notify.success('evaluation.service.delete');
+                            await paramServices.that.initServices();
+                        }
+                        catch (e) {
+                            console.error(e);
+                            notify.error('evaluation.service.delete.error');
+                        }
+
                     });
                 }
             }
@@ -315,15 +349,16 @@ export const paramServices = {
                     modalite: 'S',
                     evaluable: true
                 });
-            paramServices.that.lightboxes.create = true
+            paramServices.that.lightboxes.create = true;
         },
 
-        createService: function(service) {
+        createService: async function(service) {
             try {
-                service.createService();
+                await service.createService();
+                notify.success('evaluation.service.create');
             } finally {
                 paramServices.that.lightboxes.create = false;
-                utils.safeApply(paramServices.that)
+                await paramServices.that.initServices();
             }
         },
 
