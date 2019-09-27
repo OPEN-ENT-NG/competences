@@ -15,9 +15,10 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { http, Model, _ } from 'entcore';
+import {http, Model, _, Collection} from 'entcore';
 import {DefaultMatiere} from "../common/DefaultMatiere";
 import {Competence} from "./Competence";
+import {SousMatiere} from "./TypeSousMatiere";
 
 export class Matiere extends DefaultMatiere {
     id: string;
@@ -25,51 +26,11 @@ export class Matiere extends DefaultMatiere {
     externalId: string;
     ens: any = [];
     moyenne: number;
-
+    sousMatieres: Collection<SousMatiere>;
     constructor () {
         super()
         this.collection(Competence);
+        this.collection(SousMatiere);
     }
 
-    get api () {
-        return {
-            calculMoyenne: '/competences/eleve/'
-        };
-    }
-
-    /**
-     * Recupère la moyenne d'un élève en fonction de devoirs
-     * donnés en paramètre
-     * @param id_eleve id de l'élève
-     * @param devoirs Les devoirs pris en compte pour le calcul de moyenne
-     * @returns {Promise<any>} Promesse de retour
-     */
-    getMoyenne (id_eleve, devoirs?) : Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (devoirs) {
-                let idDevoirsURL = "";
-
-                _.each(_.pluck(devoirs,'id'), (id) => {
-                    idDevoirsURL += "devoirs=" + id + "&";
-                });
-                idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
-
-                http().getJson(this.api.calculMoyenne + id_eleve + "/moyenne?" + idDevoirsURL).done(function (res) {
-                    if (!res.error) {
-                        if (!res.hasNote) {
-                            this.moyenne = "NN";
-                        }
-                        else {
-                            this.moyenne = res.moyenne;
-                        }
-                    } else {
-                        this.moyenne = "";
-                    }
-                    if(resolve && typeof(resolve) === 'function'){
-                        resolve();
-                    }
-                }.bind(this));
-            }
-        });
-    }
 }

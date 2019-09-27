@@ -59,7 +59,8 @@ export class Evaluations extends Model {
             GET_COMPETENCES : '/viescolaire/competences/eleve/',
             GET_ANNOTATION : '/viescolaire/annotations/eleve/',
             GET_ARBRE_DOMAINE : '/competences/domaines?idClasse=',
-            GET_ENSEIGNEMENT: '/competences/enseignements'
+            GET_ENSEIGNEMENT: '/competences/enseignements',
+            calculMoyenne: '/competences/eleve/'
         };
     }
 
@@ -104,8 +105,13 @@ export class Evaluations extends Model {
                         for (let matiere in mapMatiere) {
                             uri = uri + '&idMatiere=' + matiere;
                         }
-                        http().get(uri).done((matieres) => {
-                            this.matieres.load(matieres);
+                        http().get(uri).done( (matieresResult) => {
+                            this.matieres.load(matieresResult);
+                            this.matieres.all.forEach( (matiere) =>{
+                                if (matiere.hasOwnProperty('sous_matieres')) {
+                                    matiere.sousMatieres.load(_.find(matieresResult,{id : matiere.id}).sous_matieres);
+                                }
+                            })
                             resolve();
                         }).bind(this);
                     });

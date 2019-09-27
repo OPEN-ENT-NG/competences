@@ -24,4 +24,5 @@ export * from './functions/safeApply';
 export * from './functions/translate';
 export * from './functions/scrollTo';
 export * from './functions/initChartsEval';
+export * from './functions/average';
 // export * from '../../utils/functions/getDefaultPeriode';

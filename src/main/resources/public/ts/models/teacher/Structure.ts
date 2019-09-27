@@ -306,7 +306,7 @@ export class Structure extends Model {
                     }.bind(this));
                 });
             }
-        });
+        })
         this.collection(Annotation, {
             sync: function () {
                 return new Promise((resolve, reject) => {

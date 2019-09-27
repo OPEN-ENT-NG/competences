@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { _ } from 'entcore';
+import {_, http} from 'entcore';
 /**
  * @param arr liste de nombres
  * @returns la moyenne si la liste n'est pas vide
@@ -24,4 +24,34 @@ export function average (arr) {
     return _.reduce(arr, function(memo, num) {
             return memo + num;
         }, 0) / (arr.length === 0 ? 1 : arr.length);
+}
+
+export function  getMoyenne (id_eleve, object, devoirs?) : Promise<any> {
+     return new Promise(  (resolve, reject) => {
+        if (devoirs) {
+            let idDevoirsURL = "";
+
+            _.each(_.pluck(devoirs,'id'), (id) => {
+                idDevoirsURL += "devoirs=" + id + "&";
+            });
+            idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
+
+            http().getJson('/competences/eleve/' + id_eleve + "/moyenne?" + idDevoirsURL).done(function (res) {
+                if (!res.error) {
+                    if (!res.hasNote) {
+                        object.moyenne = "NN";
+                    }
+                    else {
+                        object.moyenne = res.moyenne;
+                    }
+                } else {
+                    object.moyenne = "";
+                }
+
+                if(resolve && typeof(resolve) === 'function'){
+                    resolve();
+                }
+            }.bind(this));
+        }
+    });
 }

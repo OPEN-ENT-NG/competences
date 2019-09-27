@@ -33,7 +33,7 @@ export let releveController = ng.controller('ReleveController', [
          * Calcul la moyenne pour chaque matière
          * contenue dans $scope.matieres
          */
-        $scope.calculMoyenneMatieres = function() {
+        $scope.calculMoyenneMatieres = async function() {
             if ($scope.dataReleve === undefined) {
                 return ;
             }
@@ -48,7 +48,20 @@ export let releveController = ng.controller('ReleveController', [
                     } else {
                         id_eleve = $scope.eleve.id;
                     }
-                    matiere.getMoyenne(id_eleve, devoirsMatieres).then(() => {
+                     utils.getMoyenne( id_eleve, matiere, devoirsMatieres).then(() => {
+                        if ( matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0 ){
+                            matiere.sousMatieres.all.forEach( (sousMat) => {
+                                let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
+                                if( devoirsSousMat.length > 0 ){
+                                    utils.getMoyenne(id_eleve, sousMat, devoirsSousMat).then(()=> {
+                                        utils.safeApply($scope);
+                                    });
+                                }else{
+                                    sousMat.moyenne = "";
+                                }
+                                utils.safeApply($scope);
+                            });
+                        }
                         utils.safeApply($scope);
                     });
                 }
@@ -142,6 +155,14 @@ export let releveController = ng.controller('ReleveController', [
         $scope.isEvaluated = (devoir) => {
             return devoir.is_evaluated && (devoir.note !== undefined || devoir.annotation !== undefined);
         };
+
+        $scope.hasDevoirWithUnderSubject = (sousMat) => {
+            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) =>{
+                return (devoir.note !== undefined || devoir.annotation !== undefined)
+            });
+            return _.some(devoirWithNote,
+                {id_matiere: sousMat.id_matiere,id_sousmatiere: sousMat.id_type_sousmatiere,is_evaluated:true});
+        }
 
         $scope.checkHaveResult = function () {
             let res = false;

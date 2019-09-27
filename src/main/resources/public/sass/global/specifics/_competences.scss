@@ -2917,6 +2917,17 @@ body.evaluations {
         }
       }
     }
+
+    .background-grey{
+      background: rgba(0,0,0,0.05) !important;
+    }
+
+    .background-white{
+      background: $white !important;
+    }
+    .height80{
+      line-height: 80px;
+    }
     .list-devoirs {
       .testAlignLeft {
         @media screen and (min-device-width:$fat-mobile) {
