@@ -1747,9 +1747,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if ($location.path() === "/devoir/create") {
                 $scope.devoir = $scope.initDevoir();
                 let classes = _.filter($scope.structure.classes.all, (classe) => {
-                    return $scope.isValidClasse(classe.id)});
+                    return $scope.isValidClasseMatiere(classe.id)});
                 if(!_.isEmpty(classes)) {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", classes).id;
+
                     $scope.devoir.id_type = _.findWhere($scope.structure.types.all, {default_type: true}).id;
 
                     let currentPeriode = await $scope.getCurrentPeriode(_.findWhere(classes,
@@ -1758,14 +1759,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($scope.devoir.id_periode == null
                         && $scope.search.periode && $scope.search.periode !== "*") {
                         $scope.devoir.id_periode = $scope.search.periode.id_type;
-                        utils.safeApply($scope);
+                       await utils.safeApply($scope);
                     }
                     $scope.hideCreation = false;
                 }
                 else {
                     $scope.hideCreation = true;
                     template.open('main', 'enseignants/creation_devoir/display_creation_devoir');
-                    utils.safeApply($scope);
+                    await utils.safeApply($scope);
                     return;
                 }
             }
@@ -1830,8 +1831,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 //$scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
                 $scope.devoir.matiere = $filter('getMatiereClasse')($scope.structure.matieres.all,
                     $scope.devoir.id_groupe, $scope.classes, $scope.search)[0];
-                $scope.devoir.id_matiere = $scope.devoir.matiere.id;
-                if ($scope.devoir.matiere.sousMatieres !== undefined
+                let matiere = $scope.devoir.matiere;
+                $scope.devoir.id_matiere = (matiere === undefined)? undefined : matiere.id;
+                if ($scope.devoir.matiere !== undefined &&  $scope.devoir.matiere.sousMatieres !== undefined
                     && $scope.devoir.matiere.sousMatieres.all.length > 0) {
                     // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
                     $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
@@ -2176,9 +2178,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($location.path() === "/devoir/create") {
                         if (res !== undefined) {
                             let _devoir = evaluations.structure.devoirs.findWhere({id: res.id});
-                            evaluations.structure.devoirs.getPercentDone(_devoir).then(() => {
-                                utils.safeApply($scope);
+                            evaluations.structure.devoirs.getPercentDone(_devoir).then(async () => {
                                 $location.path("/devoir/" + res.id);
+                                await utils.safeApply($scope);
                             });
                         }
 
