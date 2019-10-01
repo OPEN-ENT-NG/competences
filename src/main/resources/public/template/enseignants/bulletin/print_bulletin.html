@@ -122,22 +122,37 @@
                         </span></label>
                         </div>
                         <div class="four cell twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.moyenneEleveSousMat"/><span>
-                            <i18n>evaluations.moyenne.sous.matiere.eleve</i18n>
-                        </span></label>
+                            <div ng-show="print.moyenneEleve">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.moyenneEleveSousMat"/>
+                                    <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
+                                </label>
+                            </div>
+                            <div ng-hide="print.moyenneEleve">
+                                &nbsp;
+                            </div>
                         </div>
                         <div class="four cell twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.moyenneClasseSousMat"/><span>
-                            <i18n>evaluations.moyenne.sous.matiere.classe</i18n>
-                        </span></label>
+                            <div ng-show="print.moyenneClasse">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.moyenneClasseSousMat"/>
+                                    <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
+                                </label>
+                            </div>
+                            <div ng-hide="print.moyenneClasse">
+                                &nbsp;
+                            </div>
                         </div>
                         <div class="four cell twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.positionnementSousMat"/><span>
-                            <i18n>evaluations.positionnement.sous.matiere</i18n>
-                        </span></label>
+                            <div ng-show="print.positionnement">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.positionnementSousMat"/>
+                                    <span><i18n>evaluations.positionnement.with.sous.matiere</i18n></span>
+                                </label>
+                            </div>
+                            <div ng-hide="print.positionnement">
+                                &nbsp;
+                            </div>
                         </div>
                     </fieldset>
 
@@ -279,7 +294,7 @@
                     <fieldset class="eleven">
                         <ul class="twelve selectable-list">
                             <li ng-repeat="model in (filteredModels = (models.all | filter:filterSearch(search) | orderBy:'title'))"
-                                    style="margin-bottom: 0px;"  ng-class="{selected: print.idModel === model.id}">
+                                style="margin-bottom: 0px;"  ng-class="{selected: print.idModel === model.id}">
                                 <span
                                         ng-click="model.show = !model.show"><i18n >evaluations.model</i18n>
                                     &nbsp;:&nbsp;[[model.title]]

@@ -79,7 +79,6 @@
         }
 
         td {
-            background-color: #EFF7FC;
             margin: 4px;
             padding: 10px;
         }
@@ -92,13 +91,7 @@
 
         .start { page-break-before : left }
 
-        table tr:nth-child(odd) td {
-            background-color: #E2F0FA;
-        }
 
-        table tr:nth-child(even) td {
-            background-color: #EFF7FC;
-        }
         table tr:first-child td {
             background-color: #e2f3fb;
         }
@@ -256,6 +249,7 @@
             padding: 1px !important;
             overflow: hidden;
             text-overflow: ellipsis;
+            vertical-align: middle !important;
         }
         .emptyClass {
             padding-top: 1px;
@@ -351,7 +345,11 @@
             {{#getProgramElements}}
             <td class="secondSuivi">{{suiviElementLibelle}}</td>
             {{/getProgramElements}}
+
             <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
+            {{#printSousMatieres}}
+            <td class="fourthSuivi"></td>
+            {{/printSousMatieres}}
             {{#getMoyenneEleve}}
             <td class="fourthSuivi">{{moyenneStudentLibelle}}</td>
             {{/getMoyenneEleve}}
@@ -366,63 +364,172 @@
         {{#suiviAcquis}}
         {{#printMatiere}}
         <tr>
-            <td class="left-align emptyClass">
+            <td style= "border-right: none; background-color: {{{backgroundColor}}}"  rowspan="{{rowSpan}}"
+                class="left-align emptyClass">
                 <span style="font-size: small; font-weight: bold">{{libelleMatiere}}</span><br/>
 
                 <div class="inlineBlock">{{#teachers}}
-                <span style="color: black; font-size: smaller;">{{initial}}.{{name}}</span>
-                {{/teachers}}</div>
-                <div class="inlineBlock">
-                {{#printSousMatieres}}
-                    {{#sousMatieres}}
-                    <br/>
-                    <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
-                    {{/sousMatieres}}
-                {{/printSousMatieres}}
-                </div>
+                    <span style="color: black; font-size: smaller;">{{initial}}.{{name}}</span>
+                    {{/teachers}}</div>
             </td>
+
             {{#getProgramElements}}
             {{#display}}
-            <td style="text-align: left; word-wrap:break-word;{{{style}}}" class="secondSuivi onePadding">
+            <td rowspan="{{rowSpan}}"
+                style="text-align: left; background-color: {{{backgroundColor}}}; word-wrap:break-word;{{{style}}}"
+                class="secondSuivi onePadding">
                 {{/display}}
                 {{elementsProgramme}}</td>
 
             {{/getProgramElements}}
             {{#display}}
-            <td style="text-align: left;word-wrap:break-word; {{{style}}}" class="thirdSuivi onePadding">
+
+            <td rowspan="{{rowSpan}}"
+                style="text-align: left; background-color: {{{backgroundColor}}};word-wrap:break-word; {{{style}}}"
+                class="thirdSuivi onePadding">
                 {{/display}}
                 {{appreciation}}</td>
+
+        {{#printSousMatieres}}
+           {{^hasSousMatiere}}
+            <td style=" border-left: none;font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="fifthSuivi onePadding">
+                <br/>
+            </td>
             {{#getMoyenneEleve}}
-            <td style="font-size: x-small; font-weight: bold" class="fourthSuivi onePadding">
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
+                class="fourthSuivi onePadding">
                 {{moyenneEleve}}
+            </td>
+            {{/getMoyenneEleve}}
+            {{#getMoyenneClasse}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="fifthSuivi onePadding">
+                {{moyenneClasse}}
+            </td>
+            {{/getMoyenneClasse}}
+            {{#getPositionnement}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="sixthSuivi onePadding">
+                {{positionnement}}
+            </td>
+            {{/getPositionnement}}
+           {{/hasSousMatiere}}
+
+
+           {{#hasSousMatiere}}
+            {{#firstSousMatiere}}
+            <td style=" border-left: none;background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
+                <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
+            </td>
+            {{#getMoyenneEleve}}
+            <td style="background-color: {{{backgroundColor}}}" class="fourthSuivi onePadding">
                 {{#moyenneEleveSousMat}}
-                {{#sousMatieres}}
-                <br/><span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
-                {{/sousMatieres}}
+                <span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
                 {{/moyenneEleveSousMat}}
             </td>
             {{/getMoyenneEleve}}
             {{#getMoyenneClasse}}
-            <td style="font-size: x-small; font-weight: bold" class="fifthSuivi onePadding">
-                {{moyenneClasse}}
+            <td style="background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
                 {{#moyenneClasseSousMat}}
-                {{#sousMatieres}}
-                <br/><span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
-                {{/sousMatieres}}
+                <span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
                 {{/moyenneClasseSousMat}}
             </td>
             {{/getMoyenneClasse}}
             {{#getPositionnement}}
-            <td style="font-size: x-small; font-weight: bold" class="sixthSuivi onePadding">
-                {{positionnement}}
+            <td style="background-color: {{{backgroundColor}}}" class="sixthSuivi onePadding">
                 {{#positionnementSousMat}}
-                {{#sousMatieres}}
-                <br/><span style="font-size: xx-small; font-weight: normal">{{positionnement}}</span>
-                {{/sousMatieres}}
+                <span style="font-size: xx-small; font-weight: normal">{{positionnement}}</span>
+                {{/positionnementSousMat}}
+            </td>
+            {{/getPositionnement}}
+            {{/firstSousMatiere}}
+          {{/hasSousMatiere}}
+        {{/printSousMatieres}}
+        {{^printSousMatieres}}
+            {{#getMoyenneEleve}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
+                class="fourthSuivi onePadding">
+                {{moyenneEleve}}
+            </td>
+            {{/getMoyenneEleve}}
+            {{#getMoyenneClasse}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="fifthSuivi onePadding">
+                {{moyenneClasse}}
+            </td>
+            {{/getMoyenneClasse}}
+            {{#getPositionnement}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="sixthSuivi onePadding">
+                {{positionnement}}
+            </td>
+            {{/getPositionnement}}
+        {{/printSousMatieres}}
+        </tr>
+    {{#printSousMatieres}}
+
+
+        {{#sousMatieres}}
+        <tr>
+            <td style=" border-left: none;background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
+                <span style="font-size: xx-small; font-weight: normal">{{libelle}}</span>
+            </td>
+            {{#getMoyenneEleve}}
+            <td style="background-color: {{{backgroundColor}}}" class="fourthSuivi onePadding">
+                {{#moyenneEleveSousMat}}
+                <span style="font-size: xx-small; font-weight: normal">{{moyenneEleve}}</span>
+                {{/moyenneEleveSousMat}}
+            </td>
+            {{/getMoyenneEleve}}
+            {{#getMoyenneClasse}}
+            <td style="background-color: {{{backgroundColor}}}" class="fifthSuivi onePadding">
+                {{#moyenneClasseSousMat}}
+                <span style="font-size: xx-small; font-weight: normal">{{moyenneClasse}}</span>
+                {{/moyenneClasseSousMat}}
+            </td>
+            {{/getMoyenneClasse}}
+            {{#getPositionnement}}
+            <td style="background-color: {{{backgroundColor}}}" class="sixthSuivi onePadding">
+                {{#positionnementSousMat}}
+                <span style="font-size: xx-small; font-weight: normal">{{positionnement}}</span>
                 {{/positionnementSousMat}}
             </td>
             {{/getPositionnement}}
         </tr>
+        {{/sousMatieres}}
+
+        {{#hasSousMatiere}}
+        <tr>
+            {{#printSousMatieres}}
+            <td style=" border-left: none;font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="fifthSuivi onePadding">
+                <br/>
+            </td>
+            {{/printSousMatieres}}
+            {{#getMoyenneEleve}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}} "
+                class="fourthSuivi onePadding">
+                {{moyenneEleve}}
+            </td>
+            {{/getMoyenneEleve}}
+            {{#getMoyenneClasse}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="fifthSuivi onePadding">
+                {{moyenneClasse}}
+            </td>
+            {{/getMoyenneClasse}}
+            {{#getPositionnement}}
+            <td style="font-size: x-small; font-weight: bold; background-color: {{{backgroundColor}}}"
+                class="sixthSuivi onePadding">
+                {{positionnement}}
+            </td>
+            {{/getPositionnement}}
+
+        </tr>
+        {{/hasSousMatiere}}
+    {{/printSousMatieres}}
+
         {{/printMatiere}}
         {{/suiviAcquis}}
     </table>
@@ -498,16 +605,16 @@
             <div style="background-color: #eef4d7 !important; min-height: 20px; font-size: small;" class="synthese">
                 {{syntheseBilanPeriodque}}<br/>
                 {{#hasAvisConseil}}
-                    <span style="font-weight: bold">
+                <span style="font-weight: bold">
                         {{beforeAvisConseil}}
                     </span>
-                    {{avisConseil}}
+                {{avisConseil}}
                 {{/hasAvisConseil}}<br/>
                 {{#hasAvisOrientation}}
-                    <span style="font-weight: bold">
+                <span style="font-weight: bold">
                         {{beforeAvisOrientation}}
                     </span>
-                    {{avisOrientation}}
+                {{avisOrientation}}
                 {{/hasAvisOrientation}}
             </div>
         </div>

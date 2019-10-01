@@ -59,4 +59,7 @@ public interface ExportService {
     void getElevesExportReleveComp(final String finalIdClasse, String idStructure, String finalIdEleve,
                                    final Long finalIdPeriode, final Map<String, String> elevesMap,
                                    Handler<Either<String, Object>> handler);
+
+    void getDataForExportReleveEleve(String idUser, String idEtablissement, Long idPeriode,
+                                     final MultiMap params, Handler<Either<String, JsonObject>> handler);
 }

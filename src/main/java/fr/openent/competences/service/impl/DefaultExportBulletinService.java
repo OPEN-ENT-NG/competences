@@ -72,7 +72,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String GET_ARBRE_DOMAINE_METHOD = "getArbreDomaines";
     private static final String GET_DATA_FOR_GRAPH_DOMAINE_METHOD = "getBilanPeriodiqueDomaineForGraph";
     private static final String PRINT_SOUS_MATIERES = "printSousMatieres";
-
+    private static final String BACKGROUND_COLOR = "backgroundColor";
     // Keys Utils
     private static final String APPRECIATION_KEY = "appreciation";
     private static final String PRINT_MATIERE_KEY = "printMatiere";
@@ -376,7 +376,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(HAS_IMG_STRUCTURE, params.getBoolean(HAS_IMG_STRUCTURE))
                     .put(IMG_SIGNATURE, params.getString(IMG_SIGNATURE))
                     .put(HAS_IMG_SIGNATURE, params.getBoolean(HAS_IMG_SIGNATURE))
-                    .put(NAME_CE, params.getString(NAME_CE));
+                    .put(NAME_CE, params.getString(NAME_CE))
+                    .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES));
 
         }
         log.debug(" -------[" + PUT_LIBELLE_FOR_EXPORT_METHOD +" ]: " + idEleve + " FIN " );
@@ -1631,6 +1632,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     // matière
                                     for (int i = 0; suiviAcquis != null && i < suiviAcquis.size() ; i++) {
                                         final JsonObject matiere = suiviAcquis.getJsonObject(i);
+                                        matiere.put(BACKGROUND_COLOR, (res.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
                                         // Une matière sera affichée si on a au moins un élement sur la période
                                         final boolean printMatiere = false;
                                         buildMatiereForSuiviAcquis (matiere, printMatiere, idPeriode, classe, params);
@@ -1772,10 +1774,19 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         Boolean printMoyEl = params.getBoolean(MOYENNE_ELEVE_SOUS_MAT);
         Boolean printMoyCl = params.getBoolean(MOYENNE_CLASSE_SOUS_MAT);
         matiere.put(POSITIONNEMENT_SOUS_MAT, printPosi).put(MOYENNE_CLASSE_SOUS_MAT, printMoyCl)
-                .put(MOYENNE_ELEVE_SOUS_MAT, printMoyEl);
+                .put(MOYENNE_ELEVE_SOUS_MAT, printMoyEl).put(GET_MOYENNE_CLASSE, params.getBoolean(MOYENNE_CLASSE))
+                .put(GET_MOYENNE_ELEVE, params.getBoolean(MOYENNE_ELEVE))
+                .put(GET_POSITIONNEMENT, params.getBoolean(POSITIONNEMENT));
+
+        int rowSpan = (isNull(sousMatiere) || !params.getBoolean(PRINT_SOUS_MATIERES))? 1 : sousMatiere.size()+1;
+        String backgroundColor = matiere.getString(BACKGROUND_COLOR);
+        matiere.put("rowSpan", rowSpan)
+                .put("hasSousMatiere", isNull(sousMatiere)? false : sousMatiere.size()>0);
+        JsonArray sousMatiereWithoutFirst = new JsonArray();
         if(isNotNull(sousMatiere)) {
             for (int i = 0; i < sousMatiere.size(); i++){
                 JsonObject sousMat = sousMatiere.getJsonObject(i);
+                sousMat.put(BACKGROUND_COLOR, backgroundColor);
                 Long idSousMat = sousMat.getLong(ID_TYPE_SOUS_MATIERE);
 
                 if(isNotNull(idSousMat)) {
@@ -1797,8 +1808,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     JsonObject moyenClasseSous = matiere.getJsonObject("_moyennesClasse");
                     Float moyCl = getMoyenneForSousMat(moyenClasseSous, idPeriode, idSousMat);
                     sousMat.put(MOYENNE_CLASSE, isNull(moyCl)? NN : moyCl);
+                    if(i!=0){
+                        sousMatiereWithoutFirst.add(sousMat);
+                    }
+                    if(i==0){
+                        matiere.put("firstSousMatiere", sousMat);
+                    }
                 }
             }
+            matiere.remove(SOUS_MATIERES);
+            matiere.put(SOUS_MATIERES, sousMatiereWithoutFirst);
         }
     }
     /**

@@ -51,7 +51,11 @@ export class ExportBulletins {
         if(o.useModel === true) {
             _.extend(o, {idModel : options.idModel});
         }
-        _.extend(o, {printSousMatieres : (o.moyenneClasseSousMat || o.moyenneEleveSousMat || o.positionnementSousMat)});
+        _.extend(o, {printSousMatieres :
+                (o.moyenneClasseSousMat || o.moyenneEleveSousMat || o.positionnementSousMat)});
+        if(!o.moyenneClasse && !o.moyenneEleve && !o.positionnement){
+            o['printSousMatieres'] = false;
+        }
         return o;
     }
 
