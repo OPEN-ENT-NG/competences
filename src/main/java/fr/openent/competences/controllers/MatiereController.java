@@ -84,4 +84,11 @@ public class MatiereController extends ControllerHelper {
     public void deleteModel(final HttpServerRequest request) {
         matiereService.deleteModeleLibelle(request.params().get("id"), arrayResponseHandler(request));
     }
+
+    @Get("/matieres/devoirs/update")
+    @ApiDoc("ont met par défaut une sousMatiere à chaque devoir")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    public void updateDevoirs(final HttpServerRequest request) {
+        matiereService.updateDevoirs(null, arrayResponseHandler(request));
+    }
 }

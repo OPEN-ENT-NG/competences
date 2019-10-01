@@ -25,6 +25,8 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -796,5 +798,11 @@ public class Utils {
         return o == null;
     }
 
+    public static  <T> void returnFailure(String method, AsyncResult<CompositeFuture> event,
+                                     Handler<Either<String, T>> handler){
+        String cause = event.cause().getMessage();
+        log.error(method + cause);
+        handler.handle(new Either.Left<>(cause));
+    }
 }
 

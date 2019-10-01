@@ -17,11 +17,14 @@ import io.vertx.core.Handler;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.getLibelle;
+import static fr.openent.competences.Utils.*;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.sql.Sql.listPrepared;
 
 
 public class DefaultMatiereService extends SqlCrudService implements MatiereService {
@@ -31,6 +34,7 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
     private static String modelSubjectLibelleTable = VSCO_SCHEMA + "." + VSCO_MODEL_MATIERE_LIBELLE_TABLE;
     private static String underSubjectTable =  VSCO_SCHEMA + ".sousmatiere";
     private static String typeUnderSubjectTable =  VSCO_SCHEMA + ".type_sousmatiere"  ;
+    private static String ID_SOUS_MATIERE = "id_sousmatiere";
 
     private  EventBus eb;
     private static final String LIBELLE_COURT = "libelle_court";
@@ -262,17 +266,17 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
         // Récupération des matières de l'établissement dans l'annuaire
         Future<JsonArray> subjectNeo = Future.future();
         listMatieresEtab(idStructure, subjectsEvent ->
-                FormateFutureEvent.formate(subjectNeo, subjectsEvent));
+                formate(subjectNeo, subjectsEvent));
 
         // Récupération des libelles courts dans la table notes.matiere
         Future<JsonArray> libelleCourt = Future.future();
         getDefaultLibele( event ->
-                FormateFutureEvent.formate(libelleCourt, event));
+                formate(libelleCourt, event));
 
         // Récupération des libelles et des models de l'établissement
         Future<JsonArray> modelsFuture = Future.future();
         getLibelleMatierePostgres(idStructure, idModelToget, modelsEvent ->
-                FormateFutureEvent.formate(modelsFuture, modelsEvent));
+                formate(modelsFuture, modelsEvent));
 
         CompositeFuture.all(subjectNeo, modelsFuture, libelleCourt).setHandler(
                 event -> {
@@ -381,5 +385,96 @@ public class DefaultMatiereService extends SqlCrudService implements MatiereServ
                 handler.handle(new Either.Left<>(body.getString(MESSAGE)));
             }
         }));
+    }
+
+    private void getDevoirsToUpdate(JsonArray idsMatieres,  Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT DISTINCT devoirs.*\n" +
+                " FROM " + COMPETENCES_SCHEMA + ".devoirs\n" +
+                " INNER JOIN " +
+                "      " + VSCO_SCHEMA + ".sousmatiere " +
+                "       ON devoirs.id_matiere = sousmatiere.id_matiere  AND " +
+                (isNull(idsMatieres)? "true" : listPrepared(idsMatieres.getList())) +
+                "       AND devoirs.id_sousmatiere IS NULL;";
+
+        JsonArray params = new JsonArray();
+        if(isNotNull(idsMatieres)){
+            params.addAll(idsMatieres);
+        }
+        sql.prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+    private void getSubJectInfos(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT id_type_sousmatiere as id_sousmatiere, id_matiere , libelle\n" +
+                " FROM " + VSCO_SCHEMA + ".sousmatiere\n" +
+                " INNER JOIN "  + VSCO_SCHEMA + ".type_sousmatiere " +
+                "       ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id AND " +
+                (isNull(idsMatieres)? "true" : listPrepared(idsMatieres.getList()));
+
+        JsonArray params = new JsonArray();
+        if(isNotNull(idsMatieres)){
+            params.addAll(idsMatieres);
+        }
+        sql.prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    private JsonObject buildUpdateDevoir(JsonObject devoir, JsonObject sousMatiere){
+        String query =
+                " UPDATE " + COMPETENCES_SCHEMA + ".devoirs " +
+                        " SET id_sousmatiere = ? " +
+                        " WHERE id = ? ";
+
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(sousMatiere.getLong(ID_SOUS_MATIERE)).add(devoir.getLong(ID_KEY));
+
+        return new JsonObject().put("statement", query).put("values", values).put("action", "prepared");
+    }
+
+    public void updateDevoirs(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler){
+        //Récupération des matières avec sousMatières
+        Future<JsonArray> subjectFuture = Future.future();
+        getSubJectInfos(idsMatieres, event -> formate(subjectFuture, event));
+
+        //Récupération des devoirs rattachés auxMatières avec sousMAtières
+        Future<JsonArray> devoirsFuture = Future.future();
+        getDevoirsToUpdate(idsMatieres, event -> formate(devoirsFuture, event));
+
+        CompositeFuture.all(devoirsFuture, subjectFuture).setHandler( event -> {
+           if(event.failed()){
+               returnFailure("updateDevoirs", event, handler);
+               return;
+           }
+            JsonArray subjects = subjectFuture.result();
+            Map<String, JsonObject> defaultSousMatiere = new HashMap<>();
+            for(int i = 0; i<subjects.size(); i++){
+                JsonObject subject = subjects.getJsonObject(i);
+                String idMatiere = subject.getString(ID_MATIERE);
+                if(defaultSousMatiere.containsKey(idMatiere)){
+                    continue;
+                }
+                defaultSousMatiere.put(idMatiere, subject);
+            }
+
+            JsonArray statements = new JsonArray();
+            JsonArray devoirs = devoirsFuture.result();
+            for(int i=0; i<devoirs.size(); i++){
+                JsonObject devoir = devoirs.getJsonObject(i);
+                String idMatiereDevoir = devoir.getString(ID_MATIERE);
+                JsonObject sousMatiere = defaultSousMatiere.get(idMatiereDevoir);
+                statements.add(buildUpdateDevoir(devoir, sousMatiere));
+                devoir.put("sousMatiere", sousMatiere.getString(LIBELLE));
+            }
+               sql.transaction(statements, SqlResult.validResultsHandler( statementEvent -> {
+                   if(statementEvent.isLeft()){
+                       handler.handle(statementEvent.left());
+                   }
+                   else{
+                       handler.handle(new Either.Right<>(devoirs));
+                   }
+               }));
+
+
+        });
+
+
+
     }
 }

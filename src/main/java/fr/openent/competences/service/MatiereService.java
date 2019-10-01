@@ -51,4 +51,12 @@ public interface MatiereService extends CrudService {
       * @param handler
       */
      void getMatieresEtab(String idEtablissement, Handler<Either<String, JsonArray>> handler);
+
+     /**
+      * Met à jour les devoirs en choisissant une sousMAtiere par défaut au devoir contenant des matières avec
+      * sous matières
+      * @param idsMatieres
+      * @param handler
+      */
+     void updateDevoirs(JsonArray idsMatieres, Handler<Either<String, JsonArray>> handler);
 }
