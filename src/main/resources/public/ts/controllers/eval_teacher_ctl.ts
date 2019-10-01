@@ -3449,45 +3449,69 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 switch ($scope.printOption.fileType) {
                     case 'cartouche' : {
                         url = "/competences/devoirs/print/" + $scope.currentDevoir.id + "/cartouche?eleve=" + $scope.printOption.byEleve
-                            + '&color=' + $scope.printOption.inColor + "&nbr=" + $scope.printOption.cartoucheNmb + "&image=" + $scope.printOption.image;
+                            + '&color=' + $scope.printOption.inColor + "&nbr=" + $scope.printOption.cartoucheNmb + "&image=" + $scope.printOption.image +
+                        "&withResult=" + $scope.printOption.withResult + "&withAppreciations=" + $scope.printOption.withAppreciations;
+                        http().getJson(url + "&json=true").error((result) => {
+                            $scope.errorResultExportDevoir(result);
+                            utils.safeApply($scope);
+                        }).done(() => {
+                            $scope.printOption.display = false;
+                            utils.safeApply($scope);
+                            location.replace(url);
+                        });
+                        utils.safeApply($scope);
                         break;
                     }
                     case 'formSaisie' : {
                         url = '/competences/devoirs/print/' + $scope.currentDevoir.id + '/formsaisie';
+                        $scope.exportDevoirObj.empty = false;
+                        $scope.exportDevoirObj.errExport = false;
+                        $scope.printOption.display = false;
+                        utils.safeApply($scope);
+                        location.replace(url);
                         break;
                     }
                 }
             }
-            $scope.exportDevoirObj.empty = false;
-            $scope.exportDevoirObj.errExport = false;
-            $scope.printOption.display = false;
-            utils.safeApply($scope);
-            location.replace(url);
         };
 
         $scope.exportDevoirObj = {};
         $scope.exportRelCompObj = {};
         $scope.exportDevoir = async (idDevoir, textMod = false) => {
             let url = "/competences/devoirs/print/" + idDevoir + "/export?text=" + textMod;
-            http().getJson(url + "&json=true").error(() => {
-                if ("{\"error\":\"exportDevoir : empty result.\"}") {
-                    $scope.exportDevoirObj.errExport = false;
-                    $scope.exportDevoirObj.empty = true;
-                }
-                else {
-                    $scope.exportDevoirObj.errExport = true;
-                }
+            http().getJson(url + "&json=true").error((result) => {
+                $scope.errorResultExportDevoir(result);
                 utils.safeApply($scope);
-            }).done((result) => {
+            }).done(() => {
                 $scope.opened.evaluation.exportDevoirLB = false;
                 $scope.textModExport = false;
-                $scope.exportDevoirObj.errExport = false;
                 $scope.printOption.display = false;
-                $scope.exportDevoirObj.empty = false;
                 utils.safeApply($scope);
                 location.replace(url);
             });
             utils.safeApply($scope);
+        };
+
+        $scope.errorResultExportDevoir = (result) => {
+            switch (result.responseText) {
+                case "{\"error\":\"exportDevoir : empty result.\"}" :
+                    $scope.exportDevoirObj.emptyResult = true;
+                break;
+                case "{\"error\":\"exportCartouche : empty result.\"}":
+                    $scope.exportDevoirObj.emptyResult = true;
+                break;
+                case "{\"error\":\"exportDevoir : no level.\"}" :
+                    $scope.exportDevoirObj.emptyLevel = true ;
+                    break;
+                case  "{\"error\":\"exportCartouche : no level.\"}" :
+                    $scope.exportDevoirObj.emptyLevel = true ;
+                    break;
+                case "{\"error\":\"errorCartouche : can not get students\"}":
+                    $scope.exportDevoirObj.emptyStudent = true;
+                    break;
+                default :
+                    $scope.exportDevoirObj.errExport = true;
+            }
         };
 
         $scope.exportReleveComp = async (idEleve: String, idPeriode: Number, textMod: Boolean = false,
@@ -3657,6 +3681,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.cycleNotFound = false;
             $scope.exportRelCompObj.errExport = false;
             $scope.exportRecapEvalObj.errExport = false;
+            $scope.exportDevoirObj.errExport = false;
+            $scope.exportDevoirObj.emptyLevel = false;
+            $scope.exportDevoirObj.emptyResult = false;
+            $scope.exportDevoirObj.emptyStudent = false;
         };
 
         $scope.openedLigthbox = function (classe) {

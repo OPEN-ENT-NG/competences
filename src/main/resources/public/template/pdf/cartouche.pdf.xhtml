@@ -17,7 +17,7 @@
   -->
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" lang="fr">
 <head>
     <title>Formulaire de saisie</title>
     <style type="text/css">
@@ -37,11 +37,6 @@
             page-break-after: avoid;
         }
 
-        td {
-
-            padding: 3px;
-        }
-
         table {
             border-collapse: collapse;
             width: 100%;
@@ -51,10 +46,12 @@
 
         }
 
-        table tr td {
-            width: 8%;
-            text-align: center;
-            border: 2px solid black;
+         td {
+             padding: 3px;
+             width: 8%;
+             text-align: center;
+             border: 2px solid black;
+             height: auto;
         }
 
         table tr:nth-child(odd) td {
@@ -62,11 +59,7 @@
 
         }
 
-        table tr:first-child  {
-            height: 35px !important;
-        }
-
-        table td:first-child {
+        td:first-child {
             width: 50%;
             padding: 5px;
 
@@ -75,26 +68,6 @@
         .circle{
             position: relative;
             display: block;
-        }
-
-        .circle > p{
-            z-index: 5;
-            margin-left: auto;
-            margin-right: auto;
-            padding-top:10px;
-            bottom :0px;
-
-
-        }
-        .cercleaufond{
-            background-image:url("img/c1.png");
-            background-position: center;
-            background-repeat: no-repeat ;
-            background-size: 34px 34px;
-            width:35px;
-            height: 35px;
-            margin-right:auto;
-            margin-left:auto;
         }
 
         .couleur{
@@ -143,21 +116,21 @@
         <table>
 
             <tr>
-                <td>{{devoirDate}}  {{devoirName}} -  {{lastName}} {{firstName}}</td>
+                <td>{{nameClass}}  {{devoirName}} -  {{lastName}} {{firstName}}</td>
                 <!--> les 5 evaluation competence </-->
                 {{^byColor}}
-                <td ><div class="circle cercleaufond"><p>0</p> </div></td>
+                <td ><div class="circle"><p>NE</p> </div></td>
                 {{#niveaux}}
-                <td ><div class="circle cercleaufond"><p>{{ordre}}</p> </div></td>
+                <td><div class="circle"><p>{{ordre}}</p> </div></td>
                 {{/niveaux}}
                 {{/byColor}}
                 {{#byColor}}
-                <td ><div class="circle"><img class="couleur" src="img/cercle/0.png" alt="span"></img> </div></td>
+                <td><div class="circle"><img class="couleur" src="img/cercle/0.png" alt="span"></img></div></td>
                 {{#niveaux}}
-                <td ><div class="circle"><img class="couleur"  src="img/cercle/{{ordre}}.png" alt="span"></img></div></td>
+                <td><div class="circle"><img class="couleur"  src="img/cercle/{{ordre}}.png" alt="span"></img></div></td>
                 {{/niveaux}}
                 {{/byColor}}
-                {{#evaluation}} <td >Note</td> {{/evaluation}}
+                {{#evaluation}} <td>Note</td> {{/evaluation}}
             </tr>
             {{#hasCompetences}}
             {{#competences}}
@@ -165,17 +138,42 @@
             <tr>
                 <td>{{code_domaine}}: {{nom}}</td>
                 <!--> les 5 evaluation competence </-->
+                {{#withResult}}
+                    {{#hasAnnotation}}
+                        {{#first}}{{^evaluation}}<td rowspan="{{nbrCompetences}}">{{note}}</td>{{/evaluation}}{{/first}}
+                        {{#evaluation}}<td ></td>{{/evaluation}}
+                            {{#niveaux}}
+                            <td></td>
+                            {{/niveaux}}
+                        {{#first}}{{#evaluation}}<td  rowspan="{{nbrCompetences}}" >{{note}}</td>{{/evaluation}}{{/first}}
+                    {{/hasAnnotation}}
 
-                <td>  </td>
+                    {{^hasAnnotation}}
+                        {{#niveauxEleve}}
+                        <td>{{#.}}X{{/.}}</td>
+                        {{/niveauxEleve}}
+                        {{#first}} {{#evaluation}} <td  rowspan="{{nbrCompetences}}" >{{note}}</td> {{/evaluation}} {{/first}}
+                    {{/hasAnnotation}}
+                {{/withResult}}
+
+                {{^withResult}}
+                <td></td>
                 {{#niveaux}}
                 <td></td>
                 {{/niveaux}}
-
-
                 {{#first}} {{#evaluation}} <td  rowspan="{{nbrCompetences}}" ></td> {{/evaluation}} {{/first}}
+                {{/withResult}}
+
             </tr>
             {{/competences}}
             {{/hasCompetences}}
+
+            {{#showAppreciation}}
+            <tr>
+                <td colspan="{{colspanAppreciation}}">Appréciation : {{appreciation}}</td>
+            </tr>
+            {{/showAppreciation}}
+
 
         </table>
     </div>
@@ -192,21 +190,21 @@
         <table>
 
             <tr>
-                <td>{{devoirDate}}  {{devoirName}} </td>
+                <td>{{nameClass}}  {{devoirName}} </td>
                 <!--> les 5 evaliation competence </-->
                 {{^byColor}}
-                <td ><div class="circle cercleaufond"><p>0</p> </div></td>
+                <td><div class="circle"><p>0</p> </div></td>
                 {{#niveaux}}
-                <td ><div class="circle cercleaufond"><p>{{ordre}}</p> </div></td>
+                <td><div class="circle"><p>{{ordre}}</p> </div></td>
                 {{/niveaux}}
                 {{/byColor}}
                 {{#byColor}}
-                <td ><div class="circle"><img class="couleur" src="img/cercle/0.png" alt="span"></img> </div></td>
+                <td><div class="circle"><img class="couleur" src="img/cercle/0.png" alt="span"></img></div></td>
                 {{#niveaux}}
-                <td ><div class="circle"><img class="couleur"  src="img/cercle/{{ordre}}.png" alt="span"></img></div></td>
+                <td><div class="circle"><img class="couleur"  src="img/cercle/{{ordre}}.png" alt="span"></img></div></td>
                 {{/niveaux}}
                 {{/byColor}}
-                {{#evaluation}} <td >Note</td> {{/evaluation}}
+                {{#evaluation}} <td>Note</td> {{/evaluation}}
             </tr>
             {{#hasCompetences}}
             {{#competences}}

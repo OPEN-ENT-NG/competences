@@ -19,6 +19,7 @@ package fr.openent.competences.service;
 
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
+import io.vertx.core.MultiMap;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
@@ -28,6 +29,12 @@ import java.util.List;
 import java.util.Map;
 
 public interface ExportService {
+    /**
+     * get jsonObject with param to build the template for pdf cartouche
+     * @param params front params
+     * @param handler response to build the template for pdf
+     */
+    void getExportCartouche (final MultiMap params, Handler<Either<String, JsonObject>> handler);
 
     void getExportEval(final Boolean text, Boolean only_evaluation, JsonObject devoir, String idGroupe,
                        String idEtablissement, HttpServerRequest request,

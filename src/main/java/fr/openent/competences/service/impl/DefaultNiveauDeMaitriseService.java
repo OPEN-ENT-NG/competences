@@ -106,7 +106,6 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
 
         Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, validResultHandler(handler));
     }
-
     public void getPersoNiveauMaitrise(String idUser,Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();

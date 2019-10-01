@@ -1151,4 +1151,24 @@ public class DefaultUtilsService  implements UtilsService {
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(handler));
 
     }
+
+    public void getClassInfo ( final String idClass, Handler<Either<String,JsonObject>> handler){
+        JsonObject action = new JsonObject()
+                .put("action", "classe.getClasseInfo")
+                .put("idClasse", idClass);
+
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                if ("ok".equals(body.getString("status"))) {
+                    JsonObject classInfo = body.getJsonObject("result").getJsonObject("c").getJsonObject("data");
+                    handler.handle(new Either.Right<>(classInfo));
+                } else {
+                    log.error("GetClassInfo : can not get class info : "+ idClass);
+                    handler.handle(new Either.Left<>(body.getString(MESSAGE)));
+                }
+            }
+        }));
+    }
 }

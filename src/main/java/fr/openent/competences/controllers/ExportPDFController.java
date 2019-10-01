@@ -406,7 +406,7 @@ public class ExportPDFController extends ControllerHelper {
     /**
      * Genere le BFC des entites passees en parametre au format PDF via la fonction
      * Ces entites peuvent etre au choix un etablissement, un ou plusieurs classes, un ou plusieurs eleves.
-     * Afin de prefixer le fichier PDF cree, appelle {@link DefaultUtilsService#getNameEntity(String[], Handler)} afin
+     * Afin de prefixer le fichier PDF cree, appelle {@link DefaultUtilsService#/getNameEntity(String[], Handler)} afin
      * de recuperer le nom de l'entite fournie.
      *
      * @param request
@@ -638,226 +638,35 @@ public class ExportPDFController extends ControllerHelper {
     @Get("/devoirs/print/:idDevoir/cartouche")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getCartouche(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    MultiMap params = request.params();
-                    final Long idDevoir;
-                    if (params.get("idDevoir") != null) {
-                        try {
-                            idDevoir = Long.parseLong(params.get("idDevoir"));
-                        } catch (NumberFormatException e) {
-                            log.error("Error : idDevoir must be a long object", e);
-                            badRequest(request, e.getMessage());
-                            return;
-                        }
+        UserUtils.getUserInfos(eb, request, user -> {
 
-                        final JsonObject result = new JsonObject();
-                        int nbrCartouche = 0;
-                        try {
-                            nbrCartouche = Integer.parseInt(params.get("nbr"));
-                        } catch (NumberFormatException e) {
-                            log.error("Error : idDevoir must be a long object", e);
-                            badRequest(request, e.getMessage());
-                            return;
-                        }
-                        if (nbrCartouche > 0) {
-                            JsonArray nbr = new fr.wseduc.webutils.collections.JsonArray();
-                            for (int j = 0; j < nbrCartouche; j++) {
-                                nbr.add(j);
-                            }
-                            result.put("number", nbr);
+            if (user != null) {
+                MultiMap params = request.params();
+                final boolean json = Boolean.parseBoolean(request.params().get("json"));
+
+                exportService.getExportCartouche(params,  event-> {
+                    if(event.isRight()){
+                        JsonObject result = event.right().getValue();
+
+                        if (json) {
+                            Renders.renderJson(request, result);
                         } else {
-                            result.put("number", new fr.wseduc.webutils.collections.JsonArray().add("cartouche"));
+                        exportService.genererPdf(request,
+                                        result,
+                                        "cartouche.pdf.xhtml",
+                                        "Cartouche",
+                                        vertx, config);
                         }
-
-                        final String byEleve = params.get("eleve");
-                        final String color = params.get("color");
-                        if (byEleve != null && color != null) {
-                            devoirService.getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
-                                @Override
-                                public void handle(Either<String, JsonObject> devoirInfo) {
-                                    if (devoirInfo.isRight()) {
-                                        final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
-                                        SimpleDateFormat dateBfFormat = new SimpleDateFormat("yyyy-MM-dd");
-                                        SimpleDateFormat dateAftFormat = new SimpleDateFormat("dd-MM-yyyy");
-                                        String reformattedStr = "";
-                                        ArrayList<String> classeList = new ArrayList<String>();
-
-                                        result.put("devoirName", devoirInfos.getString("name"));
-                                        if (color.equals("true")) {
-                                            result.put("byColor", true);
-                                        } else {
-                                            result.put("byColor", false);
-                                        }
-                                        try {
-                                            reformattedStr = dateAftFormat.format(dateBfFormat.parse(devoirInfos.getString("created")));
-                                        } catch (ParseException e) {
-                                            e.printStackTrace();
-                                        }
-                                        if (reformattedStr != "") {
-                                            result.put("devoirDate", reformattedStr);
-                                        } else {
-                                            result.put("devoirDate", devoirInfos.getString("created"));
-                                        }
-//                                        result.put("evaluation", devoirInfos.getBoolean("is_evaluated"));
-                                        result.put("evaluation", true);
-                                        //début
-                                        classeList.add(devoirInfos.getString("id_groupe"));
-                                        utilsService.getCycle(classeList, new Handler<Either<String, JsonArray>>() {
-                                            @Override
-                                            public void handle(Either<String, JsonArray> cycle) {
-                                                if (cycle.isRight()) {
-                                                    JsonObject cycleobj = cycle.right().getValue().getJsonObject(0);
-                                                    niveauDeMaitriseService.getNiveauDeMaitriseofCycle(cycleobj.getLong("id_cycle"), new Handler<Either<String, JsonArray>>() {
-                                                        @Override
-                                                        public void handle(Either<String, JsonArray> nivMaitrise) {
-                                                            if (nivMaitrise.isRight()) {
-                                                                result.put("niveaux", nivMaitrise.right().getValue());
-                                                                if (byEleve.equals("true")) {
-                                                                    result.put("byEleves", true);
-                                                                    JsonObject action = new JsonObject()
-                                                                            .put("action", "classe.getEleveClasse")
-                                                                            .put("idClasse", devoirInfos
-                                                                                    .getString("id_groupe"))
-                                                                            .put("idPeriode", devoirInfos
-                                                                                    .getInteger("id_periode"));
-
-                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                                        @Override
-                                                                        public void handle(Message<JsonObject> message) {
-                                                                            JsonObject body = message.body();
-
-                                                                            if ("ok".equals(body.getString("status"))) {
-                                                                                result.put("eleves", body.getJsonArray("results"));
-                                                                                if (devoirInfos.getInteger("nbrcompetence") > 0) {
-                                                                                    competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
-                                                                                        @Override
-                                                                                        public void handle(Either<String, JsonArray> CompetencesObject) {
-                                                                                            if (CompetencesObject.isRight()) {
-                                                                                                JsonArray CompetencesOld = CompetencesObject.right().getValue();
-                                                                                                JsonArray CompetencesNew = new fr.wseduc.webutils.collections.JsonArray();
-                                                                                                for (int i = 0; i < CompetencesOld.size(); i++) {
-                                                                                                    JsonObject Comp = CompetencesOld.getJsonObject(i);
-                                                                                                    Comp.put("i", i + 1);
-                                                                                                    if (i == 0) {
-                                                                                                        Comp.put("first", true);
-                                                                                                    } else {
-                                                                                                        Comp.put("first", false);
-                                                                                                    }
-                                                                                                    CompetencesNew.add(Comp);
-                                                                                                }
-                                                                                                if (CompetencesNew.size() > 0) {
-                                                                                                    result.put("hasCompetences", true);
-                                                                                                } else {
-                                                                                                    result.put("hasCompetences", false);
-                                                                                                }
-                                                                                                result.put("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
-                                                                                                result.put("competences", CompetencesNew);
-                                                                                                exportService
-                                                                                                        .genererPdf(request,
-                                                                                                                result,
-                                                                                                                "cartouche.pdf.xhtml",
-                                                                                                                "Cartouche",
-                                                                                                                vertx, config);
-                                                                                            } else {
-                                                                                                log.error("Error :can not get competences devoir ");
-                                                                                                badRequest(request, "Error :can not get competences devoir ");
-                                                                                            }
-                                                                                        }
-                                                                                    });
-                                                                                } else {
-                                                                                    exportService.genererPdf(request,
-                                                                                            result,
-                                                                                            "cartouche.pdf.xhtml",
-                                                                                            "Cartouche",
-                                                                                            vertx, config);
-                                                                                }
-                                                                            } else {
-                                                                                log.error("Error :can not get students ");
-                                                                                badRequest(request, "Error :can not get students  ");
-                                                                            }
-                                                                        }
-                                                                    }));
-                                                                } else {
-                                                                    result.put("byEleves", false);
-                                                                    if (devoirInfos.getInteger("nbrcompetence") > 0) {
-                                                                        competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
-                                                                            @Override
-                                                                            public void handle(Either<String, JsonArray> CompetencesObject) {
-                                                                                if (CompetencesObject.isRight()) {
-                                                                                    JsonArray CompetencesOld = CompetencesObject.right().getValue();
-                                                                                    JsonArray CompetencesNew = new fr.wseduc.webutils.collections.JsonArray();
-                                                                                    for (int i = 0; i < CompetencesOld.size(); i++) {
-                                                                                        JsonObject Comp = CompetencesOld.getJsonObject(i);
-                                                                                        Comp.put("i", i + 1);
-                                                                                        if (i == 0) {
-                                                                                            Comp.put("first", true);
-                                                                                        } else {
-                                                                                            Comp.put("first", false);
-                                                                                        }
-
-                                                                                        CompetencesNew.add(Comp);
-                                                                                    }
-                                                                                    if (CompetencesNew.size() > 0) {
-                                                                                        result.put("hasCompetences", true);
-                                                                                    } else {
-                                                                                        result.put("hasCompetences", false);
-                                                                                    }
-                                                                                    result.put("nbrCompetences", devoirInfos.getInteger("nbrcompetence").toString());
-                                                                                    result.put("competences", CompetencesNew);
-                                                                                    result.put("image", Boolean.parseBoolean(request.params().get("image")));
-                                                                                    exportService
-                                                                                            .genererPdf(request,
-                                                                                                    result,
-                                                                                                    "cartouche.pdf.xhtml",
-                                                                                                    "Cartouche",
-                                                                                                    vertx, config);
-                                                                                } else {
-                                                                                    log.error("Error :can not get competences devoir ");
-                                                                                    badRequest(request, "Error :can not get competences devoir ");
-                                                                                }
-                                                                            }
-                                                                        });
-                                                                    } else {
-                                                                        exportService.genererPdf(request, result,
-                                                                                "cartouche.pdf.xhtml", "Cartouche",
-                                                                                vertx, config);
-                                                                    }
-                                                                }
-                                                            } else {
-                                                                log.error("Error :can not get levels ");
-                                                                badRequest(request, "Error :can not get levels  ");
-                                                            }
-                                                        }
-                                                    });
-
-                                                } else {
-                                                    log.error("Error :can not get cycle ");
-                                                    badRequest(request, "Error :can not get cycle  ");
-                                                }
-
-
-                                            }
-                                        });
-
-                                    } else {
-                                        log.error("Error :can not get informations from postgres tables ");
-                                        badRequest(request, "Error :can not get informations from postgres tables ");
-                                    }
-
-                                }
-                            });
-                        }
-                    } else {
-                        log.error("Error : idDevoir must be a long object");
-                        badRequest(request, "Error : idDevoir must be a long object");
+                    }else{
+                        leftToResponse(request, event.left());
                     }
-                } else {
-                    unauthorized(request);
-                }
+
+                });
+
+            } else {
+                unauthorized(request);
             }
+
         });
     }
 
@@ -881,7 +690,7 @@ public class ExportPDFController extends ControllerHelper {
             public void handle(Either<String, JsonObject> stringJsonObjectEither) {
                 if (stringJsonObjectEither.isRight()) {
                     JsonObject devoir = stringJsonObjectEither.right().getValue();
-                    final Boolean only_evaluation = devoir.getInteger("nbrcompetence").equals(0L);
+                    final Boolean only_evaluation = devoir.getLong("nbrcompetence").equals(0L);
                     String idGroupe = devoir.getString("id_groupe");
                     String idEtablissement = devoir.getString("id_etablissement");
 

@@ -275,4 +275,12 @@ public interface UtilsService {
      * @param handler response
      */
     void getActivesStructure(EventBus event, Handler<Either<String, JsonArray>>handler);
+
+
+    /**
+     * get class info with eventBus
+     * @param idClass id class
+     * @param handler response
+     */
+    void getClassInfo(final String idClass, Handler<Either<String, JsonObject>>handler);
 }

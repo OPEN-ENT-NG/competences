@@ -18,6 +18,7 @@
 package fr.openent.competences.utils;
 
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -25,6 +26,8 @@ import java.text.Format;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
@@ -75,5 +78,4 @@ public class UtilsConvert {
         }
         return date;
     }
-
 }

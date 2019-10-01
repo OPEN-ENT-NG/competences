@@ -15,23 +15,23 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 
-<lightbox show="printOption.display" class="" on-close="printOption.display=false; exportDevoirObj.errExport=false; exportDevoirObj.empty = false;">
+<lightbox show="printOption.display" class="" on-close="printOption.display=false;">
     <h2><i18n>evaluations.export.format.pdf</i18n>&nbsp;:</h2>
     <div class="checkbox-grid">
         <label ng-show=" currentDevoir.competences.all.length > 0">
-            <input type="radio" ng-change=""  ng-model="printOption.fileType" value="cartouche">
+            <input type="radio" ng-change="closeWarningMessages();"  ng-model="printOption.fileType" value="cartouche">
             <span>
                     <i18n>evaluation.devoir.print.cartouches</i18n>
                 </span>
         </label>
         <label>
-            <input type="radio" ng-change=""  ng-model="printOption.fileType" value="formSaisie">
+            <input type="radio" ng-change="closeWarningMessages();"  ng-model="printOption.fileType" value="formSaisie">
             <span>
                     <i18n>evaluation.devoir.print.form.saisie</i18n>
              </span>
         </label>
         <label>
-            <input type="radio" ng-change="" ng-model="printOption.fileType" value="devoir">
+            <input type="radio" ng-change="closeWarningMessages();" ng-model="printOption.fileType" value="devoir">
             <i18n>evaluations.devoir.print</i18n>
         </label>
     </div>
@@ -53,6 +53,20 @@
             <span class="help-option-eleve-print" >
                 <i class="help" tooltip="evaluation.devoir.cartouche.eleve.help"></i>
             </span>
+            <div class="checkbox-grid additional-options" ng-if="printOption.byEleve">
+                <div >
+                <label class="checkbox">
+                    <input type="checkbox" ng-model="printOption.withResult" >
+                    <span><i18n>evaluation.devoir.cartouche.results</i18n></span>
+                </label>
+                </div>
+                <div ng-if="printOption.withResult">
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="printOption.withAppreciations" >
+                        <span><i18n>evaluation.devoir.cartouche.appreciation</i18n></span>
+                    </label>
+                </div>
+            </div>
         </div>
         <div class="cell">
             <label class="checkbox">
@@ -81,8 +95,11 @@
             <i18n>evaluations.export.err</i18n>
         </div>
         <div class="warning"
-             ng-if="exportDevoirObj.empty">
+             ng-if="exportDevoirObj.emptyResult">
             <i18n>evaluations.export.empty</i18n>
+        </div>
+        <div class="warning" ng-if="exportDevoirObj.emptyLevel">
+            <i18n>evaluations.export.errorLevel</i18n>
         </div>
         <button ng-if="printOption.fileType !== 'devoir'" class ="right-magnet" ng-click="printCartouche()">
             <i18n>evaluations.export</i18n>
@@ -107,7 +124,7 @@
                ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
                class="right-magnet" ng-class="{'button-edit-devoir' : currentDevoir.competences.all.length > 0,
                                         'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
-        <button ng-click="printOption.display =true"
+        <button ng-click="printOption.display =true ; closeWarningMessages();"
                 class="right-magnet ng-scope"
                 tooltip="evaluations.export.format.pdf"
                 ng-class="{'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0, 'button-print-devoir' : currentDevoir.competences.all.length > 0}">
