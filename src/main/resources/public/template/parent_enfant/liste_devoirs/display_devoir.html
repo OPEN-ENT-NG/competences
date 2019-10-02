@@ -39,6 +39,9 @@
                         <section>
                             <label><i18n class="bold">viescolaire.utils.subject</i18n> : [[getLibelleMatiere(currentDevoir.id_matiere)]]</label>
                         </section>
+                        <section ng-if="currentDevoir.id_sousmatiere !== undefined && currentDevoir.id_sousmatiere !== null">
+                            <label><i18n class="bold">viescolaire.utils.undersubject</i18n> : [[getLibelleSousMatiere(currentDevoir)]]</label>
+                        </section>
                         <section>
                             <label><i18n class="bold">viescolaire.utils.date</i18n> : [[getDateFormated(currentDevoir.date)]]</label>
                         </section>

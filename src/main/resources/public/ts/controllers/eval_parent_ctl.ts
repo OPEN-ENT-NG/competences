@@ -338,6 +338,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
+         $scope.getLibelleSousMatiere = function (currentDevoir) {
+
+             let idMatiere = currentDevoir.id_matiere;
+             if (idMatiere === undefined || idMatiere == null || idMatiere === "") return "";
+             let matiere = _.findWhere($scope.matieres.all, {id: idMatiere});
+             let idSousmatiere = currentDevoir.id_sousmatiere;
+             if (matiere === undefined || idSousmatiere === undefined || idSousmatiere === null || idSousmatiere === ""  )
+                 return ""
+             let sousmatiere = _.findWhere(matiere.sousMatieres.all, {id_type_sousmatiere: parseInt(idSousmatiere)})
+             if(sousmatiere !== undefined && sousmatiere.hasOwnProperty('libelle')){
+                 return sousmatiere.libelle;
+             }else{
+                 return "";
+             }
+         };
+
         $scope.getTeacherDisplayName = function (owner) {
             if (owner === undefined || owner === null || owner === "") return "";
             let ensenseignant = _.findWhere(evaluations.enseignants.all, {id: owner});
