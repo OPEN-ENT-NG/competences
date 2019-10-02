@@ -995,7 +995,7 @@ body.evaluations {
     height: 4.5em;
   }
   .center {
-    text-align: center;
+    text-align: center !important;
   }
   .buttonHeader{
     .button{
@@ -2921,7 +2921,6 @@ body.evaluations {
     .background-grey{
       background: rgba(0,0,0,0.05) !important;
     }
-
     .background-white{
       background: $white !important;
     }

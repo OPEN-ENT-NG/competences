@@ -26,8 +26,8 @@ export function average (arr) {
         }, 0) / (arr.length === 0 ? 1 : arr.length);
 }
 
-export function  getMoyenne (id_eleve, object, devoirs?) : Promise<any> {
-     return new Promise(  (resolve, reject) => {
+export function   getMoyenne (id_eleve, object, devoirs?) : Promise<any> {
+     return new Promise((resolve, reject) => {
         if (devoirs) {
             let idDevoirsURL = "";
 
@@ -36,7 +36,7 @@ export function  getMoyenne (id_eleve, object, devoirs?) : Promise<any> {
             });
             idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
 
-            http().getJson('/competences/eleve/' + id_eleve + "/moyenne?" + idDevoirsURL).done(function (res) {
+            http().getJson('/competences/eleve/' + id_eleve + "/moyenne?" + idDevoirsURL).done((res) =>{
                 if (!res.error) {
                     if (!res.hasNote) {
                         object.moyenne = "NN";
@@ -49,9 +49,11 @@ export function  getMoyenne (id_eleve, object, devoirs?) : Promise<any> {
                 }
 
                 if(resolve && typeof(resolve) === 'function'){
-                    resolve();
+                   resolve();
                 }
-            }.bind(this));
+            }).error(()=> {
+                    reject();
+            });
         }
     });
 }
