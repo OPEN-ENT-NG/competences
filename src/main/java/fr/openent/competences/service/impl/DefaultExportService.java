@@ -1955,7 +1955,13 @@ public class DefaultExportService implements ExportService {
                     moy = moySousMatiere.getLong(MOYENNE).toString() + "/20";
                 }
                 sousMatiere.put(MOYENNE, moy).put("isLast", i == sousMatieres.size()-1);
-                sousMatiere.put(DEVOIRS, devoirsSousMat.get(idMatiere).get(idSousMatiere));
+                JsonArray devoirsSousMatieres = new JsonArray();
+                if(isNotNull(devoirsSousMat.get(idMatiere))){
+                    if(isNotNull(devoirsSousMat.get(idMatiere).get(idSousMatiere))){
+                        devoirsSousMatieres = devoirsSousMat.get(idMatiere).get(idSousMatiere);
+                    }
+                }
+                sousMatiere.put(DEVOIRS, devoirsSousMatieres);
                 if(i == 0){
                     matiereInter.put("first_sous_matieres", sousMatiere);
                 }

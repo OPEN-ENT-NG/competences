@@ -12,7 +12,7 @@
             <table class="twelve suiviDesAcquis">
                 <thead>
                 <tr>
-                    <th class="one"><i18n>matieres</i18n></th>
+                    <th class="one" colspan="2"><i18n>matieres</i18n></th>
                     <th class="four"><i18n>bilan.perodique.elements.programme.travailles</i18n></th>
                     <th class="seven"><i18n>appreciation</i18n></th>
                     <th class="one center"><i18n>average.min.eleve</i18n></th>
@@ -22,16 +22,26 @@
                 </thead>
                 <tbody>
                 <tr ng-repeat="suiviDesAcquis in elementBilanPeriodique.suivisAcquis.all">
-                    <td>
-                        <span class="matiere">[[suiviDesAcquis.libelleMatiere]]</span>
-                        <ul class="cell eight">
+                    <td colspan="2" ng-if="suiviDesAcquis.sousMatieres === undefined || suiviDesAcquis.sousMatieres.length == 0 ">
+                        <div class="matiere">[[suiviDesAcquis.libelleMatiere]]</div>
+                        <ul>
                             <li ng-repeat="teacher in suiviDesAcquis.teachers">[[teacher.firstName[0] + '.' + teacher.name]]</li>
                         </ul>
-                        <div class="cell four">
-                            <div style="margin: -4px">&nbsp;</div>
+                    </td>
+                    <td ng-if="suiviDesAcquis.sousMatieres.length > 0 ">
+                        <span class="matiere">[[suiviDesAcquis.libelleMatiere]]</span>
+                        <ul>
+                            <li ng-repeat="teacher in suiviDesAcquis.teachers">[[teacher.firstName[0] + '.' + teacher.name]]</li>
+                        </ul>
+                    </td>
+                    <td ng-if="suiviDesAcquis.sousMatieres.length > 0 " style="padding-left: 0px; padding-right: 0px"
+                        class="one center">
                             <div style="padding: 6px"
                                  class="ellipsis"
-                                 ng-repeat="sousMat in suiviDesAcquis.sousMatieres">[[sousMat.libelle]]</div>
+                                 ng-repeat="sousMat in suiviDesAcquis.sousMatieres">[[sousMat.libelle]]
+                            </div>
+                        <div style="padding: 6px" class="bold ng-binding">
+                            &nbsp;
                         </div>
                     </td>
                     <td data-label="[[translate('bilan.perodique.elements.programme.travailles')]]">
@@ -56,61 +66,24 @@
                         </ng-form>
                     </td>
                     <td class="center" data-label="[[translate('average.student')]]">
-                            <div style="padding: 6px" class="bold">
-                                [[suiviDesAcquis.moyenneEleve]]
-                            </div>
                         <div style="padding: 6px"
                              ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
                                 [[  sousMat.moy ]]
                         </div>
+                        <div style="padding: 6px" class="bold">
+                            [[suiviDesAcquis.moyenneEleve]]
+                        </div>
                     </td>
                     <td class="center" data-label="[[translate('average.class')]]">
-                        <div style="padding: 6px" class="bold">
-                                [[suiviDesAcquis.moyenneClasse]]
-                            </div>
                         <div style="padding: 6px"
                              ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
                             [[  sousMat.moyClasse ]]
                         </div>
+                        <div style="padding: 6px" class="bold">
+                            [[suiviDesAcquis.moyenneClasse]]
+                        </div>
                     </td>
                     <td class="center" data-label="[[translate('evaluations.releve.positionnement')]]">
-                        <div>
-                        <ul class="selectable-list twelve"
-                            ng-init="suiviDesAcquis.initPositionnement()"
-                            ng-if="canSaveAppMatierePosiBilanPeriodique" >
-
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final}"
-                                data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
-                                ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
-                                <label ng-bind-html="$index"></label>
-                            </li>
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final}"
-                                data-ng-click="savePositionnementEleve(suiviDesAcquis, structure.cycle.niveauCompetencesArray.length);"
-                            >
-                                <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
-                            </li>
-
-                        </ul>
-                        <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique" >
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ positionnementcalculee: $index === suiviDesAcquis.getPositionnementDefinitif()}"
-                                ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
-                                <label ng-bind-html="$index"></label>
-                            </li>
-                            <li class="cell"
-                                style="margin: 0"
-                                ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.getPositionnementDefinitif()}"
-                            >
-                                <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
-                            </li>
-                        </ul>
-                        </div>
-
 
                         <div ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
 
@@ -124,6 +97,42 @@
                                 <li class="cell"
                                     style="margin: 0; border: 1px solid #2a9cc8;"
                                     ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === sousMat.posi}"
+                                >
+                                    <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <ul class="selectable-list twelve"
+                                ng-init="suiviDesAcquis.initPositionnement()"
+                                ng-if="canSaveAppMatierePosiBilanPeriodique" >
+
+                                <li class="cell"
+                                    style="margin: 0"
+                                    ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final}"
+                                    data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
+                                    ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    <label ng-bind-html="$index"></label>
+                                </li>
+                                <li class="cell"
+                                    style="margin: 0"
+                                    ng-class="{ selected: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.positionnement_final}"
+                                    data-ng-click="savePositionnementEleve(suiviDesAcquis, structure.cycle.niveauCompetencesArray.length);"
+                                >
+                                    <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
+                                </li>
+
+                            </ul>
+                            <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique" >
+                                <li class="cell"
+                                    style="margin: 0"
+                                    ng-class="{ positionnementcalculee: $index === suiviDesAcquis.getPositionnementDefinitif()}"
+                                    ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    <label ng-bind-html="$index"></label>
+                                </li>
+                                <li class="cell"
+                                    style="margin: 0"
+                                    ng-class="{ positionnementcalculee: elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length === suiviDesAcquis.getPositionnementDefinitif()}"
                                 >
                                     <label ng-bind-html="elementBilanPeriodique.structure.cycle.niveauCompetencesArray.length"></label>
                                 </li>
