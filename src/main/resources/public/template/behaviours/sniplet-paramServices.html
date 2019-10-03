@@ -41,15 +41,21 @@
             </div>
             <div class="ten cell">
                 <div class="row">
-                    <h4 class="[[columns.delete.size]] cell-indent cell">[[translate(columns.delete.name)]]</h4>
-                    <h4 class="[[columns.matiere.size]] cell-indent cell">[[translate(columns.matiere.name)]]</h4>
-                    <h4 class="[[columns.classe.size]] cell-indent cell">[[translate(columns.classe.name)]]</h4>
-                    <h4 class="[[columns.enseignant.size]] cell-indent cell">[[translate(columns.enseignant.name)]]</h4>
+                    <h4 class="[[columns.delete.size]] cell">[[translate(columns.delete.name)]]</h4>
+                    <h4 ng-click="sortOrderBy = 'nom_matiere'"
+                        class="[[columns.matiere.size]] cell-indent cell">[[translate(columns.matiere.name)]]</h4>
+                    <h4  ng-click="sortOrderBy = 'nom_groupe'"
+                         class="[[columns.classe.size]] cell-indent cell">[[translate(columns.classe.name)]]</h4>
+                    <h4 ng-click="sortOrderBy = 'nom_enseignant'"
+                        class="[[columns.enseignant.size]] cell-indent cell">[[translate(columns.enseignant.name)]]</h4>
                     <h4 class="[[columns.modalite.size]] cell-indent cell">[[translate(columns.modalite.name)]]</h4>
                     <h4 class="[[columns.evaluable.size]] cell-indent cell">[[translate(columns.evaluable.name)]]</h4>
                 </div>
 
-                <div ng-repeat="service in (filteredItems = ( services | filter:filterEvaluable(headers) | filter:filterGroupe(columns.classe.data, typeGroupes) | filter:filterSearch(search))) track by $index " class="row serviceList">
+                <div ng-repeat="service in (filteredItems = ( services | filter:filterEvaluable(headers) |
+                 filter:filterGroupe(columns.classe.data, typeGroupes) | filter:filterSearch(search) |
+                  orderBy : sortOrderBy : reverse)) track by $index   "
+                     class="row serviceList">
                     <label class="one checkbox">
                         <i class="delete"
                            ng-if="service.isManual"
@@ -88,7 +94,7 @@
                 </h4>
                 <label class="select">
                     <select ng-model="service.id_matiere"
-                            ng-options="matiere.id as matiere.name for matiere in columns.matiere.data | orderBy:matiere.name">
+                            ng-options="matiere.id as matiere.name for matiere in columns.matiere.data | orderBy:'name'">
                     </select>
                 </label>
             </div>
@@ -100,7 +106,7 @@
 
                 <label class="select">
                     <select ng-model="service.id_groupe"
-                            ng-options="classe.id as classe.name for classe in columns.classe.data | orderBy:classe.name"></select>
+                            ng-options="classe.id as classe.name for classe in columns.classe.data | orderBy:'name'"></select>
                 </label>
             </div>
             <div class="row">
@@ -110,7 +116,7 @@
 
                 <label class="select">
                     <select ng-model="service.id_enseignant"
-                            ng-options="enseignant.id as enseignant.displayName for enseignant in columns.enseignant.data | orderBy:enseignant.displayName"></select>
+                            ng-options="enseignant.id as enseignant.displayName for enseignant in columns.enseignant.data | orderBy: 'displayName'"></select>
                 </label>
             </div>
             <div class="row">
