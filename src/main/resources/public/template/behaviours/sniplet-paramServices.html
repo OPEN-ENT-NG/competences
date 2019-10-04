@@ -54,7 +54,7 @@
 
                 <div ng-repeat="service in (filteredItems = ( services | filter:filterEvaluable(headers) |
                  filter:filterGroupe(columns.classe.data, typeGroupes) | filter:filterSearch(search) |
-                  orderBy : sortOrderBy : reverse)) track by $index   "
+                  orderBy : sortOrderBy)) track by $index   "
                      class="row serviceList">
                     <label class="one checkbox">
                         <i class="delete"

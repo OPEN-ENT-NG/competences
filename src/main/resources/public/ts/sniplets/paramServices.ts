@@ -165,7 +165,6 @@ export const paramServices = {
             this.services = [];
             this.search = "";
             this.matiereSelected = "";
-            this.reverse = true;
 
             this.headers = {
                 all: {name:"all", value: null, isSelected: true},
