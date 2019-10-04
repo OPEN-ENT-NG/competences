@@ -62,4 +62,7 @@ public interface ExportService {
 
     void getDataForExportReleveEleve(String idUser, String idEtablissement, Long idPeriode,
                                      final MultiMap params, Handler<Either<String, JsonObject>> handler);
+
+    void getDataForExportReleveClasse(String idClasse, String idEtablissement, Long idPeriode, final Long idTypePeriode,
+                                      final Long ordre, Handler<Either<String, JsonObject>> handler);
 }

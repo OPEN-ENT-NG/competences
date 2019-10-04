@@ -45,9 +45,7 @@ import javax.imageio.ImageIO;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.RESULTS;
-import static fr.openent.competences.Utils.getLibelle;
-import static fr.openent.competences.Utils.isNotNull;
-import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -1972,5 +1970,71 @@ public class DefaultExportService implements ExportService {
             matiereInter.put(keySousMatiere+ "_tail", sousMatieresWithoutFirst);
 
         }
+    }
+
+    public void getDataForExportReleveClasse(String idClasse, String idEtablissement, Long idPeriode,
+                                             Long idTypePeriode, final Long ordre,
+                                             Handler<Either<String, JsonObject>> handler){
+        Utils.getElevesClasse(eb, idClasse, idPeriode, elevesEvent -> {
+            if (elevesEvent.isLeft()) {
+                String error = elevesEvent.left().getValue();
+                log.error("[ getDataForExportReleveClasse ]" + error);
+                handler.handle(new Either.Left<>(getLibelle("evaluations.get.students.classe.error")));
+                return;
+            }
+            JsonArray elevesClasse = elevesEvent.right().getValue();
+            if(isNull(elevesClasse)){
+                log.error("[ getDataForExportReleveClasse ] : NO student in classe");
+                handler.handle(new Either.Left<>(getLibelle("evaluations.export.releve.no.student")));
+                return;
+            }
+            JsonArray exportResultClasse = new JsonArray();
+            List<Future> classeFuture = new ArrayList<>();
+            MultiMap params = MultiMap.caseInsensitiveMultiMap();
+            params.add("idTypePeriode", isNotNull(idTypePeriode)? idTypePeriode.toString() : null)
+                    .add("ordrePeriode", isNotNull(ordre)? ordre.toString() : null);
+            getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture );
+
+            CompositeFuture.all(classeFuture).setHandler(event -> {
+               if(event.failed()){
+                   returnFailure("getDataForExportReleveClasse", event, handler);
+                   return;
+               }
+                handler.handle(new Either.Right<>( new JsonObject().put(ELEVES,
+                        sortUsersByDisplayNameAndFirstName(exportResultClasse))));
+            });
+        });
+    }
+
+    private void getDataForClasse(JsonArray elevesClasse, String idEtablissement, Long idPeriode, MultiMap params,
+                                  JsonArray exportResultClasse, List<Future> classeFuture) {
+        for(int i=0; i < elevesClasse.size(); i++){
+            JsonObject eleve = elevesClasse.getJsonObject(i);
+            String idEleve = eleve.getString(ID_KEY);
+            if(isNull(idEleve)){
+                idEleve = eleve.getString(ID_ELEVE_KEY);
+            }
+            Future eleveFuture = Future.future();
+
+            classeFuture.add(eleveFuture);
+            getDataForEleve(idEleve, idEtablissement, idPeriode, params, eleveFuture, exportResultClasse);
+        }
+
+    }
+
+    private void getDataForEleve(String idEleve, String idEtablissement, Long idPeriode, MultiMap params,
+                                 Future eleveFuture, JsonArray exportResultClasse) {
+        getDataForExportReleveEleve(idEleve, idEtablissement, idPeriode, params, event -> {
+            if(event.isLeft()){
+                String error = event.left().getValue();
+                log.error("[getDataForEleve] " + error);
+                eleveFuture.fail(getLibelle("evaluations.get.data.student.classe.error"));
+                return;
+            }
+            exportResultClasse.add(event.right().getValue());
+            eleveFuture.complete();
+
+        });
+
     }
 }

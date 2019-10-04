@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+  ~     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~   This program is free software; you can redistribute it and/or modify
+  ~   it under the terms of the GNU Affero General Public License as
+  ~   published by the Free Software Foundation (version 3 of the License).
+  ~   For the sake of explanation, any module that communicate over native
+  ~   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~   license and could be license under its own terms. This is merely considered
+  ~   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~   This program is distributed in the hope that it will be useful,
+  ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head >	<title>Relevé de notes</title>
+    <style type="text/css">
+
+        body{
+            padding: 10px;
+            font-family: "Calibri";
+        }
+        .head, .head tr, .display-student, .display-student tr, .display-bulletin, .display-bulletin tr{
+            width: 100%;
+        }
+        .head tr td:first-child{
+            width: 65%;
+        }
+        .page {
+            page-break-after: always;
+        }
+
+        .page:last-child{
+            page-break-after: avoid;
+        }
+        h1{
+            text-align: center;
+        }
+        .display-student tr td:first-child{
+            width:60%;
+        }
+        .display-bulletin{
+            text-align: center;
+            border-spacing: 0px;
+            margin: 50px 0 30px 0;
+        }
+        .display-bulletin tr{
+            padding: 0;
+        }
+        .display-bulletin tr td{
+            margin: 0;
+            padding: 10px;
+        }
+        .greyscale{
+            background-color: #f0f0f0;
+        }
+        .upper{
+            text-transform: uppercase;
+        }
+        .align-left{
+            text-align: left;
+        }
+        .align-right{
+            text-align: right;
+            text-indent: 5px;
+        }
+        .matiere{
+            border: none !important;
+            border-left: solid 1px #000 !important;
+            border-bottom: solid 1px #000 !important;
+        }
+        .professeur{
+            border: none !important;
+            font-size: 10px;
+        }
+        .sousMat {
+            font-size: 10px;
+            text-align: left;
+            width: 10px;
+        }
+        .bottom{
+            border-bottom: solid 1px #000;
+        }
+        .left{
+            border-left: solid 1px #000;
+        }
+        .right-bottom{
+            border-right: solid 1px #000;
+            border-bottom: solid 1px #000;
+        }
+        .right{
+            border-right: solid 1px #000;
+        }
+        .left-right{
+            border-left: solid 1px #000;
+            border-right: solid 1px #000;
+            border-bottom: solid 1px #000;
+        }
+        .none {
+            border: none;
+        }
+        .entete-1 td{
+            /*border-left: solid 1px #000;*/
+            border-top: solid 1px #000;
+            border-bottom: solid 1px #000;
+        }
+        .entete-2 td{
+            border-bottom: solid 1px #000;
+            border-left: solid 1px #000;
+        }
+        .diviseur{
+            font-size: 70%;
+        }
+        .note{
+            font-weight: bold;
+            font-size: 90%;
+        }
+
+        .coeff{
+            font-size: 70%;
+        }
+
+        .div-note {
+            width: 30px;
+        }
+    </style>
+    <meta charset="UTF-8" />
+</head>
+<body>
+
+{{#eleves}}
+<div class="page">
+<table class="head">
+    <tr><td><strong>{{#etablissement}}{{name}}{{/etablissement}}</strong></td><td class="align-right">Elève : <strong>{{#user}}{{displayName}}{{/user}}</strong></td></tr>
+    <tr><td><strong>{{#etablissement}}{{address}}{{/etablissement}}</strong></td><td class="align-right">Classe : <strong>{{#classe}}{{name}}{{/classe}}</strong></td></tr>
+    <tr><td><strong>{{#etablissement}}{{zipcode}} {{city}}{{/etablissement}}</strong></td><td class="align-right">Période : <strong>{{#periode}}{{libelle}}{{/periode}}</strong></td></tr>
+    <tr><td><strong>{{#etablissement}}Tél : {{phone}}{{/etablissement}}</strong></td></tr>
+</table>
+
+<h1>Relevé de notes</h1>
+
+
+<table class="display-bulletin">
+    <tr class="greyscale entete-1">
+
+        {{#printSousMatiere}}
+        <td colspan="2" class="align-left left"><strong>Matière</strong></td>
+        <td class="left-right"><strong>Notes</strong></td>
+        <td class="right-bottom" colspan="2"><strong>Moyenne</strong></td>
+        {{/printSousMatiere}}
+        {{^printSousMatiere}}
+        <td class="align-left left"><strong>Matière</strong></td>
+        <td class="left-right"><strong>Notes</strong></td>
+        <td class="right-bottom"><strong>Moyenne</strong></td>
+        {{/printSousMatiere}}
+    </tr>
+
+    {{^printSousMatiere}}
+    {{#matieres}}
+    <tr>
+
+        <td class="upper align-left matiere">
+            <span  class="align-left">{{name}}</span>
+            <span  class="align-left professeur">
+                {{#displayNameEnseignant}}
+                <br/><span>{{.}}</span>
+                {{/displayNameEnseignant}}
+            </span>
+        </td>
+        <td class="left-right">
+            {{#devoirs}}
+            <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+          </span>
+            {{/devoirs}}
+        </td>
+        <td  class="right-bottom"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+
+    </tr>
+    {{/matieres}}
+    {{/printSousMatiere}}
+
+
+    {{#printSousMatiere}}
+    {{#matieres}}
+    <tr>
+        {{#hasSousMatiere}}
+        <td rowspan="{{rowspan}}" class="upper align-left matiere">
+            <span  class="align-left">{{name}}</span>
+            <span  class="align-left professeur">
+                {{#displayNameEnseignant}}
+                <br/><span>{{.}}</span>
+                {{/displayNameEnseignant}}
+            </span>
+        </td>
+        {{#first_sous_matieres}}
+        {{#isLast}}
+        <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left-right">
+            {{#devoirs}}
+            <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+          </span>
+            {{/devoirs}}
+        </td>
+        <td  class="bottom"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+        {{^isLast}}
+        <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left right">
+            {{#devoirs}}
+            <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+          </span>
+            {{/devoirs}}
+        </td>
+        <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+        {{/first_sous_matieres}}
+
+        <td rowspan="{{rowspan}}"  class="right-bottom"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        {{/hasSousMatiere}}
+
+        {{^hasSousMatiere}}
+        <td class="upper align-left matiere" colspan="2">
+            <span  class="align-left">{{name}}</span>
+            <span  class="align-left professeur">
+                {{#displayNameEnseignant}}
+                <br/><span>{{.}}</span>
+                {{/displayNameEnseignant}}
+            </span>
+        </td>
+        <td class="left-right">
+            {{#devoirs}}
+            <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+          </span>
+            {{/devoirs}}
+        </td>
+        <td class="right-bottom" colspan="2"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        {{/hasSousMatiere}}
+
+    </tr>
+    {{#sous_matieres_tail}}
+    <tr>
+        {{^isLast}}
+        <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left right">
+            {{#devoirs}}
+            <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+          </span>
+            {{/devoirs}}
+        </td>
+        <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+        {{#isLast}}
+        <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left-right">
+            {{#devoirs}}
+            <span class="div-note">
+            <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
+            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+          </span>
+            {{/devoirs}}
+        </td>
+        <td  class="bottom"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+    </tr>
+    {{/sous_matieres_tail}}
+    {{/matieres}}
+    {{/printSousMatiere}}
+
+</table>
+
+* note <sup>(n)</sup> : Note ayant pour coefficient n.
+</div>
+{{/eleves}}
+</body>
+</html>

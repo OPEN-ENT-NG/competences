@@ -154,6 +154,31 @@ public class ExportPDFController extends ControllerHelper {
         });
     }
 
+    @Post("/releve/classe/pdf")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getReleve(final HttpServerRequest request){
+        RequestUtils.bodyToJson(request,  params -> {
+           final String idClasse = params.getString(ID_CLASSE_KEY);
+           final Long idPeriode = params.getLong(ID_PERIODE_KEY);
+           final String idEtablissement = params.getString(ID_STRUCTURE_KEY);
+           final Long idTypePeriode = params.getLong("idTypePeriode");
+           final Long ordre = params.getLong(ORDRE);
+            final String classeName = params.getString(CLASSE_NAME_KEY);
+           exportService.getDataForExportReleveClasse(idClasse, idEtablissement, idPeriode, idTypePeriode, ordre,
+                   event -> {
+                       if(event.isLeft()){
+                           leftToResponse(request, event.left());
+                           return;
+                       }
+                       JsonObject templateProps = event.right().getValue();
+                       String templateName = "releve-classe.pdf.xhtml";
+                       String prefixPdfName = "releve-classe_" +  classeName;
+                       exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
+                   } );
+
+        });
+    }
+
     /**
      * Genere le BFC des entites passees en parametre au format PDF via la fonction
      * Ces entites peuvent etre au choix un etablissement, un ou plusieurs classes, un ou plusieurs eleves.

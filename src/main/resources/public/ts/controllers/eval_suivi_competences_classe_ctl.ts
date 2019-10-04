@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
  *     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
@@ -377,6 +378,32 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 }
                 case 'printTabMoyPosAppr': {
                     $scope.exportMoyennesMatieres();
+                    break;
+                }
+
+                case 'printClasseReleve': {
+
+                    let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: idPeriode});
+                    let idStructure = $scope.structure.id;
+                    let idClasse = $scope.search.classe.id;
+                    let classeName = $scope.search.classe.name;
+                    $scope.opened.recapEval = false;
+                    $scope.exportRecapEvalObj.errExport = false;
+                    await Utils.runMessageLoader($scope);
+                    try {
+                        if (type_periode !== undefined) {
+                            await Utils.getClasseReleve(idPeriode, idClasse, type_periode.type, type_periode.ordre,
+                                idStructure, classeName);
+                        }
+                        else {
+                            await Utils.getClasseReleve(undefined, $scope.search.classe.id, undefined, undefined,
+                                idStructure, classeName);
+                        }
+                        await Utils.stopMessageLoader($scope);
+                    }
+                    catch (e) {
+                        await Utils.stopMessageLoader($scope);
+                    }
                     break;
                 }
             }

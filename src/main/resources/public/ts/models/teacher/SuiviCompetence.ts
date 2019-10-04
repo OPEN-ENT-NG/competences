@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, Collection, _, model } from 'entcore';
+import {Model, Collection, _, model, notify, idiom as lang} from 'entcore';
 import {
     CompetenceNote,
     Domaine,
@@ -195,9 +195,9 @@ export class SuiviCompetence extends Model {
         });
     }
 
-    getReleve (idPeriode, idUser, idTypePeriode, ordrePeriode) {
-        let uri = '/competences/releve/pdf?idEtablissement=' +
-            model.me.structures[0] + '&idUser=' + idUser;
+    getReleve (idPeriode, idUser, idTypePeriode, ordrePeriode, idStructure) {
+        let uri = `/competences/releve/pdf?idEtablissement=${idStructure}&idUser=${idUser}`;
+
         if (idPeriode !== undefined && idPeriode !== null) {
             uri += '&idPeriode=' + idPeriode;
             if (idTypePeriode !== undefined) {
@@ -210,6 +210,11 @@ export class SuiviCompetence extends Model {
 
         location.replace(uri);
     }
+
+    async getClasseReleve(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName) {
+        await Utils.getClasseReleve(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName);
+    }
+
     async getCompetencesNotes (eleve: Eleve, periode : any): Promise<any> {
         let url = SuiviCompetence.api.getCompetencesNotes + eleve.id + '?idCycle=' + this.cycle.id_cycle;
 

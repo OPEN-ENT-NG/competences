@@ -135,6 +135,9 @@
   "evaluations.title":"Évaluations",
   "evaluations" : "évaluation(s)",
   "evaluations.export.releve": "Export Relevé Périodique",
+  "evaluations.export.releve.no.student": "Aucun élève n'est présent dans la classe pour la période sélectionnée",
+  "evaluations.get.students.classe.error" : "Erreur lors de la récupération des élèves de la classe",
+  "evaluations.get.data.student.classe.error" : "Erreur lors de la récupération des donéées d'un élève de la classe",
   "evaluations.export" : "Exporter",
   "evaluations.export.format" : "Votre format d'export",
   "evaluations.export.format.pdf" : "Exporter au format PDF",
@@ -421,7 +424,9 @@
 
   "evaluation.suivi.export.button.eleve" : "Exporter le relevé de compétences de l'élève au format PDF",
   "evaluation.suivi.export.button.eleve.releve" : "Exporter le relevé de notes de l'élève au format PDF",
+  "evaluation.suivi.export.button.classe.releve" : "Exporter le relevé de notes de la classe au format PDF",
   "evaluation.suivi.export.button.classe" : "Exporter le relevé de compétences de la classe au format PDF",
+  "evaluation.releve.classe": "Le relevé de notes des élèves de la classe",
 
   "evaluation.search.by.enseignements" : "Vue par enseignements",
   "evaluation.search.by.domaines" : "Vue par domaines",

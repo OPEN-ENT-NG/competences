@@ -1011,13 +1011,36 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.getReleve = function() {
             let type_periode = _.findWhere($scope.structure.typePeriodes.all,
                 {id: $scope.search.periode.id_type});
+            let idStructure = $scope.structure.id;
             if (type_periode !== undefined) {
                 $scope.suiviCompetence.getReleve($scope.search.periode.id_type,
-                    $scope.search.eleve.id, type_periode.type, type_periode.ordre);
+                    $scope.search.eleve.id, type_periode.type, type_periode.ordre, idStructure);
             }
             else {
                 $scope.suiviCompetence.getReleve(undefined,
-                    $scope.search.eleve.id, undefined, undefined);
+                    $scope.search.eleve.id, undefined, undefined, idStructure);
+            }
+        };
+        $scope.getClasseReleve = async function(){
+            let idPeriode = $scope.search.periode.id_type;
+            let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: idPeriode});
+            let idStructure = $scope.structure.id;
+            let idClasse = $scope.search.classe.id;
+            let className = $scope.search.classe.name;
+            await Utils.runMessageLoader($scope);
+            try {
+                if (type_periode !== undefined) {
+                    await $scope.suiviCompetence.getClasseReleve(idPeriode, idClasse, type_periode.type, type_periode.ordre,
+                        idStructure, className);
+                }
+                else {
+                    await $scope.suiviCompetence.getClasseReleve(undefined, $scope.search.classe.id,
+                        undefined, undefined, idStructure, className);
+                }
+                await Utils.stopMessageLoader($scope);
+            }
+            catch(e){
+                await Utils.stopMessageLoader($scope);
             }
         };
 

@@ -15,11 +15,12 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, idiom as lang, _, Behaviours, template} from 'entcore';
+import {model, idiom as lang, _, Behaviours, template, notify} from 'entcore';
 import * as utils from '../../utils/teacher';
 import {BilanFinDeCycle, Classe, CompetenceNote} from './index';
 import {evaluations} from "./model";
 import {updateFilters} from "../../utils/functions/updateFilters";
+import http from "axios";
 
 export class Utils {
     static isHeadTeacher (classe) {
@@ -707,5 +708,48 @@ export class Utils {
         });
 
         return (nbMoy > 0)? (moy/ nbMoy) : 0;
-    }
+    };
+
+    static isNull =  function (object) {
+        return (object === undefined) || (object === null);
+    };
+
+    static isNotNull =  function (object) {
+        return (object !== undefined) && (object !== null);
+    };
+
+    static getClasseReleve = async function(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName){
+            let url = `/competences/releve/classe/pdf`;
+            let param = {
+                idPeriode: idPeriode,
+                idClasse: idClasse,
+                idTypePeriode: idTypePeriode,
+                ordre: ordrePeriode,
+                idStructure: idStructure,
+                classeName: classeName
+            };
+            if(Utils.isNull(idStructure) || Utils.isNull(idClasse)){
+                console.error(`[getClasseReleve] : required idStructure: ${idStructure} and idClasse: ${idClasse}`);
+                return;
+            }
+            try {
+                let data = await http.post(url, param,{responseType: 'arraybuffer'});
+
+                let blob = new Blob([data.data]);
+                let link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download =  data.headers['content-disposition'].split('filename=')[1];
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(function() {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(link.href);
+                }, 100);
+                notify.success(classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
+            }
+            catch (e) {
+                notify.error(e.error);
+                throw (e);
+            }
+    };
 }
