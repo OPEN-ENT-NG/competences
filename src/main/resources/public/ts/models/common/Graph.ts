@@ -224,7 +224,15 @@ export class Graph extends Model{
                     if (tooltipModel.body !== undefined) {
                         tooltipModel.width += 30;
                         for (let i = 0; i < tooltipModel.body.length; i++) {
-                            tooltipModel.body[i].lines[0] += `${tooltipModel.dataPoints[i].yLabel}`;
+                            let yLabel = tooltipModel.dataPoints[i].yLabel;
+                            let body = tooltipModel.body[i];
+                            if(Utils.isNull(body)){
+                                continue;
+                            }
+                            let line = tooltipModel.body[i].lines[0];
+                            if(Utils.isNotNull(line) && !line.endsWith(yLabel)){
+                                tooltipModel.body[i].lines[0] += `${yLabel}`;
+                            }
                         }
                     }
                 }
