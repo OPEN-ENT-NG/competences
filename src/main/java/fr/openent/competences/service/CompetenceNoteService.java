@@ -171,12 +171,4 @@ public interface CompetenceNoteService extends CrudService {
      */
     void getMaxBaremeMapOrderBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String,Map<Integer, Map<Integer,Integer>>>> handler);
 
-   /**
-     * retourne le barème max pour un cycle donné
-     * @param idEtablissement id de la structure
-     * @param idClasse id de la classe
-     * @param handler id de l'établissement
-     */
-  /*  void getMaxBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String, JsonObject>> handler);
-    */
  }

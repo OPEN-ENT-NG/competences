@@ -158,6 +158,7 @@ export class Evaluations extends Model {
                                         devoirs.push({
                                             id : competence.id_devoir,
                                             id_matiere: competence.id_matiere,
+                                            id_sousmatiere: competence.id_sousmatiere,
                                             owner : competence.owner,
                                             competences : _c,
                                             apprec_visible : competence.apprec_visible,
@@ -202,6 +203,7 @@ export class Evaluations extends Model {
                                                 devoirs.push({
                                                     id : annotation.id_devoir,
                                                     id_matiere: annotation.id_matiere,
+                                                    id_sousmatiere: annotation.id_sousmatiere,
                                                     owner : annotation.owner,
                                                     annotation : {
                                                         id : annotation.id,

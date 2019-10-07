@@ -484,19 +484,4 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         values.add(idEleve);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
-/*
-    @Override
-    public void getMaxBaremeBrevet(String idEtablissement, String idClasse, Handler<Either<String, JsonObject>> handler) {
-
-        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
-       String query = "SELECT MAX (bareme_brevet) FROM(SELECT * FROM notes.niveau_competences " +
-               "INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau " +
-               "INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle " +
-                "AND cc.id_groupe = ? " +
-                "AND echelle.id_structure = ? ) as maxbareme";
-        params.add(idClasse);
-        params.add(idEtablissement);
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
-
-    }*/
 }
