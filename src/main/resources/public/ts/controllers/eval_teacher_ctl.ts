@@ -2517,7 +2517,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getLibellePositionnement = function (positionnementCalcule) {
-            return lang.translate("evaluations.positionnement.calculee") + " : " + positionnementCalcule;
+            return lang.translate("evaluations.positionnement.calculee")
+                + " : " + (Utils.isNull(positionnementCalcule)? 0 :positionnementCalcule);
         };
         /**
          * Séquence d'enregistrement d'une annotation
@@ -4033,13 +4034,19 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         if(moy !== '') {
                             moyenneSousMatiereAnnee[idSousMatiere].push(moy);
                         }
-                        let pos_sous_mat = eleve.details._positionnements_auto[idPeriode];
-                        pos_sous_mat = (pos_sous_mat !== undefined)? pos_sous_mat[idSousMatiere] : undefined;
-                        let moyenne_convertie = (pos_sous_mat !== undefined) ? (utils.getMoyenneForBFC(
-                            pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
-                        pos_sous_matieres[idSousMatiere] = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
-                        posSousMatiereAnnee[idSousMatiere] = Math.max(pos_sous_matieres[idSousMatiere],
-                            posSousMatiereAnnee[idSousMatiere]);
+                        if(Utils.isNotNull(eleve.details._positionnements_auto)) {
+                            let pos_sous_mat = eleve.details._positionnements_auto[idPeriode];
+                            pos_sous_mat = (pos_sous_mat !== undefined) ? pos_sous_mat[idSousMatiere] : undefined;
+                            let moyenne_convertie = (pos_sous_mat !== undefined) ? (utils.getMoyenneForBFC(
+                                pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
+                            pos_sous_matieres[idSousMatiere] = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
+                            posSousMatiereAnnee[idSousMatiere] = Math.max(pos_sous_matieres[idSousMatiere],
+                                posSousMatiereAnnee[idSousMatiere]);
+                        }
+                        else{
+                            pos_sous_matieres[idSousMatiere] = 0;
+                        }
+
                     });
                     // get positionnement Auto
                     let details_pos_auto = _.findWhere(
@@ -4065,7 +4072,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($scope.releveNote.idPeriode === idPeriode) {
                         eleve.positionnement =
                             (positionnementFinal !== "") ? positionnementFinal : (positionnement);
-                        eleve.positionnementCalcule = positionnement;
+                        eleve.positionnementCalcule = Utils.isNull(positionnement)? 0 : positionnement;
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
@@ -4154,12 +4161,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if(tabMoy !== '' && !_.isEmpty(tabMoy)){
                         moyenneSousMatiereAnnee[idSousMatiere] = Utils.basicMoy(moyenneSousMatiereAnnee[idSousMatiere]);
                     }
+                    else{
+                        moyenneSousMatiereAnnee[idSousMatiere] = '';
+                    }
                 });
                 eleve.historiques.push(historiqueAnnee);
 
                 eleve.evaluations.extended = true;
                 utils.safeApply($scope);
-            }.3
+            }
         };
 
         $scope.openedLigthboxEleve = async (eleve, filteredPeriode) => {

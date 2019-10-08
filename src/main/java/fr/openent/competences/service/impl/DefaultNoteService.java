@@ -1241,15 +1241,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private Map<String, JsonArray> groupeNotesByStudent(JsonArray allNotes) {
         Map<String, JsonArray> notesByStudent = new HashMap<>();
         for (int i = 0; i < allNotes.size(); i++) {
-
-
             JsonObject note = allNotes.getJsonObject(i);
-            String id_student = note.getString(ID_ELEVE);
+            String idStudent = note.getString(ID_ELEVE);
 
-            if (!notesByStudent.containsKey(id_student)) {
-                notesByStudent.put(id_student, new JsonArray().add(note));
+            if (!notesByStudent.containsKey(idStudent)) {
+                notesByStudent.put(idStudent, new JsonArray().add(note));
             } else {
-                notesByStudent.get(id_student).add(note);
+                notesByStudent.get(idStudent).add(note);
             }
         }
         return notesByStudent;
@@ -1266,6 +1264,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Map<Long, Map<Long, Set<Long>>> idsCompetenceSousMat = new HashMap<>();
         idsCompetence.put(null, new HashSet<>());
         idsCompetenceSousMat.put(null, new HashMap<>());
+
+        result.put(POSITIONNEMENTS_AUTO, new JsonArray());
+        result.put("_" + POSITIONNEMENTS_AUTO, new JsonObject());
 
         for (int i = 0; i < listCompNotes.size(); i++) {
 
@@ -1332,9 +1333,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             // positionnement sur l'année
             utilsService.addToMap(null, notesByDevoirByPeriode, noteDevoir);
         }
-
-        result.put(POSITIONNEMENTS_AUTO, new JsonArray());
-        result.put("_" + POSITIONNEMENTS_AUTO, new JsonObject());
 
         // Paramètre de calcul des moyennes de compétencesNotes
         Boolean withStat = false;
@@ -2612,6 +2610,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 if (eleveObject.getJsonArray(COMPETENCES_NOTES_KEY) == null) {
                     eleveObject.put(COMPETENCES_NOTES_KEY, compNotesEleve);
                 }
+                if(!eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).equals(compNotesEleve)){
+                    log.info("calculMoyennesCompetencesNotesFOrReleve get difference");
+                    log.warn(compNotesEleve.encode() + " _\n "  +
+                            eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).encode());
+                }
                 calculPositionnementAutoByEleveByMatiere(compNotesEleve, eleveObject,false);
                 JsonObject positionnement = utilsService.getObjectForPeriode(
                         eleveObject.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode, ID_PERIODE);
@@ -3469,12 +3472,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             // Calcul des positionements
             JsonArray listCompNotes = listCompNotesF.result();
-            // calculPositionnementAutoByEleveByMatiere(listCompNotes, result,false);
-            Map<String, JsonObject> eleveMapObject =  new HashMap<>();
-            eleveMapObject.put(idEleve, result);
-
-            calculMoyennesCompetencesNotesFOrReleve(listCompNotes, result, null,
-                    tableauDeConversionFuture.result(), eleveMapObject);
+            calculPositionnementAutoByEleveByMatiere(listCompNotes, result,false);
 
             // Calcul des moyennes par période pour la classe
             JsonArray moyFinalesEleves = moyFinalesElevesF.result();
