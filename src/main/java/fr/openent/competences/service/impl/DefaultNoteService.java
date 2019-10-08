@@ -1261,9 +1261,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         notesByDevoirByPeriode.put(null, new ArrayList<>());
         Map<Long, Set<Long>> idsCompetence = new HashMap<>();
-        Map<Long, Map<Long, Set<Long>>> idsCompetenceSousMat = new HashMap<>();
         idsCompetence.put(null, new HashSet<>());
-        idsCompetenceSousMat.put(null, new HashMap<>());
 
         result.put(POSITIONNEMENTS_AUTO, new JsonArray());
         result.put("_" + POSITIONNEMENTS_AUTO, new JsonObject());
@@ -1278,7 +1276,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 notesByDevoirByPeriode.put(id_periode, new ArrayList<>());
                 notesByPeriodeBySousMatiere.put(id_periode, new HashMap<>());
                 idsCompetence.put(id_periode, new HashSet<>());
-                idsCompetenceSousMat.put(id_periode, new HashMap<>());
             }
 
 
@@ -1298,19 +1295,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             Long idCompetence = note.getLong("id_competence");
             Long niveauFinal = note.getLong("niveau_final");
             if(isNotNull(idSousMatiere)) {
-                if(! idsCompetenceSousMat.get(id_periode).containsKey(idSousMatiere)){
-                    idsCompetenceSousMat.get(id_periode).put(idSousMatiere, new HashSet<>());
-                }
-                if (isNotNull(niveauFinal)
-                        && !idsCompetenceSousMat.get(id_periode).get(idSousMatiere).contains(idCompetence)) {
-                    idsCompetence.get(id_periode).add(idCompetence);
-                    noteDevoirSousMat = new NoteDevoir(Double.valueOf(niveauFinal), 1.0, false,
-                            1.0);
-                } else  if (!idsCompetence.get(id_periode).contains(idCompetence)) {
-                    noteDevoirSousMat = new NoteDevoir(Double.valueOf(note.getLong("evaluation")), 1.0,
+                noteDevoirSousMat = new NoteDevoir(Double.valueOf(note.getLong("evaluation")), 1.0,
                             false, 1.0);
                     // Si on a déjà pris en compte le niveau final
-                }
                 if(isNotNull(noteDevoirSousMat)){
                     utilsService.addToMap(idSousMatiere, notesByPeriodeBySousMatiere.get(id_periode),
                             noteDevoirSousMat);

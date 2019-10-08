@@ -1759,7 +1759,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         res = ((Double) object).floatValue();
                     }
                     else {
-                        res =((JsonObject)object).getFloat(MOYENNE);
+                        Boolean hasNote = ((JsonObject)object).getBoolean("hasNote");
+                        if(isNotNull(hasNote) && hasNote) {
+                            res = ((JsonObject) object).getFloat(MOYENNE);
+                        }
                     }
 
                 }
