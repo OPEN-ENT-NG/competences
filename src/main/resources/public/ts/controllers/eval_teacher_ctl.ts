@@ -4064,9 +4064,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // Déduction du positionnement par défaut en fonction de l'échelle de convertion
                     // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
                     // (Logique prise au calcul du niveau dans le BFC).
-                    let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
-                        details_pos_auto.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
-                    let positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
+                    let positionnement = 0;
+                    if(Utils.isNotNull(details_pos_auto) && details_pos_auto.moyenne > 0) {
+                        let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
+                            details_pos_auto.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
+                        positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
+                    }
+
 
 
 

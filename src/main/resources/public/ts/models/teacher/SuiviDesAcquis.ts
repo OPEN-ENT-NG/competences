@@ -193,15 +193,18 @@ export class SuivisDesAcquis extends Model{
                         suiviDesAcquis.moyenneClasse = utils.getNN();
                     }
                     //le positionnement auto
+                    suiviDesAcquis.positionnement_auto = 0;
                     if( suiviDesAcquis.positionnements_auto !== null && suiviDesAcquis.positionnements_auto !== undefined
                         && _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
                         let positionnementCalcule = _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}).moyenne;
-                        let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1, this.tableConversions.all);
-                        suiviDesAcquis.positionnement_auto = (positionnementConverti !== -1) ? positionnementConverti : 0;
-                    }else{
-                        suiviDesAcquis.positionnement_auto = 0;
-
+                        if(positionnementCalcule !== 0) {
+                            let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1,
+                                this.tableConversions.all);
+                            suiviDesAcquis.positionnement_auto =
+                                (positionnementConverti !== -1) ? positionnementConverti : 0;
+                        }
                     }
+
                     if ( suiviDesAcquis.positionnementsFinaux !== null && suiviDesAcquis.positionnementsFinaux !== undefined && suiviDesAcquis.positionnementsFinaux.length > 0) {
                         if(_.find( suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}) !== undefined){
                             suiviDesAcquis.positionnement_final = _.find( suiviDesAcquis.positionnementsFinaux, {id_periode: suiviDesAcquis.idPeriode}).positionnementFinal;
@@ -263,7 +266,7 @@ export class SuivisDesAcquis extends Model{
     }
 
     getPositionnement(suivi, sousMat) {
-        let res = undefined;
+        let res = 0;
         let moy = suivi._positionnements_auto;
         if(moy !== undefined) {
             moy = suivi._positionnements_auto[this.idPeriode];
@@ -271,7 +274,7 @@ export class SuivisDesAcquis extends Model{
                 moy = moy [sousMat.id_type_sousmatiere];
             }
         }
-        if(moy !== undefined) {
+        if(Utils.isNotNull(moy) && moy.moyenne > 0) {
             let positionnementConverti = utils.getMoyenneForBFC(moy.moyenne + 1, this.tableConversions.all);
             res = (positionnementConverti !== -1) ? positionnementConverti : 0;
         }
