@@ -67,11 +67,21 @@
             <label class="cell twelve" tooltip="[[getLibellePositionnement(informations.eleve.positionnementCalcule)]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
             <ul class="selectable-list twelve" ng-if="!disabledSaisieNNoutPeriode()">
 
-                <li class="cell"
+                <li ng-if="$index === 0"
+                        class="cell"
+                    style="margin: 0;padding-left: 2px;padding-right: 2px;font-size: x-small;"
+                    ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                    data-ng-click="savePositionnementEleve(informations.eleve, $index);"
+                    ng-repeat-start="niveau in structure.cycle.niveauCompetencesArray">
+                    <label ng-if="$index !== 0" ng-bind-html="$index"></label>
+                    <label ng-bind-html="'NN'"></label>
+                </li>
+                <li ng-if="$index !== 0"
+                    class="cell"
                     style="margin: 0"
                     ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
                     data-ng-click="savePositionnementEleve(informations.eleve, $index);"
-                    ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
+                    ng-repeat-end="niveau in structure.cycle.niveauCompetencesArray">
                     <label ng-bind-html="$index"></label>
                 </li>
                 <li class="cell"
@@ -86,9 +96,17 @@
             <ul class="selectable-list twelve" ng-if="disabledSaisieNNoutPeriode()">
 
                 <li class="cell"
-                    style="margin: 0"
+                    ng-if="$index === 0"
+                    style="margin: 0;padding-left: 2px;padding-right: 2px;font-size: x-small;"
                     ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
-                    ng-repeat="niveau in structure.cycle.niveauCompetencesArray">
+                    ng-repeat-start="niveau in structure.cycle.niveauCompetencesArray">
+                    <label   ng-bind-html="'NN'"></label>
+                </li>
+                <li class="cell"
+                    ng-if="$index !== 0"
+                    style="margin: 0;padding-left: 2px;padding-right: 2px;font-size: x-small;"
+                    ng-class="{ selected:  $index === informations.eleve.positionnement, positionnementcalculee: $index === informations.eleve.positionnementCalcule}"
+                    ng-repeat-end="niveau in structure.cycle.niveauCompetencesArray">
                     <label ng-bind-html="$index"></label>
                 </li>
                 <li class="cell"

@@ -89,9 +89,18 @@
 
                             <ul class="selectable-list twelve">
                                 <li class="cell"
-                                    style="margin: 0; border: 1px solid #2a9cc8;"
+                                    ng-if="$index === 0"
+                                    style="margin: 0; border: 1px solid #2a9cc8;padding-left: 2px;padding-right: 2px;font-size: x-small;"
                                     ng-class="{ positionnementcalculee: ($index === sousMat.posi) }"
-                                    ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    ng-repeat-start="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    <label ng-if="$index !== 0" ng-bind-html="$index"></label>
+                                    <label  ng-bind-html="'NN'"></label>
+                                </li>
+                                <li class="cell"
+                                    ng-if="$index !== 0"
+                                    style="margin: 0;  border: 1px solid #2a9cc8;"
+                                    ng-class="{ positionnementcalculee: ($index === sousMat.posi) }"
+                                    ng-repeat-end="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
                                     <label ng-bind-html="$index"></label>
                                 </li>
                                 <li class="cell"
@@ -108,10 +117,19 @@
                                 ng-if="canSaveAppMatierePosiBilanPeriodique" >
 
                                 <li class="cell"
-                                    style="margin: 0"
+                                    ng-if="$index === 0"
+                                    style="margin: 0;padding-left: 2px;padding-right: 2px;font-size: x-small;"
                                     ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final}"
                                     data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
-                                    ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    ng-repeat-start="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    <label   ng-bind-html="'NN'"></label>
+                                </li>
+                                <li class="cell"
+                                    ng-if="$index !== 0"
+                                    style="margin: 0;"
+                                    ng-class="{ selected:  $index === suiviDesAcquis.positionnement_final}"
+                                    data-ng-click="savePositionnementEleve(suiviDesAcquis, $index);"
+                                    ng-repeat-end="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
                                     <label ng-bind-html="$index"></label>
                                 </li>
                                 <li class="cell"
@@ -125,10 +143,19 @@
                             </ul>
                             <ul class="selectable-list twelve" ng-if="!canSaveAppMatierePosiBilanPeriodique" >
                                 <li class="cell"
-                                    style="margin: 0"
+                                    ng-if="$index === 0"
+                                    style="margin: 0;padding-left: 2px;padding-right: 2px;font-size: x-small;"
                                     ng-class="{ positionnementcalculee: $index === suiviDesAcquis.getPositionnementDefinitif()}"
-                                    ng-repeat="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
-                                    <label ng-bind-html="$index"></label>
+                                    ng-repeat-start="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    <label ng-if="$index !== 0" ng-bind-html="$index"></label>
+                                    <label ng-if="$index === 0"  ng-bind-html="'NN'"></label>
+                                </li>
+                                <li class="cell"
+                                    style="margin: 0;"
+                                    ng-if="$index !== 0"
+                                    ng-class="{ positionnementcalculee: $index === suiviDesAcquis.getPositionnementDefinitif()}"
+                                    ng-repeat-end="niveau in elementBilanPeriodique.structure.cycle.niveauCompetencesArray">
+                                    <label  ng-bind-html="$index"></label>
                                 </li>
                                 <li class="cell"
                                     style="margin: 0"

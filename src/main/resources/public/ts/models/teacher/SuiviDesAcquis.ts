@@ -274,7 +274,7 @@ export class SuivisDesAcquis extends Model{
                 moy = moy [sousMat.id_type_sousmatiere];
             }
         }
-        if(Utils.isNotNull(moy) && moy.moyenne > 0) {
+        if(Utils.isNotNull(moy) && moy.hasNote > 0) {
             let positionnementConverti = utils.getMoyenneForBFC(moy.moyenne + 1, this.tableConversions.all);
             res = (positionnementConverti !== -1) ? positionnementConverti : 0;
         }

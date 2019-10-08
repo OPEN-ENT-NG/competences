@@ -1759,7 +1759,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         res = ((Double) object).floatValue();
                     }
                     else {
-                    res =((JsonObject)object).getFloat(MOYENNE);
+                        res =((JsonObject)object).getFloat(MOYENNE);
                     }
 
                 }
@@ -1876,7 +1876,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             // Grâce à l'échelle de conversion du cycle de la classe de l'élève
             if(positionnement != null) {
                 Float pos = positionnement.getFloat(MOYENNE);
-                String val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere,true);
+                Boolean hasCompNote = positionnement.getBoolean("hasNote");
+                String val = NN;
+                if(isNotNull(hasCompNote) && hasCompNote){
+                    val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere, true);
+                }
+
                 matiere.put(POSITIONNEMENT, val);
             }
         }
@@ -2334,7 +2339,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         log.info(" \n\n");
         log.info("                          :-------------------------------: ");
         log.info("                          :    BULLETIN STRUCTURE " + index + "/" + structures.size()+ "   " +
-                 ((index<=9)?" :":":"));
+                ((index<=9)?" :":":"));
         log.info("                          :-------------------------------: \n(structure : " +  idStructure + ")\n");
 
 
@@ -2518,7 +2523,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void runArchiveBulletin(JsonArray structures, Vertx vertx, JsonObject config, String path, String host,
-                               String acceptLanguage, Boolean forwardedFor ){
+                                    String acceptLanguage, Boolean forwardedFor ){
 
         AtomicInteger nbStructure = new AtomicInteger(structures.size());
         Future structuresFuture = Future.future();

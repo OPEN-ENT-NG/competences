@@ -2517,7 +2517,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getLibellePositionnement = function (positionnementCalcule) {
-            if(positionnementCalcule === -1){
+            if(positionnementCalcule === utils.getNN()){
                 return lang.translate('evaluations.no.positionnement.calculee');
             }
             else{
@@ -4065,7 +4065,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
                     // (Logique prise au calcul du niveau dans le BFC).
                     let positionnement = 0;
-                    if(Utils.isNotNull(details_pos_auto) && details_pos_auto.moyenne > 0) {
+                    if(Utils.isNotNull(details_pos_auto) && details_pos_auto.hasNote) {
                         let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
                             details_pos_auto.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
                         positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
@@ -4083,7 +4083,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($scope.releveNote.idPeriode === idPeriode) {
                         eleve.positionnement =
                             (positionnementFinal !== "") ? positionnementFinal : (positionnement);
-                        eleve.positionnementCalcule = Utils.isNull(positionnement)? -1 : positionnement;
+                        eleve.positionnementCalcule = Utils.isNull(positionnement)? utils.getNN() : positionnement;
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
