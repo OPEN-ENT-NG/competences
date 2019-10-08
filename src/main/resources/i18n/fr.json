@@ -600,6 +600,7 @@
   "evaluation.dispense.eleve":"Dispenser l'élève",
   "evaluation.not.dispense.eleve":"Ne pas Dispenser l'élève",
   "evaluations.positionnement.calculee":"Positionnement calculé",
+  "evaluations.no.positionnement.calculee":"Pas de positionnement calculé",
   "transition.bilan.annee": "NC",
   "transition.bilan.annee.classe": "Bilan Année classe : ",
   "competences.competence.niveau.final.save.err":"Erreur lors de la sauvegarde du niveau final",

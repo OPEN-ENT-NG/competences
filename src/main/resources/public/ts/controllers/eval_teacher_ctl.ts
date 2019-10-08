@@ -2517,8 +2517,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getLibellePositionnement = function (positionnementCalcule) {
-            return lang.translate("evaluations.positionnement.calculee")
-                + " : " + (Utils.isNull(positionnementCalcule)? 0 :positionnementCalcule);
+            if(positionnementCalcule === -1){
+                return lang.translate('evaluations.no.positionnement.calculee');
+            }
+            else{
+                return  lang.translate("evaluations.positionnement.calculee")
+                    + " : " + (Utils.isNull(positionnementCalcule)? 0 :positionnementCalcule);
+            }
+
+
         };
         /**
          * Séquence d'enregistrement d'une annotation
@@ -4072,7 +4079,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($scope.releveNote.idPeriode === idPeriode) {
                         eleve.positionnement =
                             (positionnementFinal !== "") ? positionnementFinal : (positionnement);
-                        eleve.positionnementCalcule = Utils.isNull(positionnement)? 0 : positionnement;
+                        eleve.positionnementCalcule = Utils.isNull(positionnement)? -1 : positionnement;
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année

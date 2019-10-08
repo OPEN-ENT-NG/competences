@@ -1351,12 +1351,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             if(isNotNull(idPeriode)) {
                 HashMap<Long, ArrayList<NoteDevoir>> moyCompNoteBySousMat = notesByPeriodeBySousMatiere.get(idPeriode);
                 if (isNotNull(moyCompNoteBySousMat)) {
+                    JsonObject sousMatMoy = new JsonObject();
                     for (Map.Entry<Long, ArrayList<NoteDevoir>> entry : moyCompNoteBySousMat.entrySet()) {
                         JsonObject moyenne = utilsService.calculMoyenne(entry.getValue(), withStat, diviseur, annual);
                         Long idSousMatiere = entry.getKey();
-                        JsonObject sousMatMoy = new JsonObject().put(idSousMatiere.toString(), moyenne);
-                        result.getJsonObject("_" + POSITIONNEMENTS_AUTO).put(idPeriode.toString(), sousMatMoy);
+                        sousMatMoy.put(idSousMatiere.toString(), moyenne);
                     }
+                    result.getJsonObject("_" + POSITIONNEMENTS_AUTO).put(idPeriode.toString(), sousMatMoy);
                 }
             }
 
