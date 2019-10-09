@@ -1759,7 +1759,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     if ($scope.devoir.id_periode == null
                         && $scope.search.periode && $scope.search.periode !== "*") {
                         $scope.devoir.id_periode = $scope.search.periode.id_type;
-                       await utils.safeApply($scope);
+                        await utils.safeApply($scope);
                     }
                     $scope.hideCreation = false;
                 }
@@ -3458,7 +3458,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     case 'cartouche' : {
                         url = "/competences/devoirs/print/" + $scope.currentDevoir.id + "/cartouche?eleve=" + $scope.printOption.byEleve
                             + '&color=' + $scope.printOption.inColor + "&nbr=" + $scope.printOption.cartoucheNmb + "&image=" + $scope.printOption.image +
-                        "&withResult=" + $scope.printOption.withResult + "&withAppreciations=" + $scope.printOption.withAppreciations;
+                            "&withResult=" + $scope.printOption.withResult + "&withAppreciations=" + $scope.printOption.withAppreciations;
                         http().getJson(url + "&json=true").error((result) => {
                             $scope.errorResultExportDevoir(result);
                             utils.safeApply($scope);
@@ -3504,10 +3504,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             switch (result.responseText) {
                 case "{\"error\":\"exportDevoir : empty result.\"}" :
                     $scope.exportDevoirObj.emptyResult = true;
-                break;
+                    break;
                 case "{\"error\":\"exportCartouche : empty result.\"}":
                     $scope.exportDevoirObj.emptyResult = true;
-                break;
+                    break;
                 case "{\"error\":\"exportDevoir : no level.\"}" :
                     $scope.exportDevoirObj.emptyLevel = true ;
                     break;
@@ -3986,7 +3986,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let posSousMatiereAnnee = {};
                 _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
                     moyenneSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = '';
-                    posSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = 0;
+                    posSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = utils.getNN();
                 });
                 // Pour vérifier que si la moyenne finale de l'année a été modifiée
                 let isMoyenneFinaleAnnee = false;
@@ -4048,23 +4048,28 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : -1;
                             pos_sous_matieres[idSousMatiere] = (pos_converti !== -1) ? pos_converti : utils.getNN();
                             let isNN = pos_sous_matieres[idSousMatiere] === utils.getNN();
-                            posSousMatiereAnnee[idSousMatiere] = Math.max(posSousMatiereAnnee[idSousMatiere],
-                                ((isNN)? 0 : pos_sous_matieres[idSousMatiere]));
+                            if(posSousMatiereAnnee[idSousMatiere] === utils.getNN()){
+                                posSousMatiereAnnee[idSousMatiere] = [];
+                            }
+                            if (!isNN && Utils.isNotNull(posSousMatiereAnnee[idSousMatiere]) &&
+                                posSousMatiereAnnee[idSousMatiere] > 0 ) {
+                                posSousMatiereAnnee[idSousMatiere].push(posSousMatiereAnnee[idSousMatiere]);
+                                ((isNN)? 0 : pos_sous_matieres[idSousMatiere]);
+                            }
                         }
                         else{
                             pos_sous_matieres[idSousMatiere] = utils.getNN();
                         }
-
                     });
-                    // get positionnement Auto
+// get positionnement Auto
                     let details_pos_auto = _.findWhere(
                         eleve.details.positionnements_auto,
                         {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
 
 
-                    // Déduction du positionnement par défaut en fonction de l'échelle de convertion
-                    // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
-                    // (Logique prise au calcul du niveau dans le BFC).
+// Déduction du positionnement par défaut en fonction de l'échelle de convertion
+// Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
+// (Logique prise au calcul du niveau dans le BFC).
                     let positionnement = -1;
                     if(Utils.isNotNull(details_pos_auto) && details_pos_auto.hasNote) {
                         let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
@@ -4076,11 +4081,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
 
 
-                    // get positionnement final
+// get positionnement final
                     let details_pos = _.findWhere( eleve.details.positionnements,
                         {id_periode: (idPeriode !== null) ? parseInt(idPeriode) : null});
                     let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement : "";
-                    // initialisation du positionnement pour le détail élève
+// initialisation du positionnement pour le détail élève
                     if ($scope.releveNote.idPeriode === idPeriode) {
                         let pos = Utils.isNull(positionnement)? -1 : positionnement
                         eleve.positionnementCalcule = ((pos <= 0)? utils.getNN() : pos);
@@ -4089,7 +4094,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     }
 
-                    // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
+// On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
                     if (idPeriode !== null &&
                         (details_moyennes_finales !== undefined || details_moyennes !== undefined)) {
                         nbMoyenneAnnee++;
@@ -4100,7 +4105,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             moyenneAnnee += moyenne;
                         }
                     }
-                    // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
+// On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
                     if (idPeriode !== null && ((positionnement !== undefined && positionnement > 0)
                             || (details_pos !== undefined && details_pos > 0))) {
                         nbPositionnementAnnee++;
@@ -4140,7 +4145,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 });
 
-                // On calcule la moyenne à l'année
+// On calcule la moyenne à l'année
                 let moyenneFinaleAnnee;
                 if (nbMoyenneAnnee !== 0) {
                     moyenneFinaleAnnee = (moyenneAnnee / nbMoyenneAnnee).toFixed(2);
@@ -4148,7 +4153,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     moyenneFinaleAnnee = "";
                 }
 
-                // On calcule le positionnement à l'année
+// On calcule le positionnement à l'année
                 let positionnementFinaleAnnee = 0;
                 if (nbPositionnementAnnee !== 0) {
                     positionnementFinaleAnnee = Math.round(positionnementAnnee / nbPositionnementAnnee);
@@ -4170,6 +4175,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
                     let idSousMatiere = sousMatiere.id_type_sousmatiere;
                     let tabMoy = moyenneSousMatiereAnnee[idSousMatiere];
+                    let tabPos = posSousMatiereAnnee[idSousMatiere];
 
                     if(tabMoy !== '' && !_.isEmpty(tabMoy)){
                         moyenneSousMatiereAnnee[idSousMatiere] = Utils.basicMoy(moyenneSousMatiereAnnee[idSousMatiere]);
@@ -4177,6 +4183,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     else{
                         moyenneSousMatiereAnnee[idSousMatiere] = '';
                     }
+                    if(tabPos !== '' && !_.isEmpty(tabPos)){
+                        posSousMatiereAnnee[idSousMatiere] =
+                            Math.round(Utils.basicMoy(posSousMatiereAnnee[idSousMatiere]));
+                    }
+                    else{
+                        posSousMatiereAnnee[idSousMatiere] = utils.getNN();
+                    }
+
                 });
                 eleve.historiques.push(historiqueAnnee);
 
@@ -4345,7 +4359,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
 
-        // Permet de faire afficher la lightBox  au dessus du bandeau du thème
+// Permet de faire afficher la lightBox  au dessus du bandeau du thème
         $scope.displayBoxAboveTheHeadBand = function () {
             $('body').addClass('lightbox-opened');
         };
