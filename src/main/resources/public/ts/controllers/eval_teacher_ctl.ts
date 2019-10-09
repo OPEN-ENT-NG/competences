@@ -3986,7 +3986,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 let posSousMatiereAnnee = {};
                 _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
                     moyenneSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = '';
-                    posSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = utils.getNN();
+                    posSousMatiereAnnee[sousMatiere.id_type_sousmatiere] = '';
                 });
                 // Pour vérifier que si la moyenne finale de l'année a été modifiée
                 let isMoyenneFinaleAnnee = false;
@@ -4047,14 +4047,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             let pos_converti = (pos_sous_mat !== undefined) ? (utils.getMoyenneForBFC(
                                 pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : -1;
                             pos_sous_matieres[idSousMatiere] = (pos_converti !== -1) ? pos_converti : utils.getNN();
-                            let isNN = pos_sous_matieres[idSousMatiere] === utils.getNN();
-                            if(posSousMatiereAnnee[idSousMatiere] === utils.getNN()){
+                            let isNN = (pos_sous_matieres[idSousMatiere] === utils.getNN());
+                            if(posSousMatiereAnnee[idSousMatiere] === ''){
                                 posSousMatiereAnnee[idSousMatiere] = [];
                             }
                             if (!isNN && Utils.isNotNull(posSousMatiereAnnee[idSousMatiere]) &&
                                 posSousMatiereAnnee[idSousMatiere] > 0 ) {
                                 posSousMatiereAnnee[idSousMatiere].push(posSousMatiereAnnee[idSousMatiere]);
-                                ((isNN)? 0 : pos_sous_matieres[idSousMatiere]);
                             }
                         }
                         else{
