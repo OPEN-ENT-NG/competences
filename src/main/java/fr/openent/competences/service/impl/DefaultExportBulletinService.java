@@ -1861,12 +1861,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         if (moyenneFinale != null) {
             printMatiere = true;
-            matiere.put(MOYENNE_ELEVE, (moyenneFinale != null) ? moyenneFinale.getValue("moyenneFinale") : "");
+            matiere.put(MOYENNE_ELEVE, moyenneFinale.getValue("moyenneFinale"));
         }
-        else if (moyenneEleve != null) {
-            printMatiere = true;
-            matiere.put(MOYENNE_ELEVE, moyenneEleve.getValue(MOYENNE));
+        else {
+            if (isNotNull(moyenneEleve)) {
+                printMatiere = true;
+                matiere.put(MOYENNE_ELEVE, moyenneEleve.getValue(MOYENNE));
 
+            }
+            else{
+                matiere.put(MOYENNE_ELEVE, NN);
+            }
         }
 
         JsonArray tableauDeconversion = classe.getJsonArray("tableauDeConversion");
@@ -1882,6 +1887,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Boolean hasCompNote = positionnement.getBoolean("hasNote");
                 String val = NN;
                 if(isNotNull(hasCompNote) && hasCompNote){
+                    printMatiere = true;
                     val = utilsService.convertPositionnement(pos, tableauDeconversion, printMatiere, true);
                 }
 
@@ -1904,7 +1910,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
         // Construction des libelles et de leur style.
         matiere.put(ELEMENTS_PROGRAMME, elementsProgramme)
-                .put(MOYENNE_CLASSE, (moyenneClasse != null) ? moyenneClasse.getValue(MOYENNE) : "")
+                .put(MOYENNE_CLASSE, (moyenneClasse != null) ? moyenneClasse.getValue(MOYENNE) : NN)
                 .put(APPRECIATION_KEY,app)
                 .put(PRINT_MATIERE_KEY, printMatiere);
 

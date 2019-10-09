@@ -4044,14 +4044,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         if(Utils.isNotNull(eleve.details._positionnements_auto)) {
                             let pos_sous_mat = eleve.details._positionnements_auto[idPeriode];
                             pos_sous_mat = (pos_sous_mat !== undefined) ? pos_sous_mat[idSousMatiere] : undefined;
-                            let moyenne_convertie = (pos_sous_mat !== undefined) ? (utils.getMoyenneForBFC(
-                                pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
-                            pos_sous_matieres[idSousMatiere] = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
-                            posSousMatiereAnnee[idSousMatiere] = Math.max(pos_sous_matieres[idSousMatiere],
-                                posSousMatiereAnnee[idSousMatiere]);
+                            let pos_converti = (pos_sous_mat !== undefined) ? (utils.getMoyenneForBFC(
+                                pos_sous_mat.moyenne + 1, $scope.releveNote.tableConversions.all)) : -1;
+                            pos_sous_matieres[idSousMatiere] = (pos_converti !== -1) ? pos_converti : utils.getNN();
+                            let isNN = pos_sous_matieres[idSousMatiere] === utils.getNN();
+                            posSousMatiereAnnee[idSousMatiere] = Math.max(posSousMatiereAnnee[idSousMatiere],
+                                ((isNN)? 0 : pos_sous_matieres[idSousMatiere]));
                         }
                         else{
-                            pos_sous_matieres[idSousMatiere] = 0;
+                            pos_sous_matieres[idSousMatiere] = utils.getNN();
                         }
 
                     });
@@ -4064,11 +4065,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     // Déduction du positionnement par défaut en fonction de l'échelle de convertion
                     // Ajout de 1 à la moyenne pour rentrer dans l'échelle de conversion
                     // (Logique prise au calcul du niveau dans le BFC).
-                    let positionnement = 0;
+                    let positionnement = -1;
                     if(Utils.isNotNull(details_pos_auto) && details_pos_auto.hasNote) {
                         let moyenne_convertie = (details_pos_auto !== undefined) ? (utils.getMoyenneForBFC(
-                            details_pos_auto.moyenne + 1, $scope.releveNote.tableConversions.all)) : 0;
-                        positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : 0;
+                            details_pos_auto.moyenne + 1, $scope.releveNote.tableConversions.all)) : -1;
+                        positionnement = (moyenne_convertie !== -1) ? moyenne_convertie : -1;
                     }
 
 
@@ -4081,9 +4082,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement : "";
                     // initialisation du positionnement pour le détail élève
                     if ($scope.releveNote.idPeriode === idPeriode) {
+                        let pos = Utils.isNull(positionnement)? -1 : positionnement
+                        eleve.positionnementCalcule = ((pos <= 0)? utils.getNN() : pos);
                         eleve.positionnement =
-                            (positionnementFinal !== "") ? positionnementFinal : (positionnement);
-                        eleve.positionnementCalcule = Utils.isNull(positionnement)? utils.getNN() : positionnement;
+                            (positionnementFinal !== "") ? positionnementFinal : (eleve.positionnementCalcule);
+
                     }
 
                     // On stocke la moyenne du trimestre pour le calcul de la moyenne à l'année
@@ -4098,8 +4101,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
                     // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
-                    if (idPeriode !== null &&
-                        ((positionnement !== undefined && positionnement > 0)
+                    if (idPeriode !== null && ((positionnement !== undefined && positionnement > 0)
                             || (details_pos !== undefined && details_pos > 0))) {
                         nbPositionnementAnnee++;
                         if (details_pos !== undefined) {
@@ -4116,7 +4118,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             moyenneClasse: moyenneClasse,
                             moyenne: moyenne,
                             moyenneFinale: moyenneFinale,
-                            positionnement: positionnement,
+                            positionnement: (positionnement > 0)? positionnement : utils.getNN(),
                             positionnementFinal: positionnementFinal,
                             appreciation: appreciation,
                             moyenneSousMatieres: moyenne_sous_matieres,

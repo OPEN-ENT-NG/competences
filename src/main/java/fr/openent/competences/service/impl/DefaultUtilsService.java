@@ -402,7 +402,7 @@ public class DefaultUtilsService  implements UtilsService {
     }
 
     public  void addToMap(String id, Long sousMatiereId,
-                                HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> map,
+                          HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> map,
                           NoteDevoir valueToAdd) {
         if (!map.containsKey(id)) {
             map.put(id, new HashMap<>());
@@ -502,7 +502,7 @@ public class DefaultUtilsService  implements UtilsService {
             query= "MATCH (s:Structure) " + returning;
         } else if(field.equals(ID_CLASSE_KEY)){
             query= " MATCH (s:Class) " + returning + " UNION MATCH (s:FunctionalGroup) " +  returning +
-            " UNION MATCH (s:ManualGroup) " + returning;
+                    " UNION MATCH (s:ManualGroup) " + returning;
         } else if(field.equals(ID_ELEVE_KEY)){
             query= " MATCH (s:User {profiles: ['Student']}) " + returning;
         }
@@ -1099,12 +1099,9 @@ public class DefaultUtilsService  implements UtilsService {
         String val = "";
         Float moyenneToSend;
         if (moyenne != null && moyenne != -1 && tableauDeconversion != null) {
-            if(translation)
-                moyenneToSend = moyenne + 1;
-            else
-                moyenneToSend = moyenne ;
-            int posConverti = getPositionnementValue(moyenneToSend,
-                    tableauDeconversion);
+            moyenneToSend = (translation) ? moyenne + 1 : moyenne;
+
+            int posConverti = getPositionnementValue(moyenneToSend, tableauDeconversion);
             if (posConverti != -1) {
                 val = String.valueOf(posConverti);
             }
