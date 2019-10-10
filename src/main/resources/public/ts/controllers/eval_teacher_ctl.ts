@@ -4086,7 +4086,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     let positionnementFinal = (details_pos !== undefined) ? details_pos.positionnement : "";
 // initialisation du positionnement pour le détail élève
                     if ($scope.releveNote.idPeriode === idPeriode) {
-                        let pos = Utils.isNull(positionnement)? -1 : positionnement
+                        let pos = Utils.isNull(positionnement)? -1 : positionnement;
                         eleve.positionnementCalcule = ((pos <= 0)? utils.getNN() : pos);
                         eleve.positionnement =
                             (positionnementFinal !== "") ? positionnementFinal : (eleve.positionnementCalcule);
@@ -4105,14 +4105,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     }
 // On stocke le positionnement du trimestre pour le calcul du positionnement à l'année
-                    if (idPeriode !== null && ((positionnement !== undefined && positionnement > 0)
-                            || (details_pos !== undefined && details_pos > 0))) {
-                        nbPositionnementAnnee++;
-                        if (details_pos !== undefined) {
-                            isPositionnementFinaleAnnee = true;
-                            positionnementAnnee += details_pos.positionnement;
-                        } else {
+                    if (idPeriode !== null) {
+                        if (Utils.isNotNull(details_pos)) {
+                            if (details_pos.positionnement > 0) {
+                                isPositionnementFinaleAnnee = true;
+                                positionnementAnnee += details_pos.positionnement;
+                                nbPositionnementAnnee++;
+                            }
+                        } else if (Utils.isNotNull(positionnement) && positionnement > 0) {
                             positionnementAnnee += positionnement;
+                            nbPositionnementAnnee++;
                         }
                     }
 
@@ -4123,7 +4125,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             moyenne: moyenne,
                             moyenneFinale: moyenneFinale,
                             positionnement: (positionnement > 0)? positionnement : utils.getNN(),
-                            positionnementFinal: positionnementFinal,
+                            positionnementFinal: ((positionnementFinal === 0)? utils.getNN() : positionnementFinal),
                             appreciation: appreciation,
                             moyenneSousMatieres: moyenne_sous_matieres,
                             posSousMatieres: pos_sous_matieres,
@@ -4165,16 +4167,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     historiqueAnnee.moyenneFinale = "";
                 }
 
+                let posAnneeForHistorique =  (positionnementFinaleAnnee > 0)? positionnementFinaleAnnee : utils.getNN();
                 if (isPositionnementFinaleAnnee) {
-                    historiqueAnnee.positionnementFinal = positionnementFinaleAnnee;
+                    historiqueAnnee.positionnementFinal = posAnneeForHistorique;
                 } else {
-                    historiqueAnnee.positionnement = positionnementFinaleAnnee;
+                    historiqueAnnee.positionnement = posAnneeForHistorique;
                     historiqueAnnee.positionnementFinal = "";
                 }
                 _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
                     let idSousMatiere = sousMatiere.id_type_sousmatiere;
                     let tabMoy = moyenneSousMatiereAnnee[idSousMatiere];
-                        let tabPos = posSousMatiereAnnee[idSousMatiere];
+                    let tabPos = posSousMatiereAnnee[idSousMatiere];
 
                     if(tabMoy !== '' && !_.isEmpty(tabMoy)){
                         moyenneSousMatiereAnnee[idSousMatiere] = Utils.basicMoy(moyenneSousMatiereAnnee[idSousMatiere]);
@@ -4257,7 +4260,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return devoir.nbcompetences > 0;
         };
 
-        $scope.updateHistorique = function (eleve, colonne: string) {
+        $scope.updateHistorique = async function (eleve, colonne: string) {
             let historique = _.findWhere(eleve.historiques, {idPeriode: $scope.releveNote.idPeriode});
             if (historique !== undefined) {
                 switch (colonne) {
@@ -4268,7 +4271,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         historique.moyenneFinale = eleve.moyenneFinale;
                         break;
                     case 'positionnement':
-                        historique.positionnementFinal = eleve.positionnement;
+                        historique.positionnementFinal = (eleve.positionnement>0)? eleve.positionnement:utils.getNN();
                         break;
                     default:
                         break;
@@ -4276,8 +4279,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
             }
             $scope.informations.eleve.evaluations.extended = false;
-            $scope.initDataLightBoxEleve();
-            utils.safeApply($scope);
+            await $scope.initDataLightBoxEleve();
+            await utils.safeApply($scope);
         };
         $scope.hasCompetencesNotes = function (evaluations) {
             if (evaluations === undefined || evaluations.all === undefined) {
