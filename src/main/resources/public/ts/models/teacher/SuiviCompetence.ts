@@ -140,7 +140,9 @@ export class SuiviCompetence extends Model {
             sync: async () => {
                 return new Promise( async (resolve) => {
                     let response: any = await Promise.all([
-                        Enseignement.getAll(classe.id, classe.id_cycle, this.enseignements),
+
+                        Enseignement.getAll(classe.id, (cycle.id_cycle !== undefined && cycle.id_cycle !== null ) ?
+                            cycle.id_cycle: classe.id_cycle , this.enseignements),
                         this.getCompetencesNotes(eleve, periode)
                     ]);
                     this.enseignements.load(response[0].data);

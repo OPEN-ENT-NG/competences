@@ -230,24 +230,33 @@ export class Evaluations extends Model {
                                     });
 
                                     this.devoirs.load(devoirs);
-                                    let matieresDevoirs = _.groupBy(devoirs, 'id_matiere');
-                                    let enseignants = _.groupBy(devoirs, 'owner');
-                                    this.enseignants.sync(enseignants).then(() => {
-                                        this.matieres.sync(matieresDevoirs).then(() => {
-                                            for (let o in matieresDevoirs) {
-                                                matieresDevoirs[o].forEach(function (element) {
-                                                    let devoir = element;
-                                                    let _matiere = that.matieres.findWhere({id: devoir.id_matiere});
-                                                    let enseignant = that.enseignants.findWhere({id: devoir.owner});
-                                                    if ( enseignant !== undefined && _matiere !== undefined
-                                                        && _.filter(_matiere.ens, {id: enseignant.id}).length === 0) {
-                                                        _matiere.ens.push(enseignant);
+                                    let matieresDevoirs = _.omit(_.groupBy(devoirs, 'id_matiere'),null);
+                                    let enseignants = _.omit(_.groupBy(devoirs, 'owner'), "id-user-transition-annee");
+                                    if(!_.isEmpty(enseignants)) {
+
+                                        this.enseignants.sync(enseignants).then(() => {
+                                            if (!_.isEmpty(matieresDevoirs)) {
+                                                this.matieres.sync(matieresDevoirs).then(() => {
+                                                    for (let o in matieresDevoirs) {
+                                                        matieresDevoirs[o].forEach(function (element) {
+                                                            let devoir = element;
+                                                            let _matiere = that.matieres.findWhere({id: devoir.id_matiere});
+                                                            let enseignant = that.enseignants.findWhere({id: devoir.owner});
+                                                            if (enseignant !== undefined && _matiere !== undefined
+                                                                && _.filter(_matiere.ens, {id: enseignant.id}).length === 0) {
+                                                                _matiere.ens.push(enseignant);
+                                                            }
+                                                        });
                                                     }
+                                                    resolve();
                                                 });
+                                            } else {
+                                                resolve();
                                             }
-                                            resolve();
                                         });
-                                    });
+                                    }else{
+                                        resolve();
+                                    }
                                 }).bind(this);
                             }).bind(this);
                         }).bind(this);

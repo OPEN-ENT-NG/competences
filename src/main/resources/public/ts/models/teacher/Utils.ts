@@ -347,7 +347,8 @@ export class Utils {
             if (poDomaine.competences) {
                 _.map(poDomaine.competences.all, function (competence) {
                     competence.competencesEvaluations = _.where(poCompetencesNotes, {
-                        id_competence: competence.id
+                        id_competence: competence.id,
+                        id_domaine: competence.id_domaine
                     });
                     if( competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
                         Utils.setMaxCompetenceShow(competence, isCycle);
