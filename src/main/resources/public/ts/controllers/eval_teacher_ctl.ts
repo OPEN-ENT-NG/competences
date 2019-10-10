@@ -4051,9 +4051,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             if(posSousMatiereAnnee[idSousMatiere] === ''){
                                 posSousMatiereAnnee[idSousMatiere] = [];
                             }
-                            if (!isNN && Utils.isNotNull(posSousMatiereAnnee[idSousMatiere]) &&
-                                posSousMatiereAnnee[idSousMatiere] > 0 ) {
-                                posSousMatiereAnnee[idSousMatiere].push(posSousMatiereAnnee[idSousMatiere]);
+                            if (!isNN && Utils.isNotNull(pos_sous_matieres[idSousMatiere]) &&
+                                pos_sous_matieres[idSousMatiere] > 0 ) {
+                                posSousMatiereAnnee[idSousMatiere].push(pos_sous_matieres[idSousMatiere]);
                             }
                         }
                         else{
@@ -4174,7 +4174,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 _.forEach($scope.releveNote.matiere.sousMatieres.all, (sousMatiere) => {
                     let idSousMatiere = sousMatiere.id_type_sousmatiere;
                     let tabMoy = moyenneSousMatiereAnnee[idSousMatiere];
-                    let tabPos = posSousMatiereAnnee[idSousMatiere];
+                        let tabPos = posSousMatiereAnnee[idSousMatiere];
 
                     if(tabMoy !== '' && !_.isEmpty(tabMoy)){
                         moyenneSousMatiereAnnee[idSousMatiere] = Utils.basicMoy(moyenneSousMatiereAnnee[idSousMatiere]);

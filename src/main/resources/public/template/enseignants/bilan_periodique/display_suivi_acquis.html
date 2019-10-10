@@ -23,7 +23,7 @@
                 <tbody>
                 <tr ng-repeat="suiviDesAcquis in elementBilanPeriodique.suivisAcquis.all">
                     <td colspan="2" ng-if="suiviDesAcquis.sousMatieres === undefined || suiviDesAcquis.sousMatieres.length == 0 ">
-                        <div class="matiere">[[suiviDesAcquis.libelleMatiere]]</div>
+                        <span class="matiere">[[suiviDesAcquis.libelleMatiere]]</span>
                         <ul>
                             <li ng-repeat="teacher in suiviDesAcquis.teachers">[[teacher.firstName[0] + '.' + teacher.name]]</li>
                         </ul>
