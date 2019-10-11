@@ -833,4 +833,82 @@ public class Utils {
         });
         return new JsonArray(eleves);
     }
+
+    public static String getMaitrise(String maitrise, String key) {
+        if (maitrise == null) {
+            return getMaitrise(key);
+        } else if (maitrise.equals("  ")) {
+            return getMaitrise(key);
+        } else {
+            return maitrise;
+        }
+    }
+
+    public static String getMaitrise(String key) {
+        switch (key) {
+            case "1":
+                return "MI";
+            case "2":
+                return "MF";
+            case "3":
+                return "MS";
+            default:
+                return "TB";
+        }
+    }
+    public static Map<String, JsonObject> extractData(JsonArray collection, String key) {
+
+        Map<String, JsonObject> result = new LinkedHashMap<>();
+
+        for (int i = 0; i < collection.size(); i++) {
+            if (collection.getValue(i) instanceof String) {
+                continue;
+            }
+            JsonObject item = collection.getJsonObject(i);
+            String itemKey = String.valueOf(item.getValue(key));
+            if (!result.containsKey(itemKey)) {
+                result.put(itemKey, item);
+            }
+        }
+
+        return result;
+    }
+
+    public static JsonArray orderBy(JsonArray collection, String key, Boolean inverted) {
+        Set<String> sortedSet = inverted ? new TreeSet<String>(Collections.reverseOrder()) : new TreeSet<String>();
+        Map<String, JsonArray> unsortedMap = new HashMap<>();
+        JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
+
+        for (int i = 0; i < collection.size(); i++) {
+            JsonObject item = collection.getJsonObject(i);
+            String itemKey = String.valueOf(item.getValue(key));
+            if (!unsortedMap.containsKey(itemKey)) {
+                unsortedMap.put(itemKey, new fr.wseduc.webutils.collections.JsonArray());
+            }
+            unsortedMap.get(itemKey).add(item);
+            sortedSet.add(itemKey);
+        }
+
+        for (String aSortedSet : sortedSet) {
+            utilsService.saUnion(result, unsortedMap.get(aSortedSet));
+        }
+        return result;
+    }
+
+    public static JsonArray orderBy(JsonArray collection, String key) {
+        return orderBy(collection, key, false);
+    }
+
+    public static  JsonArray addMaitriseNE(JsonArray maitrises) {
+        JsonObject nonEvalue = new JsonObject();
+        String libelle = getLibelle("evaluations.competence.unevaluated");
+        nonEvalue.put("libelle", libelle);
+        nonEvalue.put(ORDRE, 0);
+        nonEvalue.put("default", "grey");
+        nonEvalue.put("lettre", "NE");
+        maitrises.add(nonEvalue);
+
+        return maitrises;
+    }
+
 }

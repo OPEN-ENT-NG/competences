@@ -146,6 +146,9 @@ public class FormSaisieHelper {
     }
 
     public static void formatDevoirsInfos(JsonObject devoirInfos, JsonObject result) {
+        String[] date = devoirInfos.getString("date")
+                .substring(0, devoirInfos.getString("date").indexOf(" ")).split("-");
+        result.put("date", date[2] + '/' + date[1] + '/' + date[0]);
         result.put("devoirName", devoirInfos.getString("name"));
         result.put("devoirCoefficient", devoirInfos.getString("coefficient"));
         result.put("devoirDiviseur", devoirInfos.getLong("diviseur"));

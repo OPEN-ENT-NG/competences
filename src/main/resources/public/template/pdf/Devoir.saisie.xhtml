@@ -132,11 +132,12 @@
                <span class="title aligne-center"> {{devoirName}}</span> <br/>
                 <br/>
             <p class="overIt">
-                Classe: <span class="bold">{{classeName}}</span><br/>
-                Matière: <span class="bold">{{matiere}}{{#hasSousMatiere}}&nbsp;{{sousMatiere}}{{/hasSousMatiere}}</span> <br/>
-                Periode:<span class="bold">{{periode}}</span><br/>
-                Coefficient:<span class="bold">{{devoirCoefficient}}</span><br/>
-                Note sur:<span class="bold"> {{devoirDiviseur}}</span><br/>
+                <span class="bold">Classe:</span> {{classeName}}<br/>
+                <span class="bold">Matière:</span><span> {{matiere}}{{#hasSousMatiere}}&nbsp;{{sousMatiere}}{{/hasSousMatiere}}</span> <br/>
+                <span class="bold">Periode:</span><span>{{periode}}</span><br/>
+                <span class="bold">Date : </span>{{ date }}<br/>
+                <span class="bold">Coefficient:</span><span >{{devoirCoefficient}}</span><br/>
+                <span class="bold">Note sur:</span><span> {{devoirDiviseur}}</span><br/>
             </p>
         </td >
             {{#hasCompetences}}

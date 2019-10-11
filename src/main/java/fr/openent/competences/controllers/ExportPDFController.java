@@ -281,11 +281,8 @@ public class ExportPDFController extends ControllerHelper {
                         if (json) {
                             Renders.renderJson(request, result);
                         } else {
-                            exportService.genererPdf(request,
-                                    result,
-                                    "cartouche.pdf.xhtml",
-                                    "Cartouche",
-                                    vertx, config);
+                            exportService.genererPdf(request, result,"cartouche.pdf.xhtml",
+                                    "Cartouche",vertx, config);
                         }
                     }else{
                         leftToResponse(request, event.left());
@@ -315,44 +312,42 @@ public class ExportPDFController extends ControllerHelper {
             log.error(err);
         }
 
-        devoirService.getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
-            @Override
-            public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                if (stringJsonObjectEither.isRight()) {
-                    JsonObject devoir = stringJsonObjectEither.right().getValue();
+        devoirService.getDevoirInfo(idDevoir, getDevoirInfoEither -> {
+                if (getDevoirInfoEither.isRight()) {
+                    JsonObject devoir = getDevoirInfoEither.right().getValue();
                     final Boolean only_evaluation = devoir.getLong("nbrcompetence").equals(0L);
                     String idGroupe = devoir.getString("id_groupe");
                     String idEtablissement = devoir.getString("id_etablissement");
 
                     exportService.getExportEval(text, only_evaluation, devoir, idGroupe, idEtablissement,
-                            request, new Handler<Either<String, JsonObject>>() {
-
-                                @Override
-                                public void handle(Either<String, JsonObject> stringJsonObjectEither) {
-                                    if (stringJsonObjectEither.isRight()) {
+                            request,  event -> {
+                                    if (event.isRight()) {
                                         try {
-                                            JsonObject result = stringJsonObjectEither.right().getValue();
+                                            JsonObject result = event.right().getValue();
                                             result.put("notOnlyEvaluation", !only_evaluation);
                                             if (json) {
                                                 Renders.renderJson(request, result);
                                             } else {
-                                                String fileName = result.getJsonObject("devoir").getString("classe") + "_" + result.getJsonObject("devoir").getString("nom").replace(' ', '_');
-                                                exportService.genererPdf(request,
-                                                        result, "evaluation.pdf.xhtml",
-                                                        fileName, vertx, config);
+                                                String fileName = result.getJsonObject("devoir")
+                                                        .getString("classe") + "_" +
+                                                        result.getJsonObject("devoir").getString("nom")
+                                                                .replace(' ', '_');
+                                                exportService.genererPdf(request, result,
+                                                        "evaluation.pdf.xhtml", fileName, vertx, config);
                                             }
                                         } catch (Error err) {
-                                            leftToResponse(request, new Either.Left<>("An error occured while rendering pdf export : " + err.getMessage()));
+                                            String error = "An error occured while rendering pdf export : " +
+                                                    err.getMessage();
+                                            log.error(error);
+                                            leftToResponse(request, new Either.Left<>(error));
                                         }
                                     } else {
-                                        leftToResponse(request, stringJsonObjectEither.left());
+                                        leftToResponse(request, event.left());
                                     }
-                                }
                             });
                 } else {
-                    leftToResponse(request, stringJsonObjectEither.left());
+                    leftToResponse(request, getDevoirInfoEither.left());
                 }
-            }
         });
     }
 

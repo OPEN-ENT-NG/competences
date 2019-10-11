@@ -229,7 +229,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         values.add(devoirId);
         values.add(devoirId);
 
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, validResultHandler(handler));
     }
 
     @Override

@@ -34,6 +34,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultAnnotationService extends SqlCrudService implements AnnotationService {
@@ -68,7 +69,7 @@ public class DefaultAnnotationService extends SqlCrudService implements Annotati
                 .append("WHERE "+ Competences.COMPETENCES_SCHEMA +".annotations.id = ?");
         values.add(id);
 
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
 

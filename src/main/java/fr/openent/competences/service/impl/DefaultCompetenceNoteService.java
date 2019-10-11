@@ -216,7 +216,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 "WHERE competences_notes.id_devoir = ? " +
                 "AND competences.id = competences_notes.id_competence");
 
-        Sql.getInstance().prepared(query.toString(), new fr.wseduc.webutils.collections.JsonArray().add(idDevoir), SqlResult.validResultHandler(handler));
+        Sql.getInstance().prepared(query.toString(),
+                new JsonArray().add(idDevoir), DELIVERY_OPTIONS, SqlResult.validResultHandler(handler));
     }
 
     @Override

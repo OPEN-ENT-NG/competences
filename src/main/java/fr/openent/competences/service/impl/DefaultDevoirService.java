@@ -144,7 +144,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append( "SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement,")
                 .append(" devoir.coefficient,devoir.id_matiere,devoir.diviseur, devoir.is_evaluated,devoir.id_periode,")
                 .append(" rel_periode.type AS periodeType,rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*")
-                .append(" , Gdevoir.type_groupe, devoir.id_sousmatiere, type_sousmatiere.libelle ")
+                .append(" , Gdevoir.type_groupe, devoir.id_sousmatiere, type_sousmatiere.libelle, id_cycle ")
                 .append(" FROM notes.devoirs devoir")
                 .append(" INNER JOIN viesco.rel_type_periode rel_periode on rel_periode.id = devoir.id_periode")
                 .append(" NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" )
@@ -155,6 +155,10 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append("            ON devoir.id_sousmatiere = sousmatiere.id ")
                 .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ")
                 .append("            ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
+                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_devoirs_groupes ")
+                .append("            ON rel_devoirs_groupes.id_devoir = devoir.id ")
+                .append(" LEFT JOIN "+ Competences.EVAL_SCHEMA +".rel_groupe_cycle ")
+                .append("            ON rel_groupe_cycle.id_groupe = rel_devoirs_groupes.id_groupe ")
                 .append(" WHERE devoir.id = ? ;");
 
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();

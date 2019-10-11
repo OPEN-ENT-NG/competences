@@ -21,8 +21,10 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
+import fr.openent.competences.utils.ExportEvaluationHelper;
 import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.Either.*;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.data.FileResolver;
 import fr.wseduc.webutils.http.Renders;
@@ -39,7 +41,6 @@ import io.vertx.core.logging.LoggerFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.entcore.common.storage.Storage;
-import org.entcore.common.user.UserInfos;
 
 import javax.imageio.ImageIO;
 
@@ -48,6 +49,7 @@ import static fr.openent.competences.Competences.RESULTS;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.openent.competences.utils.ExportEvaluationHelper.*;
 
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -60,8 +62,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static fr.wseduc.webutils.http.Renders.getHost;
 import static fr.wseduc.webutils.http.Renders.getScheme;
-import static java.awt.SystemColor.info;
-import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 public class DefaultExportService implements ExportService {
 
@@ -139,119 +139,118 @@ public class DefaultExportService implements ExportService {
                 if (devoirInfo.isLeft()) {
                     handler.handle(new Either.Left<>("error to get devoir " + devoirInfo.left().getValue()));
                     log.error("error to get devoir id: "+idDevoir + " Message : "+devoirInfo.left().getValue());
+                    return;
+                }
+                final JsonObject devoir = (JsonObject) ((Either.Right) devoirInfo).getValue();
+                String idStructure = devoir.getString("id_etablissement");
+                final String idClass = devoir.getString("id_groupe");
 
-                } else {
-                    final JsonObject devoir = (JsonObject) ((Either.Right) devoirInfo).getValue();
-                    String idStructure = devoir.getString("id_etablissement");
-                    final String idClass = devoir.getString("id_groupe");
+                Future<JsonObject> classInfoFuture = Future.future();
+                utilsService.getClassInfo(idClass, event ->
+                        FormateFutureEvent.formate(classInfoFuture,event));
 
-                    Future<JsonObject> classInfoFuture = Future.future();
-                    utilsService.getClassInfo(idClass, event ->
-                            FormateFutureEvent.formate(classInfoFuture,event));
+                Future<JsonArray> competencesFuture = Future.future();
+                if(devoir.getInteger("nbrcompetence")> 0){
+                    competencesService.getDevoirCompetences(idDevoir, event ->
+                            FormateFutureEvent.formate(competencesFuture, event));
+                }else{
+                    competencesFuture.complete(new JsonArray());
+                }
 
-                    Future<JsonArray> competencesFuture = Future.future();
-                    if(devoir.getInteger("nbrcompetence")> 0){
-                        competencesService.getDevoirCompetences(idDevoir, event ->
-                                FormateFutureEvent.formate(competencesFuture, event));
-                    }else{
-                        competencesFuture.complete(new JsonArray());
-                    }
+                CompositeFuture.all(classInfoFuture,competencesFuture).setHandler( event -> {
+                    if(event.failed()){
+                        handler.handle(new Either.Left<>(event.cause().getMessage()));
+                        log.error("error to get niveau de maitrise, classInfo and competence : "
+                                + event.cause().getMessage());
+                    }else {
 
-                    CompositeFuture.all(classInfoFuture,competencesFuture).setHandler( event -> {
-                        if(event.failed()){
-                            handler.handle(new Either.Left<>(event.cause().getMessage()));
-                            log.error("error to get niveau de maitrise, classInfo and competence : "
-                                    + event.cause().getMessage());
+                        JsonObject classInfo = classInfoFuture.result();
+                        JsonArray competences = competencesFuture.result();
+                        Map<String, JsonArray> mapResult = new HashMap<>();
+                        if( classInfo.isEmpty() || competences.isEmpty() ){
+                            handler.handle(new Either.Left<>("no classInfo or no competences"));
+                            log.error("error : no classInfo or no competences");
                         }else {
+                            mapResult.put("competences", competences);
+                            Long idCycle = competences.getJsonObject(0).getLong("id_cycle");
 
-                            JsonObject classInfo = classInfoFuture.result();
-                            JsonArray competences = competencesFuture.result();
-                            Map<String, JsonArray> mapResult = new HashMap<>();
-                            if( classInfo.isEmpty() || competences.isEmpty() ){
-                                handler.handle(new Either.Left<>("no classInfo or no competences"));
-                                log.error("error : no classInfo or no competences");
-                            }else {
-                                mapResult.put("competences", competences);
-                                Long idCycle = competences.getJsonObject(0).getLong("id_cycle");
+                            niveauDeMaitriseService.getNiveauDeMaitrise(idStructure, idCycle,
+                                    eventNivMaitrise -> {
 
-                                niveauDeMaitriseService.getNiveauDeMaitrise(idStructure, idCycle,
-                                        eventNivMaitrise -> {
+                                        if(eventNivMaitrise.isLeft() || eventNivMaitrise.right().getValue().isEmpty()){
+                                            handler.handle(new Either.Left<>("export : no level."));
+                                            log.error("error : no level " + eventNivMaitrise.left().getValue());
+                                        }else {
+                                            mapResult.put("maitrises",eventNivMaitrise.right().getValue());
 
-                                            if(eventNivMaitrise.isLeft() || eventNivMaitrise.right().getValue().isEmpty()){
-                                                handler.handle(new Either.Left<>("export : no level."));
-                                                log.error("error : no level " + eventNivMaitrise.left().getValue());
-                                            }else {
-                                                mapResult.put("maitrises",eventNivMaitrise.right().getValue());
+                                            if (!byEleves.equals("true")) {
+                                                handler.handle(new Either.Right<>(buildExportCartouche(devoir,
+                                                        params,result, byEleves,
+                                                        withResult, classInfo, mapResult)));
+                                            } else {
+                                                JsonObject action = new JsonObject()
+                                                        .put("action", "classe.getEleveClasse")
+                                                        .put("idClasse", devoir.getString("id_groupe"))
+                                                        .put("idPeriode", devoir.getInteger("id_periode"));
 
-                                                if (!byEleves.equals("true")) {
-                                                    handler.handle(new Either.Right<>(buildExportCartouche(devoir,
-                                                            params,result, byEleves,
-                                                            withResult, classInfo, mapResult)));
-                                                } else {
-                                                    JsonObject action = new JsonObject()
-                                                            .put("action", "classe.getEleveClasse")
-                                                            .put("idClasse", devoir.getString("id_groupe"))
-                                                            .put("idPeriode", devoir.getInteger("id_periode"));
+                                                eb.send(Competences.VIESCO_BUS_ADDRESS, action,
+                                                        handlerToAsyncHandler( message -> {
 
-                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action,
-                                                            handlerToAsyncHandler( message -> {
+                                                            JsonObject body = message.body();
 
-                                                                JsonObject body = message.body();
+                                                            if ("ok".equals(body.getString("status")) &&
+                                                                    !body.getJsonArray("results").isEmpty()) {
 
-                                                                if ("ok".equals(body.getString("status")) &&
-                                                                        !body.getJsonArray("results").isEmpty()) {
+                                                                JsonArray eleves = body.getJsonArray("results");
+                                                                mapResult.put("eleves", eleves);
+                                                                if (!withResult) {
+                                                                    handler.handle(new Either.Right<>(
+                                                                            buildExportCartouche(devoir, params, result,byEleves,
+                                                                                    withResult, classInfo, mapResult)));
 
-                                                                    JsonArray eleves = body.getJsonArray("results");
-                                                                    mapResult.put("eleves", eleves);
-                                                                    if (!withResult) {
-                                                                        handler.handle(new Either.Right<>(
-                                                                                buildExportCartouche(devoir, params, result,byEleves,
-                                                                                        withResult, classInfo, mapResult)));
+                                                                } else {
 
-                                                                    } else {
+                                                                    getResultsEleves(idDevoir,
+                                                                            idStructure, mapResult,
+                                                                            eventResultsEleve -> {
 
-                                                                        getResultsEleves(idDevoir,
-                                                                                idStructure, mapResult,
-                                                                                eventResultsEleve -> {
-
-                                                                                    if (eventResultsEleve.isRight()) {
-                                                                                        if (eventResultsEleve.right().getValue()) {
-                                                                                            handler.handle(new Either.Right<>(
-                                                                                                    buildExportCartouche(
-                                                                                                            devoir, params,
-                                                                                                            result,byEleves,
-                                                                                                            withResult, classInfo,
-                                                                                                            mapResult)));
-                                                                                        } else {
-                                                                                            handler.handle(new Either.Left<>(
-                                                                                                    "exportCartouche : empty result."));
-                                                                                        }
+                                                                                if (eventResultsEleve.isRight()) {
+                                                                                    if (eventResultsEleve.right().getValue()) {
+                                                                                        handler.handle(new Either.Right<>(
+                                                                                                buildExportCartouche(
+                                                                                                        devoir, params,
+                                                                                                        result,byEleves,
+                                                                                                        withResult, classInfo,
+                                                                                                        mapResult)));
                                                                                     } else {
                                                                                         handler.handle(new Either.Left<>(
-                                                                                                "error to get competencesNotes" +
-                                                                                                        " or notes or annotations "));
-                                                                                        log.error("error to get competencesNotes"+
-                                                                                                " or notes or annotations "
-                                                                                                + eventResultsEleve.left().getValue());
+                                                                                                "exportCartouche : empty result."));
                                                                                     }
+                                                                                } else {
+                                                                                    handler.handle(new Either.Left<>(
+                                                                                            "error to get competencesNotes" +
+                                                                                                    " or notes or annotations "));
+                                                                                    log.error("error to get competencesNotes"+
+                                                                                            " or notes or annotations "
+                                                                                            + eventResultsEleve.left().getValue());
+                                                                                }
 
-                                                                                });
-                                                                    }
-                                                                } else {
-                                                                    handler.handle(new Either.Left<>(
-                                                                            "errorCartouche : can not get students"));
-                                                                    log.error("errorCartouche : can not get students "
-                                                                            + body.getString(MESSAGE));
+                                                                            });
                                                                 }
-                                                            }));
-                                                }
+                                                            } else {
+                                                                handler.handle(new Either.Left<>(
+                                                                        "errorCartouche : can not get students"));
+                                                                log.error("errorCartouche : can not get students "
+                                                                        + body.getString(MESSAGE));
+                                                            }
+                                                        }));
                                             }
-                                        });
-                            }
+                                        }
+                                    });
                         }
+                    }
 
-                    });
-                }
+                });
             });
 
         }
@@ -451,275 +450,66 @@ public class DefaultExportService implements ExportService {
     }
 
     @Override
-    public void getExportEval(final Boolean text, final Boolean only_evaluation, final JsonObject devoir,
-                              String idGroupe,
-                              final String idEtablissement,
-                              HttpServerRequest request, final Handler<Either<String, JsonObject>> handler) {
+    public void getExportEval(final Boolean text, final Boolean onlyEvaluation, final JsonObject devoir,
+                              String idGroupe, final String idEtablissement, HttpServerRequest request,
+                              final Handler<Either<String, JsonObject>> handler) {
 
+        List<Future> exportDatas = new ArrayList<>();
         Long idDevoir = devoir.getLong(ID_KEY);
-        final AtomicBoolean answered = new AtomicBoolean();
-        final JsonArray elevesArray = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray notesArray = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray annotationsArray = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray competencesArray = new fr.wseduc.webutils.collections.JsonArray();
-        JsonArray competencesNotesArray = new fr.wseduc.webutils.collections.JsonArray();
+        HashMap devoirMap = new HashMap();
+        ExportEvaluationHelper.formatDevoir(devoir, getHost(request), I18n.acceptLanguage(request),devoirMap);
+        exportDatas.add(getClasseDevoir(devoir , devoirMap, eb));
+        exportDatas.add(getMatiereDevoir(devoir , devoirMap, eb));
 
-        final Handler<Either<String, JsonArray>> finalHandler = getDevoirFinalHandler(text, only_evaluation, devoir, request, elevesArray,
-                competencesArray, notesArray, competencesNotesArray, annotationsArray, answered, handler);
+        JsonArray maitrises = new JsonArray();
+        Future  maitriseFuture = getNiveauDeMaitriseDevoir(devoir, onlyEvaluation, maitrises);
+        exportDatas.add(maitriseFuture);
 
-        JsonObject action = new JsonObject()
-                .put("action", "classe.getElevesClasses")
-                .put("idClasses", new fr.wseduc.webutils.collections.JsonArray().add(idGroupe))
-                .put("idPeriode", devoir.getLong("id_periode"));
+        final JsonArray elevesArray = new JsonArray();
+        Future eleveFuture = getStudents(devoir, eb, idGroupe, elevesArray);
+        exportDatas.add(eleveFuture);
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonArray eleves = message.body().getJsonArray("results");
-                getIntermediateHandler(elevesArray, finalHandler).handle(new Either.Right<String, JsonArray>(eleves));
+        JsonArray notesArray = new JsonArray();
+        Future noteFuture = listNotes(idDevoir, eb, notesArray);
+        exportDatas.add(noteFuture);
+
+        JsonArray annotationsArray = new JsonArray();
+        Future annotationF = listAnnotations(idEtablissement, annotationsArray);
+        exportDatas.add(annotationF);
+
+        JsonArray competencesArray = new JsonArray();
+        Future competenceFuture = getDevoirCompetences(idDevoir, onlyEvaluation, eb, competencesArray);
+        exportDatas.add(competenceFuture);
+
+        JsonArray cmpNotesAr = new JsonArray();
+        Future compNotesFuture = getCompetencesNotesDevoir(idDevoir, onlyEvaluation, cmpNotesAr);
+        exportDatas.add(compNotesFuture);
+
+        CompositeFuture.all(exportDatas).setHandler(event -> {
+            if(event.failed()){
+                returnFailure("getExportEval", event, handler);
             }
-        }));
-        if (!only_evaluation) {
-            competencesService.getDevoirCompetences(idDevoir,
-                    getIntermediateHandler(competencesArray, finalHandler));
-            competenceNoteService.getCompetencesNotesDevoir(idDevoir,
-                    getIntermediateHandler(competencesNotesArray, finalHandler));
-        }
-        noteService.listNotesParDevoir(idDevoir,
-                getIntermediateHandler(notesArray, finalHandler));
-        annotationsService.listAnnotations(idEtablissement,
-                getIntermediateHandler(annotationsArray, finalHandler));
-    }
-
-    private Handler<Either<String, JsonArray>> getDevoirFinalHandler(final Boolean text, final Boolean only_evaluation,
-                                                                     final JsonObject devoir, final HttpServerRequest request,
-                                                                     final JsonArray eleves, final JsonArray competences,
-                                                                     final JsonArray notes, final JsonArray competencesNotes,
-                                                                     final JsonArray annotations, final AtomicBoolean answered,
-                                                                     final Handler<Either<String, JsonObject>> responseHandler) {
-
-        final AtomicBoolean elevesDone = new AtomicBoolean();
-        final AtomicBoolean maitriseDone = new AtomicBoolean();
-        final AtomicBoolean competencesDone = new AtomicBoolean();
-        final AtomicBoolean notesDone = new AtomicBoolean();
-        final AtomicBoolean competencesNotesDone = new AtomicBoolean();
-        final AtomicBoolean annotationsDone = new AtomicBoolean();
-
-        return new Handler<Either<String, JsonArray>>() {
-            @Override
-            public void handle(Either<String, JsonArray> stringJsonArrayEither) {
-                if (!answered.get()) {
-                    if (stringJsonArrayEither.isRight()) {
-
-                        elevesDone.set(eleves.size() > 0);
-                        competencesDone.set(competences.size() > 0);
-                        notesDone.set(notes.size() > 0);
-                        competencesNotesDone.set(competencesNotes.size() > 0);
-                        annotationsDone.set(annotations.size() > 0);
-
-                        JsonArray maitrises = new fr.wseduc.webutils.collections.JsonArray();
-
-                        if (!only_evaluation) {
-                            if (elevesDone.get()
-                                    && competencesDone.get()
-                                    && notesDone.get()
-                                    && competencesNotesDone.get()
-                                    && annotationsDone.get()) {
-                                answered.set(true);
-
-                                if (eleves.contains("empty")
-                                        || (competencesNotes.contains("empty") && notes.contains("empty"))
-                                        || annotations.contains("empty")) {
-                                    answered.set(true);
-                                    responseHandler.handle(new Either.Left<String, JsonObject>("exportDevoir : empty result."));
-                                } else {
-
-                                    getDevoirInfos(devoir, request, new Handler<Either<String, JsonObject>>() {
-                                        @Override
-                                        public void handle (Either<String, JsonObject> stringJsonObjectEither) {
-                                            if (stringJsonObjectEither.isRight()) {
-                                                Map<String, Map<String, JsonObject>> competenceNoteElevesMap = new HashMap<>();
-                                                if (!competencesNotes.contains("empty")) {
-                                                    for (int i = 0; i < competencesNotes.size(); i++) {
-                                                        JsonObject competenceNote = competencesNotes.getJsonObject(i);
-                                                        if (!competenceNoteElevesMap.containsKey(competenceNote.getString("id_eleve"))) {
-                                                            competenceNoteElevesMap.put(
-                                                                    competenceNote.getString("id_eleve"),
-                                                                    new HashMap<>());
-                                                        }
-                                                        competenceNoteElevesMap.get(competenceNote.getString("id_eleve"))
-                                                                .put(String.valueOf(competenceNote.getLong("id_competence")), competenceNote);
-                                                    }
-                                                }
-                                                niveauDeMaitriseService.getNiveauDeMaitrise(devoir.getString("id_etablissement"),
-                                                        competences.getJsonObject(0).getLong("id_cycle"),
-                                                        new Handler<Either<String, JsonArray>>() {
-                                                            @Override
-                                                            public void handle (Either<String, JsonArray> eventNivMaitrise) {
-                                                                if (eventNivMaitrise.isLeft() || eventNivMaitrise.right().getValue().isEmpty()) {
-                                                                    responseHandler.handle(new Either.Left<>("exportDevoir : no level."));
-                                                                    log.error("exportDevoir : no level " + eventNivMaitrise.left().getValue());
-                                                                } else {
-                                                                    maitrises.addAll(eventNivMaitrise.right().getValue());
-                                                                    responseHandler.handle(new Either.Right<String, JsonObject>(
-                                                                            formatJsonObjectExportDevoir(text,
-                                                                                    stringJsonObjectEither.right().getValue(),
-                                                                                    extractData(orderBy(eleves, "lastName"), "idEleve"),
-                                                                                    extractData(orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE),
-                                                                                    extractData(competences, "id_competence"),
-                                                                                    extractData(notes, "id_eleve"),
-                                                                                    extractData(annotations, ID_KEY),
-                                                                                    competenceNoteElevesMap)));
-                                                                }
-                                                            }
-                                                        });
-
-                                            } else {
-                                                responseHandler.handle(new Either.Left<String, JsonObject>("formatJsonObjectExportDevoir : an error occured."));
-                                                log.error("formatJsonObjectExportDevoir : an error occured." + stringJsonObjectEither.left().getValue());
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-                        } else {
-                            if (elevesDone.get() && notesDone.get() && annotationsDone.get()) {
-                                answered.set(true);
-
-                                if (eleves.contains("empty") || notes.contains("empty") || annotations.contains("empty")) {
-                                    answered.set(true);
-                                    responseHandler.handle(new Either.Left<>("exportDevoir : empty result."));
-                                } else {
-
-                                    getDevoirInfos(devoir, request, new Handler<Either<String, JsonObject>>() {
-                                        @Override
-                                        public void handle (Either<String, JsonObject> stringJsonObjectEither) {
-                                            if (stringJsonObjectEither.isRight()) {
-                                                Map<String, Map<String, JsonObject>> competenceNoteElevesMap = new HashMap<>();
-
-                                                responseHandler.handle(new Either.Right<String, JsonObject>(
-                                                        formatJsonObjectExportDevoir(text,
-                                                                stringJsonObjectEither.right().getValue(),
-                                                                extractData(orderBy(eleves, "lastName"), "idEleve"),
-                                                                extractData(orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE),
-                                                                extractData(competences, "id_competence"),
-                                                                extractData(notes, "id_eleve"),
-                                                                extractData(annotations, ID_KEY),
-                                                                competenceNoteElevesMap)));
-
-                                            } else {
-                                                responseHandler.handle(new Either.Left<String, JsonObject>("formatJsonObjectExportDevoir : an error occured."));
-                                            }
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                    } else {
-                        answered.set(true);
-                        responseHandler.handle(new Either.Left<String, JsonObject>(stringJsonArrayEither.left().getValue()));
+            else {
+                final Map<String, Map<String, JsonObject>> compNoteElevesMap  = new HashMap<>();
+                for (int i = 0; i < cmpNotesAr.size(); i++) {
+                    JsonObject compNote = cmpNotesAr.getJsonObject(i);
+                    String idEleve = compNote.getString(ID_ELEVE);
+                    if (!compNoteElevesMap.containsKey(idEleve)) {
+                        compNoteElevesMap.put(idEleve, new HashMap<>());
                     }
+                    compNoteElevesMap.get(idEleve).put(String.valueOf(compNote.getLong("id_competence")), compNote);
                 }
+
+                handler.handle(new Either.Right<>(ExportEvaluationHelper.formatJsonObjectExportDevoir(text,
+                        new JsonObject(devoirMap),
+                        extractData(orderBy(elevesArray, LAST_NAME_KEY), ID_ELEVE_KEY),
+                        extractData(orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE),
+                        extractData(competencesArray, "id_competence"),
+                        extractData(notesArray, ID_ELEVE),
+                        extractData(annotationsArray, ID_KEY),
+                        compNoteElevesMap)));
             }
-        };
-    }
-
-    private JsonObject formatJsonObjectExportDevoir(final Boolean text, final JsonObject devoir,
-                                                    final Map<String, JsonObject> eleves,
-                                                    final Map<String, JsonObject> maitrises,
-                                                    final Map<String, JsonObject> competences,
-                                                    final Map<String, JsonObject> notes,
-                                                    final Map<String, JsonObject> annotations,
-                                                    final Map<String, Map<String, JsonObject>> competenceNotes) {
-
-        JsonObject result = new JsonObject();
-        result.put("text", text);
-
-        Map<String, String> competenceIndice = new LinkedHashMap<>();
-        int i = 1;
-        for (Map.Entry<String, JsonObject> competence : competences.entrySet()) {
-            competenceIndice.put("[C" + String.valueOf(i) + "]", String.valueOf(competence.getValue().getLong("id_competence")));
-            i++;
-        }
-
-        //Devoir
-        devoir.remove(ID_KEY);
-        result.put("devoir", devoir);
-
-        //Maitrise
-        JsonArray maitrisesArray = new fr.wseduc.webutils.collections.JsonArray();
-        for (JsonObject maitrise : maitrises.values()) {
-            JsonObject _maitrise = new JsonObject();
-            _maitrise.put("libelle", maitrise.getString("libelle"));
-            _maitrise.put("visu", text ? getMaitrise(maitrise.getString("lettre"), String.valueOf(maitrise.getLong(ORDRE))) : String.valueOf(maitrise.getLong(ORDRE)));
-            maitrisesArray.add(_maitrise);
-        }
-        result.put("maitrise", maitrisesArray);
-
-        //Competences
-        JsonArray competencesArray = new fr.wseduc.webutils.collections.JsonArray();
-        for (Map.Entry<String, String> competence : competenceIndice.entrySet()) {
-            competencesArray.add(competence.getKey() + " " + competences.get(competence.getValue()).getString("code_domaine") + " " + competences.get(competence.getValue()).getString("nom"));
-        }
-        result.put("competence", competencesArray);
-
-        //Eleves
-        JsonArray elevesArray = new fr.wseduc.webutils.collections.JsonArray();
-
-        //Header
-        JsonObject headerEleves = new JsonObject();
-        headerEleves.put("header", "");
-        headerEleves.put("note", "Note");
-        headerEleves.put("competenceNotes", new fr.wseduc.webutils.collections.JsonArray());
-        for (String indice : competenceIndice.keySet()) {
-            headerEleves.getJsonArray("competenceNotes").add(indice);
-        }
-        result.put("elevesHeader", headerEleves);
-
-        //Body
-        for (Map.Entry<String, JsonObject> eleve : eleves.entrySet()) {
-            JsonObject eleveObject = new JsonObject();
-            eleveObject.put("header", eleve.getValue().getString("lastName").toUpperCase() + " " + eleve.getValue().getString("firstName"));
-
-            String note = "";
-            Boolean hasAnnotation = false;
-            if (notes.containsKey(eleve.getKey())) {
-                if (notes.get(eleve.getKey()).getString("appreciation") != null && !notes.get(eleve.getKey()).getString("appreciation").equals("")) {
-                    eleveObject.put("appreciation", notes.get(eleve.getKey()).getString("appreciation"));
-                    eleveObject.put("appreciationColspan", competences.size() + 1);
-                }
-                if (notes.get(eleve.getKey()).getLong("id_annotation") != null) {
-                    note = annotations.get(String.valueOf(notes.get(eleve.getKey()).getLong("id_annotation"))).getString("libelle_court");
-                    hasAnnotation = true;
-                } else {
-                    note = notes.get(eleve.getKey()).getString("valeur");
-                }
-            }
-            eleveObject.put("note", note);
-
-
-            JsonArray comptenceNotesEleves = new fr.wseduc.webutils.collections.JsonArray();
-            for (String competence : competenceIndice.values()) {
-                if (hasAnnotation) {
-                    comptenceNotesEleves.add("");
-                } else if (competenceNotes.containsKey(eleve.getKey()) && competenceNotes.get(eleve.getKey()).containsKey(competence)) {
-                    Map<String, JsonObject> competenceNotesEleve = competenceNotes.get(eleve.getKey());
-                    String evaluation = String.valueOf(competenceNotesEleve.get(competence).getLong("evaluation"));
-                    comptenceNotesEleves.add(text ? getMaitrise(maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("lettre"), String.valueOf(Integer.valueOf(evaluation) + 1))
-                            : String.valueOf(Integer.valueOf(evaluation) + 1));
-                } else {
-                    comptenceNotesEleves.add(text ? getMaitrise(maitrises.get("0").getString("lettre"), "0")
-                            : "0");
-                }
-                eleveObject.put("competenceNotes", comptenceNotesEleves);
-            }
-            elevesArray.add(eleveObject);
-        }
-        result.put("eleves", elevesArray);
-
-//        result.put("height", String.valueOf(calcNumbLine(result)) + "%");
-
-        return result;
+        });
     }
 
     private  void buildDevoirExport(final Boolean pByEnseignement, final String idEleve, final String[] idGroupes,
@@ -958,48 +748,6 @@ public class DefaultExportService implements ExportService {
         return keyShown.size() + jsonShown;
     }
 
-    private Map<String, JsonObject> extractData(JsonArray collection, String key) {
-
-        Map<String, JsonObject> result = new LinkedHashMap<>();
-
-        for (int i = 0; i < collection.size(); i++) {
-            if (collection.getValue(i) instanceof String) {
-                continue;
-            }
-            JsonObject item = collection.getJsonObject(i);
-            String itemKey = String.valueOf(item.getValue(key));
-            if (!result.containsKey(itemKey)) {
-                result.put(itemKey, item);
-            }
-        }
-
-        return result;
-    }
-
-    private JsonArray orderBy(JsonArray collection, String key, Boolean inverted) {
-        Set<String> sortedSet = inverted ? new TreeSet<String>(Collections.reverseOrder()) : new TreeSet<String>();
-        Map<String, JsonArray> unsortedMap = new HashMap<>();
-        JsonArray result = new fr.wseduc.webutils.collections.JsonArray();
-
-        for (int i = 0; i < collection.size(); i++) {
-            JsonObject item = collection.getJsonObject(i);
-            String itemKey = String.valueOf(item.getValue(key));
-            if (!unsortedMap.containsKey(itemKey)) {
-                unsortedMap.put(itemKey, new fr.wseduc.webutils.collections.JsonArray());
-            }
-            unsortedMap.get(itemKey).add(item);
-            sortedSet.add(itemKey);
-        }
-
-        for (String aSortedSet : sortedSet) {
-            utilsService.saUnion(result, unsortedMap.get(aSortedSet));
-        }
-        return result;
-    }
-
-    private JsonArray orderBy(JsonArray collection, String key) {
-        return orderBy(collection, key, false);
-    }
 
     private Handler<Either<String, JsonArray>>
     getReleveCompFinalHandler(final Boolean text, final String idEleve, final JsonArray devoirs,
@@ -1101,17 +849,6 @@ public class DefaultExportService implements ExportService {
         };
     }
 
-    private JsonArray addMaitriseNE(JsonArray maitrises) {
-        JsonObject nonEvalue = new JsonObject();
-        String libelle = getLibelle("evaluations.competence.unevaluated");
-        nonEvalue.put("libelle", libelle);
-        nonEvalue.put(ORDRE, 0);
-        nonEvalue.put("default", "grey");
-        nonEvalue.put("lettre", "NE");
-        maitrises.add(nonEvalue);
-
-        return maitrises;
-    }
 
     private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean byEnseignement, String idEleve,
                                                         List<String> devoirs,
@@ -1232,33 +969,32 @@ public class DefaultExportService implements ExportService {
         return result;
     }
 
-    private void getDevoirInfos(JsonObject devoir, final HttpServerRequest request, final Handler<Either<String, JsonObject>> handler) {
+    private void getDevoirInfos(JsonObject devoir, final HttpServerRequest request,
+                                final Handler<Either<String, JsonObject>> handler) {
 
         final AtomicBoolean handled = new AtomicBoolean();
         final Map<String, Object> devoirMap = new HashMap<>();
 
-        final Handler<Either<String, Map<String, Object>>> finalHandler = new Handler<Either<String, Map<String, Object>>>() {
-            @Override
-            public void handle(Either<String, Map<String, Object>> stringMapEither) {
-                if (!handled.get()) {
-                    if (stringMapEither.isRight()) {
-                        Map<String, Object> devoir = stringMapEither.right().getValue();
-                        int checkDevoirInfos = checkDevoirInfos(devoir);
-                        if (checkDevoirInfos == 0) {
-                            handled.set(true);
-                            handler.handle(new Either.Right<String, JsonObject>(new JsonObject(devoir)));
-                        } else if (checkDevoirInfos == 1) {
-                            handled.set(true);
-                            handler.handle(new Either.Left<String, JsonObject>("getDevoirsInfos : Devoir doesn't respect format."));
-                        }
-                    } else {
+        final Handler<Either<String, Map<String, Object>>> finalHandler = stringMapEither -> {
+            if (!handled.get()) {
+                if (stringMapEither.isRight()) {
+                    Map<String, Object> devoirObj = stringMapEither.right().getValue();
+                    int checkDevoirInfos = checkDevoirInfos(devoirObj);
+                    if (checkDevoirInfos == 0) {
                         handled.set(true);
-                        handler.handle(new Either.Left<String, JsonObject>("getDevoirsInfos : Error handled"));
+                        handler.handle(new Either.Right<>(new JsonObject(devoirObj)));
+                    } else if (checkDevoirInfos == 1) {
+                        handled.set(true);
+                        handler.handle(new Either.Left<>("getDevoirsInfos : Devoir doesn't respect format."));
                     }
+                } else {
+                    handled.set(true);
+                    handler.handle(new Either.Left<>("getDevoirsInfos : Error handled"));
                 }
             }
         };
-        String[] date = devoir.getString("date").substring(0, devoir.getString("date").indexOf(" ")).split("-");
+        String[] date = devoir.getString("date")
+                .substring(0, devoir.getString("date").indexOf(" ")).split("-");
         devoirMap.put("date", date[2] + '/' + date[1] + '/' + date[0]);
 
         devoirMap.put(ID_KEY, devoir.getLong(ID_KEY));
@@ -1269,24 +1005,24 @@ public class DefaultExportService implements ExportService {
                 "viescolaire.periode." + String.valueOf(devoir.getLong("periodetype")),
                 getHost(request),
                 I18n.acceptLanguage(request)) + " " + String.valueOf(devoir.getLong("periodeordre")));
+        devoirMap.put("sousMatiere", devoir.getString("libelle", ""));
 
         JsonObject action = new JsonObject()
                 .put("action", "classe.getClasseInfo")
                 .put("idClasse", devoir.getString("id_groupe"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    devoirMap.put("classe", body.getJsonObject("result").getJsonObject("c").getJsonObject("data").getString("name"));
-                    finalHandler.handle(new Either.Right<String, Map<String, Object>>(devoirMap));
-                } else {
-                    finalHandler.handle(
-                            new Either.Left<String, Map<String, Object>>(
-                                    "getDevoirsInfos : devoir '" + devoirMap.get(ID_KEY) + "), couldn't get class name."));
-                }
+            if ("ok".equals(body.getString("status"))) {
+                devoirMap.put("classe", body.getJsonObject("result").getJsonObject("c").getJsonObject("data")
+                        .getString("name"));
+                finalHandler.handle(new Right<>(devoirMap));
+
+            } else {
+                String error = "getDevoirsInfos : devoir '" + devoirMap.get(ID_KEY) + "), couldn't get class name.";
+                log.error(error);
+                finalHandler.handle(new Left<>(error));
             }
         }));
 
@@ -1295,19 +1031,17 @@ public class DefaultExportService implements ExportService {
                 .put("action", "matiere.getMatiere")
                 .put("idMatiere", devoir.getString("id_matiere"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, matiereAction, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-            @Override
-            public void handle(Message<JsonObject> message) {
-                JsonObject body = message.body();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, matiereAction, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
 
-                if ("ok".equals(body.getString("status"))) {
-                    devoirMap.put("matiere", body.getJsonObject("result").getJsonObject("n").getJsonObject("data").getString("label"));
-                    finalHandler.handle(new Either.Right<String, Map<String, Object>>(devoirMap));
-                } else {
-                    finalHandler.handle(
-                            new Either.Left<String, Map<String, Object>>(
-                                    "getDevoirsInfos : devoir '" + devoirMap.get(ID_KEY) + "), couldn't get matiere name."));
-                }
+            if ("ok".equals(body.getString("status"))) {
+                devoirMap.put("matiere", body.getJsonObject("result").getJsonObject("n").getJsonObject("data")
+                        .getString("label"));
+                finalHandler.handle(new Right<>(devoirMap));
+            } else {
+                String error = "getDevoirsInfos : devoir '" +devoirMap.get(ID_KEY)+ "), couldn't get matiere name.";
+                log.error(error);
+                finalHandler.handle(new Left<>(error));
             }
         }));
     }
@@ -1357,29 +1091,6 @@ public class DefaultExportService implements ExportService {
             resultList.add(competenceNotesObj);
         }
         return resultList;
-    }
-
-    private String getMaitrise(String maitrise, String key) {
-        if (maitrise == null) {
-            return getMaitrise(key);
-        } else if (maitrise.equals("  ")) {
-            return getMaitrise(key);
-        } else {
-            return maitrise;
-        }
-    }
-
-    private String getMaitrise(String key) {
-        switch (key) {
-            case "1":
-                return "MI";
-            case "2":
-                return "MF";
-            case "3":
-                return "MS";
-            default:
-                return "TB";
-        }
     }
 
 
@@ -1996,10 +1707,10 @@ public class DefaultExportService implements ExportService {
             getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture );
 
             CompositeFuture.all(classeFuture).setHandler(event -> {
-               if(event.failed()){
-                   returnFailure("getDataForExportReleveClasse", event, handler);
-                   return;
-               }
+                if(event.failed()){
+                    returnFailure("getDataForExportReleveClasse", event, handler);
+                    return;
+                }
                 handler.handle(new Either.Right<>( new JsonObject().put(ELEVES,
                         sortUsersByDisplayNameAndFirstName(exportResultClasse))));
             });
