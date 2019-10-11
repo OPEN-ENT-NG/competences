@@ -46,7 +46,7 @@
             page-break-inside :auto;
             width: 100%;
 
-            font-size: 12px;
+            font-size: 10px;
             text-align: left;
             table-layout: fixed;
         }
@@ -62,7 +62,13 @@
             page-break-inside: avoid;
         }
 
-
+        .title {
+            font-size: 14px;
+            font-weight: bold !important;
+        }
+        .bold {
+            font-weight: bold !important;
+        }
         table .list-eleve td:first-child {
             width: 20%;
             max-width: 20%;
@@ -122,13 +128,15 @@
         <tr class="list-eleve ">
             {{#hasCompetences}}<td   rowspan="2"> {{/hasCompetences}}
             {{^hasCompetences}}<td   > {{/hasCompetences}}
+
+               <span class="title aligne-center"> {{devoirName}}</span> <br/>
+                <br/>
             <p class="overIt">
-                {{devoirName}}<br/>
-                Classe: {{classeName}}<br/>
-                Matière: {{matiere}}<br/>
-                Periode: {{periode}}<br/>
-                Coefficient: {{devoirCoefficient}}<br/>
-                Note sur: {{devoirDiviseur}}<br/>
+                Classe: <span class="bold">{{classeName}}</span><br/>
+                Matière: <span class="bold">{{matiere}}{{#hasSousMatiere}}&nbsp;{{sousMatiere}}{{/hasSousMatiere}}</span> <br/>
+                Periode:<span class="bold">{{periode}}</span><br/>
+                Coefficient:<span class="bold">{{devoirCoefficient}}</span><br/>
+                Note sur:<span class="bold"> {{devoirDiviseur}}</span><br/>
             </p>
         </td >
             {{#hasCompetences}}

@@ -158,23 +158,23 @@ public class ExportPDFController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getReleve(final HttpServerRequest request){
         RequestUtils.bodyToJson(request,  params -> {
-           final String idClasse = params.getString(ID_CLASSE_KEY);
-           final Long idPeriode = params.getLong(ID_PERIODE_KEY);
-           final String idEtablissement = params.getString(ID_STRUCTURE_KEY);
-           final Long idTypePeriode = params.getLong("idTypePeriode");
-           final Long ordre = params.getLong(ORDRE);
+            final String idClasse = params.getString(ID_CLASSE_KEY);
+            final Long idPeriode = params.getLong(ID_PERIODE_KEY);
+            final String idEtablissement = params.getString(ID_STRUCTURE_KEY);
+            final Long idTypePeriode = params.getLong("idTypePeriode");
+            final Long ordre = params.getLong(ORDRE);
             final String classeName = params.getString(CLASSE_NAME_KEY);
-           exportService.getDataForExportReleveClasse(idClasse, idEtablissement, idPeriode, idTypePeriode, ordre,
-                   event -> {
-                       if(event.isLeft()){
-                           leftToResponse(request, event.left());
-                           return;
-                       }
-                       JsonObject templateProps = event.right().getValue();
-                       String templateName = "releve-classe.pdf.xhtml";
-                       String prefixPdfName = "releve-classe_" +  classeName;
-                       exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
-                   } );
+            exportService.getDataForExportReleveClasse(idClasse, idEtablissement, idPeriode, idTypePeriode, ordre,
+                    event -> {
+                        if(event.isLeft()){
+                            leftToResponse(request, event.left());
+                            return;
+                        }
+                        JsonObject templateProps = event.right().getValue();
+                        String templateName = "releve-classe.pdf.xhtml";
+                        String prefixPdfName = "releve-classe_" +  classeName;
+                        exportService.genererPdf(request, templateProps, templateName, prefixPdfName, vertx, config);
+                    } );
 
         });
     }
@@ -234,181 +234,35 @@ public class ExportPDFController extends ControllerHelper {
     @Get("/devoirs/print/:idDevoir/formsaisie")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getFormsaisi(final HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if (user != null) {
-                    MultiMap params = request.params();
-                    final Long idDevoir;
-                    if (params.get("idDevoir") != null) {
-                        try {
-                            idDevoir = Long.parseLong(params.get("idDevoir"));
-                        } catch (NumberFormatException e) {
-                            log.error("Error : idDevoir must be a long object", e);
-                            badRequest(request, e.getMessage());
-                            return;
-                        }
+        MultiMap params = request.params();
+        final Long idDevoir;
+        if (params.get("idDevoir") != null) {
+            try {
+                idDevoir = Long.parseLong(params.get("idDevoir"));
+            } catch (NumberFormatException e) {
+                log.error("Error : idDevoir must be a long object", e);
+                badRequest(request, e.getMessage());
+                return;
+            }
 
-                        final JsonObject result = new JsonObject();
 
-                        devoirService.getDevoirInfo(idDevoir, new Handler<Either<String, JsonObject>>() {
-                            @Override
-                            public void handle(final Either<String, JsonObject> devoirInfo) {
-                                if (devoirInfo.isRight()) {
+            String acceptLanguage = request.headers().get("Accept-Language");
+            String host = getHost(request);
 
-                                    final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
-                                    result.put("devoirName", devoirInfos.getString("name"));
-                                    result.put("devoirCoefficient", devoirInfos.getString(COEFFICIENT));
-                                    result.put("devoirDiviseur", devoirInfos.getLong("diviseur"));
-                                    result.put("evaluation", devoirInfos.getBoolean("is_evaluated"));
-
-                                    JsonObject jsonRequest = new JsonObject()
-                                            .put("headers", new JsonObject().put("Accept-Language",
-                                                    request.headers().get("Accept-Language")))
-                                            .put("Host", getHost(request));
-                                    JsonObject action = new JsonObject()
-                                            .put("action", "periode.getLibellePeriode")
-                                            .put("type", devoirInfos.getInteger("periodetype"))
-                                            .put("ordre", devoirInfos.getInteger("periodeordre"))
-                                            .put("request", jsonRequest);
-                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                        @Override
-                                        public void handle(Message<JsonObject> message) {
-                                            JsonObject body = message.body();
-
-                                            result.put("periode", body.getString("result"));
-
-                                            JsonObject action = new JsonObject()
-                                                    .put("action", "classe.getEleveClasse")
-                                                    .put("idClasse", devoirInfos.getString("id_groupe"))
-                                                    .put("idPeriode", devoirInfos.getInteger("id_periode"));
-
-                                            eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                @Override
-                                                public void handle(Message<JsonObject> message) {
-                                                    JsonObject body = message.body();
-
-                                                    if ("ok".equals(body.getString("status"))) {
-                                                        result.put("eleves", body.getJsonArray("results"));
-
-                                                        JsonObject action = new JsonObject()
-                                                                .put("action", "matiere.getMatiere")
-                                                                .put("idMatiere", devoirInfos.getString("id_matiere"));
-
-                                                        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                            @Override
-                                                            public void handle(Message<JsonObject> message) {
-                                                                JsonObject body = message.body();
-
-                                                                if ("ok".equals(body.getString("status"))) {
-                                                                    result.put("matiere", body.getJsonObject("result").getJsonObject("n").getJsonObject("data").getString("label"));
-
-                                                                    JsonObject action = new JsonObject()
-                                                                            .put("action", "classe.getClasseInfo")
-                                                                            .put("idClasse", devoirInfos.getString("id_groupe"));
-
-                                                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                                                                        @Override
-                                                                        public void handle(Message<JsonObject> message) {
-                                                                            JsonObject body = message.body();
-                                                                            if ("ok".equals(body.getString("status"))) {
-                                                                                result.put("classeName", body.getJsonObject("result").getJsonObject("c").getJsonObject("data").getString("name"));
-                                                                                if(devoirInfos.getBoolean("is_evaluated") == true){
-                                                                                    Integer nbrColone = (devoirInfos.getInteger("nbrcompetence") + 1 );
-                                                                                    result.put("nbrCompetences",nbrColone.toString());
-                                                                                }else{
-                                                                                    result.put("nbrCompetences",devoirInfos.getInteger("nbrcompetence").toString());
-                                                                                }
-
-                                                                                if(devoirInfos.getInteger("nbrcompetence") > 0) {
-                                                                                    competencesService.getDevoirCompetences(idDevoir, new Handler<Either<String, JsonArray>>() {
-                                                                                        @Override
-                                                                                        public void handle(Either<String, JsonArray> CompetencesObject) {
-                                                                                            if(CompetencesObject.isRight()){
-                                                                                                JsonArray  CompetencesOld = CompetencesObject.right().getValue();
-                                                                                                final JsonArray  CompetencesNew = new fr.wseduc.webutils.collections.JsonArray();
-                                                                                                Integer size =0;
-                                                                                                Double ligne = new Double(0);
-                                                                                                Integer lenght = 103; // le nombre de caractére max dans une ligne
-                                                                                                Double height = new Double(2.2); // la hauteur d'une ligne
-                                                                                                for (int i=0 ; i < CompetencesOld.size() ; i++) {
-                                                                                                    JsonObject Comp = CompetencesOld.getJsonObject(i);
-                                                                                                    size = Comp.getString("nom").length() +10; // +10 pour "[ Cx ]"
-                                                                                                    ligne += (Integer) size / lenght ;
-                                                                                                    if(size%lenght > 0 ){
-                                                                                                        ligne++;
-                                                                                                    }
-                                                                                                    Comp.put("i", i+1);
-                                                                                                    CompetencesNew.add(Comp);
-                                                                                                }
-
-                                                                                                ligne = (ligne * height) + 6; // + 6 la hauteur de la 1 ligne du tableau
-                                                                                                if( ligne < 25){ // 25 est la hauteure minimal
-                                                                                                    ligne = Double.parseDouble("25") ;
-                                                                                                }
-                                                                                                result.put("ligne", ligne.toString()+"%");
-                                                                                                if(CompetencesNew.size() > 0){
-                                                                                                    result.put("hasCompetences",true);
-                                                                                                }else{
-                                                                                                    result.put("hasCompetences",false);
-                                                                                                }
-                                                                                                result.put("competences",CompetencesNew);
-                                                                                                exportService
-                                                                                                        .genererPdf(
-                                                                                                                request,
-                                                                                                                result ,
-                                                                                                                "Devoir.saisie.xhtml",
-                                                                                                                "Formulaire_saisie",
-                                                                                                                vertx, config);
-                                                                                            }else{
-                                                                                                log.error("Error :can not get competences devoir ");
-                                                                                                badRequest(request, "Error :can not get competences devoir ");
-                                                                                            }
-                                                                                        }
-                                                                                    });
-                                                                                }else{
-                                                                                    exportService.genererPdf(request,
-                                                                                            result ,
-                                                                                            "Devoir.saisie.xhtml",
-                                                                                            "Formulaire_saisie",
-                                                                                            vertx, config);
-                                                                                }
-                                                                            }else{
-                                                                                log.error("Error :can not get classe informations ");
-                                                                                badRequest(request, "Error :can not get  classe informations");
-                                                                            }
-                                                                        }
-                                                                    }));
-                                                                } else {
-                                                                    log.error("Error :can not get classe info ");
-                                                                    badRequest(request, "Error :can not get  classe info  ");
-                                                                }
-                                                            }
-                                                        }));
-                                                    } else {
-                                                        log.error("Error :can not get students ");
-                                                        badRequest(request, "Error :can not get students  ");
-                                                    }
-                                                }
-                                            }));
-                                        }
-                                    }));
-                                } else {
-                                    log.error("Error :can not get informations from postgres tables ");
-                                    badRequest(request, "Error :can not get informations from postgres tables ");
-                                }
-                            }
-                        });
-                    } else {
-                        log.error("Error : idDevoir must be a long object");
-                        badRequest(request, "Error : idDevoir must be a long object");
-                    }
-                } else {
-                    unauthorized(request);
+            devoirService.getFormSaisieDevoir(idDevoir, acceptLanguage, host, event -> {
+                if(event.isLeft()){
+                    badRequest(request, event.left().getValue());
+                    return;
                 }
 
-            }
-        });
+                exportService.genererPdf(request, event.right().getValue() ,"Devoir.saisie.xhtml",
+                        "Formulaire_saisie", vertx, config);
+            });
+
+        } else {
+            log.error("Error : idDevoir must be a long object");
+            badRequest(request, "Error : idDevoir must be a long object");
+        }
     }
 
     @Get("/devoirs/print/:idDevoir/cartouche")

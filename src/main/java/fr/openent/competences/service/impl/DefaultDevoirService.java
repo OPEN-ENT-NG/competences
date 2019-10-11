@@ -19,11 +19,11 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.security.utils.FilterDevoirUtils;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.wseduc.webutils.Either;
-import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
@@ -39,13 +39,13 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Utils.returnFailure;
+import static fr.openent.competences.utils.FormSaisieHelper.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -144,13 +144,17 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append( "SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement,")
                 .append(" devoir.coefficient,devoir.id_matiere,devoir.diviseur, devoir.is_evaluated,devoir.id_periode,")
                 .append(" rel_periode.type AS periodeType,rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*")
-                .append(" , Gdevoir.type_groupe ")
+                .append(" , Gdevoir.type_groupe, devoir.id_sousmatiere, type_sousmatiere.libelle ")
                 .append(" FROM notes.devoirs devoir")
                 .append(" INNER JOIN viesco.rel_type_periode rel_periode on rel_periode.id = devoir.id_periode")
                 .append(" NATURAL  JOIN (SELECT COALESCE(count(*), 0) NbrCompetence" )
                 .append(" FROM notes.competences_devoirs c" )
                 .append(" WHERE c.id_devoir =?) comp")
-                .append(" INNER Join notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
+                .append(" INNER JOIN  notes.rel_devoirs_groupes Gdevoir ON Gdevoir.id_devoir = devoir.id")
+                .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".sousmatiere")
+                .append("            ON devoir.id_sousmatiere = sousmatiere.id ")
+                .append(" LEFT JOIN "+ Competences.VSCO_SCHEMA +".type_sousmatiere ")
+                .append("            ON sousmatiere.id_type_sousmatiere = type_sousmatiere.id ")
                 .append(" WHERE devoir.id = ? ;");
 
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
@@ -1544,4 +1548,51 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(result));
     }
+
+
+
+    @Override
+    public void getFormSaisieDevoir(Long idDevoir, String acceptLanguage, String host,
+                                    Handler<Either<String, JsonObject>> handler){
+      JsonObject result = new JsonObject();
+        getDevoirInfo(idDevoir,  (Either<String, JsonObject> devoirInfo) -> {
+          if (devoirInfo.isRight()) {
+
+              final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
+
+              formatDevoirsInfos(devoirInfos, result);
+
+              // Récupération de la période pour l'export
+              Future periodeFuture = getPeriodeForFormaSaisie(devoirInfos, acceptLanguage, host, result, eb);
+
+              // Récupération des élèves de la classe
+              Future studentsFuture = getStudentsForFormSaisie(devoirInfos, result, eb);
+
+              // Récupération du libellé de la matière du devoir
+              Future subjectFuture = getSubjectsFuture(devoirInfos, result, eb);
+
+              // Récupération du nom de la classe
+              Future classeFuture = getClasseFuture(devoirInfos, result, eb);
+
+              // Récupération des compétences du devoir
+              Future compFuture = getCompFuture(idDevoir, devoirInfos, result, eb);
+
+              CompositeFuture.all(periodeFuture, studentsFuture, subjectFuture, compFuture, classeFuture)
+                      .setHandler(event -> {
+                          if(event.failed()){
+                              returnFailure("[getFormSaisieDevoir] ", event, handler);
+                          }
+                          else{
+                              handler.handle(new Either.Right<>(result));
+                          }
+                      });
+
+
+          } else {
+              String error = "Error :can not get informations from postgres tables ";
+              log.error(error);
+              handler.handle(new Either.Left<>(error));
+          }
+      });
+  }
 }

@@ -236,4 +236,14 @@ public interface DevoirService extends CrudService {
      * @param result handler portant le résultat de la requête NEO4j
      */
     void updatePositionnementTableAfterDelete(List<String> listEleves, List<String> listGroups, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> result);
+
+    /**
+     * Récupère les informations nécessaires pour générer un formulaire de saisie
+     * @param idDevoir
+     * @param acceptLanguage
+     * @param host
+     * @param handler
+     */
+    void getFormSaisieDevoir(Long idDevoir, String acceptLanguage, String host,
+                             Handler<Either<String, JsonObject>> handler);
 }
