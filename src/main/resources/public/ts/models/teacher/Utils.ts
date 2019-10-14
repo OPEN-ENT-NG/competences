@@ -22,6 +22,7 @@ import {evaluations} from "./model";
 import {updateFilters} from "../../utils/functions/updateFilters";
 import http from "axios";
 
+
 export class Utils {
     static isHeadTeacher (classe) {
         /*if (evaluations.structure.detailsUser === undefined) {
@@ -752,5 +753,14 @@ export class Utils {
                 notify.error(e.error);
                 throw (e);
             }
+    };
+
+    static downloadFile(res, document) {
+        let blob = new Blob([res.data]);
+        let link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = res.headers['content-disposition'].split('filename=')[1];
+        document.body.appendChild(link);
+        link.click();
     };
 }

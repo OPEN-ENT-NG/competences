@@ -28,6 +28,7 @@ export let messageLoaderLink = ($scope) => {
     $scope.$watch('display', function (newValue, oldValue) {
         if (newValue !== oldValue) {
             if(newValue === true){
+                jquery('#message-loader').css('z-index', 100);
                 animation.restart();
             }
             else {

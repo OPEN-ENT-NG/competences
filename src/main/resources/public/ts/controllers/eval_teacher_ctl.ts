@@ -3448,7 +3448,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         });
 
 
-        $scope.printCartouche = (unType?: String) => {
+        $scope.printCartouche = async (unType?: String) => {
 
             let url;
             if (unType) {
@@ -3459,15 +3459,18 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         url = "/competences/devoirs/print/" + $scope.currentDevoir.id + "/cartouche?eleve=" + $scope.printOption.byEleve
                             + '&color=' + $scope.printOption.inColor + "&nbr=" + $scope.printOption.cartoucheNmb + "&image=" + $scope.printOption.image +
                             "&withResult=" + $scope.printOption.withResult + "&withAppreciations=" + $scope.printOption.withAppreciations;
-                        http().getJson(url + "&json=true").error((result) => {
+                        $scope.printOption.display = false;
+                        await Utils.runMessageLoader($scope);
+                        http().getJson(url + "&json=true").error(async (result) => {
                             $scope.errorResultExportDevoir(result);
-                            utils.safeApply($scope);
-                        }).done(() => {
+                            $scope.printOption.display = true;
+                            await Utils.stopMessageLoader($scope);
+                        }).done(async () => {
                             $scope.printOption.display = false;
-                            utils.safeApply($scope);
-                            location.replace(url);
+                            let res = await httpAxios.get(url, {responseType: 'arraybuffer'});
+                            Utils.downloadFile(res, document);
+                            await Utils.stopMessageLoader($scope);
                         });
-                        utils.safeApply($scope);
                         break;
                     }
                     case 'formSaisie' : {
@@ -3475,8 +3478,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.exportDevoirObj.empty = false;
                         $scope.exportDevoirObj.errExport = false;
                         $scope.printOption.display = false;
-                        utils.safeApply($scope);
-                        location.replace(url);
+                        await Utils.runMessageLoader($scope);
+                        let res = await httpAxios.get(url, {responseType: 'arraybuffer'});
+                        Utils.downloadFile(res, document);
+                        await Utils.stopMessageLoader($scope);
                         break;
                     }
                 }
@@ -3486,18 +3491,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.exportDevoirObj = {};
         $scope.exportRelCompObj = {};
         $scope.exportDevoir = async (idDevoir, textMod = false) => {
+            $scope.printOption.display = false;
+            await Utils.runMessageLoader($scope);
             let url = "/competences/devoirs/print/" + idDevoir + "/export?text=" + textMod;
-            http().getJson(url + "&json=true").error((result) => {
+            http().getJson(url + "&json=true").error(async (result) => {
                 $scope.errorResultExportDevoir(result);
-                utils.safeApply($scope);
-            }).done(() => {
+                $scope.printOption.display = true;
+                await Utils.stopMessageLoader($scope);
+            }).done(async () => {
                 $scope.opened.evaluation.exportDevoirLB = false;
                 $scope.textModExport = false;
                 $scope.printOption.display = false;
-                utils.safeApply($scope);
-                location.replace(url);
+                let res = await httpAxios.get(url, {responseType: 'arraybuffer'});
+                Utils.downloadFile(res, document);
+                await Utils.stopMessageLoader($scope);
             });
-            utils.safeApply($scope);
         };
 
         $scope.errorResultExportDevoir = (result) => {
