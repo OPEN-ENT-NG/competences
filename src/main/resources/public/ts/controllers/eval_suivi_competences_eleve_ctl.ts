@@ -368,6 +368,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                         "canUpdateBFCSynthese");
                     await $scope.syncPeriode($scope.search.classe.id);
+                     $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
                 }
                 $scope.selected.grey = true;
                 if ($scope.search.classe.id_cycle === null) {
