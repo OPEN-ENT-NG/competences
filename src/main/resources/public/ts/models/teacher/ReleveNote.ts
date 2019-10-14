@@ -380,7 +380,7 @@ export class ReleveNote extends  Model implements IModel {
                         this.elementProgramme = this._tmp.elementProgramme;
                         this.syncAppreciationClasse(this._tmp.appreciation_classe.appreciation);
                     }
-                    this.getConversionTable(this._tmp.tableConversions);
+                    await this.getConversionTable(this._tmp.tableConversions);
                 }
                 this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated: true});
                 this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined) ? false : true;

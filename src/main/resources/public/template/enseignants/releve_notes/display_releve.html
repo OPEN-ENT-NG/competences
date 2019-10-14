@@ -404,7 +404,7 @@
                         </table>
                     </div>
                     <div class="responsive-table" ng-if="search.periode.id !== null && search.periode.id !== undefined">
-                        <table id="tableReleveStats" ng-show="!releveNote.isNN && !releveNote.toogle" class="tableReleve tableRelevePadding" c-naviga-table>
+                        <table id="tableReleveStats"  class="tableReleve tableRelevePadding" c-naviga-table>
                             <tbody>
                             <tr class="moyenneClasse">
                                 <td class="col1 text-overflow">
@@ -421,11 +421,14 @@
                                            ng-disabled="true"
                                            max="20" min="0" step="0.01">
                                 </td>
-                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                    [[releveNote._tmp._moyenne_classe.null.moyenne]]
+                                </td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                [[releveNote._tmp._moyenne_classe.nullFinal.moyenne]]
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"
                                     ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
-
+                                [[(releveNote._tmp._moyenne_classe[sousMatiere.id_type_sousmatiere].moyenne)]]
                                 </td>
                                 <td class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
@@ -446,15 +449,18 @@
                                            ng-disabled="true"
                                            max="20" min="0" step="0.01">
                                 </td>
-                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                    [[releveNote._tmp._moyenne_classe.null.min]]
+                                </td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                    [[releveNote._tmp._moyenne_classe.nullFinal.min]]
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"
                                     ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
-
+                                    [[(releveNote._tmp._moyenne_classe[sousMatiere.id_type_sousmatiere].min)]]
                                 </td>
-                                <th class="colMoyenne"
+                                <td class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
-                                ></th>
+                                ></td>
                             </tr>
                             <tr class="maxClasse">
                                 <td class="col1 text-overflow">
@@ -471,11 +477,14 @@
                                            ng-disabled="true"
                                            max="20" min="0" step="0.01">
                                 </td>
-                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
-                                <td class="colMoyenne zero-mobile" data-label="Moyenne"></td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                    [[releveNote._tmp._moyenne_classe.null.max]]
+                                </td>
+                                <td class="colMoyenne zero-mobile" data-label="Moyenne">
+                                    [[releveNote._tmp._moyenne_classe.nullFinal.max]]
                                 <td class="colMoyenne zero-mobile" data-label="Moyenne"
                                     ng-repeat="sousMatiere in search.matiere.sousMatieres.all">
-
+                                    [[(releveNote._tmp._moyenne_classe[sousMatiere.id_type_sousmatiere].max)]]
                                 </td>
                                 <td class="colMoyenne"
                                     ng-class="{widthMax: releveNote.toogle}"
