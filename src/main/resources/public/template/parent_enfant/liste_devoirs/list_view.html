@@ -80,7 +80,8 @@
                 <td ng-if="devoir.id_matiere !== ''"
                     class="testAlignLeft" data-label="[[translate('viescolaire.utils.subject')]]"
                     ng-click="goToDevoir(devoir.id)">
-                    <div class="competence-text-overflow">[[getLibelleMatiere(devoir.id_matiere)]]</div>
+                    <div class="competence-text-overflow">[[getLibelleMatiere(devoir.id_matiere)]] <span
+                            ng-if="devoir.id_sousmatiere !== null">([[getLibelleSousMatiere(devoir)]])</span></div>
                 </td>
                 <td ng-if="devoir.id_matiere === ''"
                     ng-click="goToDevoir(devoir.id)"

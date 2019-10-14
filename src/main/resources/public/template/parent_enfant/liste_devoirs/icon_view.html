@@ -26,7 +26,10 @@
             <section class="devoir-icons-container twelve-mobile">
                 <header>
                     <div class="devoir-icons-date expandable-content">[[getDateFormated(devoir.date)]]</div>
-                    <div class="devoir-icons-date expandable-content">[[getLibelleMatiere(devoir.id_matiere)]]</div>
+                    <div class="devoir-icons-date expandable-content">
+                        [[getLibelleMatiere(devoir.id_matiere)]]
+                        <span ng-if="devoir.id_sousmatiere !== null">([[getLibelleSousMatiere(devoir)]])</span>
+                    </div>
                 </header>
                 <div class="devoir-icons-name expandable-content"
                      ng-if="devoir.name.length > 30" tooltip="[[devoir.name]]">
