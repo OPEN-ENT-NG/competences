@@ -59,6 +59,9 @@
         .first {
             text-align : left;
         }
+        .bold {
+            font-weight: bold;
+        }
 
 
         .zui-table {
@@ -259,26 +262,38 @@
         </tr>
 
         {{/appreciationClasse}}
+
         {{#moyenneClasse}}
-
-        <tr>
+        <tr class="bold">
             <td class="first">{{moyenneClasseLibelle}}</td>
-            <td colspan="{{colspan}}">
-                {{moyenne_classe}}
-            </td>
-        </tr>
 
-        {{/moyenneClasse}}
-        {{#moyenneClasseSousMat}}
-        {{#print}}
-        <tr>
-            <td class="first">{{_libelle}}</td>
-            <td colspan="{{colspan}}">
-                {{_moyenne}}
-            </td>
+            {{#averageAuto}}
+            {{#_moyenne_classe}}
+            {{#null}}
+            <td class="center">{{moyenne}}</td>
+            {{/null}}
+            {{/_moyenne_classe}}
+            {{/averageAuto}}
+
+            {{#averageFinal}}
+            {{#_moyenne_classe}}
+            {{#nullFinal}}
+            <td class="center">{{moyenne}}</td>
+            {{/nullFinal}}
+            {{/_moyenne_classe}}
+            {{/averageFinal}}
+
+            {{#moyenneClasseSousMat}}
+            {{#print}}
+                <td  class="center">
+                    {{_moyenne}}
+                </td>
+            {{/print}}
+            {{/moyenneClasseSousMat}}
+            <td colspan="{{moyspan}}"></td>
         </tr>
-        {{/print}}
-        {{/moyenneClasseSousMat}}
+        {{/moyenneClasse}}
+
         </tbody>
     </table>
 

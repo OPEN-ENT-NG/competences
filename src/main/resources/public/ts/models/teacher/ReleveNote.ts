@@ -621,6 +621,15 @@ export class ReleveNote extends  Model implements IModel {
     async export  () {
         return new Promise(async (resolve, reject) => {
             let parameter = this.toJson();
+            let moyspan = _.filter(_.values(this.exportOptions.sousMatieres.positionnements_auto),
+                (val) => { return val === true;}).length;
+            if(this.exportOptions.positionnementFinal){
+                ++moyspan;
+            }
+            if(this.exportOptions.appreciation){
+                ++ moyspan;
+            }
+            _.filter(_.values(this.exportOptions),(val) => { return val === true;}).length;
             let colspan = _.filter(_.values(this.exportOptions),(val) => { return val === true;}).length;
             colspan += _.filter(_.values(this.exportOptions.sousMatieres.moyennes),
                 (val) => { return val === true;}).length;
@@ -629,7 +638,7 @@ export class ReleveNote extends  Model implements IModel {
             _.extend(parameter, this.exportOptions);
             _.extend(parameter, {typeClasse: this.classe.type_groupe, classeName: this.classe.name,
                 matiere: this.matiere.name,
-                colspan: colspan -1 });
+                colspan: colspan -1 , moyspan: moyspan});
             try {
                 let data = await httpAxios.post(this.api.EXPORT, parameter,
                     {responseType: this.exportOptions.fileType === 'pdf'? 'arraybuffer' : 'json'});
@@ -674,23 +683,43 @@ export class ReleveNote extends  Model implements IModel {
                     });
 
 
-                    let csvData = Utils.ConvertToCSV(columnCsv,format.header);
+                    let csvData = Utils.ConvertToCSV(columnCsv, format.header);
                     if(this.exportOptions.appreciationClasse ){
                         csvData += (`${lang.translate('evaluations.releve.appreciation.classe')};${
                             response.appreciation_classe.appreciation}\r\n`);
                     }
-                    if(this.exportOptions.moyenneClasse ){
-                        csvData += (`${lang.translate('average.class')};${
-                            response.moyenne_classe}\r\n`);
+                    let classe = response._moyenne_classe;
+                    if(this.exportOptions.moyenneClasse){
+                        let moyAuto = classe['null'];
+                        let moyFinal = classe['nullFinal'];
+                        if(Utils.isNotNull(moyAuto)){
+                            moyAuto = moyAuto.moyenne;
+                        }
+                        if(Utils.isNotNull(moyFinal)){
+                            moyFinal = moyFinal.moyenne;
+                        }
+                        moyAuto = Utils.isNull(moyAuto)? '' : moyAuto;
+                        moyFinal = Utils.isNull(moyFinal)? '' : moyFinal;
+
+                        csvData += (`${lang.translate('average.class')}`);
+                        if(this.exportOptions.averageAuto) {
+                            csvData += (`;${moyAuto}`);
+                        }
+                        if(this.exportOptions.averageFinal) {
+                            csvData += (`;${moyFinal}`);
+                        }
+                        let classeSousMat = response.moyenneClasseSousMat;
+                        if(Utils.isNotNull(classeSousMat)) {
+                            _.forEach(classeSousMat, sousMat => {
+                                if(sousMat.print){
+                                    csvData += (`;${sousMat._moyenne}`);
+                                }
+                            })
+                        }
+                        csvData += '\r\n';
                     }
-                    let classeSousMat = response.moyenneClasseSousMat;
-                    if(Utils.isNotNull(classeSousMat)) {
-                        _.forEach(classeSousMat, sousMat => {
-                            if(sousMat.print){
-                                csvData += (`${sousMat._libelle};${sousMat._moyenne}\r\n`);
-                            }
-                        })
-                    }
+
+
                     csvData = "\ufeff"+csvData;
                     blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
                     link = document.createElement('a');

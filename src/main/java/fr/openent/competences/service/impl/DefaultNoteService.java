@@ -87,6 +87,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public static final String SOUS_MATIERES = "sousMatieres";
     public static final String ID_TYPE_SOUS_MATIERE = "id_type_sousmatiere";
     public static final String COLSPAN = "colspan";
+    public static final String MOYSPAN = "moyspan";
 
     private EventBus eb;
     private UtilsService utilsService;
@@ -1866,6 +1867,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         resultFinal.put(CLASSE_NAME_KEY, params.getString(CLASSE_NAME_KEY));
         resultFinal.put(MATIERE_TABLE, params.getString(MATIERE_TABLE));
         resultFinal.put(COLSPAN, params.getValue(COLSPAN));
+        resultFinal.put(MOYSPAN, params.getValue(MOYSPAN));
+
         for(int i = 0; i <students.size(); i++) {
             JsonObject student = students.getJsonObject(i);
             if(i==0) {
