@@ -2624,7 +2624,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (evaluation.valeur !== undefined) {
                     evaluation.valeur = evaluation.valeur.replace(",",".");
                 }
-                if (evaluation.valeur === "" && !isAnnotaion) {
+                if (evaluation.valeur === "" && isAnnotaion !== undefined && !isAnnotaion) {
                     evaluation.valeur = utils.getNN();
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
