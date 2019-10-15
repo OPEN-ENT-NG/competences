@@ -2350,6 +2350,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 devoir.id_sousmatiere = matiere.sousMatieres.all[0].id_type_sousmatiere;
             }
 
+            if( matiere.sousMatieres !== undefined && matiere.sousMatieres.all.length === 0 && devoir.id_sousmatiere !== null){
+                devoir.id_sousmatiere = null;
+            }
+
+
         };
 
         /**
