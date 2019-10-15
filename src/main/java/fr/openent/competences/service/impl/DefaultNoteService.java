@@ -2035,7 +2035,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                             idPeriode, tableauDeConversionFuture.result(), elevesMapObject);
 
                                     // Format sous matières moyennes
-                                    addSousMatieres(elevesMapObject, sousMatiereFuture.result(), idPeriode);
+                                    addSousMatieres(elevesMapObject, sousMatiereFuture.result(),
+                                            resultHandler, idPeriode);
 
                                     // Rajout des positionnements finaux
                                     FormateColonneFinaleReleve(positionnementsFinauxFutures.result(), elevesMapObject,
@@ -3034,9 +3035,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         mapEleve.put(key, new JsonObject().put(ID_ETABLISSEMENT_KEY, idStructure));
 
         // Récupération des informations sur l'établissment
-        new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve.get(key), event -> {
-            formate(structureFuture, event);
-        });
+        new DefaultExportBulletinService(eb, null).getStructure(key,mapEleve.get(key), event ->
+                formate(structureFuture, event));
 
         // Récupération du logo de l'établissment
         Future<JsonObject> imgStructureFuture = Future.future();
@@ -3052,10 +3052,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         CompositeFuture.all(exportResult, structureFuture, imgStructureFuture, periodeLibelleFuture)
                 .setHandler((event -> {
-                    if (event.succeeded()) {
+                    if (event.failed()) {
+                        log.info(event.cause().getMessage());
+                        badRequest(request);
+                    }
+                    else{
                         JsonObject exportJson = exportResult.result();
-
                         putLibelleAndParamsForExportReleve(exportJson, param);
+
                         JsonObject imgStructure =  imgStructureFuture.result();
                         if (imgStructure != null && imgStructure.containsKey("imgStructure")) {
                             exportJson.put("imgStructure", imgStructure.getJsonObject("imgStructure")
@@ -3066,10 +3070,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         new DefaultExportService(eb, null).genererPdf(request, exportJson,
                                 "releve-periodique.pdf.xhtml", exportJson.getString("title"),
                                 vertx, config);
-                    }
-                    else {
-                        log.info(event.cause().getMessage());
-                        badRequest(request);
                     }
                 }));
     }
@@ -3368,7 +3368,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return res;
     }
 
-    private void addSousMatieres(Map<String, JsonObject> elevesMapObject, JsonArray sousMatieres, Long idPeriode){
+    private void addSousMatieres(Map<String, JsonObject> elevesMapObject, JsonArray sousMatieres,
+                                 JsonObject result,Long idPeriode){
         for(Map.Entry<String, JsonObject> elMap : elevesMapObject.entrySet()){
             JsonObject eleve = elMap.getValue();
             eleve.put(SOUS_MATIERES, new JsonObject().put(MOYENNES, new JsonArray())
@@ -3415,6 +3416,23 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 }
             }
         }
+        result.put("moyenneClasseSousMat", new JsonArray());
+        for (int i = 0; i < sousMatieres.size(); i++) {
+            JsonObject sousMatiere = sousMatieres.getJsonObject(i);
+            String moyLibelle = getLibelle("average.class") + " " + sousMatiere.getString(LIBELLE);
+            Long idSousMatiere = sousMatiere.getLong(ID_SOUS_MATIERE);
+            sousMatiere.put("_"+ LIBELLE, moyLibelle);
+            Object moy = result.getJsonObject("_moyenne_classe");
+            if(isNotNull(moy) && isNotNull(idSousMatiere)){
+                moy = ((JsonObject) moy).getJsonObject(idSousMatiere.toString());
+                if(isNotNull(moy)){
+                    moy = ((JsonObject) moy).getValue(MOYENNE);
+                }
+            }
+            moy = isNull(moy)? "" : moy;
+            sousMatiere.put("_" + MOYENNE, moy);
+            result.getJsonArray("moyenneClasseSousMat").add(sousMatiere);
+        }
     }
 
     private void putParamSousMatiere(JsonArray sousMatieres, JsonObject params) {
@@ -3425,6 +3443,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 Long idSousMatiere = sousMatiere.getLong(ID_SOUS_MATIERE);
                 Object print = params.getJsonObject(SOUS_MATIERES);
                 Object printPosi = params.getJsonObject(SOUS_MATIERES);
+                sousMatiere.put(COLSPAN, params.getValue(COLSPAN));
                 if(isNotNull(print)){
                     print = ((JsonObject)print).getJsonObject(MOYENNES);
                     printPosi = ((JsonObject)printPosi).getJsonObject(POSITIONNEMENTS_AUTO);

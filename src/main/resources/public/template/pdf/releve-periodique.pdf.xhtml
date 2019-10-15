@@ -269,6 +269,16 @@
         </tr>
 
         {{/moyenneClasse}}
+        {{#moyenneClasseSousMat}}
+        {{#print}}
+        <tr>
+            <td class="first">{{_libelle}}</td>
+            <td colspan="{{colspan}}">
+                {{_moyenne}}
+            </td>
+        </tr>
+        {{/print}}
+        {{/moyenneClasseSousMat}}
         </tbody>
     </table>
 

@@ -683,6 +683,14 @@ export class ReleveNote extends  Model implements IModel {
                         csvData += (`${lang.translate('average.class')};${
                             response.moyenne_classe}\r\n`);
                     }
+                    let classeSousMat = response.moyenneClasseSousMat;
+                    if(Utils.isNotNull(classeSousMat)) {
+                        _.forEach(classeSousMat, sousMat => {
+                            if(sousMat.print){
+                                csvData += (`${sousMat._libelle};${sousMat._moyenne}\r\n`);
+                            }
+                        })
+                    }
                     csvData = "\ufeff"+csvData;
                     blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
                     link = document.createElement('a');
