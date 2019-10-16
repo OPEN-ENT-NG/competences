@@ -46,6 +46,7 @@ import java.util.List;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.ACTION;
+import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BFC_TABLE;
 import static fr.openent.competences.utils.ArchiveUtils.ARCHIVE_BULLETIN_TABLE;
@@ -557,6 +558,27 @@ public class BFCController extends ControllerHelper {
         if(idsClasses != null) {
             bfcService.getMoyenneControlesContinusBrevet(eb, idsClasses, idTypePeriode, isCycle, idCycle,
                     arrayResponseHandler(request));
+        }else{
+            log.debug("eleves bareme brevet  not found");
+            Renders.badRequest(request);
+        }
+
+    }
+    @Get("/bfc/bareme/brevet/:idEleve/:idClasse/:idStructure")
+    @ApiDoc("Récupère la moyenne des contrôles continus(obtenue à partir des niveaux du bfc) en fct de la dispense des domaines")
+    @SecuredAction(value="",type= ActionType.RESOURCE)
+    @ResourceFilter(AccessControleContinuFilter.class)
+    public void getMaxBaremeMoyBaremeBrevetEleve(final HttpServerRequest request){
+        final String idClasse = request.params().get(ID_CLASSE_KEY);
+        final String idEleve = request.params().get(ID_ELEVE_KEY);
+        final String idStrucutre = request.params().get(ID_STRUCTURE_KEY);
+        final Long idTypePeriode = (!request.params().get("idTypePeriode").equals("null")) ?
+                Long.valueOf(request.params().get("idTypePeriode")) : null;
+        final Boolean isCycle = Boolean.valueOf(request.params().get("isCycle"));
+        final Long idCycle = (isCycle)? Long.valueOf(request.params().get("idCycle")):null;
+        if(isNotNull(idClasse) && isNotNull(idEleve)) {
+            bfcService.getMoyenneControlesContinusBrevet(eb, idClasse, idEleve, idStrucutre,idTypePeriode, isCycle,
+                    idCycle, arrayResponseHandler(request));
         }else{
             log.debug("eleves bareme brevet  not found");
             Renders.badRequest(request);

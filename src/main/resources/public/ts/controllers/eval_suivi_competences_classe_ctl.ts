@@ -20,20 +20,20 @@
  * Created by ledunoiss on 27/10/2016.
  */
 
-import {ng, template, model, http, moment, notify} from 'entcore';
+import {ng, template, model, http, notify, Controller} from 'entcore';
 import httpAxios from "axios";
 import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
 import * as utils from '../utils/teacher';
 import { Defaultcolors } from "../models/eval_niveau_comp";
-import {Utils} from "../models/teacher/Utils";
+import {Utils} from "../models/teacher/";
 import { FilterNotEvaluated, FilterNotEvaluatedEnseignement
-    } from "../utils/filters/filterNotEvaluatedEnseignement";
+} from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 
-declare let _:any;
+declare let _: any;
 
 export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClasseCtl', [
-    '$scope', 'route', '$rootScope', '$location', '$filter', '$route','$timeout',
+    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
     async function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
 
         /** --------------------------------------  Functions définies dans le scope  --------------        */
@@ -58,7 +58,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         async function endSelectSuivi() {
 
             return new Promise(async (resolve) => {
-                updateColorAndLetterForSkills($scope,$location);
+                updateColorAndLetterForSkills($scope, $location);
 
                 // on met à jour le fil d'ariane
                 let updatedUrl = '/competences/classe?idClasse=' + $scope.search.classe.id;
@@ -66,10 +66,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     updatedUrl += '&idPeriode=' + $scope.search.periode.id_type;
 
                 $rootScope.$broadcast('change-params', updatedUrl);
-                if ($scope.searchBilan.parDomaine ===  'true') {
+                if ($scope.searchBilan.parDomaine === 'true') {
                     await $scope.suiviCompetence.domaines.sync();
                 }
-                if ($scope.searchBilan.parDomaine ===  'false') {
+                if ($scope.searchBilan.parDomaine === 'false') {
                     await $scope.suiviCompetence.enseignements.sync();
                     $scope.suiviFilter.mine = 'false';
                 }
@@ -88,28 +88,28 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     mapEleves[$scope.search.classe.eleves.all[i].id] = $scope.search.classe.eleves.all[i];
                 }
                 $scope.search.classe.mapEleves = mapEleves;
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
                 if ($scope.displayFromEleve) delete $scope.displayFromEleve;
 
                 template.close('suivi-competence-content');
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
                 template.open('suivi-competence-content',
                     'enseignants/suivi_competences_classe/content_vue_suivi_classe');
-                Utils.stopMessageLoader($scope);
+                await Utils.stopMessageLoader($scope);
                 resolve();
             });
-        };
+        }
 
         /**
          * Créer une suivi de compétence
          */
         $scope.selectSuivi = async function (classeHasChange) {
-            Utils.runMessageLoader($scope);
+            await Utils.runMessageLoader($scope);
             if (classeHasChange === true) {
                 await $scope.syncPeriode($scope.search.classe.id);
             }
             if ($scope.search.classe.id_cycle === null) {
-                Utils.stopMessageLoader($scope);
+                await Utils.stopMessageLoader($scope);
                 return;
             }
             $scope.Display = {EvaluatedCompetences: true};
@@ -120,21 +120,20 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     $scope.suiviCompetence = new SuiviCompetenceClasse(
                         $scope.search.classe.filterEvaluableEleve($scope.search.periode)
                         , $scope.search.periode, $scope.structure);
-                   await endSelectSuivi();
+                    await endSelectSuivi();
                 } else {
                     // cas 1ère sélection de période : on attend le chargement des élèves avant de passer
                     // lal iste des élèves au constructeur SuiviCompetenceClasse
-                    $scope.informations.classe.on('synchronize-students', async function () {
-                        $scope.suiviCompetence = new SuiviCompetenceClasse(
-                            $scope.search.classe.filterEvaluableEleve($scope.search.periode)
-                            , $scope.search.periode, $scope.structure);
-                     await  endSelectSuivi();
-                    });
+                    await $scope.informations.classe.eleves.sync();
+                    $scope.suiviCompetence = new SuiviCompetenceClasse(
+                        $scope.search.classe.filterEvaluableEleve($scope.search.periode)
+                        , $scope.search.periode, $scope.structure);
+                    await  endSelectSuivi();
                 }
             } else {
                 //cas 1ere entrée dans le suivi
                 template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
-                Utils.stopMessageLoader($scope);
+                await Utils.stopMessageLoader($scope);
             }
 
         };
@@ -146,20 +145,20 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         $scope.updateColorAndLetterForSkills = function () {
-           updateColorAndLetterForSkills($scope, $location);
+            updateColorAndLetterForSkills($scope, $location);
         };
 
         $scope.updateNiveau = function (usePerso) {
-           updateNiveau(usePerso, $scope);
+            updateNiveau(usePerso, $scope);
         };
 
         $scope.getMaxEvaluations = function (idEleve) {
             if ($scope.detailCompetence === undefined
-                ||$scope.detailCompetence === null) {
+                || $scope.detailCompetence === null) {
                 return;
             }
             if ($scope.suiviFilter === undefined) $scope.initFilterMine();
-            var evaluations = $scope.suiviFilter.mine == 'true'
+            let evaluations = $scope.suiviFilter.mine == 'true'
                 ? _.where($scope.detailCompetence.competencesEvaluations, {id_eleve: idEleve, owner: model.me.userId})
                 : _.where($scope.detailCompetence.competencesEvaluations, {id_eleve: idEleve});
             if (evaluations.length > 0) {
@@ -178,7 +177,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          * @returns {String} Nom de la classe
          */
         $scope.getEvaluationResultColor = function (eleveId) {
-            var evaluation = $scope.getMaxEvaluations(eleveId);
+            let evaluation = $scope.getMaxEvaluations(eleveId);
             if (evaluation !== -Infinity) {
                 return $scope.mapCouleurs[evaluation.evaluation];
             }
@@ -189,7 +188,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         $scope.FilterColor = function (item) {
-            var evaluation = $scope.getMaxEvaluations(item.id);
+            let evaluation = $scope.getMaxEvaluations(item.id);
             if (evaluation === undefined) {
                 return;
             }
@@ -245,10 +244,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
          */
         $scope.incrementClasse = async function (num) {
             $scope.Display = {EvaluatedCompetences: true};
-            let index = _.findIndex(_.sortBy(_.sortBy($scope.classes.all,'name'),'type_groupe_libelle'), {id: $scope.search.classe.id});
+            let index = _.findIndex(_.sortBy(_.sortBy($scope.classes.all, 'name'), 'type_groupe_libelle'), {id: $scope.search.classe.id});
             if (index !== -1 && (index + parseInt(num)) >= 0
                 && (index + parseInt(num)) < $scope.classes.all.length) {
-                $scope.search.classe = _.sortBy(_.sortBy($scope.classes.all,'name'),'type_groupe_libelle')[index + parseInt(num)];
+                $scope.search.classe = _.sortBy(_.sortBy($scope.classes.all, 'name'), 'type_groupe_libelle')[index + parseInt(num)];
                 $scope.syncPeriode($scope.search.classe.id);
                 $scope.search.periode = '*';
                 $scope.synchronizeStudents($scope.search.classe.id);
@@ -258,18 +257,18 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         $scope.changeContent = async function () {
-            if(template.containers['suivi-competence-content'] !== undefined) {
+            if (template.containers['suivi-competence-content'] !== undefined) {
                 let content = $scope.template.containers['suivi-competence-content']
                     .split('.html?hash=')[0].split('template/')[1];
-                Utils.runMessageLoader($scope);
+                await Utils.runMessageLoader($scope);
                 await $scope.selectSuivi($scope.route.current.$$route.originalPath);
                 $scope.template.open('suivi-competence-content', content);
-                Utils.stopMessageLoader($scope);
+                await Utils.stopMessageLoader($scope);
             }
         };
 
         $scope.exportRecapEval = async (textMod, printSuiviClasse, idPeriode, exportByEnseignement,
-                                  withMoyGeneraleByEleve, withMoyMinMaxByMat ) => {
+                                        withMoyGeneraleByEleve, withMoyMinMaxByMat) => {
             switch (printSuiviClasse) {
                 case 'printRecapAppreciations' : {
                     let url = "/competences/recapAppreciations/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
@@ -309,12 +308,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     break;
                 }
                 case 'printReleveComp' : {
-                    if( $scope.opened.recapEval ) $scope.opened.recapEval = false;
+                    if ($scope.opened.recapEval) $scope.opened.recapEval = false;
                     await Utils.runMessageLoader($scope);
 
                     let url = "/competences/releveComp/print/export?text=" + !textMod;
                     url += "&idEtablissement=" + $scope.structure.id;
-                    for (var m = 0; m < $scope.allMatieresSorted.length; m++) {
+                    for (let m = 0; m < $scope.allMatieresSorted.length; m++) {
                         if ($scope.allMatieresSorted[m].select) {
                             url += "&idMatiere=" + $scope.allMatieresSorted[m].id;
                         }
@@ -325,20 +324,20 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     url += "&idClasse=" + $scope.search.classe.id;
                     url += "&byEnseignement=" + exportByEnseignement;
                     http().getJson(url + "&json=true")
-                        .error( async (result) => {
+                        .error(async (result) => {
                             await Utils.stopMessageLoader($scope);
                             $scope.opened.recapEval = true;
                             console.log(result);
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
-                        .done( async () => {
+                        .done(async () => {
 
                             delete $scope.releveComp;
                             $scope.releveComp = {
                                 textMod: true
                             };
-                            await httpAxios.get(url, {responseType: 'arraybuffer' }).then(async(data) => {
+                            await httpAxios.get(url, {responseType: 'arraybuffer'}).then(async (data) => {
                                 let blob;
                                 let link = document.createElement('a');
                                 let response = data.data;
@@ -357,11 +356,11 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     break;
                 }
                 case 'printTabMoys': {
-                    let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id ;
-                    url +=  "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
-                    url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat+ "&text=" + !textMod;
+                    let url = "/competences/suiviClasse/tableau/moyenne/" + $scope.search.classe.id;
+                    url += "/export?withMoyGeneraleByEleve=" + withMoyGeneraleByEleve;
+                    url += "&withMoyMinMaxByMat=" + withMoyMinMaxByMat + "&text=" + !textMod;
                     if (idPeriode) {
-                        url += "&idPeriode=" + idPeriode ;
+                        url += "&idPeriode=" + idPeriode;
                     }
                     http().getJson(url)
                         .error((result) => {
@@ -484,11 +483,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             $scope.route = $route;
 
 
-            $scope.initFilterMine = () => {
-                $scope.suiviFilter = {
-                    mine: (!Utils.isChefEtab()).toString()
-                };
+            $scope.initFilterMine = function () {
+                Utils.initFilterMine($scope);
             };
+
             $scope.initFilterMine();
 
             utils.safeApply($scope);
@@ -511,7 +509,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         $scope.showEnseignementChoice = (parDomaine?) => {
-            if (parDomaine !== undefined){
+            if (parDomaine !== undefined) {
 
                 return parDomaine === 'false';
             }

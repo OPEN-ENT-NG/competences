@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, Collection, http, idiom as lang, _} from 'entcore';
+import {Model, Collection, http, _} from 'entcore';
 import { Eleve, Periode, SuiviCompetenceClasse, Utils, BaremeBrevetEleves } from './index';
 import * as utils from '../../utils/teacher';
 import {TypePeriode} from "../common/TypePeriode";
@@ -76,7 +76,7 @@ export class Classe extends Model {
         }
         this.collection(Eleve, {
             sync : () : Promise<any> => {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     this.mapEleves = {};
                     let url;
                     if(Utils.isChefEtab(this)){
@@ -95,7 +95,7 @@ export class Classe extends Model {
                            _d.id_cycle = this.id_cycle;
                         });
                         this.eleves.load(data);
-                        for (var i = 0; i < this.eleves.all.length; i++) {
+                        for (let i = 0; i < this.eleves.all.length; i++) {
                             this.mapEleves[this.eleves.all[i].id] = this.eleves.all[i];
                         }
                         this.trigger('sync');
@@ -108,13 +108,13 @@ export class Classe extends Model {
         this.collection(SuiviCompetenceClasse);
         this.collection(Periode, {
             sync : async (): Promise<any> => {
-                return new Promise((resolve, reject) => {
+                return new Promise((resolve) => {
                     http().getJson(this.api.syncPeriode).done((res) => {
                         res.push({id: null});
                         this.periodes.load(res);
                         this.synchronized.periodes = true;
                         resolve();
-                    }).error( (res) =>{
+                    }).error( () =>{
                         this.periodes.load([]);
                         this.synchronized.periodes = true;
                         resolve();
@@ -144,7 +144,7 @@ export class Classe extends Model {
         }
         return libelleClasse;
 
-    }
+    };
 
     filterEvaluableEleve (periode) {
         let res = _.omit(this, 'eleves');
@@ -167,6 +167,6 @@ export class Classe extends Model {
             res.eleves = this.eleves;
         }
         return res;
-    };
+    }
 
 }

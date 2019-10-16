@@ -459,6 +459,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             displaySuiviCompetencesClasse: async function (params) {
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
+                    template.close('suivi-competence-content');
                     let display = async function(){
                         $scope.selected.matieres = [];
                         $scope.allUnselect = true;

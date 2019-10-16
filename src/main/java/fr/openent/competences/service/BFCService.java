@@ -134,6 +134,10 @@ public interface BFCService extends CrudService {
                                            Boolean isCycle, Long idCycle,
                                            final Handler<Either<String, JsonArray>> handler);
 
+    void getMoyenneControlesContinusBrevet(EventBus eb, String idClasse, String idEleve, String idStrucutre,
+                                           Long idPeriode, Boolean isCycle, Long idCycle,
+                                           final Handler<Either<String, JsonArray>> handler);
+
 
     void checkHeadTeacherForBFC(UserInfos user, String id_eleve, String id_etablissement,
                                 final Handler<Boolean> handler);

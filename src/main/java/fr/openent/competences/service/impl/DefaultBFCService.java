@@ -718,6 +718,56 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         });
     }
 
+    public void getMoyenneControlesContinusBrevet(EventBus eb, String idClasse, String idEleve, String idStructure,
+                                                  Long idPeriode, Boolean isCycle, Long idCycle,
+                                                  final Handler<Either<String, JsonArray>> handler) {
+        final JsonArray moyControlesContinusEleves = new fr.wseduc.webutils.collections.JsonArray();
+
+        List<String> idsEleves = new ArrayList<>();
+        idsEleves.add(idEleve);
+
+        //On récupère la valeur max du barèmebrevet et map des ordres(=niveau ds le JsonObject du buildBFC)/bareme
+        Future<Map<Integer, Map<Integer, Integer>>> maxBaremFuture = Future.future();
+        competenceNoteService.getMaxBaremeMapOrderBaremeBrevet(idStructure, idClasse, max ->
+                formate(maxBaremFuture, max));
+
+        //On récupère le nb de DomainesRacines
+        Future<JsonArray> domainesRacineFuture = Future.future();
+        domaineService.getDomainesRacines(idClasse, event -> formate(domainesRacineFuture, event));
+
+        //On récupère les élèves qui sont dispensés pour un domaine racine
+        Future<Map<String, Map<Long, Boolean>>> dispDomaineFuture = Future.future();
+        dispenseDomaineEleveService.mapOfDispenseDomaineByIdEleve(idsEleves, event ->formate(dispDomaineFuture, event));
+
+        //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
+        Future<JsonObject> bfcFuture = Future.future();
+        String[] el = new String[1];
+        el[0] = idEleve;
+        buildBFC(false, el, idClasse, idStructure, idPeriode, idCycle, event-> formate(bfcFuture, event));
+
+        CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispDomaineFuture, bfcFuture)
+                .setHandler(event -> {
+                    if(event.failed()){
+                        returnFailure("getMoyenneControlesContinusBrevet", event, handler);
+                        return;
+                    }
+                    Map<String, Map<Long, Boolean>> dispensesDomainesEleves = dispDomaineFuture.result();
+                    final Integer nbDomainesRacines = domainesRacineFuture.result().size();
+                    final JsonObject resultsElevesByDomaine = bfcFuture.result();
+                    final Integer maxBareme = maxBaremFuture.result().entrySet().iterator().next().getKey();
+                    final Map<Integer, Integer> mapOrdreBaremeBrevet =
+                            maxBaremFuture.result().entrySet().iterator().next().getValue();
+                    Map<String, List<String>> classe = new HashMap<>();
+                    classe.put(idClasse, new ArrayList<>());
+                    classe.get(idClasse).add(idEleve);
+                    for(Map.Entry<String, List<String>> c :  classe.entrySet()) {
+                        runMoyenneControleContinue(moyControlesContinusEleves, maxBareme,
+                                dispensesDomainesEleves, nbDomainesRacines, resultsElevesByDomaine,
+                                mapOrdreBaremeBrevet, c, handler);
+                    }
+                });
+    }
+
     //récupérer les paramètres nécessaire pour les méthodes
     private void getParamsMethodGetMoyenne (final List<String> idsClasses, final Long idPeriode,
                                             final Handler<Either<String, Map<String, Map<String, List<String>>>>> handler){

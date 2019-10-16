@@ -18,6 +18,7 @@
 import { notify,Model }from 'entcore';
 import http from 'axios';
 import {Mix} from 'entcore-toolkit';
+import {Utils} from "./teacher";
 
 export class BaremeBrevetEleve {
 
@@ -39,18 +40,38 @@ export class BaremeBrevetEleves {
         this.all = [];
     }
 
-    async sync(id_classe: string,idTypePeriode: number, isCycle: boolean, idCycle: number){
+    async getBaremClasse(idClasse: string,idTypePeriode: number, isCycle: boolean, idCycle: number) {
+        let { data } = await http.get(`/competences/bfc/bareme/brevet/eleves?idClasse=${
+            idClasse}&idTypePeriode=${idTypePeriode}&isCycle=${isCycle}&idCycle=${idCycle}`);
+        this.all = Mix.castArrayAs(BaremeBrevetEleve,data);
+        return data;
+    }
+
+    async getBaremEleve(idClasse,idTypePeriode, isCycle, idCycle, idStructure, idEleve){
+        let { data } = await http.get(`/competences/bfc/bareme/brevet/${idEleve}/${
+            idClasse}/${idStructure}?idTypePeriode=${idTypePeriode}&isCycle=${isCycle}&idCycle=${idCycle}`);
+        this.all = Mix.castArrayAs(BaremeBrevetEleve,data);
+        return data;
+    }
+
+    async sync(idClasse: string,idTypePeriode: number, isCycle: boolean, idCycle: number, idStructure? , idEleve?){
         return new Promise( async (resolve, reject) => {
         try{
-            let { data } = await http.get(`/competences/bfc/bareme/brevet/eleves?idClasse=${
-                id_classe}&idTypePeriode=${idTypePeriode}&isCycle=${isCycle}&idCycle=${idCycle}`);
-            this.all = Mix.castArrayAs(BaremeBrevetEleve,data);
-            resolve(data);
+            if(Utils.isNull(idStructure) && Utils.isNull(idEleve)) {
+                let {data} = await this.getBaremClasse(idClasse, idTypePeriode, isCycle, idCycle);
+                resolve(data);
+            }
+            else {
+                let {data} = await this.getBaremEleve(idClasse, idTypePeriode, isCycle, idCycle, idStructure, idEleve);
+                resolve(data);
+            }
         }catch (e){
             notify.error('evaluation.bfc.controle.continu.eleves.err');
             reject(e);
         }
         });
     }
+
+
 
 }

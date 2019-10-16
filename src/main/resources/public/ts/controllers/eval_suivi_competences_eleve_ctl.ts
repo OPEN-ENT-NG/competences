@@ -431,7 +431,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                         if(idCycle !== undefined) {
                             let allPromise = [$scope.suiviCompetence.sync(),
                                 $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,
-                                    idTypePeriode, isCycle, idCycle),
+                                    idTypePeriode, isCycle, idCycle, evaluations.structure.id, $scope.search.eleve.id),
                                 $scope.suiviCompetence.bilanFinDeCycles.sync(), $scope.initSliderBFC()];
                             if ($scope.searchBilan.parDomaine === 'true') {
                                 allPromise.push($scope.suiviCompetence.domaines.sync());
@@ -1003,7 +1003,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 }
             }
             await $scope.suiviCompetence.baremeBrevetEleves.sync($scope.suiviCompetence.classe.id,
-                idTypePeriode, isCycle, idCycle);
+                idTypePeriode, isCycle, idCycle, evaluations.structure.id, $scope.search.eleve.id);
             $scope.suiviCompetence.baremeBrevetEleve = _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all, {id_eleve: $scope.search.eleve.id});
             await utils.safeApply($scope);
         };
