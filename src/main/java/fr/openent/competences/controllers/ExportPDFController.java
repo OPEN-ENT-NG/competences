@@ -768,9 +768,9 @@ public class ExportPDFController extends ControllerHelper {
                 if(json) {
                     Renders.renderJson(request, result);
                 } else {
-                    String fileName = result.getString("classe") + "_export_appreciation";
+                    String fileName = result.getString("classe") + "_export_synthese";
                     exportService.genererPdf(request, result,
-                            "export_appreciations-classe.pdf.xhtml", fileName, vertx, config);
+                            "export_syntheses-classe.pdf.xhtml", fileName, vertx, config);
                 }
             } else {
                 leftToResponse(request, new Either.Left<>(allData.cause().getMessage()));
