@@ -45,6 +45,11 @@ export class Graph extends Model{
                 data: _.clone(configMixedChart.averageStudent.data),
                 tooltipsPercentage : _.clone(configMixedChart.averageStudent.data),
                 fill: false,
+                borderColor: configMixedChart.averageStudent.borderColor,
+                backgroundColor: configMixedChart.averageStudent.backgroundColor,
+                pointBorderColor: configMixedChart.averageStudent.pointBorderColor,
+                pointBackgroundColor: configMixedChart.averageStudent.pointBackgroundColor,
+                pointHoverBackgroundColor: configMixedChart.averageStudent.backgroundColor
             },
             {
                 label: _.clone(configMixedChart.averageClass.label),
@@ -53,6 +58,11 @@ export class Graph extends Model{
                 tooltipsPercentage: _.clone(configMixedChart.averageClass.data),
                 fill: false,
                 borderWidth : 1 + Chart.defaults.global.elements.line.borderWidth,
+                borderColor: configMixedChart.averageClass.borderColor,
+                backgroundColor: configMixedChart.averageClass.backgroundColor,
+                pointBorderColor: configMixedChart.averageClass.pointBorderColor,
+                pointBackgroundColor: configMixedChart.averageClass.pointBackgroundColor,
+                pointHoverBackgroundColor: configMixedChart.averageClass.backgroundColor
             },
             {
                 label: _.clone(niveauCompetences[3].libelle),
@@ -298,7 +308,9 @@ export class Graph extends Model{
                 type: 'line',
                 data: dataStudent,
                 borderColor: '#00ADF9',
-                backgroundColor: '#009eea',
+                backgroundColor: '#00ADF9',
+                pointBorderColor: '#ccefff',
+                pointBackgroundColor: '#00ADF9',
                 fill: false,
                 id: undefined,
                 options: {
@@ -317,8 +329,10 @@ export class Graph extends Model{
                 label: lang.translate('level.class'),
                 type: 'line',
                 data: dataClass,
-                borderColor: '#5f626c',
-                backgroundColor: '#5f626c',
+                borderColor: '#787c87',
+                backgroundColor: '#787c87',
+                pointBorderColor: '#bbbdc3',
+                pointBackgroundColor: '#787c87',
                 borderWidth:
                 1 + Chart.defaults.global.elements.line.borderWidth,
                 fill: false,

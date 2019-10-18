@@ -87,13 +87,22 @@ export class ComparisonGraph extends Model {
             dataset.label += ` ${periode.name}`;
             dataset.stack = stackNumber.toString();
             let backgroundColor = dataset.backgroundColor;
-            if(backgroundColor !== undefined && withDarkness === true) {
+            if(backgroundColor !== undefined && withDarkness === true ) {
                 dataset.backgroundColor =
                     `rgb(${Color(backgroundColor).darken((stackNumber) * 0.25).values.rgb.toString()})`;
-            }
-            if(dataset.type !== 'line') {
                 dataset.borderColor =
                     `rgb(${Color(dataset.backgroundColor).darken((stackNumber) * 0.25).values.rgb.toString()})`;
+            }
+
+            if(dataset.type === 'line') {
+                dataset.pointHoverBackgroungColor =
+                    `rgb(${Color(dataset.pointHoverBorderColor).darken((stackNumber) * 0.15).values.rgb.toString()})`;
+                dataset.pointBackgroundColor =
+                    `rgb(${Color(dataset.pointBackgroundColor).darken((stackNumber) * 0.15).values.rgb.toString()})`;
+                dataset.backgroundColor =
+                    `rgb(${Color(backgroundColor).darken((stackNumber) * 0.15).values.rgb.toString()})`;
+                dataset.borderColor =
+                    `rgb(${Color(dataset.backgroundColor).darken((stackNumber) * 0.15).values.rgb.toString()})`;
             }
             dataset.borderWidth = (stackNumber+1)*0.5 + 1;
             newPeriodeDataset.push(new Array(labels.length));
