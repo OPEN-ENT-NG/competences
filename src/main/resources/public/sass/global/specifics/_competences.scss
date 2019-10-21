@@ -2783,9 +2783,9 @@ body.evaluations {
         padding: 2px;
       }
       .selectable-list li:hover {
-        background: $orange;
-        color: $white;
-        border-bottom-color: $orange;
+        background: $white;
+        color: $orange;
+        border-bottom-color: grey;
       }
     }
     .filtre-classe {

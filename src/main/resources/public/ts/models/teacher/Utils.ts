@@ -626,6 +626,9 @@ export class Utils {
 
     static chooseClasse = async function (classe, $scope, withStudent) {
         classe.selected = !classe.selected;
+        if(classe.selected && $scope.showEleves !== true){
+            $scope.showEleves = true;
+        }
         $scope.opened.displayMessageLoader = true;
         await utils.safeApply($scope);
         if (classe.synchronized.periodes !== true) {
@@ -649,6 +652,9 @@ export class Utils {
         if(isClasse === true){
             $scope.opened.displayMessageLoader = true;
             await utils.safeApply($scope);
+            if(b && $scope.showEleves !== true){
+                $scope.showEleves = true;
+            }
             await updateFilters($scope, withStudent);
             $scope.opened.displayMessageLoader = false;
             await utils.safeApply($scope);
