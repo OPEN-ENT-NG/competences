@@ -88,6 +88,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     public static final String ID_TYPE_SOUS_MATIERE = "id_type_sousmatiere";
     public static final String COLSPAN = "colspan";
     public static final String MOYSPAN = "moyspan";
+    public static final String MOYENNES_CLASSE = "moyennesClasse";
 
     private EventBus eb;
     private UtilsService utilsService;
@@ -889,7 +890,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             }
         }
         // permettra de stocker les moyennes des sousMatières par période
-        result.put("moyennes", new JsonArray());
+        result.put(MOYENNES, new JsonArray());
         result.put("_"+ MOYENNE, new JsonObject());
         HashMap<Long,JsonArray> listMoyDevoirs = new HashMap<>();
 
@@ -929,22 +930,23 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
             //ajout des moyennes de l'élève sur chaque période au résultat final
             if (listMoyDevoirs.get(idPeriode).size() > 0) {
-                result.getJsonArray("moyennes").add(listMoyDevoirs.get(idPeriode).getJsonObject(0));
+                result.getJsonArray(MOYENNES).add(listMoyDevoirs.get(idPeriode).getJsonObject(0));
             }
         }
 
         // calcul des moyenne classe des sousMatieres par période
-        result.put("_moyennesClasse", new JsonObject());
+        result.put("_" + MOYENNES_CLASSE, new JsonObject());
         for (Map.Entry<Long, HashMap<Long, ArrayList<NoteDevoir>>> nClassSousMat : notesClasseBySousMat.entrySet()) {
 
             Long idPeriode = nClassSousMat.getKey();
             if (idPeriode != null) {
+                result.getJsonObject("_" + MOYENNES_CLASSE).put(idPeriode.toString(), new JsonObject());
                 for (Map.Entry<Long, ArrayList<NoteDevoir>> noteSousMat : nClassSousMat.getValue().entrySet()) {
                     Long idSousMat = noteSousMat.getKey();
                     ArrayList<NoteDevoir> notes = noteSousMat.getValue();
                     Double moyClasse = calculMoyenneClasseByPeriode(notes, new HashMap<>(), idPeriode);
-                    result.getJsonObject("_moyennesClasse").put(idPeriode.toString(),
-                            new JsonObject().put(idSousMat.toString(), moyClasse));
+                    result.getJsonObject("_" + MOYENNES_CLASSE).getJsonObject(idPeriode.toString())
+                            .put(idSousMat.toString(), moyClasse);
                 }
             }
         }
@@ -1235,7 +1237,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     (double) Math.round((sumMoyPeriode / moyennesClasses.size()) * 100) / 100);
             moyennesClasses.add(moyennePeriodeClasse);
         }
-        result.put("moyennesClasse", moyennesClasses);
+        result.put(MOYENNES_CLASSE, moyennesClasses);
 
     }
 
