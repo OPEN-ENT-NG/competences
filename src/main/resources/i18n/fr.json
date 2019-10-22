@@ -147,7 +147,7 @@
   "evaluations.export.releveComp" : "Exporter le relevé de compétences au format PDF",
   "evaluations.recapEval" : "Tableau récapitulatif des niveaux acquis par domaine des élèves",
   "evaluations.releveComp.classe" : "Listes récapitulatives des compétences évaluées par domaine ou enseignement des élèves",
-  "evaluations.recapAppreciations.classe" : "Synthèse du conseil de la classe",
+  "evaluations.recapAppreciations.classe" : "Synthèse du conseil de classe",
   "evaluations.tab.moys": "Tableau des moyennes des élèves de la classe",
   "evaluations.tab.moysPos": "Tableau des synthèses du conseil de classe, des moyennes et positionnements par matières des élèves de la classe",
   "evaluations.moy.generale.by.eleve": "Avec les moyennes générales de chaque élève",
