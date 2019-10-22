@@ -27,6 +27,7 @@ import {
 import {AppreciationElement} from "./AppreciationElement";
 import {AvisConseil} from "./AvisConseil";
 import {AvisOrientation} from "./AvisOrientation";
+import {Utils} from "./Utils";
 
 export class BilanPeriodique extends  Model {
     synchronized: any;
@@ -151,9 +152,15 @@ export class BilanPeriodique extends  Model {
             notify.error('evaluations.appreciations.get.error');
         }
 
-        let period = _.findWhere(this.classe.periodes.all, {id_type: periode.id_type});
-        if(period){
-            this.endSaisie = moment(period.date_fin_saisie).isBefore(moment(), "days");
+
+        if(Utils.isChefEtab()){
+            this.endSaisie = false;
+        }
+        else {
+            let period = _.findWhere(this.classe.periodes.all, {id_type: periode.id_type});
+            if (period) {
+                this.endSaisie = moment(period.date_fin_saisie).isBefore(moment(), "days");
+            }
         }
     }
 

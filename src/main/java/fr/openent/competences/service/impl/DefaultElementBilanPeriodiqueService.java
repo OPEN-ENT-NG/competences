@@ -18,13 +18,19 @@
 package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.security.utils.FilterUserUtils;
+import fr.openent.competences.security.utils.WorkflowActionUtils;
+import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.ElementBilanPeriodiqueService;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
+import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -33,15 +39,20 @@ import org.entcore.common.service.impl.SqlCrudService;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.sql.SqlStatementsBuilder;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
-import static fr.openent.competences.Competences.TRANSITION_CONFIG;
+import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static fr.wseduc.webutils.http.Renders.unauthorized;
+import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 import static org.entcore.common.mongodb.MongoDbResult.validResultHandler;
 
@@ -297,46 +308,46 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
                                             Handler<Either<String, JsonArray>> handler) {
 
         getElementBilanPeriodique(idEnseignant, idClasse, idEtablissement, event -> {
-                        if (event.isRight()) {
-                            JsonArray result = event.right().getValue();
+            if (event.isRight()) {
+                JsonArray result = event.right().getValue();
 
-                            List<String> idMatieres = new ArrayList<>();
-                            List<String> idClasses = new ArrayList<>();
-                            List<String> idUsers = new ArrayList<>();
+                List<String> idMatieres = new ArrayList<>();
+                List<String> idClasses = new ArrayList<>();
+                List<String> idUsers = new ArrayList<>();
 
-                            for(Object r : result){
-                                JsonObject element = (JsonObject)r;
+                for(Object r : result){
+                    JsonObject element = (JsonObject)r;
 
-                                String[] arrayIdClasses = element.getString("groupes").split(",");
-                                JsonArray jsonArrayIntsMats = element.getJsonArray("intervenants_matieres");
+                    String[] arrayIdClasses = element.getString("groupes").split(",");
+                    JsonArray jsonArrayIntsMats = element.getJsonArray("intervenants_matieres");
 
-                                for(int i = 0; i < arrayIdClasses.length; i++){
-                                    if(!idClasses.contains(arrayIdClasses[i])){
-                                        idClasses.add(arrayIdClasses[i]);
-                                    }
-                                }
-
-                                if(jsonArrayIntsMats != null){
-                                    for(Object o : jsonArrayIntsMats){
-                                        JsonArray jsonArrayIntMat = (JsonArray) o;
-                                        String[] arrayIntMat = jsonArrayIntMat.getString(1).split(",");
-                                        if(!idUsers.contains(arrayIntMat[0])){
-                                            idUsers.add(arrayIntMat[0]);
-                                        }
-                                        if(arrayIntMat.length > 1 && !idMatieres.contains(arrayIntMat[1])){
-                                            idMatieres.add(arrayIntMat[1]);
-                                        }
-                                    }
-                                }
-                            }
-
-                            // récupération des noms des matières
-                            getSubjectNames(idMatieres,idClasses,idUsers, result, handler);
-
-                        } else{
-                            handler.handle(event.left());
+                    for(int i = 0; i < arrayIdClasses.length; i++){
+                        if(!idClasses.contains(arrayIdClasses[i])){
+                            idClasses.add(arrayIdClasses[i]);
                         }
-                });
+                    }
+
+                    if(jsonArrayIntsMats != null){
+                        for(Object o : jsonArrayIntsMats){
+                            JsonArray jsonArrayIntMat = (JsonArray) o;
+                            String[] arrayIntMat = jsonArrayIntMat.getString(1).split(",");
+                            if(!idUsers.contains(arrayIntMat[0])){
+                                idUsers.add(arrayIntMat[0]);
+                            }
+                            if(arrayIntMat.length > 1 && !idMatieres.contains(arrayIntMat[1])){
+                                idMatieres.add(arrayIntMat[1]);
+                            }
+                        }
+                    }
+                }
+
+                // récupération des noms des matières
+                getSubjectNames(idMatieres,idClasses,idUsers, result, handler);
+
+            } else{
+                handler.handle(event.left());
+            }
+        });
     }
 
     private void  getSubjectNames(List<String> idMatieres ,
@@ -350,27 +361,27 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler(message -> {
-                        JsonObject body = message.body();
+                    JsonObject body = message.body();
 
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray matieres = body.getJsonArray("results");
-                            Map<String, String> matieresMap = new HashMap<String, String>();
+                    if ("ok".equals(body.getString("status"))) {
+                        JsonArray matieres = body.getJsonArray("results");
+                        Map<String, String> matieresMap = new HashMap<String, String>();
 
-                            for(Object o : matieres){
-                                JsonObject matiere = (JsonObject)o;
-                                matieresMap.put(matiere.getString("id"),
-                                        matiere.getString("name"));
-                            }
-
-
-                            // récupération des noms des classes/groupes
-                            getClassesGroupesName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
-                                    handler);
-                        } else{
-                            String _message = body.getString("message");
-                            log.error(_message);
-                            handler.handle(new Either.Left<>(_message));
+                        for(Object o : matieres){
+                            JsonObject matiere = (JsonObject)o;
+                            matieresMap.put(matiere.getString("id"),
+                                    matiere.getString("name"));
                         }
+
+
+                        // récupération des noms des classes/groupes
+                        getClassesGroupesName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
+                                handler);
+                    } else{
+                        String _message = body.getString("message");
+                        log.error(_message);
+                        handler.handle(new Either.Left<>(_message));
+                    }
                 }));
     }
 
@@ -384,31 +395,31 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler( message -> {
-                        JsonObject body = message.body();
+                    JsonObject body = message.body();
 
-                        if ("ok".equals(body.getString("status"))) {
-                            JsonArray classes = body.getJsonArray("results");
-                            Map<String, String> classesNameMap =
-                                    new HashMap<String, String>();
-                            Map<String, String> classesExternalIdMap =
-                                    new HashMap<String, String>();
-                            for(Object o : classes){
-                                JsonObject classe = (JsonObject)o;
-                                classesNameMap.put(classe.getString("id"),
-                                        classe.getString("name"));
-                                classesExternalIdMap.put(
-                                        classe.getString("id"),
-                                        classe.getString("externalId"));
-                            }
-
-                            // récupération des noms des intervenants
-                            getTeacherName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
-                                    classes, classesNameMap, classesExternalIdMap, handler);
-                        } else{
-                            String _message = body.getString("message");
-                            log.error(_message);
-                            handler.handle(new Either.Left<>(_message));
+                    if ("ok".equals(body.getString("status"))) {
+                        JsonArray classes = body.getJsonArray("results");
+                        Map<String, String> classesNameMap =
+                                new HashMap<String, String>();
+                        Map<String, String> classesExternalIdMap =
+                                new HashMap<String, String>();
+                        for(Object o : classes){
+                            JsonObject classe = (JsonObject)o;
+                            classesNameMap.put(classe.getString("id"),
+                                    classe.getString("name"));
+                            classesExternalIdMap.put(
+                                    classe.getString("id"),
+                                    classe.getString("externalId"));
                         }
+
+                        // récupération des noms des intervenants
+                        getTeacherName(idMatieres, idClasses, idUsers, matieres, matieresMap, result,
+                                classes, classesNameMap, classesExternalIdMap, handler);
+                    } else{
+                        String _message = body.getString("message");
+                        log.error(_message);
+                        handler.handle(new Either.Left<>(_message));
+                    }
                 }));
 
     }
@@ -425,88 +436,88 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS,
                 handlerToAsyncHandler( message -> {
-                                JsonObject body = message.body();
+                    JsonObject body = message.body();
 
-                                if ("ok".equals(body
-                                        .getString("status"))) {
-                                    JsonArray users = body.getJsonArray("results");
-                                    Map<String, String> usersMap = new HashMap<String, String>();
-                                    for(Object o : users){
-                                        JsonObject user = (JsonObject)o;
-                                        usersMap.put(user.getString("id"),user.getString("displayName"));
+                    if ("ok".equals(body
+                            .getString("status"))) {
+                        JsonArray users = body.getJsonArray("results");
+                        Map<String, String> usersMap = new HashMap<String, String>();
+                        for(Object o : users){
+                            JsonObject user = (JsonObject)o;
+                            usersMap.put(user.getString("id"),user.getString("displayName"));
+                        }
+
+                        JsonArray parsedElems = new fr.wseduc.webutils.collections.JsonArray();
+                        for(Object o  : result){
+                            JsonObject element = (JsonObject) o;
+                            JsonObject parsedElem = new JsonObject();
+
+                            parsedElem.put("id", element.getInteger("id"));
+                            parsedElem.put("type",element.getInteger("type_elt_bilan_periodique"));
+
+                            if(element
+                                    .getString("intitule")
+                                    != null){
+                                parsedElem.put("libelle",element.getString("intitule"));
+                                parsedElem.put("description",element.getString("description"));
+                            }
+
+                            if(element.getInteger("id_thematique") != null){
+                                JsonObject theme = new JsonObject();
+                                theme.put("id", element.getInteger("id_thematique"));
+                                theme.put("libelle", element.getString("libelle"));
+                                theme.put("code", element.getString("code"));
+                                parsedElem.put("theme", theme);
+                            }
+
+                            String[] arrayIdGroupes = element.getString("groupes").split(",");
+                            JsonArray groupes = new fr.wseduc.webutils.collections.JsonArray();
+
+                            for(int i = 0; i < arrayIdGroupes.length; i++){
+                                JsonObject groupe = new JsonObject();
+                                groupe.put("id", arrayIdGroupes[i]);
+                                groupe.put("name", classesNameMap.get(arrayIdGroupes[i]));
+                                groupe.put("externalId", classesExternalIdMap.get(arrayIdGroupes[i]));
+                                groupes.add(groupe);
+                            }
+                            parsedElem.put("groupes", groupes);
+
+                            if(element.getJsonArray("intervenants_matieres") != null){
+
+                                JsonArray intMat = element.getJsonArray("intervenants_matieres");
+                                JsonArray intervenantsMatieres =
+                                        new fr.wseduc.webutils.collections.JsonArray();
+
+                                for(int i = 0; i < intMat.size(); i++){
+                                    String[] intMatArray = intMat.getJsonArray(i)
+                                            .getString(1).split(",");
+                                    JsonObject intervenantMatiere = new JsonObject();
+
+                                    JsonObject intervenant = new JsonObject();
+                                    intervenant.put("id", intMatArray[0]);
+                                    intervenant.put("displayName", usersMap.get(intMatArray[0]));
+                                    intervenantMatiere.put("intervenant", intervenant);
+                                    if(intMatArray.length > 1 ){
+                                        JsonObject matiere = new JsonObject();
+                                        matiere.put("id", intMatArray[1]);
+                                        matiere.put("name", matieresMap.get(intMatArray[1]));
+                                        intervenantMatiere.put("matiere", matiere);
                                     }
 
-                                    JsonArray parsedElems = new fr.wseduc.webutils.collections.JsonArray();
-                                    for(Object o  : result){
-                                        JsonObject element = (JsonObject) o;
-                                        JsonObject parsedElem = new JsonObject();
-
-                                        parsedElem.put("id", element.getInteger("id"));
-                                        parsedElem.put("type",element.getInteger("type_elt_bilan_periodique"));
-
-                                        if(element
-                                                .getString("intitule")
-                                                != null){
-                                            parsedElem.put("libelle",element.getString("intitule"));
-                                            parsedElem.put("description",element.getString("description"));
-                                        }
-
-                                        if(element.getInteger("id_thematique") != null){
-                                            JsonObject theme = new JsonObject();
-                                            theme.put("id", element.getInteger("id_thematique"));
-                                            theme.put("libelle", element.getString("libelle"));
-                                            theme.put("code", element.getString("code"));
-                                            parsedElem.put("theme", theme);
-                                        }
-
-                                        String[] arrayIdGroupes = element.getString("groupes").split(",");
-                                        JsonArray groupes = new fr.wseduc.webutils.collections.JsonArray();
-
-                                        for(int i = 0; i < arrayIdGroupes.length; i++){
-                                            JsonObject groupe = new JsonObject();
-                                            groupe.put("id", arrayIdGroupes[i]);
-                                            groupe.put("name", classesNameMap.get(arrayIdGroupes[i]));
-                                            groupe.put("externalId", classesExternalIdMap.get(arrayIdGroupes[i]));
-                                            groupes.add(groupe);
-                                        }
-                                        parsedElem.put("groupes", groupes);
-
-                                        if(element.getJsonArray("intervenants_matieres") != null){
-
-                                            JsonArray intMat = element.getJsonArray("intervenants_matieres");
-                                            JsonArray intervenantsMatieres =
-                                                    new fr.wseduc.webutils.collections.JsonArray();
-
-                                            for(int i = 0; i < intMat.size(); i++){
-                                                String[] intMatArray = intMat.getJsonArray(i)
-                                                        .getString(1).split(",");
-                                                JsonObject intervenantMatiere = new JsonObject();
-
-                                                JsonObject intervenant = new JsonObject();
-                                                intervenant.put("id", intMatArray[0]);
-                                                intervenant.put("displayName", usersMap.get(intMatArray[0]));
-                                                intervenantMatiere.put("intervenant", intervenant);
-                                                if(intMatArray.length > 1 ){
-                                                    JsonObject matiere = new JsonObject();
-                                                    matiere.put("id", intMatArray[1]);
-                                                    matiere.put("name", matieresMap.get(intMatArray[1]));
-                                                    intervenantMatiere.put("matiere", matiere);
-                                                }
-
-                                                intervenantsMatieres.add(intervenantMatiere);
-                                            }
-                                            parsedElem.put("intervenantsMatieres", intervenantsMatieres);
-                                        }
-
-                                        parsedElems.add(parsedElem);
-                                    }
-                                    handler.handle(new Either.Right<>(parsedElems));
-                                } else{
-                                    String _message = body.getString("message");
-                                    log.error(_message);
-                                    handler.handle(new Either.Left<>(_message));
+                                    intervenantsMatieres.add(intervenantMatiere);
                                 }
-                        }));
+                                parsedElem.put("intervenantsMatieres", intervenantsMatieres);
+                            }
+
+                            parsedElems.add(parsedElem);
+                        }
+                        handler.handle(new Either.Right<>(parsedElems));
+                    } else{
+                        String _message = body.getString("message");
+                        log.error(_message);
+                        handler.handle(new Either.Left<>(_message));
+                    }
+                }));
     }
     @Override
     public void getEnseignantsElementsBilanPeriodique (List<String> idElements, Handler<Either<String, JsonArray>> handler){
@@ -549,6 +560,89 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         params.add(idEtablissement);
 
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+    }
+
+    private void getClassesElementsBilanPeriodique (String idEtablissement, Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        query
+                .append("SELECT id_groupe ")
+                .append(" FROM notes.rel_elt_bilan_periodique_intervenant_matiere ")
+                .append("  INNER JOIN notes.rel_elt_bilan_periodique_groupe ")
+                .append("  ON rel_elt_bilan_periodique_intervenant_matiere.id_elt_bilan_periodique = rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique ")
+                .append(" UNION ")
+                .append("SELECT id_groupe ")
+                .append(" FROM notes.rel_elt_bilan_periodique_groupe ")
+                .append("  INNER JOIN notes.elt_bilan_periodique ")
+                .append("  ON rel_elt_bilan_periodique_groupe.id_elt_bilan_periodique = elt_bilan_periodique.id ")
+                .append(" WHERE type_elt_bilan_periodique = ? ")
+                .append("  AND id_etablissement = ? ");
+        params.add(_elementBilanPerdiodiqueParcours);
+        params.add(idEtablissement);
+
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+    }
+    public void getClasseProjets (String idStructure, UserInfos user, Handler<Either<String, JsonArray>> handler){
+        Future<JsonArray> classesElemFuture = Future.future();
+        if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())){
+            getClassesElementsBilanPeriodique(idStructure, event -> formate(classesElemFuture, event));
+        }
+        else{
+            String userId = user.getUserId();
+            getClassesElementsBilanPeriodique(idStructure, userId, event -> formate(classesElemFuture, event));
+        }
+        // On récupère la liste des classes de l'établissement
+        Future<JsonArray> classesEtab = Future.future();
+        JsonObject action = new JsonObject()
+                .put(ACTION, "classe.listAllGroupes")
+                .put(ID_STRUCTURE_KEY, idStructure);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler( message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                classesEtab.complete(body.getJsonArray(RESULTS));
+            }
+            else {
+                classesEtab.fail("error while retreiving classes getClassesElementBilanPeriodique");
+            }
+        }));
+
+        CompositeFuture.all(classesElemFuture, classesEtab).setHandler(event -> {
+            if(event.failed()){
+                String error = event.cause().getMessage();
+                log.warn("getClassesElementBilanPeriodique failed " + error);
+                handler.handle(new Either.Left<>(error));
+            }
+            else {
+                JsonArray listGroupesEtablissement = classesEtab.result();
+                JsonArray externalIdElementBilanPeriodique = classesElemFuture.result();
+                JsonArray jsonArrayResultat = new fr.wseduc.webutils.collections.JsonArray();
+                if (listGroupesEtablissement.size() > 0) {
+                    for (int i = 0; i < listGroupesEtablissement.size(); i++) {
+                        JsonObject vGroupe = listGroupesEtablissement.getJsonObject(i)
+                                .getJsonObject("m").getJsonObject("data");
+                        for (int j = 0; j < externalIdElementBilanPeriodique.size(); j++) {
+                            String idGroupe = externalIdElementBilanPeriodique.getJsonObject(j)
+                                    .getString("id_groupe");
+                            if (idGroupe.equalsIgnoreCase(vGroupe.getString("id"))) {
+                                JsonArray vTypeClasse = listGroupesEtablissement.getJsonObject(i)
+                                        .getJsonObject("m").getJsonObject("metadata").getJsonArray("labels");
+                                if (vTypeClasse.contains("Class")) {
+                                    vGroupe.put("type_groupe", 0);
+                                } else if (vTypeClasse.contains("FunctionalGroup")) {
+                                    vGroupe.put("type_groupe", 1);
+                                } else {
+                                    vGroupe.put("type_groupe", 2);
+                                }
+                                jsonArrayResultat.add(vGroupe);
+                                break;
+                            }
+                        }
+                    }
+                }
+                handler.handle(new Either.Right<>(jsonArrayResultat));
+            }
+        });
     }
 
     @Override
@@ -629,7 +723,7 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
         if (idElements == null) {
             query += ", rel_groupe_appreciation_elt_eleve.id_groupe , thematiqueBP.code, elBP.type_elt_bilan_periodique ";
         }
-                query += "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve ";
+        query += "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_elt_bilan_periodique_eleve ";
 
         if(idsClasses != null && idsClasses.size() > 0){
             query += " INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_appreciation_elt_eleve " +
@@ -1052,6 +1146,110 @@ public class DefaultElementBilanPeriodiqueService extends SqlCrudService impleme
 
                     }
                 });
+    }
+
+    public  String getElementSchema(String type){
+        String schema= "";
+        switch (type) {
+            case "1" :
+                schema = Competences.SCHEMA_EPI_BILAN_PERIODIQUE;
+                break;
+            case "2" :
+                schema = Competences.SCHEMA_AP_BILAN_PERIODIQUE;
+                break;
+            case "3" :
+                schema = Competences.SCHEMA_PARCOURS_BILAN_PERIODIQUE;
+                break;
+            case "eleve" :
+                schema = Competences.SCHEMA_APPRECIATION_ELEVE_CREATE;
+                break;
+            case "eleve-bilanPeriodique" :
+                schema = Competences.SCHEMA_APPRECIATION_ELEVE_CREATE;
+                break;
+            case "classe" :
+                schema = Competences.SCHEMA_APPRECIATION_CLASSE_CREATE;
+                break;
+            default :
+                schema = null;
+        }
+        return schema;
+    }
+
+    public void createApprec(final HttpServerRequest request){
+        String schema = getElementSchema(request.params().get("type"));
+
+        if(schema != null){
+            UserUtils.getUserInfos(eb, request, user -> {
+                if(user != null){
+                    RequestUtils.bodyToJson(request, resource -> {
+                        List<String> idsElements = new ArrayList<String>();
+                        idsElements.add(resource.getInteger("id_element").toString());
+                        final String idEleve = resource.getString("id_eleve");
+                        final String idClasse = resource.getString("id_classe");
+                        final String idEtablissement = resource.getString("id_etablissement");
+                        final Boolean isAdmin = new WorkflowActionUtils().hasRight(user,
+                                WorkflowActions.ADMIN_RIGHT.toString());
+
+                        Future<Boolean> validateElement = Future.future();
+                        if(isAdmin){
+                            validateElement.complete(true);
+                        }
+                        else {
+                            new FilterUserUtils(user, eb).validateElement(idsElements, idClasse,
+                                    isValid -> validateElement.complete(isValid ||
+                                            request.params().get("type").equals("eleve-bilanPeriodique")));
+                        }
+
+                        Future<Boolean> validateEleve = Future.future();
+                        if(isAdmin){
+                            validateEleve.complete(true);
+                        }
+                        else {
+                            new FilterUserUtils(user, eb).validateEleve(idEleve, idClasse, idEtablissement,
+                                    isValid -> validateEleve.complete(isValid));
+                        }
+
+                        Future<JsonArray> groupesElemBilanP =  Future.future();
+                        getGroupesElementBilanPeriodique(resource.getInteger("id_element").toString(),
+                        event -> formate(groupesElemBilanP, event));
+                        CompositeFuture.all(validateElement, validateEleve, groupesElemBilanP).setHandler(
+                                event -> {
+                                   if(event.failed()){
+                                       String error = event.cause().getMessage();
+                                       log.error(error);
+                                       leftToResponse(request, new Either.Left<>(error));
+                                   }
+                                   else {
+                                       Boolean isValidateElement = validateElement.result();
+                                       Boolean isValidateEleve = validateEleve.result();
+
+                                       if(isNull(isValidateElement) || isNull(isValidateEleve) ||
+                                       !isValidateElement || !isValidateEleve) {
+                                           unauthorized(request);
+                                           return;
+                                       }
+                                       insertOrUpdateAppreciationElement(
+                                               resource.getString("id_eleve"),
+                                               resource.getString("id_classe"),
+                                               resource.getString("externalid_classe"),
+                                               new Long(resource.getInteger("id_periode")),
+                                               new Long(resource.getInteger("id_element")),
+                                               resource.getString("appreciation"),
+                                               groupesElemBilanP.result(),
+                                               defaultResponseHandler(request));
+                                   }
+
+                                });
+
+
+                    });
+                } else{
+                    unauthorized(request);
+                }
+            });
+        } else {
+            Renders.renderJson(request, new JsonObject().put("error", "appreciation type not found"), 400);
+        }
     }
 }
 
