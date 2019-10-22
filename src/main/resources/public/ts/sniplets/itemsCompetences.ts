@@ -26,6 +26,8 @@ export const itemsCompetences = {
     that: undefined,
     controller: {
         init: function () {
+            template.open('lightboxContainerCreateItem',
+                '../../../competences/public/template/personnels/param_items/display_creation_item');
             itemsCompetences.that = this;
             this.idStructure = this.source.idStructure;
             this.cycles = this.source.cycles;
