@@ -38,6 +38,9 @@
                     <span ng-if = " !canSaveCompetenceNiveauFinal() && competence.niveauFinaltoShowAllEvaluations >= 0" >
                         [[competence.niveauFinaltoShowAllEvaluations + 1]]
                     </span>
+                     <span ng-if = "canSaveCompetenceNiveauFinal() && competence.niveauFinalToShowMyEvaluations === undefined && competence.niveauFinaltoShowAllEvaluations >= 0" >
+                        [[competence.niveauFinaltoShowAllEvaluations + 1]]
+                    </span>
                 </span>
                     <span ng-if="competence.competencesEvaluations.length < 1 || notEvalutationOwner(competence.competencesEvaluations) || !hasMaxNotFormative(competence)">
                     NE
