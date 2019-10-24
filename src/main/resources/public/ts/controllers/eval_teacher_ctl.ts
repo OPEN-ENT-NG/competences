@@ -310,13 +310,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                             await  Utils.stopMessageLoader($scope);
 
-                            angular.element(document).bind('mousewheel', function () {
-                                // On Calque la position de la partie centrale sur le menu de gauche
-                                let element = $('#left-side-notes');
-                                let mirorElement = $('#liste-notes-devoir-header');
-                                utils.mirorOnScroll(element, mirorElement);
-                            });
-
                         };
 
                         let _classe = evaluations.structure.classes.findWhere({id: $scope.currentDevoir.id_groupe});

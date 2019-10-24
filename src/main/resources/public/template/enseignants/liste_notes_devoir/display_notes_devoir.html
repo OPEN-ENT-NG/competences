@@ -142,7 +142,7 @@
             </h2>
         </header>
 
-        <aside class="two cell">
+        <aside class="two cell" style="position: -webkit-sticky; position: sticky;top: 64px !important; z-index:10;">
             <nav class="vertical hash-magnet floating zero-mobile scrolling"
                  id="left-side-notes">
                 <div class="menuLeftStyle detail-devoir criterion card" ng-class="{opened : openedDetails === true}">
@@ -226,7 +226,8 @@
                 <div class="card">
                     <content class="block row">
 
-                        <div class="devoirs-header" id="liste-notes-devoir-header" current-devoir="currentDevoir" sticky offset="64" confine="true">
+                        <div class="devoirs-header" id="liste-notes-devoir-header" current-devoir="currentDevoir"
+                             style="position: -webkit-sticky; position: sticky;top: 64px !important; z-index: 10">
                             <div class="align-center">
                                 <c-skills-color-page devoir="currentDevoir" selected-competences="selected.competences.list"
                                                      selected-eleves="selected.eleves" ng-if="currentDevoir.competences.all.length > 0"
