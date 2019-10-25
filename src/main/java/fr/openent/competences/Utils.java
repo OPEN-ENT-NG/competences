@@ -112,7 +112,6 @@ public class Utils {
                     @Override
                     public void handle(Message<JsonObject> message) {
                         JsonObject body = message.body();
-
                         if (OK.equals(body.getString(STATUS))) {
                             JsonArray queryResult = body.getJsonArray(RESULTS);
                             handler.handle(new Either.Right<String, JsonArray>(queryResult));

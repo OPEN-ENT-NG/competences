@@ -1295,6 +1295,7 @@ public class ExportPDFController extends ControllerHelper {
                     Integer idPeriode = null;
                     try {
                         if (request.params().contains("idPeriode") && request.params().get("idPeriode")!= null ) {
+
                             idPeriode = Integer.parseInt(request.params().get("idPeriode"));
                         }
                     } catch (NumberFormatException err) {
@@ -1307,6 +1308,7 @@ public class ExportPDFController extends ControllerHelper {
                     SortedMap<String, Set<String>> mapAllidMatAndidTeachers = new TreeMap<>();
                     Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve = new LinkedHashMap<>();
                     final JsonObject[] resultElevesTab = new JsonObject[1];
+
 
                     Handler<Either<String, JsonObject>> getMatEvaluatedAndStatHandler = event -> {
                         if(!event.isRight()) {
@@ -1369,7 +1371,7 @@ public class ExportPDFController extends ControllerHelper {
                         noteService.getMoysEleveByMatByPeriode(idClasse, idPeriode, mapAllidMatAndidTeachers,
                                 mapIdMatListMoyByEleve, getMoysEleveByMatHandler);
                     }else{
-                        List<String> listIdClasse =new ArrayList<>();
+                        List<String> listIdClasse = new ArrayList<>();
                         listIdClasse.add(idClasse);
                         utilsService.getPeriodes(listIdClasse, null, new Handler<Either<String, JsonArray>>() {
                             @Override
@@ -1397,6 +1399,7 @@ public class ExportPDFController extends ControllerHelper {
         result.put("withMoyGeneraleByEleve", withMoyGeneraleByEleve);
         result.put("withMoyMinMaxByMat", withMoyMinMaxByMat);
         result.put("text", text);
+
         exportService.genererPdf(request,
                 result,
                 "recap_moys_eleves_par_matiere_classe.pdf.xhtml",

@@ -1447,13 +1447,11 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                            Map<String, List<NoteDevoir>> mapIdMatListMoyByEleve,
                                            Handler<Either<String,JsonObject>> handler) {
 
-
         List<String> idsEleve = new ArrayList();
 
         Utils.getEleveClasse(eb, idsEleve, idClasse, idPeriode, new Handler<Either<String, List<Eleve>>>() {
                     @Override
                     public void handle(Either<String, List<Eleve>> responseListEleve) {
-
                         if (responseListEleve.isLeft()) {
                             handler.handle(new Either.Left<>("eleves not found"));
                             log.error(responseListEleve.left().getValue());
@@ -1486,8 +1484,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                                                     if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
                                                         idsGroups.add(idClasse);
+                                                        handler.handle(new Either.Left<>("idClasseGroups null"));
                                                     } else {
-                                                        idsGroups.add( idClasseGroups.getJsonObject(0)
+                                                        idsGroups.add(idClasseGroups.getJsonObject(0)
                                                                 .getString("id_classe") );
                                                         idsGroups.addAll(idClasseGroups.getJsonObject(0)
                                                                 .getJsonArray("id_groupes"));
@@ -1698,6 +1697,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                                                                                     elevesResult.add(eleveJsonO);
                                                                                 }
+
                                                                                 JsonObject resultMoysElevesByMat = new JsonObject();
                                                                                 setJOResultWithList(resultMoysElevesByMat, listMoyGeneraleEleve);
                                                                                 resultMoysElevesByMat.put("eleves", elevesResult);
@@ -1783,7 +1783,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             resultJO.put("moyMinClass", "");
             resultJO.put("moyMaxClass", "");
         }else {
-            JsonObject resultCalculMoy =  utilsService.calculMoyenne( notesList, true,null,false);
+            JsonObject resultCalculMoy =  utilsService.calculMoyenne(notesList, true,null,false);
             resultJO.put("moyClassAllEleves", resultCalculMoy.getDouble("moyenne"));
             resultJO.put("moyMinClass", resultCalculMoy.getDouble("noteMin"));
             resultJO.put("moyMaxClass", resultCalculMoy.getDouble("noteMax"));
