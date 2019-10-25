@@ -60,6 +60,7 @@ export class SuiviDesAcquis  {
             if(this.appreciationByClasse !== undefined){
                 let _data = _.extend(this.toJson(),{
                     idClasse: this.appreciationByClasse.idClasse,
+                    idClasseSuivi : this.idClasse,
                     appreciation_matiere_periode: this.appreciationByClasse.appreciation,
                     colonne: 'appreciation_matiere_periode',
                     delete: this.appreciationByClasse.appreciation === "",

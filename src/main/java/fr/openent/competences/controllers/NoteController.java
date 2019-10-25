@@ -20,8 +20,6 @@ package fr.openent.competences.controllers;
 import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.bean.StatClass;
-import fr.openent.competences.bean.StatMat;
 import fr.openent.competences.security.AccessEvaluationFilter;
 import fr.openent.competences.security.AccessNoteFilter;
 import fr.openent.competences.security.AccessReleveFilter;
@@ -34,7 +32,6 @@ import fr.openent.competences.service.ElementProgramme;
 import fr.openent.competences.service.NoteService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -55,7 +52,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.getLibellePeriode;
+import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
@@ -772,7 +769,8 @@ public class NoteController extends ControllerHelper {
     public void saveAppreciationMatiereAndPositionnement(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
             RequestUtils.bodyToJson(request, resource -> {
-                final String idClasse = resource.getString("idClasse");
+                final String idClasseSuivi = resource.getString("idClasseSuivi");
+                final String idClasse = isNull(idClasseSuivi)? resource.getString(ID_CLASSE_KEY) : idClasseSuivi;
                 FilterUser.isChefEtabAndHeadTeacher(user, new JsonArray().add(idClasse),
                         isChefEtabAndHeadTeacher -> {
                             if (isChefEtabAndHeadTeacher) {
