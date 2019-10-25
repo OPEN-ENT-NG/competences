@@ -636,7 +636,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.openDetailCompetence = async function (competence) {
             $scope.detailCompetence = competence;
-            await utils.initChartsEval($scope);
+            await utils.initChartsEvalParents($scope);
             template.open("main", "parent_enfant/bilan_competences/detail_vue_graph");
             utils.scrollTo('top');
         };
@@ -772,7 +772,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         });
 
         $scope.initChartsEval = async function () {
-            await utils.initChartsEval($scope);
+            await utils.initChartsEvalParents($scope);
         };
 
         /**
