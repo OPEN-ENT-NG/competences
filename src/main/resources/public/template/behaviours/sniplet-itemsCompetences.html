@@ -130,18 +130,17 @@
                     ng-include="'tree_item_renderer.html'">
             </div>
         </div>
-        <div ng-if="searchBilan.parDomaine === 'false'" class="row patchwork">
+        <div ng-if="searchBilan.parDomaine === 'false'" class="row patchwork inline-block">
             <div class="padding-left"
                  ng-repeat="enseignement in lastSelectedCycle.enseignements.all|filter:customFilterEns(search.keyword,
-                 enseignementsFilter,competencesFilter, search)"
-            >
+                 enseignementsFilter,competencesFilter, search)">
                 <h4 ng-class="{'openedDom': enseignement.OpenDom, 'Domaine': enseignement.competences.all.length > 0 }"
                     class="margin-top-1em twelve cell " ng-click="enseignement.OpenDom = !enseignement.OpenDom"
-                    ng-init="enseignement.OpenDom = false">[[enseignement.nom]]</h4>
-                <div
-                        ng-class="{'openedSectionDom' : enseignement.OpenDom}"
+                    ng-init="enseignement.OpenDom = false">[[enseignement.nom]]
+                </h4>
+                <div ng-class="{'openedSectionDom' : enseignement.OpenDom}"
                         class="twelve cell" style='height: auto;'>
-                    <div  ng-repeat="connaissance in enseignement.competences.all">
+                    <div ng-repeat="connaissance in enseignement.competences.all">
                         <div ng-init="initEnseignementConnaissance(connaissance);"
                              ng-mouseover="connaissance.action = true"
                              ng-mouseleave="connaissance.action = false">
