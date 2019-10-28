@@ -339,7 +339,12 @@ export class Structure extends Model {
             return new Promise((resolve, reject) => {
                 http().getJson(that.api.CLASSE.synchronizationRemplacement)
                     .done((res) => {
-                        this.classes.addRange(castClasses(res));
+                        let classes = this.classes.all;
+                        let classesToAdd = _.filter(res, (classe) => {
+                            let cloneClasse = _.findWhere(classes, {id: classe.id});
+                            return cloneClasse === undefined;
+                        });
+                        this.classes.addRange(castClasses(classesToAdd));
                         model.trigger('apply');
                         resolve();
                     });
