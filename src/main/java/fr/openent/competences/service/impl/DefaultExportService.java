@@ -916,6 +916,7 @@ public class DefaultExportService implements ExportService {
                     for (String idDomain : idsDomain) {
                         if (null != competencesByDomainOrEnsei.get(idDomain)) {
                             competencesByDomainOrEnsei.get(idDomain).add(idComp);
+                        }
 
                     }
                 }
