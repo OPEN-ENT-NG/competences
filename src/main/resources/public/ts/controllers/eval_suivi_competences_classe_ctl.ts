@@ -441,6 +441,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         $scope.initController = async () => {
             template.open('container', 'layouts/2_10_layout');
+
             // create the timer variable
             $scope.timer = undefined;
 
@@ -504,8 +505,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
             await $scope.selectSuivi($scope.route.current.$$route.originalPath);
             template.open('content', 'enseignants/suivi_competences_classe/content');
-            utils.safeApply($scope);
-
+            await utils.safeApply($scope);
         };
 
         $scope.showEnseignementChoice = (parDomaine?) => {

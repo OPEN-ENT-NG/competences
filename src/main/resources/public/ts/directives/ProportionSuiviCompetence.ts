@@ -22,6 +22,7 @@
 import { ng, appPrefix, _ } from 'entcore';
 import * as utils from '../utils/teacher';
 import {DefaultLetters} from "../models/eval_niveau_comp";
+import {Utils} from "../models/teacher";
 
 /**
  * Directive de proportions de compétences
@@ -106,7 +107,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         return evaluation.owner === $scope.user.userId;
                     });
                 }
-                if ($scope.competencesEvaluations.length > 0 /*&& !_.every($scope.competencesEvaluations, function (competence) { return competence.evaluation === -1})*/) {
+                if (Utils.isNotNull($scope.competencesEvaluations) && $scope.competencesEvaluations.length > 0 ) {
                     var nbEleves = 0;
                     if ($scope.isClasse == true) {
                         var elevesMap = {};

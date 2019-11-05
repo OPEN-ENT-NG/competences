@@ -218,7 +218,7 @@
 <div ng-if="search.classe.id_cycle !== null">
     <div class="content-suivi-eleve twelve-mobile ten card"
          ng-if="informations.classe !== '' && informations.classe !== undefined && search.classe !== ''">
-        <div class="twelve suivi-eleve-ctl">
+        <div class="twelve suivi-eleve-ctl"  sticky offset="64">
             <h2 class="align-center"><i class="previous cell" ng-click="incrementClasse(-1)"></i>
                 [[informations.classe.name]]
                 <i class="next right-magnet" ng-click="incrementClasse(1)"></i></h2>
@@ -231,7 +231,6 @@
                              -->
                         <c-skills-bubble text="color.lettre" color="color.couleur" select-cond="selected.colors[color.ordre]">
                         </c-skills-bubble>
-                        </span>
                     </li>
                     <li><span class="rounded grey" ng-class="{selected : selected.colors[0]}"
                               ng-click="selected.colors[0] = !selected.colors[0]"></span></li>

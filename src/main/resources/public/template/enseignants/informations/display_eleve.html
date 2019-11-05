@@ -20,22 +20,46 @@
         ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}"
         ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</h2>
 </div>
-<div ng-show="informations.eleve !== undefined">
+<div ng-show="informations.eleve !== undefined" class="menuLeftStyle">
     <div class="imgEleve">
-        <img src="/userbook/avatar/[[informations.eleve.id]]" alt="" ng-if="informations.eleve !== null" />
-    </div>
-    <div ng-if="informations.eleve.birthDate!= 'undefined' && informations.eleve.birthDate!= null" class="center vertical-spacing"><i18n>viescolaire.utils.user.birthdate</i18n> : <span class="italic">[[getDateFormated(informations.eleve.birthDate)]]</span></div>
-    <div ng-if="informations.eleve.birthDate == 'undefined' || informations.eleve.birthDate== null" class="center vertical-spacing">
-        <i18n>viescolaire.utils.user.birthdate.undefined</i18n>
+        <img src="[[informations.eleve.img]]" alt="" ng-if="informations.eleve !== null" />
     </div>
     <div ng-if="informations.eleve.competencesNotes !== undefined"
-            class="five inline-block align-center" style="padding-left: 29%">
+         class="five inline-block align-center" style="padding-left: 29%">
         <proportion-suivi-competence
-                evaluations="informations.competencesNotes"
+                evaluations="informations.eleve.competencesNotes"
                 is-classe="false" filter="{mine : false}" user="me"
                 map-lettres="mapLettres"
                 map-couleurs="mapCouleurs"
-                maj-proportions="informations.competencesNotes"
+                maj-proportions="informations.eleve.competencesNotes"
         ></proportion-suivi-competence>
+    </div>
+    <br>
+    <div ng-if="informations.eleve.birthDate!= 'undefined' && informations.eleve.birthDate!= null" class="twelve cell">
+        <i18n>viescolaire.utils.user.birthdate</i18n> : <span class="italic">[[getDateFormated(informations.eleve.birthDate)]]</span>
+    </div>
+    <div ng-if="informations.eleve.birthDate == 'undefined' || informations.eleve.birthDate== null" class="twelve cell">
+        <i18n>viescolaire.utils.user.birthdate.undefined</i18n>
+    </div>
+    <div class="twelve cell">
+        <span><i18n>viescolaire.retards</i18n>:&nbsp;</span>
+        <label  class="bold"><span>[[ informations.eleve.evenement.retard ]]</span></label>
+    </div>
+    <div class="twelve cell">
+        <span><i18n>viescolaire.abs.justified</i18n>:&nbsp;</span>
+        <label  class="bold"><span>[[ informations.eleve.evenement.abs_just ]]</span><i18n>half.days</i18n></label>
+    </div>
+    <div class="twelve cell">
+        <span><i18n>viescolaire.abs.not.justified</i18n>:&nbsp;</span>
+        <label  class="bold"><span>[[ informations.eleve.evenement.abs_non_just ]]</span><i18n>half.days</i18n></label>
+    </div>
+    <div class="twelve cell ellipsis" tooltip="[[ informations.eleve.evenement.abs_totale_heure +' ' + lang.translate('hours')]]">
+        <span><i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;</span><label  class="bold">
+        <span>[[ informations.eleve.evenement.abs_totale_heure ]]</span><i18n>hours</i18n></label>
+    </div>
+
+    <div ng-if="informations.eleve.appreciationCPE.appreciation !== undefined" class="twelve">
+        <span><i18n>viescolaire.commentaire</i18n>:&nbsp;</span><label  class="bold">
+        <span>[[ informations.eleve.appreciationCPE.appreciation ]]</span></label>
     </div>
 </div>

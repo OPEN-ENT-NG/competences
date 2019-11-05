@@ -15,13 +15,23 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {model, notify, idiom as lang, ng, template, moment, _, angular, http} from 'entcore';
-import {Devoir, Evaluation, evaluations, ReleveNote, ReleveNoteTotale, GestionRemplacement, Classe} from '../models/teacher';
+import {model, notify, idiom as lang, ng, template, moment, _, angular, http, skin} from 'entcore';
+import {
+    Devoir,
+    Evaluation,
+    evaluations,
+    ReleveNote,
+    ReleveNoteTotale,
+    GestionRemplacement,
+    Classe,
+    Eleve
+} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {Defaultcolors} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/Utils";
 import {selectCycleForView, updateNiveau} from "../models/common/Personnalisation";
 import httpAxios from "axios";
+import {AppreciationCPE} from "../models/teacher/AppreciationCPE";
 
 declare let $: any;
 declare let document: any;
@@ -578,6 +588,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.MAX_CHAR_APPRECIATION_LENGTH = 300;
         $scope.exportRecapEvalObj = {
             errExport: false
+        };
+        $scope.bindElem = {
+            lefSide: false
         };
         $scope.opened = {
             devoir: -1,
@@ -2321,7 +2334,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await utils.safeApply($scope);
             }
 
-            $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all, $scope.devoirs.all, $scope.search);
+            $scope.filteredPeriode = $filter('customPeriodeFilters')($scope.structure.typePeriodes.all,
+                $scope.devoirs.all, $scope.search);
+            if(Utils.isNotNull($scope.informations) && Utils.isNotNull($scope.informations.eleve)) {
+                await $scope.getEleveInfo($scope.informations.eleve);
+            }
             await utils.safeApply($scope);
         };
 
@@ -2893,19 +2910,42 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
 
+        $scope.getAvatar = async function (eleve) {
+            try {
+                let imgUrl = `/userbook/avatar/${eleve.id}`;
+                await httpAxios.get(imgUrl);
+                eleve.img = imgUrl;
+            }
+            catch (e) {
+                eleve.img = `/assets/themes/${skin.skin}/img/illustrations/no-avatar.svg`;
+            }
+        };
         /**
          * Retourne les informations relatives à un élève
          * @param eleve élève
          */
-        $scope.getEleveInfo = function (eleve) {
+        $scope.getEleveInfo = async function (eleve) {
+            if(Utils.isNull(eleve) || Utils.isNull(eleve.getEvenements)){
+                return;
+            }
             $scope.showInfosEleve = true;
             template.close('leftSide-userInfo');
-            utils.safeApply($scope);
-            template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
+            await utils.safeApply($scope);
+            let idPeriode = (Utils.isNotNull($scope.search.periode)?$scope.search.periode.id_type: null);
+            let allPromise = [eleve.getEvenements(), $scope.getAvatar(eleve)];
+            if(Utils.isNotNull(idPeriode)) {
+                eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
+                allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
+            }
+            await Promise.all(allPromise);
+            if($location.path() === `/devoir/${$scope.currentDevoir.id}`){
+                $scope.search.periode = $scope.currentDevoir.id_periode;
+            }
+            utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
+
             $scope.informations.eleve = eleve;
-            delete $scope.informations.competencesNotes;
-            $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
-            utils.safeApply($scope);
+            template.open('leftSide-userInfo', 'enseignants/informations/display_eleve');
+            await utils.safeApply($scope);
         };
 
         /**
@@ -3031,7 +3071,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.cleanRoot = function () {
             let elem = angular.element(".autocomplete");
-
             for (let i = 0; i < elem.length; i++) {
                 elem[i].style.height = "0px";
             }
@@ -4204,21 +4243,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.openedLigthboxEleve = async (eleve, filteredPeriode) => {
-            $scope.getEleveInfo(eleve);
+            await $scope.getEleveInfo(eleve);
             $scope.filteredPeriode = filteredPeriode;
             $scope.opened.lightboxReleve = true;
             eleve.showCompetencesDetails = false;
-            $scope.initDataLightBoxEleve();
+            await $scope.initDataLightBoxEleve();
             template.close('lightboxEleveDetails');
             template.open('lightboxContainerReleve', 'enseignants/releve_notes/details_releve_periodique_eleve');
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
             if(template.contains('contentDetails', 'enseignants/releve_notes/details_graph_view')) {
                 template.close('contentDetails');
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
                 await $scope.releveNote.getDataForGraph($scope.informations.eleve, $scope.displayDomaine,
                     $scope.niveauCompetences);
                 template.open('contentDetails', 'enseignants/releve_notes/details_graph_view');
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             }
         };
 

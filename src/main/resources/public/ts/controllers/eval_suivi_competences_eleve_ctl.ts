@@ -399,6 +399,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     && $scope.informations.eleve !== undefined) {
 
                     // Récupérer le suivi de l'élève
+                    await $scope.getEleveInfo($scope.search.eleve);
                     let eleveIsEvaluable = $scope.search.eleve.isEvaluable($scope.search.periode);
                     if (eleveIsEvaluable) {
                         if($scope.currentCycle === null || $scope.currentCycle === undefined)

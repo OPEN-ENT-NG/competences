@@ -542,6 +542,7 @@
   "viescolaire.classe.note.min":"Note min",
   "viescolaire.classe.note.max":"Note max",
   "viescolaire.evaluation.note": "Note",
+  "viescolaire.commentaire": "Commentaire vie scolaire",
   "evaluations.add.file.structure" : "Logo de l'établissement",
   "evaluations.add.file.signature" : "Signature ",
   "evaluations.homework.details":"Détails de l'évaluation",

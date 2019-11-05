@@ -25,34 +25,34 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
             link: function linkFn($scope, $elem, $attrs) {
 
                 // Initial scope
-                var scrollableNodeTagName = 'sticky-scroll';
-                var initialPosition = $elem.css('position');
-                var initialStyle = $elem.attr('style') || '';
-                var stickyBottomLine = 0;
-                var isSticking = false;
-                var onStickyHeighUnbind;
-                var originalInitialCSS;
-                var originalOffset;
-                var placeholder;
-                var stickyLine;
-                var initialCSS;
+                let scrollableNodeTagName = 'sticky-scroll';
+                let initialPosition = $elem.css('position');
+                let initialStyle = $elem.attr('style') || '';
+                let stickyBottomLine = 0;
+                let isSticking = false;
+                let onStickyHeighUnbind;
+                let originalInitialCSS;
+                let originalOffset;
+                let placeholder;
+                let stickyLine;
+                let initialCSS;
 
                 // Optional Classes
-                var stickyClass = $attrs.stickyClass || '';
-                var unstickyClass = $attrs.unstickyClass || '';
-                var bodyClass = $attrs.bodyClass || '';
-                var bottomClass = $attrs.bottomClass || '';
+                let stickyClass = $attrs.stickyClass || '';
+                let unstickyClass = $attrs.unstickyClass || '';
+                let bodyClass = $attrs.bodyClass || '';
+                let bottomClass = $attrs.bottomClass || '';
 
                 // Find scrollbar
-                var scrollbar = deriveScrollingViewport ($elem);
+                let scrollbar = deriveScrollingViewport ($elem);
 
                 // Define elements
-                var windowElement = angular.element($window);
-                var scrollbarElement = angular.element(scrollbar);
-                var $body = angular.element(document.body);
+                let windowElement = angular.element($window);
+                let scrollbarElement = angular.element(scrollbar);
+                let $body = angular.element(document.body);
 
                 // Resize callback
-                var $onResize = function () {
+                let $onResize = function () {
                     if ($scope.$root && !$scope.$root.$$phase) {
                         utils.safeApply($scope);
                     } else {
@@ -65,26 +65,26 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                 });
 
                 // Define options
-                var usePlaceholder = ($attrs.usePlaceholder !== 'false');
-                var anchor = $attrs.anchor === 'bottom' ? 'bottom' : 'top';
-                var confine = ($attrs.confine === 'true');
+                let usePlaceholder = ($attrs.usePlaceholder !== 'false');
+                let anchor = $attrs.anchor === 'bottom' ? 'bottom' : 'top';
+                let confine = ($attrs.confine === 'true');
                 $scope.disabled = ($attrs.disabled === 'true');
 
                 // flag: can react to recalculating the initial CSS dimensions later
                 // as link executes prematurely. defaults to immediate checking
-                var isStickyLayoutDeferred = $attrs.isStickyLayoutDeferred !== undefined
+                let isStickyLayoutDeferred = $attrs.isStickyLayoutDeferred !== undefined
                     ? ($attrs.isStickyLayoutDeferred === 'true')
                     : false;
 
                 // flag: is sticky content constantly observed for changes.
                 // Should be true if content uses ngBind to show text
-                // that may vary in size over time
-                var isStickyLayoutWatched = $attrs.isStickyLayoutWatched !== undefined
+                // that may lety in size over time
+                let isStickyLayoutWatched = $attrs.isStickyLayoutWatched !== undefined
                     ? ($attrs.isStickyLayoutWatched === 'true')
                     : true;
 
 
-                var offset = $attrs.offset
+                let offset = $attrs.offset
                     ? parseInt ($attrs.offset.replace(/px;?/, ''))
                     : 0;
 
@@ -93,7 +93,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Because of the `timeout()` method for the call of
                  * @type {Boolean}
                  */
-                var shouldInitialize = true;
+                let shouldInitialize = true;
 
                 /**
                  * Initialize Sticky
@@ -157,15 +157,15 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                 /**
                  * Determine if the element should be sticking or not.
                  */
-                var checkIfShouldStick = function() {
+                let checkIfShouldStick = function() {
                     if ($scope.disabled === true || mediaQueryMatches()) {
                         if (isSticking) unStickElement();
                         return false;
                     }
 
                     // What's the document client top for?
-                    var scrollbarPosition = scrollbarYPos();
-                    var shouldStick;
+                    let scrollbarPosition = scrollbarYPos();
+                    let shouldStick;
 
                     if (anchor === 'top') {
                         if (confine === true) {
@@ -181,7 +181,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                     // $attrs.stickLimit - when it's equal to true it enables the user
                     // to turn off the sticky function when the elem height is
                     // bigger then the viewport
-                    var closestLine = getClosest (scrollbarPosition, stickyLine, stickyBottomLine);
+                    let closestLine = getClosest (scrollbarPosition, stickyLine, stickyBottomLine);
 
                     if (shouldStick && !shouldStickWithLimit ($attrs.stickLimit) && !isSticking) {
                         stickElement (closestLine);
@@ -200,7 +200,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  */
                 function deriveScrollingViewport(stickyNode) {
                     // derive relevant scrolling by ascending the DOM tree
-                    var match =findAncestorTag (scrollableNodeTagName, stickyNode);
+                    let match =findAncestorTag (scrollableNodeTagName, stickyNode);
                     return (match.length === 1) ? match[0] : $window;
                 }
 
@@ -208,12 +208,12 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * since jqLite lacks closest(), this is a pseudo emulator (by tag name)
                  */
                 function findAncestorTag(tag, context) {
-                    var m = []; // nodelist container
-                    var n = context.parent(); // starting point
-                    var p;
+                    let m = []; // nodelist container
+                    let n = context.parent(); // starting point
+                    let p;
 
                     do {
-                        var node = n[0]; // break out of jqLite
+                        let node = n[0]; // break out of jqLite
                         // limit DOM territory
                         if (node.nodeType !== 1) {
                             break;
@@ -244,9 +244,9 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Finds the closest value from a set of numbers in an array.
                  */
                 function getClosest(scrollTop, stickyLine, stickyBottomLine) {
-                    var closest = 'top';
-                    var topDistance = Math.abs(scrollTop - stickyLine);
-                    var bottomDistance = Math.abs(scrollTop - stickyBottomLine);
+                    let closest = 'top';
+                    let topDistance = Math.abs(scrollTop - stickyLine);
+                    let bottomDistance = Math.abs(scrollTop - stickyBottomLine);
 
                     if (topDistance > bottomDistance) {
                         closest = 'bottom';
@@ -337,7 +337,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                 /**
                  * Clean up directive
                  */
-                var onDestroy = function() {
+                let onDestroy = function() {
                     scrollbarElement.off('scroll', checkIfShouldStick);
                     windowElement.off('resize', $onResize);
 
@@ -362,11 +362,11 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Triggered on load / digest cycle
                  * return `0` if the DOM element is hidden
                  */
-                var onDigest = function() {
+                let onDigest = function() {
                     if ($scope.disabled === true) {
                         return unStickElement();
                     }
-                    var offsetFromTop = elementsOffsetFromTop ($elem[0]);
+                    let offsetFromTop = elementsOffsetFromTop ($elem[0]);
                     if (offsetFromTop === 0) {
                         return offsetFromTop;
                     }
@@ -380,21 +380,21 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                 /**
                  * Triggered on change
                  */
-                var onChange = function (newVal, oldVal) {
+                let onChange = function (newVal, oldVal) {
 
                     /**
                      * Indicate if the DOM element is showed, or not
                      * @type {boolean}
                      */
-                    var elemIsShowed = !!newVal;
+                    let elemIsShowed = !!newVal;
 
                     /**
                      * Indicate if the DOM element was showed, or not
                      * @type {boolean}
                      */
-                    var elemWasHidden = !oldVal;
-                    var valChange = (newVal !== oldVal || typeof stickyLine === 'undefined');
-                    var notSticking = (!isSticking && !isBottomedOut());
+                    let elemWasHidden = !oldVal;
+                    let valChange = (newVal !== oldVal || typeof stickyLine === 'undefined');
+                    let notSticking = (!isSticking && !isBottomedOut());
 
                     if (valChange && notSticking && newVal > 0 && elemIsShowed) {
                         stickyLine = newVal - offset;
@@ -411,22 +411,22 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                         }
 
                         // Get Parent height, so we know when to bottom out for confined stickies
-                        var parent = $elem.parent()[0];
+                        let parent = $elem.parent()[0];
 
                         // Offset parent height by the elements height, if we're not using a placeholder
-                        var parentHeight = parseInt (parent.offsetHeight) - (usePlaceholder ? 0 : $elem[0].offsetHeight);
+                        let parentHeight = parseInt (parent.offsetHeight) - (usePlaceholder ? 0 : $elem[0].offsetHeight);
 
                         // and now lets ensure we adhere to the bottom margins
                         // TODO: make this an attribute? Maybe like ignore-margin?
-                        var marginBottom = parseInt ($elem.css('margin-bottom').replace(/px;?/, '')) || 0;
+                        let marginBottom = parseInt ($elem.css('margin-bottom').replace(/px;?/, '')) || 0;
 
                         // specify the bottom out line for the sticky to unstick
-                        var elementsDistanceFromTop = elementsOffsetFromTop ($elem[0]);
-                        var parentsDistanceFromTop = elementsOffsetFromTop (parent)
-                        var scrollbarDistanceFromTop = elementsOffsetFromTop (scrollbar);
+                        let elementsDistanceFromTop = elementsOffsetFromTop ($elem[0]);
+                        let parentsDistanceFromTop = elementsOffsetFromTop (parent)
+                        let scrollbarDistanceFromTop = elementsOffsetFromTop (scrollbar);
 
-                        var elementsDistanceFromScrollbarStart = elementsDistanceFromTop - scrollbarDistanceFromTop;
-                        var elementsDistanceFromBottom = parentsDistanceFromTop + parentHeight - elementsDistanceFromTop;
+                        let elementsDistanceFromScrollbarStart = elementsDistanceFromTop - scrollbarDistanceFromTop;
+                        let elementsDistanceFromBottom = parentsDistanceFromTop + parentHeight - elementsDistanceFromTop;
 
                         stickyBottomLine = elementsDistanceFromScrollbarStart
                             + elementsDistanceFromBottom
@@ -454,8 +454,8 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                         }
 
                         placeholder = angular.element('<div>');
-                        var elementsHeight = $elem[0].offsetHeight;
-                        var computedStyle = $elem[0].currentStyle || window.getComputedStyle($elem[0]);
+                        let elementsHeight = $elem[0].offsetHeight;
+                        let computedStyle = $elem[0].currentStyle || window.getComputedStyle($elem[0]);
                         elementsHeight += parseInt(computedStyle.marginTop, 10);
                         elementsHeight += parseInt(computedStyle.marginBottom, 10);
                         elementsHeight += parseInt(computedStyle.borderTopWidth, 10);
@@ -481,7 +481,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Fetch top offset of element
                  */
                 function elementsOffsetFromTop(element) {
-                    var offset = 0;
+                    let offset = 0;
 
                     if (element.getBoundingClientRect) {
                         offset = element.getBoundingClientRect().top;
@@ -494,7 +494,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Retrieves top scroll distance
                  */
                 function scrollbarYPos() {
-                    var position;
+                    let position;
 
                     if (typeof scrollbar.scrollTop !== 'undefined') {
                         position = scrollbar.scrollTop;
@@ -511,7 +511,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Determine scrollbar's height
                  */
                 function scrollbarHeight() {
-                    var height;
+                    let height;
 
                     if (scrollbarElement[0] instanceof HTMLElement) {
                         // isn't bounding client rect cleaner than insane regex mess?
@@ -529,8 +529,8 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Checks if the media matches
                  */
                 function mediaQueryMatches() {
-                    var mediaQuery = $attrs.mediaQuery || false;
-                    var matchMedia = $window.matchMedia;
+                    let mediaQuery = $attrs.mediaQuery || false;
+                    let matchMedia = $window.matchMedia;
 
                     return mediaQuery && !(matchMedia ('(' + mediaQuery + ')').matches || matchMedia (mediaQuery).matches);
                 }
@@ -539,7 +539,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  * Get more accurate CSS values
                  */
                 function getCSS($el, prop){
-                    var el = $el[0],
+                    let el = $el[0],
                         computed = window.getComputedStyle(el),
                         prevDisplay = computed.display,
                         val;
@@ -619,7 +619,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                  */
                 this.resetLayout = function(newWidth, newHeight) {
 
-                    var scrollbar = $scope.getScrollbar(),
+                    let scrollbar = $scope.getScrollbar(),
                         initialCSS = $scope.getInitialCSS(),
                         anchor = $scope.getAnchor();
 
@@ -653,7 +653,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
 
                     // use this directive element's as default, if no measurements passed in
                     if (newWidth === undefined && newHeight === undefined) {
-                        var e_bcr = $scope.getElement()[0].getBoundingClientRect();
+                        let e_bcr = $scope.getElement()[0].getBoundingClientRect();
                         newWidth = e_bcr.width;
                         newHeight = e_bcr.height;
                     }
