@@ -918,6 +918,7 @@ public class DefaultExportService implements ExportService {
                             competencesByDomainOrEnsei.get(idDomain).add(idComp);
                         }
 
+                        }
                     }
                 }
             }

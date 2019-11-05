@@ -435,9 +435,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         };
 
-        $scope.deleteStudent = function () {
+        $scope.deleteStudent = async function () {
             $scope.informations.eleve = '';
+            $scope.search.eleve = '';
             $scope.critereIsEmpty = true;
+            await $scope.changeContent();
         };
 
         //////            Lightbox historique            //////

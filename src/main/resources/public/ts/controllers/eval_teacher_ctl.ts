@@ -2940,6 +2940,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             await Promise.all(allPromise);
             if($location.path() === `/devoir/${$scope.currentDevoir.id}`){
                 $scope.search.periode = $scope.currentDevoir.id_periode;
+                $scope.search.classe = _.findWhere($scope.structure.classes.all, {id : $scope.currentDevoir.id_groupe});
+                if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
+                    _.isEmpty($scope.search.classe.periodes.all)){
+                    await $scope.search.classe.periodes.sync();
+                }
             }
             utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
 

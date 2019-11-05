@@ -24,7 +24,8 @@ export let setHistoriqueEvenement = function ($scope, eleve, filteredPeriode) {
         let pushIt = false;
         if (evenement === undefined) {
             evenement = {id_periode: periode.id_type};
-            if(!_.isEmpty(_.where($scope.search.classe.periodes.all, {id_type : periode.id_type}))) {
+            if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
+                !_.isEmpty(_.where($scope.search.classe.periodes.all, {id_type : periode.id_type}))) {
                 pushIt = true;
             }
         }
