@@ -190,7 +190,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 await Utils.runMessageLoader($scope);
                 try {
                     evaluations.eleve = eleve;
-                    $scope.displayCycles($scope.search.periode);
                     $scope.eleve = evaluations.eleve;
                     $scope.selectedEleve = $scope.eleve;
                     eleve.classe = new Classe({id: eleve.idClasse});
@@ -200,6 +199,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined);
                     }
                     $scope.search.periode = evaluations.periode;
+                    $scope.displayCycles($scope.search.periode);
                     $scope.devoirs = evaluations.devoirs;
                     $scope.matieres = evaluations.matieres;
                     $scope.enseignants = evaluations.enseignants;
@@ -561,7 +561,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             else {
                 $scope.displayCycle = false;
             }
-        }
+        };
 
         /**
          * Récupère les compétences des évaluations
