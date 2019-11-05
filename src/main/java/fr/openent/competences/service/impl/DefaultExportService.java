@@ -911,10 +911,12 @@ public class DefaultExportService implements ExportService {
                     competencesByDomainOrEnsei.get(competence.getLong("id_enseignement").toString()).add(idComp);
                 }
             } else {
-                String[] idsDomain = competence.getString("ids_domaine").split(",");
-                for (String idDomain : idsDomain) {
-                    if (null != competencesByDomainOrEnsei.get(idDomain)) {
-                        competencesByDomainOrEnsei.get(idDomain).add(idComp);
+                if (null != competence.getString("ids_domaine")) {
+                    String[] idsDomain = competence.getString("ids_domaine").split(",");
+                    for (String idDomain : idsDomain) {
+                        if (null != competencesByDomainOrEnsei.get(idDomain)) {
+                            competencesByDomainOrEnsei.get(idDomain).add(idComp);
+
                     }
                 }
             }
