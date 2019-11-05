@@ -778,7 +778,7 @@ public class DefaultExportService implements ExportService {
                         if (devoirsDone.get() && maitriseDone.get() && ((domainesDone.get() && !byEnseignement.get())
                                 || (byEnseignement.get() && enseignementsDone.get()))
                                 && competencesDone.get() && competencesNotesDone.get()
-                                ) {
+                        ) {
                             answered.set(true);
 
                             if (maitrises.contains("empty")) {
@@ -918,7 +918,6 @@ public class DefaultExportService implements ExportService {
                             competencesByDomainOrEnsei.get(idDomain).add(idComp);
                         }
 
-                        }
                     }
                 }
             }
