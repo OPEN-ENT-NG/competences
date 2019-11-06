@@ -63,28 +63,20 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             inColor: false,
         };
 
-        $scope.getI18nPeriode = (periode: any) => {
+        $scope.getI18nPeriode = (periode : any) => {
             let result = lang.translate("viescolaire.utils.annee");
             if (periode !== undefined) {
-
                 if (periode.libelle !== null && periode.libelle !== undefined) {
-
                     if (periode.libelle === ("cycle")) {
                         result = lang.translate("viescolaire.utils.cycle");
                     }
-
                 } else if (periode.id === null) {
-
                     result = lang.translate("viescolaire.utils.annee");
-
                 } else if (!(periode.hasOwnProperty('id_classe') || periode.hasOwnProperty('id_groupe'))) {
-
                     result = periode ?
                         lang.translate("viescolaire.periode." + periode.type) + " " + periode.ordre
                         : lang.translate("viescolaire.utils.periodeError");
-
                 } else {
-
                     let type_periode = _.findWhere($scope.structure.typePeriodes.all, {id: periode.id_type});
                     result = type_periode ?
                         lang.translate("viescolaire.periode." + type_periode.type) + " " + type_periode.ordre
