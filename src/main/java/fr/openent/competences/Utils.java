@@ -637,9 +637,12 @@ public class Utils {
 
                     } else {//si le codeMatiere n'est pas dans la table matiere prendre
                         // les 5 premiers caracteres du libelle de la matiere
-
-                        String nameMat = subject.getString("name").substring(0, 4);
-                        subject.put("libelle_court", nameMat);
+                        String nameSubject = subject.getString("name").trim();
+                        if(nameSubject.length() < 5){
+                            subject.put("libelle_court", nameSubject);
+                        }else{
+                            subject.put("libelle_court", nameSubject.substring(0, 4));
+                        }
                     }
                 } catch (NumberFormatException e) {
                     subject.put("libelle_court", codeMatiere);
