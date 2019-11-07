@@ -36,16 +36,11 @@
         .page:last-child{
             page-break-after: auto;
         }
-        td {
 
-            margin: 4px;
-            padding: 5px;
-        }
         table {
             border-collapse: collapse;
             page-break-inside :auto;
             width: 100%;
-
             font-size: 10px;
             text-align: left;
             table-layout: fixed;
@@ -53,8 +48,6 @@
 
         table tr td {
             width: auto;
-            padding-top:10px;
-            padding-bottom:10px;
             border: 1px solid black;
 
         }
@@ -70,9 +63,16 @@
             font-weight: bold !important;
         }
         table .list-eleve td:first-child {
-            width: 20%;
-            max-width: 20%;
-            min-width: 20%;
+            width: 25%;
+            max-width: 25%;
+            min-width: 25%;
+        }
+        #eleves-table {
+            vertical-align: top;
+        }
+        #eleves-table tr td {
+            padding-top:10px;
+            padding-bottom:10px;
         }
 
         @page {
@@ -82,11 +82,9 @@
         {{#hasCompetences}}  margin-top :{{ligne}} ;{{/hasCompetences}}
         {{^hasCompetences}}  margin-top :25% ;{{/hasCompetences}}
         @top-center {
-            padding-top : 15px;
             content: element(repeated-top);
             height : auto;
-            vertical-align : top ;
-
+            vertical-align : text-before-edge;
         }
         @top-left-corner{
             width : 5%;
@@ -96,6 +94,7 @@
             width : 5%;
 
         }
+
         }
 
         #repeated-top{
@@ -110,7 +109,7 @@
         }
         .overIt{
             word-wrap: break-word;
-            width: 120px;
+            width: 100%;
         }
         .dashed-border{
             border-left: 2px dashed grey;
@@ -129,7 +128,7 @@
             {{#hasCompetences}}<td   rowspan="2"> {{/hasCompetences}}
             {{^hasCompetences}}<td   > {{/hasCompetences}}
 
-               <span class="title aligne-center"> {{devoirName}}</span> <br/>
+            <span class="title aligne-center"> {{devoirName}}</span> <br/>
                 <br/>
             <p class="overIt">
                 <span class="bold">Classe:</span> {{classeName}}<br/>
@@ -164,10 +163,33 @@
         </tr>
         {{/hasCompetences}}
     </table>
-
-
-
-    <table >
+    <table id="eleves-table">
+        {{#eleves}}
+        <tr class="list-eleve ">
+            <td class="overIt" >
+                {{lastName}} {{firstName}}
+            </td>
+            {{#evaluation}}<td > </td>{{/evaluation}}
+            {{#hasCompetences}}
+            {{#competences}}
+            <td></td>
+            {{/competences}}
+            {{/hasCompetences}}
+        </tr>
+        {{/eleves}}
+        {{#eleves}}
+        <tr class="list-eleve ">
+            <td class="overIt" >
+                {{lastName}} {{firstName}}
+            </td>
+            {{#evaluation}}<td > </td>{{/evaluation}}
+            {{#hasCompetences}}
+            {{#competences}}
+            <td></td>
+            {{/competences}}
+            {{/hasCompetences}}
+        </tr>
+        {{/eleves}}
         {{#eleves}}
         <tr class="list-eleve ">
             <td class="overIt" >
