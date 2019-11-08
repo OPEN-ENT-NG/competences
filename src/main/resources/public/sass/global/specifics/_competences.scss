@@ -2146,6 +2146,7 @@ body.evaluations {
   }
   .devoir-with-comp {
     border-bottom: solid 4px $orange !important;
+    z-index: 1;
   }
   .resume-competence {
     color: $orange;
