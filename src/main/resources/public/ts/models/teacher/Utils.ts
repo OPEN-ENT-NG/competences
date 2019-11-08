@@ -725,7 +725,9 @@ export class Utils {
     static isNotNull =  function (object) {
         return (object !== undefined) && (object !== null);
     };
-
+    static isNotDefault =  function (object) {
+        return (object !== undefined) && (object !== null) && (object !== '*');
+    };
     static getClasseReleve = async function(idPeriode, idClasse, idTypePeriode, ordrePeriode, idStructure, classeName){
             let url = `/competences/releve/classe/pdf`;
             let param = {

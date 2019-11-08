@@ -466,14 +466,15 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if ($scope.bilanPeriodique !== undefined) {
                 delete $scope.bilanPeriodique;
             }
-            if ($scope.search.periode !== undefined && $scope.search.periode !== null && $scope.search.periode !== "*"
-                && $scope.search.classe !== undefined && $scope.search.classe !== null && $scope.search.classe !== "*") {
+            if (Utils.isNotDefault($scope.search.periode) && Utils.isNotDefault($scope.search.classe)) {
 
                 if ($scope.search.classe.periodes.length() === 0) {
                     await $scope.search.classe.periodes.sync();
                 }
 
-                let _p = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
+                let periodesClasse = $scope.search.classe.periodes.all;
+                let _p = _.findWhere(periodesClasse, {id_type: $scope.search.periode.id_type});
+                _p = (Utils.isNull(_p)? _.findWhere(periodesClasse, {id_type: $scope.search.periode.id}) : _p);
                 if (_p) {
                     if (!$scope.bilanPeriodique || param === "isClassChanging") {
                         $scope.bilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
@@ -504,8 +505,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if ($scope.search.classe.periodes.length() === 0) {
                     await $scope.search.classe.periodes.sync();
                 }
-                $scope.filteredPeriode = $filter('customClassPeriodeFilters')
-                ($scope.structure.typePeriodes.all, $scope.search);
+                let typesPeriodes = $scope.structure.typePeriodes.all;
+                $scope.filteredPeriode = $filter('customClassPeriodeFilters')(typesPeriodes, $scope.search);
+
                 if ($scope.selected.bfc === true) {
                     let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});
                     let year = _.findWhere($scope.filteredPeriode, {isCycle: false});
@@ -518,6 +520,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
                     if ($scope.search.periode === undefined) {
                         $scope.search.periode = _.findWhere($scope.filteredPeriode, {isCycle: true});
+                    }
+                    else if(Utils.isNotDefault($scope.search.periode)) {
+                        $scope.search.periode = _.findWhere($scope.filteredPeriode, {id: $scope.search.periode.id});
                     }
                 }
 
@@ -549,7 +554,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.saveAppElement = function (element, isBilanPeriodique, eleve?) {
             if (eleve) {
-                if (eleve.appreciations !== undefined) {
+                if (Utils.isNotNull(eleve.appreciations) &&
+                    Utils.isNotNull(eleve.appreciations[$scope.search.periode.id])) {
                     if (eleve.appreciations[$scope.search.periode.id][element.id] !== undefined) {
                         if (eleve.appreciations[$scope.search.periode.id][element.id].length <= $scope.MAX_CHAR_APPRECIATION_ELEMENT_LENGTH) {
                             $scope.bilanPeriodique.saveAppreciation($scope.search.periode, element, eleve, $scope.search.classe, isBilanPeriodique);

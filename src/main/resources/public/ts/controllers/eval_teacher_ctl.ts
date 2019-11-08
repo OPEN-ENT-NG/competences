@@ -520,18 +520,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-        $scope.selectedObj = {};
-        $scope.os = [{
-            key: "a",
-            otherValue: 'Maria'
-        }, {
-            key: "b",
-            otherValue: 'Jordan'
-        }, {
-            key: "c",
-            otherValue: 'Santana'
-        }];
-
         route(routesActions);
 
 
@@ -708,18 +696,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             classe.periodes.all.push({libelle: "cycle", id: null});
                         }
                     }
-                    $scope.getCurrentPeriode(classe).then(function (res) {
-                        setSearchPeriode(classe, res);
-                        if ($location.path() === '/devoir/create' ||
-                            ($scope.devoir !== undefined
-                                && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
-                            $scope.devoir.id_periode = res.id_type;
-                            $scope.controleDate($scope.devoir);
+                        $scope.getCurrentPeriode(classe).then(function (res) {
+                            setSearchPeriode(classe, res);
+                            if ($location.path() === '/devoir/create' ||
+                                ($scope.devoir !== undefined
+                                    && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                                $scope.devoir.id_periode = res.id_type;
+                                $scope.controleDate($scope.devoir);
+                                utils.safeApply($scope);
+                            }
                             utils.safeApply($scope);
-                        }
-
-                        utils.safeApply($scope);
-                    });
+                        });
 
                 });
 
@@ -2269,21 +2256,22 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Séquence de récupération d'un relevé de note
          */
         $scope.getReleve = async function () {
-            if ($scope.releveNote !== undefined) {
+            if (Utils.isNotNull($scope.releveNote)) {
                 delete $scope.releveNote;
             }
             if ($scope.elementProgrammeDisplay !== undefined) {
                 delete $scope.elementProgrammeDisplay;
             }
-            if ($scope.selected.devoirs.list !== undefined) {
+            if (Utils.isNotNull($scope.selected) && Utils.isNotNull($scope.selected.devoirs)
+                && Utils.isNotNull($scope.selected.devoirs.list)) {
                 for (let i = 0; i < $scope.selected.devoirs.list.length; i++) {
                     $scope.selected.devoirs.list[i].selected = false;
                 }
                 $scope.selected.devoirs.list = [];
             }
 
-            if ($scope.search.classe && $scope.search.classe !== '*' && $scope.search.classe.id !== undefined
-                && $scope.search.matiere && $scope.search.matiere !== '*' && $scope.search.matiere.id !== undefined
+            if (Utils.isNotDefault($scope.search.classe) && $scope.search.classe.id !== undefined
+                && Utils.isNotDefault($scope.search.matiere) && $scope.search.matiere.id !== undefined
                 && _.findWhere($scope.evaluations.devoirs.all, {id_groupe: $scope.search.classe.id})
                 && $scope.search.periode !== '*') {
 

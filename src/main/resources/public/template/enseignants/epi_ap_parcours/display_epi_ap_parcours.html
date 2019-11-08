@@ -46,7 +46,7 @@
                 <section>
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="syncPeriode(search.classe.id); getElementsBilanBilanPeriodique('isClassChanging');"
+                                ng-change="getElementsBilanBilanPeriodique('isClassChanging');"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in structure.classesBilanPeriodique | orderBy:['type_groupe_libelle','name']">
                             <option value="" class="header-opt">[[translate('viescolaire.utils.class.groupe')]]</option>
                         </select>
@@ -114,46 +114,48 @@
                                   class="marginFive italic">
                                 [[enseignant]]  [[$last ? '' : ', ']]
                             </span>
-                            <content class="block row marginFive card">
-                                <div class="elements-header">
-                                    <div class="two indent-fifteen inline-block cell-indent cell">
-                                        <i18n>viescolaire.utils.student</i18n>
-                                    </div>
-                                    <div ng-show="selected.EPI === true;"
-                                         class="inline-block cell-indent cell">
-                                        <i18n>evaluations.epi.appreciations</i18n>
-                                    </div>
-                                    <div ng-show="selected.AP === true;"
-                                         class="inline-block cell-indent cell">
-                                        <i18n>evaluations.ap.appreciations</i18n>
-                                    </div>
-                                    <div ng-show="selected.parcours === true"
-                                         class="inline-block cell-indent cell">
-                                        <i18n>evaluations.parcours.appreciations</i18n>
-                                    </div>
-                                </div>
+                            <content class="block row  card">
                                 <div class="expandable-liste notes-devoir-liste">
-                                    <div ng-repeat="eleve in bilanPeriodique.classe.eleves.all track by $index"
-                                         ng-class="{openedEleve : openedEleve === $index}">
-
-                                        <div class="expandable-appreciation twelve">
-                                            <div class="row">
-                                                <div class="two cell cell-indent expandable-name text-overflow"
-                                                     ng-class="{'deletedStudent': eleve.deleteDate !== null}"
-                                                     ng-click="getEleveInfo(eleve);expandNote($index, false)">
+                                        <table  class="twelve" c-naviga-table>
+                                            <thead class="twelve">
+                                            <tr  style="height: auto !important;" sticky offset="64">
+                                            <th class="two cell  cell-indent expandable-name text-overflow">
+                                                <i18n>viescolaire.utils.student</i18n>
+                                            </th>
+                                                <th class="ten cell cell-input nav-input">
+                                                    <span ng-show="selected.EPI === true;">
+                                                        <i18n>evaluations.epi.appreciations</i18n>
+                                                    </span>
+                                                    <span ng-show="selected.AP === true;">
+                                                        <i18n>evaluations.ap.appreciations</i18n>
+                                                    </span>
+                                                    <span ng-show="selected.parcours === true">
+                                                        <i18n>evaluations.parcours.appreciations</i18n>
+                                                    </span>
+                                                </th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr ng-repeat="eleve in bilanPeriodique.classe.eleves.all track by $index"
+                                                class="row">
+                                                <td style="padding-top: 2px; padding-bottom: 1px;"
+                                                        class="two cell cell-indent expandable-name text-overflow"
+                                                    ng-class="{'deletedStudent': eleve.deleteDate !== null}"
+                                                    ng-click="getEleveInfo(eleve);expandNote($index, false)">
                                                     [[::eleve.lastName]] [[::eleve.firstName]]
-                                                </div>
-                                                <div class="ten cell cell-input nav-input">
-                                                    <input type="text" class="eleven input-appreciation"
+                                                </td>
+                                                <td style="padding-top: 2px; padding-bottom: 1px;"
+                                                        class="ten cell cell cell-input nav-input">
+                                                    <input type="text" class="eleven input-appreciation navigable-cell"
                                                            name="appreciation"
                                                            ng-model="eleve.appreciations[search.periode.id][element.id]"
                                                            ng-blur="saveAppElement(element, false, eleve)"
                                                            ng-disabled="bilanPeriodique.endSaisie && !hasRight()"
                                                            ng-focus="focusMe($event);getEleveInfo(eleve);expandNote($index, false)">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
                                 </div>
                             </content>
                             <div class="appreciation-classe marginFive">
