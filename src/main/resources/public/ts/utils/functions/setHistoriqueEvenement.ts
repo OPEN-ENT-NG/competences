@@ -58,6 +58,7 @@ export let setHistoriqueEvenement = function ($scope, eleve, filteredPeriode) {
     });
     if(Utils.isNull($scope.search.periode.id_type)){
         eleve.evenement = year;
+        eleve.appreciationCPE = {};
     }
     eleve.evenements.push(year);
 };

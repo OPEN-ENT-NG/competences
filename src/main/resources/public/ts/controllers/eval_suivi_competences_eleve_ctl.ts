@@ -344,13 +344,20 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
          * @returns {Promise<void>}
          */
         $scope.getCyclesEleve = async () => {
-            await $scope.search.eleve.getCycles();
-            if($scope.search.eleve.cycles.length == 0) {
-                $scope.currentCycle = {id_cycle: undefined, libelle: "Pas de cycle évalué"};
-                $scope.selectedCycleRadio = {id_cycle: undefined};
-            }else {
-                $scope.currentCycle = _.findWhere($scope.search.eleve.cycles, {id_cycle: $scope.search.classe.id_cycle});
-                $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
+            try {
+                await $scope.search.eleve.getCycles();
+                if ($scope.search.eleve.cycles.length == 0) {
+                    $scope.currentCycle = {id_cycle: undefined, libelle: "Pas de cycle évalué"};
+                    $scope.selectedCycleRadio = {id_cycle: undefined};
+                } else {
+                    $scope.currentCycle = _.findWhere($scope.search.eleve.cycles, {id_cycle: $scope.search.classe.id_cycle});
+                    if (Utils.isNotNull($scope.currentCycle)) {
+                        $scope.selectedCycleRadio = {id_cycle: $scope.currentCycle.id_cycle};
+                    }
+                }
+            }
+            catch (e) {
+                console.error(e);
             }
             await utils.safeApply($scope);
         };
@@ -395,8 +402,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
 
                 $scope.informations.eleve = $scope.search.eleve;
-                if ($scope.informations.eleve !== null && $scope.search.eleve !== ""
-                    && $scope.informations.eleve !== undefined) {
+                if (Utils.isNotNull($scope.informations.eleve)  && $scope.search.eleve !== "") {
 
                     // Récupérer le suivi de l'élève
                     await $scope.getEleveInfo($scope.search.eleve);

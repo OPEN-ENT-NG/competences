@@ -2918,13 +2918,25 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
             }
             await Promise.all(allPromise);
-            if($location.path() === `/devoir/${$scope.currentDevoir.id}`){
-                $scope.search.periode = $scope.currentDevoir.id_periode;
-                $scope.search.classe = _.findWhere($scope.structure.classes.all, {id : $scope.currentDevoir.id_groupe});
+            let syncPeriodeClasse = async () => {
                 if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes) &&
                     _.isEmpty($scope.search.classe.periodes.all)){
                     await $scope.search.classe.periodes.sync();
                 }
+            };
+
+            if($location.path() === `/devoir/${$scope.currentDevoir.id}`){
+                $scope.search.classe = _.findWhere($scope.structure.classes.all, {id : $scope.currentDevoir.id_groupe});
+                await syncPeriodeClasse();
+                if(Utils.isNotNull($scope.search.classe) && Utils.isNotNull($scope.search.classe.periodes)) {
+                    let idPeriode = $scope.currentDevoir.id_periode;
+                    $scope.filteredPeriode = $scope.search.classe.periodes.all;
+                    $scope.search.periode = _.findWhere($scope.filteredPeriode, {id_type: idPeriode});
+                }
+            }
+            if($location.path() === '/competences/eleve') {
+                await syncPeriodeClasse();
+                $scope.filteredPeriode = $scope.search.classe.periodes.all;
             }
             utils.setHistoriqueEvenement($scope, eleve, $scope.filteredPeriode);
 

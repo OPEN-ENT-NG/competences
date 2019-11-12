@@ -41,25 +41,27 @@
     <div ng-if="informations.eleve.birthDate == 'undefined' || informations.eleve.birthDate== null" class="twelve cell">
         <i18n>viescolaire.utils.user.birthdate.undefined</i18n>
     </div>
-    <div class="twelve cell">
-        <span><i18n>viescolaire.retards</i18n>:&nbsp;</span>
-        <label  class="bold"><span>[[ informations.eleve.evenement.retard ]]</span></label>
-    </div>
-    <div class="twelve cell">
-        <span><i18n>viescolaire.abs.justified</i18n>:&nbsp;</span>
-        <label  class="bold"><span>[[ informations.eleve.evenement.abs_just ]]</span><i18n>half.days</i18n></label>
-    </div>
-    <div class="twelve cell">
-        <span><i18n>viescolaire.abs.not.justified</i18n>:&nbsp;</span>
-        <label  class="bold"><span>[[ informations.eleve.evenement.abs_non_just ]]</span><i18n>half.days</i18n></label>
-    </div>
-    <div class="twelve cell ellipsis" tooltip="[[ informations.eleve.evenement.abs_totale_heure +' ' + lang.translate('hours')]]">
-        <span><i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;</span><label  class="bold">
-        <span>[[ informations.eleve.evenement.abs_totale_heure ]]</span><i18n>hours</i18n></label>
-    </div>
+    <div ng-if="displayCycle !== true">
+        <div class="twelve cell">
+            <span><i18n>viescolaire.retards</i18n>:&nbsp;</span>
+            <label  class="bold"><span>[[ informations.eleve.evenement.retard ]]</span></label>
+        </div>
+        <div class="twelve cell">
+            <span><i18n>viescolaire.abs.justified</i18n>:&nbsp;</span>
+            <label  class="bold"><span>[[ informations.eleve.evenement.abs_just ]]</span><i18n>half.days</i18n></label>
+        </div>
+        <div class="twelve cell">
+            <span><i18n>viescolaire.abs.not.justified</i18n>:&nbsp;</span>
+            <label  class="bold"><span>[[ informations.eleve.evenement.abs_non_just ]]</span><i18n>half.days</i18n></label>
+        </div>
+        <div class="twelve cell ellipsis" tooltip="[[ informations.eleve.evenement.abs_totale_heure +' ' + lang.translate('hours')]]">
+            <span><i18n>viescolaire.nb.courses.lost</i18n>:&nbsp;</span><label  class="bold">
+            <span>[[ informations.eleve.evenement.abs_totale_heure ]]</span><i18n>hours</i18n></label>
+        </div>
 
-    <div ng-if="informations.eleve.appreciationCPE.appreciation !== undefined" class="twelve">
-        <span><i18n>viescolaire.commentaire</i18n>:&nbsp;</span><label  class="bold">
-        <span>[[ informations.eleve.appreciationCPE.appreciation ]]</span></label>
+        <div ng-if="informations.eleve.appreciationCPE.appreciation !== undefined" class="twelve">
+            <span><i18n>viescolaire.commentaire</i18n>:&nbsp;</span><label  class="bold">
+            <span>[[ informations.eleve.appreciationCPE.appreciation ]]</span></label>
+        </div>
     </div>
 </div>

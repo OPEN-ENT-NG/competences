@@ -375,7 +375,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
 
                 let periode = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
-                if (!$scope.search.eleve.isEvaluable(periode)) {
+                if (Utils.isNotDefault($scope.search.eleve) && !$scope.search.eleve.isEvaluable(periode)) {
                     notify.info('evaluations.student.is.no.more.evaluable');
                     $scope.search.eleve = '';
                     $scope.informations.eleve = $scope.search.eleve;
