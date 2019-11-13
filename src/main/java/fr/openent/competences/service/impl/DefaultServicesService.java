@@ -30,6 +30,7 @@ import org.entcore.common.sql.Sql;
 
 import java.util.Map;
 
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
@@ -45,12 +46,13 @@ public class DefaultServicesService extends SqlCrudService implements ServicesSe
 
     public void createService(JsonObject oService, Handler<Either<String, JsonObject>> handler){
 
-        String columns = "id_matiere, id_groupe, id_enseignant";
-        String params = "?,?,?";
+        String columns = "id_matiere, id_groupe, id_enseignant, coefficient";
+        String params = "?,?,?,?";
         JsonArray values = new JsonArray();
         values.add(oService.getString("id_matiere"));
         values.add(oService.getString("id_groupe"));
         values.add(oService.getString("id_enseignant"));
+        values.add(oService.getValue("coefficient"));
 
         if (oService.containsKey("id_etablissement")) {
             columns += ", id_etablissement";
@@ -80,6 +82,10 @@ public class DefaultServicesService extends SqlCrudService implements ServicesSe
         if (oService.containsKey("evaluable")) {
             query += oService.containsKey("modalite") ? ", evaluable=?" : " evaluable=?";
             values.add(oService.getBoolean("evaluable"));
+        }
+        if (oService.containsKey(COEFFICIENT)) {
+            query += oService.containsKey("modalite") ? ", coefficient=?" : " coefficient=?";
+            values.add(oService.getLong(COEFFICIENT));
         }
 
         query += " RETURNING *";

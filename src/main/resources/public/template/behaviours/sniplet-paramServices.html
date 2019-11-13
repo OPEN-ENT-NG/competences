@@ -48,6 +48,7 @@
                          class="[[columns.classe.size]] cell-indent cell">[[translate(columns.classe.name)]]</h4>
                     <h4 ng-click="sortOrderBy = 'nom_enseignant'"
                         class="[[columns.enseignant.size]] cell-indent cell">[[translate(columns.enseignant.name)]]</h4>
+                    <h4 class="[[columns.coefficient.size]] cell-indent cell">[[translate(columns.coefficient.name)]]</h4>
                     <h4 class="[[columns.modalite.size]] cell-indent cell">[[translate(columns.modalite.name)]]</h4>
                     <h4 class="[[columns.evaluable.size]] cell-indent cell">[[translate(columns.evaluable.name)]]</h4>
                 </div>
@@ -65,6 +66,10 @@
                     <span class="[[columns.matiere.size]] ellipsis">[[service.nom_matiere]]</span>
                     <span class="[[columns.classe.size]] ellipsis">[[service.nom_groupe]]</span>
                     <span class="[[columns.enseignant.size]] ellipsis">[[service.nom_enseignant]]</span>
+                    <span class="[[columns.coefficient.size]] ellipsis">
+                        <input  type="number" class="eleven small-input-number three-mobile"
+                                ng-blur="service.updateServiceCoefficient()"
+                                ng-model="service.coefficient" min="0"></span>
                     <label class="select one">
                         <select ng-model="service.modalite"
                                 ng-options="modalite for modalite in columns.modalite.data"
@@ -129,6 +134,14 @@
                     <select ng-model="::service.modalite"
                             ng-options="modalite for modalite in columns.modalite.data | orderBy:modalite.libelle"></select>
                 </label>
+            </div>
+            <div class="row">
+                <h4>
+                    <i18n>viescolaire.utils.coefficient</i18n>
+                </h4>
+                <div class="one cell  eight-mobile">
+                    <input  type="number" class="eleven small-input-number three-mobile" ng-model="service.coefficient" min="0">
+                </div>
             </div>
             <div class="row">
                 <h4>

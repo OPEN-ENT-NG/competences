@@ -38,6 +38,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 
 import java.util.Map;
 
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -159,18 +160,21 @@ public class ServicesController extends ControllerHelper {
                     criteria.put("id_enseignant", oDBService.getString("id_enseignant"));
                     criteria.put("id_groupe", oDBService.getString("id_groupe"));
 
+
                     JsonObject overwrittenService = utilsService.findWhere(aParamService, criteria);
 
                     if (overwrittenService != null) {
                         aParamService.remove(overwrittenService);
                         oDBService.put("modalite", overwrittenService.getString("modalite"));
                         oDBService.put("evaluable", overwrittenService.getBoolean("evaluable"));
+                        oDBService.put(COEFFICIENT, overwrittenService.getLong(COEFFICIENT));
                         oDBService.put("isManual", false);
                         result.add(oDBService);
                     } else {
                         oDBService.put("modalite", "S");
                         oDBService.put("evaluable", true);
                         oDBService.put("isManual", false);
+                        oDBService.put(COEFFICIENT, 1);
                         result.add(oDBService);
                     }
                 }
