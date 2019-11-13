@@ -37,9 +37,9 @@
                         <article class="twelve" style="width: auto; margin-top: 5px; height: 54px" sticky offset="64"
                                  ng-hide="me.type === 'PERSRELELEVE'">
                             <h2 class="align-center">
-                                <i class="previous cell" ng-click="incrementEleve(-1)"></i>
+                                <i class="previous cell" ng-click="incrementEleve(-1)" ng-hide="hideArrow(-1)"></i>
                                 [[informations.eleve.lastName]] [[informations.eleve.firstName]]
-                                <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
+                                <i class="next right-magnet" ng-click="incrementEleve(1)" ng-hide="hideArrow(1)"></i>
                             </h2>
                         </article>
 

@@ -219,9 +219,9 @@
     <div class="content-suivi-eleve twelve-mobile ten card"
          ng-if="informations.classe !== '' && informations.classe !== undefined && search.classe !== ''">
         <div class="twelve suivi-eleve-ctl"  sticky offset="64">
-            <h2 class="align-center"><i class="previous cell" ng-click="incrementClasse(-1)"></i>
+            <h2 class="align-center"><i class="previous cell" ng-click="incrementClasse(-1)" ng-hide="hideArrow(-1)"></i>
                 [[informations.classe.name]]
-                <i class="next right-magnet" ng-click="incrementClasse(1)"></i></h2>
+                <i class="next right-magnet" ng-click="incrementClasse(1)" ng-hide="hideArrow(1)"></i></h2>
             <div align="right">
                 <ul class="selectable-filter-list" ng-if="opened.detailCompetenceSuivi">
                     <li ng-repeat="color in niveauCompetences" ng-click="selected.colors[color.ordre]= ! selected.colors[color.ordre];">

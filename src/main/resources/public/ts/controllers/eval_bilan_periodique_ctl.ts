@@ -358,6 +358,12 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
         };
 
+        $scope.hideArrow = function (num) {
+            let index = _.findIndex($scope.search.classe.eleves.all, {id: $scope.search.eleve.id});
+            return !(index !== -1 && index + parseInt(num) >= 0
+                && index + parseInt(num) < $scope.search.classe.eleves.all.length);
+        };
+
         $scope.changeContent = async function () {
             if (!$scope.canLoadStudent) {
                 return;

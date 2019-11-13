@@ -155,9 +155,9 @@
 
         <div ng-if="$location.path() !== '/conseil/de/classe'" class="twelve" ng-class="{'suivi-eleve-ctl' : (suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined)}" sticky offset="64">
             <h2 class="align-center">
-                <i class="previous cell" ng-click="incrementEleve(-1)"></i>
+                <i class="previous cell" ng-click="incrementEleve(-1)" ng-hide="hideArrow(-1)"></i>
                 <span ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</span>
-                <i class="next right-magnet" ng-click="incrementEleve(1)"></i>
+                <i class="next right-magnet" ng-click="incrementEleve(1)" ng-hide="hideArrow(1)"></i>
             </h2>
             <div class="ten twelve-mobile centered center"
                      ng-if="suiviCompetence === undefined || suiviCompetence.cycle.id_cycle === undefined">

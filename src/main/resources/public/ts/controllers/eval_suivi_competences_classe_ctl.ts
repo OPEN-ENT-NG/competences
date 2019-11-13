@@ -256,6 +256,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
+        $scope.hideArrow = function (num) {
+            let index = _.findIndex(_.sortBy(_.sortBy($scope.classes.all, 'name'), 'type_groupe_libelle'), {id: $scope.search.classe.id});
+            return !(index !== -1 && (index + parseInt(num)) >= 0
+                && (index + parseInt(num)) < $scope.classes.all.length);
+        };
+
         $scope.changeContent = async function () {
             if (template.containers['suivi-competence-content'] !== undefined) {
                 let content = $scope.template.containers['suivi-competence-content']

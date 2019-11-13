@@ -813,6 +813,13 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
         };
 
+        $scope.hideArrow = function (num) {
+            $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+            let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
+            return !(index !== -1 && index + parseInt(num) >= 0
+                && index + parseInt(num) < $scope.filteredEleves.all.length);
+        };
+
 
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
