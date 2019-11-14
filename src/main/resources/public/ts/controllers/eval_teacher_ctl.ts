@@ -593,6 +593,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             lightboxEvalLibre: false,
             lightboxReleve: false,
             recapEval: false,
+            coefficientConflict: false,
             lightboxs: {
                 updateDevoir: {
                     firstConfirmSupp: false,

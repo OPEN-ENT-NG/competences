@@ -25,7 +25,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.MESSAGE;
+import static fr.openent.competences.Utils.isNotNull;
+import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -190,12 +193,30 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         }
     }
 
+    private void setSubjectByCoeficient(String idMatiere, JsonObject result, JsonObject coefObject,
+                                        Map<String, JsonObject> idsMatLibelle,
+                                        Map<String, JsonObject> teachersInfos){
+        if(isNotNull(coefObject)) {
+            for(Map.Entry<String, Object> coefEntry : coefObject.getMap().entrySet()) {
+                JsonArray coefIdTeachers = (JsonArray)coefEntry.getValue();
+                String coefKey = coefEntry.getKey();
+                if(!result.getJsonObject(COEFFICIENT).containsKey(coefKey)){
+                    result.getJsonObject(COEFFICIENT).put(coefKey, new JsonObject());
+                }
+                JsonObject resultCoef = result.getJsonObject(COEFFICIENT).getJsonObject(coefKey);
+                setSubjectLibelle(idMatiere, resultCoef, idsMatLibelle);
+                setTeacherInfo(resultCoef, coefIdTeachers, teachersInfos);
+            }
+        }
+    }
+
     private void setSubjectLibelleAndTeachers (String idEleve,JsonArray idClasseGroups, final String idClasse,
                                                String idEtablissement, JsonArray idsGroups,
                                                Map<String,JsonObject> idsMatieresIdsTeachers,
                                                JsonArray idsMatieres, Map<String, JsonObject> idsMatLibelle,
                                                Map<String, JsonObject> teachersInfos, Long idPeriode,
                                                Handler<Either<String, JsonArray>> handler) {
+
         if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
             idsGroups.add(idClasse);
         } else {
@@ -208,17 +229,18 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         JsonArray results = new JsonArray();
 
         for (Map.Entry<String, JsonObject> idMAtTeachersGroups : idsMatieresIdsTeachers.entrySet()) {
-            final JsonObject result = new JsonObject();
             String idMatiere = idMAtTeachersGroups.getKey();
             JsonObject teachersObject = idMAtTeachersGroups.getValue();
             JsonArray idsTeachers = teachersObject.getJsonArray("teachers");
+            final JsonObject result = new JsonObject().put(COEFFICIENT, new JsonObject());
+            JsonObject coefObject = teachersObject.getJsonObject("_" +  COEFFICIENT);
 
             //Ajout des libellés des matières
             setSubjectLibelle(idMatiere, result, idsMatLibelle);
-
             // Ajout des enseignants des matières
             setTeacherInfo(result, idsTeachers, teachersInfos);
-
+            // Mise Mise en forme des matières par coefficient
+            setSubjectByCoeficient(idMatiere, result, coefObject, idsMatLibelle, teachersInfos);
             // Récupération des élements du Programme
             Future<JsonArray> elementsProgFuture = Future.future();
             elementProgramme.getElementProgrammeClasses(
@@ -228,9 +250,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
             // Récupération des appreciation Moyenne Finale et positionnement Finale
             Future<JsonArray> appreciationMoyFinalePosFuture = Future.future();
-            noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null, event -> {
-                formate(appreciationMoyFinalePosFuture, event);
-            });
+            noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null,
+                    event -> formate(appreciationMoyFinalePosFuture, event));
 
             // Récupération des notes
             Future<JsonArray> notesFuture = Future.future();
@@ -240,9 +261,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             // Récupération des compétences-notes
             Future<JsonArray> compNotesFuture =  Future.future();
             noteService.getCompetencesNotesReleve(idEtablissement, null, null, idMatiere,
-                    null, idEleve, null, false, compNotesEvent -> {
-                        formate(compNotesFuture, compNotesEvent);
-                    });
+                    null, idEleve, null, false,
+                    compNotesEvent -> formate(compNotesFuture, compNotesEvent));
 
             // Récupération de la moyenne finale
             Future<JsonArray> moyenneFinaleFuture = Future.future();
@@ -288,27 +308,26 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
         for (int i = 0; i < responseArray.size(); i++) {
             JsonObject responseObject = responseArray.getJsonObject(i);
+            String idMatiere = responseObject.getString(ID_MATIERE);
+            String owner = responseObject.getString("owner");
+            Long coefficient = responseObject.getLong(COEFFICIENT);
+            coefficient = isNull(coefficient)? 1L : coefficient;
 
-            if (!idsMatieresIdsTeachers.containsKey(responseObject.getString("id_matiere"))) {
-                idsMatieres.add(responseObject.getString("id_matiere"));
-                if (!idsTeachers.contains(responseObject.getString("owner"))) {
-                    idsTeachers.add(responseObject.getString("owner"));
-                }
-                JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray()
-                        .add(responseObject.getString("owner"));
-
-                idsMatieresIdsTeachers.put(responseObject.getString("id_matiere"),
-                        new JsonObject().put("teachers", teachers));
-            } else {//on récupère le JsonObject de la cle idmatiere en cours
-                JsonArray teachers = idsMatieresIdsTeachers
-                        .get(responseObject.getString("id_matiere"))
-                        .getJsonArray("teachers");
-
-                teachers.add(responseObject.getString("owner"));
-                idsTeachers.add(responseObject.getString("owner"));
+            if (!idsMatieresIdsTeachers.containsKey(idMatiere)) {
+                idsMatieres.add(idMatiere);
+                idsMatieresIdsTeachers.put(idMatiere, new JsonObject()
+                        .put("teachers", new JsonArray()).put("_" + COEFFICIENT, new JsonObject()));
             }
+            JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
+            JsonArray teachers = matiere.getJsonArray("teachers");
+            teachers.add(owner);
+            idsTeachers.add(owner);
+            JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
+            if(!coeffObject.containsKey(coefficient.toString())){
+                coeffObject.put(coefficient.toString(), new JsonArray());
+            }
+            coeffObject.getJsonArray(coefficient.toString()).add(owner);
         }
-
 
     }
 
@@ -422,6 +441,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
                 noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
+        noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
 

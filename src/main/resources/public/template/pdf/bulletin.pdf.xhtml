@@ -256,6 +256,11 @@
             padding-bottom: 1px;
             padding-right: 2px;
         }
+        .moyenneGeneral td {
+            height: 10px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+        }
 
     </style>
 </head>
@@ -347,9 +352,13 @@
             {{/getProgramElements}}
 
             <td class="thirdSuivi">{{suiviAcquisitionLibelle}}</td>
+            {{#printCoefficient}}
+            <td class="fourthSuivi">{{coefficientLibelle}}</td>
+            {{/printCoefficient}}
             {{#printSousMatieres}}
             <td class="fourthSuivi"></td>
             {{/printSousMatieres}}
+
             {{#getMoyenneEleve}}
             <td class="fourthSuivi">{{moyenneStudentLibelle}}</td>
             {{/getMoyenneEleve}}
@@ -388,7 +397,15 @@
                 style="text-align: left; background-color: {{{backgroundColor}}};word-wrap:break-word; {{{style}}}"
                 class="thirdSuivi onePadding">
                 {{/display}}
-                {{appreciation}}</td>
+                {{appreciation}}
+            </td>
+            {{#printCoefficient}}
+            <td rowspan="{{rowSpan}}"
+                style="text-align: center; background-color: {{{backgroundColor}}};word-wrap:break-word; {{{style}}}"
+                class="fourthSuivi onePadding">
+                {{coef}}
+            </td>
+            {{/printCoefficient}}
 
         {{#printSousMatieres}}
            {{^hasSousMatiere}}
@@ -532,6 +549,35 @@
 
         {{/printMatiere}}
         {{/suiviAcquis}}
+        {{#printMoyenneGenerale}}
+        <tr  class="moyenneGeneral" style= "background-color: {{{backgroundColor}}}" >
+            <td style= "border-right: none; "
+                class="left-align emptyClass">
+                <span style="font-size: small; font-weight: bold">{{moyenneGeneraleLibelle}}</span><br/>
+            </td>
+            {{#getProgramElements}}
+            <td class="secondSuivi"></td>
+            {{/getProgramElements}}
+
+            <td class="thirdSuivi"></td>
+            {{#printSousMatieres}}
+            <td class="fourthSuivi"></td>
+            {{/printSousMatieres}}
+            {{#printCoefficient}}
+            <td class="fourthSuivi"></td>
+            {{/printCoefficient}}
+            {{#getMoyenneEleve}}
+            <td class="fourthSuivi" style="font-weight: bold;"> {{moyenneGenerale}}</td>
+            {{/getMoyenneEleve}}
+            {{#getMoyenneClasse}}
+            <td class="fiveSuivi" style="font-size: x-small; font-weight: bold;"> {{moyenneGeneraleClass}}</td>
+            {{/getMoyenneClasse}}
+            {{#getPositionnement}}
+            <td class="sixthSuivi"></td>
+            {{/getPositionnement}}
+        </tr>
+        {{/printMoyenneGenerale}}
+
     </table>
     {{#getPositionnement}}<span class="paddingFifty" style="font-size: xx-small ;position: relative;top: 10px;"> {{footer}}</span>{{/getPositionnement}}
     {{/hasSuiviAcquis}}
@@ -615,7 +661,14 @@
                         {{beforeAvisOrientation}}
                     </span>
                 {{avisOrientation}}
-                {{/hasAvisOrientation}}
+                {{/hasAvisOrientation}}<br/>
+                {{#printMoyenneAnnuelle}}
+                <span style="font-weight: bold">
+                        {{moyenneAnnuelleLibelle}}:
+                    </span>
+                {{moyenneAnnuelle}}
+                {{/printMoyenneAnnuelle}}
+
             </div>
         </div>
 

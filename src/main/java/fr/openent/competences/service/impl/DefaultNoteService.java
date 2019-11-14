@@ -318,13 +318,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         query.append("SELECT devoirs.id as id_devoir, devoirs.date, devoirs.coefficient, devoirs.diviseur, ")
                 .append(" devoirs.ramener_sur, devoirs.is_evaluated, devoirs.id_periode,  devoirs.id_sousmatiere,")
-                .append(" notes.valeur, notes.id, notes.id_eleve ")
+                .append(" notes.valeur, notes.id, notes.id_eleve, services.coefficient as coef ")
                 .append(" FROM "+ COMPETENCES_SCHEMA +".devoirs ")
                 .append(" LEFT JOIN "+ COMPETENCES_SCHEMA +".notes ")
                 .append(" ON devoirs.id = notes.id_devoir ")
                 .append( (null!= userId)? " AND notes.id_eleve = ? ": "")
                 .append(" INNER JOIN "+ COMPETENCES_SCHEMA +".rel_devoirs_groupes ")
                 .append(" ON rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe IN " + Sql.listPrepared( idsClass.getList()))
+                .append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".services ")
+                .append(" ON (rel_devoirs_groupes.id_groupe = services.id_groupe ")
+                .append(" AND devoirs.owner = services.id_enseignant   AND devoirs.id_matiere = services.id_matiere) ")
                 .append(" WHERE devoirs.id_etablissement = ? ")
                 .append(" AND devoirs.id_matiere = ? ")
                 .append((null != periodeId)? " AND devoirs.id_periode = ? ": " ")
@@ -825,6 +828,49 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
+    public void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes,
+                                                 final JsonObject result, String idEleve, JsonArray idEleves){
+        Map<Long, JsonArray> notesByCoef = new HashMap<>();
+        if(isNull(result.getJsonObject(COEFFICIENT))) {
+            result.put(COEFFICIENT, new JsonObject());
+        }
+        //pour toutes les notes existantes dans la classe
+        for (int i = 0; i < listNotes.size(); i++) {
+            JsonObject note = listNotes.getJsonObject(i);
+
+            if (note.getString("valeur") == null
+                    || !note.getBoolean("is_evaluated") || note.getString("coefficient") == null) {
+                continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
+                // elle n'est pas prise en compte dans le calcul de la moyenne
+            } else {
+                Long coefMatiere = note.getLong("coef", 1L);
+
+                if (!notesByCoef.containsKey(coefMatiere)) {
+                    notesByCoef.put(coefMatiere, new JsonArray());
+                }
+                notesByCoef.get(coefMatiere).add(note);
+            }
+        }
+
+        for(Map.Entry<Long, JsonArray> notesByCoefEntry : notesByCoef.entrySet()){
+            Long coef = notesByCoefEntry.getKey();
+            JsonArray notes = notesByCoefEntry.getValue();
+            JsonObject resultCoef = new JsonObject();
+            if(isNotNull(coef)) {
+                final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
+                        calculMoyennesEleveByPeriode(notes, resultCoef, idEleve, idEleves);
+                calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, resultCoef);
+                if(isNull( result.getJsonObject(COEFFICIENT).getJsonObject(coef.toString()))){
+                    result.getJsonObject(COEFFICIENT).put(coef.toString(), new JsonObject());
+                }
+
+                result.getJsonObject(COEFFICIENT).getJsonObject(coef.toString()).getMap().putAll(resultCoef.getMap());
+                result.put("coef", coef.toString());
+            }
+        }
+
+
+    }
     public HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
     calculMoyennesEleveByPeriode (JsonArray listNotes, final JsonObject result, String idEleve, JsonArray idEleves) {
 
@@ -837,7 +883,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         notesByDevoirByPeriodeClasse.put(null, new HashMap<>());
         notesByDevoirByPeriodeBySousMat.put(null, new HashMap<>());
         notesClasseBySousMat.put(null, new HashMap<>());
-
 
         //pour toutes les notes existantes dans la classe
         for (int i = 0; i < listNotes.size(); i++) {

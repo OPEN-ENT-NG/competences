@@ -36,6 +36,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.graphDom = {opened: true, comparison: false, darkness: true, infoGrouped: false};
         $scope.graphMat = {opened: true, comparison: false, darkness: true, infoGrouped: false};
         $scope.opened.bfcPeriode = undefined;
+        $scope.opened.coefficientConflict = false;
         $scope.canLoadStudent = false;
         $scope.displayBilanPeriodique = () => {
             let isNotEmptyClasse = ($scope.search.classe !== '*' && $scope.search.classe !== null
@@ -118,6 +119,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
             }
             $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve, $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
+
             await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id, $scope.search.periode.id_type);
             await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();

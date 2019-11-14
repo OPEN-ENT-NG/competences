@@ -28,6 +28,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.ID_TYPE_SOUS_MATIERE;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
@@ -38,6 +39,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLTimeoutException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,6 +74,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String GET_ARBRE_DOMAINE_METHOD = "getArbreDomaines";
     private static final String GET_DATA_FOR_GRAPH_DOMAINE_METHOD = "getBilanPeriodiqueDomaineForGraph";
     private static final String PRINT_SOUS_MATIERES = "printSousMatieres";
+    private static final String PRINT_COEFFICIENT = "printCoefficient";
+    private static final String PRINT_MOYENNE_GENERALE = "printMoyenneGenerale";
+    private static final String PRINT_MOYENNE_ANNUELLE = "printMoyenneAnnuelle";
     private static final String BACKGROUND_COLOR = "backgroundColor";
     // Keys Utils
     private static final String APPRECIATION_KEY = "appreciation";
@@ -86,6 +91,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String MOYENNE = "moyenne";
     private static final String MOYENNE_CLASSE = "moyenneClasse";
     private static final String MOYENNE_ELEVE = "moyenneEleve";
+    private static final String MOYENNE_GENERALE = "moyenneGenerale";
+    private static final String MOYENNE_ANNUELLE = "moyenneAnnuelle";
     private static final String POSITIONNEMENT = "positionnement";
     private static final String MOYENNE_CLASSE_SOUS_MAT = "moyenneClasseSousMat";
     private static final String MOYENNE_ELEVE_SOUS_MAT = "moyenneEleveSousMat";
@@ -361,6 +368,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("levelItems", getLibelle("level.items"))
                     .put("averages", getLibelle("average"))
                     .put("evaluationByDomaine", getLibelle("evaluation.by.domaine"))
+                    .put("coefficientLibelle", getLibelle("viescolaire.utils.coef"))
+                    .put("moyenneAnnuelleLibelle", getLibelle("average.annual"))
+                    .put("moyenneGeneraleLibelle", getLibelle("average.general"))
                     .put(NIVEAU_COMPETENCE, params.getValue(NIVEAU_COMPETENCE))
 
                     // positionnement des options d'impression
@@ -377,7 +387,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(IMG_SIGNATURE, params.getString(IMG_SIGNATURE))
                     .put(HAS_IMG_SIGNATURE, params.getBoolean(HAS_IMG_SIGNATURE))
                     .put(NAME_CE, params.getString(NAME_CE))
-                    .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES));
+                    .put(PRINT_COEFFICIENT, params.getBoolean(COEFFICIENT))
+                    .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES))
+                    .put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE));
 
         }
         log.debug(" -------[" + PUT_LIBELLE_FOR_EXPORT_METHOD +" ]: " + idEleve + " FIN " );
@@ -507,8 +519,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             JsonObject resultFinal = new JsonObject()
                                     .put(GET_PROGRAM_ELEMENT, params.getBoolean(GET_PROGRAM_ELEMENT))
                                     .put("title", title);
-
-                            resultFinal.put("eleves", sortResultByClasseNameAndNameForBulletin(elevesMap));
+                            if(params.getBoolean(COEFFICIENT) && isNotNull(params.getValue(ERROR + COEFFICIENT))){
+                                renderError(request, new JsonObject().put(ELEVES,
+                                        sortResultByClasseNameAndNameForBulletin(elevesMap)));
+                                return;
+                            }
+                            resultFinal.put(ELEVES, sortResultByClasseNameAndNameForBulletin(elevesMap));
                             if(!forArchive) {
                                 resultFinal.put(ID_IMAGES_FILES, params.getJsonArray(ID_IMAGES_FILES));
                                 exportService.genererPdf(request, resultFinal, "bulletin.pdf.xhtml",
@@ -1567,6 +1583,66 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         fontstyle.put("style", value);
     }
+    private void setMoyenneAnnuelle(JsonObject eleveObject, JsonArray matieres, JsonObject params){
+        if(isNull(matieres) || isNull(eleveObject) || isNull(params)){
+            log.error("setMoyenneAnnuelle call with null Object ");
+            return;
+        }
+        Double moy = new Double(0);
+        int sumCoef = 0;
+        Object  moyenAnnuelle;
+        for(int i=0; i < matieres.size(); i++){
+            JsonObject matiere = matieres.getJsonObject(i);
+            Object coefMatiere = matiere.getValue("coef");
+            JsonObject moyAnnuelle = getObjectForPeriode(matiere.getJsonArray(MOYENNES), null, ID_KEY);
+            Object moyMatiere = isNull(moyAnnuelle)? null : moyAnnuelle.getValue(MOYENNE);
+            if(isNotNull(moyMatiere) && isNotNull(coefMatiere) && !moyMatiere.equals(NN)){
+                coefMatiere = Integer.valueOf(coefMatiere.toString());
+                sumCoef += (int) coefMatiere;
+                moy += ((int)coefMatiere * Double.valueOf(moyMatiere.toString()));
+            }
+        }
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        moyenAnnuelle = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
+
+        eleveObject.put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE));
+        eleveObject.put(MOYENNE_ANNUELLE, moyenAnnuelle);
+    }
+
+    private void setMoyenneGenerale(JsonObject eleveObject, JsonArray matieres, JsonObject params){
+        Double moy = new Double(0);
+        int sumCoef = 0;
+        Object  moyenGeneral;
+
+        Double moyClass = new Double(0);
+        int sumCoefClass = 0;
+        Object  moyenGeneralClass;
+
+        for(int i=0; i < matieres.size(); i++){
+            JsonObject matiere = matieres.getJsonObject(i);
+            Object moyMatiere = matiere.getValue(MOYENNE_ELEVE);
+            Object moyMatiereClass = matiere.getValue(MOYENNE_CLASSE);
+            Object coefMatiere = matiere.getValue("coef");
+            if(isNotNull(moyMatiere) && isNotNull(coefMatiere) && !moyMatiere.equals(NN)){
+                coefMatiere = Integer.valueOf(coefMatiere.toString());
+                sumCoef += (int) coefMatiere;
+                moy += ((int)coefMatiere * Double.valueOf(moyMatiere.toString()));
+            }
+            if(isNotNull(moyMatiereClass) && isNotNull(coefMatiere) && !moyMatiereClass.equals(NN)){
+                coefMatiere = Integer.valueOf(coefMatiere.toString());
+                sumCoefClass += (int) coefMatiere;
+                moyClass += ((int)coefMatiere * Double.valueOf(moyMatiereClass.toString()));
+            }
+        }
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        moyenGeneral = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
+        moyenGeneralClass = (sumCoefClass > 0)? decimalFormat.format(moyClass/sumCoefClass) : NN;
+
+        eleveObject.put(PRINT_MOYENNE_GENERALE, params.getBoolean(MOYENNE_GENERALE));
+        eleveObject.put(MOYENNE_GENERALE, moyenGeneral);
+        eleveObject.put(MOYENNE_GENERALE + "Class", moyenGeneralClass);
+        eleveObject.put(BACKGROUND_COLOR, (matieres.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
+    }
 
     @Override
     public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
@@ -1636,12 +1712,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                         // Une matière sera affichée si on a au moins un élement sur la période
                                         final boolean printMatiere = false;
                                         buildMatiereForSuiviAcquis (matiere, printMatiere, idPeriode, classe, params);
+                                        checkCoefficientConflict(eleveObject, matiere.getJsonObject(COEFFICIENT),
+                                                params);
                                         if(matiere.getBoolean(PRINT_MATIERE_KEY)) {
                                             res.add(matiere);
                                         }
 
                                     }
                                     setFontSizeOfSuivi(res, getProgrammeElement);
+                                    setMoyenneGenerale(eleveObject, res, params);
+                                    setMoyenneAnnuelle(eleveObject, suiviAcquis, params);
 
                                     eleveObject.put("suiviAcquis", res).put("hasSuiviAcquis", res.size() > 0);
 
@@ -1823,6 +1903,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             matiere.put(SOUS_MATIERES, sousMatiereWithoutFirst);
         }
     }
+    private void setPrintCoefficient(JsonObject matiere, JsonObject params){
+        matiere.put(PRINT_COEFFICIENT, params.getBoolean(COEFFICIENT));
+        matiere.put("coef", matiere.getValue("coef", "1"));
+    }
+
+    private void checkCoefficientConflict(JsonObject elevesObject, JsonObject coefficient, JsonObject params){
+        JsonArray subjectConflict = new JsonArray();
+        for(Map.Entry<String, Object> coefEntry : coefficient.getMap().entrySet()){
+            subjectConflict.add( ((JsonObject)coefEntry.getValue()).put(COEFFICIENT, coefEntry.getKey()));
+        }
+        if(subjectConflict.size()>1){
+            elevesObject.put("conflict_"+ COEFFICIENT, subjectConflict);
+            elevesObject.put("has_conflict_"+ COEFFICIENT, true);
+            if(!params.containsKey(ERROR + COEFFICIENT)){
+                params.put(ERROR + COEFFICIENT, true);
+            }
+        }
+    }
+
     /**
      *  Calcule et met en forme les colonnes de la matière passée en paramètre
      * @param matiere matière à traiter
@@ -1838,7 +1937,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             setLibelleMatiere(matiere, models);
         }
 
+
         matiere.put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES));
+        setPrintCoefficient(matiere, params);
         JsonObject moyenneEleve = getObjectForPeriode(matiere.getJsonArray(MOYENNES), idPeriode, ID_KEY);
         JsonObject moyenneClasse = getObjectForPeriode(matiere.getJsonArray("moyennesClasse"), idPeriode, ID_KEY);
         JsonObject positionnement = getObjectForPeriode(matiere.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode,

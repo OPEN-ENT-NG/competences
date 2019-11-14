@@ -6,7 +6,16 @@
             </article>
         </content>
     </section>
-
+     <article ng-if="elementBilanPeriodique.suivisAcquis.hasCoefficientConflict === true" class="twelve ">
+        <div class=" warning">
+            <i18n>evaluations.coefficient.conflict.warning</i18n>
+        </div>
+         <div class="row">
+             <button class="right-magnet" ng-click="opened.coefficientConflict = true;">
+                 <i18n>show.details</i18n>
+             </button>
+         </div>
+     </article>
     <article class="twelve cell" ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
         <div class="responsive-table width-td-10 margin-zero">
             <table class="twelve suiviDesAcquis">
@@ -192,3 +201,4 @@
     </section>
     </div>
 
+    <div ng-include="'/competences/public/template/enseignants/bilan_periodique/Ligthbox_conflict_coefficient.html'"></div>

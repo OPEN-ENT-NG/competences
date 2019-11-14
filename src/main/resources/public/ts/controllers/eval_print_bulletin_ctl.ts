@@ -44,6 +44,15 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
             $scope.currentModel = undefined;
             $scope.print = {};
+            $scope.error = {};
+            if(Utils.isNotNull($scope.opened)) {
+                $scope.opened.coefficientConflict = false;
+            }
+            else{
+                $scope.opened = {
+                    coefficientConflict : false
+                };
+            }
 
             // Récupération du logo de l'établissement, de la signature et du nom du CE
             try {

@@ -46,6 +46,7 @@ import java.util.regex.Pattern;
 
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
@@ -386,19 +387,13 @@ public class DefaultUtilsService  implements UtilsService {
 
     @Override
     public <K, V> void addToMap(K id, HashMap<K, ArrayList<V>> map, V valueToAdd) {
-        if(isNull(id)){
-            return;
+        if (!map.containsKey(id) ) {
+            map.put(id, new ArrayList<>());
         }
-        if (map.containsKey(id)) {
-
-            map.get(id).add(valueToAdd);
-
-        } else {
-
-            ArrayList<V> notes = new ArrayList<>();
-            notes.add(valueToAdd);
-            map.put(id, notes);
+        if(isNull(map.get(id))){
+            map.put(id, new ArrayList<>());
         }
+        map.get(id).add(valueToAdd);
     }
 
     public  void addToMap(String id, Long sousMatiereId,
@@ -1066,11 +1061,14 @@ public class DefaultUtilsService  implements UtilsService {
 
     public JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key) {
         JsonObject res = null;
-        if (array != null) {
+        if (isNotNull(array )) {
             for (int i = 0; i < array.size(); i++) {
                 JsonObject o = array.getJsonObject(i);
-                if (o != null && o.getLong(key) != null && o.getLong(key).equals(idPeriode)) {
-                    res = o;
+                if (isNotNull(o)){
+                    if((isNotNull(o.getValue(key)) && o.getLong(key).equals(idPeriode) && isNotNull(idPeriode))
+                    || (isNull(idPeriode) && isNull(o.getValue(key))) ) {
+                        res = o;
+                    }
                 }
             }
         }

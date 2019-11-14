@@ -3,12 +3,13 @@
  */
 import {_, notify, idiom as lang} from 'entcore';
 import http from "axios";
-import {Classe, ElementBilanPeriodique} from "../teacher";
+import {Classe, ElementBilanPeriodique, Utils} from "../teacher";
 import {Stopwatch} from "./StopWatch";
 import {renameSubject} from "../../sniplets/renameSubject";
 
 declare let $ : any;
 declare let Chart: any;
+declare let TextDecoder : any;
 
 export class ExportBulletins {
 
@@ -22,6 +23,9 @@ export class ExportBulletins {
             positionnement: (options.positionnement === true)? options.positionnement:false ,
             moyenneClasseSousMat: (options.moyenneClasseSousMat === true)? options.moyenneClasseSousMat:false ,
             moyenneEleveSousMat: (options.moyenneEleveSousMat === true)? options.moyenneEleveSousMat:false ,
+            moyenneGenerale: (options.moyenneGenerale === true)? options.moyenneGenerale:false ,
+            moyenneAnnuelle: (options.moyenneAnnuelle === true)? options.moyenneAnnuelle:false ,
+            coefficient: (options.coefficient === true)? options.coefficient : false,
             positionnementSousMat: (options.positionnementSousMat === true)? options.positionnementSousMat:false ,
             showBilanPerDomaines: (options.showBilanPerDomaines === true)? options.showBilanPerDomaines:false ,
             showFamily: (options.showFamily === true)? options.showFamily:false ,
@@ -40,7 +44,8 @@ export class ExportBulletins {
             hasImgStructure: (options.imgStructure !== undefined),
             imgSignature: (options.imgSignature !== undefined)? options.imgSignature : "",
             hasImgSignature: (options.imgSignature !== undefined),
-            useModel : (options.useModel !== true)? false : true
+            useModel : (options.useModel !== true)? false : true,
+            simple : (options.simple !== true)? false : true
         };
         if (options.idPeriode !== null || options.idPeriode!== undefined){
             _.extend(o, {idPeriode: options.idPeriode, typePeriode: options.type});
@@ -82,6 +87,27 @@ export class ExportBulletins {
         }
     }
 
+    private static manageError(data, $scope){
+        if(data instanceof ArrayBuffer && data.byteLength !== 0) {
+            let obj: string;
+            let decodedString: any;
+            if ('TextDecoder' in window) {
+                let dataView = new DataView(data);
+                decodedString = new TextDecoder('utf8');
+                obj = JSON.parse(decodedString.decode(dataView));
+            } else {
+                decodedString = String.fromCharCode.apply(null, new Uint8Array(data));
+                obj = JSON.parse(decodedString);
+            }
+            $scope.opened.coefficientConflict = true;
+            if(Utils.isNull($scope.error.eleves)){
+                $scope.error.eleves = obj['eleves'];
+            }
+            else{
+                $scope.error.eleves = _.union($scope.error.eleves, obj['eleves']);
+            }
+        }
+    }
     public static async  generateBulletins (options, $scope) {
         let method = "generateBulletins";
         let stopwatch = this.startDebug( $scope, options, method);
@@ -111,8 +137,11 @@ export class ExportBulletins {
             $('.chart-container').empty();
             notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
             this.stopDebug(stopwatch, $scope, options, method);
-        } catch (e) {
-            console.dir(e);
+        } catch (data) {
+            console.dir(data);
+            if(data.response != undefined && data.response.status === 500){
+                this.manageError(data.response.data, $scope);
+            }
             $('.chart-container').empty();
             notify.error(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.error'));
             this.stopDebug(stopwatch, $scope, options, method);

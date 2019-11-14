@@ -158,6 +158,17 @@ public interface NoteService extends CrudService {
                           String colonne,Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Regroupe les notes des matières par coefficient puis effectue le calcul par matière
+     * @param moyFinalesEleves
+     * @param listNotes notes de tous les élèves
+     * @param result JsonObject of result
+     * @param idEleve
+     * @param idEleves id des Eleves ayant une note dans la lisNotes
+     * @return retourne rien
+     */
+    void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes, final JsonObject result,
+                                          String idEleve, JsonArray idEleves);
+    /**
      *Calcul la moyenne d'un eleve a
      * @param listNotes response of request
      * @param result JsonObject of result

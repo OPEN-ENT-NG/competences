@@ -4,7 +4,8 @@
 
     <!-- LightBox display modlel -->
     <div ng-include="'/competences/public/template/enseignants/bulletin/lightBox_model_subject.html'"></div>
-
+    <!-- LightBox coefficient conflict -->
+    <div ng-include="'/competences/public/template/enseignants/bulletin/lightBox_conflict_coefficient.html'"></div>
     <div ng-include="'/competences/public/template/enseignants/menu_teacher.html'"></div>
     <div    ng-init="initBulletin()"
             class="ten cell card main-content twelve-mobile">
@@ -103,6 +104,22 @@
                             <i18n>evaluations.use.model.libelle</i18n>
                         </span></label>
                         </div>
+                        <div class="twelve cell">
+                            <div class="four cell twelve-mobile">
+                                <div>
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.coefficient"/>
+                                        <span><i18n>evaluations.test.coefficient</i18n></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="four cell twelve-mobile">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.moyenneGenerale"/><span>
+                            <i18n>average.general</i18n>
+                        </span></label>
+                            </div>
+                        </div>
                         <div class="four cell twelve-mobile">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.moyenneEleve"/><span>
@@ -159,38 +176,49 @@
                     <!-- Page 2 -->
                     <fieldset class="eleven">
                         <legend><i18n>evaluations.page.two</i18n></legend>
-                        <div class="twelve twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.showFamily"/><span>
-                            <i18n>show.family</i18n>
+                        <!-- Bilan par domaine -->
+                        <div class="twelve cell">
+                            <div class="four cell twelve-mobile" >
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.showBilanPerDomaines"/><span>
+                            <i18n>show.bilan.per.domaines</i18n>
                         </span></label>
+                            </div>
+                            <div ng-if="print.showBilanPerDomaines" class="twelve-mobile">
+                                <div class="four cell">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.withLevelsStudent"/><span>
+                                <i18n>show.with.level.student</i18n>
+                            </span></label>
+                                </div>
+                                <div class="four cell">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.withLevelsClass"/><span>
+                                <i18n>show.with.level.class</i18n>
+                            </span></label>
+                                </div>
+                            </div>
                         </div>
+                        <!-- Enseignements pratiques interdisciplinaires -->
                         <div class="four cell twelve-mobile" >
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.showProjects"/><span>
                             <i18n>show.projects</i18n>
                         </span></label>
                         </div>
-                        <!-- Bilan par domaine -->
-                        <div class="three cell twelve-mobile" >
+                        <!-- Bilan de l'acquisiion des connaissances et compétences -->
+                        <div class="four cell twelve-mobile">
                             <label class="checkbox">
-                                <input type="checkbox" ng-model="print.showBilanPerDomaines"/><span>
-                            <i18n>show.bilan.per.domaines</i18n>
+                                <input type="checkbox" ng-model="print.moyenneAnnuelle"/><span>
+                            <i18n>average.annual</i18n>
                         </span></label>
                         </div>
-                        <div ng-if="print.showBilanPerDomaines" class="five cell twelve-mobile">
-                            <div class="six cell">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.withLevelsStudent"/><span>
-                                <i18n>show.with.level.student</i18n>
-                            </span></label>
-                            </div>
-                            <div class="six cell">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.withLevelsClass"/><span>
-                                <i18n>show.with.level.class</i18n>
-                            </span></label>
-                            </div>
+                        <!-- Communication avec la famille-->
+                        <div class="twelve twelve-mobile">
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="print.showFamily"/><span>
+                            <i18n>show.family</i18n>
+                        </span></label>
                         </div>
                     </fieldset>
 
@@ -223,7 +251,7 @@
                     </fieldset>
                     -->
                 </div>
-                <div >
+                <div>
                     <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
                         <h2>
                             <i18n>viescolaire.utils.parameter</i18n>
@@ -282,6 +310,19 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- choix bulletin neutre
+                        <div class="twelve cell twelve-mobile">
+                            <div class="four cell">
+                            <span><i18n>viescolaire.bulletin.lycee</i18n>
+                             </span>
+                            </div>
+                            <div class="one cell">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.simple"/><span></span>
+                                </label>
+                            </div>
+                        </div>
+                        -->
                     </fieldset>
                 </div>
                 <div  ng-show="print.useModel === true">
@@ -328,8 +369,6 @@
 
     </div>
 
-    </aside>
-
 </div>
 <div class="zero" id="list-to-pdf"></div>
 <div class="zero" id="canvas-to-pdf"></div>
@@ -343,5 +382,5 @@
 </div>
 <div class="stopwatch zero"></div>
 <ul class="results zero"></ul>
-</div>
+
 
