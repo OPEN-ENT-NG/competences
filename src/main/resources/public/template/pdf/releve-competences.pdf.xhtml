@@ -106,6 +106,16 @@
 
         }
 
+        .circle {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            -webkit-border-radius: 50%;
+            -moz-border-radius: 50%;
+            overflow: hidden;
+        }
+
         .white {
             background-color: #FFFFFF;
         }
@@ -160,9 +170,9 @@
                         {{ visu }}
                         {{/ text }}
                         {{^ text }}
-                    <img src="img/cercle/{{ visu }}.png" alt=""/>
+                    <div class="circle {{ visu }}" style="background-color:{{ persoColor }} !important"></div>
                         {{/ text }}
-                        {{ libelle }}
+                        <span>{{ libelle }}</span>
                     </span><br/>
                     {{/ right }}
                 </td>
@@ -203,7 +213,7 @@
                         <tr>
                             {{# competenceNotes }}
                             <td style="width: {{ width }}%;">
-                                <div class="subDiv {{ color }}">{{ number }}</div>
+                                <div class="subDiv {{ color }}" style="background-color: {{ persoColor }} !important">{{ number }}</div>
                             </td>
                             {{/ competenceNotes }}
                         </tr>

@@ -36,16 +36,16 @@ public interface ExportService {
      */
     void getExportCartouche (final MultiMap params, Handler<Either<String, JsonObject>> handler);
 
-    void getExportEval(final Boolean text, Boolean only_evaluation, JsonObject devoir, String idGroupe,
+    void getExportEval(final Boolean text, final Boolean usePerso, Boolean only_evaluation, JsonObject devoir, String idGroupe,
                        String idEtablissement, HttpServerRequest request,
                        Handler<Either<String, JsonObject>> handler);
 
-    void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve,
+    void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement, final String idEleve,
                              String[] idGroupes,String[] idFunctionalGroupes, final String idEtablissement,
                              final List<String> idMatieres, Long idPeriodeType, final Boolean isCycle,
                              final Handler<Either<String, JsonObject>> handler);
 
-    void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement,
+    void getExportRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle, final String idEtablissement,
                             final Handler<Either<String, JsonArray>> handler);
 
     void genererPdf(final HttpServerRequest request, final JsonObject templateProps, final String templateName,

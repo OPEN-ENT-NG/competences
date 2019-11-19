@@ -212,7 +212,8 @@ public class ExportEvaluationHelper {
     }
 
 
-    public static JsonObject formatJsonObjectExportDevoir(final Boolean text, final JsonObject devoir,
+    public static JsonObject formatJsonObjectExportDevoir(final Boolean text, final Boolean usePerso,
+                                                          final JsonObject devoir,
                                                     final Map<String, JsonObject> eleves,
                                                     final Map<String, JsonObject> maitrises,
                                                     final Map<String, JsonObject> competences,
@@ -239,7 +240,12 @@ public class ExportEvaluationHelper {
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject();
             _maitrise.put("libelle", maitrise.getString("libelle"));
-            _maitrise.put("visu", text ? getMaitrise(maitrise.getString("lettre"), String.valueOf(maitrise.getLong(ORDRE))) : String.valueOf(maitrise.getLong(ORDRE)));
+            _maitrise.put("visu", text ? getMaitrise(maitrise.getString("lettre"),
+                    String.valueOf(maitrise.getLong(ORDRE))) : maitrise.getString("default"));
+
+            if(usePerso)
+                _maitrise.put("persoColor", maitrise.getString("couleur"));
+
             maitrisesArray.add(_maitrise);
         }
         result.put("maitrise", maitrisesArray);
@@ -286,20 +292,27 @@ public class ExportEvaluationHelper {
             eleveObject.put("note", note);
 
 
-            JsonArray comptenceNotesEleves = new fr.wseduc.webutils.collections.JsonArray();
+            JsonArray competenceNotesEleves = new fr.wseduc.webutils.collections.JsonArray();
             for (String competence : competenceIndice.values()) {
                 if (hasAnnotation) {
-                    comptenceNotesEleves.add("");
+                    competenceNotesEleves.add("");
                 } else if (competenceNotes.containsKey(eleve.getKey()) && competenceNotes.get(eleve.getKey()).containsKey(competence)) {
                     Map<String, JsonObject> competenceNotesEleve = competenceNotes.get(eleve.getKey());
                     String evaluation = String.valueOf(competenceNotesEleve.get(competence).getLong("evaluation"));
-                    comptenceNotesEleves.add(text ? getMaitrise(maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("lettre"), String.valueOf(Integer.valueOf(evaluation) + 1))
-                            : String.valueOf(Integer.valueOf(evaluation) + 1));
+
+                    JsonObject _competenceNotes = new JsonObject();
+                    _competenceNotes.put("visu", text ? getMaitrise(maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("lettre"), String.valueOf(Integer.valueOf(evaluation) + 1))
+                            : maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("default"));
+
+                    if(usePerso)
+                        _competenceNotes.put("persoColor", maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("couleur"));
+
+                    competenceNotesEleves.add(_competenceNotes);
                 } else {
-                    comptenceNotesEleves.add(text ? getMaitrise(maitrises.get("0").getString("lettre"), "0")
-                            : "0");
+                    competenceNotesEleves.add(text ? getMaitrise(maitrises.get("0").getString("lettre"), "0")
+                            : getMaitrise(maitrises.get("0").getString("default"), "0"));
                 }
-                eleveObject.put("competenceNotes", comptenceNotesEleves);
+                eleveObject.put("competenceNotes", competenceNotesEleves);
             }
             elevesArray.add(eleveObject);
         }

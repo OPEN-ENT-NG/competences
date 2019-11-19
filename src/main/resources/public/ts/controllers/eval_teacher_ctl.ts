@@ -3487,7 +3487,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 switch ($scope.printOption.fileType) {
                     case 'cartouche' : {
                         url = "/competences/devoirs/print/" + $scope.currentDevoir.id + "/cartouche?eleve=" + $scope.printOption.byEleve
-                            + '&color=' + $scope.printOption.inColor + "&nbr=" + $scope.printOption.cartoucheNmb + "&image=" + $scope.printOption.image +
+                            + '&color=' + $scope.printOption.inColor + "&usePerso=" + $scope.structure.usePerso + "&nbr=" + $scope.printOption.cartoucheNmb + "&image=" + $scope.printOption.image +
                             "&withResult=" + $scope.printOption.withResult + "&withAppreciations=" + $scope.printOption.withAppreciations;
                         $scope.printOption.display = false;
                         await Utils.runMessageLoader($scope);
@@ -3523,7 +3523,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.exportDevoir = async (idDevoir, textMod = false) => {
             $scope.printOption.display = false;
             await Utils.runMessageLoader($scope);
-            let url = "/competences/devoirs/print/" + idDevoir + "/export?text=" + textMod;
+            let url = "/competences/devoirs/print/" + idDevoir + "/export?text=" + textMod
+                + "&usePerso=" + $scope.structure.usePerso;
             http().getJson(url + "&json=true").error(async (result) => {
                 $scope.errorResultExportDevoir(result);
                 $scope.printOption.display = true;
@@ -3563,6 +3564,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.exportReleveComp = async (idEleve: String, idPeriode: Number, textMod: Boolean = false,
                                          exportByEnseignement: Boolean) => {
             let url = "/competences/releveComp/print/export?text=" + textMod;
+            url += "&usePerso=" + $scope.structure.usePerso;
             url += "&idEleve=" + idEleve;
             url += "&idEtablissement=" + $scope.structure.id;
 
