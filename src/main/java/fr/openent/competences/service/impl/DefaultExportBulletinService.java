@@ -527,8 +527,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             resultFinal.put(ELEVES, sortResultByClasseNameAndNameForBulletin(elevesMap));
                             if(!forArchive) {
                                 resultFinal.put(ID_IMAGES_FILES, params.getJsonArray(ID_IMAGES_FILES));
-                                exportService.genererPdf(request, resultFinal, "bulletin.pdf.xhtml",
-                                        title, vertx, config);
+                                String template = "bulletin.pdf.xhtml";
+                                if(isNotNull(params.getValue("simple")) && params.getBoolean("simple")) {
+                                    template = "bulletin_neutre.pdf.xhtml";
+                                }
+                                    exportService.genererPdf(request, resultFinal, template, title, vertx, config);
                             }
                             if(future != null){
                                 log.debug("EleveDone : " + elevesDone.get()
