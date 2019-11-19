@@ -573,7 +573,7 @@ export class ReleveNote extends  Model implements IModel {
         return this.tableConversions.sync();
     }
 
-    getArbreDomaine(eleve): any {
+    getArbreDomaine(eleve) : any {
         return new Promise((resolve, reject) => {
             let uri = this.api.GET_ARBRE_DOMAINE + '&idEleve=' + eleve.id;
             eleve.domaines = {

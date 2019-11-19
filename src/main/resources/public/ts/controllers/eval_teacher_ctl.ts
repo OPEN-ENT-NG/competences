@@ -4008,7 +4008,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         competencesNotes.push(utils.clone(competencesNote))
                     });
 
-                    _.extend(devoir, {competencesNotes:competencesNotes});
+                    _.extend(devoir, {competencesNotes : competencesNotes});
                     _.extend(evaluation, devoir);
                 });
 

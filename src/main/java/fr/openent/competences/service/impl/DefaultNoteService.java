@@ -532,7 +532,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
     private void runGetCompetencesNotesReleve(String etablissementId, String classeId, JsonArray groupIds,
                                               String matiereId, List<String> matiereIds, Long periodeId,
-                                              String eleveId, List<String> idEleves,Boolean withDomaineInfo,
+                                              String eleveId, List<String> idEleves, Boolean withDomaineInfo,
                                               Handler<Either<String, JsonArray>> handler) {
 
         StringBuilder query = new StringBuilder();
@@ -548,10 +548,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .append(" devoirs.id_periode, competences_notes.id_eleve, devoirs.is_evaluated, ")
                 .append("null as annotation, ")
                 .append("competence_niveau_final.niveau_final AS niveau_final, type.formative")
-                .append(" FROM "+ COMPETENCES_SCHEMA +".devoirs ");
 
-
-        query.append(" INNER JOIN "+ COMPETENCES_SCHEMA +".type ON (devoirs.id_type = type.id) ");
+                .append(" FROM "+ COMPETENCES_SCHEMA +".devoirs ")
+                .append(" INNER JOIN "+ COMPETENCES_SCHEMA +".type ON (devoirs.id_type = type.id) ");
 
         if (null != eleveId) {
             query.append(" LEFT JOIN (SELECT id, id_devoir, id_competence, max(evaluation) ")
@@ -2016,7 +2015,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         // Récupération des Compétences-Notes du Relevé
                         Future<JsonArray> compNotesFuture = Future.future();
                         getCompetencesNotesReleveEleves(idEleves, idEtablissement, idClasse,null, idMatiere,
-                                null, idPeriode,null, false, compNotesEvent ->
+                                null, idPeriode,null, true, compNotesEvent ->
                                         formate(compNotesFuture, compNotesEvent));
 
                         List<Future> listFutures = new ArrayList<>(Arrays.asList(compNotesFuture, notesFuture,
@@ -2125,7 +2124,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         // Récupération des Compétences-Notes du Relevé
                         Future<JsonArray> compNotesFuture = Future.future();
                         getCompetencesNotesReleveEleves(idEleves, idEtablissement, idClasse, null, null,
-                                idMatieres, idPeriode, null, false, compNotesEvent -> {
+                                idMatieres, idPeriode, null, true, compNotesEvent -> {
                                     formate(compNotesFuture, compNotesEvent);
                                 });
 
@@ -3087,7 +3086,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // 1. On récupère les CompétencesNotes de toutes les matières et de tous les élèves
         Future<JsonArray> compNoteF = Future.future();
         getCompetencesNotesReleve(idEtablissement,idClasse, groupIds,null, idPeriode,null,
-                typeClasse,false, eventReleve ->  formate(compNoteF, eventReleve));
+                typeClasse,true, eventReleve ->  formate(compNoteF, eventReleve));
 
         // 2. On récupère les Notes de toutes les matières et de tous les élèves
         Future<JsonArray> noteF = Future.future();
@@ -3473,7 +3472,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         // Récupération des compétences Note de l'élève
         Future<JsonArray> listCompNotesF = Future.future();
         getCompetencesNotesReleve( idEtablissement, idClasse,null, idMatiere, null,
-                idEleve,null, false, event -> formate(listCompNotesF, event));
+                idEleve,null, true, event -> formate(listCompNotesF, event));
         detailsFuture.add(listCompNotesF);
 
         // Récupération des notes de l'élève

@@ -351,7 +351,8 @@ export class Utils {
                         id_competence: competence.id,
                         id_domaine: competence.id_domaine
                     });
-                    if( competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
+
+                    if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
                         Utils.setMaxCompetenceShow(competence, isCycle);
                     }
                 });
@@ -366,7 +367,8 @@ export class Utils {
                     id_competence: competence.id,
                     id_domaine: competence.id_domaine
                 });
-                if( competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
+
+                if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
                         Utils.setMaxCompetenceShow(competence, isCycle);
                 }
 
@@ -374,10 +376,10 @@ export class Utils {
                     let mineCompetencesEvaluations = _.filter(competence.competencesEvaluations, {owner : model.me.userId});
 
                     // Récupère mes évaluations maximales de la compétence pour tous les élèves
-                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence,mineCompetencesEvaluations);
+                    competence.mineCompetencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, mineCompetencesEvaluations);
 
                     // Récupère les évaluations maximales de la compétence pour tous les élèves
-                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence,competence.competencesEvaluations);
+                    competence.competencesEvaluations = Utils.getCompetenceEvaluations(classe, competence, competence.competencesEvaluations);
 
                     for (let i = 0; i < classe.eleves.all.length; i++) {
                         let mine = _.findWhere(competence.mineCompetencesEvaluations, {id_eleve : classe.eleves.all[i].id,
@@ -416,7 +418,7 @@ export class Utils {
             });
         }
 
-        if( poDomaine.domaines) {
+        if(poDomaine.domaines) {
             for (var i = 0; i < poDomaine.domaines.all.length; i++) {
                 this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, object, classe,
                     tabDomaine, isCycle);
@@ -562,13 +564,13 @@ export class Utils {
         if ($scope.suiviFilter === undefined) Utils.initFilterMine($scope);
         if ($scope.selected.grey === true || ($scope.selected.grey === false && MaCompetence.masque)) {
             let _t = MaCompetence.competencesEvaluations;
+
             if ($scope.suiviFilter.mine === 'true' || $scope.suiviFilter.mine === true) {
                 _t = _.filter(MaCompetence.competencesEvaluations, function (evaluation) {
                     if (evaluation.owner !== undefined && evaluation.owner === $scope.me.userId)
                         return evaluation;
                 });
             }
-
 
             let max = _.max(_t, function (evaluation) {
                 return evaluation.evaluation;
@@ -578,11 +580,9 @@ export class Utils {
             } else {
                 return false;
             }
-
-        } else {
-            return true;
         }
 
+        return true;
     };
 
     static ConvertToCSV (objArray, entete, orderColumn?) {
