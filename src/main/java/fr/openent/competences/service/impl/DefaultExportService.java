@@ -103,7 +103,7 @@ public class DefaultExportService implements ExportService {
         final String byEleves = params.get("eleve");
         final Boolean withResult = "true".equals(params.get("withResult"));
         JsonObject result = new JsonObject();
-        int nbrCartouche ;
+        int nbrCartouche;
         try {
             nbrCartouche = Integer.parseInt(params.get("nbr"));
         } catch (NumberFormatException e) {
@@ -181,11 +181,11 @@ public class DefaultExportService implements ExportService {
                                             handler.handle(new Either.Left<>("export : no level."));
                                             log.error("error : no level " + eventNivMaitrise.left().getValue());
                                         }else {
-                                            mapResult.put("maitrises",eventNivMaitrise.right().getValue());
+                                            mapResult.put("maitrises", eventNivMaitrise.right().getValue());
 
                                             if (!byEleves.equals("true")) {
                                                 handler.handle(new Either.Right<>(buildExportCartouche(devoir,
-                                                        params,result, byEleves,
+                                                        params, result, byEleves,
                                                         withResult, classInfo, mapResult)));
                                             } else {
                                                 JsonObject action = new JsonObject()
@@ -205,7 +205,7 @@ public class DefaultExportService implements ExportService {
                                                                 mapResult.put("eleves", eleves);
                                                                 if (!withResult) {
                                                                     handler.handle(new Either.Right<>(
-                                                                            buildExportCartouche(devoir, params, result,byEleves,
+                                                                            buildExportCartouche(devoir, params, result, byEleves,
                                                                                     withResult, classInfo, mapResult)));
 
                                                                 } else {
@@ -320,9 +320,9 @@ public class DefaultExportService implements ExportService {
 
         result.put("evaluation", devoir.getBoolean("is_evaluated"));
         result.put("nameClass", classInfo.getString("name"));
-        result.put("niveaux",maitrises);
+        result.put("niveaux", maitrises);
         result.put("withResult", withResult);
-        result.put("devoirName",devoir.getString("name"));
+        result.put("devoirName", devoir.getString("name"));
 
 
         if(devoir.getInteger("nbrcompetence") > 0 && !competences.isEmpty()){
@@ -392,7 +392,7 @@ public class DefaultExportService implements ExportService {
                     eleve_jo.put("hasAnnotation", hasAnnotation);
                     eleve_jo.put("showAppreciation", hasAppreciation);
 
-                    JsonArray competencesNotesElvesArray = new JsonArray();
+                    JsonArray competencesNotesElevesArray = new JsonArray();
                     evaluatedCompetences.stream().forEach(evaluatedCompetence -> {
                         String id_competenceEvaluated = String.
                                 valueOf(((JsonObject)evaluatedCompetence).getLong("id_competence"));
@@ -434,9 +434,9 @@ public class DefaultExportService implements ExportService {
                                 competenceNoteEleveResult.put("niveauxEleve", niveauxEleve);
                             }
                         }
-                        competencesNotesElvesArray.add(competenceNoteEleveResult);
+                        competencesNotesElevesArray.add(competenceNoteEleveResult);
                     });
-                    eleve_jo.put("competences", competencesNotesElvesArray);
+                    eleve_jo.put("competences", competencesNotesElevesArray);
                 });
                 result.put("eleves", eleves);
             }else{
@@ -450,7 +450,7 @@ public class DefaultExportService implements ExportService {
     }
 
     @Override
-    public void getExportEval(final Boolean text, final Boolean onlyEvaluation, final JsonObject devoir,
+    public void getExportEval(final Boolean text, final Boolean usePerso, final Boolean onlyEvaluation, final JsonObject devoir,
                               String idGroupe, final String idEtablissement, HttpServerRequest request,
                               final Handler<Either<String, JsonObject>> handler) {
 
@@ -500,7 +500,7 @@ public class DefaultExportService implements ExportService {
                     compNoteElevesMap.get(idEleve).put(String.valueOf(compNote.getLong("id_competence")), compNote);
                 }
 
-                handler.handle(new Either.Right<>(ExportEvaluationHelper.formatJsonObjectExportDevoir(text,
+                handler.handle(new Either.Right<>(ExportEvaluationHelper.formatJsonObjectExportDevoir(text, usePerso,
                         new JsonObject(devoirMap),
                         extractData(orderBy(elevesArray, LAST_NAME_KEY), ID_ELEVE_KEY),
                         extractData(orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE),
@@ -619,8 +619,8 @@ public class DefaultExportService implements ExportService {
     }
 
     @Override
-    public void getExportReleveComp(final Boolean text, final Boolean pByEnseignement, final String idEleve,
-                                    final String[] idGroupes, String[] idFunctionalGroupes,
+    public void getExportReleveComp(final Boolean text, final Boolean usePerso, final Boolean pByEnseignement,
+                                    final String idEleve, final String[] idGroupes, String[] idFunctionalGroupes,
                                     final String idEtablissement, final List<String> idMatieres,
                                     Long idPeriodeType, Boolean isCycle, final Handler<Either<String, JsonObject>> handler) {
         final JsonArray maitriseArray = new fr.wseduc.webutils.collections.JsonArray();
@@ -632,7 +632,7 @@ public class DefaultExportService implements ExportService {
         String[] idMatieresTab = idMatieres.toArray(new String[0]);
         final AtomicBoolean answered = new AtomicBoolean();
         final AtomicBoolean byEnseignement = new AtomicBoolean(pByEnseignement);
-        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, idEleve, devoirsArray,
+        final Handler<Either<String, JsonArray>> finalHandler = getReleveCompFinalHandler(text, usePerso, idEleve, devoirsArray,
                 maitriseArray, competencesArray, domainesArray, competencesNotesArray, enseignementArray, answered,
                 byEnseignement, handler);
 
@@ -644,8 +644,8 @@ public class DefaultExportService implements ExportService {
     }
 
     @Override
-    public void getExportRecapEval(final Boolean text, final Long idCycle, final String idEtablissement,
-                                   final Handler<Either<String, JsonArray>> handler) {
+    public void getExportRecapEval(final Boolean text, final Boolean usePerso, final Long idCycle,
+                                   final String idEtablissement, final Handler<Either<String, JsonArray>> handler) {
 
         niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, idCycle, new Handler<Either<String, JsonArray>>() {
             @Override
@@ -660,6 +660,10 @@ public class DefaultExportService implements ExportService {
                         niveau.put("visu", text ? getMaitrise(o.getString("lettre"),
                                 o.getInteger(ORDRE).toString()) : o.getString("default"));
                         niveau.put(ORDRE, o.getInteger(ORDRE));
+
+                        if(usePerso)
+                            niveau.put("persoColor", o.getString("couleur"));
+
                         legende.add(niveau);
                     }
                     handler.handle(new Either.Right<>(legende));
@@ -750,7 +754,7 @@ public class DefaultExportService implements ExportService {
 
 
     private Handler<Either<String, JsonArray>>
-    getReleveCompFinalHandler(final Boolean text, final String idEleve, final JsonArray devoirs,
+    getReleveCompFinalHandler(final Boolean text, final Boolean usePerso, final String idEleve, final JsonArray devoirs,
                               final JsonArray maitrises, final JsonArray competences,
                               final JsonArray domaines, final JsonArray competencesNotes, final JsonArray enseignements,
                               final AtomicBoolean answered, final AtomicBoolean byEnseignement,
@@ -821,7 +825,7 @@ public class DefaultExportService implements ExportService {
                                     Map<String, JsonObject> enseignementsMap = extractData(enseignements, ID_KEY);
 
                                     JsonObject resToAdd = formatJsonObjectExportReleveComp(
-                                            text, Boolean.valueOf(byEnseignement.get()), idEleve, devoirsList,
+                                            text, usePerso, Boolean.valueOf(byEnseignement.get()), idEleve, devoirsList,
                                             maitrisesMap, competencesMap, domainesMap,
                                             enseignementsMap,
                                             competenceNotesMap)
@@ -850,8 +854,8 @@ public class DefaultExportService implements ExportService {
     }
 
 
-    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean byEnseignement, String idEleve,
-                                                        List<String> devoirs,
+    private JsonObject formatJsonObjectExportReleveComp(Boolean text, Boolean usePerso, Boolean byEnseignement,
+                                                        String idEleve, List<String> devoirs,
                                                         Map<String, JsonObject> maitrises,
                                                         Map<String, JsonObject> competences,
                                                         Map<String, JsonObject> domaines,
@@ -872,7 +876,10 @@ public class DefaultExportService implements ExportService {
                     .put("libelle", maitrise.getString("libelle"))
                     .put("visu", text ? getMaitrise(maitrise
                             .getString("lettre"), String.valueOf(maitrise
-                            .getLong(ORDRE))) : String.valueOf(maitrise.getLong(ORDRE)));
+                            .getLong(ORDRE))) : maitrise.getString("default"));
+            if(usePerso)
+                _maitrise.put("persoColor", maitrise.getString("couleur"));
+
             headerMiddle.add(_maitrise);
         }
         header.put("right", headerMiddle);
@@ -959,7 +966,7 @@ public class DefaultExportService implements ExportService {
                 }
                 JsonObject competenceNote = new JsonObject();
                 competenceNote.put("header", competencesObjByIdComp.get(competence).getString("nom"));
-                competenceNote.put("competenceNotes", calcWidthNote(text, maitrises, valuesByComp, devoirs.size()));
+                competenceNote.put("competenceNotes", calcWidthNote(text, usePerso, maitrises, valuesByComp, devoirs.size()));
                 competencesInDomainArray.add(competenceNote);
             }
             domainObj.put("domainBody", competencesInDomainArray);
@@ -1064,7 +1071,8 @@ public class DefaultExportService implements ExportService {
         return 0;
     }
 
-    private JsonArray calcWidthNote(Boolean text, Map<String, JsonObject> maitrises, List<Long> competenceNotes, Integer nbDevoir) {
+    private JsonArray calcWidthNote(Boolean text, Boolean usePerso, Map<String, JsonObject> maitrises,
+                                    List<Long> competenceNotes, Integer nbDevoir) {
         Map<Long, Integer> occNote = new HashMap<>();
         for (Long competenceNote : competenceNotes) {
             if (!occNote.containsKey(competenceNote)) {
@@ -1080,6 +1088,10 @@ public class DefaultExportService implements ExportService {
             competenceNotesObj.put("number", number);
             String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
             competenceNotesObj.put("color", color);
+
+            if(usePerso)
+                competenceNotesObj.put("persoColor", maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("couleur"));
+
 
             String width = "100"; // gestion cas 0 devoir
             if (nbDevoir > 0) {

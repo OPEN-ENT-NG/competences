@@ -107,6 +107,35 @@
             font-weight: bold;
         }
 
+        .circle {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            -webkit-border-radius: 50%;
+            -moz-border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .white {
+            background-color: #FFFFFF;
+        }
+        .grey {
+            background-color: #555555;
+        }
+        .red {
+            background-color: #E13A3A;
+        }
+        .orange {
+            background-color: #FD8401;
+        }
+        .yellow {
+            background-color: #ECBE30;
+        }
+        .green {
+            background-color: #46BFAF;
+        }
+
     </style>
 </head>
 <body>
@@ -132,7 +161,7 @@
                         {{ visu }}
                         {{/ text }}
                         {{^ text }}
-                        <img src="img/cercle/{{ visu }}.png"/>
+                        <div class="circle {{ visu }}" style="background-color:{{ persoColor }} !important"></div>
                         {{/ text }}
                         {{ libelle }}
                     </span><br/>
@@ -176,10 +205,12 @@
         {{# competenceNotes }}
         <td class="textCenter">
             {{# text }}
-            <span>{{ . }}</span>
+            <span>{{ visu }}</span>
             {{/ text }}
             {{^ text }}
-            {{#.}}<img src="img/cercle/{{ . }}.png"></img>{{/.}}
+            {{#.}}
+            <div class="circle {{ visu }}" style="background-color:{{ persoColor }} !important"></div>
+            {{/.}}
             {{/ text }}
 
         </td>

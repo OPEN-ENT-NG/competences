@@ -303,6 +303,7 @@ public class ExportPDFController extends ControllerHelper {
         Long idDevoir = 0L;
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
+        final Boolean usePerso = Boolean.parseBoolean(request.params().get("usePerso"));
 
 
         try {
@@ -319,7 +320,7 @@ public class ExportPDFController extends ControllerHelper {
                     String idGroupe = devoir.getString("id_groupe");
                     String idEtablissement = devoir.getString("id_etablissement");
 
-                    exportService.getExportEval(text, only_evaluation, devoir, idGroupe, idEtablissement,
+                    exportService.getExportEval(text, usePerso, only_evaluation, devoir, idGroupe, idEtablissement,
                             request,  event -> {
                                     if (event.isRight()) {
                                         try {
@@ -354,8 +355,8 @@ public class ExportPDFController extends ControllerHelper {
     @Get("/releveComp/print/export")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void getExportReleveComp(final HttpServerRequest request) {
-        log.info(" BEGIN getExportReleveComp ");
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
+        final Boolean usePerso = Boolean.parseBoolean(request.params().get("usePerso"));
         final Boolean byEnseignement = Boolean.parseBoolean(request.params().get("byEnseignement"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final Boolean isCycle = Boolean.parseBoolean(request.params().get("isCycle"));
@@ -366,7 +367,6 @@ public class ExportPDFController extends ControllerHelper {
         for (int i = 0; i < listIdMatieres.size(); i++) {
             idMatieres.add(listIdMatieres.get(i));
         }
-
 
         Long idPeriode = null;
         String idClasse = null;
@@ -405,7 +405,7 @@ public class ExportPDFController extends ControllerHelper {
         exportService.getLibellePeriodeExportReleveComp(request, finalIdPeriode, isCycle, event ->
                 formate(periodeFuture, event));
 
-        // Récuoération des élèves
+        // Récupération des élèves
         Future<Object> elevesFuture = Future.future();
         final Map<String, String> elevesMap = new LinkedHashMap<>();
         exportService.getElevesExportReleveComp(finalIdClasse, idStructure, finalIdEleve, finalIdPeriode,
@@ -441,7 +441,7 @@ public class ExportPDFController extends ControllerHelper {
                 JsonArray resultFinal = new fr.wseduc.webutils.collections.JsonArray();
                 final Handler<Either<String, JsonObject>> finalHandler = getReleveCompetences(request, elevesMap,
                         nomGroupes, matieres, libellePeriode, json, answered, resultFinal);
-                exportService.getExportReleveComp(text, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]),
+                exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleves[0], idGroupes.toArray(new String[0]),
                         _iGroupesdArr, idEtablissementEl, listIdMatieres, finalIdPeriode, isCycle, finalHandler);
             } else {
                 JsonArray eleves = (JsonArray) elevesFuture.result();
@@ -463,11 +463,9 @@ public class ExportPDFController extends ControllerHelper {
                     JsonArray idFunctionalGroupes = strIdGroupesToJsonArray(eleve.getValue("idGroupes"));
                     JsonArray idGroupesJsArr = utilsService.saUnion(idFunctionalGroupes, idManualGroupes);
                     String[] idGroupesArr = UtilsConvert.jsonArrayToStringArr(idGroupesJsArr);
-                    exportService.getExportReleveComp(text, byEnseignement, idEleveEl, _idGroupes, idGroupesArr,
+                    exportService.getExportReleveComp(text, usePerso, byEnseignement, idEleveEl, _idGroupes, idGroupesArr,
                             idEtablissement.get(i), listIdMatieres, finalIdPeriode, isCycle, finalHandler);
                 }
-
-
             }
         });
 
@@ -784,6 +782,7 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean text = Boolean.parseBoolean(request.params().get("text"));
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final String idClasse = request.params().get("idClasse");
+        final Boolean usePerso = Boolean.parseBoolean(request.params().get("usePerso"));
 
         Long idPeriode = null;
 
@@ -847,9 +846,10 @@ public class ExportPDFController extends ControllerHelper {
                                                                     else {
                                                                         isHeadTeacher = event.right().getValue();
                                                                     }
-                                                                    getExportRecapUtils (user,idEtablissement,idCycle,
-                                                                            text,json,idClasse,finalIdPeriode,
-                                                                            request ,isChefEtab || isHeadTeacher);
+                                                                    getExportRecapUtils (user, idEtablissement, idCycle,
+                                                                            text, json, usePerso, idClasse,
+                                                                            finalIdPeriode, request,
+                                                                            isChefEtab || isHeadTeacher);
                                                                 }
                                                             });
 
@@ -869,8 +869,8 @@ public class ExportPDFController extends ControllerHelper {
     }
 
     private void getExportRecapUtils (final UserInfos user, final String idEtablissement, final Long idCycle,
-                                      final Boolean text, final Boolean json, final String idClasse,
-                                      final Long finalIdPeriode, final HttpServerRequest request ,
+                                      final Boolean text, final Boolean json, final Boolean usePerso,
+                                      final String idClasse, final Long finalIdPeriode, final HttpServerRequest request,
                                       final Boolean isChefEtab) {
 
         if ((user != null) || isChefEtab) {
@@ -901,7 +901,7 @@ public class ExportPDFController extends ControllerHelper {
                                 }
                                 final boolean isHabilite = moy;
 
-                                exportService.getExportRecapEval(text, idCycle, idEtablissement,
+                                exportService.getExportRecapEval(text, usePerso, idCycle, idEtablissement,
                                         new Handler<Either<String, JsonArray>>() {
 
                                             @Override
@@ -973,6 +973,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                             .equals(((JsonObject) niveau).getLong("ordre").toString())) {
                                                                                                                         note.put("id", ((JsonObject) resultNote).getInteger("idDomaine"));
                                                                                                                         note.put("visu", ((JsonObject) niveau).getString("visu"));
+                                                                                                                        note.put("persoColor", ((JsonObject) niveau).getString("persoColor"));
                                                                                                                         note.put("nonEvalue", false);
                                                                                                                         String moyCalcule = new DecimalFormat("#0.00").format(((JsonObject) resultNote).getDouble(MOYENNE).doubleValue());
                                                                                                                         if (isHabilite)

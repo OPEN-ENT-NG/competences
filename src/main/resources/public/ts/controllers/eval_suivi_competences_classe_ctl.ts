@@ -296,7 +296,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     break;
                 }
                 case 'printRecapEval' : {
-                    let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
+                    let url = "/competences/recapEval/print/" + $scope.search.classe.id + "/export?text=" + !textMod
+                        + "&usePerso=" + $scope.structure.usePerso;
                     if (idPeriode) {
                         url += "&idPeriode=" + idPeriode;
                     }
@@ -317,8 +318,10 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     if ($scope.opened.recapEval) $scope.opened.recapEval = false;
                     await Utils.runMessageLoader($scope);
 
-                    let url = "/competences/releveComp/print/export?text=" + !textMod;
+                    let url = "/competences/releveComp/print/export?text=" + !textMod
+                        + "&usePerso=" + $scope.structure.usePerso;
                     url += "&idEtablissement=" + $scope.structure.id;
+
                     for (let m = 0; m < $scope.allMatieresSorted.length; m++) {
                         if ($scope.allMatieresSorted[m].select) {
                             url += "&idMatiere=" + $scope.allMatieresSorted[m].id;

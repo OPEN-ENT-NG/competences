@@ -275,7 +275,6 @@ export class Evaluations extends Model {
                             if (resDomaines) {
                                 let _res = [];
                                 for (let i = 0; i < resDomaines.length; i++) {
-
                                     let domaine = new Domaine(resDomaines[i]);
                                     that.setCompetenceNotes(domaine, competences);
                                     _res.push(domaine);
@@ -285,8 +284,6 @@ export class Evaluations extends Model {
                             if (resolve && typeof (resolve) === 'function') {
                                 resolve();
                             }
-
-
                         }).bind(this);
                     });
                 }
