@@ -88,7 +88,7 @@ export class Structure extends Model {
                 synchronization: '/viescolaire/matieres?idEnseignant=' + model.me.userId + '&idEtablissement=' + this.id
             },
             CLASSE: {
-                synchronization: '/viescolaire/classes?idEtablissement=' + this.id,
+                synchronization: '/viescolaire/classes?idEtablissement=' + this.id + '&forAdmin=true',
                 synchronizationRemplacement: '/competences/remplacements/classes?idEtablissement=' + this.id
             },
             ELEVE: {
@@ -353,8 +353,6 @@ export class Structure extends Model {
         this.collection(Classe, {
             sync:  () => {
                 return new Promise(async (resolve, reject) => {
-
-
                     let allPromise = await Promise.all([httpAxios.get(this.api.CLASSE.synchronization),
                         httpAxios.get(this.api.GET_SERVICES)]);
                     let res = allPromise[0].data;
@@ -486,7 +484,6 @@ export class Structure extends Model {
     }
     syncClassesBilanPeriodique(): Promise<any> {
         return new Promise((resolve, reject) => {
-            var that = this;
             http().getJson(this.api.getClassesBilanPeriodique).done((res) => {
                 _.map(res, (classe) => {
                     classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
@@ -503,7 +500,6 @@ export class Structure extends Model {
 
     usePersoFun(idUser): Promise<boolean> {
         return new Promise((resolve, reject) => {
-
             http().getJson(this.api.NIVEAU_COMPETENCES.use).done((res) => {
                 if (!res) {
                     reject();
