@@ -93,6 +93,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String MOYENNE_ELEVE = "moyenneEleve";
     private static final String MOYENNE_GENERALE = "moyenneGenerale";
     private static final String MOYENNE_ANNUELLE = "moyenneAnnuelle";
+    private static final String STUDENT_RANK = "studentRank";
+    private static final String CLASS_AVERAGE_MINMAX = "classAverageMinMax";
     private static final String POSITIONNEMENT = "positionnement";
     private static final String MOYENNE_CLASSE_SOUS_MAT = "moyenneClasseSousMat";
     private static final String MOYENNE_ELEVE_SOUS_MAT = "moyenneEleveSousMat";
@@ -134,6 +136,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
     private static final String GET_MOYENNE_ELEVE = "getMoyenneEleve";
+    private static final String GET_STUDENT_RANK = "getStudentRank";
+    private static final String GET_CLASS_AVERAGE_MINMAX = "getClassAverageMinMax";
     private static final String GET_POSITIONNEMENT = "getPositionnement";
     private static final String GET_PROGRAM_ELEMENT = "getProgramElements";
     private static final String HAS_IMG_STRUCTURE = "hasImgStructure";
@@ -352,6 +356,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("suiviAcquisitionLibelle",
                             getLibelle("evaluations.export.bulletin.element.appreciation.libelle"))
                     .put("positionementLibelle", getLibelle("evaluations.releve.positionnement.min") + '*')
+                    .put("studentRankLibelle", getLibelle("sudent.rank"))
+                    .put("classAverageMinLibelle", getLibelle("classaverage.min"))
+                    .put("classAverageMaxLibelle", getLibelle("classaverage.max"))
                     .put("moyenneStudentLibelle", getLibelle("average.min.eleve"))
                     .put("bilanAcquisitionLibelle", getLibelle("viescolaire.suivi.des.acquis.libelle.export"))
                     .put("viescolaireLibelle", getLibelle("evaluations.export.bulletin.viescolaireLibelle"))
@@ -377,6 +384,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(GET_RESPONSABLE, params.getBoolean(GET_RESPONSABLE))
                     .put(GET_MOYENNE_CLASSE, params.getBoolean(MOYENNE_CLASSE))
                     .put(GET_MOYENNE_ELEVE, params.getBoolean(MOYENNE_ELEVE))
+                    .put(GET_STUDENT_RANK, params.getBoolean(STUDENT_RANK))
+                    .put(GET_CLASS_AVERAGE_MINMAX, params.getBoolean(CLASS_AVERAGE_MINMAX))
                     .put(GET_POSITIONNEMENT, params.getBoolean(POSITIONNEMENT))
                     .put(SHOW_PROJECTS, params.getBoolean(SHOW_PROJECTS))
                     .put(SHOW_FAMILY, params.getBoolean(SHOW_FAMILY))

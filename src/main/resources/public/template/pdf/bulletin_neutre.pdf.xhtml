@@ -255,6 +255,7 @@
         }
         .onePadding {
             padding: 1px !important;
+            margin: 0 !important;
             overflow: hidden;
             text-overflow: ellipsis;
             vertical-align: middle !important;
@@ -363,6 +364,13 @@
             {{#printCoefficient}}
             <td class="fourthSuivi">{{coefficientLibelle}}</td>
             {{/printCoefficient}}
+            {{#getStudentRank}}
+            <td class="sixthSuivi">{{studentRankLibelle}}</td>
+            {{/getStudentRank}}
+            {{#getClassAverageMinMax}}
+            <td class="onePadding">{{classAverageMinLibelle}}</td>
+            <td class="onePadding">{{classAverageMaxLibelle}}</td>
+            {{/getClassAverageMinMax}}
             {{#printSousMatieres}}
             <td class="fourthSuivi"></td>
             {{/printSousMatieres}}
@@ -414,6 +422,34 @@
                 {{coef}}
             </td>
             {{/printCoefficient}}
+
+            {{#getStudentRank}}
+            <td rowspan="{{rowSpan}}"
+                style="font-size: x-small; text-align: center; word-wrap:break-word; {{{style}}}"
+                class="fifthSuivi onePadding">
+                {{#studentRank}}
+                {{rank}}/{{rank_size}}
+                {{/studentRank}}
+            </td>
+            {{/getStudentRank}}
+
+            {{#getClassAverageMinMax}}
+            <td rowspan="{{rowSpan}}"
+                style="font-size: x-small; text-align: center;  {{{style}}}"
+                class="onePadding">
+                {{#classAverageMinMax}}
+                {{min}}
+                {{/classAverageMinMax}}
+            </td>
+
+            <td rowspan="{{rowSpan}}"
+                style="font-size: x-small; text-align: center; {{{style}}}"
+                class="onePadding">
+                {{#classAverageMinMax}}
+                {{max}}
+                {{/classAverageMinMax}}
+            </td>
+            {{/getClassAverageMinMax}}
 
             {{#printSousMatieres}}
             {{^hasSousMatiere}}
@@ -574,6 +610,13 @@
             {{#printCoefficient}}
             <td class="fourthSuivi"></td>
             {{/printCoefficient}}
+            {{#getStudentRank}}
+            <td class="sixthSuivi"></td>
+            {{/getStudentRank}}
+            {{#getClassAverageMinMax}}
+            <td class="onePadding"></td>
+            <td class="onePadding"></td>
+            {{/getClassAverageMinMax}}
             {{#getMoyenneEleve}}
             <td class="fourthSuivi" style="font-weight: bold;"> {{moyenneGenerale}}</td>
             {{/getMoyenneEleve}}

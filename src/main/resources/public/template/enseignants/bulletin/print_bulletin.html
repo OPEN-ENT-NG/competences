@@ -104,7 +104,7 @@
                             <i18n>evaluations.use.model.libelle</i18n>
                         </span></label>
                         </div>
-                        <div class="twelve cell">
+
                             <div class="four cell twelve-mobile">
                                 <div>
                                     <label class="checkbox">
@@ -119,37 +119,38 @@
                             <i18n>average.general</i18n>
                         </span></label>
                             </div>
+                        <div class="four cell twelve-mobile">
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="print.studentRank"/>
+                                <span><i18n>display.sudent.rank</i18n></span></label>
                         </div>
                         <div class="four cell twelve-mobile">
                             <label class="checkbox">
-                                <input type="checkbox" ng-model="print.moyenneEleve"/><span>
-                            <i18n>average.student</i18n>
-                        </span></label>
+                                <input type="checkbox" ng-model="print.classAverageMinMax"/>
+                                <span><i18n>display.classaverage.minmax</i18n></span></label>
                         </div>
+                        <div class="twelve cell">
+                            <div class="four cell twelve-mobile">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.moyenneEleve"/><span>
+                                <i18n>average.student</i18n>
+                            </span></label>
+                                <div ng-show="print.moyenneEleve">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.moyenneEleveSousMat"/>
+                                        <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
+                                    </label>
+                                </div>
+                                <div ng-hide="print.moyenneEleve">
+                                    &nbsp;
+                                </div>
+                        </div>
+
                         <div class="four cell twelve-mobile">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.moyenneClasse"/><span>
                             <i18n>average.class</i18n>
                         </span></label>
-                        </div>
-                        <div class="four cell twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.positionnement"/><span>
-                            <i18n>evaluations.releve.positionnement</i18n>
-                        </span></label>
-                        </div>
-                        <div class="four cell twelve-mobile">
-                            <div ng-show="print.moyenneEleve">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.moyenneEleveSousMat"/>
-                                    <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
-                                </label>
-                            </div>
-                            <div ng-hide="print.moyenneEleve">
-                                &nbsp;
-                            </div>
-                        </div>
-                        <div class="four cell twelve-mobile">
                             <div ng-show="print.moyenneClasse">
                                 <label class="checkbox">
                                     <input type="checkbox" ng-model="print.moyenneClasseSousMat"/>
@@ -161,7 +162,11 @@
                             </div>
                         </div>
                         <div class="four cell twelve-mobile">
-                            <div ng-show="print.positionnement">
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="print.positionnement"/><span>
+                                <i18n>evaluations.releve.positionnement</i18n></span>
+                            </label>
+                            <div ng-if="print.positionnement">
                                 <label class="checkbox">
                                     <input type="checkbox" ng-model="print.positionnementSousMat"/>
                                     <span><i18n>evaluations.positionnement.with.sous.matiere</i18n></span>
@@ -170,6 +175,7 @@
                             <div ng-hide="print.positionnement">
                                 &nbsp;
                             </div>
+                        </div>
                         </div>
                     </fieldset>
 

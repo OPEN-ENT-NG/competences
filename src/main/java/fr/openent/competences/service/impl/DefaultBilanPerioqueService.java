@@ -4,7 +4,6 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
-import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -14,14 +13,11 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.apache.fontbox.afm.Composite;
 import org.entcore.common.sql.Sql;
 
-import java.sql.SQLTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.MESSAGE;
@@ -31,8 +27,6 @@ import static fr.openent.competences.service.impl.DefaultExportBulletinService.T
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
@@ -439,11 +433,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private void setMoyAndPosForSuivi (JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
                                        JsonObject result, String idEleve) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
-        HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse =
-                noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
+        HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
         noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
+        noteService.setRankAndMinMaxInClasseByPeriode(idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
 
     }
     public void getBilanPeriodiqueDomaineForGraph(final String idEleve,String idEtablissement,
