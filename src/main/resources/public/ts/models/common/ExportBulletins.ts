@@ -16,26 +16,26 @@ export class ExportBulletins {
     toJSON (options) {
         let o = {
             idStudents: options.idStudents,
-            getResponsable: (options.getResponsable === true)? options.getResponsable:false ,
-            getProgramElements: (options.getProgramElements === true)? options.getProgramElements:false ,
-            moyenneClasse: (options.moyenneClasse === true)? options.moyenneClasse:false ,
-            moyenneEleve: (options.moyenneEleve === true) ? options.moyenneEleve : false,
-            studentRank: (options.studentRank === true) ? options.studentRank : false,
-            classAverageMinMax: (options.classAverageMinMax === true) ? options.classAverageMinMax : false,
-            positionnement: (options.positionnement === true)? options.positionnement:false ,
-            moyenneClasseSousMat: (options.moyenneClasseSousMat === true)? options.moyenneClasseSousMat:false ,
-            moyenneEleveSousMat: (options.moyenneEleveSousMat === true)? options.moyenneEleveSousMat:false ,
-            moyenneGenerale: (options.moyenneGenerale === true)? options.moyenneGenerale:false ,
-            moyenneAnnuelle: (options.moyenneAnnuelle === true)? options.moyenneAnnuelle:false ,
-            coefficient: (options.coefficient === true)? options.coefficient : false,
-            positionnementSousMat: (options.positionnementSousMat === true)? options.positionnementSousMat:false ,
-            showBilanPerDomaines: (options.showBilanPerDomaines === true)? options.showBilanPerDomaines:false ,
-            showFamily: (options.showFamily === true)? options.showFamily:false ,
-            showProjects: (options.showProjects === true)? options.showProjects:false ,
-            threeLevel: (options.threeLevel === true)? options.threeLevel:false ,
-            threeMoyenneClasse: (options.threeMoyenneClasse === true)? options.threeMoyenneClasse:false ,
-            threeMoyenneEleve: (options.threeMoyenneEleve === true)? options.threeMoyenneEleve:false ,
-            threePage: (options.threePage === true)? options.threePage:false ,
+            getResponsable: (options.getResponsable === true),
+            getProgramElements: (options.getProgramElements === true) ,
+            moyenneClasse: (options.moyenneClasse === true),
+            moyenneEleve: (options.moyenneEleve === true),
+            studentRank: (options.studentRank === true) ,
+            classAverageMinMax: (options.classAverageMinMax === true),
+            positionnement: (options.positionnement === true) ,
+            moyenneClasseSousMat: (options.moyenneClasseSousMat === true),
+            moyenneEleveSousMat: (options.moyenneEleveSousMat === true),
+            moyenneGenerale: (options.moyenneGenerale === true),
+            moyenneAnnuelle: (options.moyenneAnnuelle === true),
+            coefficient: (options.coefficient === true),
+            positionnementSousMat: (options.positionnementSousMat === true),
+            showBilanPerDomaines: (options.showBilanPerDomaines === true),
+            showFamily: (options.showFamily === true),
+            showProjects: (options.showProjects === true),
+            threeLevel: (options.threeLevel === true) ,
+            threeMoyenneClasse: (options.threeMoyenneClasse === true) ,
+            threeMoyenneEleve: (options.threeMoyenneEleve === true) ,
+            threePage: (options.threePage === true) ,
             classeName: options.classeName,
             idClasse: options.idClasse,
             idStructure: options.idStructure,
@@ -46,10 +46,11 @@ export class ExportBulletins {
             hasImgStructure: (options.imgStructure !== undefined),
             imgSignature: (options.imgSignature !== undefined)? options.imgSignature : "",
             hasImgSignature: (options.imgSignature !== undefined),
-            useModel : (options.useModel !== true)? false : true,
-            simple : (options.simple !== true)? false : true
+            useModel : (options.useModel === true),
+            simple : (options.simple === true),
+            neutre: (options.neutre === true)
         };
-        if (options.idPeriode !== null || options.idPeriode!== undefined){
+        if (Utils.isNotNull(options.idPeriode)){
             _.extend(o, {idPeriode: options.idPeriode, typePeriode: options.type});
         }
         if(o.showBilanPerDomaines) {
@@ -117,7 +118,7 @@ export class ExportBulletins {
             options.images = {}; // contiendra les id des images par élève
             options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
 
-            if (options.showBilanPerDomaines === true) {
+            if (options.showBilanPerDomaines === true && options.simple !== true) {
                 // Si on choisit de déssiner les graphes
                 await this.createCanvas(options, $scope);
             }
@@ -251,7 +252,7 @@ export class ExportBulletins {
                                         display:false
                                     },
                                     ticks: {
-                                        callback: function(value, index, values) {
+                                        callback: function() {
                                             return ' ';
                                         }
                                     }

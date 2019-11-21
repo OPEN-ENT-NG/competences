@@ -74,10 +74,18 @@
             </div>
         </aside>
 
-        <aside class="ten twelve-mobile cell right">
-
-            <content>
-                <div>
+        <aside class="ten twelve-mobile cell right" ng-init="print.simple=false">
+            <div class="twelve cell twelve-mobile">
+                <div class="fancyCheck three cell">
+                    <input type="checkbox" id="subjectComparison" class="cell"
+                           ng-model="print.simple">
+                    <label class="cell twelve" for="subjectComparison">
+                        <h5 class=" ten "> <span><i18n>viescolaire.bulletin.lycee</i18n></span></h5>
+                    </label>
+                </div>
+            </div>
+            <div ng-if="print.simple !== true">
+                <div >
                     <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
                         <h2>
                             <i18n>viescolaire.utils.options</i18n>
@@ -105,20 +113,20 @@
                         </span></label>
                         </div>
 
-                            <div class="four cell twelve-mobile">
-                                <div>
-                                    <label class="checkbox">
-                                        <input type="checkbox" ng-model="print.coefficient"/>
-                                        <span><i18n>evaluations.test.coefficient</i18n></span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="four cell twelve-mobile">
+                        <div class="four cell twelve-mobile">
+                            <div>
                                 <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.moyenneGenerale"/><span>
+                                    <input type="checkbox" ng-model="print.coefficient"/>
+                                    <span><i18n>evaluations.test.coefficient</i18n></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="four cell twelve-mobile">
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="print.moyenneGenerale"/><span>
                             <i18n>average.general</i18n>
                         </span></label>
-                            </div>
+                        </div>
                         <div class="four cell twelve-mobile">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.studentRank"/>
@@ -144,38 +152,38 @@
                                 <div ng-hide="print.moyenneEleve">
                                     &nbsp;
                                 </div>
-                        </div>
+                            </div>
 
-                        <div class="four cell twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.moyenneClasse"/><span>
+                            <div class="four cell twelve-mobile">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.moyenneClasse"/><span>
                             <i18n>average.class</i18n>
                         </span></label>
-                            <div ng-show="print.moyenneClasse">
+                                <div ng-show="print.moyenneClasse">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.moyenneClasseSousMat"/>
+                                        <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
+                                    </label>
+                                </div>
+                                <div ng-hide="print.moyenneClasse">
+                                    &nbsp;
+                                </div>
+                            </div>
+                            <div class="four cell twelve-mobile">
                                 <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.moyenneClasseSousMat"/>
-                                    <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
-                                </label>
-                            </div>
-                            <div ng-hide="print.moyenneClasse">
-                                &nbsp;
-                            </div>
-                        </div>
-                        <div class="four cell twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.positionnement"/><span>
+                                    <input type="checkbox" ng-model="print.positionnement"/><span>
                                 <i18n>evaluations.releve.positionnement</i18n></span>
-                            </label>
-                            <div ng-if="print.positionnement">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.positionnementSousMat"/>
-                                    <span><i18n>evaluations.positionnement.with.sous.matiere</i18n></span>
                                 </label>
+                                <div ng-if="print.positionnement">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.positionnementSousMat"/>
+                                        <span><i18n>evaluations.positionnement.with.sous.matiere</i18n></span>
+                                    </label>
+                                </div>
+                                <div ng-hide="print.positionnement">
+                                    &nbsp;
+                                </div>
                             </div>
-                            <div ng-hide="print.positionnement">
-                                &nbsp;
-                            </div>
-                        </div>
                         </div>
                     </fieldset>
 
@@ -319,12 +327,12 @@
                         <!-- choix bulletin neutre  -->
                         <div class="twelve cell twelve-mobile">
                             <div class="four cell">
-                            <span><i18n>viescolaire.bulletin.lycee</i18n>
+                            <span><i18n>viescolaire.bulletin.neutre</i18n>
                              </span>
                             </div>
                             <div class="one cell">
                                 <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.simple"/><span></span>
+                                    <input type="checkbox" ng-model="print.neutre"/><span></span>
                                 </label>
                             </div>
                         </div>
@@ -369,8 +377,8 @@
                         <i18n>evaluation.lsu.export.button</i18n>
                     </button>
                 </div>
-            </content>
-
+            </div>
+            <div ng-include="'/competences/public/template/enseignants/bulletin/notes_options.html'"></div>
         </aside>
 
     </div>

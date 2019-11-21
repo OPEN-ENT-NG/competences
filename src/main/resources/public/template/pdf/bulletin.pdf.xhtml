@@ -67,41 +67,84 @@
         }
 
         h1[color="blue"] {
+        {{#neutre}}
+        background-color: #cccccc;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #009ddd;
+        {{/neutre}}
         }
 
         h1[color="orange"] {
+        {{#neutre}}
+        background-color: #cccccc;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #ff9027;
+        {{/neutre}}
+
         }
 
         h1[color="green"] {
+        {{#neutre}}
+        background-color: #cccccc;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #b0d243;
+        {{/neutre}}
         }
+
+        {{#neutre}}
+        tr {
+            border-color: #1f1f1f;
+        }
+        {{/neutre}}
 
         td {
             margin: 4px;
             padding: 10px;
+        {{#neutre}}
+        border: solid 1px;
+        {{/neutre}}
         }
 
         table {
             width: 100%;
             font-size: 12px;
             text-align: center;
+        {{#neutre}}
+       border-collapse: collapse;
+
+        {{/neutre}}
+
         }
 
         .start { page-break-before : left }
 
 
         table tr:first-child td {
+        {{#neutre}}
+        background-color: #ffffff;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #e2f3fb;
+        {{/neutre}}
         }
         table tr:first-child td:first-child {
             visibility: hidden;
         }
         .secondSuivi {
             width: 50%!important;
+        {{#neutre}}
+        padding: 5px !important;
+        text-align: justify !important;
+        {{/neutre}}
         }
         .thirdSuivi {
+        {{#neutre}}
+        padding: 5px !important;
+        text-align: justify !important;
+        {{/neutre}}
         {{#getProgramElements}}
         width: 50% !important;
         {{/getProgramElements}}
@@ -121,7 +164,12 @@
 
         .eleve {
             padding: 5px;
+        {{#neutre}}
+        background-color: #cccccc;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #e2f3fb;
+        {{/neutre}}
             min-height : 60px;
             font-size: 14px;
         }
@@ -154,7 +202,12 @@
 
         .synthese {
             margin-top: 10px;
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #ffd0a0 !important;
+        {{/neutre}}
             padding: 10px;
             visibility: visible !important;
         }
@@ -177,12 +230,17 @@
             height: 45px !important;
         }
         .rightCommunication {
-            padding : 20px!important;
             vertical-align: top;
-            background-color: #ffd0a0 !important;
             text-align: right;
-            position: relative;
-            heigth :  45px;
+
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
+        background-color: #ffd0a0 !important;
+        position: relative;
+        heigth :  45px;
+        {{/neutre}}
         }
         #imgSignature {
             width: 150px;
@@ -235,10 +293,20 @@
             padding-top: 1px;
         }
         .projets tr:nth-child(even) td {
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #EFF7FC !important;
+        {{/neutre}}
         }
         .projets tr:first-child td {
+        {{#neutre}}
+        background-color : #ffffff;
+        {{/neutre}}
+        {{^neutre}}
             background-color: #e2f3fb !important;
+        {{/neutre}}
         }
         .header td {
             font-size: x-small;
@@ -596,19 +664,44 @@
             {{/getProgramElements}}
 
             <td class="thirdSuivi"></td>
-            {{#printSousMatieres}}
-            <td class="fourthSuivi"></td>
-            {{/printSousMatieres}}
+
             {{#printCoefficient}}
             <td class="fourthSuivi"></td>
             {{/printCoefficient}}
             {{#getStudentRank}}
-            <td class="sixthSuivi"></td>
+            {{#moyenneGeneraleObj}}
+            <td rowspan="{{rowSpan}}"
+                style="font-size: x-small; text-align: center; word-wrap:break-word; {{{style}}}"
+                class="fifthSuivi onePadding">
+                {{#studentRank}}
+                {{rank}}/{{rank_size}}
+                {{/studentRank}}
+            </td>
+            {{/moyenneGeneraleObj}}
             {{/getStudentRank}}
+
             {{#getClassAverageMinMax}}
-            <td class="onePadding"></td>
-            <td class="onePadding"></td>
+            {{#moyenneGeneraleObj}}
+            <td rowspan="{{rowSpan}}"
+                style="font-size: x-small; text-align: center;  {{{style}}}"
+                class="onePadding">
+                {{#classAverageMinMax}}
+                {{min}}
+                {{/classAverageMinMax}}
+            </td>
+
+            <td rowspan="{{rowSpan}}"
+                style="font-size: x-small; text-align: center; {{{style}}}"
+                class="onePadding">
+                {{#classAverageMinMax}}
+                {{max}}
+                {{/classAverageMinMax}}
+            </td>
+            {{/moyenneGeneraleObj}}
             {{/getClassAverageMinMax}}
+            {{#printSousMatieres}}
+            <td class="fourthSuivi"></td>
+            {{/printSousMatieres}}
             {{#getMoyenneEleve}}
             <td class="fourthSuivi" style="font-weight: bold;"> {{moyenneGenerale}}</td>
             {{/getMoyenneEleve}}
@@ -691,7 +784,10 @@
 
         <h1 color= "green"> {{bilanAcquisitionLibelle}}</h1>
         <div class="paddingFifty">
-            <div style="background-color: #eef4d7 !important; min-height: 20px; font-size: small;" class="synthese">
+
+            <div class="synthese"
+                    style="{{^neutre}}background-color: #eef4d7 !important;{{/neutre}}
+                    min-height: 20px; font-size: small;">
                 {{syntheseBilanPeriodque}}<br/>
                 {{#hasAvisConseil}}
                 <span style="font-weight: bold">
