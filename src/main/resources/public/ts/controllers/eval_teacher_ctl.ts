@@ -4467,7 +4467,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         moyenneMat: $scope.opened.releveNoteTotaleChoice == "moy" || $scope.opened.releveNoteTotaleChoice == "moyPos",
                         avisConseil: $scope.suiviClasse.withAvisConseil,
                         avisOrientation: $scope.suiviClasse.withAvisOrientation
-                    }
+                    },
+                    allMatieres: $scope.allMatieresSorted
                 };
                 if ($scope.suiviClasse.periode) {
                     p.idPeriode = $scope.suiviClasse.periode.id_type;

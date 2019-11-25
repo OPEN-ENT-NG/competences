@@ -23,7 +23,8 @@ import {
     Classe,
     Devoir,
     Structure,
-    evaluations, TableConversion, Utils
+    evaluations,
+    TableConversion, Utils
 } from './index';
 import * as utils from "../../utils/teacher";
 
@@ -45,6 +46,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
     matiereWithDevoirs : any;
     matieresId : any;
     format:any;
+    allMatieres:any;
 
     get api() {
         return {
@@ -321,7 +323,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 if(this.idPeriode)
                     uri += '&idPeriode=' + this.idPeriode;
                 await httpAxios.get(uri).then((data) => {
-                    _.forEach(evaluations.structure.matieres.all, matiere => {
+                    _.forEach(this.allMatieres, matiere => {
                         let _devoirs = data.data.filter(devoir => devoir.id_matiere == matiere.id);
                         if (_devoirs.length > 0) {
                             this.matiereWithDevoirs.push(matiere);
