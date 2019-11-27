@@ -88,7 +88,7 @@ export class Structure extends Model {
                 synchronization: '/viescolaire/matieres?idEnseignant=' + model.me.userId + '&idEtablissement=' + this.id
             },
             CLASSE: {
-                synchronization: '/viescolaire/classes?idEtablissement=' + this.id + '&forAdmin=true',
+                synchronization: '/viescolaire/classes?idEtablissement=' + this.id,
                 synchronizationRemplacement: '/competences/remplacements/classes?idEtablissement=' + this.id
             },
             ELEVE: {
@@ -484,6 +484,7 @@ export class Structure extends Model {
     }
     syncClassesBilanPeriodique(): Promise<any> {
         return new Promise((resolve, reject) => {
+            var that = this;
             http().getJson(this.api.getClassesBilanPeriodique).done((res) => {
                 _.map(res, (classe) => {
                     classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
