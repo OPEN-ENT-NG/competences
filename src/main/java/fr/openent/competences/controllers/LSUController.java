@@ -513,20 +513,6 @@ public class LSUController extends ControllerHelper {
 
         getTableConversion(idStructure,idsClasse, tableConversionByClass, getTableConversionHandler);
 
-        Future<JsonObject> getEnseignantsFuture = Future.future();
-        listGetFuture.add(getEnseignantsFuture);
-        Handler<String> getEnseignantsHandler = event -> {
-            if (event.equals("success")) {
-                log.info("getEnseignantsFuture");
-                getEnseignantsFuture.complete();
-            } else {
-                getEnseignantsFuture.complete();
-                badRequest(request,"getXML : getBaliseEnseignants " + event);
-                log.error("getXML : getBaliseEnseignants " + event);
-            }
-        };
-        getBaliseEnseignants(donnees, idStructure, idsClasse, enseignantFromSts, getEnseignantsHandler);
-
         Future<JsonObject> getDisciplineFuture = Future.future();
         listGetFuture.add(getDisciplineFuture);
         Handler<String> getDisciplineHandler = event -> {
@@ -1782,56 +1768,6 @@ public class LSUController extends ControllerHelper {
         });
     }
 
-    private void getBaliseEnseignants(final Donnees donnees, final String structureId, List<String> idsClasse,
-                                      JsonArray enseignantFromSts, final Handler<String> handler) {
-        final List<Future> futureMyResponse1Lst = new ArrayList<>();
-        for (int i = 0; i < idsClasse.size(); i++) {
-            Future<JsonObject> resp1FutureComposite = Future.future();
-            futureMyResponse1Lst.add(resp1FutureComposite);
-            JsonArray types = new JsonArray().add("Teacher");
-            JsonObject action = new JsonObject()
-                    .put("action", "user.getUsersByTypeClassAndStructure")
-                    .put("structureId", structureId)
-                    .put("classId", idsClasse.get(i))
-                    .put("types", types);
-            eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                    handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                        AtomicBoolean answer = new AtomicBoolean(false);
-                        AtomicInteger count = new AtomicInteger(0);
-                        final String thread = "("  + structureId + ", "+ idsClasse.toString()+ " )";
-                        final String method = "getBaliseEnseignants";
-                        @Override
-                        public void handle(Message<JsonObject> message) {
-                            JsonObject body = message.body();
-                            if ("ok".equals(body.getString("status"))) {
-                                JsonArray teachersList = body.getJsonArray("results");
-                                for (Integer k = 0; k < teachersList.size(); k++) {
-                                    addorFindTeacherBalise(donnees, enseignantFromSts, teachersList.getJsonObject(k));
-                                }
-                                // log for time-out
-                                answer.set(true);
-                                lsuService.serviceResponseOK(answer, count.get(), thread, method);
-                                resp1FutureComposite.complete();
-                            }else{
-                                String error = body.getString(MESSAGE);
-                                if (error!=null && error.contains(TIME)) {
-                                    eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                                            handlerToAsyncHandler(this));
-                                }
-                                else {
-                                    // log for time-out
-                                    answer.set(true);
-                                    resp1FutureComposite.complete();
-                                }
-                                lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
-                            }
-                        }
-                    }));
-        }
-        CompositeFuture.all(futureMyResponse1Lst).setHandler(
-                event -> handler.handle("success"));
-    }
-
     private void getHeadTeachers( List<String> idsClasse,
                                   Map<String, JsonArray> mapIdClasseHeadTeachers,
                                   final Handler<String> handler){
@@ -1942,40 +1878,30 @@ public class LSUController extends ControllerHelper {
 
 
     private void getBaliseEnseignantFromId(final Donnees donnees, String idEnseignant,final JsonArray enseignantFromSts, final Handler<String> handler) {
-        JsonArray ids = new JsonArray().add(idEnseignant);
-        JsonObject action = new JsonObject()
-                .put("action", "user.getUsers")
-                .put("idUsers", ids);
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    AtomicBoolean answer = new AtomicBoolean(false);
-                    AtomicInteger count = new AtomicInteger(0);
-                    final String thread = action.encode();
-                    final String method = "getBaliseEnseignantFromId";
-                    @Override
-                    public void handle(Message<JsonObject> message) {
-                        JsonObject body = message.body();
-                        if ("ok".equals(body.getString("status")) && body.getJsonArray("results").size() == 1 ) {
-                            JsonArray teachersList = body.getJsonArray("results");
-                            for (Integer k = 0; k < teachersList.size(); k++) {
-                                addorFindTeacherBalise(donnees, enseignantFromSts, teachersList.getJsonObject(k));
-                            }
-                            handler.handle("success");
-                        }
-                        else{
-                            String error = message.body().getString(MESSAGE);
-                            if(error != null && error.contains(TIME)){
-                                eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                                        handlerToAsyncHandler(this));
-                            }
-                            else{
-                                answer.set(true);
-                                handler.handle(error);
-                            }
-                            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
-                        }
-                    }
-                }));
+        final JsonArray ids = new JsonArray().add(idEnseignant);
+
+        Utils.getLastNameFirstNameUser(eb, ids, mapResponseTeacher -> {
+            AtomicBoolean answer = new AtomicBoolean(false);
+            AtomicInteger count = new AtomicInteger(0);
+            String method = "getLastNameFirestNameUser" ;
+            String thread = " id_teacher " + ids;
+            if(mapResponseTeacher.isLeft()){
+                String error = mapResponseTeacher.left().getValue();
+                if(error != null && error.contains(TIME)){
+                    Utils.getLastNameFirstNameUser(eb, ids, (Handler<Either<String, Map<String, JsonObject>>>) this);
+                }else{
+                    handler.handle(error);
+                }
+
+            }else{
+                Map<String, JsonObject> mapIdJoTeacher = mapResponseTeacher.right().getValue();
+                mapIdJoTeacher.forEach((k,jsonObjectTeacher)-> {
+                    addorFindTeacherBalise(donnees, enseignantFromSts, jsonObjectTeacher);
+                });
+                handler.handle("success");
+            }
+            lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
+        });
     }
 
     private Enseignant addorFindTeacherBalise(Donnees donnees, final JsonArray enseignantsFromSts, JsonObject enseignant){
@@ -2421,11 +2347,6 @@ public class LSUController extends ControllerHelper {
                     }
 
                     if(!addDatesBilanPeriodique(bilanPeriodique,  currentEleve, currentPeriode, periodeOfClass)){
-                   /*response.put("status", 400);
-                    response.put(MESSAGE, "Periode do not exit for this class "+ currentEleve.getCodeDivision() +
-                            "id : "+currentEleve.getId_Class());
-                    getOut.handle(new Either.Right<String, JsonObject>(response));
-                    return;*/
                         setError(errorsExport,currentEleve,"Pas de dates pour cette classe");
                     }
 
@@ -2524,12 +2445,7 @@ public class LSUController extends ControllerHelper {
                                         viescolare.setNbHeuresManquees(BigInteger.valueOf(0L));
 
                                         final JsonArray vieScoRightValue = eventViesco.right().getValue();
-                                /*JsonObject viesco = (JsonObject) vieScoRightValue.stream()
-                                        .filter(el -> periodeJSon.getInteger("id_type").equals(((JsonObject) el).getInteger("id_periode")))
-                                        .findFirst()
-                                        .orElse(null);*/
                                         JsonObject viesco = (JsonObject) vieScoRightValue.stream()
-                                                //.filter(el -> periodeJSon.getInteger("id_type").equals(((JsonObject) el).getInteger("id_periode")))
                                                 .filter(el -> currentPeriode.getTypePeriode() == ((JsonObject) el).getInteger("id_periode"))
                                                 .findFirst()
                                                 .orElse(null);
@@ -2606,12 +2522,7 @@ public class LSUController extends ControllerHelper {
                                 }
 
                                 private void addApEleve(JsonObject element) {
-                                   /* String extGroup = element.getString("id_groupe");
-                                    if (accGroupAdded.size() > 0 && extGroup != null && accGroupAdded.containsKey(extGroup)) {
-                                        AccPersoGroupe accGroupe = donnees.getAccPersosGroupes().getAccPersoGroupe().stream()
-                                                .filter(el -> el.getId().equals(accGroupAdded.getString(extGroup)))
-                                                .findFirst()
-                                                .orElse(null);*/
+
                                     List<AccPersoGroupe> listAccPersoGroupe = donnees.getAccPersosGroupes().getAccPersoGroupe();
                                     if (listAccPersoGroupe != null && listAccPersoGroupe.size() > 0) {
                                         AccPersoGroupe accGroupe = listAccPersoGroupe.stream()
@@ -2632,12 +2543,7 @@ public class LSUController extends ControllerHelper {
                                 }
 
                                 private void addEpiEleve(JsonObject element) {
-                                   /* String extGroup = element.getString("id_groupe");
-                                    if (epiGroupAdded.size() > 0 && extGroup != null && epiGroupAdded.containsKey(extGroup)) {
-                                    EpiGroupe epiGroupe = donnees.getEpisGroupes().getEpiGroupe().stream()
-                                                .filter(el -> el.getId().equals(epiGroupAdded.getString(extGroup)))
-                                                .findFirst()
-                                                .orElse(null);*/
+
                                     if (donnees.getEpisGroupes() != null) {
                                         List<EpiGroupe> listEpiGroupe = donnees.getEpisGroupes().getEpiGroupe();
                                         if (listEpiGroupe != null && listEpiGroupe.size() > 0) {
@@ -2799,7 +2705,7 @@ public class LSUController extends ControllerHelper {
 
                                     BigInteger positionnementToSet = BigInteger.valueOf(0);
                                     // "hasNote" exit if  moyenne != -1
-                                    if (positionnementAuto != null && positionnementAuto.containsKey("hasNote")) {
+                                    if (positionnementAuto != null && positionnementAuto.containsKey("hasNote") && positionnementAuto.getBoolean("hasNote") ) {
                                         // BigInteger positionnementToSet;
                                         String valuePositionnementAuto = utilsService.convertPositionnement(
                                                 positionnementAuto.getFloat("moyenne"), tableConversion, null,true);

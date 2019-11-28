@@ -27,6 +27,7 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -45,7 +46,6 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -655,42 +655,73 @@ public class Utils {
 
     public static void getLastNameFirstNameUser(EventBus eb, final JsonArray idsUsers,
                                                 final Handler<Either<String, Map<String, JsonObject>>> handler) {
+       List<String> idsTeacherNotInNeo = idsUsers.stream().map(Object::toString).collect(Collectors.toList());
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
                 .put("idUsers", idsUsers);
         eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS,
-                handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
-                    @Override
-                    public void handle(Message<JsonObject> message) {
+                handlerToAsyncHandler(message -> {
 
-                        JsonObject body = message.body();
-                        Map<String, JsonObject> idsUserNamePrenom = new HashMap<>();
+                    JsonObject body = message.body();
+                    Map<String, JsonObject> idsUserNamePrenom = new HashMap<>();
 
-                        if (OK.equals(body.getString(STATUS))) {
-                            JsonArray requestUsers = body.getJsonArray(RESULTS);
-                            if (requestUsers != null && requestUsers.size() > 0) {
+                    if (OK.equals(body.getString(STATUS))) {
+                        JsonArray requestUsers = body.getJsonArray(RESULTS);
+                        if (requestUsers != null && requestUsers.size() > 0) {
+                            for (int i = 0; i < requestUsers.size(); i++) {
+                                JsonObject requestUser = requestUsers.getJsonObject(i);
+                                if (!idsUserNamePrenom.containsKey(requestUser.getString("id"))) {
+                                    idsUserNamePrenom.put(requestUser.getString("id"), new JsonObject()
+                                            .put("firstName", requestUser.getString("firstName"))
+                                            .put("name", requestUser.getString("name"))
+                                            .put("id", requestUser.getString("id"))
+                                            .put("birthDate", requestUser.getString("birthDate")));
 
-                                for (int i = 0; i < requestUsers.size(); i++) {
-                                    JsonObject requestUser = requestUsers.getJsonObject(i);
-                                    if (!idsUserNamePrenom.containsKey(requestUser.getString("id"))) {
-                                        idsUserNamePrenom.put(requestUser.getString("id"), new JsonObject()
-                                                .put("firstName", requestUser.getString("firstName"))
-                                                .put("name", requestUser.getString("name"))
-                                                .put("id", requestUser.getString("id")));
-                                    }
-
+                                    idsTeacherNotInNeo.remove(requestUser.getString("id"));
                                 }
-                            } else {
-                                handler.handle(new Either.Left<>("no User "));
-                                log.error("getUsers : no User");
                             }
-                            handler.handle(new Either.Right<String, Map<String, JsonObject>>(idsUserNamePrenom));
-                        } else {
-                            handler.handle(new Either.Left<String, Map<String, JsonObject>>(body.getString("message")));
-                            log.error("getUsers : " + body.getString("message"));
                         }
+                        if(!idsTeacherNotInNeo.isEmpty()) {
 
+                            JsonObject action2 = new JsonObject()
+                                    .put(ACTION,"user.getDeletedTeachers")
+                                    .put("idsTeacher", idsTeacherNotInNeo);
+                            eb.send(VIESCO_BUS_ADDRESS, action2, DELIVERY_OPTIONS,
+                                    handlerToAsyncHandler(event -> {
+                                        JsonObject bodyDeletedUsers = event.body();
+                                        if(OK.equals(bodyDeletedUsers.getString(STATUS)) &&
+                                                bodyDeletedUsers.getJsonArray(RESULTS) != null &&
+                                                !bodyDeletedUsers.isEmpty()){
+                                            JsonArray deletedUsers = bodyDeletedUsers.getJsonArray(RESULTS);
+
+                                            deletedUsers.stream().forEach(   deletedUser -> {
+                                                JsonObject o_deletedUser = (JsonObject) deletedUser;
+                                                if (!idsUserNamePrenom.containsKey( o_deletedUser.getString("id_user"))) {
+                                                    idsUserNamePrenom.put(o_deletedUser.getString("id_user"), new JsonObject()
+                                                            .put("firstName", o_deletedUser.getString("first_name"))
+                                                            .put("name", o_deletedUser.getString("last_name"))
+                                                            .put("id", o_deletedUser.getString("id_user"))
+                                                            .put("birthDate",o_deletedUser.getString("birth_date")));
+                                                }
+                                            });
+                                            handler.handle(new Either.Right<>(idsUserNamePrenom));
+
+                                        }else if(idsUserNamePrenom.isEmpty()){
+                                            handler.handle(new Either.Left<>("no User "));
+                                            log.error("getUsers : no User");
+                                        }else{
+                                            handler.handle(new Either.Right<>(idsUserNamePrenom));
+                                        }
+
+                                    }));
+                        } else {
+                            handler.handle(new Either.Right<>(idsUserNamePrenom));
+                        }
+                    } else {
+                        handler.handle(new Either.Left<>(body.getString("message")));
+                        log.error("getUsers : " + body.getString("message"));
                     }
+
                 }));
     }
 

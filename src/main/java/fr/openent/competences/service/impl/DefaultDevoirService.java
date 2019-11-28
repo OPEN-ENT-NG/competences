@@ -1403,7 +1403,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner " +
+        String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, devoirs.id_periode " +
                 " FROM "+ Competences.COMPETENCES_SCHEMA + ".devoirs";
 
         String footerQuery = " WHERE devoirs.eval_lib_historise = false ";
@@ -1433,7 +1433,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 footerQuery +
 
                 " ) AS res " +
-                " ORDER BY res.id_matiere ";
+                " ORDER BY res.id_periode, res.id_matiere ";
 
         values.add(id_eleve).add(id_eleve).add(id_eleve).add(id_eleve);
 

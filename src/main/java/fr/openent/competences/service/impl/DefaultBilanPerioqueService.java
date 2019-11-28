@@ -27,6 +27,7 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.MESSAGE;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
+import static fr.openent.competences.utils.FormateFutureEvent.*;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
@@ -66,7 +67,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private void getSubjectLibelleForSuivi(final String idEtablissement, JsonArray idsMatieres,
                                            Future<Map<String,JsonObject>> libelleMatiereFuture){
 
-        // Récupération des matières de l'établmissement
+        // Récupération des matières de l'établissement
         Future<JsonArray> subjectF = Future.future();
         new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
 
@@ -101,7 +102,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                final String idClasse , Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> subjectFuture = Future.future();
-        // Récupération des matières
+        /* Récupération des matières et des professeurs de l'année */
         devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, event -> {
             formate(subjectFuture,event);
         });
@@ -124,7 +125,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     handler.handle(new Either.Right<>(new JsonArray()));
                 }
                 else {
-                    buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres, idsTeachers, responseArray);
+                    buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres, idsTeachers, responseArray, idPeriode);
 
                     // Récupération du libelle des matières et sous Matières
                     Future<Map<String,JsonObject>> libelleMatiereFuture = Future.future();
@@ -132,9 +133,10 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
                     // Récupération des noms et prénoms des professeurs
                     Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
-                    Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
-                        formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
-                    });
+                    Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent ->
+                        FormateFutureEvent.formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent)
+                    );
+
 
                     CompositeFuture.all(libelleMatiereFuture, lastNameAndFirstNameFuture).setHandler( event1 -> {
                         if(event1.succeeded()) {
@@ -142,7 +144,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             Map<String, JsonObject> teachersInfos = lastNameAndFirstNameFuture.result();
                             JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
                             setSubjectLibelleAndTeachers (idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
-                                    idsMatieresIdsTeachers, idsMatieres, idsMatLibelle, teachersInfos, idPeriode, handler);
+                                    idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
 
                         }
                         else{
@@ -193,8 +195,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private void setSubjectLibelleAndTeachers (String idEleve,JsonArray idClasseGroups, final String idClasse,
                                                String idEtablissement, JsonArray idsGroups,
                                                Map<String,JsonObject> idsMatieresIdsTeachers,
-                                               JsonArray idsMatieres, Map<String, JsonObject> idsMatLibelle,
-                                               Map<String, JsonObject> teachersInfos, Long idPeriode,
+                                               Map<String, JsonObject> idsMatLibelle,
+                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
                                                Handler<Either<String, JsonArray>> handler) {
         if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
             idsGroups.add(idClasse);
@@ -213,20 +215,20 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             JsonObject teachersObject = idMAtTeachersGroups.getValue();
             JsonArray idsTeachers = teachersObject.getJsonArray("teachers");
 
-            //Ajout des libellés des matières
+            //add subject name
             setSubjectLibelle(idMatiere, result, idsMatLibelle);
 
-            // Ajout des enseignants des matières
+            // add subject teachers
             setTeacherInfo(result, idsTeachers, teachersInfos);
 
             // Récupération des élements du Programme
             Future<JsonArray> elementsProgFuture = Future.future();
             elementProgramme.getElementProgrammeClasses(
-                    idPeriode, idMatiere, idsGroups,elementsProgEvent -> {
+                    idPeriod, idMatiere, idsGroups,elementsProgEvent -> {
                         formate(elementsProgFuture, elementsProgEvent);
                     });
 
-            // Récupération des appreciation Moyenne Finale et positionnement Finale
+            // Récupération des appreciation Moyenne Finale et positionnement Finale de l'élève
             Future<JsonArray> appreciationMoyFinalePosFuture = Future.future();
             noteService.getAppreciationMoyFinalePositionnement(idEleve, idMatiere, null, event -> {
                 formate(appreciationMoyFinalePosFuture, event);
@@ -284,32 +286,37 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsMatieres,
-                                      JsonArray idsTeachers, JsonArray responseArray){
+                                      JsonArray idsTeachers, JsonArray responseArray, final Long idPeriode){
 
         for (int i = 0; i < responseArray.size(); i++) {
             JsonObject responseObject = responseArray.getJsonObject(i);
-
+            Long id_period = responseObject.getLong("id_periode");
             if (!idsMatieresIdsTeachers.containsKey(responseObject.getString("id_matiere"))) {
                 idsMatieres.add(responseObject.getString("id_matiere"));
-                if (!idsTeachers.contains(responseObject.getString("owner"))) {
+                //add teachers only for the requested period
+                if (!idsTeachers.contains(responseObject.getString("owner")) && idPeriode.equals(id_period)) {
                     idsTeachers.add(responseObject.getString("owner"));
                 }
-                JsonArray teachers = new fr.wseduc.webutils.collections.JsonArray()
-                        .add(responseObject.getString("owner"));
+                JsonArray teachers;
+                if (idPeriode.equals(id_period)) {
+                    teachers = new fr.wseduc.webutils.collections.JsonArray()
+                            .add(responseObject.getString("owner"));
+                }else{
+                    teachers = new fr.wseduc.webutils.collections.JsonArray();
+                }
 
                 idsMatieresIdsTeachers.put(responseObject.getString("id_matiere"),
                         new JsonObject().put("teachers", teachers));
-            } else {//on récupère le JsonObject de la cle idmatiere en cours
+            } else {
                 JsonArray teachers = idsMatieresIdsTeachers
                         .get(responseObject.getString("id_matiere"))
                         .getJsonArray("teachers");
-
-                teachers.add(responseObject.getString("owner"));
-                idsTeachers.add(responseObject.getString("owner"));
+                if(idPeriode.equals(id_period)){  //add teachers only for the requested period
+                    teachers.add(responseObject.getString("owner"));
+                    idsTeachers.add(responseObject.getString("owner"));
+                }
             }
         }
-
-
     }
 
 
@@ -327,10 +334,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             .getJsonObject(i)
                             .getString("texte");
                 }
-
             }
         }
-
         result.put("elementsProgramme", elementsProg);
     }
 
