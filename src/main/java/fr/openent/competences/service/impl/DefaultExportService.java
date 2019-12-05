@@ -1626,7 +1626,7 @@ public class DefaultExportService implements ExportService {
 
             // ajout du devoir sur la matiere, si son identifiant de matière correspond bien
 
-            if ( isNotNull(coefficient) && idMatiere.equals(devoirJson.getString("id_matiere"))) {
+            if (isNotNull(coefficient) && idMatiere.equals(devoirJson.getString("id_matiere"))) {
                 devoirsMatiereJson.add(devoirJson);
                 Double note = Double.valueOf(devoirJson.getString("note"));
                 Double diviseur = Double.valueOf(devoirJson.getInteger("diviseur"));

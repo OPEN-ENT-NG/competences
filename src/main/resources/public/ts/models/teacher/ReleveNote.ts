@@ -201,12 +201,10 @@ export class ReleveNote extends  Model implements IModel {
             if (this.idPeriode === null) {
                 http().getJson(this.api.GET_MOYENNE_ANNEE)
                     .done((res) => {
-
                         _.forEach(this.classe.eleves.all, (eleve) => {
                             let moyennes = _.where(res.moyennes, {id_eleve: eleve.id});
 
                             let moyennesFinales = _.where(res.moyennes_finales, {id_eleve: eleve.id});
-
 
                             let nbMoyenneAnnee = 0;
                             let moyennesFinalesNumber = 0;
@@ -243,11 +241,9 @@ export class ReleveNote extends  Model implements IModel {
                             }
 
                             if (moyennes !== undefined && moyennes !== null) {
-
                                 eleve.moyennes = moyennes;
                             }
                             eleve.moyennesFinales = moyennesFinales;
-
 
                         });
                         resolve();
@@ -383,9 +379,8 @@ export class ReleveNote extends  Model implements IModel {
                     await this.getConversionTable(this._tmp.tableConversions);
                 }
                 this.hasEvaluatedDevoirs = _.findWhere(this.devoirs.all, {is_evaluated: true});
-                this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs === undefined) ? false : true;
+                this.hasEvaluatedDevoirs = (this.hasEvaluatedDevoirs !== undefined);
                 _.each(this.classe.eleves.all, (eleve) => {
-
                     let _evals = [];
                     let _t = _.where(_notes, {id_eleve: eleve.id});
                     _.each(this.devoirs.all, async (devoir) => {
@@ -427,7 +422,6 @@ export class ReleveNote extends  Model implements IModel {
                         }
                     });
                     eleve.evaluations.load(_evals, null, false);
-
                 });
                 _.each(_devoirs, (devoir) => {
                     let d = _.findWhere(this.devoirs.all, {id: devoir.id});
@@ -442,7 +436,14 @@ export class ReleveNote extends  Model implements IModel {
                         }
                     }
                 });
-                if (this.hasEvaluatedDevoirs) {
+
+                let sumCoeff = this.devoirs.all.reduce((s, c) => {
+                    if(c.is_evaluated)
+                        s += parseFloat(String(c.coefficient));
+                    return s;
+                }, 0);
+
+                if (this.hasEvaluatedDevoirs && sumCoeff > 0) {
                     _.each(this.classe.eleves.all, (eleve) => {
                         let e = _.findWhere(_eleves, {id: eleve.id});
                         if (e !== undefined) {
@@ -452,7 +453,6 @@ export class ReleveNote extends  Model implements IModel {
                             eleve.moyenne = getNN();
                         }
                     });
-
                 }
                 else {
                     this.isNN = true;

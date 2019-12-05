@@ -368,7 +368,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private void getNotesReleveEleves(JsonArray ids,String etablissementId, String classeId,String matiereId,
                                       Long periodeId, Boolean withMoyenneFinale, JsonArray idsGroup, JsonArray matiereIds,
                                       Handler<Either<String, JsonArray>> handler) {
-
         List<String> idEleves = new ArrayList<String>();
 
         if (ids != null) {
@@ -434,7 +433,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
         String queryWithMoyF = "";
         if (withMoyenneFinale) {
-
             queryWithMoyF = ("SELECT * FROM ( " + query + ") AS devoirs_notes_annotation " +
                     "FULL JOIN ( SELECT moyenne_finale.id_matiere AS id_matiere_moyf, " +
                     "moyenne_finale.id_eleve AS id_eleve_moyenne_finale, moyenne_finale.moyenne, " +
@@ -1924,7 +1922,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 .getConversionNoteCompetence(idEtablissement, idClasse,
                         tableauEvent -> formate(tableauDeConversionFuture, tableauEvent));
 
-
         // Récupération de l'appréciation de la classe
         Future<JsonArray> appreciationClassFuture = Future.future();
         if (idPeriode != null) {
@@ -2061,7 +2058,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                         });
                     }
                     else {
-
                         handler.handle(new Either.Left<>(idElevesEvent.cause().getMessage()));
                     }
                 });
