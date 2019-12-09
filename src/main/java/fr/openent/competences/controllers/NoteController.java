@@ -252,10 +252,8 @@ public class NoteController extends ControllerHelper {
     @ResourceFilter(AccessReleveFilter.class)
     public void getNoteElevePeriode(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-
             @Override
             public void handle(UserInfos user) {
-
                 final String idEleve = request.params().get(ID_ELEVE_KEY);
                 final String idEtablissement = request.params().get(ID_ETABLISSEMENT_KEY);
                 final String idClasse = request.params().get(ID_CLASSE_KEY);
@@ -263,10 +261,8 @@ public class NoteController extends ControllerHelper {
                 final String idPeriodeString = request.params().get(ID_PERIODE_KEY);
                 final Integer typeClasse = Integer.valueOf(request.params().get(TYPE_CLASSE_KEY));
 
-
                 new FilterUserUtils(user, eb).validateMatiere(request, idEtablissement, idMatiere, false,
                         hasAccessToMatiere -> {
-
                             Long idPeriode = null;
                             if (!hasAccessToMatiere) {
                                 unauthorized(request);
@@ -288,7 +284,6 @@ public class NoteController extends ControllerHelper {
                                         .put(TYPE_CLASSE_KEY, typeClasse);
 
                                 notesService.getDatasReleve(params, notEmptyResponseHandler(request));
-
                             }
                         });
             }
@@ -858,7 +853,6 @@ public class NoteController extends ControllerHelper {
     @ResourceFilter(AccessReleveFilter.class)
     public void getReleveAnne(final HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-
             @Override
             public void handle(UserInfos user) {
                 final String idEtablissement = request.params().get("idEtablissement");
@@ -874,7 +868,6 @@ public class NoteController extends ControllerHelper {
                         new Handler<Boolean>() {
                             @Override
                             public void handle(final Boolean hasAccessToMatiere) {
-
                                 Handler<Either<String, JsonArray>> handler = new Handler<Either<String, JsonArray>>() {
                                     @Override
                                     public void handle(Either<String, JsonArray> event) {
@@ -891,10 +884,9 @@ public class NoteController extends ControllerHelper {
                                                         final JsonObject result = new JsonObject();
                                                         final JsonArray idEleves = new fr.wseduc.webutils.collections.JsonArray();
                                                         JsonArray queryResult = body.getJsonArray("results");
-                                                        result.put("moyennes",new fr.wseduc.webutils.collections.JsonArray());
+                                                        result.put("moyennes", new fr.wseduc.webutils.collections.JsonArray());
 
                                                         for (int i = 0; i < queryResult.size(); i++) {
-
                                                             HashMap<Long,JsonArray> listMoyDevoirs = new HashMap<>();
                                                             HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>>
                                                                     notesByDevoirByPeriode = new HashMap<>();
@@ -906,15 +898,12 @@ public class NoteController extends ControllerHelper {
                                                             String idEleve = eleve.getString("idEleve");
                                                             idEleves.add(idEleve);
 
-
                                                             for (int j = 0; j < listNotes.size(); j++) {
-
                                                                 JsonObject note = listNotes.getJsonObject(j);
 
                                                                 if (note.getString("valeur") == null ||
                                                                         note.getString("coefficient") == null ||
                                                                         !note.getBoolean("is_evaluated")) {
-
 
                                                                     continue; //Si la note fait partie d'un devoir qui n'est pas évalué,
                                                                     // elle n'est pas prise en compte dans le calcul de la moyenne
@@ -950,7 +939,7 @@ public class NoteController extends ControllerHelper {
                                                                         entryPeriode.getValue().entrySet()) {
                                                                     JsonObject moyenne = utilsService.calculMoyenne(
                                                                             entry.getValue(),
-                                                                            false, 20,false);
+                                                                            false, 20, false);
                                                                     moyenne.put("id_periode", entry.getKey());
                                                                     moyenne.put("id_eleve", idEleve);
                                                                     listMoyDevoirs.get(entryPeriode.getKey()).add(moyenne);
@@ -961,8 +950,6 @@ public class NoteController extends ControllerHelper {
                                                                 }
                                                             }
                                                         }
-
-
 
                                                         // On récupère les moyennes finales
                                                         notesService.getColonneReleve(
@@ -986,7 +973,6 @@ public class NoteController extends ControllerHelper {
                                                                     }
                                                                 });
                                                     }
-
                                                 }
                                             }));
                                         } else {
@@ -999,8 +985,6 @@ public class NoteController extends ControllerHelper {
                                 if (!hasAccessToMatiere) {
                                     unauthorized(request);
                                 } else {
-
-
                                     notesService.getNoteElevePeriode(null,
                                             idEtablissement,
                                             new fr.wseduc.webutils.collections.JsonArray().add(idClasse),
