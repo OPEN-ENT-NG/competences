@@ -4,7 +4,8 @@
 
     <!-- LightBox display modlel -->
     <div ng-include="'/competences/public/template/enseignants/bulletin/lightBox_model_subject.html'"></div>
-
+    <!-- LightBox coefficient conflict -->
+    <div ng-include="'/competences/public/template/enseignants/bulletin/lightBox_conflict_coefficient.html'"></div>
     <div ng-include="'/competences/public/template/enseignants/menu_teacher.html'"></div>
     <div    ng-init="initBulletin()"
             class="ten cell card main-content twelve-mobile">
@@ -73,10 +74,18 @@
             </div>
         </aside>
 
-        <aside class="ten twelve-mobile cell right">
-
-            <content>
-                <div>
+        <aside class="ten twelve-mobile cell right" ng-init="print.simple=false">
+            <div class="twelve cell twelve-mobile">
+                <div class="fancyCheck three cell">
+                    <input type="checkbox" id="subjectComparison" class="cell"
+                           ng-model="print.simple">
+                    <label class="cell twelve" for="subjectComparison">
+                        <h5 class=" ten "> <span><i18n>viescolaire.bulletin.lycee</i18n></span></h5>
+                    </label>
+                </div>
+            </div>
+            <div ng-if="print.simple !== true">
+                <div >
                     <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
                         <h2>
                             <i18n>viescolaire.utils.options</i18n>
@@ -103,55 +112,77 @@
                             <i18n>evaluations.use.model.libelle</i18n>
                         </span></label>
                         </div>
+
+                        <div class="four cell twelve-mobile">
+                            <div>
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.coefficient"/>
+                                    <span><i18n>evaluations.test.coefficient</i18n></span>
+                                </label>
+                            </div>
+                        </div>
                         <div class="four cell twelve-mobile">
                             <label class="checkbox">
-                                <input type="checkbox" ng-model="print.moyenneEleve"/><span>
-                            <i18n>average.student</i18n>
+                                <input type="checkbox" ng-model="print.moyenneGenerale"/><span>
+                            <i18n>average.general</i18n>
                         </span></label>
                         </div>
                         <div class="four cell twelve-mobile">
                             <label class="checkbox">
-                                <input type="checkbox" ng-model="print.moyenneClasse"/><span>
+                                <input type="checkbox" ng-model="print.studentRank"/>
+                                <span><i18n>display.sudent.rank</i18n></span></label>
+                        </div>
+                        <div class="four cell twelve-mobile">
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="print.classAverageMinMax"/>
+                                <span><i18n>display.classaverage.minmax</i18n></span></label>
+                        </div>
+                        <div class="twelve cell">
+                            <div class="four cell twelve-mobile">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.moyenneEleve"/><span>
+                                <i18n>average.student</i18n>
+                            </span></label>
+                                <div ng-show="print.moyenneEleve">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.moyenneEleveSousMat"/>
+                                        <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
+                                    </label>
+                                </div>
+                                <div ng-hide="print.moyenneEleve">
+                                    &nbsp;
+                                </div>
+                            </div>
+
+                            <div class="four cell twelve-mobile">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.moyenneClasse"/><span>
                             <i18n>average.class</i18n>
                         </span></label>
-                        </div>
-                        <div class="four cell twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.positionnement"/><span>
-                            <i18n>evaluations.releve.positionnement</i18n>
-                        </span></label>
-                        </div>
-                        <div class="four cell twelve-mobile">
-                            <div ng-show="print.moyenneEleve">
+                                <div ng-show="print.moyenneClasse">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.moyenneClasseSousMat"/>
+                                        <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
+                                    </label>
+                                </div>
+                                <div ng-hide="print.moyenneClasse">
+                                    &nbsp;
+                                </div>
+                            </div>
+                            <div class="four cell twelve-mobile">
                                 <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.moyenneEleveSousMat"/>
-                                    <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
+                                    <input type="checkbox" ng-model="print.positionnement"/><span>
+                                <i18n>evaluations.releve.positionnement</i18n></span>
                                 </label>
-                            </div>
-                            <div ng-hide="print.moyenneEleve">
-                                &nbsp;
-                            </div>
-                        </div>
-                        <div class="four cell twelve-mobile">
-                            <div ng-show="print.moyenneClasse">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.moyenneClasseSousMat"/>
-                                    <span><i18n>evaluations.moyenne.with.sous.matiere</i18n></span>
-                                </label>
-                            </div>
-                            <div ng-hide="print.moyenneClasse">
-                                &nbsp;
-                            </div>
-                        </div>
-                        <div class="four cell twelve-mobile">
-                            <div ng-show="print.positionnement">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.positionnementSousMat"/>
-                                    <span><i18n>evaluations.positionnement.with.sous.matiere</i18n></span>
-                                </label>
-                            </div>
-                            <div ng-hide="print.positionnement">
-                                &nbsp;
+                                <div ng-if="print.positionnement">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.positionnementSousMat"/>
+                                        <span><i18n>evaluations.positionnement.with.sous.matiere</i18n></span>
+                                    </label>
+                                </div>
+                                <div ng-hide="print.positionnement">
+                                    &nbsp;
+                                </div>
                             </div>
                         </div>
                     </fieldset>
@@ -159,38 +190,49 @@
                     <!-- Page 2 -->
                     <fieldset class="eleven">
                         <legend><i18n>evaluations.page.two</i18n></legend>
-                        <div class="twelve twelve-mobile">
-                            <label class="checkbox">
-                                <input type="checkbox" ng-model="print.showFamily"/><span>
-                            <i18n>show.family</i18n>
+                        <!-- Bilan par domaine -->
+                        <div class="twelve cell">
+                            <div class="four cell twelve-mobile" >
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.showBilanPerDomaines"/><span>
+                            <i18n>show.bilan.per.domaines</i18n>
                         </span></label>
+                            </div>
+                            <div ng-if="print.showBilanPerDomaines" class="twelve-mobile">
+                                <div class="four cell">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.withLevelsStudent"/><span>
+                                <i18n>show.with.level.student</i18n>
+                            </span></label>
+                                </div>
+                                <div class="four cell">
+                                    <label class="checkbox">
+                                        <input type="checkbox" ng-model="print.withLevelsClass"/><span>
+                                <i18n>show.with.level.class</i18n>
+                            </span></label>
+                                </div>
+                            </div>
                         </div>
+                        <!-- Enseignements pratiques interdisciplinaires -->
                         <div class="four cell twelve-mobile" >
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.showProjects"/><span>
                             <i18n>show.projects</i18n>
                         </span></label>
                         </div>
-                        <!-- Bilan par domaine -->
-                        <div class="four cell twelve-mobile" >
+                        <!-- Bilan de l'acquisiion des connaissances et compétences -->
+                        <div class="four cell twelve-mobile">
                             <label class="checkbox">
-                                <input type="checkbox" ng-model="print.showBilanPerDomaines"/><span>
-                            <i18n>show.bilan.per.domaines</i18n>
+                                <input type="checkbox" ng-model="print.moyenneAnnuelle"/><span>
+                            <i18n>average.annual</i18n>
                         </span></label>
                         </div>
-                        <div ng-if="print.showBilanPerDomaines" class="seven cell twelve-mobile right-magnet">
-                            <div class="six cell">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.withLevelsStudent"/><span>
-                                <i18n>show.with.level.student</i18n>
-                            </span></label>
-                            </div>
-                            <div class="six cell">
-                                <label class="checkbox">
-                                    <input type="checkbox" ng-model="print.withLevelsClass"/><span>
-                                <i18n>show.with.level.class</i18n>
-                            </span></label>
-                            </div>
+                        <!-- Communication avec la famille-->
+                        <div class="twelve twelve-mobile">
+                            <label class="checkbox">
+                                <input type="checkbox" ng-model="print.showFamily"/><span>
+                            <i18n>show.family</i18n>
+                        </span></label>
                         </div>
                     </fieldset>
 
@@ -223,7 +265,7 @@
                     </fieldset>
                     -->
                 </div>
-                <div >
+                <div>
                     <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
                         <h2>
                             <i18n>viescolaire.utils.parameter</i18n>
@@ -282,6 +324,19 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- choix bulletin neutre  -->
+                        <div class="twelve cell twelve-mobile">
+                            <div class="four cell">
+                            <span><i18n>viescolaire.bulletin.neutre</i18n>
+                             </span>
+                            </div>
+                            <div class="one cell">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.neutre"/><span></span>
+                                </label>
+                            </div>
+                        </div>
+
                     </fieldset>
                 </div>
                 <div  ng-show="print.useModel === true">
@@ -322,13 +377,11 @@
                         <i18n>evaluation.lsu.export.button</i18n>
                     </button>
                 </div>
-            </content>
-
+            </div>
+            <div ng-include="'/competences/public/template/enseignants/bulletin/notes_options.html'"></div>
         </aside>
 
     </div>
-
-    </aside>
 
 </div>
 <div class="zero" id="list-to-pdf"></div>
@@ -343,5 +396,5 @@
 </div>
 <div class="stopwatch zero"></div>
 <ul class="results zero"></ul>
-</div>
+
 

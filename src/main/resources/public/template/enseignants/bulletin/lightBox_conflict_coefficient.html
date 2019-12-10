@@ -1,0 +1,39 @@
+<lightbox show="opened.coefficientConflict" on-close="!opened.coefficientConflict">
+    <h1 class="center"><i18n>evaluations.coefficient.conflict.list</i18n></h1>
+    <div class="twelve">
+        <div class="info">
+            <i18n>evaluations.coefficient.conflict.info</i18n>
+        </div>
+    </div>
+    <div ng-repeat="eleve in error.eleves | unique:'idEleve'">
+        <div ng-if="eleve.has_conflict_coefficient">
+             <div class="twelve">
+                <div class="twelve row">
+                <div class="twelve" style="font-size: 18px; font-weight: bold">[[eleve.firstName]] &nbsp; [[eleve.lastName]]  </div>
+                 <div class="twelve" style="font-size: small;">[[eleve.classeOf]] [[eleve.classeNameToShow]]</div>
+                </div>
+            </div>
+            <div class="header card row twelve" style="background: #4bafd5;height: 35px;padding-top: 10px; padding-left: 10px">
+                <div>
+                    <div class="cell bold nine"><i18n>viescolaire.utils.subject</i18n></div>
+                    <div class="cell bold center one"><i18n>evaluations.test.coefficient</i18n></div>
+                </div>
+            </div>
+            <div>
+                <div ng-repeat="subject in eleve.conflict_coefficient track by $index">
+                    <div>
+                        <div class="twelve row card ">
+                        <div style="padding-left: 10px" class="cell nine">
+                            <div class="bold matiere">[[subject.libelleMatiere]]</div>
+                            <div ng-repeat="teacher in subject.teachers">
+                                <span >[[teacher.firstName[0] + '.' + teacher.name]]</span><br/>
+                            </div>
+                        </div>
+                        <div class="cell one center">[[subject.coefficient]]</div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</lightbox>

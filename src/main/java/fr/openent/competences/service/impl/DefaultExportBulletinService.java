@@ -3,6 +3,7 @@ package fr.openent.competences.service.impl;
 import fr.openent.competences.Competences;
 import fr.openent.competences.ImgLevel;
 import fr.openent.competences.Utils;
+import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
 import fr.openent.competences.utils.MustachHelper;
 import fr.openent.competences.utils.NodePdfGeneratorClientHelper;
@@ -28,8 +29,8 @@ import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.service.impl.DefaultNoteService.ID_TYPE_SOUS_MATIERE;
-import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
+import static fr.openent.competences.service.impl.DefaultNoteService.*;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.*;
@@ -38,6 +39,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLTimeoutException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,6 +74,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String GET_ARBRE_DOMAINE_METHOD = "getArbreDomaines";
     private static final String GET_DATA_FOR_GRAPH_DOMAINE_METHOD = "getBilanPeriodiqueDomaineForGraph";
     private static final String PRINT_SOUS_MATIERES = "printSousMatieres";
+    private static final String PRINT_COEFFICIENT = "printCoefficient";
+    private static final String PRINT_MOYENNE_GENERALE = "printMoyenneGenerale";
+    private static final String PRINT_MOYENNE_ANNUELLE = "printMoyenneAnnuelle";
     private static final String BACKGROUND_COLOR = "backgroundColor";
     // Keys Utils
     private static final String APPRECIATION_KEY = "appreciation";
@@ -80,12 +85,16 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String ID_PARENT = "id_parent";
     private static final String ID_PERIODE ="id_periode";
     private static final String ID_CLASSE = "idClasse";
-    private static final String ID_ELEVE = "idEleve";
+    private static final String ID_ELEVE = "id_eleve";
     public static final String ID_ETABLISSEMENT = "id_etablissement";
     private static final String GET_RESPONSABLE = "getResponsable";
     private static final String MOYENNE = "moyenne";
     private static final String MOYENNE_CLASSE = "moyenneClasse";
     private static final String MOYENNE_ELEVE = "moyenneEleve";
+    private static final String MOYENNE_GENERALE = "moyenneGenerale";
+    private static final String MOYENNE_ANNUELLE = "moyenneAnnuelle";
+    private static final String STUDENT_RANK = "studentRank";
+    private static final String CLASS_AVERAGE_MINMAX = "classAverageMinMax";
     private static final String POSITIONNEMENT = "positionnement";
     private static final String MOYENNE_CLASSE_SOUS_MAT = "moyenneClasseSousMat";
     private static final String MOYENNE_ELEVE_SOUS_MAT = "moyenneEleveSousMat";
@@ -111,6 +120,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String PERIODE = "periode";
     private static final String STRUCTURE_LIBELLE = "structureLibelle";
     public static final String STRUCTURE = "structure";
+    private static final String NEUTRE = "neutre";
 
     public static final String USE_MODEL_KEY = "useModel";
     public static final String TYPE_PERIODE = "typePeriode";
@@ -127,6 +137,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
     private static final String GET_MOYENNE_ELEVE = "getMoyenneEleve";
+    private static final String GET_STUDENT_RANK = "getStudentRank";
+    private static final String GET_CLASS_AVERAGE_MINMAX = "getClassAverageMinMax";
     private static final String GET_POSITIONNEMENT = "getPositionnement";
     private static final String GET_PROGRAM_ELEMENT = "getProgramElements";
     private static final String HAS_IMG_STRUCTURE = "hasImgStructure";
@@ -154,6 +166,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private final DefaultCompetenceNoteService competenceNoteService;
     private final DefaultNiveauDeMaitriseService defaultNiveauDeMaitriseService;
     private HttpClient httpClient;
+    private DefaultNoteService noteService;
+    
     public DefaultExportBulletinService(EventBus eb, Storage storage) {
         this.eb = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
@@ -169,6 +183,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 Competences.COMPETENCES_NOTES_TABLE);
         this.storage = storage;
         defaultNiveauDeMaitriseService = new DefaultNiveauDeMaitriseService();
+        noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
 
     }
     public DefaultExportBulletinService(EventBus eb, Storage storage, Vertx vertx) {
@@ -254,7 +269,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         JsonArray idEleves = idStudents;
                         if (idEleves == null) {
                             idEleves = new JsonArray(idElevesFuture.result().stream()
-                                    .map(e -> ((JsonObject) e).getString(ID_ELEVE))
+                                    .map(e -> ((JsonObject) e).getString(ID_ELEVE_KEY))
                                     .collect(Collectors.toList()));
                         }
                         // si on a aucun élève, pas la peine de faire un export, on stoppe tout
@@ -345,6 +360,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("suiviAcquisitionLibelle",
                             getLibelle("evaluations.export.bulletin.element.appreciation.libelle"))
                     .put("positionementLibelle", getLibelle("evaluations.releve.positionnement.min") + '*')
+                    .put("studentRankLibelle", getLibelle("sudent.rank"))
+                    .put("classAverageMinLibelle", getLibelle("classaverage.min"))
+                    .put("classAverageMaxLibelle", getLibelle("classaverage.max"))
                     .put("moyenneStudentLibelle", getLibelle("average.min.eleve"))
                     .put("bilanAcquisitionLibelle", getLibelle("viescolaire.suivi.des.acquis.libelle.export"))
                     .put("viescolaireLibelle", getLibelle("evaluations.export.bulletin.viescolaireLibelle"))
@@ -361,12 +379,17 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("levelItems", getLibelle("level.items"))
                     .put("averages", getLibelle("average"))
                     .put("evaluationByDomaine", getLibelle("evaluation.by.domaine"))
+                    .put("coefficientLibelle", getLibelle("viescolaire.utils.coef"))
+                    .put("moyenneAnnuelleLibelle", getLibelle("average.annual"))
+                    .put("moyenneGeneraleLibelle", getLibelle("average.general"))
                     .put(NIVEAU_COMPETENCE, params.getValue(NIVEAU_COMPETENCE))
 
                     // positionnement des options d'impression
                     .put(GET_RESPONSABLE, params.getBoolean(GET_RESPONSABLE))
                     .put(GET_MOYENNE_CLASSE, params.getBoolean(MOYENNE_CLASSE))
                     .put(GET_MOYENNE_ELEVE, params.getBoolean(MOYENNE_ELEVE))
+                    .put(GET_STUDENT_RANK, params.getBoolean(STUDENT_RANK))
+                    .put(GET_CLASS_AVERAGE_MINMAX, params.getBoolean(CLASS_AVERAGE_MINMAX))
                     .put(GET_POSITIONNEMENT, params.getBoolean(POSITIONNEMENT))
                     .put(SHOW_PROJECTS, params.getBoolean(SHOW_PROJECTS))
                     .put(SHOW_FAMILY, params.getBoolean(SHOW_FAMILY))
@@ -377,7 +400,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(IMG_SIGNATURE, params.getString(IMG_SIGNATURE))
                     .put(HAS_IMG_SIGNATURE, params.getBoolean(HAS_IMG_SIGNATURE))
                     .put(NAME_CE, params.getString(NAME_CE))
-                    .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES));
+                    .put(PRINT_COEFFICIENT, params.getBoolean(COEFFICIENT))
+                    .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES))
+                    .put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE))
+                    .put(NEUTRE, params.getBoolean(NEUTRE, false));
 
         }
         log.debug(" -------[" + PUT_LIBELLE_FOR_EXPORT_METHOD +" ]: " + idEleve + " FIN " );
@@ -506,13 +532,21 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                             I18n.DEFAULT_DOMAIN, Locale.FRANCE);
                             JsonObject resultFinal = new JsonObject()
                                     .put(GET_PROGRAM_ELEMENT, params.getBoolean(GET_PROGRAM_ELEMENT))
-                                    .put("title", title);
-
-                            resultFinal.put("eleves", sortResultByClasseNameAndNameForBulletin(elevesMap));
+                                    .put("title", title)
+                                    .put(NEUTRE, params.getBoolean(NEUTRE));
+                            if(params.getBoolean(COEFFICIENT) && isNotNull(params.getValue(ERROR + COEFFICIENT))){
+                                renderError(request, new JsonObject().put(ELEVES,
+                                        sortResultByClasseNameAndNameForBulletin(elevesMap)));
+                                return;
+                            }
+                            resultFinal.put(ELEVES, sortResultByClasseNameAndNameForBulletin(elevesMap));
                             if(!forArchive) {
                                 resultFinal.put(ID_IMAGES_FILES, params.getJsonArray(ID_IMAGES_FILES));
-                                exportService.genererPdf(request, resultFinal, "bulletin.pdf.xhtml",
-                                        title, vertx, config);
+                                String template = "bulletin.pdf.xhtml";
+                                if(isNotNull(params.getValue("simple")) && params.getBoolean("simple")) {
+                                    template = "bulletin_lycee.pdf.xhtml";
+                                }
+                                    exportService.genererPdf(request, resultFinal, template, title, vertx, config);
                             }
                             if(future != null){
                                 log.debug("EleveDone : " + elevesDone.get()
@@ -1359,7 +1393,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         else {
             JsonObject action = new JsonObject();
             action.put(ACTION, "eleve.getResponsables")
-                    .put(ID_ELEVE, idEleve);
+                    .put(ID_ELEVE_KEY, idEleve);
             eb.send(Competences.VIESCO_BUS_ADDRESS, action,
                     Competences.DELIVERY_OPTIONS,
                     handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
@@ -1567,6 +1601,115 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         fontstyle.put("style", value);
     }
+    private void setMoyenneAnnuelle(JsonObject eleveObject, JsonArray matieres, JsonObject params){
+        if(isNull(matieres) || isNull(eleveObject) || isNull(params)){
+            log.error("setMoyenneAnnuelle call with null Object ");
+            return;
+        }
+        Double moy = new Double(0);
+        int sumCoef = 0;
+        Object  moyenAnnuelle;
+        for(int i=0; i < matieres.size(); i++){
+            JsonObject matiere = matieres.getJsonObject(i);
+            Object coefMatiere = matiere.getValue("coef");
+            JsonObject moyAnnuelle = getObjectForPeriode(matiere.getJsonArray(MOYENNES), null, ID_KEY);
+            Object moyMatiere = isNull(moyAnnuelle)? null : moyAnnuelle.getValue(MOYENNE);
+            if(isNotNull(moyMatiere) && isNotNull(coefMatiere) && !moyMatiere.equals(NN)){
+                coefMatiere = Integer.valueOf(coefMatiere.toString());
+                sumCoef += (int) coefMatiere;
+                moy += ((int)coefMatiere * Double.valueOf(moyMatiere.toString()));
+            }
+        }
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        moyenAnnuelle = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
+
+        eleveObject.put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE));
+        eleveObject.put(MOYENNE_ANNUELLE, moyenAnnuelle);
+    }
+
+    private void setMoyenneGenerale(JsonObject eleveObject, JsonArray matieres, JsonObject params,
+                                    Long idPeriode, String idEl){
+        Map<String, Double> moyMap = new HashMap<>();
+        Map<String, Integer> sumCoefMap = new HashMap<>();
+
+
+        Double moy = new Double(0);
+        int sumCoef = 0;
+        Object  moyenGeneral;
+
+        Double moyClass = new Double(0);
+        int sumCoefClass = 0;
+        Object  moyenGeneralClass;
+
+        for(int i=0; i < matieres.size(); i++){
+            JsonObject matiere = matieres.getJsonObject(i);
+            Object moyMatiere = matiere.getValue(MOYENNE_ELEVE);
+            Object moyMatiereClass = matiere.getValue(MOYENNE_CLASSE);
+            Object coefMatiere = matiere.getValue("coef", "1");
+            JsonObject moyenneMapPeriode = matiere.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT);
+
+            // Calcul de la moyenne générale de chacun des élèves évalué sur la matière
+            if(isNotNull(moyenneMapPeriode) && isNotNull(idPeriode)){
+                JsonObject matiereMoyenne = moyenneMapPeriode.getJsonObject(idPeriode.toString());
+                for(Map.Entry<String, Object> moyenneEleve : matiereMoyenne.getMap().entrySet()){
+                    String idEleve = moyenneEleve.getKey();
+                    Double moyEleve = (Double) moyenneEleve.getValue();
+                    if(!moyMap.containsKey(idEleve)){
+                        moyMap.put(idEleve, new Double(0));
+                        sumCoefMap.put(idEleve, 0);
+                    }
+                    int coefInt = Integer.valueOf(coefMatiere.toString()).intValue();
+                    moyMap.put(idEleve, moyMap.get(idEleve) + (moyEleve * coefInt));
+                    sumCoefMap.put(idEleve, sumCoefMap.get(idEleve) + coefInt);
+                }
+            }
+            // Calcul de la moyenne générale de l'élève
+            if(isNotNull(moyMatiere) && isNotNull(coefMatiere) && !moyMatiere.equals(NN)){
+                coefMatiere = Integer.valueOf(coefMatiere.toString());
+                sumCoef += (int) coefMatiere;
+                moy += ((int)coefMatiere * Double.valueOf(moyMatiere.toString()));
+            }
+            // Calcul de la moyenne Génerale de la classe
+            if(isNotNull(moyMatiereClass) && isNotNull(coefMatiere) && !moyMatiereClass.equals(NN)){
+                coefMatiere = Integer.valueOf(coefMatiere.toString());
+                sumCoefClass += (int) coefMatiere;
+                moyClass += ((int)coefMatiere * Double.valueOf(moyMatiereClass.toString()));
+            }
+        }
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.00");
+        moyenGeneral = (sumCoef > 0)? decimalFormat.format(moy/sumCoef) : NN;
+        moyenGeneralClass = (sumCoefClass > 0)? decimalFormat.format(moyClass/sumCoefClass) : NN;
+        JsonArray moyFinalesEleves = new JsonArray();
+        HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = new HashMap<>();
+        notesByDevoirByPeriodeClasse.put(idPeriode, new HashMap<>());
+        notesByDevoirByPeriodeClasse.get(idPeriode).put(idPeriode, new ArrayList<>());
+        for(Map.Entry<String, Double> moyenneEleve : moyMap.entrySet()){
+            String idEleve = moyenneEleve.getKey();
+            int sumCo = sumCoefMap.get(idEleve);
+            Double moyen = moyenneEleve.getValue();
+            if(sumCo > 0) {
+                Double moyCuEl = moyen/sumCo;
+                NoteDevoir noteEleve = new NoteDevoir(moyCuEl, 20.0, false, 1.0, idEleve);
+                notesByDevoirByPeriodeClasse.get(idPeriode).get(idPeriode).add(noteEleve);
+            }
+            
+        }
+
+        eleveObject.put(MOYENNE_GENERALE + "Obj", new JsonObject());
+        noteService.setRankAndMinMaxInClasseByPeriode(idEl, notesByDevoirByPeriodeClasse,moyFinalesEleves,
+                eleveObject.getJsonObject(MOYENNE_GENERALE + "Obj"));
+        eleveObject.put(PRINT_MOYENNE_GENERALE, params.getBoolean(MOYENNE_GENERALE));
+        eleveObject.put(MOYENNE_GENERALE, moyenGeneral);
+        eleveObject.put(MOYENNE_GENERALE + "Class", moyenGeneralClass);
+
+        if(params.getBoolean(NEUTRE, false)){
+            eleveObject.put(BACKGROUND_COLOR, "#ffffff");
+        }
+        else{
+            eleveObject.put(BACKGROUND_COLOR, (matieres.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
+        }
+    }
 
     @Override
     public void getSuiviAcquis(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode, JsonObject classe,
@@ -1632,16 +1775,27 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     // matière
                                     for (int i = 0; suiviAcquis != null && i < suiviAcquis.size() ; i++) {
                                         final JsonObject matiere = suiviAcquis.getJsonObject(i);
-                                        matiere.put(BACKGROUND_COLOR, (res.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
+
+                                        if(params.getBoolean(NEUTRE, false)){
+                                            eleveObject.put(BACKGROUND_COLOR, "#ffffff");
+                                            matiere.put(BACKGROUND_COLOR, "#ffffff");
+                                        }
+                                        else{
+                                            matiere.put(BACKGROUND_COLOR, (res.size()%2 ==0)? "#E2F0FA" : "#EFF7FC");
+                                        }
                                         // Une matière sera affichée si on a au moins un élement sur la période
                                         final boolean printMatiere = false;
                                         buildMatiereForSuiviAcquis (matiere, printMatiere, idPeriode, classe, params);
+                                        checkCoefficientConflict(eleveObject, matiere.getJsonObject(COEFFICIENT),
+                                                params);
                                         if(matiere.getBoolean(PRINT_MATIERE_KEY)) {
                                             res.add(matiere);
                                         }
 
                                     }
                                     setFontSizeOfSuivi(res, getProgrammeElement);
+                                    setMoyenneGenerale(eleveObject, res, params, idPeriode, idEleve);
+                                    setMoyenneAnnuelle(eleveObject, suiviAcquis, params);
 
                                     eleveObject.put("suiviAcquis", res).put("hasSuiviAcquis", res.size() > 0);
 
@@ -1823,6 +1977,25 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             matiere.put(SOUS_MATIERES, sousMatiereWithoutFirst);
         }
     }
+    private void setPrintCoefficient(JsonObject matiere, JsonObject params){
+        matiere.put(PRINT_COEFFICIENT, params.getBoolean(COEFFICIENT));
+        matiere.put("coef", matiere.getValue("coef", "1"));
+    }
+
+    private void checkCoefficientConflict(JsonObject elevesObject, JsonObject coefficient, JsonObject params){
+        JsonArray subjectConflict = new JsonArray();
+        for(Map.Entry<String, Object> coefEntry : coefficient.getMap().entrySet()){
+            subjectConflict.add( ((JsonObject)coefEntry.getValue()).put(COEFFICIENT, coefEntry.getKey()));
+        }
+        if(subjectConflict.size()>1){
+            elevesObject.put("conflict_"+ COEFFICIENT, subjectConflict);
+            elevesObject.put("has_conflict_"+ COEFFICIENT, true);
+            if(!params.containsKey(ERROR + COEFFICIENT)){
+                params.put(ERROR + COEFFICIENT, true);
+            }
+        }
+    }
+
     /**
      *  Calcule et met en forme les colonnes de la matière passée en paramètre
      * @param matiere matière à traiter
@@ -1838,7 +2011,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             setLibelleMatiere(matiere, models);
         }
 
+
         matiere.put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES));
+        setPrintCoefficient(matiere, params);
         JsonObject moyenneEleve = getObjectForPeriode(matiere.getJsonArray(MOYENNES), idPeriode, ID_KEY);
         JsonObject moyenneClasse = getObjectForPeriode(matiere.getJsonArray("moyennesClasse"), idPeriode, ID_KEY);
         JsonObject positionnement = getObjectForPeriode(matiere.getJsonArray(POSITIONNEMENTS_AUTO), idPeriode,
@@ -1990,8 +2165,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     responsableToCheck.getString(ADDRESSE_POSTALE);
                             java.lang.String addressResponsale =
                                     responsable.getString(ADDRESSE_POSTALE);
-                            String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName");
-                            String lastNameResponsable = responsable.getString("responsableLastName");
+                            String lastNameResponsableToCheck = responsableToCheck.getString("responsableLastName",
+                                    "");
+                            String lastNameResponsable = responsable.getString("responsableLastName",
+                                    "");
                             String civiliteResponsableToCheck = responsableToCheck.getString("civilite");
                             String civiliteResponsable = responsable.getString("civilite");
                             String newLastNameResponsableToCheck = new String();
@@ -2007,11 +2184,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                     if ("M.".equals(civiliteResponsableToCheck)) {
                                         newLastNameResponsableToCheck = civiliteResponsableToCheck + " et Mme " +
                                                 lastNameResponsableToCheck + " " +
-                                                responsableToCheck.getString("responsableFirstName");
+                                                responsableToCheck.getString("responsableFirstName","");
                                     } else {
                                         newLastNameResponsableToCheck = civiliteResponsable + " et Mme " +
                                                 lastNameResponsable + " " +
-                                                responsable.getString("responsableFirstName");
+                                                responsable.getString("responsableFirstName","");
                                     }
 
                                     responsableNewLibelle.add(newLastNameResponsableToCheck);
@@ -2711,7 +2888,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         log.error(e.getMessage(), e);
                     }
                     String fileName = getFileNameForStudent(student);
-                    String idEleve = student.getString(ID_ELEVE);
+                    String idEleve = student.getString(ID_ELEVE_KEY);
                     String externalIdClasse = student.getString(EXTERNAL_ID_KEY);
                     Future eleveFuture = Future.future();
 

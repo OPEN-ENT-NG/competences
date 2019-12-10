@@ -66,7 +66,7 @@ import static fr.wseduc.webutils.http.Renders.getScheme;
 public class DefaultExportService implements ExportService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultExportService.class);
-    private final static String  COEFFICIENT = "coefficient";
+    public final static String  COEFFICIENT = "coefficient";
     private final static String DEVOIRS = "devoirs";
     private final static String PRINT_SOUS_MATIERE = "printSousMatiere";
     /**

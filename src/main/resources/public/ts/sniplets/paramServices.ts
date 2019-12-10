@@ -21,11 +21,13 @@ export const paramServices = {
             evaluable: boolean;
             previous_evaluable: boolean;
             isManual: boolean;
+            coefficient: number;
 
             constructor(service) {
                 _.extend(this, service);
                 this.previous_modalite = this.modalite;
                 this.previous_evaluable = this.evaluable;
+                this.coefficient = (Utils.isNull(this.coefficient)? 1 : this.coefficient);
             }
 
             hasNullProperty(){
@@ -59,7 +61,13 @@ export const paramServices = {
                     })
                 }
             }
-
+            updateServiceCoefficient () {
+                try {
+                    return http.put('/competences/service', this.toJson());
+                } catch (e) {
+                    notify.error('evaluation.service.error.update');
+                }
+            }
             updateServiceEvaluable() {
 
                 let request = () => {
@@ -131,7 +139,8 @@ export const paramServices = {
                     id_matiere: this.id_matiere,
                     id_groupe: this.id_groupe,
                     modalite: this.modalite,
-                    evaluable: this.evaluable
+                    evaluable: this.evaluable,
+                    coefficient: this.coefficient
                 }
             }
         },
@@ -181,9 +190,10 @@ export const paramServices = {
             this.columns = {
                 delete: {size : "one", name: "evaluation.service.columns.delete", filtered: false},
                 matiere: {size: "three", data: [], name: "evaluation.service.columns.matiere", filtered: false},
-                enseignant: {size: "three", data: [], name: "evaluation.service.columns.teacher", filtered: false},
+                enseignant: {size: "two", data: [], name: "evaluation.service.columns.teacher", filtered: false},
                 classe: {size: "two", data: [], name: "evaluation.service.columns.classGroup", filtered: false},
                 modalite: {size: "one", data: [], name: "evaluation.service.columns.modalite", filtered: false},
+                coefficient: {size: "one", name: "viescolaire.utils.coefficient", filtered: false},
                 evaluable: {size: "one", name: "evaluation.service.columns.evaluable", filtered: false},
             };
 

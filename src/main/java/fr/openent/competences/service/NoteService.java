@@ -18,7 +18,6 @@
 package fr.openent.competences.service;
 
 import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.bean.StatClass;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
@@ -158,6 +157,17 @@ public interface NoteService extends CrudService {
                           String colonne,Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Regroupe les notes des matières par coefficient puis effectue le calcul par matière
+     * @param moyFinalesEleves
+     * @param listNotes notes de tous les élèves
+     * @param result JsonObject of result
+     * @param idEleve
+     * @param idEleves id des Eleves ayant une note dans la lisNotes
+     * @return retourne rien
+     */
+    void getMoyennesMatieresByCoefficient(JsonArray moyFinalesEleves, JsonArray listNotes, final JsonObject result,
+                                          String idEleve, JsonArray idEleves);
+    /**
      *Calcul la moyenne d'un eleve a
      * @param listNotes response of request
      * @param result JsonObject of result
@@ -194,8 +204,19 @@ public interface NoteService extends CrudService {
      * @param result JsonObject sur lequel est ajouté les moyennes de la classe
      */
     void calculAndSetMoyenneClasseByPeriode(final JsonArray moyFinalesEleves,
-                                            final HashMap<Long,HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
-                                            final JsonObject result );
+                                            final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+                                            final JsonObject result);
+
+    /**
+     *  @param idEleve
+     * @param notesByDevoirByPeriodeClasse
+     * @param moyFinalesEleves
+     * @param result
+     */
+    void setRankAndMinMaxInClasseByPeriode(final String idEleve,
+                                           final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+                                           final JsonArray moyFinalesEleves,
+                                           final JsonObject result);
 
     void calculPositionnementAutoByEleveByMatiere(JsonArray listNotes, JsonObject result, Boolean annual);
 

@@ -143,5 +143,4 @@ public class NoteDevoir {
     }
 
     public Long getIdPeriode() {return this.idPeriode;}
-
 }

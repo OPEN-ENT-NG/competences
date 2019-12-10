@@ -1,4 +1,4 @@
-import {_, ng, notify, idiom as lang} from "entcore";
+import {_, ng, notify, idiom as lang, Me} from "entcore";
 import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
 import {evaluations, Utils} from "../models/teacher";
@@ -43,7 +43,18 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             });
 
             $scope.currentModel = undefined;
-            $scope.print = {};
+            let competences = await Me.preference('competences');
+            let optionsPrintBulletin = (Utils.isNull(competences)? undefined : competences.printBulletin);
+            $scope.print = (Utils.isNull(optionsPrintBulletin))? {} : optionsPrintBulletin;
+            $scope.error = {};
+            if(Utils.isNotNull($scope.opened)) {
+                $scope.opened.coefficientConflict = false;
+            }
+            else{
+                $scope.opened = {
+                    coefficientConflict : false
+                };
+            }
 
             // Récupération du logo de l'établissement, de la signature et du nom du CE
             try {
@@ -81,6 +92,14 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 $scope.print.nameCE);
         };
         $scope.generateBulletin = async function (options){
+            if(Me && Me.preferences) {
+                if(Utils.isNull(Me.preferences.competences)) {
+                    Me.preferences.competences = {};
+                }
+
+                Me.preferences.competences.printBulletin = $scope.print;
+                await Me.savePreference('competences');
+            }
             let selectedClasses = _.where($scope.printClasses.all, {selected : true});
 
             if (_.isEmpty(selectedClasses)) {

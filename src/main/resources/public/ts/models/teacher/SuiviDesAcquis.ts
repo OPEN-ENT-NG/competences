@@ -29,14 +29,12 @@ export class SuiviDesAcquis  {
 
     _positionnements_auto : any[];
     _moyenne : any[];
-
     idEleve: string;
     idClasse: string;
     idEtablissement: string;
     idPeriode : number;
 
     constructor(o?:any ) {
-
     }
 
 
@@ -122,6 +120,7 @@ export class SuivisDesAcquis extends Model{
     idEtablissement: string;
     idPeriode : number;
     historiques: Historique[];
+    hasCoefficientConflict : boolean;
 
     constructor (idEleve: string, idClasse: string, idEtablissement: string, idPeriode : number, typesPeriode : TypePeriode[]) {
         super();
@@ -135,7 +134,7 @@ export class SuivisDesAcquis extends Model{
             this.historiques.push(new Historique(typeP.id_type));
         });
         this.historiques.push(new Historique(null));
-
+        this.hasCoefficientConflict = false;
     }
 
     async getConversionTable(): Promise<any> {
@@ -146,6 +145,24 @@ export class SuivisDesAcquis extends Model{
             }
         });
         return this.tableConversions.sync();
+    }
+     checkCoefficientConflict = () => {
+        this.hasCoefficientConflict = false;
+        _.forEach(this.all, (subject) => {
+            subject.coefficients = [];
+            if(Utils.isNotNull(subject) && _.keys(subject.coefficient).length > 1){
+                this.hasCoefficientConflict = true;
+                subject.hasConflict = true;
+                this.hasCoefficientConflict = true;
+                _.mapObject(subject.coefficient, (val, key) => {
+                    subject.coefficients.push(_.extend(val, {coefficient : key}));
+                });
+            }
+            else {
+                subject.hasConflict = false;
+            }
+
+        })
     }
     async getSuivisDesAcquis ( ){
 
@@ -246,7 +263,7 @@ export class SuivisDesAcquis extends Model{
                 _.each(suiviDesAcquisToRemove, (suiviDesAcquisToRemove) => {
                     this.all = _.without(this.all, suiviDesAcquisToRemove);
                 });
-
+                this.checkCoefficientConflict();
                     //calcul moyenne pour chaque periode
                 _.each(this.historiques, (histo) => {
                     histo.moyGeneraleEleve = (histo.moyEleveAllMatieres.length === 0)? utils.getNN() : utils.average(histo.moyEleveAllMatieres).toFixed(2);

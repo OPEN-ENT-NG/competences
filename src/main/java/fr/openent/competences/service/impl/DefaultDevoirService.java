@@ -1235,8 +1235,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                                             JsonArray listNotes = event.right().getValue();
 
                                                             for (int i = 0; i < listNotes.size(); i++) {
+
                                                                 JsonObject note = listNotes.getJsonObject(i);
-                                                                String coef = note.getString("coefficient");
+                                                                String  coef = note.getString("coefficient");
                                                                 if(coef != null) {
                                                                     NoteDevoir noteDevoir = new NoteDevoir(
                                                                             Double.valueOf(note
@@ -1402,10 +1403,16 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, devoirs.id_periode " +
-                " FROM "+ Competences.COMPETENCES_SCHEMA + ".devoirs";
+        String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, services.coefficient " +
+                " FROM "+ Competences.COMPETENCES_SCHEMA + ".devoirs " +
+                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
+                " ON (devoirs.id = rel_devoirs_groupes.id_devoir) "+
+                " LEFT JOIN "+ Competences.COMPETENCES_SCHEMA + ".services " +
+                " ON (rel_devoirs_groupes.id_groupe = services.id_groupe AND devoirs.owner = services.id_enseignant " +
+                "                           AND devoirs.id_matiere = services.id_matiere) ";
 
-        String footerQuery = " WHERE devoirs.eval_lib_historise = false ";
+
+                String footerQuery =   " WHERE devoirs.eval_lib_historise = false ";
 
         String query = "SELECT * " +
                 " FROM (" +
@@ -1426,13 +1433,14 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                 " UNION " + headQuery +
                 " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode " +
-                " ON (appreciation_matiere_periode.id_matiere = devoirs.id_matiere AND appreciation_matiere_periode.id_eleve = ?) "+
-                " INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes " +
-                " ON (rel_devoirs_groupes.id_groupe = appreciation_matiere_periode.id_classe AND devoirs.id = rel_devoirs_groupes.id_devoir) "+
+                " ON (appreciation_matiere_periode.id_matiere = devoirs.id_matiere " +
+                "           AND appreciation_matiere_periode.id_eleve = ? " +
+                "           AND rel_devoirs_groupes.id_groupe = appreciation_matiere_periode.id_classe ) "+
+
                 footerQuery +
 
                 " ) AS res " +
-                " ORDER BY res.id_periode, res.id_matiere ";
+                " ORDER BY res.id_matiere ";
 
         values.add(id_eleve).add(id_eleve).add(id_eleve).add(id_eleve);
 
