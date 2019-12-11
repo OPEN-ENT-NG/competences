@@ -4,6 +4,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
+import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -98,7 +99,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                final String idClasse , Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> subjectFuture = Future.future();
-        // Récupération des matières
+        // Récupération des matières et des professeurs
         devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, event -> {
             formate(subjectFuture,event);
         });
@@ -121,7 +122,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     handler.handle(new Either.Right<>(new JsonArray()));
                 }
                 else {
-                    buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres, idsTeachers, responseArray);
+                    buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres, idsTeachers, responseArray,idPeriode);
 
                     // Récupération du libelle des matières et sous Matières
                     Future<Map<String,JsonObject>> libelleMatiereFuture = Future.future();
@@ -130,7 +131,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     // Récupération des noms et prénoms des professeurs
                     Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
                     Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
-                        formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
+                        FormateFutureEvent.formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
                     });
 
                     CompositeFuture.all(libelleMatiereFuture, lastNameAndFirstNameFuture).setHandler( event1 -> {
@@ -139,7 +140,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                             Map<String, JsonObject> teachersInfos = lastNameAndFirstNameFuture.result();
                             JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
                             setSubjectLibelleAndTeachers (idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
-                                    idsMatieresIdsTeachers, idsMatieres, idsMatLibelle, teachersInfos, idPeriode, handler);
+                                    idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
 
                         }
                         else{
@@ -207,8 +208,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private void setSubjectLibelleAndTeachers (String idEleve,JsonArray idClasseGroups, final String idClasse,
                                                String idEtablissement, JsonArray idsGroups,
                                                Map<String,JsonObject> idsMatieresIdsTeachers,
-                                               JsonArray idsMatieres, Map<String, JsonObject> idsMatLibelle,
-                                               Map<String, JsonObject> teachersInfos, Long idPeriode,
+                                               Map<String, JsonObject> idsMatLibelle,
+                                               Map<String, JsonObject> teachersInfos, Long idPeriod,
                                                Handler<Either<String, JsonArray>> handler) {
 
         if (!(idClasseGroups != null && !idClasseGroups.isEmpty())) {
@@ -238,7 +239,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             // Récupération des élements du Programme
             Future<JsonArray> elementsProgFuture = Future.future();
             elementProgramme.getElementProgrammeClasses(
-                    idPeriode, idMatiere, idsGroups,elementsProgEvent -> {
+                    idPeriod, idMatiere, idsGroups,elementsProgEvent -> {
                         formate(elementsProgFuture, elementsProgEvent);
                     });
 
@@ -298,12 +299,13 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsMatieres,
-                                      JsonArray idsTeachers, JsonArray responseArray){
+                                      JsonArray idsTeachers, JsonArray responseArray, final Long idPeriode){
 
         for (int i = 0; i < responseArray.size(); i++) {
             JsonObject responseObject = responseArray.getJsonObject(i);
             String idMatiere = responseObject.getString(ID_MATIERE);
             String owner = responseObject.getString("owner");
+            Long id_periode = responseObject.getLong("id_periode");
             Long coefficient = responseObject.getLong(COEFFICIENT);
             coefficient = isNull(coefficient)? 1L : coefficient;
 
@@ -314,8 +316,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
             JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
             JsonArray teachers = matiere.getJsonArray("teachers");
-            teachers.add(owner);
-            idsTeachers.add(owner);
+            if (idPeriode.equals(id_periode)){
+                teachers.add(owner);
+                idsTeachers.add(owner);
+            }
+
             JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
             if(!coeffObject.containsKey(coefficient.toString())){
                 coeffObject.put(coefficient.toString(), new JsonArray());
