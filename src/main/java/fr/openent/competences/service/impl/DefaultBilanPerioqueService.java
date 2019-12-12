@@ -131,7 +131,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     // Récupération des noms et prénoms des professeurs
                     Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
                     Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
-                        FormateFutureEvent.formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
+                        formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
                     });
 
                     CompositeFuture.all(libelleMatiereFuture, lastNameAndFirstNameFuture).setHandler( event1 -> {
@@ -316,16 +316,16 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
             JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
             JsonArray teachers = matiere.getJsonArray("teachers");
-            if (idPeriode.equals(id_periode)){
-                teachers.add(owner);
-                idsTeachers.add(owner);
-            }
+            if (idPeriode.equals(id_periode)) teachers.add(owner);
+
+            if(!idsTeachers.contains(owner)) idsTeachers.add(owner);
 
             JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
             if(!coeffObject.containsKey(coefficient.toString())){
                 coeffObject.put(coefficient.toString(), new JsonArray());
             }
-            coeffObject.getJsonArray(coefficient.toString()).add(owner);
+            if(!coeffObject.getJsonArray(coefficient.toString()).contains(owner))
+                coeffObject.getJsonArray(coefficient.toString()).add(owner);
         }
 
     }
