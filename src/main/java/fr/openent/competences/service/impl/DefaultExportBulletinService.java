@@ -2401,8 +2401,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             setLevel(eleve);
 
             // Rajout de l'idEtablissement pour l'archive
-            if(isNull(eleve.getString(ID_ETABLISSEMENT_KEY)) && isNotNull(params.getString(ID_ETABLISSEMENT_KEY))){
-                eleve.put(ID_ETABLISSEMENT_KEY, params.getString(ID_ETABLISSEMENT_KEY));
+            if(isNotNull(params.getString("idStructure")) && (isNull(eleve.getString(ID_ETABLISSEMENT_KEY))
+                    || !eleve.getString(ID_ETABLISSEMENT_KEY).equals(params.getString(ID_ETABLISSEMENT_KEY)))){
+                eleve.put(ID_ETABLISSEMENT_KEY, params.getString("idStructure"));
             }
 
             elevesMap.put(idEleve, eleve);
