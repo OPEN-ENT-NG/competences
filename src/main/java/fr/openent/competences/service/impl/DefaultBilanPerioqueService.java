@@ -131,7 +131,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     // Récupération des noms et prénoms des professeurs
                     Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
                     Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
-                        formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
+                        FormateFutureEvent.formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
                     });
 
                     CompositeFuture.all(libelleMatiereFuture, lastNameAndFirstNameFuture).setHandler( event1 -> {

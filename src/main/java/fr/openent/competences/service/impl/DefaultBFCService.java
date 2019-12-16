@@ -833,7 +833,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
     public void generateBFC(final String idStructure, final JsonArray idClassesArray, final JsonArray idElevesArray,
                             final Long idCycle, final Long idPeriode, final Handler<Either<String, JsonObject>>handler){
-
         final List<String> idClasses = idClassesArray.getList();
         final List<String> idEleves = idElevesArray.getList();
 
@@ -1106,7 +1105,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         final Map<Integer, String> libelleEchelle = new HashMap<>();
 
-
         Future conversionNoteFuture = Future.future();
         getConversionNoteCompetenceClasse(idStructure, classe, result, libelleEchelle,
                 event -> formate(conversionNoteFuture, event ));
@@ -1178,7 +1176,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                         e.setLangueCultureRegionale(niveauLangueCultureRegionaleEleve.get(e.getIdEleve()));
                         e.setSyntheseCycle(syntheseEleve.get(e.getIdEleve()));
                     }
-                    JsonArray classeResult = formatBFC(classe.getValue());
+                    JsonArray eleves = formatBFC(classe.getValue());
+                    final JsonArray classeResult = Utils.sortElevesByDisplayName(eleves);
                     final String idClasse = classe.getValue().get(0).getIdClasse();
                     if (classeResult != null) {
                         List<Future> listeFutures = new ArrayList<>();
@@ -1207,7 +1206,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                 collectBFCEleve(classe.getKey(), new JsonObject().put(ERROR, error), result, handler);
                                 log.error("getBFC: buildBFC (Array of idEleves, " + classe.getKey() + ", "
                                         + idStructure + ") : " + event.toString());
-                            }else{
+                            } else {
                                 for(Object eleve : classeResult){
                                     JsonObject eleveJson = ((JsonObject)eleve);
                                     JsonObject imgStructure =  imageStructureFuture.result();
@@ -1227,7 +1226,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                 collectBFCEleve(classe.getKey(), new JsonObject().put(ELEVES, classeResult), result,
                                         handler);
                             }
-
                         });
                     }
 
@@ -1336,9 +1334,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         }
 
         for (final Map.Entry<String, List<Eleve>> classe : classes.entrySet()) {
-
             final Map<String, Map<Long, Integer>> resultatsEleves = new HashMap<>();
-
             final List<String> idEleves = new ArrayList<>();
 
             // La liste des identifiants des Eleves de la classe est necessaire pour "buildBFC"
@@ -1347,7 +1343,6 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
             }
 
             buildBFCParClasse(idEleves, idStructure, idPeriode, idCycle, classe, result, resultatsEleves, handler);
-
         }
     }
 

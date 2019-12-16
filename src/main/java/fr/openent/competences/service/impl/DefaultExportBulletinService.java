@@ -106,6 +106,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String ACTION = "action";
     private static final String NAME = Competences.NAME;
     private static final String CLASSE_NAME = CLASSE_NAME_KEY;
+    public static final String DISPLAY_NAME = "displayName";
     private static final String ADDRESSE_POSTALE = "addressePostale";
     private static final String GRAPH_PER_DOMAINE = "graphPerDomaine";
     private static final String LIBELLE = "libelle";
@@ -132,7 +133,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String PATH = "path";
     public static final String FIRST_NAME_KEY = "firstName";
     public static final String LAST_NAME_KEY = "lastName";
-
 
     // Parameter Key
     private static final String GET_MOYENNE_CLASSE = "getMoyenneClasse";
@@ -247,7 +247,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                   String host, String acceptLanguage,
                                   final Handler<Either<String, JsonObject>> finalHandler, Future<JsonObject> future){
 
-
         Boolean threeLevel = params.getBoolean("threeLevel");
         Boolean threeMoyenneClasse = params.getBoolean("threeMoyenneClasse");
         Boolean threeMoyenneEleve = params.getBoolean("threeMoyenneEleve");
@@ -308,7 +307,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         CompositeFuture.all(tableauDeConversionFuture, elevesFuture, modelsLibelleFuture)
                 .setHandler((event -> {
                     if (event.succeeded()) {
-                        final JsonArray eleves = elevesFuture.result();
+                        JsonArray eleves = elevesFuture.result();
+                        eleves = Utils.sortElevesByDisplayName(eleves);
                         final JsonObject classe =
                                 new JsonObject().put("tableauDeConversion", tableauDeConversionFuture.result());
                         if (useModel) {
@@ -2121,10 +2121,9 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
     @Override
     public JsonArray sortResultByClasseNameAndNameForBulletin(Map<String, JsonObject> mapEleves) {
-
         List<JsonObject> eleves = new ArrayList<>(mapEleves.values());
         Collections.sort(eleves, new Comparator<JsonObject>() {
-            private static final String KEY_NAME = NAME;
+            private static final String KEY_DISPLAY_NAME = DISPLAY_NAME;
             private static final String KEY_CLASSE_NAME = CLASSE_NAME;
 
             @Override
@@ -2132,11 +2131,13 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 String valA = "";
                 String valB = "";
                 try {
-                    valA = a.getString(KEY_CLASSE_NAME) + a.getString(KEY_NAME);
-                    valB = b.getString(KEY_CLASSE_NAME) + b.getString(KEY_NAME);
+                    valA = a.getString(KEY_CLASSE_NAME) + "-" + a.getString(KEY_DISPLAY_NAME);
+                    valB = b.getString(KEY_CLASSE_NAME) + "-" + b.getString(KEY_DISPLAY_NAME);
                 } catch (Exception e) {
                     //do something
                 }
+                valA = Utils.removeAccent(valA);
+                valB = Utils.removeAccent(valB);
                 return valA.compareTo(valB);
             }
         });
@@ -2381,7 +2382,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         Long typePeriode = params.getLong(TYPE_PERIODE);
         String idClasseExporte = classe.getString(ID_CLASSE_KEY);
         for (int i = 0; i < eleves.size(); i++) {
-
             JsonObject eleve = eleves.getJsonObject(i);
             eleve.put(TYPE_PERIODE, typePeriode);
 

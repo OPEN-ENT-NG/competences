@@ -169,6 +169,7 @@ export class ReleveNote extends  Model implements IModel {
                 http().getJson(url)
                     .done((res) => {
                         this._tmp = res;
+                        utils.sortByLastnameWithAccentIgnored(this._tmp.eleves);
                         this.synchronized.evaluations = true;
                         resolve();
                     });
@@ -603,7 +604,6 @@ export class ReleveNote extends  Model implements IModel {
     }
 
     addColumnForExportCsv (line, key): any {
-
         if(line[key] === undefined) {
             line[key] = ' ';
         }
@@ -647,7 +647,6 @@ export class ReleveNote extends  Model implements IModel {
                 let link = document.createElement('a');
                 let response = data.data;
                 if(this.exportOptions.fileType === 'csv') {
-
                     let columnCsv = [];
                     let format = this.formateHeaderAndColumn();
                     _.forEach(response.eleves , (line) => {
@@ -681,7 +680,6 @@ export class ReleveNote extends  Model implements IModel {
 
                         columnCsv.push(_.pick(line, format.column));
                     });
-
 
                     let csvData = Utils.ConvertToCSV(columnCsv, format.header);
                     if(this.exportOptions.appreciationClasse ){
@@ -719,13 +717,11 @@ export class ReleveNote extends  Model implements IModel {
                         csvData += '\r\n';
                     }
 
-
                     csvData = "\ufeff"+csvData;
                     blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
                     link = document.createElement('a');
                     link.href = window.URL.createObjectURL(blob);
                     link.download =  `releve_periodique_${this.classe.name}_${this.matiere.name}_${this.idPeriode}.csv`;
-
                 }
                 else {
                     blob = new Blob([response]);
@@ -736,7 +732,6 @@ export class ReleveNote extends  Model implements IModel {
                 document.body.appendChild(link);
                 link.click();
                 resolve();
-
             }
             catch(e) {
                 reject(e);

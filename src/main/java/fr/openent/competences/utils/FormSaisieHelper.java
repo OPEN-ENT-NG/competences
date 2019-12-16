@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.service.impl.DefaultCompetencesService;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
@@ -44,18 +45,17 @@ public class FormSaisieHelper {
                 .put("idClasse", devoirInfos.getString("id_groupe"))
                 .put("idPeriode", devoirInfos.getInteger("id_periode"));
 
-        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(
-                message -> {
-                    JsonObject body = message.body();
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(message -> {
+            JsonObject body = message.body();
 
-                    if ("ok".equals(body.getString("status"))) {
-                        result.put("eleves", body.getJsonArray("results"));
-                        studentsFuture.complete();
-                    }
-                    else {
-                        studentsFuture.fail("Error :can not get students ");
-                    }
-                }));
+            if ("ok".equals(body.getString("status"))) {
+                result.put("eleves", Utils.sortElevesByDisplayName(body.getJsonArray("results")));
+                studentsFuture.complete();
+            }
+            else {
+                studentsFuture.fail("Error :can not get students ");
+            }
+        }));
         return studentsFuture;
     }
 

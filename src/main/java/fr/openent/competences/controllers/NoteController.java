@@ -297,7 +297,6 @@ public class NoteController extends ControllerHelper {
     public void exportRelevePeriodique(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request, param -> {
             if(param.getString("fileType").equals("pdf")) {
-
                 notesService.exportPDFRelevePeriodique(param,  request, vertx, config);
             }
             else {
@@ -315,7 +314,7 @@ public class NoteController extends ControllerHelper {
             if(param.getJsonArray("idPeriodes").size() == 0) {
                 final Long idPeriode = param.getLong(Competences.ID_PERIODE_KEY);
                 notesService.getTotaleDatasReleve(param, idPeriode, annual, notEmptyResponseHandler(request));
-            }else{
+            } else{
                 annual = true;
                 final JsonObject resultHandler = new JsonObject();
                 List<Future> listFuturesEachPeriode = new ArrayList<>();
@@ -336,7 +335,7 @@ public class NoteController extends ControllerHelper {
                                             ((JsonObject) listFuturesEachPeriode.get(i).result()));
                                 }
                                 JsonObject eleves = new JsonObject().put("eleves",((JsonObject) listFuturesEachPeriode.get(0).result()).getJsonArray("eleves").copy());
-                                resultHandler.put("annual",eleves);
+                                resultHandler.put("annual", eleves);
                                 for (int i=1; i< param.getJsonArray("idPeriodes").size();i++) {
                                     JsonArray elevesAutresPeriodes = ((JsonObject) listFuturesEachPeriode.get(i).result()).getJsonArray("eleves");
                                     for(Object eleve : resultHandler.getJsonObject("annual").getJsonArray("eleves")){
