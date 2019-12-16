@@ -1856,6 +1856,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                                                                                 JsonObject resultMoysElevesByMat = new JsonObject();
                                                                                 setJOResultWithList(resultMoysElevesByMat, listMoyGeneraleEleve);
+                                                                                elevesResult = Utils.sortElevesByDisplayName(elevesResult);
                                                                                 resultMoysElevesByMat.put("eleves", elevesResult);
                                                                                 resultMoysElevesByMat.put("nbEleves", elevesResult.size());
                                                                                 handler.handle(new Either.Right<>(resultMoysElevesByMat));
@@ -1953,16 +1954,13 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         utilsService.getLibelleMatAndTeacher(mapAllidMatAndidTeachers, new Handler<Either<String, SortedMap<String, JsonObject>>>() {
             @Override
             public void handle(Either<String, SortedMap<String, JsonObject>> event) {
-
                 if (!event.isRight()) {
                     log.error(event.left().getValue());
                     handler.handle(new Either.Left(event.left()));
                 } else {
-
                     SortedMap<String, JsonObject> mapRespMatTeacher = event.right().getValue();
                     JsonArray matieresResult = new fr.wseduc.webutils.collections.JsonArray();
                     for (Map.Entry<String, Set<String>> mapEntry : mapAllidMatAndidTeachers.entrySet()) {
-
                         String idMatAllMats = mapEntry.getKey();
                         JsonObject matiereJson = (JsonObject) mapRespMatTeacher.get(idMatAllMats);
                         JsonObject statClass = new JsonObject();
@@ -1973,8 +1971,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                             matiereJson.put("moyClass", statClass.getDouble("moyenne"));
                             matiereJson.put("moyMinClass", statClass.getDouble("noteMin"));
                             matiereJson.put("moyMaxClass", statClass.getDouble("noteMax"));
-
-                        }else{
+                        } else{
                             matiereJson.put("moyClass", "");
                             matiereJson.put("moyMinClass", "");
                             matiereJson.put("moyMaxClass", "");
@@ -2105,7 +2102,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 nbEvaluatedHomeWork, sousMatiereFuture)
                 .setHandler( idElevesEvent -> {
                     if(idElevesEvent.succeeded()) {
-                        //
                         putParamSousMatiere(sousMatiereFuture.result(), params);
                         resultHandler.put(TABLE_CONVERSION_KEY, tableauDeConversionFuture.result());
 
@@ -2191,7 +2187,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                 resultHandler.put(COMPETENCES_NOTES_KEY, compNotesFuture.result());
                                 if (idPeriode != null) {
                                     // Cacul du positionnement auto
-                                    calculMoyennesCompetencesNotesFOrReleve(compNotesFuture.result(), resultHandler,
+                                    calculMoyennesCompetencesNotesForReleve(compNotesFuture.result(), resultHandler,
                                             idPeriode, tableauDeConversionFuture.result(), elevesMapObject);
 
                                     // Format sous matières moyennes
@@ -2782,7 +2778,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
     }
 
-    private <T> void calculMoyennesCompetencesNotesFOrReleve (JsonArray listCompNotes, JsonObject result, Long idPeriode,
+    private <T> void calculMoyennesCompetencesNotesForReleve (JsonArray listCompNotes, JsonObject result, Long idPeriode,
                                                               JsonArray tableauDeconversion,
                                                               Map<String, JsonObject> eleveMapObject) {
 
@@ -2798,7 +2794,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     eleveObject.put(COMPETENCES_NOTES_KEY, compNotesEleve);
                 }
                 if(!eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).equals(compNotesEleve)){
-                    log.info("calculMoyennesCompetencesNotesFOrReleve get difference");
+                    log.info("calculMoyennesCompetencesNotesForReleve get difference");
                     log.warn(compNotesEleve.encode() + " _\n "  +
                             eleveObject.getJsonArray(COMPETENCES_NOTES_KEY).encode());
                 }
@@ -2842,12 +2838,12 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                                 Future<JsonArray> studentsClassFuture ){
         new DefaultUtilsService(this.eb).studentAvailableForPeriode(idClasse, idPeriode, typeClasse,
                 message -> {
-
                     JsonObject body = message.body();
                     if ("ok".equals(body.getString("status"))) {
-                        JsonArray queryResult =body.getJsonArray("results");
-                        for (int i = 0; i < queryResult.size(); i++) {
-                            JsonObject eleve = queryResult.getJsonObject(i);
+                        JsonArray eleves = body.getJsonArray("results");
+                        eleves = Utils.sortElevesByDisplayName(eleves);
+                        for (int i = 0; i < eleves.size(); i++) {
+                            JsonObject eleve = eleves.getJsonObject(i);
                             String idEleve = eleve.getString("id");
                             idEleves.add(idEleve);
                             eleve.put(CLASSE_NAME_KEY, eleve.getString("level"));
@@ -2856,7 +2852,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                     + eleve.getString(FIRST_NAME_KEY));
                             eleveMapObject.put(idEleve, eleve);
                         }
-                        studentsClassFuture.complete(queryResult);
+                        studentsClassFuture.complete(eleves);
                     }
                     else {
                         studentsClassFuture.fail("[getStudentClassForExportReleve] " +
@@ -3209,8 +3205,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         getLibellePeriode(eb, request, param.getInteger(ID_PERIODE_KEY),  periodeLibelleEvent -> {
             formate(periodeLibelleFuture, periodeLibelleEvent );
         });
-
-
 
         CompositeFuture.all(exportResult, structureFuture, imgStructureFuture, periodeLibelleFuture)
                 .setHandler((event -> {

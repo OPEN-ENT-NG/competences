@@ -46,6 +46,7 @@ import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.getHost;
 
 import java.util.*;
+import java.text.*;
 import java.util.stream.Collectors;
 
 public class Utils {
@@ -841,23 +842,43 @@ public class Utils {
         handler.handle(new Either.Left<>(cause));
     }
 
-    public static JsonArray sortUsersByDisplayNameAndFirstName(JsonArray users) {
+    public static String removeAccent(String text) {
+        return Normalizer.normalize(text, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+    }
 
-        List<JsonObject> eleves = users.getList();
+    public static JsonArray sortElevesByDisplayName(JsonArray array) {
+        List<JsonObject> eleves = array.getList();
         Collections.sort(eleves, new Comparator<JsonObject>() {
-            private static final String KEY_NAME = "displayName";
+            private static final String KEY_DISPLAY_NAME = "displayName";
+            private static final String KEY_LAST_NAME = "lastName";
+            private static final String KEY_FIRST_NAME = "firstName";
             private static final String USER_KEY = "user";
             @Override
             public int compare(JsonObject a, JsonObject b) {
                 String valA = "";
                 String valB = "";
                 try {
-                    valA = a.getString(KEY_NAME);
-                    valB = b.getString(KEY_NAME);
-                    if(isNull(valA) || isNull(valB)){
-                        valA = a.getJsonObject(USER_KEY).getString(KEY_NAME);
-                        valB = b.getJsonObject(USER_KEY).getString(KEY_NAME);
+                    if(!isNull(a.getJsonObject(USER_KEY))){
+                        valA = a.getJsonObject(USER_KEY).getString(KEY_DISPLAY_NAME);
+                        valB = b.getJsonObject(USER_KEY).getString(KEY_DISPLAY_NAME);
+                        if(isNull(valA))
+                            valA = a.getJsonObject(USER_KEY).getString(KEY_LAST_NAME) + " "
+                                    + a.getJsonObject(USER_KEY).getString(KEY_FIRST_NAME);
+                        if(isNull(valB))
+                            valB = b.getJsonObject(USER_KEY).getString(KEY_LAST_NAME) + " "
+                                    + b.getJsonObject(USER_KEY).getString(KEY_FIRST_NAME);
                     }
+                    else {
+                        valA = a.getString(KEY_DISPLAY_NAME);
+                        valB = b.getString(KEY_DISPLAY_NAME);
+                        if(isNull(valA))
+                            valA = a.getString(KEY_LAST_NAME) + " " + a.getString(KEY_FIRST_NAME);
+                        if(isNull(valB))
+                            valB = b.getString(KEY_LAST_NAME) + " " + b.getString(KEY_FIRST_NAME);
+                    }
+                    valA = removeAccent(valA);
+                    valB = removeAccent(valB);
                 } catch (Exception e) {
                     //do something
                 }

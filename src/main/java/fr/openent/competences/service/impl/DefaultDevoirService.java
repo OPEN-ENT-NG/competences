@@ -1233,9 +1233,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                                                             JsonArray listNotes = event.right().getValue();
 
                                                             for (int i = 0; i < listNotes.size(); i++) {
-
                                                                 JsonObject note = listNotes.getJsonObject(i);
-                                                                String  coef = note.getString("coefficient");
+                                                                String coef = note.getString("coefficient");
                                                                 if(coef != null) {
                                                                     NoteDevoir noteDevoir = new NoteDevoir(
                                                                             Double.valueOf(note
@@ -1566,7 +1565,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
       JsonObject result = new JsonObject();
         getDevoirInfo(idDevoir,  (Either<String, JsonObject> devoirInfo) -> {
           if (devoirInfo.isRight()) {
-
               final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
 
               formatDevoirsInfos(devoirInfos, result);
@@ -1595,8 +1593,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                               handler.handle(new Either.Right<>(result));
                           }
                       });
-
-
           } else {
               String error = "Error :can not get informations from postgres tables ";
               log.error(error);

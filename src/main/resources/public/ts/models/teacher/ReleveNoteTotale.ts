@@ -109,7 +109,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 }
                 _.forEach(this.matiereWithDevoirs, (matiere)=> {
                     if (!addingAllStudents) {
-                        _.forEach(_.sortBy(response.eleves,'displayName'), (line) => {
+                        _.forEach(response.eleves, (line) => {
                             if (this.exportOptions.moyenneMat) {
                                 if (line.moyenneFinale != undefined && line.moyenneFinale[matiere.id] != undefined) {
                                     line[matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];
@@ -249,7 +249,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         }
                         addingAllStudents = true;
                     } else {
-                        _.forEach(_.sortBy(response.eleves,'displayName'), (line) => {
+                        _.forEach(response.eleves, (line) => {
                             if (this.exportOptions.moyenneMat) {
                                 if (line.moyenneFinale != undefined && line.moyenneFinale[matiere.id] != undefined) {
                                     columnCsv.filter(eleve => eleve.displayName == line.displayName)[0][matiere.name + 'Moyenne'] = line.moyenneFinale[matiere.id];

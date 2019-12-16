@@ -166,7 +166,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         };
 
         $scope.chooseClasse = async function (classe) {
-            await Utils.chooseClasse(classe,$scope, true);
+            await Utils.chooseClasse(classe, $scope, true);
+            utils.sortByLastnameWithAccentIgnored($scope.allElevesClasses);
             await utils.safeApply($scope);
         };
 

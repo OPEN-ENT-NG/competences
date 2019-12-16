@@ -273,7 +273,7 @@ public class DefaultExportService implements ExportService {
             FormateFutureEvent.formate(notesFuture, event);
         });
 
-        CompositeFuture.all(competencesNotesFuture,annotationsFuture,notesFuture)
+        CompositeFuture.all(competencesNotesFuture, annotationsFuture, notesFuture)
                 .setHandler(new Handler<AsyncResult<CompositeFuture>>() {
                     @Override
                     public void handle (AsyncResult<CompositeFuture> event) {
@@ -344,6 +344,7 @@ public class DefaultExportService implements ExportService {
 
         if( result.getBoolean("byEleves")){
             JsonArray eleves = mapResult.get("eleves");
+            eleves = Utils.sortElevesByDisplayName(eleves);
             if(devoir.getInteger("nbrcompetence") > 0 && !competences.isEmpty() && withResult) {
                 JsonArray evaluatedCompetences = result.getJsonArray("competences");
                 result.remove("competences");
@@ -502,7 +503,7 @@ public class DefaultExportService implements ExportService {
 
                 handler.handle(new Either.Right<>(ExportEvaluationHelper.formatJsonObjectExportDevoir(text, usePerso,
                         new JsonObject(devoirMap),
-                        extractData(orderBy(elevesArray, LAST_NAME_KEY), ID_ELEVE_KEY),
+                        extractData(Utils.sortElevesByDisplayName(elevesArray), ID_ELEVE_KEY),
                         extractData(orderBy(addMaitriseNE(maitrises), ORDRE, true), ORDRE),
                         extractData(competencesArray, "id_competence"),
                         extractData(notesArray, ID_ELEVE),
@@ -1387,11 +1388,12 @@ public class DefaultExportService implements ExportService {
             eb.send(Competences.VIESCO_BUS_ADDRESS, action, Competences.DELIVERY_OPTIONS, handlerToAsyncHandler(
                     message -> {
                         if (OK.equals(message.body().getString(STATUS))) {
-                            final JsonArray eleves = message.body().getJsonArray(RESULTS);
+                            JsonArray eleves = message.body().getJsonArray(RESULTS);
+                            eleves = Utils.sortElevesByDisplayName(eleves);
                             final String[] idEleves = new String[eleves.size()];
 
                             for (int i = 0; i < eleves.size(); i++) {
-                                elevesMap.put( eleves.getJsonObject(i).getString(ID_KEY),
+                                elevesMap.put(eleves.getJsonObject(i).getString(ID_KEY),
                                         eleves.getJsonObject(i).getString("lastName")
                                                 + " " + eleves.getJsonObject(i).getString("firstName"));
                                 idEleves[i] = eleves.getJsonObject(i).getString(ID_KEY);
@@ -1436,14 +1438,14 @@ public class DefaultExportService implements ExportService {
                 false, event -> formate(devoirsFuture, event));
 
         //Récupération de la structure
-        Future<JsonObject> strtuctureFuture = Future.future();
-        utilsService.getStructure(idEtablissement, event -> formate(strtuctureFuture, event));
+        Future<JsonObject> structureFuture = Future.future();
+        utilsService.getStructure(idEtablissement, event -> formate(structureFuture, event));
 
         // Récupération des matières de l'établissement
         Future<JsonArray> subjectF = Future.future();
         new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
 
-        CompositeFuture.all(infoEleve, devoirsFuture, strtuctureFuture, subjectF)
+        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF)
                 .setHandler(event -> {
                     if (event.failed()) {
                         Utils.returnFailure("getExportReleveEleve", event, handler);
@@ -1480,8 +1482,7 @@ public class DefaultExportService implements ExportService {
                         }
                     }
 
-
-                    final JsonObject etabJSON = strtuctureFuture.result().getJsonObject("s")
+                    final JsonObject etabJSON = structureFuture.result().getJsonObject("s")
                             .getJsonObject("data");
                     final JsonObject periodeJSON = new JsonObject();
 
@@ -1501,6 +1502,7 @@ public class DefaultExportService implements ExportService {
                             periodeJSON, userJSON, etabJSON, handler);
                 });
     }
+
     /**
      * Récupère le nom des enseignants de chacune des matières puis positionne
      * les devoirs de l'élève sur les bonnes matières et enfin génère le PDF associé
@@ -1714,20 +1716,21 @@ public class DefaultExportService implements ExportService {
                 handler.handle(new Either.Left<>(getLibelle("evaluations.export.releve.no.student")));
                 return;
             }
+
             JsonArray exportResultClasse = new JsonArray();
             List<Future> classeFuture = new ArrayList<>();
             MultiMap params = MultiMap.caseInsensitiveMultiMap();
             params.add("idTypePeriode", isNotNull(idTypePeriode)? idTypePeriode.toString() : null)
                     .add("ordrePeriode", isNotNull(ordre)? ordre.toString() : null);
-            getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture );
+            getDataForClasse(elevesClasse, idEtablissement, idPeriode, params, exportResultClasse, classeFuture);
 
             CompositeFuture.all(classeFuture).setHandler(event -> {
                 if(event.failed()){
                     returnFailure("getDataForExportReleveClasse", event, handler);
                     return;
                 }
-                handler.handle(new Either.Right<>( new JsonObject().put(ELEVES,
-                        sortUsersByDisplayNameAndFirstName(exportResultClasse))));
+                handler.handle(new Either.Right<>(new JsonObject().put(ELEVES,
+                        Utils.sortElevesByDisplayName(exportResultClasse))));
             });
         });
     }
@@ -1745,7 +1748,6 @@ public class DefaultExportService implements ExportService {
             classeFuture.add(eleveFuture);
             getDataForEleve(idEleve, idEtablissement, idPeriode, params, eleveFuture, exportResultClasse);
         }
-
     }
 
     private void getDataForEleve(String idEleve, String idEtablissement, Long idPeriode, MultiMap params,
@@ -1759,7 +1761,6 @@ public class DefaultExportService implements ExportService {
             }
             exportResultClasse.add(event.right().getValue());
             eleveFuture.complete();
-
         });
 
     }

@@ -22,8 +22,14 @@
  */
 export function sortByLastnameWithAccentIgnored (collection) {
     collection.sort(function(a, b) {
-        var textA = removeAccent(a.lastName.toUpperCase());
-        var textB = removeAccent(b.lastName.toUpperCase());
+        var textA = a.displayName;
+        var textB = b.displayName;
+        if(!textA)
+            textA = a.lastName + a.firstName;
+        if(!textB)
+            textB = b.lastName + b.firstName;
+        textA = removeAccent(textA);
+        textB = removeAccent(textB);
         return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
     });
 }
