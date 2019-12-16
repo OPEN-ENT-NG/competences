@@ -47,6 +47,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
     matieresId : any;
     format:any;
     allMatieres:any;
+    idGroups:any;
 
     get api() {
         return {
@@ -66,6 +67,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
         this.dataByMatiere = [];
         this.matiereWithDevoirs = [];
         this.matieresId = [];
+        this.idGroups = [];
         this.collection(Devoir, {
             sync: () => {
             }
@@ -78,21 +80,23 @@ export class ReleveNoteTotale extends  Model implements IModel {
             idClasse: this.idClasse,
             idEtablissement: this.idEtablissement,
             idPeriode: this.idPeriode,
-            idPeriodes: _.pluck(this.periodes,'idPeriode')
+            idPeriodes: _.pluck(this.periodes,'idPeriode'),
+            typeClasse: this.classe.type_groupe
         };
     }
 
     async export  () {
         return new Promise(async (resolve, reject) => {
             try {
-                await this.formateHeaderAndColumn()
+                await this.formateHeaderAndColumn();
                 let columnCsv = [];
                 let blob;
                 let addingAllStudents = false;
                 let parameter = this.toJson();
-                _.extend(parameter, {
-                    typeClasse: this.classe.type_groupe
-                });
+                if(this.idGroups.length != 0)
+                    _.extend(parameter, {
+                        idGroups: this.idGroups
+                    });
                 let data = await httpAxios.post(this.api.EXPORT, parameter);
                 console.dir(data);
                 let response;
@@ -164,8 +168,8 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             if(this.exportOptions.avisOrientation && this.periodes.length >0) {
                                 for (let periode of this.periodes){
                                     if((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName).length != 0 &&
-                                        (responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0].avis_conseil_orientation != undefined)
-                                        line['avis_orientation'+periode.periodeName] = (responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0].avis_conseil_orientation;
+                                        ((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0] as any).avis_conseil_orientation != undefined)
+                                        line['avis_orientation'+periode.periodeName] = ((responseOtherPeriodes[periode.idPeriode].eleves).filter(eleve => eleve.displayName == line.displayName)[0] as any).avis_conseil_orientation;
                                     else
                                         line['avis_orientation'+periode.periodeName] = ""
                                 }
@@ -293,7 +297,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     csvData = "\ufeff"+csvData;
                     blob = new Blob([csvData], { type: ' type: "text/csv;charset=UTF-8"' });
                     let link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
+                    link.href = (window as any).URL.createObjectURL(blob);
                     if(this.exportOptions.positionnementFinal && this.exportOptions.moyenneMat)
                         link.download = `tableau_moyenne_positionnement_toutes_matieres_${this.classe.name}_${this.periodeName}.csv`;
                     else
@@ -329,9 +333,15 @@ export class ReleveNoteTotale extends  Model implements IModel {
                             this.matiereWithDevoirs.push(matiere);
                             this.matieresId.push(matiere.id);
                             this.dataByMatiere[matiere.id] = _devoirs;
+                            _devoirs.forEach(devoir => {
+                                if(devoir.id_groupe != this.idClasse)
+                                    this.idGroups.push(devoir.id_groupe);
+                            });
                         }
                     });
                 });
+                if(this.idGroups.length != 0)
+                    this.idGroups.push(this.idClasse);
                 if (this.matieresId.length == 0)
                     throw "Pas d'évaluations réalisées pour cette classe sur cette période";
                 for (let matiere of this.matiereWithDevoirs) {

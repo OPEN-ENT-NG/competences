@@ -381,8 +381,8 @@ public class NoteController extends ControllerHelper {
                                                                     .put(idMatiere.toString(),Long.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
                                                         }else {
                                                             ((JsonObject) eleve).getJsonObject("positionnement")
-                                                                    .put(idMatiere.toString(), Float.valueOf(((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()) +
-                                                                            Float.valueOf(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
+                                                                    .put(idMatiere.toString(), Float.parseFloat(((JsonObject) eleve).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()) +
+                                                                            Float.parseFloat(((JsonObject) eleveAutrePeriode).getJsonObject("positionnement").getValue(idMatiere.toString()).toString()));
                                                             if (((JsonObject) eleve).containsKey("nbPeriodeMoyennePos")) {
                                                                 if (((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").containsKey(idMatiere.toString())) {
                                                                     ((JsonObject) eleve).getJsonObject("nbPeriodeMoyennePos").put(idMatiere.toString(),
@@ -409,8 +409,8 @@ public class NoteController extends ControllerHelper {
                                                         ((JsonObject) eleve).put("moyenne_generale",Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
                                                         ((JsonObject) eleve).put("nbPeriodesMoyenne", 1);
                                                     }else {
-                                                        ((JsonObject) eleve).put("moyenne_generale", Double.valueOf(((JsonObject) eleve).getValue("moyenne_generale").toString()) +
-                                                                Double.valueOf(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
+                                                        ((JsonObject) eleve).put("moyenne_generale", Double.parseDouble(((JsonObject) eleve).getValue("moyenne_generale").toString()) +
+                                                                Double.parseDouble(((JsonObject) eleveAutrePeriode).getValue("moyenne_generale").toString()));
                                                         if (((JsonObject) eleve).containsKey("nbPeriodesMoyenne")) {
                                                             ((JsonObject) eleve).put("nbPeriodesMoyenne",((JsonObject) eleve).getLong("nbPeriodesMoyenne") + 1);
                                                         } else {
@@ -450,11 +450,11 @@ public class NoteController extends ControllerHelper {
                                     }
                                 }
 
-                                Boolean init = false;
+                                boolean init = false;
                                 Double min = 0.0;
                                 Double max = 0.0;
                                 int nbElevesMoyenne = 0;
-                                Double moyenneDeMoyenne = 0.0;
+                                double moyenneDeMoyenne = 0.0;
 
                                 for(Object eleve : resultHandler.getJsonObject("annual").getJsonArray("eleves")) {
                                     JsonObject jsonEleve = ((JsonObject) eleve);
@@ -490,17 +490,17 @@ public class NoteController extends ControllerHelper {
                                     }
                                     if (jsonEleve.containsKey("nbPeriodesMoyenne") && jsonEleve.containsKey("moyenne_generale") && jsonEleve.getValue("moyenne_generale") != null
                                             && !(jsonEleve.getValue("moyenne_generale").equals(NN) || jsonEleve.getValue("moyenne_generale").equals(""))) {
-                                        moyenneDeMoyenne += Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                        moyenneDeMoyenne += Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
                                         nbElevesMoyenne++;
                                         if (!init) {
-                                            min = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
-                                            max = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                            min = Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                            max = Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
                                             init = true;
                                         } else {
-                                            if (min > Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))
-                                                min = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
-                                            if (max < Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))
-                                                max = Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                            if (min > Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))
+                                                min = Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
+                                            if (max < Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))
+                                                max = Double.parseDouble(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne");
                                         }
                                         jsonEleve.put("moyenne_generale", decimalFormat.format((Double.valueOf(jsonEleve.getValue("moyenne_generale").toString()) / jsonEleve.getLong("nbPeriodesMoyenne"))));
                                     } else if (!jsonEleve.containsKey("moyenne_generale") || jsonEleve.getValue("moyenne_generale") == null
@@ -524,15 +524,15 @@ public class NoteController extends ControllerHelper {
 
                                 for(Object idMatiere : param.getJsonArray("idMatieres")){
                                     Double moyenne = 0.0;
-                                    Float moyennePos = new Float(0);
+                                    float moyennePos = (float) 0;
                                     nbElevesMoyenne = 0;
                                     int nbElevesMoyennePos = 0;
                                     min = 0.0;
                                     max = 0.0;
-                                    Float minPos = new Float(0);
-                                    Float maxPos = new Float(0);
+                                    float minPos = (float) 0;
+                                    float maxPos = (float) 0;
                                     init = false;
-                                    Boolean initPos = false;
+                                    boolean initPos = false;
 
                                     for(Object eleve : resultHandler.getJsonObject("annual").getJsonArray("eleves")){
                                         JsonObject jsonEleve = ((JsonObject)eleve);
@@ -556,17 +556,17 @@ public class NoteController extends ControllerHelper {
                                         }
                                         if(jsonEleve.getJsonObject("positionnement").containsKey(idMatiere.toString()) && ((JsonObject)eleve).getJsonObject("positionnement").getValue(idMatiere.toString()) != null
                                                 && !(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(NN) || jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).equals(""))) {
-                                            moyennePos += Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                            moyennePos += Float.parseFloat(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
                                             nbElevesMoyennePos++;
                                             if(!initPos){
-                                                minPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
-                                                maxPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                minPos = Float.parseFloat(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                maxPos = Float.parseFloat(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
                                                 initPos = true;
                                             }else{
-                                                if(minPos >  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
-                                                    minPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
-                                                if(maxPos <  Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
-                                                    maxPos = Float.valueOf(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                if(minPos >  Float.parseFloat(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
+                                                    minPos = Float.parseFloat(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
+                                                if(maxPos <  Float.parseFloat(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString()))
+                                                    maxPos = Float.parseFloat(jsonEleve.getJsonObject("positionnement").getValue(idMatiere.toString()).toString());
                                             }
                                         }
                                     }
@@ -627,14 +627,41 @@ public class NoteController extends ControllerHelper {
         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
         String idEtablissement = request.params().get("idEtablissement");
         String idClasse = request.params().get("idClasse");
-        Long idPeriode = null;
-        if (request.params().get("idPeriode") != null) {
-            idPeriode = Long.parseLong(request.params().get("idPeriode"));
-        }
-        if (idEtablissement != "undefined" && idClasse != "undefined"
-                && request.params().get("idPeriode") != "undefined") {
-            devoirsService.listDevoirs(null,idEtablissement, idClasse, null,
-                    idPeriode,false, handler);
+        Long idPeriode =Long.parseLong(request.params().get("idPeriode"));
+        if (!idEtablissement.equals("undefined") && !idClasse.equals("undefined")
+                && !request.params().get("idPeriode").equals("undefined")) {
+            Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
+                        @Override
+                        public void handle(Either<String, JsonArray> responseQuerry) {
+                            if (responseQuerry.isLeft()) {
+                                String error = responseQuerry.left().getValue();
+                                log.error(error);
+                                handler.handle(new Either.Left<>(error));
+                            } else {
+                                JsonArray idClasseGroups = responseQuerry.right().getValue();
+                                //List qui contient la idClasse + tous les ids groupes de la classe
+                                if (idClasseGroups.isEmpty()) {
+                                    String[] idsGroups = new String[1];
+                                    idsGroups[0] = idClasse;
+                                    devoirsService.listDevoirs(null, idsGroups, null,
+                                            new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                            null, false, handler);
+                                } else {
+                                    String[] idsGroups = new String[idClasseGroups.getJsonObject(0)
+                                            .getJsonArray("id_groupes").size() + 1];
+                                    idsGroups[0] = idClasseGroups.getJsonObject(0).getString("id_classe");
+                                    for (int i = 0; i < idClasseGroups.getJsonObject(0)
+                                            .getJsonArray("id_groupes").size(); i++) {
+                                        idsGroups[i + 1] = idClasseGroups.getJsonObject(0)
+                                                .getJsonArray("id_groupes").getString(i);
+                                        devoirsService.listDevoirs(null, idsGroups, null,
+                                                new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                                null, false, handler);
+                                    }
+                                }
+                            }
+                        }
+                    });
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }

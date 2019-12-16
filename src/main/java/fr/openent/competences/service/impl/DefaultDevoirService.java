@@ -791,8 +791,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             handler.handle(new Either.Left<String, JsonArray>("listDevoirs : All parameters are empty."));
         }
 
-        query.append("SELECT devoirs.*, rel.id_groupe")
+        query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
+                .append(" inner join "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
                 .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel")
                 .append(" ON devoirs.id = rel.id_devoir");
 
@@ -838,11 +839,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             if (historise) {
                 query.append(" OR ");
             }
-        } else {
-            query.append(" (");
         }
         if (historise) {
-            query.append(" devoirs.eval_lib_historise = ? ");
+            query.append("( devoirs.eval_lib_historise = ? ");
             params.add(historise);
         }
         if (idMatieres.length != 0 || historise) {
@@ -853,8 +852,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append(" UNION ");
 
-        query.append("SELECT devoirs.*, rel.id_groupe")
+        query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
+                .append(" inner join "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
                 .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel").append(" ON devoirs.id = rel.id_devoir")
                 .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCES_NOTES_TABLE + " AS comp").append(" ON devoirs.id = comp.id_devoir");
 
@@ -900,11 +900,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             if (historise) {
                 query.append(" OR ");
             }
-        } else {
-            query.append(" (");
         }
         if (historise) {
-            query.append(" devoirs.eval_lib_historise = ? ");
+            query.append("( devoirs.eval_lib_historise = ? ");
             params.add(historise);
         }
         if (idMatieres.length != 0 || historise) {
