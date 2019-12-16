@@ -21,11 +21,12 @@
         <article class="twelve cell">
             <h3 ng-class="{'openedElem' : graphMat.opened}"
                 class="margin-top-05em chevron"
-                data-ng-click="graphMat.opened = !graphMat.opened; switchOpenMatiere(graphMat.opened);">
+                data-ng-click="graphMat.opened = !graphMat.opened;">
                 <i18n>evaluations.bilan.by.subject</i18n>
             </h3>
             <div ng-if="!graphMat.opened">
-                <div class="fancyCheck three cell">
+                <div class="loaderGraph loaderCenter" ng-show="showGraphMatLoader == true"></div>
+                <div class="fancyCheck three cell" ng-show="showGraphMatLoader == false">
                     <input type="checkbox" id="subjectComparison" class="cell"
                            ng-model="graphMat.comparison">
                     <label class="cell twelve" for="subjectComparison">
@@ -76,11 +77,12 @@
         <article class="twelve cell">
             <h3 ng-class="{'openedElem' : graphDom.opened}"
                 class="margin-top-05em chevron"
-                data-ng-click="graphDom.opened = !graphDom.opened; switchOpenDomaine(graphDom.opened);">
+                data-ng-click="graphDom.opened = !graphDom.opened;">
                 <i18n>evaluations.bilan.by.domaine</i18n>
             </h3>
             <div ng-if="!graphDom.opened">
-                <div class="fancyCheck three cell">
+                <div class="loaderGraph loaderCenter" ng-show="showGraphDomLoader == true"></div>
+                <div class="fancyCheck three cell" ng-show="showGraphDomLoader == false">
                     <input type="checkbox" id="domaineComparison" class="cell"
                            ng-model="graphDom.comparison">
                     <label class="cell twelve" for="domaineComparison">

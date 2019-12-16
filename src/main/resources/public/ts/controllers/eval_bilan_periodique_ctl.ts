@@ -32,6 +32,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.opened.criteres = true;
         $scope.opened.avis = true;
         $scope.opened.ensCplt = true;
+        $scope.showGraphMatLoader = false;
+        $scope.showGraphDomLoader = false;
         $scope.selected = {suiviAcquis: true, projet: false, vieScolaire: false, graphique: false, bfc: false};
         $scope.graphDom = {opened: true, comparison: false, darkness: true, infoGrouped: false};
         $scope.graphMat = {opened: true, comparison: false, darkness: true, infoGrouped: false};
@@ -218,6 +220,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 template.open('graphique', 'enseignants/bilan_periodique/display_graphiques');
                 template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
                 await Utils.stopMessageLoader($scope);
+                $scope.openMatiere();
+                $scope.openDomaine();
             }
             catch (e) {
                 await Utils.stopMessageLoader($scope);
@@ -264,14 +268,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
         //////            Graph de l'onglet graphique            //////
-        $scope.switchOpenMatiere = async function (isOpened) {
-            if (isOpened !== true) {
-                await $scope.openMatiere();
-            }
-        };
-
         $scope.openMatiere = async function () {
             template.close('graphMatiere');
+            $scope.showGraphMatLoader = true;
             await utils.safeApply($scope);
             let promiseOpenMatiere = [];
             promiseOpenMatiere.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false,
@@ -284,6 +283,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             await Promise.all(promiseOpenMatiere);
             template.open('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject');
+            $scope.showGraphMatLoader = false;
             await utils.safeApply($scope);
         };
 
@@ -325,13 +325,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 await Utils.stopMessageLoader($scope);
             }
         };
-        $scope.switchOpenDomaine = async function (isOpened) {
-            if (isOpened !== true) {
-                await $scope.openDomaine();
-            }
-        };
+
         $scope.openDomaine = async function () {
             template.close('graphDomaine');
+            $scope.showGraphDomLoader = true;
             await utils.safeApply($scope);
             let promiseDomaine = [];
             if (template.contains('comparisonGraphDom', 'enseignants/bilan_periodique/graph/comparison_graph_domaine')) {
@@ -342,6 +339,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.niveauCompetences, $scope.search.periode.id_type));
             await Promise.all(promiseDomaine);
             template.open('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine');
+            $scope.showGraphDomLoader = false;
             await utils.safeApply($scope);
         };
 
