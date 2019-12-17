@@ -118,7 +118,7 @@
 
     </div>
 </div>
-<section class="toggle-buttons" ng-class="{ hide: selected.devoirs.list.length == 0 }">
+<section class="toggle-buttons" ng-if="selected.devoirs.list.length > 0">
     <div class="toggle">
         <div class="row">
             <button ng-show="selected.devoirs.list.length === 1 &&
@@ -139,7 +139,7 @@
                     ng-click="opened.lightboxs.duplication = true;">
                 <i18n><span class="no-style">evaluations.toaster.duplication</span></i18n>
             </button>
-            <button class="cell ng-scope" ng-click="confirmSuppretion()">
+            <button class="cell ng-scope" ng-click="confirmSuppression()">
                 <i18n><span class="no-style">evaluations.test.delete</span></i18n>
             </button>
             <button class="cell"
@@ -192,7 +192,7 @@
 </lightbox>
 
 <lightbox ng-if="selected.devoirs.list.length > 0 || devoirsUncancelable.length > 0"
-          show="opened.evaluation.suppretionMsg1" on-close="opened.evaluation.suppretionMsg1=false">
+          show="opened.evaluation.suppressionMsg1" on-close="opened.evaluation.suppressionMsg1=false">
     <p ng-if="devoirsUncancelable.length > 0 ">
         <i18n>evaluations.devoir.recaputilatif.suppression.uncancelable</i18n>
         <span ng-if="(selected.devoirs.list.length + devoirsUncancelable.length)< 12"
@@ -224,17 +224,17 @@
             class="marginFive" ng-click="firstConfirmationSuppDevoir()">
         <i18n>evaluations.devoir.confirmation</i18n>
     </button>
-    <button class="marginFive" ng-click="annulerSuppretion()">
+    <button class="marginFive" ng-click="annulerSuppression()">
         <i18n>evaluations.devoir.annuler</i18n>
     </button>
 </lightbox>
 
-<lightbox ng-if="selected.devoirs.listwithEvaluatedMarks.length>0 || selected.devoirs.listwithEvaluatedSkills.length>0" show="opened.evaluation.suppretionMsg2" on-close="opened.evaluation.suppretionMsg2=false">
-    <p ng-if="conditionAffichageText(1)" >[[textSuppretionMsg2.Text1]]</p>
-    <p ng-if="conditionAffichageText(2)" >[[textSuppretionMsg2.Text2]]</p>
-    <p ng-if="conditionAffichageText(3)" >[[textSuppretionMsg2.Text3]]</p>
+<lightbox ng-if="selected.devoirs.listwithEvaluatedMarks.length>0 || selected.devoirs.listwithEvaluatedSkills.length>0" show="opened.evaluation.suppressionMsg2" on-close="opened.evaluation.suppressionMsg2=false">
+    <p ng-if="conditionAffichageText(1)" >[[textSuppressionMsg2.Text1]]</p>
+    <p ng-if="conditionAffichageText(2)" >[[textSuppressionMsg2.Text2]]</p>
+    <p ng-if="conditionAffichageText(3)" >[[textSuppressionMsg2.Text3]]</p>
     <div ng-if="conditionAffichageText(4)">
-        <p  >[[textSuppretionMsg2.Text4]]</p>
+        <p  >[[textSuppressionMsg2.Text4]]</p>
         <div >
             <p><i18n>evaluations.devoir.recaputilatif.EvaluatedSkills</i18n>:</p>
             <ul>
@@ -243,7 +243,7 @@
         </div>
     </div>
     <div ng-if="conditionAffichageText(5)">
-        <p  >[[textSuppretionMsg2.Text5]]</p>
+        <p  >[[textSuppressionMsg2.Text5]]</p>
         <div >
             <p><i18n>evaluations.devoir.recaputilatif.EvaluatedMarks</i18n>:</p>
             <ul>
@@ -252,7 +252,7 @@
         </div>
     </div>
     <div  ng-if="conditionAffichageText(6)" >
-        <p  >[[textSuppretionMsg2.Text6]]</p>
+        <p  >[[textSuppressionMsg2.Text6]]</p>
         <div >
             <p><i18n>evaluations.devoir.recaputilatif.EvaluatedSkills</i18n>:</p>
             <ul>
@@ -266,11 +266,11 @@
             </ul>
         </div>
     </div>
-    <p>[[textSuppretionMsg2.TextFin]]</p>
+    <p>[[textSuppressionMsg2.TextFin]]</p>
     <button class="marginFive" ng-click="deleteDevoir()">
         <i18n>evaluations.devoir.confirmation</i18n>
     </button>
-    <button class="marginFive" ng-click="annulerSuppretion()">
+    <button class="marginFive" ng-click="annulerSuppression()">
         <i18n>evaluations.devoir.annuler</i18n>
     </button>
 </lightbox>

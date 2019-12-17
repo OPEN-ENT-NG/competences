@@ -195,6 +195,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
 
             listDevoirs: async function (params) {
+                $scope.selected.devoirs.list = [];
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -600,8 +601,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             },
             accOp: 0,
             evaluation: {
-                suppretionMsg1: false,
-                suppretionMsg2: false,
+                suppressionMsg1: false,
+                suppressionMsg2: false,
             },
             displayStructureLoader: false,
             displayMessageLoader: false,
@@ -1016,7 +1017,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         };
 
-        $scope.confirmSuppretion = function () {
+        $scope.confirmSuppression = function () {
             if ($scope.selected.devoirs.list.length > 0) {
                 $scope.devoirsUncancelable = [];
                 if (!Utils.isChefEtab()) {
@@ -1032,12 +1033,12 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                     });
                 }
-                $scope.opened.evaluation.suppretionMsg1 = true;
+                $scope.opened.evaluation.suppressionMsg1 = true;
 
                 utils.safeApply($scope);
             }
         };
-        $scope.textSuppretionMsg2 = {
+        $scope.textSuppressionMsg2 = {
             Text1: lang.translate('evaluations.devoir.recaputilatif.suppression.text1'),
             Text2: lang.translate('evaluations.devoir.recaputilatif.suppression.text2'),
             Text3: lang.translate('evaluations.devoir.recaputilatif.suppression.text3'),
@@ -1084,10 +1085,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                         }
                     }
-                    $scope.opened.evaluation.suppretionMsg1 = false;
+                    $scope.opened.evaluation.suppressionMsg1 = false;
                     if ($scope.selected.devoirs.listwithEvaluatedSkills.length > 0
                         || $scope.selected.devoirs.listwithEvaluatedMarks.length > 0) {
-                        $scope.opened.evaluation.suppretionMsg2 = true;
+                        $scope.opened.evaluation.suppressionMsg2 = true;
                     } else {
                         $scope.deleteDevoir();
                     }
@@ -1139,9 +1140,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
 
         };
-        $scope.annulerSuppretion = function () {
-            $scope.opened.evaluation.suppretionMsg2 = false;
-            $scope.opened.evaluation.suppretionMsg1 = false;
+        $scope.annulerSuppression = function () {
+            $scope.opened.evaluation.suppressionMsg2 = false;
+            $scope.opened.evaluation.suppressionMsg1 = false;
         };
 
         $scope.releveNote = undefined;
@@ -1956,7 +1957,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 if (index > -1) {
                                     $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, d);
                                 }
-                                $scope.goTo('/devoirs/list');
                                 utils.safeApply($scope);
                             });
                         })
@@ -1966,7 +1966,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 );
             }
-            $scope.opened.evaluation.suppretionMsg2 = false;
+            $scope.opened.evaluation.suppressionMsg2 = false;
         };
 
         $scope.cancelUpdateDevoir = function () {
