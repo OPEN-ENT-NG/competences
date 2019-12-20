@@ -3502,8 +3502,8 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     .put("studentAverage", averageStudent)
                     .put("classAverage", classAverage);
             matieres.add(matiere);
-
         }
+
         matieres.add(
                 new JsonObject().put("name", "null")
                         .put("competencesNotes", matieresCompNotes.get("no_id_matiere"))
@@ -3513,7 +3513,6 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         );
 
         handler.handle(new Either.Right<>(matieres));
-
     }
 
     private JsonObject cloneSousMatiere( Map<String, Object> stringObjectMap){

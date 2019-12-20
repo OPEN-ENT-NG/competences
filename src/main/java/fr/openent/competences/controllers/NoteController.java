@@ -1058,12 +1058,10 @@ public class NoteController extends ControllerHelper {
                     final String idPeriodeString = request.params().get("idPeriode");
                     notesService.getDataGraph(idEleve, idGroups, idEtablissement, idClasse, typeClasse,
                             idPeriodeString, arrayResponseHandler(request));
-
                 }
             }
         });
     }
-
 
     @Get("/bilan/periodique/datas/graph/domaine")
     @ApiDoc("Récupère les données pour construire les graphs du bilan periodique")
@@ -1078,7 +1076,6 @@ public class NoteController extends ControllerHelper {
         new DefaultBilanPerioqueService(eb).getBilanPeriodiqueDomaineForGraph(idEleve, idEtablissement, idClasse,
                 typeClasse, idPeriodeString, arrayResponseHandler(request));
     }
-
 
     /**
      * Récupère les notes pour le relevé de notes

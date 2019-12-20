@@ -19,18 +19,18 @@
 <div ng-show="selected.graphique">
     <section>
         <article class="twelve cell">
-            <h3 ng-class="{'openedElem' : graphMat.opened}"
+            <h3 ng-class="{'openedElem' : !graphMat.opened}"
                 class="margin-top-05em chevron"
-                data-ng-click="graphMat.opened = !graphMat.opened;">
+                data-ng-click="switchOpenMatiere()">
                 <i18n>evaluations.bilan.by.subject</i18n>
             </h3>
-            <div ng-if="!graphMat.opened">
+            <div ng-if="graphMat.opened">
                 <div class="loaderGraph loaderCenter" ng-show="showGraphMatLoader == true"></div>
                 <div class="fancyCheck three cell" ng-show="showGraphMatLoader == false">
                     <input type="checkbox" id="subjectComparison" class="cell"
                            ng-model="graphMat.comparison">
                     <label class="cell twelve" for="subjectComparison">
-                        <h5 class=" ten "> <span><i18n>evaluation.bilan.periodique.open.comparison</i18n></span></h5>
+                        <h5 class="ten"> <span><i18n>evaluation.bilan.periodique.open.comparison</i18n></span></h5>
                     </label>
                 </div>
                 <fieldset class="twelve cell twelve-mobile" ng-show="graphMat.comparison">
@@ -70,23 +70,23 @@
                     </button>
                 </div>
             </div>
-            <container ng-show="!graphMat.opened && !graphMat.comparison" template="graphMatiere"></container>
-            <container ng-show="!graphMat.opened && graphMat.comparison"  template="comparisonGraphMatiere"></container>
+            <container ng-show="graphMat.opened && !graphMat.comparison" template="graphMatiere"></container>
+            <container ng-show="graphMat.opened && graphMat.comparison"  template="comparisonGraphMatiere"></container>
         </article>
 
         <article class="twelve cell">
-            <h3 ng-class="{'openedElem' : graphDom.opened}"
+            <h3 ng-class="{'openedElem' : !graphDom.opened}"
                 class="margin-top-05em chevron"
-                data-ng-click="graphDom.opened = !graphDom.opened;">
+                data-ng-click="switchOpenDomaine()">
                 <i18n>evaluations.bilan.by.domaine</i18n>
             </h3>
-            <div ng-if="!graphDom.opened">
+            <div ng-if="graphDom.opened">
                 <div class="loaderGraph loaderCenter" ng-show="showGraphDomLoader == true"></div>
                 <div class="fancyCheck three cell" ng-show="showGraphDomLoader == false">
                     <input type="checkbox" id="domaineComparison" class="cell"
                            ng-model="graphDom.comparison">
                     <label class="cell twelve" for="domaineComparison">
-                        <h5 class=" ten "> <span><i18n>evaluation.bilan.periodique.open.comparison</i18n></span></h5>
+                        <h5 class="ten"> <span><i18n>evaluation.bilan.periodique.open.comparison</i18n></span></h5>
                     </label>
                 </div>
                 <fieldset class="twelve cell twelve-mobile" ng-show="graphDom.comparison">
@@ -103,7 +103,7 @@
                             </label>
                         </div>
                     </div>
-                    <div class="six cell twelve-mobile  horizontal-spacing">
+                    <div class="six cell twelve-mobile horizontal-spacing">
                         <label class="checkbox">
                             <input type="checkbox"
                                    ng-model="graphDom.darkness"
@@ -111,7 +111,7 @@
                             <i18n>evaluation.comparison.darkness</i18n>
                         </span></label>
                     </div>
-                    <div class="six cell twelve-mobile  horizontal-spacing">
+                    <div class="six cell twelve-mobile horizontal-spacing">
                         <label class="checkbox">
                             <input type="checkbox"
                                    ng-model="graphDom.infoGrouped"
@@ -127,8 +127,8 @@
                     </button>
                 </div>
             </div>
-            <container ng-show="!graphDom.opened && !graphDom.comparison" template="graphDomaine"></container>
-            <container ng-show="!graphDom.opened && graphDom.comparison"  template="comparisonGraphDom"></container>
+            <container ng-show="graphDom.opened && !graphDom.comparison" template="graphDomaine"></container>
+            <container ng-show="graphDom.opened && graphDom.comparison"  template="comparisonGraphDom"></container>
         </article>
     </section>
 
