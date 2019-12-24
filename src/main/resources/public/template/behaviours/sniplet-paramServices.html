@@ -55,7 +55,7 @@
 
                 <div ng-repeat="service in (filteredItems = ( services | filter:filterEvaluable(headers) |
                  filter:filterGroupe(columns.classe.data, typeGroupes) | filter:filterSearch(search) |
-                  orderBy : sortOrderBy)) track by $index   "
+                  orderBy : sortOrderBy)) track by $index "
                      class="row serviceList">
                     <label class="one checkbox">
                         <i class="delete"
@@ -71,7 +71,7 @@
                                 ng-blur="service.updateServiceCoefficient()"
                                 ng-model="service.coefficient" min="0"></span>
                     <label class="select one">
-                        <select ng-model="service.modalite"
+                        <select ng-model="service.modalite" style="min-width: 0px !important"
                                 ng-options="modalite for modalite in columns.modalite.data"
                                 ng-change="service.updateServiceModalite()"></select>
                     </label>
