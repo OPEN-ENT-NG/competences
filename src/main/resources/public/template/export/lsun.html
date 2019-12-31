@@ -76,13 +76,13 @@
                                     selection-event="updateFilters(params.classes)"
                                     deselection-event="updateFilters(params.classes)"
                             ></multi-combo>
-                            <div class="select-blocks">
-                                <div ng-repeat="classe in params.classes"
-                                     ng-click="dropComboModel(classe, params.classes)">
-                                    [[classe.name]]
-                                </div>
-                            </div>
                         </label>
+                        <div class="select-blocks">
+                            <div ng-repeat="classe in params.classes"
+                                 ng-click="dropComboModel(classe, params.classes)">
+                                [[classe.name]]
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="one cell">
@@ -100,13 +100,13 @@
                                     filtered-model="params.responsables"
                                     labels="comboLabels"
                             ></multi-combo>
-                            <div class="select-blocks">
-                                <div ng-repeat="responsable in params.responsables"
-                                     ng-click="dropComboModel(responsable, params.responsables)">
-                                    [[responsable.displayName]]
-                                </div>
-                            </div>
                         </label>
+                        <div class="select-blocks">
+                            <div ng-repeat="responsable in params.responsables"
+                                 ng-click="dropComboModel(responsable, params.responsables)">
+                                [[responsable.displayName]]
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

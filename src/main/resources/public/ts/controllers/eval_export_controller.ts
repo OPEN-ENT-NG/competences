@@ -50,7 +50,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
         };
 
         $scope.dropComboModel = async function (el: any, table: any){
-            table = _.without(table, el);
+            table.splice(table.indexOf(el), 1);
             await utils.safeApply($scope);
         };
 
