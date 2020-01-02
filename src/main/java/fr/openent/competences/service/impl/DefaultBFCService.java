@@ -1166,16 +1166,30 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                                         ((JsonObject) resultat).getInteger("niveau"));
                             }
                         }
+
                         resultatsEleves.put(idEleves.get(i), resultEleves);
                     }
 
+                    List<Eleve> elevesNonEvalues = new ArrayList<Eleve>();
                     // On modifie l'objet élève avec les informations récupérées précédemment
                     for (Eleve e : classe.getValue()) {
-                        e.setNotes(resultatsEleves.get(e.getIdEleve()));
-                        e.setEnseignmentComplements(niveauEnseignementComplementEleve.get(e.getIdEleve()));
-                        e.setLangueCultureRegionale(niveauLangueCultureRegionaleEleve.get(e.getIdEleve()));
-                        e.setSyntheseCycle(syntheseEleve.get(e.getIdEleve()));
+                        Map<Long, Integer> notes = resultatsEleves.get(e.getIdEleve());
+                        Map<String, Long> enseignmentComplements = niveauEnseignementComplementEleve.get(e.getIdEleve());
+                        Map<String, Long> langueCultureRegionale = niveauLangueCultureRegionaleEleve.get(e.getIdEleve());
+                        String syntheseCycle = syntheseEleve.get(e.getIdEleve());
+
+                        e.setNotes(notes);
+                        e.setEnseignmentComplements(enseignmentComplements);
+                        e.setLangueCultureRegionale(langueCultureRegionale);
+                        e.setSyntheseCycle(syntheseCycle);
+
+                        if(notes.size() == 0 && enseignmentComplements == null &&
+                                langueCultureRegionale == null && syntheseCycle == null){
+                            elevesNonEvalues.add(e);
+                        }
                     }
+                    classe.getValue().removeAll(elevesNonEvalues);
+
                     JsonArray eleves = formatBFC(classe.getValue());
                     final JsonArray classeResult = Utils.sortElevesByDisplayName(eleves);
                     final String idClasse = classe.getValue().get(0).getIdClasse();

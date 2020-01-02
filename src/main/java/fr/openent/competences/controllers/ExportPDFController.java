@@ -199,7 +199,7 @@ public class ExportPDFController extends ControllerHelper {
                 Long.valueOf(request.params().get(ID_PERIODE_KEY));
 
         // paramètre pour l'export des élèves
-        final String idEtablissement = isNull(idStructure)?request.params().get(ID_ETABLISSEMENT_KEY): idStructure;
+        final String idEtablissement = isNull(idStructure) ? request.params().get(ID_ETABLISSEMENT_KEY) : idStructure;
 
         // Ou exclusif sur la presence des parametres, de facon a s'assurer qu'un seul soit renseigne.
         if (idStructure != null ^ !idClasses.isEmpty() ^ !idEleves.isEmpty()) {
