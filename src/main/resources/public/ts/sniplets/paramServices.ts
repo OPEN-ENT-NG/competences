@@ -156,7 +156,7 @@ export const paramServices = {
                     let missingParams = {
                         id_etablissement: paramServices.that.idStructure,
                         nom_enseignant: enseignant ? enseignant.displayName : null,
-                        nom_matiere: matiere ? matiere.name : null,
+                        nom_matiere: matiere ? matiere.name + " (" + matiere.externalId + ")" : null,
                         nom_groupe: groupe ? groupe.name : null};
                     return new paramServices.that.Service(_.defaults(service, missingParams ));
                 }), service => service.hasNullProperty());

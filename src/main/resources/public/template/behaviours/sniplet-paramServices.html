@@ -99,7 +99,7 @@
                 </h4>
                 <label class="select">
                     <select ng-model="service.id_matiere"
-                            ng-options="matiere.id as matiere.name for matiere in columns.matiere.data | orderBy:'name'">
+                            ng-options="matiere.id as (matiere.name + ' (' + matiere.externalId + ')') for matiere in columns.matiere.data | orderBy:'name'">
                     </select>
                 </label>
             </div>
