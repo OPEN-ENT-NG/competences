@@ -68,7 +68,7 @@ export const bilanPeriodique = {
 
         openElementLigthbox: async function (param?) {
             await bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
-            bilanPeriodique.that.classes = evaluations.structure.classes;
+            await bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
             bilanPeriodique.that.openedLightbox = true;
@@ -279,6 +279,17 @@ export const bilanPeriodique = {
                 bilanPeriodique.that.themes = data.data;
             } catch (e) {
                 notify.error('evaluations.theme.get.error');
+            }
+            utils.safeApply(this);
+        },
+
+        getClasses: async function () {
+            try {
+                let url = `/viescolaire/classes?idEtablissement=${evaluations.structure.id}&forAdmin=true`;
+                let data = await http.get(url);
+                bilanPeriodique.that.classes = data.data;
+            } catch (e) {
+                notify.error('evaluations.classe.get.error');
             }
             utils.safeApply(this);
         },

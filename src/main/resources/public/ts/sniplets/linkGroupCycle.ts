@@ -51,7 +51,7 @@ export const linkGroupCycle = {
         initSource: function () {
         },
         getClasses: function () {
-            http().get(`/viescolaire/classes?idEtablissement=${this.idStructure}`)
+            http().get(`/viescolaire/classes?idEtablissement=${this.idStructure}&forAdmin=true`)
                 .done(function (res) {
                     this.classesGroupes = {
                         all: this.castClasses(res)
