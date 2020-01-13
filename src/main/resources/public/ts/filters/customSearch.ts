@@ -22,6 +22,7 @@ import { ng, moment } from 'entcore';
 
 declare let _:any;
 
+//TODO Rajouter le filtre sur les établissements dans le cas multi-étabs
 export let customSearchFilter = ng.filter('customSearchFilters', function(){
     return function(devoirs, searchParams){
         var output = devoirs;

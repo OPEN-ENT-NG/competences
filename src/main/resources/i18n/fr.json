@@ -162,6 +162,7 @@
   "evaluations.export.err" : "Impossible d'exporter le fichier PDF",
   "evaluations.export.errorLevel" : "Pas de niveau de maîtrise pour cette classe",
   "evaluations.export.empty" : "Il n'existe pas de compétences évaluées pour les critères sélectionnés.",
+  "evaluations.export.empty.student" : "L'élève n'a pas de compétences évaluées pour cette période.",
   "evaluations.export.eval.not.found.err" : "Aucune évaluation trouvée",
   "evaluations.export.periode.not.found.err" : "La période n'a pas pu être récupérée",
   "evaluations.export.classe.not.found.err" : "La classe n'a pas pu être récupérée",
