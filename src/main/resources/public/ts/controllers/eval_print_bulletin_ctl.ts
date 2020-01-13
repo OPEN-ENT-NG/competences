@@ -97,7 +97,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     Me.preferences.competences = {};
                 }
 
-                Me.preferences.competences.printBulletin = $scope.print;
+                Me.preferences.competences.printBulletin = Object.assign({},$scope.print);
+                delete Me.preferences.competences.printBulletin.students;
                 await Me.savePreference('competences');
             }
             let selectedClasses = _.where($scope.printClasses.all, {selected : true});
