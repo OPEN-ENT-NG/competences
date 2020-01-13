@@ -1411,6 +1411,80 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         }
         return notesByStudent;
     }
+    private void getMaxCompNoteByPeriode(JsonArray listCompNotes,
+                                         HashMap<Long, ArrayList<NoteDevoir>> notesByDevoirByPeriode,
+                                         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriodeBySousMatiere){
+        notesByDevoirByPeriode.put(null, new ArrayList<>());
+
+        // 1- parcourir la listCompNotes pour en extraire les map map<idP, JAcompNote> et map<idP,map<idssM,JAcompNote>>
+        HashMap<Long, JsonArray> compNotesByPeriode = new HashMap<>();
+        HashMap<Long,HashMap<Long,JsonArray>> compNotesBySousMatByPeriode = new HashMap<>();
+
+        for(int i = 0; i < listCompNotes.size(); i++){
+            JsonObject compNote = listCompNotes.getJsonObject(i);
+            Long id_periode = compNote.getLong(ID_PERIODE);
+            Long idSousMatiere = compNote.getLong(ID_SOUS_MATIERE);
+
+            Boolean isFormative = compNote.getBoolean("formative");
+            if (isFormative) {
+                continue;
+            }
+
+            if (compNote.getLong("evaluation") == null || compNote.getLong("evaluation") < 0) {
+                continue; //Si pas de compétence Note
+            }
+            if (!compNotesByPeriode.containsKey(id_periode)) {
+                compNotesByPeriode.put(id_periode, new JsonArray());
+                compNotesBySousMatByPeriode.put(id_periode, new HashMap<>());
+            }
+            if(isNotNull(idSousMatiere)){
+
+                utilsService.addToMapWithJsonArray(idSousMatiere,compNotesBySousMatByPeriode.get(id_periode),compNote);
+            }
+            utilsService.addToMapWithJsonArray(id_periode,compNotesByPeriode,compNote);
+        }
+        //2- loop map<idP, JAcompNote> -> JAcompNoteMaxByPeriode -> map<idP,list<NoteDevoirMax>> = notesByDevoirByPeriode
+        compNotesByPeriode.forEach((id_period,compNotes)->{
+            Map<String, JsonObject> MaxCompNotesByCompetence = calculMaxCompNoteItem(compNotes,true);
+
+            MaxCompNotesByCompetence.forEach((id_comp,maxCompNote)->{
+                NoteDevoir noteDevoir;
+
+                Long niveauFinal = maxCompNote.getLong("niveau_final");
+                if (isNotNull(niveauFinal) ) {
+                    noteDevoir = new NoteDevoir(Double.valueOf(niveauFinal),1.0,false,1.0);
+                } else {
+                    noteDevoir = new NoteDevoir(Double.valueOf(maxCompNote.getLong("evaluation")), 1.0,
+                            false, 1.0);
+                }
+                utilsService.addToMap(id_period, notesByDevoirByPeriode, noteDevoir);
+                // positionnement sur l'année
+                utilsService.addToMap(null, notesByDevoirByPeriode, noteDevoir);
+            });
+
+        });
+
+        //3-loop map<idP,map<idssM,JAcompNote>> ->JAcompNoteMaxBySousMatByPerode -> map<idP,map<idssM,list<NoteDevoirMax>> = notesByPeriodeBySousMatiere
+        compNotesBySousMatByPeriode.forEach((id_periode,mapSousMatCompNotes)->{
+            mapSousMatCompNotes.forEach((id_sousMat, compNotesSousMat)-> {
+                Map<String,JsonObject> MaxCompNoteSousMatByComp = calculMaxCompNoteItem(compNotesSousMat,
+                        false);
+
+                MaxCompNoteSousMatByComp.forEach((id_comp,maxCompNoteSousMat) -> {
+                    NoteDevoir noteDevoir = new NoteDevoir(Double.valueOf(maxCompNoteSousMat.getLong("evaluation")),
+                            1.0, false, 1.0);
+
+                    if(!notesByPeriodeBySousMatiere.containsKey(id_periode)) notesByPeriodeBySousMatiere.put(id_periode,
+                            new HashMap());
+                    utilsService.addToMap(id_sousMat,notesByPeriodeBySousMatiere.get(id_periode),noteDevoir);
+
+                });
+
+            });
+        });
+
+
+    }
 
     public void calculPositionnementAutoByEleveByMatiere(JsonArray listCompNotes, JsonObject result, Boolean annual) {
 
@@ -1418,73 +1492,16 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         HashMap<Long, ArrayList<NoteDevoir>> notesByDevoirByPeriode = new HashMap<>();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByPeriodeBySousMatiere = new HashMap<>();
 
-        notesByDevoirByPeriode.put(null, new ArrayList<>());
-        Map<Long, Set<Long>> idsCompetence = new HashMap<>();
-        idsCompetence.put(null, new HashSet<>());
-
         result.put(POSITIONNEMENTS_AUTO, new JsonArray());
         result.put("_" + POSITIONNEMENTS_AUTO, new JsonObject());
 
-        for (int i = 0; i < listCompNotes.size(); i++) {
-
-            JsonObject note = listCompNotes.getJsonObject(i);
-            Long id_periode = note.getLong(ID_PERIODE);
-            Long idSousMatiere = note.getLong(ID_SOUS_MATIERE);
-
-            if (!notesByDevoirByPeriode.containsKey(id_periode)) {
-                notesByDevoirByPeriode.put(id_periode, new ArrayList<>());
-                notesByPeriodeBySousMatiere.put(id_periode, new HashMap<>());
-                idsCompetence.put(id_periode, new HashSet<>());
-            }
-
-
-            // si competence provenant d'un devoir de type formative, alors,
-            // on l'exclue du calcul
-            Boolean isFormative = note.getBoolean("formative");
-            if (isFormative) {
-                continue;
-            }
-
-            if (note.getLong("evaluation") == null || note.getLong("evaluation") < 0) {
-                continue; //Si pas de compétence Note
-            }
-
-            NoteDevoir noteDevoir;
-            NoteDevoir noteDevoirSousMat = null;
-            Long idCompetence = note.getLong("id_competence");
-            Long niveauFinal = note.getLong("niveau_final");
-            if(isNotNull(idSousMatiere)) {
-                noteDevoirSousMat = new NoteDevoir(Double.valueOf(note.getLong("evaluation")), 1.0,
-                        false, 1.0);
-                // Si on a déjà pris en compte le niveau final
-                if(isNotNull(noteDevoirSousMat)){
-                    utilsService.addToMap(idSousMatiere, notesByPeriodeBySousMatiere.get(id_periode),
-                            noteDevoirSousMat);
-                }
-            }
-            if (isNotNull(niveauFinal) && !idsCompetence.get(id_periode).contains(idCompetence)) {
-                idsCompetence.get(id_periode).add(idCompetence);
-                noteDevoir = new NoteDevoir(Double.valueOf(niveauFinal),1.0,false,1.0);
-            } else {
-                noteDevoir = new NoteDevoir(Double.valueOf(note.getLong("evaluation")), 1.0,
-                        false, 1.0);
-                // Si on a déjà pris en compte le niveau final
-                if(idsCompetence.get(id_periode).contains(idCompetence)){
-                    utilsService.addToMap(null, notesByDevoirByPeriode, noteDevoir);
-                    continue;
-                }
-            }
-
-            utilsService.addToMap(id_periode, notesByDevoirByPeriode, noteDevoir);
-            // positionnement sur l'année
-            utilsService.addToMap(null, notesByDevoirByPeriode, noteDevoir);
-        }
+        getMaxCompNoteByPeriode(listCompNotes, notesByDevoirByPeriode,notesByPeriodeBySousMatiere);
 
         // Paramètre de calcul des moyennes de compétencesNotes
         Boolean withStat = false;
         Integer diviseur = 1;
 
-        // Calcul des moyennes des max de compétencesNotes par période pour L'élève
+        // Calcul des moyennes des compétencesNotes par période pour L'élève
         for (Map.Entry<Long, ArrayList<NoteDevoir>> entryPeriode: notesByDevoirByPeriode.entrySet()) {
             listMoyDevoirs.put(entryPeriode.getKey(), new JsonArray());
             Long idPeriode = entryPeriode.getKey();
@@ -3409,7 +3426,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         for (Map.Entry<String,JsonArray> entry: mapData.entrySet()) {
             String idEntry = entry.getKey();
             JsonArray currentEntry = entry.getValue();
-            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry);
+            Map<String, JsonObject> maxComp = calculMaxCompNoteItem(currentEntry,true);
             result.put(idEntry, new JsonArray());
             for (Map.Entry<String,JsonObject> max: maxComp.entrySet()) {
                 result.get(idEntry).add(max.getValue());
@@ -3424,7 +3441,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     private JsonArray getMaxByItemDomaine(JsonArray compNotes){
         JsonArray result = new JsonArray();
 
-        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes);
+        Map<String, JsonObject> maxCompNote = calculMaxCompNoteItem(compNotes, true);
         for (Map.Entry<String,JsonObject> max: maxCompNote.entrySet()) {
             result.add(max.getValue());
         }
@@ -3432,7 +3449,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         return result;
     }
 
-    private Map<String, JsonObject> calculMaxCompNoteItem (JsonArray compNotes) {
+    private Map<String, JsonObject> calculMaxCompNoteItem (JsonArray compNotes, Boolean takeNivFinal) {
         Map<String, JsonObject> maxComp = new HashMap<>();
         for (int i = 0; i < compNotes.size(); i++) {
             JsonObject compNote = compNotes.getJsonObject(i);
@@ -3450,13 +3467,18 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                 Long evaluation = compNote.getLong("evaluation");
                 Long niveauFinal = compNote.getLong("niveau_final");
-                Long valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
+                Long valueToTake;
+                if (takeNivFinal) valueToTake = (niveauFinal != null) ? niveauFinal : evaluation;
+                else valueToTake = evaluation;
 
 
                 JsonObject maxCompetence = maxComp.get(idItem);
                 Long maxEvaluation = maxCompetence.getLong("evaluation");
                 Long maxNiveauFinal = maxCompetence.getLong("niveau_final");
-                Long maxToTake = (maxNiveauFinal != null) ? maxNiveauFinal : maxEvaluation;
+
+                Long maxToTake;
+                if (takeNivFinal) maxToTake = (maxNiveauFinal != null) ? maxNiveauFinal : maxEvaluation;
+                else maxToTake = maxEvaluation;
 
                 if(maxToTake == null) {
                     maxComp.replace(idItem, compNote);

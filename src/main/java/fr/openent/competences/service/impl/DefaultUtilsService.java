@@ -40,6 +40,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
+import java.math.RoundingMode;
 import java.text.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -224,6 +225,7 @@ public class DefaultUtilsService  implements UtilsService {
         symbols.setDecimalSeparator('.');
 
         DecimalFormat df = new DecimalFormat("##.##", symbols);
+        df.setRoundingMode(RoundingMode.HALF_UP);//with this mode 2.125 -> 2.13 without 2.125 -> 2.12
         try {
             if (moyenne.isNaN()) {
                 moyenne = null;
@@ -238,8 +240,8 @@ public class DefaultUtilsService  implements UtilsService {
         } catch (NumberFormatException e) {
             log.error("Moyenne : " + String.valueOf(moyenne), e);
         }
-        if (null == moyenne)
-            moyenne = 0.0;
+        if (null == moyenne) moyenne = 0.0;
+
         JsonObject r = new JsonObject().put("moyenne", moyenne)
                 .put("hasNote", listeNoteDevoirs.size() > 0);
         if (statistiques) {
@@ -396,6 +398,7 @@ public class DefaultUtilsService  implements UtilsService {
         map.get(id).add(valueToAdd);
     }
 
+
     public  void addToMap(String id, Long sousMatiereId,
                           HashMap<String, HashMap<Long, ArrayList<NoteDevoir>>> map,
                           NoteDevoir valueToAdd) {
@@ -409,6 +412,18 @@ public class DefaultUtilsService  implements UtilsService {
         map.get(id).get(sousMatiereId).add(valueToAdd);
     }
 
+    public <K,V> void addToMapWithJsonArray(K id, HashMap<K, JsonArray> map, V valueToAdd){
+        if (map.containsKey(id)) {
+
+            map.get(id).add(valueToAdd);
+
+        } else {
+
+           JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+            values.add(valueToAdd);
+            map.put(id, values);
+        }
+    }
     /**
      * Récupère les cycles des classes dans la relation classe_cycle
      *

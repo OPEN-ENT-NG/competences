@@ -153,6 +153,7 @@ public interface UtilsService {
     <K,V> void addToMap(K key, HashMap<K, ArrayList<V>> map, V valueToAdd);
     void addToMap(String key, Long sousmatiere, HashMap<String,HashMap<Long,ArrayList<NoteDevoir>>> map,
                   NoteDevoir valueToAdd);
+    <K,V> void addToMapWithJsonArray(K id, HashMap<K, JsonArray> map, V valueToAdd);
 
     /**
      * Récupère le nom de l'entité à qui appartient l'identifiant passé en paramètre.
