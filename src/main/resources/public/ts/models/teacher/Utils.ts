@@ -281,8 +281,7 @@ export class Utils {
      *
      */
 
-     static setMaxCompetenceShow  ( competence, isCycle) {
-
+     static setMaxCompetenceShow (competence, isCycle) {
         //all evaluations
         // récupèrer toutes les évaluations de type non "formative"
         let allEvaluations = _.filter(competence.competencesEvaluations, (evaluation) => {
@@ -290,12 +289,10 @@ export class Utils {
             // la competence doit être reliée à un devoir ayant un type non "formative"
         });
         if(allEvaluations !== undefined && allEvaluations.length > 0){
-            if (isCycle !== true) {
-                let notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
-                    return evaluation.eval_lib_historise === false;
-                });
-                allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            }
+            let notHistorizedEvals = _.filter(allEvaluations, (evaluation) => {
+                return evaluation.eval_lib_historise === false;
+            });
+            allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
             competence.niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations);
         }
 
@@ -310,6 +307,12 @@ export class Utils {
             //set the max of my evaluations on this competence for "niveau final"
             competence.niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations);
         }
+
+        console.log(allEvaluations);
+        console.log(myEvaluations);
+        console.log(competence.niveauFinaltoShowAllEvaluations);
+        console.log(competence.niveauAtteintToShowMyEvaluations);
+        console.log(competence.niveauFinalToShowMyEvaluations);
     }
 
     /**
@@ -317,7 +320,7 @@ export class Utils {
      * @param listEval
      * @param onlyNote
      */
-    static getNiveauMaxOfListEval (listEval,onlyNote? ){
+    static getNiveauMaxOfListEval (listEval, onlyNote?){
         //tableau des max des Evals pour chaque matière
         if(onlyNote !== undefined && onlyNote){
             return  _.max(listEval, (e) => {
