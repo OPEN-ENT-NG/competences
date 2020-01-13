@@ -195,15 +195,15 @@ export let exportControleur = ng.controller('ExportController',['$scope',
         };
         $scope.updateFilters = async function(classes){
             if( !_.isEmpty(classes) ) {
-                _.map( classes, (classe) => {
+                _.map(classes, (classe) => {
                     classe.selected = true;
                 });
                 $scope.printClasses = {
                     all: classes
                 };
                 await utils.updateFilters($scope, false);
-                if( !_.isEmpty( $scope.params.periodes_type) &&  !_.isEmpty( $scope.filteredPeriodes )){
-                    _.forEach( $scope.filteredPeriodes, (filteredPeriode) => {
+                if(!_.isEmpty($scope.params.periodes_type) &&  !_.isEmpty( $scope.filteredPeriodes)){
+                    _.forEach($scope.filteredPeriodes, (filteredPeriode) => {
                         let periodeToSelected =_.findWhere($scope.params.periodes_type, {id_type: filteredPeriode.id_type});
                         if(periodeToSelected !== undefined){
                             if(periodeToSelected.selected !== undefined ){
@@ -215,14 +215,14 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     });
                 }
 
-                if ( _.isEmpty($scope.filteredPeriodes )) {
+                if (_.isEmpty($scope.filteredPeriodes)) {
                     notify.info('evaluations.classes.are.not.initialized');
                 }
                 await utils.safeApply($scope);
             }else{
-                if( !_.isEmpty($scope.params.periodes_type )){
-                    _.each($scope.params.periodes_type, ( periode_type ) => {
-                        periode_type.classes =[];
+                if(!_.isEmpty($scope.params.periodes_type )){
+                    _.each($scope.params.periodes_type, (periode_type) => {
+                        periode_type.classes = [];
                     });
                 }
             }

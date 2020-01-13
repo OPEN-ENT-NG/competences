@@ -63,20 +63,18 @@
             <div class="row vertical-spacing">
                 <div class="five cell horizontal-spacing">
                     <div class="row display-inline-block">
-                        <label class="ten small">
-                            <multi-combo
-                                    class="twelve"
-                                    title="Selection de classe(s)"
-                                    id="classes-list"
-                                    combo-model="lsu.classes"
-                                    search-on="name"
-                                    order-by="name"
-                                    filtered-model="params.classes"
-                                    labels="comboLabels"
-                                    selection-event="updateFilters(params.classes)"
-                                    deselection-event="updateFilters(params.classes)"
-                            ></multi-combo>
-                        </label>
+                        <multi-combo
+                                class="twelve"
+                                title="Selection de classe(s)"
+                                id="classes-list"
+                                combo-model="lsu.classes"
+                                search-on="name"
+                                order-by="name"
+                                filtered-model="params.classes"
+                                labels="comboLabels"
+                                selection-event="updateFilters(params.classes)"
+                                deselection-event="updateFilters(params.classes)"
+                        ></multi-combo>
                         <div class="select-blocks">
                             <div ng-repeat="classe in params.classes"
                                  ng-click="dropComboModel(classe, params.classes)">
@@ -89,18 +87,16 @@
                 </div>
                 <div class="five cell horizontal-spacing">
                     <div class="row display-inline-block">
-                        <label class="ten small">
-                            <multi-combo
-                                    class="twelve"
-                                    title="Selection de responsable(s)"
-                                    id="responsables-list"
-                                    combo-model="lsu.responsables"
-                                    search-on="displayName"
-                                    order-by="displayName"
-                                    filtered-model="params.responsables"
-                                    labels="comboLabels"
-                            ></multi-combo>
-                        </label>
+                        <multi-combo
+                                class="twelve"
+                                title="Selection de responsable(s)"
+                                id="responsables-list"
+                                combo-model="lsu.responsables"
+                                search-on="displayName"
+                                order-by="displayName"
+                                filtered-model="params.responsables"
+                                labels="comboLabels"
+                        ></multi-combo>
                         <div class="select-blocks">
                             <div ng-repeat="responsable in params.responsables"
                                  ng-click="dropComboModel(responsable, params.responsables)">
