@@ -68,7 +68,7 @@ export const bilanPeriodique = {
 
         openElementLigthbox: async function (param?) {
             await bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
-            await bilanPeriodique.that.classes = evaluations.structure.classes;
+            await bilanPeriodique.that.getClasses();
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
             bilanPeriodique.that.openedLightbox = true;
