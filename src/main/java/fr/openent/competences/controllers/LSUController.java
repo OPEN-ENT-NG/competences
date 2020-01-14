@@ -2941,11 +2941,11 @@ public class LSUController extends ControllerHelper {
         Calendar today = Calendar.getInstance();
         Calendar janvier = Calendar.getInstance();
         janvier.set(Calendar.DAY_OF_MONTH,1);
-        janvier.set(Calendar.MONTH,1);
+        janvier.set(Calendar.MONTH,Calendar.JANUARY);
 
         Calendar juillet = Calendar.getInstance();
         juillet.set(Calendar.DAY_OF_MONTH, 31);
-        juillet.set(Calendar.MONTH, 7);
+        juillet.set(Calendar.MONTH, Calendar.JULY);
 
         millesime = today.get(Calendar.YEAR);
         // Si on est entre le 01 janvier et le 31 juillet on enleve une année au millésime
