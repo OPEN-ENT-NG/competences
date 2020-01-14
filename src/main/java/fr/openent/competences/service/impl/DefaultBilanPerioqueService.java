@@ -272,7 +272,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     setElementProgramme(result, elementsProgFuture.result());
                     setAppreciationMoyFinalePositionnementEleve(result,appreciationMoyFinalePosFuture.result());
                     setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(),moyenneFinaleFuture.result(),
-                            result, idEleve);
+                            result, idEleve, idPeriod);
                     results.add(result);
                     subjectFuture.complete();
                 }
@@ -435,14 +435,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
 
-    private void setMoyAndPosForSuivi (JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
-                                       JsonObject result, String idEleve) {
+    private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
+                                      JsonObject result, String idEleve, Long idPeriodAsked) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
         noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
-        noteService.setRankAndMinMaxInClasseByPeriode(idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
+        noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
 
     }
     public void getBilanPeriodiqueDomaineForGraph(final String idEleve,String idEtablissement,

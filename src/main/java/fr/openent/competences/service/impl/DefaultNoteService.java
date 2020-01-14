@@ -1302,7 +1302,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
     }
 
 
-    public void setRankAndMinMaxInClasseByPeriode(final String idEleve, final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
+    public void setRankAndMinMaxInClasseByPeriode(final Long idPeriodAsked, final String idEleve, final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                                   final JsonArray moyFinalesEleves, final JsonObject result) {
 
         JsonArray ranks = new fr.wseduc.webutils.collections.JsonArray();
@@ -1360,7 +1360,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     minMaxObj.put("id_periode", idPeriode)
                             .put("min", min[0])
                             .put("max", max[0]);
-                    allMinMax.add(minMaxObj);
+                    if(idPeriodAsked.equals(idPeriode)){
+                        allMinMax.add(minMaxObj);
+                    }
                 }
 
                 //order average scores in classes
@@ -1389,7 +1391,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     rankObj.put("id_periode", idPeriode)
                             .put("rank", rank)
                             .put("rank_size", allMoyennesSorted.size());
-                    ranks.add(rankObj);
+                    if (idPeriodAsked.equals(idPeriode)) {
+                        ranks.add(rankObj);
+                    }
                 }
             }
         }

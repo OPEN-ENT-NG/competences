@@ -1697,7 +1697,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
 
         eleveObject.put(MOYENNE_GENERALE + "Obj", new JsonObject());
-        noteService.setRankAndMinMaxInClasseByPeriode(idEl, notesByDevoirByPeriodeClasse,moyFinalesEleves,
+        noteService.setRankAndMinMaxInClasseByPeriode(idPeriode, idEl, notesByDevoirByPeriodeClasse,moyFinalesEleves,
                 eleveObject.getJsonObject(MOYENNE_GENERALE + "Obj"));
         eleveObject.put(PRINT_MOYENNE_GENERALE, params.getBoolean(MOYENNE_GENERALE));
         eleveObject.put(MOYENNE_GENERALE, moyenGeneral);

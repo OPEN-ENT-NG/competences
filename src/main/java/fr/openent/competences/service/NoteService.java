@@ -208,12 +208,14 @@ public interface NoteService extends CrudService {
                                             final JsonObject result);
 
     /**
-     *  @param idEleve
+     * @param idPeriod
+     * @param idEleve
      * @param notesByDevoirByPeriodeClasse
      * @param moyFinalesEleves
      * @param result
      */
-    void setRankAndMinMaxInClasseByPeriode(final String idEleve,
+    void setRankAndMinMaxInClasseByPeriode(final Long idPeriod,
+                                           final String idEleve,
                                            final HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse,
                                            final JsonArray moyFinalesEleves,
                                            final JsonObject result);
