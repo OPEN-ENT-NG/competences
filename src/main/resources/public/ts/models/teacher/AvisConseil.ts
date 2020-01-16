@@ -12,10 +12,11 @@ export class AvisConseil extends DefaultAvis {
         };
     }
 
-    constructor (idEleve:string, idPeriode:number) {
+    constructor (idEleve:string, idPeriode:number, idStructure:string) {
         super();
         this.id_eleve = idEleve;
         this.id_periode = idPeriode;
+        this.id_structure = idStructure;
     }
 
     async getLibelleAvis () {
@@ -31,7 +32,7 @@ export class AvisConseil extends DefaultAvis {
 
     async syncAvisConseil () {
         try {
-            let {data} = await http.get(`/competences/avis/conseil?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}`);
+            let {data} = await http.get(`/competences/avis/conseil?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
             if(data.id_avis_conseil_bilan !== undefined) {
                 this.id_avis_conseil_bilan = data.id_avis_conseil_bilan;
             }
@@ -45,6 +46,7 @@ export class AvisConseil extends DefaultAvis {
             id_avis_conseil_bilan: this.id_avis_conseil_bilan,
             id_eleve: this.id_eleve,
             id_periode: this.id_periode,
+            id_structure: this.id_structure,
         }
     }
 
@@ -59,7 +61,7 @@ export class AvisConseil extends DefaultAvis {
         }
         else {
             this.id_avis_conseil_bilan = -1;
-            await http.delete(`/competences/avis/conseil?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}`);
+            await http.delete(`/competences/avis/conseil?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
         }
     }
 

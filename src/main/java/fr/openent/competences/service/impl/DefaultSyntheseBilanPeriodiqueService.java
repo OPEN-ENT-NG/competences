@@ -14,49 +14,54 @@ import static fr.openent.competences.Competences.TRANSITION_CONFIG;
 
 public class DefaultSyntheseBilanPeriodiqueService {
 
-    public void createOrUpdateSyntheseBilanPeriodique (Long idTypePeriode, String idEleve,  String synthese, Handler<Either<String, JsonObject>> handler){
+    public void createOrUpdateSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, String idStructure,  String synthese, Handler<Either<String, JsonObject>> handler){
         if(synthese.length() == 0){
-            deleteSynthese(idTypePeriode, idEleve, handler);
+            deleteSynthese(idTypePeriode, idEleve, idStructure, handler);
         }
         else {
           String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique" +
-                    "(id_typePeriode, id_eleve, synthese) VALUES (?, ?, ?)" +
-                    "ON CONFLICT (id_typePeriode, id_eleve) DO UPDATE SET synthese = ?";
+                    "(id_typePeriode, id_eleve, synthese, id_etablissement) VALUES (?, ?, ?, ?)" +
+                    "ON CONFLICT (id_typePeriode, id_eleve, id_etablissement) DO UPDATE SET synthese = ?";
             JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
             values.add(idTypePeriode);
             values.add(idEleve);
             values.add(synthese);
+            values.add(idStructure);
             values.add(synthese);
             Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
         }
 
     }
 
-    private void deleteSynthese (Long idTypePeriode, String idEleve, Handler<Either<String, JsonObject>> handler){
+    private void deleteSynthese (Long idTypePeriode, String idEleve, String idStructure, Handler<Either<String, JsonObject>> handler){
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "";
 
             query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique " +
                     " WHERE id_eleve = ?" +
-                    " AND id_typePeriode = ? ";
+                    " AND id_typePeriode = ?" +
+                    " AND id_etablissement = ?";
         params.add(idEleve)
-                .add(idTypePeriode);
+                .add(idTypePeriode)
+                .add(idStructure);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void getSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, Handler<Either<String, JsonObject>> handler) {
+    public void getSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, String idStructure, Handler<Either<String, JsonObject>> handler) {
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "";
 
         query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique " +
                 "WHERE "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_eleve = ? " +
-                "AND "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_typePeriode = ? ";
+                "AND "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_typePeriode = ? " +
+                "AND "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_etablissement = ?";
 
         params.add(idEleve);
         params.add(idTypePeriode);
+        params.add(idStructure);
 
         Sql.getInstance().prepared(query, params,
                 new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG

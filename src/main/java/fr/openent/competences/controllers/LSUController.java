@@ -2351,7 +2351,7 @@ public class LSUController extends ControllerHelper {
                     }
 
                     syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique((long) currentPeriode.getTypePeriode(),
-                            currentEleve.getIdNeo4j(), new Handler<Either<String, JsonObject>>() {
+                            currentEleve.getIdNeo4j(),idStructure, new Handler<Either<String, JsonObject>>() {
                                 AtomicBoolean answer = new AtomicBoolean(false);
                                 AtomicInteger count = new AtomicInteger(0);
                                 final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + " )";
@@ -2380,7 +2380,7 @@ public class LSUController extends ControllerHelper {
                                             }
                                             syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(
                                                     (long) currentPeriode.getTypePeriode(),
-                                                    currentEleve.getIdNeo4j(), this);
+                                                    currentEleve.getIdNeo4j(),idStructure, this);
                                         } else {
                                             answer.set(true);
                                         }

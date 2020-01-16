@@ -24,5 +24,6 @@ import { Model } from 'entcore';
 export abstract class DefaultAvis extends Model {
     id_eleve : string;
     id_periode : number;
+    id_structure : string;
     id_avis_conseil_bilan : number;
 }

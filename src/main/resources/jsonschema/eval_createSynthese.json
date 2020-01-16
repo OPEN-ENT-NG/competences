@@ -11,11 +11,15 @@
     },
     "synthese": {
       "type" : "string"
+    },
+    "id_structure": {
+      "type" : "string"
     }
   },
   "required": [
     "id_typePeriode",
     "id_eleve",
-    "synthese"
+    "synthese",
+    "id_structure"
   ]
 }
