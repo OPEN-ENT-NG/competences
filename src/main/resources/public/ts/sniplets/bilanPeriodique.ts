@@ -15,9 +15,9 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {notify, _, $} from 'entcore';
+import {notify, _, $,http as HTTP} from 'entcore';
 import http from "axios";
-import {evaluations} from '../models/teacher';
+import {Classe, evaluations} from '../models/teacher';
 import * as utils from '../utils/teacher';
 
 
@@ -285,13 +285,24 @@ export const bilanPeriodique = {
 
         getClasses: async function () {
             try {
-                let url = `/viescolaire/classes?idEtablissement=${evaluations.structure.id}&forAdmin=true`;
-                let data = await http.get(url);
-                bilanPeriodique.that.classes = data.data;
+                HTTP().get(`/viescolaire/classes?idEtablissement=${evaluations.structure.id}&forAdmin=true`)
+                    .done(async function (res) {
+                        bilanPeriodique.that.classes = {
+                            all: bilanPeriodique.that.castClasses(res)
+                        };
+                        await utils.safeApply(bilanPeriodique.that);
+                    });
             } catch (e) {
                 notify.error('evaluations.classe.get.error');
             }
-            utils.safeApply(this);
+        },
+
+        castClasses: (classes) => {
+            return _.map(classes, (classe) => {
+                classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
+                classe = new Classe(classe);
+                return classe;
+            });
         },
 
 
