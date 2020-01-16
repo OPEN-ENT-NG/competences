@@ -96,6 +96,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(
                             Long.parseLong(request.params().get("id_typePeriode")),
                             request.params().get("id_eleve"),
+                            request.params().get("id_structure"),
                             defaultResponseHandler(request));
                 } else {
                     badRequest(request);
@@ -124,9 +125,11 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                 public void handle(JsonObject synthese) {
                                     final Long idTypePeriode = synthese.getLong("id_typePeriode");
                                     final String idEleve = synthese.getString("id_eleve");
+                                    final String idStructure = synthese.getString("id_structure");
                                     syntheseBilanPeriodiqueService.createOrUpdateSyntheseBilanPeriodique(
                                             idTypePeriode,
                                             idEleve,
+                                            idStructure,
                                             synthese.getString("synthese"),
                                             DefaultResponseHandler.defaultResponseHandler(request));
                                 }
@@ -248,10 +251,12 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                     final Long idPeriode = idAvisClasse.getLong("id_periode");
                                     final String idEleve = idAvisClasse.getString("id_eleve");
                                     final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
+                                    final String idStructure = idAvisClasse.getString("id_structure");
                                     avisConseilService.createOrUpdateAvisConseil(
                                             idEleve,
                                             idPeriode,
                                             idAvis,
+                                            idStructure,
                                             DefaultResponseHandler.defaultResponseHandler(request));
                                 }
                             });
@@ -274,6 +279,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     avisConseilService.deleteAvisConseil(
                             Long.parseLong(request.params().get("id_periode")),
                             request.params().get("id_eleve"),
+                            request.params().get("id_structure"),
                             defaultResponseHandler(request));
                 }else {
                     log.debug("User not found in session.");
@@ -300,6 +306,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     avisConseilService.getAvisConseil(
                             request.params().get("id_eleve"),
                             Long.parseLong(request.params().get("id_periode")),
+                            request.params().get("id_structure"),
                             defaultResponseHandler(request));
                 } else {
                     badRequest(request);
@@ -329,10 +336,12 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                     final Long idPeriode = idAvisClasse.getLong("id_periode");
                                     final String idEleve = idAvisClasse.getString("id_eleve");
                                     final Long idAvis = idAvisClasse.getLong("id_avis_conseil_bilan");
+                                    final String idStructure = idAvisClasse.getString("id_structure");
                                     avisOrientationService.createOrUpdateAvisOrientation(
                                             idEleve,
                                             idPeriode,
                                             idAvis,
+                                            idStructure,
                                             DefaultResponseHandler.defaultResponseHandler(request));
                                 }
                             });
@@ -355,6 +364,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     avisOrientationService.deleteAvisOrientation(
                             Long.parseLong(request.params().get("id_periode")),
                             request.params().get("id_eleve"),
+                            request.params().get("id_structure"),
                             defaultResponseHandler(request));
                 }else {
                     log.debug("User not found in session.");
@@ -381,6 +391,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     avisOrientationService.getAvisOrientation(
                             request.params().get("id_eleve"),
                             Long.parseLong(request.params().get("id_periode")),
+                            request.params().get("id_structure"),
                             defaultResponseHandler(request));
                 } else {
                     badRequest(request);

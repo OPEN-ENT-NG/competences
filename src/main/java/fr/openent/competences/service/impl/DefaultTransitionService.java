@@ -508,14 +508,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                         idsEleve,statements,valuesForSuppressionIdEleve,
                         Competences.APPRECIATION_ELT_BILAN_PERIODIQUE_ELEVE_TABLE, Competences.ID_PERIODE);
 
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA,Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.AVIS_CONSEIL_DE_CLASSE_TABLE, Competences.ID_PERIODE);
-
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.AVIS_CONSEIL_ORIENTATION_TABLE, Competences.ID_PERIODE);
-
                 supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
                         idsEleve,statements,valuesForSuppressionIdEleve,
                         Competences.COMPETENCE_NIVEAU_FINAL, Competences.ID_PERIODE);
@@ -523,10 +515,6 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
                 supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
                         idsEleve, statements, valuesForSuppressionIdEleve,
                         Competences.POSITIONNEMENT, Competences.ID_PERIODE);
-
-                supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE,
-                        idsEleve,statements,valuesForSuppressionIdEleve,
-                        Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE,"id_typeperiode");
 
                 //Suppression rel_groupe_appreciation_elt_eleve
                 supressionTransitionCheckPeriode(Competences.COMPETENCES_SCHEMA, Competences.ID_ELEVE ,
@@ -548,6 +536,15 @@ public class DefaultTransitionService extends SqlCrudService implements Transiti
         //suppression elt_bilan_periodique after appreciation_elt_bilan_periodique_classe et eleve
         suppressionTransitionParamIdStructure(statements,valuesIdEtab,
                 Competences.ELT_BILAN_PERIODIQUE_TABLE, Competences.COMPETENCES_SCHEMA);
+
+        suppressionTransitionParamIdStructure(statements, valuesIdEtab,
+                Competences.SYNTHESE_BILAN_PERIODIQUE_TABLE,Competences.COMPETENCES_SCHEMA);
+
+        suppressionTransitionParamIdStructure(statements, valuesIdEtab,
+                Competences.AVIS_CONSEIL_DE_CLASSE_TABLE, Competences.COMPETENCES_SCHEMA);
+
+        suppressionTransitionParamIdStructure(statements, valuesIdEtab,
+                Competences.AVIS_CONSEIL_ORIENTATION_TABLE, Competences.COMPETENCES_SCHEMA);
 
         // Suppresion des remplacants, notes.users, notes.members, notes.groups, rel_group_cycle, périodes
         deleteUsersGroups(idStructureATraiter, statements);

@@ -30,18 +30,22 @@ public interface SyntheseBilanPeriodiqueService {
      * @param idEleve id eleve
      * @param idTypePeriode id_type periode
      * @param synthese synthese saisie par le professeur
+     * @param idStructure id de l'établissement où la synthèse a été saisie
      * @param handler handler portant le résultat de la requête
      */
-    public void createOrUpdateSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, Handler<Either<String, JsonObject>> handler);
+    public void createOrUpdateSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, String idStructure,
+                                                      Handler<Either<String, JsonObject>> handler);
 
     /**
      * Récupérer une synthèse d'un élève pour une période donnée
      * @param idEleve id élève
      * @param idTypePeriode id_type période
      * @param synthese synthese rédigé par le professeur
+     * @param idStructure id de l'établissement où la synthèse a été saisie
      * @param handler handler portant le résultat de la requête
      */
-    public void getSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, Handler<Either<String, JsonObject>> handler);
+    public void getSyntheseBilanPeriodique(String idEleve, Long idTypePeriode, String synthese, String idStructure,
+                                           Handler<Either<String, JsonObject>> handler);
 
 
 }

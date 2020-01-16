@@ -678,7 +678,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 validResultHandler(handler));
     }
 
-    public void getColonneReleveTotale(JsonArray idEleves, Long idPeriode, JsonArray idsMatiere, JsonArray idsClasse,
+    public void getColonneReleveTotale(JsonArray idEleves, Long idPeriode, JsonArray idsMatiere, JsonArray idsClasse, String idStructure,
                                        Handler<Either<String, JsonArray>> handler){
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
@@ -751,6 +751,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append(" AND IdTableAvisOrientation.id_periode = ? ");
             values.add(idPeriode);
         }
+        if (null != idStructure) {
+            query.append(" AND IdTableAvisOrientation.id_etablissement = ? ");
+            values.add(idStructure);
+        }
 
         query.append(" UNION " +
                 "SELECT IdTableAvisConseil.id_eleve, IdTableAvisConseil.id_periode, null as avis_conseil_orientation," +
@@ -769,6 +773,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
             query.append(" AND IdTableAvisConseil.id_periode = ? ");
             values.add(idPeriode);
         }
+        if (null != idStructure) {
+            query.append(" AND IdTableAvisConseil.id_etablissement = ? ");
+            values.add(idStructure);
+        }
 
         query.append("UNION " +
                 "SELECT syntheseBP.id_eleve, syntheseBP.id_typeperiode as id_periode, null as avis_conseil_orientation, null as avis_conseil_de_classe," +
@@ -784,6 +792,10 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         if (null != idPeriode) {
             query.append(" AND syntheseBP.id_typeperiode = ? ");
             values.add(idPeriode);
+        }
+        if (null != idStructure) {
+            query.append(" AND syntheseBP.id_etablissement = ? ");
+            values.add(idStructure);
         }
 
         Sql.getInstance().prepared(query.toString(), values,
@@ -2280,7 +2292,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
 
                         // Récupération des moyennes, positionnement Finales, appréciations, avis conseil de classe et orientation
                         Future<JsonArray> bigRequestFuture = Future.future();
-                        getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse),
+                        getColonneReleveTotale(idEleves, idPeriode, idMatieres, new JsonArray().add(idClasse), idEtablissement,
                                 event -> formate(bigRequestFuture, event));
 
                         // Récupération des Notes du Relevé

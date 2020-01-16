@@ -96,9 +96,10 @@ public interface ExportBulletinService {
      * @param idEleve IdEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idTypePeriode IdPeriode
+     * @param idStructure id de l'établissement où la synthèse a été saisie
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getSyntheseBilanPeriodique ( String idEleve,  Map<String,JsonObject> elevesMap, Long idTypePeriode,
+    void getSyntheseBilanPeriodique ( String idEleve,  Map<String,JsonObject> elevesMap, Long idTypePeriode, String idStructure,
                                       Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -160,9 +161,10 @@ public interface ExportBulletinService {
      * @param idEleve  idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idType of the periode
+     * @param idStructure id de l'établissement où les avis ont été saisi
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode,
+    void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
                         Handler<Either<String, JsonObject>> finalHandler);
 
     /**
@@ -170,9 +172,10 @@ public interface ExportBulletinService {
      * @param idEleve  idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idType of the periode
+     * @param idStructure l'is de l'établissement où les avis ont été saisis
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode,
+    void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
                         Handler<Either<String, JsonObject>> finalHandler);
 
 

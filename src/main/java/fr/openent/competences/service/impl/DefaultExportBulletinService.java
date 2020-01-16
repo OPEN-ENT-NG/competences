@@ -420,7 +420,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             if (!answered.get()) {
                 putLibelleForExport(idEleve, elevesMap, params, finalHandler);
                 getEvenements(idEleve, elevesMap, idPeriode, finalHandler);
-                getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, finalHandler);
+                getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
                 getStructure(idEleve, elevesMap.get(idEleve), finalHandler);
                 getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, finalHandler);
@@ -428,8 +428,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
                         finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
-                getAvisConseil(idEleve, elevesMap, idPeriode, finalHandler);
-                getAvisOrientation(idEleve, elevesMap, idPeriode, finalHandler);
+                getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
+                getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
                 if(params.getBoolean(GET_RESPONSABLE)) {
                     getResponsables(idEleve, elevesMap, finalHandler);
                 }
@@ -848,7 +848,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode,
+    public void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
                                Handler<Either<String, JsonObject>> finalHandler) {
         logBegin(GET_AVIS_CONSEIL_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
@@ -856,7 +856,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             logStudentNotFound(idEleve, GET_AVIS_CONSEIL_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         }else{
-            avisConseilService.getAvisConseil(idEleve, idPeriode, new Handler<Either<String, JsonObject>>() {
+            avisConseilService.getAvisConseil(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonObject>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
@@ -867,7 +867,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         log.error("[getAvisConseil ] : " + idEleve  + " " + message + " " + count);
                         if (message.contains(TIME)) {
                             count++;
-                            avisConseilService.getAvisConseil(idEleve, idPeriode,this);
+                            avisConseilService.getAvisConseil(idEleve, idPeriode, idStructure, this);
                         }
                         else {
                             if (eleveObject.getJsonArray(ERROR) == null) {
@@ -896,7 +896,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode,
+    public void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
                                    Handler<Either<String, JsonObject>> finalHandler) {
         logBegin(GET_AVIS_ORIENTATION_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
@@ -904,7 +904,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             logStudentNotFound(idEleve, GET_AVIS_ORIENTATION_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         }else{
-            avisOrientationService.getAvisOrientation(idEleve, idPeriode, new Handler<Either<String, JsonObject>>() {
+            avisOrientationService.getAvisOrientation(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonObject>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
@@ -915,7 +915,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         log.error("[getAvisOrientation ] : " + idEleve  + " " + message + " " + count);
                         if (message.contains(TIME)) {
                             count++;
-                            avisOrientationService.getAvisOrientation(idEleve, idPeriode,this);
+                            avisOrientationService.getAvisOrientation(idEleve, idPeriode, idStructure,this);
                         }
                         else {
                             if (eleveObject.getJsonArray(ERROR) == null) {
@@ -1140,7 +1140,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void getSyntheseBilanPeriodique ( String idEleve,  Map<String,JsonObject> elevesMap, Long idPeriode,
-                                             Handler<Either<String, JsonObject>> finalHandler) {
+                                             String idStructure, Handler<Either<String, JsonObject>> finalHandler) {
         JsonObject eleveObject = elevesMap.get(idEleve);
         logBegin(GET_SYNTHESE_BILAN_PERIO_METHOD, idEleve);
         if (eleveObject == null) {
@@ -1148,7 +1148,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             finalHandler.handle(new Either.Right<>(null));
         }
         else {
-            syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve,
+            syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve, idStructure,
                     new Handler<Either<String, JsonObject>>() {
                         private int count = 1;
                         private AtomicBoolean answer = new AtomicBoolean(false);
@@ -1159,7 +1159,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 log.error("[getSyntheseBilanPeriodique ] : " + idEleve  + " " + message + " " + count);
                                 if (message.contains(TIME) && !answer.get()) {
                                     count++;
-                                    syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve,
+                                    syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve, idStructure,
                                             this);
                                 }
                                 else {

@@ -5,6 +5,7 @@ export class SyntheseBilanPeriodique extends Model {
     id_eleve : string;
     id_typePeriode : number;
     synthese : string;
+    id_structure : string;
 
     get api () {
         return {
@@ -12,15 +13,16 @@ export class SyntheseBilanPeriodique extends Model {
         };
     }
 
-    constructor (idEleve:string, idTypePeriode:number) {
+    constructor (idEleve:string, idTypePeriode:number, idStructure:string) {
         super();
         this.id_eleve = idEleve;
         this.id_typePeriode = idTypePeriode;
+        this.id_structure = idStructure;
     }
 
     async syncSynthese() {
         try {
-            let {data} = await http.get(`/competences/syntheseBilanPeriodique?id_eleve=${this.id_eleve}&id_typePeriode=${this.id_typePeriode}`);
+            let {data} = await http.get(`/competences/syntheseBilanPeriodique?id_eleve=${this.id_eleve}&id_typePeriode=${this.id_typePeriode}&id_structure=${this.id_structure}`);
             if(data.synthese !== undefined) {
                 this.synthese = data.synthese;
             }
@@ -34,6 +36,7 @@ export class SyntheseBilanPeriodique extends Model {
             synthese: this.synthese,
             id_eleve: this.id_eleve,
             id_typePeriode: this.id_typePeriode,
+            id_structure: this.id_structure,
         }
     }
 

@@ -11,6 +11,9 @@
     },
     "id_avis_conseil_bilan": {
       "type" : "integer"
+    },
+    "id_structure": {
+      "type" : "string"
     }
   },
   "required": [
