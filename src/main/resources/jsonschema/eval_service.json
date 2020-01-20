@@ -9,8 +9,8 @@
     "id_enseignant": {
       "type": "string"
     },
-    "id_groupe": {
-      "type": "string"
+    "id_groupes": {
+      "type": "array"
     },
     "id_etablissement": {
       "type": "string"
@@ -31,6 +31,6 @@
   "required": [
     "id_matiere",
     "id_enseignant",
-    "id_groupe"
+    "id_groupes"
   ]
 }
