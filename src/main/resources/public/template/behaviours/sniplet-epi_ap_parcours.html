@@ -325,7 +325,7 @@
                     <label class="select"
                            ng-class="{disabled : search.enseignant == null || search.enseignant == undefined}">
                         <select ng-model="search.matiere"
-                                ng-change="pushData(search.enseignant, search.matiere)"
+                                ng-change="pushData(search.enseignant, dataELem.ens_mat, search.matiere)"
                                 ng-options="matiere.name for matiere in (filteredSubjects = (options.matieres | filter:notYetSelected()))"
                                 ng-disabled="search.enseignant == null">
                             <option class="header-opt" disabled value="">[[translate('viescolaire.utils.subject')]]
@@ -350,7 +350,7 @@
                 <div class="five cell twelve-mobile">
                     <label class="select">
                         <select ng-model="search.classe"
-                                ng-change="pushData(search.classe)"
+                                ng-change="pushData(search.classe,dataELem.classes)"
                                 ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | orderBy:['type_groupe_libelle','name']">
                             <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]
                             </option>

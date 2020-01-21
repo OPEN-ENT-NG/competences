@@ -366,22 +366,11 @@ export const bilanPeriodique = {
             };
         },
 
-        pushData: function (teacher, subject?) {
-            if (subject) {
-
-                let foundEM = bilanPeriodique.that.dataELem.ens_mat.find(
-                    EM => EM.intervenant.id === teacher.id && EM.matiere.id === subject.id);
-
-                if (!foundEM && subject.id !== undefined) {
-                    bilanPeriodique.that.dataELem.ens_mat.push({intervenant: teacher, matiere: subject});
-                }
-            } else {
-                let foundClasse = bilanPeriodique.that.dataELem.classes.find(classe =>
-                    classe.id === teacher.id);
-                if (!foundClasse) {
-                    bilanPeriodique.that.dataELem.classes.push(teacher);
-                }
-            }
+        pushData: function (teacher, dataElem, subject?) {
+            if(subject)
+                utils.pushData(teacher,dataElem,subject);
+            else
+                utils.pushData(teacher,dataElem);
         },
 
 

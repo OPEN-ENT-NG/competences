@@ -653,6 +653,7 @@
   "evaluation.service.update":"Le service a bien été mis à jour",
   "evaluation.service.delete":"Le service a bien été supprimé",
   "evaluation.service.create":"Le service a bien été créé",
+  "evaluation.services.create":"Les services ont bien été créés",
   "evaluation.service.delete.error":"Erreur lors de la suppression d'un service",
   "evaluation.service.choose.a.subject": "Veuillez choisir une matière",
   "evaluation.service.choose.another.subject": "Veuillez choisir une matière différente de celle où le service est créé",

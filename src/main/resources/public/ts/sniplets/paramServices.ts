@@ -1,7 +1,7 @@
 import {notify, idiom as lang, angular, _} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
-import {Utils} from "../models/teacher";
+import {Classe, Utils} from "../models/teacher";
 
 export const paramServices = {
     title: 'Configuration des services',
@@ -50,6 +50,8 @@ export const paramServices = {
                         notify.error('evaluation.service.error.update');
                     }
                 };
+
+                paramServices.that.classesSelected = [this.id_groupe];
 
                 if(this.modalite == this.previous_modalite) {
                     return;
@@ -133,15 +135,26 @@ export const paramServices = {
             }
 
             toJson() {
-                return {
+                if(paramServices.that.classesSelected.length == 0 || !paramServices.that.lightboxes.create)
+                    return {
+                        id_etablissement: this.id_etablissement,
+                        id_enseignant: this.id_enseignant,
+                        id_matiere: this.id_matiere,
+                        id_groupes: [this.id_groupe],
+                        modalite: this.modalite,
+                        evaluable: this.evaluable,
+                        coefficient: this.coefficient
+                    };
+                else
+                    return {
                     id_etablissement: this.id_etablissement,
                     id_enseignant: this.id_enseignant,
                     id_matiere: this.id_matiere,
-                    id_groupe: this.id_groupe,
+                    id_groupes: _.map(paramServices.that.classesSelected,(classe) => {return classe.id;}),
                     modalite: this.modalite,
                     evaluable: this.evaluable,
                     coefficient: this.coefficient
-                }
+                };
             }
         },
 
@@ -167,6 +180,7 @@ export const paramServices = {
                     console.error(error);
                     await this.stopMessageLoader();
                 });
+            paramServices.that.classesSelected = [];
         },
         init: async function () {
             console.log(" ParamServices");
@@ -208,7 +222,12 @@ export const paramServices = {
 
             Promise.all([this.getClasses(), this.getMatieres(), this.getTeachers(), this.getModalite(), this.getRemplacements()])
                 .then(async function([aClasses, aMatieres, aTeachers, aModalite, aRemplacement]) {
-                    paramServices.that.columns.classe.data = aClasses.data;
+                    paramServices.that.columns.classe.data = _.map(aClasses.data,
+                        (classe) => {
+                            classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
+                            classe = new Classe(classe);
+                            return classe;
+                        });
                     paramServices.that.columns.enseignant.data = _.map(aTeachers.data, teacher => teacher.u.data);
                     paramServices.that.columns.matiere.data = aMatieres.data;
                     paramServices.that.columns.modalite.data = _.pluck(aModalite.data, "id");
@@ -216,6 +235,7 @@ export const paramServices = {
 
                     await paramServices.that.initServices();
                 });
+            this.classesSelected = [];
         },
 
         translate: function(key) {
@@ -259,9 +279,20 @@ export const paramServices = {
             }
         },
 
-        checkIfExists: function (service) {
-            return !!_.findWhere(paramServices.that.services, {id_matiere: service.id_matiere, id_enseignant: service.id_enseignant,
-                id_groupe: service.id_groupe})  ;
+        checkIfExistsAndValid: function (service) {
+            let exist = false;
+            if(paramServices.that.classesSelected.length>0 && service.id_matiere != "" && service.id_enseignant != "") {
+                paramServices.that.classesSelected.forEach(classe => {
+                    if (_.findWhere(paramServices.that.services, {
+                        id_matiere: service.id_matiere, id_enseignant: service.id_enseignant,
+                        id_groupe: classe
+                    }))
+                        exist = true;
+                });
+                return exist;
+            }else{
+                return true;
+            }
         },
 
         checkDevoirsService: async function (service, callback) {
@@ -342,19 +373,29 @@ export const paramServices = {
             paramServices.that.matiereSelected = matiere;
         },
 
+        deleteClasse: function (classe) {
+            for (let i = 0; i < paramServices.that.classesSelected.length; i++) {
+                if (paramServices.that.classesSelected[i] == classe) {
+                    paramServices.that.classesSelected = _.without(paramServices.that.classesSelected,
+                        paramServices.that.classesSelected[i]);
+                }
+            }
+        },
+
+        pushData:function(classe,listClasses){
+            utils.pushData(classe,listClasses);
+        },
+
         openCreateLightbox: function () {
-            let matiere = _.first(paramServices.that.columns.matiere.data);
-            let enseignant = _.first(paramServices.that.columns.enseignant.data);
-            let groupe = _.first(paramServices.that.columns.classe.data);
             paramServices.that.service = new paramServices.that.Service(
                 {
                     id_etablissement: paramServices.that.idStructure,
-                    id_matiere: matiere.id,
-                    id_enseignant: enseignant.id,
-                    id_groupe: groupe.id,
-                    nom_matiere: matiere.name,
-                    nom_enseignant: enseignant.displayName,
-                    nom_groupe: groupe.name,
+                    id_matiere: "",
+                    id_enseignant: "",
+                    id_groupe: "",
+                    nom_matiere: "",
+                    nom_enseignant: "",
+                    nom_groupe: "",
                     isManual: true,
                     modalite: 'S',
                     evaluable: true
@@ -365,7 +406,10 @@ export const paramServices = {
         createService: async function(service) {
             try {
                 await service.createService();
-                notify.success('evaluation.service.create');
+                if(paramServices.that.classesSelected.length >1)
+                    notify.success('evaluation.services.create');
+                else
+                    notify.success('evaluation.service.create');
             } finally {
                 paramServices.that.lightboxes.create = false;
                 await paramServices.that.initServices();

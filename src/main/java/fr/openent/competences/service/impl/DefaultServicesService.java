@@ -46,49 +46,57 @@ public class DefaultServicesService extends SqlCrudService implements ServicesSe
 
     public void createService(JsonObject oService, Handler<Either<String, JsonObject>> handler){
 
+        String query="";
         String columns = "id_matiere, id_groupe, id_enseignant, coefficient";
         String params = "?,?,?,?";
         JsonArray values = new JsonArray();
-        values.add(oService.getString("id_matiere"));
-        values.add(oService.getString("id_groupe"));
-        values.add(oService.getString("id_enseignant"));
-        values.add(oService.getValue("coefficient"));
 
-        if (oService.containsKey("id_etablissement")) {
-            columns += ", id_etablissement";
-            params += ",?";
-            values.add(oService.getString("id_etablissement"));
-        }
+        for(Object id_groupe : oService.getJsonArray("id_groupes")) {
 
-        if (oService.containsKey("modalite")) {
-            columns += ", modalite";
-            params += ",?";
-            values.add(oService.getString("modalite"));
-        }
+            values.add(oService.getString("id_matiere"));
+            values.add(id_groupe);
+            values.add(oService.getString("id_enseignant"));
+            values.add(oService.getValue("coefficient"));
 
-        if(oService.containsKey("evaluable")) {
-            columns += ", evaluable";
-            params += ",?";
-            values.add(oService.getBoolean("evaluable"));
-        }
+            columns = "id_matiere, id_groupe, id_enseignant, coefficient";
+            params = "?,?,?,?";
 
-        String query = "INSERT INTO " + this.resourceTable + " ("+columns+") "
-                + "VALUES ("+params+") ON CONFLICT ON CONSTRAINT pk_services DO UPDATE SET";
+            if (oService.containsKey("id_etablissement")) {
+                columns += ", id_etablissement";
+                params += ",?";
+                values.add(oService.getString("id_etablissement"));
+            }
 
-        if (oService.containsKey("modalite")) {
-            query += " modalite=?";
-            values.add(oService.getValue("modalite"));
-        }
-        if (oService.containsKey("evaluable")) {
-            query += oService.containsKey("modalite") ? ", evaluable=?" : " evaluable=?";
-            values.add(oService.getBoolean("evaluable"));
-        }
-        if (oService.containsKey(COEFFICIENT)) {
-            query += oService.containsKey("modalite") ? ", coefficient=?" : " coefficient=?";
-            values.add(oService.getLong(COEFFICIENT));
-        }
+            if (oService.containsKey("modalite")) {
+                columns += ", modalite";
+                params += ",?";
+                values.add(oService.getString("modalite"));
+            }
 
-        query += " RETURNING *";
+            if (oService.containsKey("evaluable")) {
+                columns += ", evaluable";
+                params += ",?";
+                values.add(oService.getBoolean("evaluable"));
+            }
+
+            query += "INSERT INTO " + this.resourceTable + " (" + columns + ") "
+                    + "VALUES (" + params + ") ON CONFLICT ON CONSTRAINT pk_services DO UPDATE SET";
+
+            if (oService.containsKey("modalite")) {
+                query += " modalite=?";
+                values.add(oService.getValue("modalite"));
+            }
+            if (oService.containsKey("evaluable")) {
+                query += oService.containsKey("modalite") ? ", evaluable=?" : " evaluable=?";
+                values.add(oService.getBoolean("evaluable"));
+            }
+            if (oService.containsKey(COEFFICIENT)) {
+                query += oService.containsKey("modalite") || oService.containsKey("evaluable") ? ", coefficient=?" : " coefficient=?";
+                values.add(oService.getLong(COEFFICIENT));
+            }
+
+            query += "; ";
+        }
 
         Sql.getInstance().prepared(query, values, validUniqueResultHandler(handler));
     }

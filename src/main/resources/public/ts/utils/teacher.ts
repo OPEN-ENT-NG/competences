@@ -33,3 +33,4 @@ export * from './functions/xmlToJson';
 export * from './functions/updateFilters';
 export * from './functions/initChartsEval';
 export * from './functions/setHistoriqueEvenement';
+export * from './functions/pushData';
