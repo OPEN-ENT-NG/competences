@@ -2513,16 +2513,31 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return false;
         };
 
-        $scope.getLibellePositionnement = function (positionnementCalcule) {
-            if(positionnementCalcule === utils.getNN()){
-                return lang.translate('evaluations.no.positionnement.calculee');
+        $scope.getLibellePositionnement = function (informationEleve,number) {
+            let positionnementCalcule;
+            if(informationEleve.positionnements_auto) {
+                let positionnementFind = _.find(informationEleve.positionnements_auto,
+                    function (positionnement) {
+                        return positionnement.id_periode == $scope.search.periode.id_type
+                    });
+                positionnementCalcule = (positionnementFind.moyenne) ? positionnementFind.moyenne : utils.getNN();
+            }else{
+                positionnementCalcule = utils.getNN();
             }
-            else{
-                return  lang.translate("evaluations.positionnement.calculee")
-                    + " : " + (Utils.isNull(positionnementCalcule)? 0 :positionnementCalcule);
+            if(number) {
+                if (positionnementCalcule === utils.getNN()) {
+                    return "";
+                } else {
+                    return positionnementCalcule + 1;
+                }
+            }else {
+                if (positionnementCalcule === utils.getNN()) {
+                    return lang.translate('evaluations.no.positionnement.calculee');
+                } else {
+                    return lang.translate("evaluations.positionnement.calculee")
+                        + " : " + (Utils.isNull(positionnementCalcule) ? 0 : positionnementCalcule + 1);
+                }
             }
-
-
         };
         /**
          * Séquence d'enregistrement d'une annotation
