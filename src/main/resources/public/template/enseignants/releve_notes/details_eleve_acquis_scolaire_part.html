@@ -64,7 +64,9 @@
             <span style="margin-left: 2px">[[informations.eleve.moyenneClasse]]</span>
         </section>
         <section>
-            <label class="cell twelve" tooltip="[[getLibellePositionnement(informations.eleve.positionnementCalcule)]]"><i18n class="bold">evaluations.releve.positionnement</i18n> : </label>
+            <label class="cell twelve" tooltip="[[getLibellePositionnement(informations.eleve,false)]]">
+                <i18n class="bold">evaluations.releve.positionnement</i18n> : [[getLibellePositionnement(informations.eleve,true)]]
+            </label>
             <ul class="selectable-list twelve" ng-if="!disabledSaisieNNoutPeriode()">
 
                 <li ng-if="$index === 0"
