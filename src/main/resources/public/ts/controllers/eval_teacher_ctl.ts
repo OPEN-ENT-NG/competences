@@ -2520,7 +2520,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     function (positionnement) {
                         return positionnement.id_periode == $scope.search.periode.id_type
                     });
-                positionnementCalcule = (positionnementFind.moyenne) ? positionnementFind.moyenne : utils.getNN();
+                positionnementCalcule = (positionnementFind.moyenne || positionnementFind.moyenne == 0) ? positionnementFind.moyenne : utils.getNN();
             }else{
                 positionnementCalcule = utils.getNN();
             }
