@@ -662,6 +662,10 @@
   "evaluation.service.delete.error":"Erreur lors de la suppression d'un service",
   "evaluation.service.choose.a.subject": "Veuillez choisir une matière",
   "evaluation.service.choose.another.subject": "Veuillez choisir une matière différente de celle où le service est créé",
-  "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur"
-
+  "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur",
+  "viescolaire.create.subEnseignement" : "Ajouter sous matières",
+  "evaluation.service.lightboxes.subEducation.create": "Ajouter des sous matières",
+  "evaluation.service.lightboxes.subEducation.select": "Sélection des sous matières",
+  "evaluation.service.lightboxes.subEducation.choice": "Choix matière(s)",
+  "evaluation.service.lightboxes.subEducation.class.choice": "Choix classe(s)/ groupe(s)"
 }
