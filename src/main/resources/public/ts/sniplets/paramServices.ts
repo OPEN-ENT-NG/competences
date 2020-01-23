@@ -147,14 +147,14 @@ export const paramServices = {
                     };
                 else
                     return {
-                    id_etablissement: this.id_etablissement,
-                    id_enseignant: this.id_enseignant,
-                    id_matiere: this.id_matiere,
-                    id_groupes: _.map(paramServices.that.classesSelected,(classe) => {return classe.id;}),
-                    modalite: this.modalite,
-                    evaluable: this.evaluable,
-                    coefficient: this.coefficient
-                };
+                        id_etablissement: this.id_etablissement,
+                        id_enseignant: this.id_enseignant,
+                        id_matiere: this.id_matiere,
+                        id_groupes: _.map(paramServices.that.classesSelected,(classe) => {return classe.id;}),
+                        modalite: this.modalite,
+                        evaluable: this.evaluable,
+                        coefficient: this.coefficient
+                    };
             }
         },
 
@@ -204,7 +204,7 @@ export const paramServices = {
             this.columns = {
                 delete: {size : "one", name: "evaluation.service.columns.delete", filtered: false},
                 matiere: {size: "three", data: [], name: "evaluation.service.columns.matiere", filtered: false},
-                enseignant: {size: "two", data: [], name: "evaluation.service.columns.teacher", filtered: false},
+                enseignant: {size: "one", data: [], name: "evaluation.service.columns.teacher", filtered: false},
                 classe: {size: "two", data: [], name: "evaluation.service.columns.classGroup", filtered: false},
                 modalite: {size: "one", data: [], name: "evaluation.service.columns.modalite", filtered: false},
                 coefficient: {size: "one", name: "viescolaire.utils.coefficient", filtered: false},
@@ -214,7 +214,8 @@ export const paramServices = {
             this.lightboxes= {
                 switchEval: false,
                 confirm: false,
-                create: false
+                create: false,
+                subEducationCreate:false
             };
 
             paramServices.that = this;
@@ -310,6 +311,40 @@ export const paramServices = {
             })
         },
 
+        openSubEducationLightBoxCreation: function (selectedServices){
+            console.log(selectedServices)
+            paramServices.that.matieres =[];
+            paramServices.that.sousMatieres =[];
+            selectedServices.map(service =>{
+                paramServices.that.columns.matiere.data.map( matiere =>{
+                    if(matiere.id === service.id_matiere) {
+                        paramServices.that.matieres.push(matiere);
+                        matiere.sous_matieres.forEach(sm =>{
+                            if(sm !== undefined)
+                                paramServices.that.sousMatieres.push(sm);
+                        })
+                    }
+                })
+            })
+
+            console.log(paramServices.that.matieres)
+            console.log(paramServices.that.sousMatieres)
+            paramServices.that.servicesSelected = selectedServices;
+            paramServices.that.lightboxes.subEducationCreate = true;
+
+        },
+        getSelectedDisciplines:function(){
+            let selectedDisciplines = []
+            paramServices.that.services.forEach(service =>{
+                if(service.selected)
+                    selectedDisciplines.push(service);
+            });
+            return selectedDisciplines;
+        },
+        oneDisicplineSelected:function(){
+            let service = paramServices.that.services.find(service => service.selected)
+            return service !== undefined;
+        },
         switchEvaluableService: async function(service) {
             if(service.evaluable) {
                 await service.updateServiceEvaluable();
