@@ -220,6 +220,7 @@
             <i18n>viescolaire.utils.cancel</i18n>
         </button>
     </lightbox>
+
     <lightbox show="lightboxes.subEducationCreate" on-close="lightboxes.subEducationCreate = false">
         <h3>
             <i18n>evaluation.service.lightboxes.subEducation.create</i18n>
@@ -230,53 +231,85 @@
                 <i18n>evaluation.service.lightboxes.subEducation.select</i18n>
             </h4>
             <article class="card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.5)!important;">
-                <ul class="row">
-                    <li ng-repeat="matiere in sousMatieres track by matiere.id_type_sousmatiere">
-                        <span>[[matiere.libelle]]</span>
-                    </li>
-                </ul>
-                <button class="right-magnet" >plop</button>
+                <div class="row">
+                    <div class="seven cell">
+                        <ul>
+                            <li ng-repeat="matiere in subTopics.all track by matiere.id">
+                                <label class="one checkbox">
+                                    <input type="checkbox"
+                                           ng-model="matiere.selected"
+                                    />
+                                    <span></span>
+                                </label>
+                                <span>[[matiere.libelle]]</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="four cell buttonAbsolute">
+
+                        <button ng-click="openCreationSubTopicCreationLightBox()" ><i18n>evaluation.service.lightboxes.subEducation.class.sub.create</i18n></button>
+                    </div>
+
+                </div>
             </article>
             <h4>
                 <i18n>evaluation.service.lightboxes.subEducation.choice</i18n>
 
             </h4>
             <article class="card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.5)!important;">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. In ut semper quam. Pellentesque efficitur nulla vel consequat pellentesque. Morbi laoreet pharetra nisi in feugiat. Proin convallis sapien sit amet dui commodo, vel mollis odio iaculis. Suspendisse at quam vitae quam consectetur auctor sed nec tortor. Mauris egestas rhoncus leo, eget porttitor arcu auctor eget. Praesent ullamcorper tortor dui, cursus blandit purus cursus eget. Donec commodo tincidunt lorem, ut efficitur dui rutrum non. Curabitur vehicula mollis lectus sed laoreet. Donec dictum luctus leo eget imperdiet. Donec nisi libero, auctor vel mi id, convallis rhoncus eros. Aenean facilisis augue at elit feugiat luctus. Donec in erat venenatis neque dictum maximus. Proin a mauris vitae dui lacinia semper id ac tellus. Pellentesque commodo dignissim neque, vel scelerisque risus condimentum et. Mauris bibendum quam at magna finibus, sit amet volutpat erat tempor.
+                <div class="row">
+                    <div class="five cell">
+                        <ul>
+                            <li ng-repeat="matiere in matieres track by matiere.id">
+                                <label class="one checkbox">
+                                    <input type="checkbox"
+                                           ng-model="matiere.selected"
+                                    />
+                                    <span></span>
+                                </label>
+                                <span>[[matiere.name]]</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="one cell">
 
-                Aenean faucibus leo nisi, eget posuere nibh maximus sit amet. Ut vitae nisl quis justo vehicula suscipit ut at metus. Vivamus congue sem et feugiat viverra. Mauris eu pretium libero. Pellentesque eleifend justo dui, non tempor lectus cursus maximus. Phasellus auctor erat placerat mauris venenatis, vel aliquam nibh ultricies. Etiam id sapien molestie, consequat erat et, pharetra felis. Mauris sed maximus odio. Ut eget mauris porta, iaculis sem nec, faucibus neque. Vivamus imperdiet bibendum risus, sit amet laoreet libero ultrices sed. Etiam gravida lorem sed felis lobortis elementum. Duis tempus, diam sit amet pulvinar volutpat, erat neque posuere neque, vitae pretium mauris arcu sit amet dolor. Fusce varius dolor metus, a rutrum urna tincidunt ac. Quisque consequat est a mauris ultrices, at feugiat nibh gravida.
+                    </div>
+                    <div class="six cell">
 
-                Integer a augue quis ex porta ornare non eget felis. Nullam ac mattis ante. Vivamus nec quam sit amet ipsum interdum dictum. Vestibulum semper ligula non tortor egestas consequat nec quis lectus. Aliquam vitae nisi et nisl sodales tempus. Proin viverra accumsan nisi, ac dapibus magna interdum sit amet. Donec accumsan sapien sit amet felis feugiat, quis pretium nulla accumsan. Vivamus tempor urna vel lacus tempor lobortis eget ac ligula.
+                        <h4>
+                            <i18n>evaluation.service.lightboxes.subEducation.add.matiere</i18n>
+                        </h4>
+                        <select ng-model="matiereToAdd"
+                                ng-options="matiere.name for matiere in matieresForSelect"
+                                ng-change="addMatiereToCreateSubTopic(matiereToAdd)"
+                        >
+                        </select>
+                    </div>
 
-                Aenean purus nisl, faucibus sit amet commodo at, laoreet ultrices nibh. Quisque sit amet tristique est, nec efficitur nulla. Donec sed vehicula nunc. Ut volutpat dictum nunc ac dignissim. Suspendisse facilisis lacus justo, ornare pellentesque magna sodales ac. Cras bibendum neque arcu, eget fermentum ante dapibus eget. Vivamus aliquet, diam vel tempor laoreet, velit nunc sagittis nisi, sit amet ultrices elit massa quis velit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Donec ante massa, tempor a mi quis, suscipit eleifend orci. Praesent vestibulum, nisl ac blandit efficitur, tellus tellus elementum sem, in ullamcorper arcu lacus ac enim.
-
-                Sed ut finibus metus. Donec bibendum ligula volutpat facilisis pellentesque. Fusce posuere justo vel diam rutrum, nec pharetra lectus euismod. Vivamus sit amet sapien sapien. Sed lacinia ultricies tortor, rhoncus vestibulum elit pretium ac. Cras in velit et ex pretium cursus at sagittis neque. Maecenas ornare dolor sit amet elit semper dignissim. Nulla facilisi. Vestibulum eget scelerisque ipsum, in finibus augue. In mollis dapibus neque sit amet sollicitudin. Sed bibendum ante sit amet pretium dapibus.
-
-            </article>
-            <h4>
-                <i18n>evaluation.service.lightboxes.subEducation.class.choice</i18n>
-            </h4>
-            <article class="card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.5)!important;">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. In ut semper quam. Pellentesque efficitur nulla vel consequat pellentesque. Morbi laoreet pharetra nisi in feugiat. Proin convallis sapien sit amet dui commodo, vel mollis odio iaculis. Suspendisse at quam vitae quam consectetur auctor sed nec tortor. Mauris egestas rhoncus leo, eget porttitor arcu auctor eget. Praesent ullamcorper tortor dui, cursus blandit purus cursus eget. Donec commodo tincidunt lorem, ut efficitur dui rutrum non. Curabitur vehicula mollis lectus sed laoreet. Donec dictum luctus leo eget imperdiet. Donec nisi libero, auctor vel mi id, convallis rhoncus eros. Aenean facilisis augue at elit feugiat luctus. Donec in erat venenatis neque dictum maximus. Proin a mauris vitae dui lacinia semper id ac tellus. Pellentesque commodo dignissim neque, vel scelerisque risus condimentum et. Mauris bibendum quam at magna finibus, sit amet volutpat erat tempor.
-
-                Aenean faucibus leo nisi, eget posuere nibh maximus sit amet. Ut vitae nisl quis justo vehicula suscipit ut at metus. Vivamus congue sem et feugiat viverra. Mauris eu pretium libero. Pellentesque eleifend justo dui, non tempor lectus cursus maximus. Phasellus auctor erat placerat mauris venenatis, vel aliquam nibh ultricies. Etiam id sapien molestie, consequat erat et, pharetra felis. Mauris sed maximus odio. Ut eget mauris porta, iaculis sem nec, faucibus neque. Vivamus imperdiet bibendum risus, sit amet laoreet libero ultrices sed. Etiam gravida lorem sed felis lobortis elementum. Duis tempus, diam sit amet pulvinar volutpat, erat neque posuere neque, vitae pretium mauris arcu sit amet dolor. Fusce varius dolor metus, a rutrum urna tincidunt ac. Quisque consequat est a mauris ultrices, at feugiat nibh gravida.
-
-                Integer a augue quis ex porta ornare non eget felis. Nullam ac mattis ante. Vivamus nec quam sit amet ipsum interdum dictum. Vestibulum semper ligula non tortor egestas consequat nec quis lectus. Aliquam vitae nisi et nisl sodales tempus. Proin viverra accumsan nisi, ac dapibus magna interdum sit amet. Donec accumsan sapien sit amet felis feugiat, quis pretium nulla accumsan. Vivamus tempor urna vel lacus tempor lobortis eget ac ligula.
-
-                Aenean purus nisl, faucibus sit amet commodo at, laoreet ultrices nibh. Quisque sit amet tristique est, nec efficitur nulla. Donec sed vehicula nunc. Ut volutpat dictum nunc ac dignissim. Suspendisse facilisis lacus justo, ornare pellentesque magna sodales ac. Cras bibendum neque arcu, eget fermentum ante dapibus eget. Vivamus aliquet, diam vel tempor laoreet, velit nunc sagittis nisi, sit amet ultrices elit massa quis velit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Donec ante massa, tempor a mi quis, suscipit eleifend orci. Praesent vestibulum, nisl ac blandit efficitur, tellus tellus elementum sem, in ullamcorper arcu lacus ac enim.
-
-                Sed ut finibus metus. Donec bibendum ligula volutpat facilisis pellentesque. Fusce posuere justo vel diam rutrum, nec pharetra lectus euismod. Vivamus sit amet sapien sapien. Sed lacinia ultricies tortor, rhoncus vestibulum elit pretium ac. Cras in velit et ex pretium cursus at sagittis neque. Maecenas ornare dolor sit amet elit semper dignissim. Nulla facilisi. Vestibulum eget scelerisque ipsum, in finibus augue. In mollis dapibus neque sit amet sollicitudin. Sed bibendum ante sit amet pretium dapibus.
+                </div>
             </article>
         </div>
         <div class="row">
-            <button class="marginFive magnet-right">
+            <button class="marginFive right-magnet">
                 <i18n>viescolaire.utils.save</i18n>
             </button>
         </div>
-        <button ng-click="lightboxes.switchEval = false; service.evaluable = !service.evaluable;" class="right-magnet cancel">
-            <i18n>viescolaire.utils.cancel</i18n>
-        </button>
+
     </lightbox>
+
+    <lightbox  show="lightboxes.subTopicCreationForm" on-close="lightboxes.subTopicCreationForm = false">
+        <div>
+            <h3>
+                <i18n>evaluation.service.lightboxes.subEducation.class.sub.create</i18n>
+            </h3>
+            <input type="text" i18n-placeholder="evaluation.service.lightboxes.subEducation.placeholder" ng-model = "newSubTopic"/>
+
+            <button class="marginFive right-magnet">
+                <i18n>viescolaire.utils.save</i18n>
+            </button>
+        </div>
+    </lightbox>
+
 
     <section class="toggle-buttons" ng-class="{ hide: !oneDisicplineSelected() }">
         <div class="toggle">

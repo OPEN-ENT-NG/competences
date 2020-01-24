@@ -1,8 +1,16 @@
 .lightboxCreate{
   ul{
+    padding-left: 1.33em;
+    margin-top: 0.4em;
     li{
       font-size: 1.2em;
       list-style-type: none;
+      padding-top: 10px;
     }
+  }
+  .buttonAbsolute{
+    bottom: 0;
+    position: absolute;
+    right: 0;
   }
 }
