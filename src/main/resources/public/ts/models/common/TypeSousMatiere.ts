@@ -16,8 +16,23 @@
  */
 
 import { Model } from 'entcore';
+import {Mix, Selectable,Selection} from "entcore-toolkit";
+import http from "axios";
 
-export class TypeSousMatiere extends Model {
+export class TypeSousMatiere extends Model implements Selectable{
     id: number;
     libelle: string;
+    selected:boolean;
+}
+
+
+export class TypeSousMatieres extends Selection<TypeSousMatiere>{
+    id: number;
+    libelle: string;
+
+    async get(){
+        let {data} = await http.get(`/viescolaire/types/sousmatieres`);
+        this.all = Mix.castArrayAs(TypeSousMatiere, data);
+
+    }
 }
