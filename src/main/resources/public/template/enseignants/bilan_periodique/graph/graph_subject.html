@@ -1,8 +1,8 @@
-<div ng-if="informations.eleve.configMixedChart !== undefined"
+<div ng-if="informations.eleve.configMixedChart !== undefined && graph.type == 'baton'"
      class="twelve">
-    <div class=" twelve cell twelve-mobile solid-bottom">
+    <div class=" twelve cell twelve-mobile"  ng-if="graph.competences">
         <div class="chart-container" style="position: relative; height:auto; width:auto; margin: auto;"  >
-            <canvas id="mixedChartfalse"
+            <canvas id="mixedChartfalseCompetences"
                     class="chart chart-bar" width="400" height="400"
                     chart-labels="informations.eleve.configMixedChart.labels"
                     chart-options="informations.eleve.configMixedChart.options"
@@ -10,11 +10,21 @@
                     chart-dataset-override="informations.eleve.configMixedChart.datasetsOveride"></canvas>
         </div>
     </div>
+    <div class=" twelve cell twelve-mobile" ng-if="graph.notes">
+        <div class="chart-container" style="position: relative; height:auto; width:auto; margin: auto;"  >
+            <canvas id="mixedChartfalseNotes"
+                    class="chart chart-bar" width="400" height="800"
+                    chart-labels="informations.eleve.configMixedChart.labels"
+                    chart-options="informations.eleve.configMixedChart.optionsNotes"
+                    chart-data="informations.eleve.configMixedChart._datasNotes"
+                    chart-dataset-override="informations.eleve.configMixedChart.datasetsNotesOveride"></canvas>
+        </div>
+    </div>
 </div>
 
 
-<div class="twelve">
-    <div class="twelve-mobile six cell inline-block">
+<div class="twelve center" ng-if="graph.type == 'radar'">
+    <div class="twelve-mobile six inline-block" ng-class="{'cell': graph.notes && graph.competences }" ng-if="graph.notes">
         <div class="twelve-mobile twelve">
             <canvas id="radar0" class="chart chart-radar align-center"
                     chart-data="informations.eleve.configRadarChart.datasets.average"
@@ -26,7 +36,7 @@
             </canvas>
         </div>
     </div>
-    <div class="twelve-mobile six cell inline-block ">
+    <div class="twelve-mobile six inline-block " ng-class="{'cell': graph.notes && graph.competences }" ng-if="graph.competences">
         <div class="twelve-mobile twelve">
             <canvas id="radar" class="chart chart-radar align-center"
                     chart-data="informations.eleve.configRadarChart.datasets.data"
