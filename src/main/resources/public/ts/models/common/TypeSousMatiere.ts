@@ -26,7 +26,9 @@ export class TypeSousMatiere extends Model implements Selectable{
 
     async save() {
         try{
-            let {status,data} = await http.post(`/viescolaire/types/sousmatiere`,this.toJson())
+            let {status,data} = await http.post(`/viescolaire/types/sousmatiere`,this.toJson());
+            console.log(status)
+            console.log(status === 200)
             this.id = data.id;
             return status === 200;
         }catch (e){
@@ -35,7 +37,10 @@ export class TypeSousMatiere extends Model implements Selectable{
     }
 
     private toJson() {
-
+        return {
+            ...(this.id && {id: this.id}),
+            ...(this.libelle && {libelle: this.libelle}),
+        }
     }
 }
 //TODO faire le CRUD et faire les controllers backs

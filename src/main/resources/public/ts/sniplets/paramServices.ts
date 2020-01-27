@@ -340,12 +340,11 @@ export const paramServices = {
             let isSaved = await subTopic.save();
             if(isSaved === false){
                 paramServices.that.lightboxes.subEducationCreate = false;
-                safeApply(paramServices.that)
                 toasts.warning("viesco.subTopic.creation.error");
             }else{
                 paramServices.that.subTopics.all.push(subTopic);
             }
-
+            safeApply(paramServices.that)
         },
         plop: function(newSubTopic){
             paramServices.that.newSubTopic = newSubTopic;
