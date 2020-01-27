@@ -1,7 +1,8 @@
-import {notify, idiom as lang, angular, _} from 'entcore';
+import {notify, idiom as lang, angular, _,toasts} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
-import {Classe, TypeSousMatieres, Utils} from "../models/teacher";
+import {Classe, TypeSousMatiere, TypeSousMatieres, Utils} from "../models/teacher";
+import {safeApply} from "../utils/teacher";
 
 export const paramServices = {
     title: 'Configuration des services',
@@ -22,6 +23,7 @@ export const paramServices = {
             previous_evaluable: boolean;
             isManual: boolean;
             coefficient: number;
+
 
             constructor(service) {
                 _.extend(this, service);
@@ -217,8 +219,7 @@ export const paramServices = {
                 switchEval: false,
                 confirm: false,
                 create: false,
-                subEducationCreate:false,
-                subTopicCreationForm:false
+                subEducationCreate:false
             };
 
             paramServices.that = this;
@@ -317,20 +318,42 @@ export const paramServices = {
             let isAlreadyIn = false;
             paramServices.that.matieresForSelect = [];
             paramServices.that.columns.matiere.data.map(matiere =>{
-                paramServices.that.matieres.forEach(mm =>{
-                    if(mm.id === matiere.id)
-                        isAlreadyIn = true;
-                });
+                    paramServices.that.matieres.forEach(mm =>{
+                        if(mm.id === matiere.id)
+                            isAlreadyIn = true;
+                    });
                     if(!isAlreadyIn)
                         paramServices.that.matieresForSelect.push(matiere);
-                isAlreadyIn = false;
+                    isAlreadyIn = false;
                 }
             )
 
         },
+        openCreationSubTopicCreationInput: function(){
+            paramServices.that.subTopicCreationForm = true;
+            safeApply(paramServices.that);
+        },
+        saveNewSubTopic: async function(){
+            paramServices.that.subTopicCreationForm = false;
+            let subTopic = new TypeSousMatiere();
+            subTopic.libelle = paramServices.that.newSubTopic;
+            let isSaved = await subTopic.save();
+            if(isSaved === false){
+                paramServices.that.lightboxes.subEducationCreate = false;
+                safeApply(paramServices.that)
+                toasts.warning("viesco.subTopic.creation.error");
+            }else{
+                paramServices.that.subTopics.all.push(subTopic);
+            }
+
+        },
+        plop: function(newSubTopic){
+            paramServices.that.newSubTopic = newSubTopic;
+        },
         openSubEducationLightBoxCreation: function (selectedServices){
             paramServices.that.matieres =[];
-            console.log(  paramServices.that.columns.matiere.data)
+            paramServices.that.subTopicCreationForm = false;
+            paramServices.that.newSubTopic="";
             selectedServices.map(service => {
                 paramServices.that.columns.matiere.data.map(matiere => {
                     if (matiere.id === service.id_matiere) {
@@ -349,12 +372,6 @@ export const paramServices = {
             paramServices.that.initMatieresForSelect();
             paramServices.that.servicesSelected = selectedServices;
             paramServices.that.lightboxes.subEducationCreate = true;
-
-        },
-        openCreationSubTopicCreationLightBox: function(){
-            paramServices.that.lightboxes.subEducationCreate = false;
-            paramServices.that.lightboxes.subTopicCreationForm = true;
-
 
         },
         addMatiereToCreateSubTopic: async function(matiereToAdd){
