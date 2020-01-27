@@ -665,5 +665,6 @@
   "evaluation.service.lightboxes.subEducation.class.choice": "Choix classe(s)/ groupe(s)",
   "evaluation.service.lightboxes.subEducation.class.sub.create": "Créer une sous matière",
   "evaluation.service.lightboxes.subEducation.add.matiere": "Ajouter une matière :",
-  "evaluation.service.lightboxes.subEducation.placeholder": "Nom de la sous matière"
+  "evaluation.service.lightboxes.subEducation.placeholder": "Nom de la sous matière",
+  "viesco.subTopic.creation.error": "Erreur lors de la création de la sous matière"
 }

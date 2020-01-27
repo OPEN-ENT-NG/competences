@@ -232,7 +232,7 @@
             </h4>
             <article class="card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.5)!important;">
                 <div class="row">
-                    <div class="seven cell">
+                    <div class="six cell">
                         <ul>
                             <li ng-repeat="matiere in subTopics.all track by matiere.id">
                                 <label class="one checkbox">
@@ -245,9 +245,20 @@
                             </li>
                         </ul>
                     </div>
-                    <div class="four cell buttonAbsolute">
+                    <div ng-show="!subTopicCreationForm"class="six cell buttonAbsolute">
+                        <button ng-click="openCreationSubTopicCreationInput()" ><i18n>evaluation.service.lightboxes.subEducation.class.sub.create</i18n></button>
+                    </div>
 
-                        <button ng-click="openCreationSubTopicCreationLightBox()" ><i18n>evaluation.service.lightboxes.subEducation.class.sub.create</i18n></button>
+                    <div ng-show="subTopicCreationForm"class="six cell buttonAbsolute">
+
+                        <input class="six cell"
+                               i18n-placeholder="evaluation.service.lightboxes.subEducation.placeholder"
+                               style="margin-top: 10px;"
+                               type="text"
+                               ng-model="newSubTopic"
+                               ng-change="plop(newSubTopic)" >
+
+                        <button class="five cell" ng-click="saveNewSubTopic()" ><i18n>Enregistrer</i18n></button>
                     </div>
 
                 </div>
@@ -296,21 +307,6 @@
         </div>
 
     </lightbox>
-
-    <lightbox  show="lightboxes.subTopicCreationForm" on-close="lightboxes.subTopicCreationForm = false">
-        <div>
-            <h3>
-                <i18n>evaluation.service.lightboxes.subEducation.class.sub.create</i18n>
-            </h3>
-            <input type="text" i18n-placeholder="evaluation.service.lightboxes.subEducation.placeholder" ng-model = "newSubTopic"/>
-
-            <button class="marginFive right-magnet">
-                <i18n>viescolaire.utils.save</i18n>
-            </button>
-        </div>
-    </lightbox>
-
-
     <section class="toggle-buttons" ng-class="{ hide: !oneDisicplineSelected() }">
         <div class="toggle">
             <div class="row">

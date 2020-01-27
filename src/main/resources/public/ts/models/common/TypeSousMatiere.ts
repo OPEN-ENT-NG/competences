@@ -15,7 +15,7 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model } from 'entcore';
+import { Model,toasts } from 'entcore';
 import {Mix, Selectable,Selection} from "entcore-toolkit";
 import http from "axios";
 
@@ -23,8 +23,22 @@ export class TypeSousMatiere extends Model implements Selectable{
     id: number;
     libelle: string;
     selected:boolean;
-}
 
+    async save() {
+        try{
+            let {status,data} = await http.post(`/viescolaire/types/sousmatiere`,this.toJson())
+            this.id = data.id;
+            return status === 200;
+        }catch (e){
+            return false
+        }
+    }
+
+    private toJson() {
+
+    }
+}
+//TODO faire le CRUD et faire les controllers backs
 
 export class TypeSousMatieres extends Selection<TypeSousMatiere>{
     id: number;
