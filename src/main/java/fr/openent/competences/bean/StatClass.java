@@ -89,6 +89,21 @@ public class StatClass {
         return averageClass;
     }
 
+    public Double getMinMaxClass(boolean min) {
+        Double moyMin = null;
+        Boolean first = true;
+        for (Map.Entry<String, StatEleve> entry : this.mapEleveStat.entrySet()) {
+            StatEleve statEleve = entry.getValue();
+            if (first) {
+                moyMin = statEleve.getMoyenne();
+                first = false;
+            } else if ((min)?(moyMin > statEleve.getMoyenne()):(moyMin < statEleve.getMoyenne())) {
+                    moyMin = statEleve.getMoyenne();
+            }
+        }
+        return moyMin;
+    }
+
     public void setAverageClass(Double averageClass) {
         this.averageClass = averageClass;
     }

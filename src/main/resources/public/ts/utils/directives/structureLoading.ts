@@ -4,7 +4,7 @@
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Affero General Public License as
- *   published by the Free Software Foundation (version 3 of the License).
+ *   published by the Free Software Foundation (veang-model="batonRadar" phMatierersion 3 of the License).
  *   For the sake of explanation, any module that communicate over native
  *   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
  *   license and could be license under its own terms. This is merely considered

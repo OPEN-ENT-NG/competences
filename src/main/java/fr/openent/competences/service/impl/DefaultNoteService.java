@@ -3525,10 +3525,14 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                 continue;
             }
             Double classAverage = null;
+            Double classMin = null;
+            Double classMax = null;
             Double averageStudent = null;
             StatClass statClasse = mapMatieresStatClasseAndEleve.get(matiere.getString("id"));
             if (statClasse != null) {
                 classAverage = statClasse.getAverageClass();
+                classMin = statClasse.getMinMaxClass(true);
+                classMax = statClasse.getMinMaxClass(false);
                 averageStudent = statClasse.getMoyenneEleve(idEleve);
             }
             matiere.put("competencesNotes", matieresCompNotes
@@ -3538,7 +3542,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                     .put("notes", matieresNotes.get(matiere.getString("id")))
                     .put("notesEleve", matieresNotesEleve.get(matiere.getString("id")))
                     .put("studentAverage", averageStudent)
-                    .put("classAverage", classAverage);
+                    .put("classAverage", classAverage)
+                    .put("classMin", classMin)
+                    .put("classMax", classMax);
             matieres.add(matiere);
         }
 

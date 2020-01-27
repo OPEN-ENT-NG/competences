@@ -1,14 +1,32 @@
-<div ng-if="informations.eleve.comparisonGraphDom !== undefined"
+<div ng-if="informations.eleve.comparisonGraphDom !== undefined && graph.typeDom == 'baton'"
      class="twelve">
     <div class=" twelve cell twelve-mobile">
         <div class="chart-container" >
-            <canvas id="comparisonGraphtrue"
+            <canvas id="comparisonGraphCompetencestrue"
                     class="chart chart-bar" width="400" height="400"
                     chart-labels="informations.eleve.comparisonGraphDom.data.labels"
                     chart-options="informations.eleve.comparisonGraphDom.options"
                     chart-type="informations.eleve.comparisonGraphDom.type"
                     chart-data="informations.eleve.comparisonGraphDom.data.data"
                     chart-dataset-override="informations.eleve.comparisonGraphDom.data.datasetOverride"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="twelve" ng-if="graph.typeDom == 'radar'">
+    <div class="three cell twelve-mobile"> 
+        &ensp;
+    </div>
+    <div class=" six cell twelve-mobile">
+        <div class="twelve-mobile">
+            <canvas id="radar1" class="chart chart-radar align-center"
+                    chart-data="informations.eleve.comparisonGraphDomRadar.datasets.data"
+                    chart-labels="informations.eleve.comparisonGraphDomRadar.datasets.labels"
+                    chart-series="informations.eleve.comparisonGraphDomRadar.series"
+                    chart-options="informations.eleve.comparisonGraphDomRadar.options.level"
+                    chart-colors="informations.eleve.comparisonGraphDomRadar.colors"
+            >
+            </canvas>
         </div>
     </div>
 </div>

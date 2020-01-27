@@ -92,6 +92,50 @@ export class Graph extends Model{
         ];
     }
 
+    static buildDatasetsNotes(configMixedChart, niveauCompetences) : Array<object> {
+        return [
+            {
+                label: lang.translate('average.student'),
+                type: 'line',
+                data: _.clone(configMixedChart._datasNotes[0]),
+                tooltipsPercentage : _.clone(configMixedChart._datasNotes[0]),
+                fill: false,
+                borderColor: configMixedChart.averageStudent.borderColor,
+                backgroundColor: configMixedChart.averageStudent.backgroundColor,
+                pointBorderColor: configMixedChart.averageStudent.pointBorderColor,
+                pointBackgroundColor: configMixedChart.averageStudent.pointBackgroundColor,
+                pointHoverBackgroundColor: configMixedChart.averageStudent.backgroundColor
+            },
+            {
+                label: lang.translate('average.class'),
+                type: 'line',
+                data: _.clone(configMixedChart._datasNotes[1]),
+                tooltipsPercentage: _.clone(configMixedChart._datasNotes[1]),
+                fill: false,
+                borderWidth : 1 + Chart.defaults.global.elements.line.borderWidth,
+                borderColor: configMixedChart.averageClass.borderColor,
+                backgroundColor: configMixedChart.averageClass.backgroundColor,
+                pointBorderColor: configMixedChart.averageClass.pointBorderColor,
+                pointBackgroundColor: configMixedChart.averageClass.pointBackgroundColor,
+                pointHoverBackgroundColor: configMixedChart.averageClass.backgroundColor
+            },
+            {
+                label: lang.translate('classaverage.min'),
+                backgroundColor: _.clone(niveauCompetences[3].couleur),
+                borderColor :`rgb(${Color(niveauCompetences[3].couleur).darken(0.25).values.rgb.toString()})`,
+                data: _.clone(configMixedChart._datasNotes[2]),
+                tooltipsPercentage: _.clone(configMixedChart._datasNotes[2])
+            },
+            {
+                label: lang.translate('classaverage.max'),
+                backgroundColor: _.clone(niveauCompetences[0].couleur),
+                borderColor :`rgb(${Color(niveauCompetences[0].couleur).darken(0.25).values.rgb.toString()})`,
+                data: _.clone(configMixedChart._datasNotes[3]),
+                tooltipsPercentage: _.clone(configMixedChart._datasNotes[3])
+            }
+        ];
+    }
+
     static moyenneNote(notes): number {
         let res = 0;
         let sum = 0;
@@ -125,7 +169,7 @@ export class Graph extends Model{
         }
     }
 
-    static buildOption(configMixedChart, forDomaine, eleve){
+    static buildOption(configMixedChart, forDomaine, eleve,notes){
         return  {
             maintainAspectRatio: false,
             title: {
@@ -165,7 +209,7 @@ export class Graph extends Model{
                         },
                         ticks: {
                             beginAtZero:true,
-                            max: 4,
+                            max: (notes)?20:4,
                         }
                     },
                     {
@@ -201,7 +245,8 @@ export class Graph extends Model{
         let average = [];
         let averageStudent = []; // Moyenne notes par matiere de l'élève
         let averageClass = []; // Moyenne notes par matiere de la classe
-
+        let minClass = []; //moyenne min par matiere de la classe
+        let maxClass = []; // moyenne max par matiere de la classe
 
         let labels = []; //Nom des matières
         let data_set1 = [], percentage_set1 = [];
@@ -290,7 +335,10 @@ export class Graph extends Model{
             labelyAxes: [lang.translate('level.items'), lang.translate('averages')],
             datasetsOveride : undefined,
             options: undefined,
+            optionsNotes: undefined,
             _datas: [],
+            _datasNotes: [],
+            datasetsNotesOveride : undefined,
             datasets: {
                 test: undefined,
                 average: data,
@@ -367,6 +415,16 @@ export class Graph extends Model{
                 }else{
                     averageClass.push(0);
                 }
+                if(matiereOrDomaine.classMin !== null && matiereOrDomaine.classMin !== undefined){
+                    minClass.push(matiereOrDomaine.classMin.toFixed(2).toString());
+                }else{
+                    minClass.push("0.00");
+                }
+                if(matiereOrDomaine.classMax!== null && matiereOrDomaine.classMax !== undefined){
+                    maxClass.push(matiereOrDomaine.classMax.toFixed(2).toString());
+                }else{
+                    maxClass.push("0.00");
+                }
 
                 let nbrCompNotesUnevaluated = _.where(matiereOrDomaine.competencesNotesEleve, {evaluation: -1});
                 nbrCompNotesUnevaluated = (!nbrCompNotesUnevaluated) ? nbrCompNotesUnevaluated.length : 0;
@@ -420,6 +478,10 @@ export class Graph extends Model{
         average.push(_.clone(averageStudent));
         average.push(_.clone(averageClass));
 
+        configMixedChart._datasNotes =  [_.clone(averageStudent), _.clone(averageClass), _.clone(minClass),_.clone(maxClass)];
+        configMixedChart.datasetsNotesOveride = this.buildDatasetsNotes(configMixedChart, niveauCompetences);
+        configMixedChart.optionsNotes = this.buildOption(configMixedChart, forDomaine, eleve,true);
+
         if( forComparison !== true) {
             if (forDomaine === true) {
                 eleve.configRadarChartDomaine = configRadarChart;
@@ -432,19 +494,17 @@ export class Graph extends Model{
             if(niveauCompetences !== undefined) {
                 configMixedChart.datasetsOveride = this.buildDatasets(configMixedChart, niveauCompetences);
                 configMixedChart._datas = [averageStudent, averageClass, data_set1, data_set2, data_set3, data_set4];
-                configMixedChart.options = this.buildOption(configMixedChart, forDomaine, eleve);
+                configMixedChart.options = this.buildOption(configMixedChart, forDomaine, eleve,false);
             }
         }
 
         if(niveauCompetences !== undefined && forComparison == true){
-
             return {
                 configMixedChart: configMixedChart,
                 datasets: this.buildDatasets(configMixedChart, niveauCompetences),
                 forDomaine : forDomaine
             };
-        }
-        else {
+        }else {
             return {};
         }
 
