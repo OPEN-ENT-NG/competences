@@ -1,6 +1,6 @@
-<div ng-if="informations.eleve.configMixedChartDomaine !== undefined"
+<div ng-if="informations.eleve.configMixedChartDomaine !== undefined && graph.typeDom == 'baton'"
      class="twelve">
-    <div class=" twelve cell twelve-mobile solid-bottom">
+    <div class=" twelve cell twelve-mobile">
         <div class="chart-container" style="position: relative; height:auto; width:auto; margin: auto;" >
             <canvas id="mixedCharttrue"
                     class="chart chart-bar" width="400" height="400"
@@ -13,7 +13,7 @@
 </div>
 
 
-<div class="twelve">
+<div class="twelve" ng-if="graph.typeDom == 'radar'">
     <div class="three cell twelve-mobile"> 
         &ensp;
     </div>

@@ -40,6 +40,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.opened.bfcPeriode = undefined;
         $scope.opened.coefficientConflict = false;
         $scope.canLoadStudent = false;
+        $scope.graph = {competences : true, notes : false, type: "baton",typeDom: "baton"};
         $scope.displayBilanPeriodique = () => {
             let isNotEmptyClasse = ($scope.search.classe !== '*' && $scope.search.classe !== null
                 && $scope.search.classe !== undefined);
@@ -287,6 +288,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if($scope.graphMat.opened){
                 $scope.openMatiere();
             }
+        };
+
+        $scope.unlessOneChecked = function (checkboxClick){
+            if(!($scope.graph.competences || $scope.graph.notes))
+                if(checkboxClick == 'competences')
+                    $scope.graph.competences = true;
+                else
+                    $scope.graph.notes = true;
         };
 
         //////            Graph de l'onglet graphique            //////
