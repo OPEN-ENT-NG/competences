@@ -698,17 +698,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             classe.periodes.all.push({libelle: "cycle", id: null});
                         }
                     }
-                        $scope.getCurrentPeriode(classe).then(function (res) {
-                            setSearchPeriode(classe, res);
-                            if ($location.path() === '/devoir/create' ||
-                                ($scope.devoir !== undefined
-                                    && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
-                                $scope.devoir.id_periode = res.id_type;
-                                $scope.controleDate($scope.devoir);
-                                utils.safeApply($scope);
-                            }
+                    $scope.getCurrentPeriode(classe).then(function (res) {
+                        setSearchPeriode(classe, res);
+                        if ($location.path() === '/devoir/create' ||
+                            ($scope.devoir !== undefined
+                                && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                            $scope.devoir.id_periode = res.id_type;
+                            $scope.controleDate($scope.devoir);
                             utils.safeApply($scope);
-                        });
+                        }
+                        utils.safeApply($scope);
+                    });
 
                 });
 
@@ -856,7 +856,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             for (let i = 0; i < $scope.evaluations.competencesDevoir.length; i++) {
                 for (let j = 0; j < $scope.evaluations.enseignements.all.length; j++) {
                     if ($scope.competencesFilter[$scope.evaluations.competencesDevoir[i].id_competence + '_'
-                        + $scope.evaluations.enseignements.all[j].id] !== undefined) {
+                    + $scope.evaluations.enseignements.all[j].id] !== undefined) {
                         // selection des competences du devoir
                         $scope.competencesFilter[$scope.evaluations.competencesDevoir[i].id_competence
                         + '_' + $scope.evaluations.enseignements.all[j].id].isSelected = true;
@@ -1394,8 +1394,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     && poCompetence.ids_domaine_int.length === 1) {
                     let id_domaine = poCompetence.ids_domaine_int[0];
                     if (_.findIndex($scope.domaines, function (domaine) {
-                            return domaine.id === id_domaine;
-                        }) === -1) {
+                        return domaine.id === id_domaine;
+                    }) === -1) {
                         $scope.domaines.push({"code_domaine": poCompetence.code_domaine, "id": id_domaine});
                         $scope.showCompetencesDomaine[id_domaine] = true;
                     }
@@ -2150,7 +2150,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
                     for (let j = 0; j < $scope.competencesSupp.length; j++) {
                         if (_.findWhere($scope.devoir.competencesUpdate,
-                                {id: $scope.competencesSupp[j].id_competence}) === undefined) {
+                            {id: $scope.competencesSupp[j].id_competence}) === undefined) {
                             $scope.devoir.competencesRem.push($scope.competencesSupp[j].id_competence);
                         }
                     }
@@ -2520,7 +2520,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     function (positionnement) {
                         return positionnement.id_periode == $scope.search.periode.id_type
                     });
-                positionnementCalcule = (positionnementFind.moyenne) ? positionnementFind.moyenne : utils.getNN();
+                positionnementCalcule = (positionnementFind.moyenne || positionnementFind.moyenne == 0) ? positionnementFind.moyenne : utils.getNN();
             }else{
                 positionnementCalcule = utils.getNN();
             }
@@ -2528,7 +2528,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 if (positionnementCalcule === utils.getNN()) {
                     return "";
                 } else {
-                    return positionnementCalcule + 1;
+                    return +(positionnementCalcule + 1).toFixed(2);
                 }
             }else {
                 if (positionnementCalcule === utils.getNN()) {
@@ -2675,7 +2675,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
                         let oldAnnotation = _.findWhere($scope.evaluations.annotations.all, {id: evaluation.oldId_annotation});
                         if (!reg.test(evaluation.valeur) && ((annotation !== undefined && annotation !== null && annotation.id !== evaluation.oldId_annotation) ||
-                                (oldAnnotation !== undefined && annotation === undefined))) {
+                            (oldAnnotation !== undefined && annotation === undefined))) {
                             if (oldAnnotation !== undefined && annotation === undefined) {
                                 await $scope.deleteAnnotationDevoir(evaluation, true);
                             } else {
