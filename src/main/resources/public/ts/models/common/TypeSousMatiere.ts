@@ -46,9 +46,9 @@ export class TypeSousMatiere extends Model implements Selectable{
 
     async save() {
       if(this.id){
-          await  this.update();
+          return  await  this.update();
       }else{
-          await this.create();
+          return await this.create();
       }
     }
 
