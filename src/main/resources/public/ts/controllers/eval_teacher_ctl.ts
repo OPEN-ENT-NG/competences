@@ -37,7 +37,7 @@ import {
     evaluationCreationCompetencesDevoir,
     evaluationCreationEnseignements,
     PreferencesUtils
-} from "../utils/prefences";
+} from "../utils/preferences";
 
 declare let $: any;
 declare let document: any;

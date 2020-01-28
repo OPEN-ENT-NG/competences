@@ -40,11 +40,11 @@ export class PreferencesUtils {
             ? 
               isNotEmpty =  Me.preferences
             && Me.preferences[PreferencesUtils.competencesStrInPref][key.toString()]
-            && Me.preferences[PreferencesUtils.competencesStrInPref][key.toString()].length !== 0;
+            && Me.preferences[PreferencesUtils.competencesStrInPref][key.toString()].length !== 0
             :
               isNotEmpty =  Me.preferences
             && Me.preferences[PreferencesUtils.competencesStrInPref]
-            &&  Me.preferences[PreferencesUtils.competencesStrInPref].length !==0
+            &&  Me.preferences[PreferencesUtils.competencesStrInPref].length !==0;
           
         return isNotEmpty
     }
