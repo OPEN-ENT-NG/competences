@@ -478,9 +478,11 @@ export class Graph extends Model{
         average.push(_.clone(averageStudent));
         average.push(_.clone(averageClass));
 
-        configMixedChart._datasNotes =  [_.clone(averageStudent), _.clone(averageClass), _.clone(minClass),_.clone(maxClass)];
-        configMixedChart.datasetsNotesOveride = this.buildDatasetsNotes(configMixedChart, niveauCompetences);
-        configMixedChart.optionsNotes = this.buildOption(configMixedChart, forDomaine, eleve,true);
+        if(niveauCompetences !== undefined) {
+            configMixedChart._datasNotes = [_.clone(averageStudent), _.clone(averageClass), _.clone(minClass), _.clone(maxClass)];
+            configMixedChart.datasetsNotesOveride = this.buildDatasetsNotes(configMixedChart, niveauCompetences);
+            configMixedChart.optionsNotes = this.buildOption(configMixedChart, forDomaine, eleve, true);
+        }
 
         if( forComparison !== true) {
             if (forDomaine === true) {
