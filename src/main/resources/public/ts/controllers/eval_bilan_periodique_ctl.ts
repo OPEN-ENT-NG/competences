@@ -41,6 +41,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.opened.coefficientConflict = false;
         $scope.canLoadStudent = false;
         $scope.graph = {competences : true, notes : false, type: "baton",typeDom: "baton"};
+        $scope.displayMoyenne = true;
         $scope.displayBilanPeriodique = () => {
             let isNotEmptyClasse = ($scope.search.classe !== '*' && $scope.search.classe !== null
                 && $scope.search.classe !== undefined);
@@ -746,6 +747,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
         });
 
-    }
 
+        $scope.toggleDisplayMoyenne = function () {
+            $scope.displayMoyenne = !$scope.displayMoyenne;
+        };
+
+    }
 ]);

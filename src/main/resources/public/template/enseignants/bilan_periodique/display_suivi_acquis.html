@@ -1,4 +1,4 @@
-    <div ng-show="selected.suiviAcquis">
+<div ng-show="selected.suiviAcquis">
     <section ng-if="elementBilanPeriodique.suivisAcquis.all.length === 0">
         <content>
             <article class="card twelve-mobile centered">
@@ -6,16 +6,16 @@
             </article>
         </content>
     </section>
-     <article ng-if="elementBilanPeriodique.suivisAcquis.hasCoefficientConflict === true" class="twelve ">
+    <article ng-if="elementBilanPeriodique.suivisAcquis.hasCoefficientConflict === true" class="twelve ">
         <div class=" warning">
             <i18n>evaluations.coefficient.conflict.warning</i18n>
         </div>
-         <div class="row">
-             <button class="right-magnet" ng-click="opened.coefficientConflict = true;">
-                 <i18n>show.details</i18n>
-             </button>
-         </div>
-     </article>
+        <div class="row">
+            <button class="right-magnet" ng-click="opened.coefficientConflict = true;">
+                <i18n>show.details</i18n>
+            </button>
+        </div>
+    </article>
     <article class="twelve cell" ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
         <div class="responsive-table width-td-10 margin-zero">
             <table class="twelve suiviDesAcquis">
@@ -24,9 +24,17 @@
                     <th class="one" colspan="2"><i18n>matieres</i18n></th>
                     <th class="four"><i18n>bilan.perodique.elements.programme.travailles</i18n></th>
                     <th class="seven"><i18n>appreciation</i18n></th>
-                    <th class="one center"><i18n>average.min.eleve</i18n></th>
-                    <th class="one center"><i18n>average.min.classe</i18n></th>
-                    <th class="one center"><i18n>evaluations.releve.positionnement</i18n></th>
+                    <th class="one center" ng-if="displayMoyenne"><i18n>average.min.eleve</i18n></th>
+                    <th class="one center" ng-if="displayMoyenne"><i18n>average.min.classe</i18n></th>
+                    <th class="one center" ng-if="displayMoyenne"><i18n>evaluations.releve.positionnement</i18n></th>
+                    <th class="one center">
+                        <span data-ng-click="toggleDisplayMoyenne();" class="toogleDevoir"
+                              tooltip="[[!displayMoyenne ? 'conseil.acquis.moyenne.show' : 'conseil.acquis.moyenne.hide']]">
+                            <i class="toogleIcon"
+                               ng-class="{'angle-double-right': !displayMoyenne,'angle-double-left': displayMoyenne}"></i>
+                        </span>
+                    </th>
+
                 </tr>
                 </thead>
                 <tbody>
@@ -45,10 +53,10 @@
                     </td>
                     <td ng-if="suiviDesAcquis.sousMatieres.length > 0 " style="padding-left: 0px; padding-right: 0px"
                         class="one center">
-                            <div style="padding: 6px"
-                                 class="ellipsis"
-                                 ng-repeat="sousMat in suiviDesAcquis.sousMatieres">[[sousMat.libelle]]
-                            </div>
+                        <div style="padding: 6px"
+                             class="ellipsis"
+                             ng-repeat="sousMat in suiviDesAcquis.sousMatieres">[[sousMat.libelle]]
+                        </div>
                         <div style="padding: 6px" class="bold ng-binding">
                             &nbsp;
                         </div>
@@ -67,23 +75,23 @@
                                           ng-blur="suiviDesAcquis.saveAppreciationMatierePeriodeEleve()">
                                 </textarea>
                             <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique"
-                                  ng-bind="suiviDesAcquis.appreciationByClasse.appreciation">
+                                 ng-bind="suiviDesAcquis.appreciationByClasse.appreciation">
                             </div>
                             <div ng-if="appreciationMatiereForm.appreciation.$error.maxlength" class="warning">
                                 <i18n>evaluations.releve.appreciation.classe.max.length</i18n>
                             </div>
                         </ng-form>
                     </td>
-                    <td class="center" data-label="[[translate('average.student')]]">
+                    <td class="center" data-label="[[translate('average.student')]]" ng-if="displayMoyenne">
                         <div style="padding: 6px"
                              ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
-                                [[  sousMat.moy ]]
+                            [[  sousMat.moy ]]
                         </div>
                         <div style="padding: 6px" class="bold">
                             [[suiviDesAcquis.moyenneEleve]]
                         </div>
                     </td>
-                    <td class="center" data-label="[[translate('average.class')]]">
+                    <td class="center" data-label="[[translate('average.class')]]" ng-if="displayMoyenne">
                         <div style="padding: 6px"
                              ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
                             [[  sousMat.moyClasse ]]
@@ -92,10 +100,8 @@
                             [[suiviDesAcquis.moyenneClasse]]
                         </div>
                     </td>
-                    <td class="center" data-label="[[translate('evaluations.releve.positionnement')]]">
-
+                    <td class="center" data-label="[[translate('evaluations.releve.positionnement')]]" ng-if="displayMoyenne">
                         <div ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
-
                             <ul class="selectable-list twelve">
                                 <li class="cell"
                                     ng-if="$index === 0"
@@ -176,7 +182,7 @@
                         </div>
 
                     </td>
-
+                    <td></td>
                 </tr>
 
                 </tbody>
@@ -199,6 +205,6 @@
     <section>
         <container template="synthese"></container>
     </section>
-    </div>
+</div>
 
-    <div ng-include="'/competences/public/template/enseignants/bilan_periodique/Ligthbox_conflict_coefficient.html'"></div>
+<div ng-include="'/competences/public/template/enseignants/bilan_periodique/Ligthbox_conflict_coefficient.html'"></div>
