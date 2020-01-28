@@ -24,16 +24,32 @@ export class TypeSousMatiere extends Model implements Selectable{
     libelle: string;
     selected:boolean;
 
-    async save() {
+    async create(){
         try{
             let {status,data} = await http.post(`/viescolaire/types/sousmatiere`,this.toJson());
-            console.log(status)
-            console.log(status === 200)
             this.id = data.id;
             return status === 200;
         }catch (e){
             return false
         }
+    }
+
+    async update(){
+        try{
+            let {status,data} = await http.put(`/viescolaire/types/sousmatiere/${this.id}`,this.toJson());
+            this.id = data.id;
+            return status === 200;
+        }catch (e){
+            return false
+        }
+    }
+
+    async save() {
+      if(this.id){
+          await  this.update();
+      }else{
+          await this.create();
+      }
     }
 
     private toJson() {

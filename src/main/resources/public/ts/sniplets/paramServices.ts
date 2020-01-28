@@ -342,11 +342,21 @@ export const paramServices = {
                 paramServices.that.lightboxes.subEducationCreate = false;
                 toasts.warning("viesco.subTopic.creation.error");
             }else{
+                subTopic.selected = true;
                 paramServices.that.subTopics.all.push(subTopic);
             }
             safeApply(paramServices.that)
         },
-        plop: function(newSubTopic){
+        openUpdateForm: function(matiere){
+            matiere.updating = true;
+        },
+        updateMatiere:async function(event,matiere){
+            if (event.which === 13){
+                matiere.updating = false;
+                await matiere.save();
+            }
+        },
+        updateSubTopic: function(newSubTopic){
             paramServices.that.newSubTopic = newSubTopic;
         },
         openSubEducationLightBoxCreation: function (selectedServices){
