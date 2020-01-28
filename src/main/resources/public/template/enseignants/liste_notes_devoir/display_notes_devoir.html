@@ -55,10 +55,10 @@
             </span>
             <div class="checkbox-grid additional-options" ng-if="printOption.byEleve">
                 <div >
-                <label class="checkbox">
-                    <input type="checkbox" ng-model="printOption.withResult" >
-                    <span><i18n>evaluation.devoir.cartouche.results</i18n></span>
-                </label>
+                    <label class="checkbox">
+                        <input type="checkbox" ng-model="printOption.withResult" >
+                        <span><i18n>evaluation.devoir.cartouche.results</i18n></span>
+                    </label>
                 </div>
                 <div ng-if="printOption.withResult">
                     <label class="checkbox">
@@ -124,10 +124,17 @@
                ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
                class="right-magnet" ng-class="{'button-edit-devoir' : currentDevoir.competences.all.length > 0,
                                         'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
-        <button ng-click="printOption.display =true ; closeWarningMessages();"
+
+        <button ng-click="finishCurrentDevoir()" tooltip="evaluations.test.finish"
+                class="right-magnet " ng-class="{'button-finish-devoir' : currentDevoir.competences.all.length > 0,
+                                        'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
+            <i class="check"></i>
+        </button>
+
+        <button ng-click="printOption.display =true ; closeWarningMessages();" tooltip="evaluations.export.format.pdf"
                 class="right-magnet ng-scope"
-                tooltip="evaluations.export.format.pdf"
-                ng-class="{'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0, 'button-print-devoir' : currentDevoir.competences.all.length > 0}">
+                ng-class="{'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0,
+                                        'button-print-devoir' : currentDevoir.competences.all.length > 0}">
             <i class="download"></i>
         </button>
 

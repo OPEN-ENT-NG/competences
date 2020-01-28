@@ -82,7 +82,8 @@ export class Devoir extends Model implements IModel{
             updateCompetencesNotes : '/competences/competence/notes',
             deleteCompetencesNotes : '/competences/competence/notes',
             isEvaluatedDevoir : '/competences/devoirs/evaluations/information?idDevoir=',
-            switchVisiApprec : '/competences/devoirs/' + this.id + '/visibility'
+            switchVisiApprec : '/competences/devoirs/' + this.id + '/visibility',
+            finishDevoir : '/competences/devoir/finish?idDevoir=',
         }
     }
 
@@ -310,12 +311,15 @@ export class Devoir extends Model implements IModel{
         });
     }
 
-    calculStats () : Promise<any> {
+    calculStats (change = true) : Promise<any> {
         return new Promise(async (resolve, reject) => {
             let that = this;
             try {
-                let response = await Promise.all([axioshttp.get(this.api.getStatsDevoir),
-                    evaluations.devoirs.getPercentDone(that)]);
+                let allPromise = [axioshttp.get(this.api.getStatsDevoir)];
+                if(change)
+                    allPromise.push(evaluations.devoirs.getPercentDone(that));
+                let response = await Promise.all(allPromise);
+
                 let stat = response[0].data;
 
                 if (!stat.error) {
@@ -457,5 +461,18 @@ export class Devoir extends Model implements IModel{
                 });
             }
         }
+    }
+
+    finishDevoir(){
+        return new Promise((resolve, reject) => {
+            http().put(this.api.finishDevoir + this.id).done(function(data){
+                if (resolve && (typeof (resolve) === 'function')) {
+                    resolve(data);
+                }
+            })
+                .error(function () {
+                    reject();
+                });
+        });
     }
 }
