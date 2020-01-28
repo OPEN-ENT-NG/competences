@@ -235,13 +235,18 @@
                     <div class="six cell">
                         <ul>
                             <li ng-repeat="matiere in subTopics.all track by matiere.id">
-                                <label class="one checkbox">
+                                <div ng-show="!matiere.updating">
+                                    <label class="one checkbox">
                                     <input type="checkbox"
                                            ng-model="matiere.selected"
                                     />
                                     <span></span>
                                 </label>
-                                <span>[[matiere.libelle]]</span>
+                                    <span>[[matiere.libelle]]</span> <i ng-click="openUpdateForm(matiere)" class="edit"></i>
+                                </div>
+                                <div ng-show="matiere.updating">
+                                    <input type="text"  ng-keypress="updateMatiere($event,matiere)"  ng-model="matiere.libelle">
+                                </div>
                             </li>
                         </ul>
                     </div>
@@ -256,9 +261,9 @@
                                style="margin-top: 10px;"
                                type="text"
                                ng-model="newSubTopic"
-                               ng-change="plop(newSubTopic)" >
+                               ng-change="updateSubTopic(newSubTopic)" >
 
-                        <button class="five cell" ng-click="saveNewSubTopic()" ><i18n>Enregistrer</i18n></button>
+                        <button class="five cell" ng-click="saveNewSubTopic();newSubTopic=''" ><i18n>Enregistrer</i18n></button>
                     </div>
 
                 </div>
