@@ -348,6 +348,12 @@ export const paramServices = {
             safeApply(paramServices.that)
         },
         openUpdateForm: function(matiere){
+            paramServices.that.subTopics.all.map(topic => {
+                if(topic.updating)
+                    topic.save();
+                topic.updating = false;
+            });
+            safeApply(paramServices.that);
             matiere.updating = true;
         },
         updateMatiere:async function(event,matiere){
