@@ -659,7 +659,6 @@
   "evaluation.service.choose.another.subject": "Veuillez choisir une matière différente de celle où le service est créé",
   "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur",
 
-  "conseil.acquis.moyenne.hide" : "Masquer les moyennes et le positionnement",
-  "conseil.acquis.moyenne.show" : "Afficher les moyennes et le positionnement"
+  "conseil.acquis.moyenne.showColumns" : "Afficher / Masquer les colonnes"
 
 }

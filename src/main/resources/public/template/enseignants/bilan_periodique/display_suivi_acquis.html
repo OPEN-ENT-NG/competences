@@ -17,6 +17,27 @@
         </div>
     </article>
     <article class="twelve cell" ng-if="elementBilanPeriodique.suivisAcquis.all.length !== 0">
+        <div class="columns-popup-wrapper right-magnet">
+            <div ng-click="showPopUpColumns = !showPopUpColumns" class="right-magnet columns-popup-button"
+                  tooltip="[['conseil.acquis.moyenne.showColumns']]">
+                <span ng-show="showPopUpColumns === true">&#x25BC;</span>
+                <span ng-hide="showPopUpColumns === true">&#x25B2;</span>
+            </div>
+            <div ng-if="showPopUpColumns" class="right-magnet columns-popup">
+                <label class="columns-popup-items">
+                    <input type="checkbox" ng-model="showColumns.moyEleve">
+                    <span><i18n>average.min.eleve</i18n></span>
+                </label>
+                <label class="columns-popup-items">
+                    <input type="checkbox" ng-model="showColumns.moyClasse">
+                    <span><i18n>average.min.classe</i18n></span>
+                </label>
+                <label class="columns-popup-items">
+                    <input type="checkbox" ng-model="showColumns.pos">
+                    <span><i18n>evaluations.releve.positionnement</i18n></span>
+                </label>
+            </div>
+        </div>
         <div class="responsive-table width-td-10 margin-zero">
             <table class="twelve suiviDesAcquis">
                 <thead>
@@ -24,17 +45,9 @@
                     <th class="one" colspan="2"><i18n>matieres</i18n></th>
                     <th class="four"><i18n>bilan.perodique.elements.programme.travailles</i18n></th>
                     <th class="seven"><i18n>appreciation</i18n></th>
-                    <th class="one center" ng-if="displayMoyenne"><i18n>average.min.eleve</i18n></th>
-                    <th class="one center" ng-if="displayMoyenne"><i18n>average.min.classe</i18n></th>
-                    <th class="one center" ng-if="displayMoyenne"><i18n>evaluations.releve.positionnement</i18n></th>
-                    <th class="one center">
-                        <span data-ng-click="toggleDisplayMoyenne();" class="toogleDevoir"
-                              tooltip="[[!displayMoyenne ? 'conseil.acquis.moyenne.show' : 'conseil.acquis.moyenne.hide']]">
-                            <i class="toogleIcon"
-                               ng-class="{'angle-double-right': !displayMoyenne,'angle-double-left': displayMoyenne}"></i>
-                        </span>
-                    </th>
-
+                    <th class="one center" ng-if="showColumns.moyEleve"><i18n>average.min.eleve</i18n></th>
+                    <th class="one center" ng-if="showColumns.moyClasse"><i18n>average.min.classe</i18n></th>
+                    <th class="one center" ng-if="showColumns.pos"><i18n>evaluations.releve.positionnement</i18n></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -82,7 +95,7 @@
                             </div>
                         </ng-form>
                     </td>
-                    <td class="center" data-label="[[translate('average.student')]]" ng-if="displayMoyenne">
+                    <td class="center" data-label="[[translate('average.student')]]" ng-if="showColumns.moyEleve">
                         <div style="padding: 6px"
                              ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
                             [[  sousMat.moy ]]
@@ -91,7 +104,7 @@
                             [[suiviDesAcquis.moyenneEleve]]
                         </div>
                     </td>
-                    <td class="center" data-label="[[translate('average.class')]]" ng-if="displayMoyenne">
+                    <td class="center" data-label="[[translate('average.class')]]" ng-if="showColumns.moyClasse">
                         <div style="padding: 6px"
                              ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
                             [[  sousMat.moyClasse ]]
@@ -100,7 +113,7 @@
                             [[suiviDesAcquis.moyenneClasse]]
                         </div>
                     </td>
-                    <td class="center" data-label="[[translate('evaluations.releve.positionnement')]]" ng-if="displayMoyenne">
+                    <td class="center" data-label="[[translate('evaluations.releve.positionnement')]]" ng-if="showColumns.pos">
                         <div ng-repeat="sousMat in suiviDesAcquis.sousMatieres">
                             <ul class="selectable-list twelve">
                                 <li class="cell"
@@ -182,7 +195,6 @@
                         </div>
 
                     </td>
-                    <td></td>
                 </tr>
 
                 </tbody>
