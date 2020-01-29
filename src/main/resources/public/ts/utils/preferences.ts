@@ -1,8 +1,8 @@
 import {Me} from "entcore";
-import http from 'axios';
 export let evaluationCreationCompetencesDevoir  = 'evaluationCreationCompetencesDevoir';
 export let evaluationCreationEnseignements  = 'evaluationCreationEnseignements';
 export let evaluationCreationCompetences  = 'evaluationCreationCompetences';
+export let conseilGraphiques  = 'conseilGraphiques';
 
 export class PreferencesUtils {
 

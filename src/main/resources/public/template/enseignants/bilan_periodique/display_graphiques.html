@@ -24,7 +24,7 @@
                 data-ng-click="switchOpenMatiere()">
                 <i18n>evaluations.bilan.by.subject</i18n>
             </h3>
-            <div ng-if="graphMat.opened" class="">
+            <div ng-if="graphMat.opened">
                 <div class="loaderGraph loaderCenter" ng-show="showGraphMatLoader == true"></div>
                 <div class="fancyCheck two cell" ng-show="showGraphMatLoader == false">
                     <input type="checkbox" id="subjectComparison" class="cell"
@@ -36,13 +36,17 @@
                 <div class="radio-pillbox" ng-show="showGraphMatLoader == false">
                     <radiogroup>
                         <div>
-                            <input type="radio" ng-model="graph.type" id="baton" value="baton" class="first">
-                            <label for="baton" class="radio-label">Graphique en bâtons</label>
+                            <input type="radio" ng-model="graph.type" id="baton" value="baton" ng-change="savePreferences()"
+                                   class="first">
+                            <label for="baton" class="radio-label">
+                                <i18n>evaluation.bilan.periodique.graphiques.baton</i18n>
+                            </label>
                             </input>
                         </div>
                         <div>
-                            <input type="radio" ng-model="graph.type" id="radar" value="radar" class="last">
-                            <label for="radar">Graphique radar</label>
+                            <input type="radio" ng-model="graph.type" id="radar" value="radar" ng-change="savePreferences()"
+                                   class="last">
+                            <label for="radar"><i18n>evaluation.bilan.periodique.graphiques.radar</i18n></label>
                             </input>
                         </div>
                     </radiogroup>
@@ -50,15 +54,17 @@
                 <div class="radio-pillbox" ng-show="showGraphMatLoader == false">
                     <radiogroup>
                         <div>
-                            <input type="checkbox" ng-model="graph.competences" id="competences" class="first"
-                                   ng-click="unlessOneChecked('competences')" checked>
-                            <label for="competences" class="radio-label">Compétences</label>
+                            <input type="checkbox" ng-model="graph.competences" id="competences" ng-change="savePreferences()"
+                                   class="first" ng-click="unlessOneChecked('competences')" checked>
+                            <label for="competences" class="radio-label">
+                                <i18n>evaluation.bilan.periodique.graphiques.competences</i18n>
+                            </label>
                             </input>
                         </div>
                         <div>
-                            <input type="checkbox" ng-model="graph.notes" id="notes" class="last"
-                                   ng-click="unlessOneChecked('notes')">
-                            <label for="notes">Notes</label>
+                            <input type="checkbox" ng-model="graph.notes" id="notes" ng-change="savePreferences()"
+                                   class="last" ng-click="unlessOneChecked('notes')">
+                            <label for="notes"><i18n>evaluation.bilan.periodique.graphiques.notes</i18n></label>
                             </input>
                         </div>
                     </radiogroup>
@@ -123,13 +129,17 @@
                     <div class="radio-pillbox" ng-show="showGraphDomLoader == false">
                         <radiogroup>
                             <div>
-                                <input type="radio" ng-model="graph.typeDom" id="domBaton" value="baton" class="first">
-                                <label for="domBaton" class="radio-label">Graphique en bâtons</label>
+                                <input type="radio" ng-model="graph.typeDom" id="domBaton" value="baton" ng-change="savePreferences()"
+                                       class="first">
+                                <label for="domBaton" class="radio-label">
+                                    <i18n>evaluation.bilan.periodique.graphiques.baton</i18n>
+                                </label>
                                 </input>
                             </div>
                             <div>
-                                <input type="radio" ng-model="graph.typeDom" id="domRadar" value="radar" class="last">
-                                <label for="domRadar">Graphique radar</label>
+                                <input type="radio" ng-model="graph.typeDom" id="domRadar" value="radar" ng-change="savePreferences()"
+                                       class="last">
+                                <label for="domRadar"><i18n>evaluation.bilan.periodique.graphiques.radar</i18n></label>
                                 </input>
                             </div>
                         </radiogroup>

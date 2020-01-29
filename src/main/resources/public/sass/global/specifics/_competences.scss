@@ -2022,13 +2022,21 @@ body.evaluations {
 
   .button-edit-devoir {
     position: fixed !important;
-    right: 1% !important;
+    right: 0.5% !important;
     top: 116px !important;
     z-index: 11 !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
   }
   .button-print-devoir{
     position: fixed !important;
-    right: 230px !important;
+    right: 10.5% !important;
+    top: 116px !important;
+    z-index: 11 !important;
+  }
+  .button-finish-devoir{
+    position: fixed !important;
+    right: 15% !important;
     top: 116px !important;
     z-index: 11 !important;
   }
