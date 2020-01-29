@@ -347,12 +347,15 @@ export const paramServices = {
             }
             safeApply(paramServices.that)
         },
-        openUpdateForm: function(matiere){
+        closeUpdatingSubtopic: function(){
             paramServices.that.subTopics.all.map(topic => {
                 if(topic.updating)
                     topic.save();
                 topic.updating = false;
             });
+        },
+        openUpdateForm: function(matiere){
+            paramServices.that.closeUpdatingSubtopic();
             safeApply(paramServices.that);
             matiere.updating = true;
         },
@@ -397,6 +400,18 @@ export const paramServices = {
                     paramServices.that.matieresForSelect.splice(index,1)
                 }
             });
+            await utils.safeApply(paramServices.that);
+        },
+        saveNewSubTopics: async function(){
+            paramServices.that.closeUpdatingSubtopic();
+            let isSaved = await paramServices.that.subTopics.saveTopicSubTopicRelation(paramServices.that.matieres);
+            if(!isSaved){
+                toasts.warning("viesco.subTopic.relation.creation.error");
+            }
+            paramServices.that.services.map(service =>{
+                service.selected = false;
+            });
+            paramServices.that.lightboxes.subEducationCreate  = false;
             await utils.safeApply(paramServices.that);
         },
         getSelectedDisciplines:function(){
