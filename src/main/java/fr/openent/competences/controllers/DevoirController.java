@@ -501,34 +501,30 @@ public class DevoirController extends ControllerHelper {
                         @Override
                         public void handle(final Either<String, JsonObject> devoirInfo) {
                             if (devoirInfo.isRight()) {
-
                                 final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
+
                                 final String is_evaluated = devoirInfos.getBoolean("is_evaluated").toString();
                                 final String has_competence =
-                                        (devoirInfos.getLong("nbrcompetence") > 0)? "true" : "false";
+                                        (devoirInfos.getLong("nbrcompetence") > 0) ? "true" : "false";
                                 final String idGroupe = devoirInfos.getString("id_groupe");
                                 final Long idPeriode = devoirInfos.getLong("id_periode");
-                                final int typeClasse  = devoirInfos.getInteger("type_groupe");
+                                final int typeClasse = devoirInfos.getInteger("type_groupe");
 
                                 Utils.getIdElevesClassesGroupes(eb, idGroupe, idPeriode.intValue(), typeClasse,
                                         new Handler<Either<String, List<String>>>() {
-
                                             @Override
                                             public void handle(Either<String, List<String>> eventResultEleves) {
-
                                                 if (eventResultEleves.isRight()) {
-
                                                     List<String> idEleves = eventResultEleves.right().getValue();
-                                /*
-                                 - Si le devoir contient une evaluation numérique, on regarde le nombre de note en base
-                                 - Sinon, on regarde directement le nombre d'annotation(s) et de compétence(s)
-                                 */
+                                                    /*
+                                                     - Si le devoir contient une evaluation numérique, on regarde le nombre de note en base
+                                                     - Sinon, on regarde directement le nombre d'annotation(s) et de compétence(s)
+                                                     */
                                                     if (String.valueOf(true).equals(is_evaluated)) {
                                                         updatePercentageWithNotes(idEleves, idDevoir, user, idGroupe,
                                                                 nbNotesByDevoir, is_evaluated,
                                                                 request, has_competence, true,
                                                                 0, 0, idEleves.size());
-
                                                     } else {
                                                         updatePercentWithAnnotationsAndCompetences(idEleves, idDevoir,
                                                                 user, idGroupe,
@@ -1029,7 +1025,6 @@ public class DevoirController extends ControllerHelper {
 
                     List<String> idDevoirsList = request.params().getAll("id");
 
-
                     Long[] idDevoirsArray =  null;
 
                     if(!idDevoirsList.isEmpty()) {
@@ -1109,4 +1104,14 @@ public class DevoirController extends ControllerHelper {
         });
     }
 
+    @Put("/devoir/finish")
+    @ApiDoc("Permet de positionner une évaluation à 100% terminée même si des compétences ou des notes n'ont pas toutes été saisies")
+    public void finishDevoir(final HttpServerRequest request) {
+        try {
+            Long idDevoir = Long.parseLong(request.params().get("idDevoir"));
+            devoirsService.updatePercent(idDevoir, 100, arrayResponseHandler(request));
+        } catch (NumberFormatException err) {
+            leftToResponse(request, new Either.Left<>(err.toString()));
+        }
+    }
 }

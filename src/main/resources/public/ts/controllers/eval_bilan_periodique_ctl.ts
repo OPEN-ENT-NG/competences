@@ -9,12 +9,15 @@ import {AvisConseil} from "../models/teacher/AvisConseil";
 import {AvisOrientation} from "../models/teacher/AvisOrientation";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import {ComparisonGraph} from "../models/common/ComparisonGraph";
+import {conseilGraphiques,PreferencesUtils} from "../utils/preferences";
+
 
 declare let _: any;
 
 export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
     async function ($scope, route, $rootScope, $location, $filter) {
+        await PreferencesUtils.initPreference();
         template.close('suivi-acquis');
         template.close('projet');
         template.close('vie-scolaire');
@@ -40,7 +43,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.opened.bfcPeriode = undefined;
         $scope.opened.coefficientConflict = false;
         $scope.canLoadStudent = false;
+        //init graph choices
         $scope.graph = {competences : true, notes : false, type: "baton",typeDom: "baton"};
+                if(PreferencesUtils.isNotEmpty(conseilGraphiques)  ){
+            $scope.graph = PreferencesUtils.getPreferences(conseilGraphiques);
+        }
         $scope.showColumns = {moyEleve : true, moyClasse : true, pos : true};
         $scope.showPopUpColumn = false;
         $scope.displayBilanPeriodique = () => {
@@ -290,6 +297,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             if($scope.graphMat.opened){
                 $scope.openMatiere();
             }
+        };
+
+        $scope.savePreferences = function () {
+            let arrayKeys = [], datasArray = [];
+            datasArray.push($scope.graph);
+            arrayKeys.push(conseilGraphiques);
+            PreferencesUtils.savePreferences(arrayKeys, datasArray);
         };
 
         $scope.unlessOneChecked = function (checkboxClick){

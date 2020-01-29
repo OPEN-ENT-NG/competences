@@ -289,7 +289,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.currentDevoir.groupe = _.findWhere($scope.structure.classes.all,
                             {id: $scope.currentDevoir.id_groupe});
 
-                        let allPromise = [$scope.currentDevoir.calculStats(), $scope.currentDevoir.competences.sync()];
+                        let allPromise = [$scope.currentDevoir.calculStats(false), $scope.currentDevoir.competences.sync()];
                         if ($scope.currentDevoir.groupe.periodes.empty()) {
                             allPromise.push($scope.currentDevoir.groupe.periodes.sync(),
                                 $scope.currentDevoir.groupe.eleves.sync());
@@ -4617,6 +4617,17 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.suiviClasse.withAppreciations = false;
                 utils.safeApply($scope);
             }
+        };
+
+        /*
+        Permet de positionner une évaluation à 100% terminée même si des compétences ou des notes n'ont pas toutes été saisies
+         */
+        $scope.finishCurrentDevoir = async function () {
+            $scope.currentDevoir.percent = 100;
+            $scope.currentDevoir.statistiques.percentDone = 100;
+            await $scope.currentDevoir.finishDevoir();
+            await utils.safeApply($scope);
+            $scope.goTo("/devoirs/list");
         };
 
         angular.merge = function (s1,s2) {
