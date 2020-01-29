@@ -230,7 +230,7 @@
             <h4>
                 <i18n>evaluation.service.lightboxes.subEducation.select</i18n>
             </h4>
-            <article class="card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.5)!important;">
+            <article class="card fullBorder">
                 <div class="row">
                     <div class="six cell">
                         <ul>
@@ -256,9 +256,8 @@
 
                     <div ng-show="subTopicCreationForm"class="six cell buttonAbsolute">
 
-                        <input class="six cell"
+                        <input class="six cell buttonMargin"
                                i18n-placeholder="evaluation.service.lightboxes.subEducation.placeholder"
-                               style="margin-top: 10px;"
                                type="text"
                                ng-model="newSubTopic"
                                ng-change="updateSubTopic(newSubTopic)" >
@@ -272,7 +271,7 @@
                 <i18n>evaluation.service.lightboxes.subEducation.choice</i18n>
 
             </h4>
-            <article class="card" style="box-shadow: 0 1px 3px rgba(0,0,0,0.5)!important;">
+            <article class="card fullBorder">
                 <div class="row">
                     <div class="five cell">
                         <ul>
@@ -306,7 +305,7 @@
             </article>
         </div>
         <div class="row">
-            <button class="marginFive right-magnet">
+            <button ng-click="saveNewSubTopics()" class="marginFive right-magnet">
                 <i18n>viescolaire.utils.save</i18n>
             </button>
         </div>

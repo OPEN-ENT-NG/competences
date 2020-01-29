@@ -45,11 +45,11 @@ export class TypeSousMatiere extends Model implements Selectable{
     }
 
     async save() {
-      if(this.id){
-          return  await  this.update();
-      }else{
-          return await this.create();
-      }
+        if(this.id){
+            return  await  this.update();
+        }else{
+            return await this.create();
+        }
     }
 
     private toJson() {
@@ -69,5 +69,28 @@ export class TypeSousMatieres extends Selection<TypeSousMatiere>{
         let {data} = await http.get(`/viescolaire/types/sousmatieres`);
         this.all = Mix.castArrayAs(TypeSousMatiere, data);
 
+    }
+
+    async saveTopicSubTopicRelation(topics){
+        let topicsToSend = [];
+        let subTopicsToSend = [];
+
+        let jsonToSend = {
+            topics:[],
+            subTopics:[]
+        };
+        topics.forEach(topic =>{
+            if (topic.selected){
+                topicsToSend.push(topic.id);
+            }
+        });
+
+        this.selected.forEach(subTopic => {
+            subTopicsToSend.push(subTopic.id);
+        });
+        jsonToSend.topics = topicsToSend;
+        jsonToSend.subTopics = subTopicsToSend;
+        let {status} = await http.post(`/viescolaire/types/sousmatieres/relations`,jsonToSend);
+        return status === 200 || status === 204;
     }
 }
