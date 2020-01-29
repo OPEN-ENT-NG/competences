@@ -478,6 +478,12 @@ export class Graph extends Model{
         average.push(_.clone(averageStudent));
         average.push(_.clone(averageClass));
 
+        if(niveauCompetences !== undefined) {
+            configMixedChart._datasNotes = [_.clone(averageStudent), _.clone(averageClass), _.clone(minClass), _.clone(maxClass)];
+            configMixedChart.datasetsNotesOveride = this.buildDatasetsNotes(configMixedChart, niveauCompetences);
+            configMixedChart.optionsNotes = this.buildOption(configMixedChart, forDomaine, eleve, true);
+        }
+
         if( forComparison !== true) {
             if (forDomaine === true) {
                 eleve.configRadarChartDomaine = configRadarChart;
@@ -491,9 +497,6 @@ export class Graph extends Model{
                 configMixedChart.datasetsOveride = this.buildDatasets(configMixedChart, niveauCompetences);
                 configMixedChart._datas = [averageStudent, averageClass, data_set1, data_set2, data_set3, data_set4];
                 configMixedChart.options = this.buildOption(configMixedChart, forDomaine, eleve,false);
-                configMixedChart._datasNotes =  [_.clone(averageStudent), _.clone(averageClass), _.clone(minClass),_.clone(maxClass)];
-                configMixedChart.datasetsNotesOveride = this.buildDatasetsNotes(configMixedChart, niveauCompetences);
-                configMixedChart.optionsNotes = this.buildOption(configMixedChart, forDomaine, eleve,true);
             }
         }
 

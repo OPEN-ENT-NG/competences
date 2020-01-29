@@ -141,8 +141,9 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void getDevoirInfo(final Long idDevoir, final Handler<Either<String, JsonObject>> handler){
         StringBuilder query = new StringBuilder();
 
-        query.append( "SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement,")
-                .append(" devoir.coefficient,devoir.id_matiere,devoir.diviseur, devoir.is_evaluated,devoir.id_periode,")
+        query.append("SELECT devoir.id, devoir.name, devoir.created, devoir.date, devoir.id_etablissement,")
+                .append(" devoir.coefficient, devoir.id_matiere, devoir.diviseur, devoir.is_evaluated,")
+                .append(" devoir.id_periode, devoir.percent,")
                 .append(" rel_periode.type AS periodeType,rel_periode.ordre AS periodeOrdre, Gdevoir.id_groupe, comp.*")
                 .append(" , Gdevoir.type_groupe, devoir.id_sousmatiere, type_sousmatiere.libelle, id_cycle ")
                 .append(" FROM notes.devoirs devoir")
@@ -1409,7 +1410,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 "                           AND devoirs.id_matiere = services.id_matiere) ";
 
 
-                String footerQuery =   " WHERE devoirs.eval_lib_historise = false AND devoirs.id_etablissement = ? ";
+        String footerQuery =   " WHERE devoirs.eval_lib_historise = false AND devoirs.id_etablissement = ? ";
 
         String query = "SELECT * " +
                 " FROM (" +
@@ -1440,7 +1441,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 " ORDER BY res.id_periode,res.id_matiere ";
 
         values.add(id_eleve).add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve)
-                                                        .add(idEtablissement).add(id_eleve).add(idEtablissement);
+                .add(idEtablissement).add(id_eleve).add(idEtablissement);
 
         sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
     }
@@ -1522,18 +1523,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void updateCompetenceNiveauFinalTableAfterDelete(List<String> listEleves, List<String> listGroups, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> result) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new JsonArray();
-            query.append("DELETE FROM notes.competence_niveau_final AS compNivFin WHERE compNivFin.id_periode = ? AND " +
-                    "compNivFin.id_matiere = ? AND compNivFin.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
-                    "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
-                    " WHERE compNivFin.id_matiere = dev.id_matiere AND compNivFin.id_periode = dev.id_periode " +
-                    "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
+        query.append("DELETE FROM notes.competence_niveau_final AS compNivFin WHERE compNivFin.id_periode = ? AND " +
+                "compNivFin.id_matiere = ? AND compNivFin.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                " WHERE compNivFin.id_matiere = dev.id_matiere AND compNivFin.id_periode = dev.id_periode " +
+                "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
 
-                values.add(idPeriode);
-                values.add(idMatiere);
-                for (String eleve : listEleves)
-                    values.add(eleve);
-                for (String group : listGroups)
-                    values.add(group);
+        values.add(idPeriode);
+        values.add(idMatiere);
+        for (String eleve : listEleves)
+            values.add(eleve);
+        for (String group : listGroups)
+            values.add(group);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(result));
     }
@@ -1542,18 +1543,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     public void updatePositionnementTableAfterDelete(List<String> listEleves, List<String> listGroups, String idMatiere, Long idPeriode, Handler<Either<String, JsonArray>> result) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new JsonArray();
-            query.append("DELETE FROM notes.positionnement AS pos WHERE pos.id_periode = ? AND " +
-                    "pos.id_matiere = ? AND pos.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
-                    "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
-                    " WHERE pos.id_matiere = dev.id_matiere AND pos.id_periode = dev.id_periode " +
-                    "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
+        query.append("DELETE FROM notes.positionnement AS pos WHERE pos.id_periode = ? AND " +
+                "pos.id_matiere = ? AND pos.id_eleve IN " + Sql.listPrepared(listEleves.toArray()) + " AND NOT EXISTS " +
+                "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
+                " WHERE pos.id_matiere = dev.id_matiere AND pos.id_periode = dev.id_periode " +
+                "AND relDevGr.id_groupe IN " + Sql.listPrepared(listGroups.toArray()) + ") ");
 
-                values.add(idPeriode);
-                values.add(idMatiere);
-                for (String eleve : listEleves)
-                    values.add(eleve);
-                for (String group : listGroups)
-                    values.add(group);
+        values.add(idPeriode);
+        values.add(idMatiere);
+        for (String eleve : listEleves)
+            values.add(eleve);
+        for (String group : listGroups)
+            values.add(group);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(result));
     }
@@ -1563,42 +1564,42 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     @Override
     public void getFormSaisieDevoir(Long idDevoir, String acceptLanguage, String host,
                                     Handler<Either<String, JsonObject>> handler){
-      JsonObject result = new JsonObject();
+        JsonObject result = new JsonObject();
         getDevoirInfo(idDevoir,  (Either<String, JsonObject> devoirInfo) -> {
-          if (devoirInfo.isRight()) {
-              final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
+            if (devoirInfo.isRight()) {
+                final JsonObject devoirInfos = (JsonObject) ((Either.Right) devoirInfo).getValue();
 
-              formatDevoirsInfos(devoirInfos, result);
+                formatDevoirsInfos(devoirInfos, result);
 
-              // Récupération de la période pour l'export
-              Future periodeFuture = getPeriodeForFormaSaisie(devoirInfos, acceptLanguage, host, result, eb);
+                // Récupération de la période pour l'export
+                Future periodeFuture = getPeriodeForFormaSaisie(devoirInfos, acceptLanguage, host, result, eb);
 
-              // Récupération des élèves de la classe
-              Future studentsFuture = getStudentsForFormSaisie(devoirInfos, result, eb);
+                // Récupération des élèves de la classe
+                Future studentsFuture = getStudentsForFormSaisie(devoirInfos, result, eb);
 
-              // Récupération du libellé de la matière du devoir
-              Future subjectFuture = getSubjectsFuture(devoirInfos, result, eb);
+                // Récupération du libellé de la matière du devoir
+                Future subjectFuture = getSubjectsFuture(devoirInfos, result, eb);
 
-              // Récupération du nom de la classe
-              Future classeFuture = getClasseFuture(devoirInfos, result, eb);
+                // Récupération du nom de la classe
+                Future classeFuture = getClasseFuture(devoirInfos, result, eb);
 
-              // Récupération des compétences du devoir
-              Future compFuture = getCompFuture(idDevoir, devoirInfos, result, eb);
+                // Récupération des compétences du devoir
+                Future compFuture = getCompFuture(idDevoir, devoirInfos, result, eb);
 
-              CompositeFuture.all(periodeFuture, studentsFuture, subjectFuture, compFuture, classeFuture)
-                      .setHandler(event -> {
-                          if(event.failed()){
-                              returnFailure("[getFormSaisieDevoir] ", event, handler);
-                          }
-                          else{
-                              handler.handle(new Either.Right<>(result));
-                          }
-                      });
-          } else {
-              String error = "Error :can not get informations from postgres tables ";
-              log.error(error);
-              handler.handle(new Either.Left<>(error));
-          }
-      });
-  }
+                CompositeFuture.all(periodeFuture, studentsFuture, subjectFuture, compFuture, classeFuture)
+                        .setHandler(event -> {
+                            if(event.failed()){
+                                returnFailure("[getFormSaisieDevoir] ", event, handler);
+                            }
+                            else{
+                                handler.handle(new Either.Right<>(result));
+                            }
+                        });
+            } else {
+                String error = "Error :can not get informations from postgres tables ";
+                log.error(error);
+                handler.handle(new Either.Left<>(error));
+            }
+        });
+    }
 }
