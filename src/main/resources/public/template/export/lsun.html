@@ -49,14 +49,19 @@
 
             </div>
             <div class="row">
-                <div class="five cell horizontal-spacing">
+                <div class=" cell horizontal-spacing">
                     <div class="row display-inline-block">
-                        <label class="ten small">
-                            Fichier Sts:
-                            <input type="file" ng-model="params.stsFile"
-                                   onchange="angular.element(this).scope().uploadFile(this.files);
-                                   angular.element(this).scope().controleExportLSU()">
-                        </label>
+                        <label class="ten small"> Fichier Sts: </label>
+                        <select ng-if = "selectStsFiles.all.length > 0"
+                                ng-model = "selectStsFiles.selected"
+                                ng-options = "stsFile as stsFile.name_file + ' du '+ stsFile.creation_date for stsFile in selectStsFiles.all"
+                                ng-change = "setParamsContentFile()">
+                        </select>
+                        <input type="file"
+                               ng-model="params.stsFile"
+                               onchange="angular.element(this).scope().uploadFile(this.files);
+                               angular.element(this).scope().controleExportLSU()">
+
                     </div>
                 </div>
             </div>
