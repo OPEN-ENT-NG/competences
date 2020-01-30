@@ -74,17 +74,14 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.getLibelle;
-import static fr.openent.competences.Utils.getPeriode;
 import static fr.openent.competences.bean.lsun.TypeEnseignant.fromValue;
 import static fr.openent.competences.service.impl.DefaultLSUService.DISCIPLINE_KEY;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static java.lang.Long.*;
+import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 
 /**
@@ -101,6 +98,7 @@ public class LSUController extends ControllerHelper {
     private JsonObject errorsExport;
     private EventBus ebController;
     private DispenseDomaineEleveService dispenseDomaineEleveService;
+    private STSFileService stsFileService;
     private final BilanPeriodiqueService bilanPeriodiqueService;
     private final ElementBilanPeriodiqueService elementBilanPeriodiqueService;
     private final DefaultSyntheseBilanPeriodiqueService syntheseBilanPeriodiqueService;
@@ -129,8 +127,34 @@ public class LSUController extends ControllerHelper {
         dispenseDomaineEleveService = new DefaultDispenseDomaineEleveService(Competences.COMPETENCES_SCHEMA,Competences.DISPENSE_DOMAINE_ELEVE);
         competenceNoteService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA,Competences.COMPETENCES_NOTES_TABLE);
         lsuService = new DefaultLSUService(eb);
+        stsFileService = new DefaultSTSFileService(Competences.STSFILE_TABLE);
     }
 
+    /**
+     * save sts file with id_structure, name_file and content
+     * @param request
+     */
+    @Post("/lsu/data/sts")
+    @ApiDoc("Save sts data")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(HasExportLSURight.class)
+    public void saveDataSts ( final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request,pathPrefix + Competences.SCHEMA_CREATE_STSFILE, oSTSFile ->
+              stsFileService.create(oSTSFile, defaultResponseHandler(request)));
+    }
+
+    /**
+     * get all sts files for a structure
+     * @param request
+     */
+    @Get("/lsu/sts/files/:idStructure")
+    @ApiDoc("Get sts data")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(HasExportLSURight.class)
+    public void getDataSts ( final HttpServerRequest request) {
+       String id_etablissement = request.getParam("idStructure");
+       stsFileService.getSTSFile(id_etablissement, arrayResponseHandler(request));
+    }
 
     @Post("/lsu/unheeded/students")
     @ApiDoc("Créer une annotation sur un devoir")
