@@ -3,6 +3,7 @@ export let evaluationCreationCompetencesDevoir  = 'evaluationCreationCompetences
 export let evaluationCreationEnseignements  = 'evaluationCreationEnseignements';
 export let evaluationCreationCompetences  = 'evaluationCreationCompetences';
 export let conseilGraphiques  = 'conseilGraphiques';
+export let conseilColumns  = 'conseilColumns';
 
 export class PreferencesUtils {
 
