@@ -52,7 +52,6 @@ export class LSU {
         this.errorsLSU = new ErrorsLSU();
         this.unheededStudents = [];
         this.hasUnheededStudents = false;
-
     }
 
     private initializeExport () {

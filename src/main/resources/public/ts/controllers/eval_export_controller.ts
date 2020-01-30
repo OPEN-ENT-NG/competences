@@ -21,15 +21,17 @@ import {ng, _, notify} from "entcore";
 import {Classe, LSU, Utils} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import {LSU_TYPE_EXPORT} from "../models/common/LSU";
-export let exportControleur = ng.controller('ExportController',['$scope',
-    async function($scope) {
+import {STSFile, STSFiles} from "../models/common/STSFile";
+
+export let exportControleur = ng.controller('ExportController', ['$scope',
+    async function ($scope) {
 
         async function initparams(type, stsFile?, errorResponse?) {
             $scope.lsu = new LSU($scope.structure.id,
-                $scope.evaluations.classes.where({type_groupe : Classe.type.CLASSE}),
+                $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE}),
                 $scope.structure.responsables.all);
             $scope.allClasses = $scope.evaluations.classes.where({type_groupe: Classe.type.CLASSE});
-            $scope.errorResponse = (errorResponse!== undefined)? errorResponse: null;
+            $scope.errorResponse = (errorResponse !== undefined) ? errorResponse : null;
             $scope.inProgress = false;
             $scope.filteredPeriodes = [];
 
@@ -39,54 +41,63 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 classes: [],
                 responsables: [],
                 periodes_type: [],
-                stsFile: (stsFile!== undefined)?stsFile:null
+                stsFile: (stsFile !== undefined) ? stsFile : null
             };
             await utils.safeApply($scope);
         }
 
+        $scope.initSelectStsFiles = async () => {
+            $scope.selectStsFiles = new STSFiles();
+            await $scope.selectStsFiles.sync($scope.structure.id);
+            if ( $scope.selectStsFiles.selected != null ) {
+                $scope.params.stsFile = $scope.selectStsFiles.selected.content;
+            }
+            await utils.safeApply( $scope );
+       };
 
-        $scope.changeType = async function (type: String){
+        $scope.changeType = async function (type: String) {
             await initparams(type);
         };
 
-        $scope.dropComboModel = async function (el: any, table: any){
+        $scope.dropComboModel = async function (el: any, table: any) {
             table.splice(table.indexOf(el), 1);
             await utils.safeApply($scope);
         };
 
         $scope.toggleperiode = async function toggleperiode(periode_type) {
-            if(periode_type.selected){
+            if (periode_type.selected) {
                 let idx = $scope.params.periodes_type.indexOf(periode_type);
                 if (idx > -1) {
                     $scope.params.periodes_type.splice(idx, 1);
                     await utils.safeApply($scope);
-                }
-                else {
+                } else {
                     $scope.params.periodes_type.push(periode_type);
                     await utils.safeApply($scope);
                 }
-                if(periode_type.libelle === undefined){
+                if (periode_type.libelle === undefined) {
                     periode_type.libelle = $scope.getI18nPeriode(periode_type.periode);
                 }
-            }else{
+            } else {
                 $scope.params.periodes_type = _.without($scope.params.periodes_type, periode_type);
             }
 
         };
 
-        // Créer une fonction dans le $scope qui lance la récupération des responsables
         $scope.getResponsables = function () {
-            $scope.structure.responsables.sync().then(async function(){
+            $scope.structure.responsables.sync().then(async function () {
                 $scope.lsu.responsable = $scope.structure.responsables.all[0].displayName;
                 await utils.safeApply($scope);
             });
         };
-
+        $scope.setParamsContentFile = () => {
+            $scope.params.stsFile = $scope.selectStsFiles.selected.content;
+            utils.safeApply($scope);
+        };
 
         /**
          * Controle la validité des selections avant l'exportLSU
          */
-        $scope.controleExportLSU = function(){
+        $scope.controleExportLSU = function () {
 
             $scope.inProgress = !(
                 ($scope.params.type == LSU_TYPE_EXPORT.BFC
@@ -94,7 +105,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     && $scope.params.responsables.length > 0
                     && $scope.params.stsFile !== null)
                 || ($scope.params.type == LSU_TYPE_EXPORT.BILAN_PERIODIQUE
-                    && $scope.params.stsFile !== null
+                    && $scope.params.contentStsFile !== null
                     && $scope.params.periodes_type.length > 0
                     && $scope.params.classes.length > 0
                     && $scope.params.responsables.length > 0)
@@ -106,28 +117,38 @@ export let exportControleur = ng.controller('ExportController',['$scope',
         $scope.uploadFile = function (files) {
             let file = files[0],
                 reader = new FileReader();
-            reader.onload = () => {
+            reader.onload = async () => {
                 let text = reader.result;
                 let parser = new DOMParser();
                 let doc = parser.parseFromString(text, "application/xml");
-                // let individus = ((((utilsJson.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
-                //$scope.params.stsFile = utilsJson.cleanJson(individus);
                 let individus = ((((utils.xmlToJson(doc) || {})['STS_EDT'] || {}).DONNEES || {}).INDIVIDUS || {}).INDIVIDU;
-                $scope.params.stsFile = utils.cleanJson(individus);
+                let contentStsFile = utils.cleanJson(individus);
+                if (contentStsFile !== null && contentStsFile !== undefined) {
+                    $scope.stsFile = new STSFile($scope.lsu.idStructure, file.name, contentStsFile);
+                    await $scope.stsFile.create();
+                    if ($scope.stsFile.id) {
+                        if ($scope.selectStsFiles === undefined) {
+                            $scope.selectStsFiles = new STSFiles();
+                        }
+                        $scope.selectStsFiles.all.unshift($scope.stsFile);
+                        $scope.selectStsFiles.selected = $scope.selectStsFiles.all[0];
+                    }
+                    $scope.params.stsFile = contentStsFile;
+                }
                 $scope.inProgress = $scope.controleExportLSU();
-                utils.safeApply($scope);
+                await utils.safeApply($scope);
             };
             reader.readAsText(file);
         };
 
-        $scope.exportLSU = async function(getUnheededStudents) {
+        $scope.exportLSU = async function (getUnheededStudents) {
             await Utils.runMessageLoader($scope);
             $scope.inProgress = true;
-            $scope.params.type = ""+ $scope.params.type;
+            $scope.params.type = "" + $scope.params.type;
             $scope.noStudent = false;
             $scope.lsu.export($scope.params, getUnheededStudents)
-                .then(async function(res){
-                    if(!$scope.lsu.hasUnheededStudents) {
+                .then(async function (res) {
+                    if (!$scope.lsu.hasUnheededStudents) {
                         let blob = new Blob([res.data]);
                         let link = document.createElement('a');
                         link.href = window.URL.createObjectURL(blob);
@@ -140,15 +161,14 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                 })
 
                 .catch(async (error) => {
-                    if($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
+                    if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
                         && ($scope.lsu.errorsLSU.all.length > 0
                             || $scope.lsu.errorsLSU.errorCode.length > 0
                             || $scope.lsu.errorsLSU.emptyDiscipline
                             || $scope.lsu.errorsLSU.errorEPITeachers.length > 0)
-                    ){
+                    ) {
                         $scope.opened.lightboxErrorsLSU = true;
-                    }
-                    else {
+                    } else {
                         if ($scope.lsu.errorsLSU !== null && $scope.lsu.errorsLSU !== undefined
                             && !_.isEmpty($scope.lsu.errorsLSU.errorMessageBadRequest)) {
                             if (_.contains($scope.lsu.errorsLSU.errorMessageBadRequest, "getEleves : no student")) {
@@ -164,13 +184,13 @@ export let exportControleur = ng.controller('ExportController',['$scope',
         };
 
         $scope.chooseClasse = async function (classe) {
-            await Utils.chooseClasse(classe,$scope, false);
+            await Utils.chooseClasse(classe, $scope, false);
             await utils.safeApply($scope);
         };
         $scope.controleAllIgnored = function (students, periodes): boolean {
             let allStudentChoose = $scope.controleExportLSU();
-            if(allStudentChoose === false) {
-                for(let i =0; i < students.length; i++){
+            if (allStudentChoose === false) {
+                for (let i = 0; i < students.length; i++) {
                     let student = students[i];
                     if (student.hasOwnProperty("choose")) {
                         if ($scope.params.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
@@ -181,8 +201,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                                     break;
                                 }
                             }
-                        }
-                        else if ($scope.params.type === LSU_TYPE_EXPORT.BFC) {
+                        } else if ($scope.params.type === LSU_TYPE_EXPORT.BFC) {
                             if (student.choose[0] !== true) {
                                 allStudentChoose = true;
                                 break;
@@ -193,8 +212,8 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             }
             return allStudentChoose;
         };
-        $scope.updateFilters = async function(classes){
-            if( !_.isEmpty(classes) ) {
+        $scope.updateFilters = async function (classes) {
+            if (!_.isEmpty(classes)) {
                 _.map(classes, (classe) => {
                     classe.selected = true;
                 });
@@ -202,11 +221,11 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     all: classes
                 };
                 await utils.updateFilters($scope, false);
-                if(!_.isEmpty($scope.params.periodes_type) &&  !_.isEmpty( $scope.filteredPeriodes)){
+                if (!_.isEmpty($scope.params.periodes_type) && !_.isEmpty($scope.filteredPeriodes)) {
                     _.forEach($scope.filteredPeriodes, (filteredPeriode) => {
-                        let periodeToSelected =_.findWhere($scope.params.periodes_type, {id_type: filteredPeriode.id_type});
-                        if(periodeToSelected !== undefined){
-                            if(periodeToSelected.selected !== undefined ){
+                        let periodeToSelected = _.findWhere($scope.params.periodes_type, {id_type: filteredPeriode.id_type});
+                        if (periodeToSelected !== undefined) {
+                            if (periodeToSelected.selected !== undefined) {
                                 filteredPeriode.selected = periodeToSelected.selected;
                             }
                             periodeToSelected.periode.id_classe = filteredPeriode.periode.id_classe;
@@ -219,8 +238,8 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                     notify.info('evaluations.classes.are.not.initialized');
                 }
                 await utils.safeApply($scope);
-            }else{
-                if(!_.isEmpty($scope.params.periodes_type )){
+            } else {
+                if (!_.isEmpty($scope.params.periodes_type)) {
                     _.each($scope.params.periodes_type, (periode_type) => {
                         periode_type.classes = [];
                     });
@@ -228,39 +247,36 @@ export let exportControleur = ng.controller('ExportController',['$scope',
             }
         };
 
-        $scope.changeUnheededStudents = async function (students, changeTo?, periode?, index?){
-            if(changeTo === undefined) {
-                if(students.hasOwnProperty("choose")){
-                    let choose = (index === undefined)? students.choose : students.choose[index];
+        $scope.changeUnheededStudents = async function (students, changeTo?, periode?, index?) {
+            if (changeTo === undefined) {
+                if (students.hasOwnProperty("choose")) {
+                    let choose = (index === undefined) ? students.choose : students.choose[index];
                     let idperiode = null;
-                    if(periode!== null && periode === undefined){
+                    if (periode !== null && periode === undefined) {
                         idperiode = students.ignoredInfos
-                    } else if (periode!== null && periode !== undefined){
+                    } else if (periode !== null && periode !== undefined) {
                         idperiode = periode.id_type;
                     }
-                    let idClasse = (students.idClasse !== undefined)?students.idClasse : students.id_classe;
+                    let idClasse = (students.idClasse !== undefined) ? students.idClasse : students.id_classe;
                     let idStudents = [students.idEleve];
                     let doChange = async (periodeId) => {
-                        if(choose) {
+                        if (choose) {
                             await $scope.lsu.addUnheededStudents(idStudents, periodeId, idClasse);
-                        }
-                        else{
+                        } else {
                             await $scope.lsu.remUnheededStudents(idStudents, periodeId, idClasse);
                         }
                     };
-                    if(idperiode instanceof Array){
+                    if (idperiode instanceof Array) {
                         let allPromise = [];
                         _.forEach(idperiode, (ignoredInfo) => {
                             allPromise.push(doChange(ignoredInfo.id_periode));
                         });
                         await Promise.all(allPromise);
-                    }
-                    else {
+                    } else {
                         await doChange(idperiode);
                     }
                 }
-            }
-            else {
+            } else {
                 await Utils.runMessageLoader($scope);
                 try {
                     let allPromise = [];
@@ -271,9 +287,8 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                                     student.choose = changeTo;
                                     allPromise.push($scope.changeUnheededStudents(student));
                                 }
-                            }
-                            else{
-                                if($scope.params.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
+                            } else {
+                                if ($scope.params.type === LSU_TYPE_EXPORT.BILAN_PERIODIQUE) {
                                     for (let index = 0; index < periode.length; index++) {
                                         let currentPeriode = periode[index];
                                         if (currentPeriode.selected === true && student.choose[index] !== changeTo) {
@@ -282,8 +297,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                                                 currentPeriode, index));
                                         }
                                     }
-                                }
-                                else if ($scope.params.type === LSU_TYPE_EXPORT.BFC){
+                                } else if ($scope.params.type === LSU_TYPE_EXPORT.BFC) {
                                     if (student.choose[0] !== changeTo) {
                                         student.choose[0] = changeTo;
                                         allPromise.push($scope.changeUnheededStudents(student, undefined, null, 0));
@@ -296,8 +310,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
                         await Promise.all(allPromise);
                     }
                     await Utils.stopMessageLoader($scope);
-                }
-                catch (e){
+                } catch (e) {
                     await Utils.stopMessageLoader($scope);
                 }
             }
@@ -309,6 +322,7 @@ export let exportControleur = ng.controller('ExportController',['$scope',
          *********************************************************************************************/
         await initparams("1");
         $scope.getResponsables();
+        $scope.initSelectStsFiles();
     }
 ]);
 
