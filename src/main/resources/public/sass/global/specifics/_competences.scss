@@ -2054,10 +2054,27 @@ body.evaluations {
     display: flex;
     flex-direction: column;
     background-color: white;
-    padding: 10px;
     min-width: 160px;
-    border: 1px $primary solid;
     border-radius: 5px;
+
+    height: 0px;
+    -webkit-transition: height 0.5s linear;
+    -moz-transition: height 0.5s linear;
+    -ms-transition: height 0.5s linear;
+    -o-transition: height 0.5s linear;
+    transition: height 0.5s linear;
+  }
+
+  .columns-popup.open {
+    padding: 10px;
+    border: 1px $primary solid;
+
+    height: 130px;
+    -webkit-transition: height 0.5s linear;
+    -moz-transition: height 0.5s linear;
+    -ms-transition: height 0.5s linear;
+    -o-transition: height 0.5s linear;
+    transition: height 0.5s linear;
   }
 
   .columns-popup-button {
