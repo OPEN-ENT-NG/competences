@@ -99,6 +99,7 @@ public class Competences extends BaseServer {
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
 
     public static final String SERVICES_TABLE = "services";
+    public static final String STSFILE_TABLE = "sts_file";
     public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
 
     public static final String THEMATIQUE_BILAN_PERIODIQUE_TABLE = "thematique_bilan_periodique";
@@ -146,6 +147,7 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
     public static final String SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE = "eval_createDispenseDomaineEleve";
     public static final String SCHEMA_CREATE_COMPETENCE_NIVEAU_FINAL = "eval_createCompetenceNiveauFinal";
+    public static final String SCHEMA_CREATE_STSFILE = "eval_createSTSFile";
 
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
