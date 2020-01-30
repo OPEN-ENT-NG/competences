@@ -672,5 +672,6 @@
   "evaluation.service.lightboxes.subEducation.add.matiere": "Ajouter une matière :",
   "evaluation.service.lightboxes.subEducation.placeholder": "Nom de la sous matière",
   "viesco.subTopic.creation.error": "Erreur lors de la création de la sous matière",
-  "viesco.subTopic.relation.creation.error": "Erreur lors de la création de la relation matère - sous matière"
+  "viesco.subTopic.relation.creation.error": "Erreur lors de la création de la relation matère - sous matière",
+  "viesco.subTopic.creation.confirm": "Création / Modification validée"
 }

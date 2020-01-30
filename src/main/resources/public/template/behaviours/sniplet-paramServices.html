@@ -259,7 +259,7 @@
                                     <span>[[matiere.libelle]]</span> <i ng-click="openUpdateForm(matiere)" class="edit"></i>
                                 </div>
                                 <div ng-show="matiere.updating">
-                                    <input type="text"  ng-keypress="updateMatiere($event,matiere)"  ng-model="matiere.libelle">
+                                    <input type="text"  ng-keypress="closeUpdateLibelle($event,matiere)"   ng-blur="updateMatiere(matiere)" ng-model="matiere.libelle">
                                 </div>
                             </li>
                         </ul>

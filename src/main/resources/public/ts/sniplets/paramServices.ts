@@ -358,11 +358,19 @@ export const paramServices = {
             paramServices.that.closeUpdatingSubtopic();
             safeApply(paramServices.that);
             matiere.updating = true;
+            matiere.oldLibelle = matiere.libelle;
+
         },
-        updateMatiere:async function(event,matiere){
-            if (event.which === 13){
+        updateMatiere:async function(matiere){
+            if( matiere.libelle === "") {
+                matiere.libelle = matiere.oldLibelle;
+            }
+            matiere.updating = false;
+            await matiere.save();
+        },
+        closeUpdateLibelle(event,matiere){
+            if (event.which === 13) {
                 matiere.updating = false;
-                await matiere.save();
             }
         },
         updateSubTopic: function(newSubTopic){
@@ -404,13 +412,16 @@ export const paramServices = {
         },
         saveNewSubTopics: async function(){
             paramServices.that.closeUpdatingSubtopic();
-            let isSaved = await paramServices.that.subTopics.saveTopicSubTopicRelation(paramServices.that.matieres);
-            if(!isSaved){
-                toasts.warning("viesco.subTopic.relation.creation.error");
+            if(paramServices.that.matieres.find(matiere => matiere.selected)) {
+                let isSaved = await paramServices.that.subTopics.saveTopicSubTopicRelation(paramServices.that.matieres);
+                if (!isSaved) {
+                    toasts.warning("viesco.subTopic.relation.creation.error");
+                }
             }
-            paramServices.that.services.map(service =>{
+            paramServices.that.services.map(service => {
                 service.selected = false;
             });
+            toasts.confirm("viesco.subTopic.creation.confirm");
             paramServices.that.lightboxes.subEducationCreate  = false;
             await utils.safeApply(paramServices.that);
         },
