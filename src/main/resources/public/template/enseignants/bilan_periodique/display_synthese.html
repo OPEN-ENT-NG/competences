@@ -50,10 +50,14 @@
               ng-disabled="true">
     </textarea>
 
-    <div ng-if="element.avisConseil.id_avis_conseil_bilan">
-        <i18n>evaluations.evaluation.avis.conseil</i18n> : [[translateAvis(element.avisConseil)]]
+    <div>
+        <i18n>evaluations.evaluation.avis.conseil</i18n> : 
+        <span ng-if="element.avisConseil.id_avis_conseil_bilan">[[translateAvis(element.avisConseil)]]</span>
+        <span ng-if="!element.avisConseil.id_avis_conseil_bilan">-</span>
     </div>
     <div ng-if="element.avisOrientation.id_avis_conseil_bilan">
-        <i18n>evaluations.evaluation.avis.conseil</i18n> : [[translateAvis(element.avisOrientation)]]
+        <i18n>evaluations.evaluation.avis.orientation</i18n> : 
+        <span ng-if="element.avisOrientation.id_avis_conseil_bilan">[[translateAvis(element.avisOrientation)]]</span>
+        <span ng-if="!element.avisOrientation.id_avis_conseil_bilan">-</span>
     </div>
 </article>
