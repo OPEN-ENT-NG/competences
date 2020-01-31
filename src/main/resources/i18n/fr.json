@@ -521,6 +521,8 @@
   "viescolaire.utils.domaines.enseignements":"Domaines d'enseignement",
   "viescolaire.utils.coefficient":"Coefficient",
   "viescolaire.utils.coef" : "Coef",
+  "viescolaire.utils.yes": "Oui",
+  "viescolaire.utils.no": "Non",
   "viescolaire.parcourir" : "Parcourir",
   "ariane.competences.createDevoir":"Ajouter une évaluation",
   "ariane.competences.editDevoir":"Modifier une évaluation",
@@ -673,5 +675,8 @@
   "evaluation.service.lightboxes.subEducation.placeholder": "Nom de la sous matière",
   "viesco.subTopic.creation.error": "Erreur lors de la création de la sous matière",
   "viesco.subTopic.relation.creation.error": "Erreur lors de la création de la relation matère - sous matière",
-  "viesco.subTopic.creation.confirm": "Création / Modification validée"
+  "viesco.subTopic.creation.confirm": "Création / Modification validée",
+  "viesco.switchEvealuation.message1": " Des évaluations sont rattachées à(aux) la matière(s) :  ",
+  "viesco.switchEvealuation.message2": " et seront automatiquement rattachés à la sous matière",
+  "viesco.switchEvealuation.message3": " Confirmez-vous ?"
 }

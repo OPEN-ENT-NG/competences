@@ -235,7 +235,7 @@
         </button>
     </lightbox>
 
-    <lightbox show="lightboxes.subEducationCreate" on-close="lightboxes.subEducationCreate = false">
+    <lightbox show="lightboxes.subEducationCreate" on-close="cancelSubEducationCreate();">
         <h3>
             <i18n>evaluation.service.lightboxes.subEducation.create</i18n>
         </h3>
@@ -319,11 +319,30 @@
             </article>
         </div>
         <div class="row">
-            <button ng-click="saveNewSubTopics()" class="marginFive right-magnet">
+            <button ng-click="checkBeforeSavingNewRelations()" class="marginFive right-magnet">
                 <i18n>viescolaire.utils.save</i18n>
             </button>
         </div>
 
+    </lightbox>
+
+    <lightbox show="lightboxes.switchEvaluation" on-close="cancelSwitchEvaluation();">
+        <p><i18n>viesco.switchEvealuation.message1</i18n></p>
+        <ul>
+            <li ng-repeat="matiere in matieresWithoutSubTopic track by matiere.id">
+               <span>[[matiere.name]]</span>
+            </li>        </ul>
+        <p><i18n>viesco.switchEvealuation.message2</i18n><b> "[[defaultSubTopic.libelle]]"</b></p>
+
+        <p><i18n>viesco.switchEvealuation.message3</i18n></p>
+        <div class="row">
+            <button ng-click="saveNewRelationsSubTopics()" class="marginFive right-magnet">
+                <i18n>viescolaire.utils.yes</i18n>
+            </button>
+            <button ng-click="cancelSwitchEvaluation()" class="marginFive cancel right-magnet">
+                <i18n>viescolaire.utils.no</i18n>
+            </button>
+        </div>
     </lightbox>
     <section class="toggle-buttons" ng-class="{ hide: !oneDisicplineSelected() }">
         <div class="toggle">

@@ -219,7 +219,8 @@ export const paramServices = {
                 switchEval: false,
                 confirm: false,
                 create: false,
-                subEducationCreate:false
+                subEducationCreate:false,
+                switchEvaluation:false
             };
 
             paramServices.that = this;
@@ -286,7 +287,7 @@ export const paramServices = {
 
         checkIfExistsAndValid: function (service) {
             let exist = false;
-            if(paramServices.that.classesSelected.length>0 && service.id_matiere != "" && service.id_enseignant != "") {
+            if(paramServices.that.classesSelected && paramServices.that.classesSelected.length>0 && service.id_matiere != "" && service.id_enseignant != "") {
                 paramServices.that.classesSelected.forEach(classe => {
                     if (_.findWhere(paramServices.that.services, {
                         id_matiere: service.id_matiere, id_enseignant: service.id_enseignant,
@@ -382,15 +383,17 @@ export const paramServices = {
             paramServices.that.newSubTopic="";
             selectedServices.map(service => {
                 paramServices.that.columns.matiere.data.map(matiere => {
-                    if (matiere.id === service.id_matiere) {
+                    if (matiere.id === service.id_matiere && !paramServices.that.matieres.find(m => matiere.id === m.id)) {
                         matiere.selected = true;
+                        let hasNoSubTopic = true;
                         paramServices.that.matieres.push(matiere);
                         matiere.sous_matieres.forEach(sm => {
                             paramServices.that.subTopics.all.map(sb =>{
                                 if(sm.id_type_sousmatiere == sb.id){
                                     sb.selected = true;
+                                    hasNoSubTopic = false;
                                 }
-                            })
+                            });
                         })
                     }
                 })
@@ -410,8 +413,13 @@ export const paramServices = {
             });
             await utils.safeApply(paramServices.that);
         },
-        saveNewSubTopics: async function(){
-            paramServices.that.closeUpdatingSubtopic();
+        cancelSwitchEvaluation:function(){
+            paramServices.that.lightboxes.switchEvaluation = false;
+            paramServices.that.lightboxes.subEducationCreate = true;
+            safeApply(paramServices.that);
+
+        },
+        saveNewRelationsSubTopics:async  function(){
             if(paramServices.that.matieres.find(matiere => matiere.selected)) {
                 let isSaved = await paramServices.that.subTopics.saveTopicSubTopicRelation(paramServices.that.matieres);
                 if (!isSaved) {
@@ -422,8 +430,46 @@ export const paramServices = {
                 service.selected = false;
             });
             toasts.confirm("viesco.subTopic.creation.confirm");
-            paramServices.that.lightboxes.subEducationCreate  = false;
+            if( paramServices.that.lightboxes.subEducationCreate)
+                paramServices.that.lightboxes.subEducationCreate  = false;
+
+            if( paramServices.that.lightboxes.switchEvaluation)
+                paramServices.that.lightboxes.switchEvaluation  = false;
+
             await utils.safeApply(paramServices.that);
+
+        },
+        openSwitchEvaluation:function() {
+            paramServices.that.lightboxes.subEducationCreate = false;
+            paramServices.that.matieresWithoutSubTopic =[];
+            paramServices.that.matieres.forEach(matiere =>{
+                if(matiere.selected && matiere.sous_matieres.length === 0){
+                    paramServices.that.matieresWithoutSubTopic.push(matiere)
+                }
+            });
+            paramServices.that.defaultSubTopic = paramServices.that.subTopics.all.find(subtopic => subtopic.selected)
+
+            paramServices.that.lightboxes.switchEvaluation = true;
+            safeApply(paramServices.that);
+        },
+        cancelSubEducationCreate:function(){
+            paramServices.that.lightboxes.subEducationCreate = false;
+            paramServices.that.services.map(service => {
+                service.selected = false;
+            });
+            utils.safeApply(paramServices.that);
+        },
+        checkBeforeSavingNewRelations: function(){
+            paramServices.that.closeUpdatingSubtopic();
+            if(paramServices.that.matieres.find(matiere => matiere.selected && matiere.sous_matieres.length === 0)
+                && paramServices.that.subTopics.selected.length !== 0 ){
+                paramServices.that.openSwitchEvaluation()
+            }
+            else{
+                paramServices.that.saveNewRelationsSubTopics();
+                paramServices.that.lightboxes.subEducationCreate  = false;
+
+            }
         },
         getSelectedDisciplines:function(){
             let selectedDisciplines = []
