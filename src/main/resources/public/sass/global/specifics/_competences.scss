@@ -2058,11 +2058,11 @@ body.evaluations {
     border-radius: 5px;
 
     height: 0px;
-    -webkit-transition: height 0.5s linear;
-    -moz-transition: height 0.5s linear;
-    -ms-transition: height 0.5s linear;
-    -o-transition: height 0.5s linear;
-    transition: height 0.5s linear;
+    -webkit-transition: height 0.15s linear;
+    -moz-transition: height 0.15s linear;
+    -ms-transition: height 0.15s linear;
+    -o-transition: height 0.15s linear;
+    transition: height 0.15s linear;
   }
 
   .columns-popup.open {
@@ -2070,11 +2070,11 @@ body.evaluations {
     border: 1px $primary solid;
 
     height: 130px;
-    -webkit-transition: height 0.5s linear;
-    -moz-transition: height 0.5s linear;
-    -ms-transition: height 0.5s linear;
-    -o-transition: height 0.5s linear;
-    transition: height 0.5s linear;
+    -webkit-transition: height 0.15s linear;
+    -moz-transition: height 0.15s linear;
+    -ms-transition: height 0.15s linear;
+    -o-transition: height 0.15s linear;
+    transition: height 0.15s linear;
   }
 
   .columns-popup-button {
