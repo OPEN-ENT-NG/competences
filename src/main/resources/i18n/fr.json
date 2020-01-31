@@ -665,6 +665,8 @@
   "evaluation.service.delete.error":"Erreur lors de la suppression d'un service",
   "evaluation.service.choose.a.subject": "Veuillez choisir une matière",
   "evaluation.service.choose.another.subject": "Veuillez choisir une matière différente de celle où le service est créé",
-  "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur"
+  "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur",
+
+  "conseil.acquis.moyenne.showColumns" : "Afficher / Masquer les colonnes"
 
 }

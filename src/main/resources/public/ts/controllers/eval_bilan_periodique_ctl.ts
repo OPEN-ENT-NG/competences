@@ -9,7 +9,7 @@ import {AvisConseil} from "../models/teacher/AvisConseil";
 import {AvisOrientation} from "../models/teacher/AvisOrientation";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import {ComparisonGraph} from "../models/common/ComparisonGraph";
-import {conseilGraphiques,PreferencesUtils} from "../utils/preferences";
+import {conseilGraphiques, conseilColumns, PreferencesUtils} from "../utils/preferences";
 
 
 declare let _: any;
@@ -45,9 +45,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.canLoadStudent = false;
         //init graph choices
         $scope.graph = {competences : true, notes : false, type: "baton",typeDom: "baton"};
-        if(PreferencesUtils.isNotEmpty(conseilGraphiques)  ){
+        if(PreferencesUtils.isNotEmpty(conseilGraphiques)){
             $scope.graph = PreferencesUtils.getPreferences(conseilGraphiques);
         }
+        $scope.showColumns = {moyEleve : true, moyClasse : true, pos : true};
+        if(PreferencesUtils.isNotEmpty(conseilColumns)){
+            $scope.showColumns = PreferencesUtils.getPreferences(conseilColumns);
+        }
+        $scope.showPopUpColumn = false;
         $scope.displayBilanPeriodique = () => {
             let isNotEmptyClasse = ($scope.search.classe !== '*' && $scope.search.classe !== null
                 && $scope.search.classe !== undefined);
@@ -301,6 +306,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             let arrayKeys = [], datasArray = [];
             datasArray.push($scope.graph);
             arrayKeys.push(conseilGraphiques);
+            PreferencesUtils.savePreferences(arrayKeys, datasArray);
+        };
+
+        $scope.saveColumnsPreferences = function () {
+            let arrayKeys = [], datasArray = [];
+            datasArray.push($scope.showColumns);
+            arrayKeys.push(conseilColumns);
             PreferencesUtils.savePreferences(arrayKeys, datasArray);
         };
 
@@ -761,5 +773,4 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         });
 
     }
-
 ]);
