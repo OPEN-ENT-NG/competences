@@ -143,12 +143,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
 
             $scope.oldElementsBilanPeriodique = [];
-            for(let p in $scope.filteredPeriode) {
-                console.log(p);
-                let periode = parseInt(p);
-                console.log(periode);
-                if (periode !== 0 && periode < $scope.search.periode.id_type) {
-                    var oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+            $scope.search.classe.periodes.all.sort((a, b) => (a.id_type < b.id_type) ? 1 : -1)
+                .forEach(async (periode) => {
+                if(periode.id != null && periode.id_type < $scope.search.periode.id_type){
+                    let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                         periode, $scope.structure, $scope.filteredPeriode);
                     oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
                         periode, $scope.structure.id);
@@ -161,7 +159,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     await oldElement.avisOrientation.syncAvisOrientation();
                     $scope.oldElementsBilanPeriodique.push(oldElement);
                 }
-            }
+            });
 
             $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
             $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
@@ -169,6 +167,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
             template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
             await utils.safeApply($scope);
+        };
+
+        $scope.translateAvis = (avis) => {
+            return _.find($scope.elementBilanPeriodique.avisConseil.avis, {id: avis.id_avis_conseil_bilan}).libelle;
         };
 
         $scope.openProjet = async () => {
