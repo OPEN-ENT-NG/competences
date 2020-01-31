@@ -1649,7 +1649,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             JsonObject moyenneMapPeriode = matiere.getJsonObject(NOTES_BY_PERIODE_BY_STUDENT);
 
             // Calcul de la moyenne générale de chacun des élèves évalué sur la matière
-            if(isNotNull(moyenneMapPeriode) && isNotNull(idPeriode)){
+            if(isNotNull(moyenneMapPeriode) && isNotNull(idPeriode)
+                    && moyenneMapPeriode.containsKey(idPeriode.toString())){
                 JsonObject matiereMoyenne = moyenneMapPeriode.getJsonObject(idPeriode.toString());
                 for(Map.Entry<String, Object> moyenneEleve : matiereMoyenne.getMap().entrySet()){
                     String idEleve = moyenneEleve.getKey();
