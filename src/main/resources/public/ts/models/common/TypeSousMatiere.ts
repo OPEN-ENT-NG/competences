@@ -15,9 +15,81 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model } from 'entcore';
+import { Model,toasts } from 'entcore';
+import {Mix, Selectable,Selection} from "entcore-toolkit";
+import http from "axios";
 
-export class TypeSousMatiere extends Model {
+export class TypeSousMatiere extends Model implements Selectable{
     id: number;
     libelle: string;
+    selected:boolean;
+
+    async create(){
+        try{
+            let {status,data} = await http.post(`/viescolaire/types/sousmatiere`,this.toJson());
+            this.id = data.id;
+            return status === 200;
+        }catch (e){
+            return false
+        }
+    }
+
+    async update(){
+        try{
+            let {status,data} = await http.put(`/viescolaire/types/sousmatiere/${this.id}`,this.toJson());
+            this.id = data.id;
+            return status === 200;
+        }catch (e){
+            return false
+        }
+    }
+
+    async save() {
+        if(this.id){
+            return  await  this.update();
+        }else{
+            return await this.create();
+        }
+    }
+
+    private toJson() {
+        return {
+            ...(this.id && {id: this.id}),
+            ...(this.libelle && {libelle: this.libelle}),
+        }
+    }
+}
+export class TypeSousMatieres extends Selection<TypeSousMatiere>{
+    id: number;
+    libelle: string;
+
+    async get(){
+        let {data} = await http.get(`/viescolaire/types/sousmatieres`);
+        this.all = Mix.castArrayAs(TypeSousMatiere, data);
+
+    }
+
+    async saveTopicSubTopicRelation(topics){
+        let topicsToSend = [];
+        let subTopicsToSend = [];
+
+        let jsonToSend = {
+            topics:[],
+            subTopics:[]
+        };
+        topics.forEach(topic =>{
+            if (topic.selected){
+                topic.sous_matieres = this.all;
+                topicsToSend.push(topic.id);
+            }
+        });
+
+        this.selected.forEach(subTopic => {
+            subTopicsToSend.push(subTopic.id);
+        });
+        jsonToSend.topics = topicsToSend;
+        jsonToSend.subTopics = subTopicsToSend;
+        let {status} = await http.post(`/viescolaire/types/sousmatieres/relations`,jsonToSend);
+        return status === 200 || status === 204;
+    }
 }

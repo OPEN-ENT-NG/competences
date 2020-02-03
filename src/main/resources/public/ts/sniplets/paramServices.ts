@@ -1,7 +1,8 @@
-import {notify, idiom as lang, angular, _} from 'entcore';
+import {notify, idiom as lang, angular, _,toasts} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
-import {Classe, Utils} from "../models/teacher";
+import {Classe, TypeSousMatiere, TypeSousMatieres, Utils} from "../models/teacher";
+import {safeApply} from "../utils/teacher";
 
 export const paramServices = {
     title: 'Configuration des services',
@@ -22,6 +23,7 @@ export const paramServices = {
             previous_evaluable: boolean;
             isManual: boolean;
             coefficient: number;
+
 
             constructor(service) {
                 _.extend(this, service);
@@ -147,14 +149,14 @@ export const paramServices = {
                     };
                 else
                     return {
-                    id_etablissement: this.id_etablissement,
-                    id_enseignant: this.id_enseignant,
-                    id_matiere: this.id_matiere,
-                    id_groupes: _.map(paramServices.that.classesSelected,(classe) => {return classe.id;}),
-                    modalite: this.modalite,
-                    evaluable: this.evaluable,
-                    coefficient: this.coefficient
-                };
+                        id_etablissement: this.id_etablissement,
+                        id_enseignant: this.id_enseignant,
+                        id_matiere: this.id_matiere,
+                        id_groupes: _.map(paramServices.that.classesSelected,(classe) => {return classe.id;}),
+                        modalite: this.modalite,
+                        evaluable: this.evaluable,
+                        coefficient: this.coefficient
+                    };
             }
         },
 
@@ -174,6 +176,7 @@ export const paramServices = {
                     return new paramServices.that.Service(_.defaults(service, missingParams ));
                 }), service => service.hasNullProperty());
 
+                await  paramServices.that.subTopics.get();
                 await this.stopMessageLoader();
             })
                 .catch( async (error) => {
@@ -201,10 +204,11 @@ export const paramServices = {
                 manualGroupes : {isSelected: true, name:"evaluation.service.filter.manualGroupes", type:2}
             };
 
+            this.subTopics = new TypeSousMatieres([]);
             this.columns = {
                 delete: {size : "one", name: "evaluation.service.columns.delete", filtered: false},
                 matiere: {size: "three", data: [], name: "evaluation.service.columns.matiere", filtered: false},
-                enseignant: {size: "two", data: [], name: "evaluation.service.columns.teacher", filtered: false},
+                enseignant: {size: "one", data: [], name: "evaluation.service.columns.teacher", filtered: false},
                 classe: {size: "two", data: [], name: "evaluation.service.columns.classGroup", filtered: false},
                 modalite: {size: "one", data: [], name: "evaluation.service.columns.modalite", filtered: false},
                 coefficient: {size: "one", name: "viescolaire.utils.coefficient", filtered: false},
@@ -214,7 +218,9 @@ export const paramServices = {
             this.lightboxes= {
                 switchEval: false,
                 confirm: false,
-                create: false
+                create: false,
+                subEducationCreate:false,
+                switchEvaluation:false
             };
 
             paramServices.that = this;
@@ -281,7 +287,7 @@ export const paramServices = {
 
         checkIfExistsAndValid: function (service) {
             let exist = false;
-            if(paramServices.that.classesSelected.length>0 && service.id_matiere != "" && service.id_enseignant != "") {
+            if(paramServices.that.classesSelected && paramServices.that.classesSelected.length>0 && service.id_matiere != "" && service.id_enseignant != "") {
                 paramServices.that.classesSelected.forEach(classe => {
                     if (_.findWhere(paramServices.that.services, {
                         id_matiere: service.id_matiere, id_enseignant: service.id_enseignant,
@@ -309,7 +315,174 @@ export const paramServices = {
                 }
             })
         },
+        initMatieresForSelect :function() {
+            let isAlreadyIn = false;
+            paramServices.that.matieresForSelect = [];
+            paramServices.that.columns.matiere.data.map(matiere =>{
+                    paramServices.that.matieres.forEach(mm =>{
+                        if(mm.id === matiere.id)
+                            isAlreadyIn = true;
+                    });
+                    if(!isAlreadyIn)
+                        paramServices.that.matieresForSelect.push(matiere);
+                    isAlreadyIn = false;
+                }
+            )
 
+        },
+        openCreationSubTopicCreationInput: function(){
+            paramServices.that.subTopicCreationForm = true;
+            safeApply(paramServices.that);
+        },
+        saveNewSubTopic: async function(){
+            paramServices.that.subTopicCreationForm = false;
+            let subTopic = new TypeSousMatiere();
+            subTopic.libelle = paramServices.that.newSubTopic;
+            let isSaved = await subTopic.save();
+            if(isSaved === false){
+                paramServices.that.lightboxes.subEducationCreate = false;
+                toasts.warning("viesco.subTopic.creation.error");
+            }else{
+                subTopic.selected = true;
+                paramServices.that.subTopics.all.push(subTopic);
+            }
+            safeApply(paramServices.that)
+        },
+        closeUpdatingSubtopic: function(){
+            paramServices.that.subTopics.all.map(topic => {
+                if(topic.updating)
+                    topic.save();
+                topic.updating = false;
+            });
+        },
+        openUpdateForm: function(matiere){
+            paramServices.that.closeUpdatingSubtopic();
+            safeApply(paramServices.that);
+            matiere.updating = true;
+            matiere.oldLibelle = matiere.libelle;
+
+        },
+        updateMatiere:async function(matiere){
+            if( matiere.libelle === "") {
+                matiere.libelle = matiere.oldLibelle;
+            }
+            matiere.updating = false;
+            await matiere.save();
+        },
+        closeUpdateLibelle(event,matiere){
+            if (event.which === 13) {
+                matiere.updating = false;
+            }
+        },
+        updateSubTopic: function(newSubTopic){
+            paramServices.that.newSubTopic = newSubTopic;
+        },
+        openSubEducationLightBoxCreation: function (selectedServices){
+            paramServices.that.matieres =[];
+            paramServices.that.subTopicCreationForm = false;
+            paramServices.that.newSubTopic="";
+            selectedServices.map(service => {
+                paramServices.that.columns.matiere.data.map(matiere => {
+                    if (matiere.id === service.id_matiere && !paramServices.that.matieres.find(m => matiere.id === m.id)) {
+                        matiere.selected = true;
+                        let hasNoSubTopic = true;
+                        paramServices.that.matieres.push(matiere);
+                        matiere.sous_matieres.forEach(sm => {
+                            paramServices.that.subTopics.all.map(sb =>{
+                                if(sm.id_type_sousmatiere == sb.id){
+                                    sb.selected = true;
+                                    hasNoSubTopic = false;
+                                }
+                            });
+                        })
+                    }
+                })
+            });
+            paramServices.that.initMatieresForSelect();
+            paramServices.that.servicesSelected = selectedServices;
+            paramServices.that.lightboxes.subEducationCreate = true;
+
+        },
+        addMatiereToCreateSubTopic: async function(matiereToAdd){
+            matiereToAdd.selected = true;
+            paramServices.that.matieres.push(matiereToAdd);
+            paramServices.that.matieresForSelect.map((matiere,index) =>{
+                if (matiere.id === matiereToAdd.id){
+                    paramServices.that.matieresForSelect.splice(index,1)
+                }
+            });
+            await utils.safeApply(paramServices.that);
+        },
+        cancelSwitchEvaluation:function(){
+            paramServices.that.lightboxes.switchEvaluation = false;
+            paramServices.that.lightboxes.subEducationCreate = true;
+            safeApply(paramServices.that);
+
+        },
+        saveNewRelationsSubTopics:async  function(){
+            if(paramServices.that.matieres.find(matiere => matiere.selected)) {
+                let isSaved = await paramServices.that.subTopics.saveTopicSubTopicRelation(paramServices.that.matieres);
+                if (!isSaved) {
+                    toasts.warning("viesco.subTopic.relation.creation.error");
+                }
+            }
+            paramServices.that.services.map(service => {
+                service.selected = false;
+            });
+            toasts.confirm("viesco.subTopic.creation.confirm");
+            if( paramServices.that.lightboxes.subEducationCreate)
+                paramServices.that.lightboxes.subEducationCreate  = false;
+
+            if( paramServices.that.lightboxes.switchEvaluation)
+                paramServices.that.lightboxes.switchEvaluation  = false;
+
+            await utils.safeApply(paramServices.that);
+
+        },
+        openSwitchEvaluation:function() {
+            paramServices.that.lightboxes.subEducationCreate = false;
+            paramServices.that.matieresWithoutSubTopic =[];
+            paramServices.that.matieres.forEach(matiere =>{
+                if(matiere.selected && matiere.sous_matieres.length === 0){
+                    paramServices.that.matieresWithoutSubTopic.push(matiere)
+                }
+            });
+            paramServices.that.defaultSubTopic = paramServices.that.subTopics.all.find(subtopic => subtopic.selected)
+
+            paramServices.that.lightboxes.switchEvaluation = true;
+            safeApply(paramServices.that);
+        },
+        cancelSubEducationCreate:function(){
+            paramServices.that.lightboxes.subEducationCreate = false;
+            paramServices.that.services.map(service => {
+                service.selected = false;
+            });
+            utils.safeApply(paramServices.that);
+        },
+        checkBeforeSavingNewRelations: function(){
+            paramServices.that.closeUpdatingSubtopic();
+            if(paramServices.that.matieres.find(matiere => matiere.selected && matiere.sous_matieres.length === 0)
+                && paramServices.that.subTopics.selected.length !== 0 ){
+                paramServices.that.openSwitchEvaluation()
+            }
+            else{
+                paramServices.that.saveNewRelationsSubTopics();
+                paramServices.that.lightboxes.subEducationCreate  = false;
+
+            }
+        },
+        getSelectedDisciplines:function(){
+            let selectedDisciplines = []
+            paramServices.that.services.forEach(service =>{
+                if(service.selected)
+                    selectedDisciplines.push(service);
+            });
+            return selectedDisciplines;
+        },
+        oneDisicplineSelected:function(){
+            let service = paramServices.that.services.find(service => service.selected)
+            return service !== undefined;
+        },
         switchEvaluableService: async function(service) {
             if(service.evaluable) {
                 await service.updateServiceEvaluable();
