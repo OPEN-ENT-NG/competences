@@ -2781,7 +2781,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 evaluation.valeur = evaluation.annotation_libelle_court;
             }
             if (evaluation !== undefined && ((evaluation.valeur !== evaluation.oldValeur) || (evaluation.oldAppreciation !== evaluation.appreciation))) {
-                if (evaluation.valeur !== undefined) {
+                if (evaluation.valeur !== undefined && Utils.isNotNull(evaluation.valeur)) {
                     evaluation.valeur = evaluation.valeur.replace(",",".");
                 }
                 if (evaluation.valeur === "" && isAnnotaion !== undefined && !isAnnotaion) {
@@ -2823,14 +2823,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                         let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
                         let oldAnnotation = _.findWhere($scope.evaluations.annotations.all, {id: evaluation.oldId_annotation});
-                        if (!reg.test(evaluation.valeur) && ((annotation !== undefined && annotation !== null && annotation.id !== evaluation.oldId_annotation) ||
-                            (oldAnnotation !== undefined && annotation === undefined))) {
-                            if (oldAnnotation !== undefined && annotation === undefined) {
-                                await $scope.deleteAnnotationDevoir(evaluation, true);
-                            } else {
-                                evaluation.id_annotation = annotation.id;
-                                $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotaion);
-                            }
+                        if (!reg.test(evaluation.valeur) && ((annotation !== undefined && annotation !== null && annotation.id !== evaluation.oldId_annotation))) {
+                            evaluation.id_annotation = annotation.id;
+                            $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotaion);
                         } else {
                             if ((evaluation.oldValeur !== undefined && evaluation.oldValeur !== evaluation.valeur)
                                 || evaluation.oldAppreciation !== undefined && evaluation.oldAppreciation !== evaluation.appreciation) {
