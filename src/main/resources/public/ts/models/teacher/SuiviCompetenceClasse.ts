@@ -75,7 +75,7 @@ export class SuiviCompetenceClasse extends Model {
                         Enseignement.getAll(classe.id, classe.id_cycle, this.enseignements),
                         this.getCompetencesNotesClasse(classe, periode)
                     ]);
-                    // this.enseignements.load(response[0].data);
+                    this.enseignements.load(response[0].data);
                     let competences = response[1].data;
                     if(structure.matieres.all !== undefined)this.matieres.load(structure.matieres.all);
                     await Enseignement.loadCompetences(classe.id, competences, classe.id_cycle, this.enseignements);
