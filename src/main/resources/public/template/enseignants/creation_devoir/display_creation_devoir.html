@@ -507,6 +507,10 @@
 
                 <!-- Competences selectionnees sur le devoir -->
                 <section>
+                    <div  ng-if="toMuchCompetences()" style="color: red; text-align: center;">
+                        <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
+                        <p><i18n>evaluations.max.competences</i18n></p>
+                    </div>
                     <ul sortable-list class="twelve twelve-mobile devoir-skills-list thought-out-actions">
                         <li sortable-element
                             ng-repeat="itemCompetence in evaluations.competencesDevoir| orderBy:'index'"
@@ -562,14 +566,14 @@
             <li ng-if="endSaisie">
                 <span><i18n>end.saisie</i18n></span>
             </li>
+            <li ng-if="toMuchCompetences()">
+                    <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
+                    <p><i18n>evaluations.max.competences</i18n></p>
+            </li>
         </ul>
         <p ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
             <i18n>required.fields.double.asterisk</i18n>
         </p>
-</lightbox>
-<lightbox  show="evaluations.competencesDevoir.length > MAX_NBR_COMPETENCE" on-close="controleNewDevoirForm()">
-    <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
-    <p><i18n>evaluations.max.competences</i18n></p>
 </lightbox>
 
 <lightbox  show="opened.lightboxs.updateDevoir.firstConfirmSupp" on-close="opened.lightboxs.updateDevoir.firstConfirmSupp = false">
