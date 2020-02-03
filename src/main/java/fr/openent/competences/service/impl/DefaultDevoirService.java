@@ -718,21 +718,32 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         query.append("SELECT devoirs.*, ")
                 .append("type.nom as _type_libelle, rel_type_periode.type as _periode_type, rel_type_periode.ordre as _periode_ordre, users.username as teacher ");
         if (idEleve != null) {
-            query.append(", notes.valeur as note, COUNT(competences_devoirs.id) as nbcompetences ");
+            query.append(", notes.valeur as note, COUNT(competences_devoirs.id) as nbcompetences, sum.sum_notes, sum.nbr_eleves ");
         }
         query.append("FROM ")
                 .append(Competences.COMPETENCES_SCHEMA +".devoirs ")
-                .append("left join "+ Competences.VSCO_SCHEMA +".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
-                .append("inner join "+ Competences.COMPETENCES_SCHEMA +".type on devoirs.id_type = type.id ")
-                .append("inner join "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ");
+                .append("LEFT JOIN "+ Competences.VSCO_SCHEMA +".rel_type_periode on devoirs.id_periode = rel_type_periode.id ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".type on devoirs.id_type = type.id ")
+                .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ");
         if(idClasse != null) {
-            query.append("inner join " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes on rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe =? ");
+            query.append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".rel_devoirs_groupes on " +
+                    "rel_devoirs_groupes.id_devoir = devoirs.id AND rel_devoirs_groupes.id_groupe =? ");
             values.add(idClasse);
         }
         if (idEleve != null) {
-            query.append(" left join "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs ")
+            query.append(" LEFT JOIN "+ Competences.COMPETENCES_SCHEMA +".competences_devoirs ")
                     .append(" on devoirs.id = competences_devoirs.id_devoir ")
-                    .append("inner join "+ Competences.COMPETENCES_SCHEMA +".notes on devoirs.id = notes.id_devoir ");
+                    .append("INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".notes on devoirs.id = notes.id_devoir ")
+                    .append("INNER JOIN ( SELECT devoirs.id, SUM(notes.valeur) as sum_notes, COUNT(notes.valeur) as nbr_eleves " +
+                            "FROM notes.devoirs INNER JOIN notes.notes on devoirs.id = notes.id_devoir " +
+                            "WHERE devoirs.id_etablissement = ? AND date_publication <= Now() ");
+            values.add(idEtablissement);
+            if (idPeriode != null) {
+                query.append("AND ")
+                        .append("devoirs.id_periode = ? ");
+                values.add(idPeriode);
+            }
+            query.append("GROUP BY devoirs.id) sum ON sum.id = devoirs.id ");
         }
         query.append("WHERE ")
                 .append("devoirs.id_etablissement = ? ");
@@ -757,7 +768,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             values.add(historise);
         }
         if (idEleve != null) {
-            query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, users.username ")
+            query.append(" GROUP BY devoirs.id,rel_type_periode.type , rel_type_periode.ordre, type.nom, notes.valeur, sum_notes, nbr_eleves, users.username ")
                     .append(" ORDER BY devoirs.date ASC, devoirs.id ASC ");
         } else {
             query.append("ORDER BY devoirs.date ASC, devoirs.id ASC ");
@@ -794,7 +805,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
-                .append(" inner join "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
+                .append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
                 .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel")
                 .append(" ON devoirs.id = rel.id_devoir");
 
@@ -855,7 +866,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
         query.append("SELECT devoirs.*, rel.id_groupe, users.username as teacher")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs")
-                .append(" inner join "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
+                .append(" INNER JOIN "+ Competences.COMPETENCES_SCHEMA +".users on users.id = devoirs.owner ")
                 .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel").append(" ON devoirs.id = rel.id_devoir")
                 .append(" LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.COMPETENCES_NOTES_TABLE + " AS comp").append(" ON devoirs.id = comp.id_devoir");
 

@@ -118,7 +118,7 @@
         }
 
         .div-note {
-            width: 30px;
+            display:inline-block;
         }
     </style>
     <meta charset="UTF-8" />
@@ -166,7 +166,8 @@
             {{#devoirs}}
             <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+            {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
+                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
           </span>
             {{/devoirs}}
         </td>
@@ -196,7 +197,8 @@
             {{#devoirs}}
             <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+            {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
+                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
           </span>
             {{/devoirs}}
         </td>
@@ -208,7 +210,8 @@
             {{#devoirs}}
             <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+            {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
+                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
           </span>
             {{/devoirs}}
         </td>
@@ -232,7 +235,8 @@
             {{#devoirs}}
             <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+            {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
+                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
           </span>
             {{/devoirs}}
         </td>
@@ -248,7 +252,8 @@
             {{#devoirs}}
             <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+            {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
+                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
           </span>
             {{/devoirs}}
         </td>
@@ -260,7 +265,8 @@
             {{#devoirs}}
             <span class="div-note">
             <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
-            {{#hasCoeff}}<sup class="coeff">({{coefficient}})</sup>{{/hasCoeff}}
+            {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
+                {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
           </span>
             {{/devoirs}}
         </td>
@@ -273,6 +279,6 @@
 
 </table>
 
-* note <sup>(n)</sup> : Note ayant pour coefficient n.
+<span>* note <sup>n</sup> (m) : </span>{{#i18n}}evaluation.notation.explanation{{/i18n}}
 </body>
 </html>
