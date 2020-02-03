@@ -2744,6 +2744,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param isAnnotaion sauvegarde depuis un champ de type annotation (evaluation devoir actuellement)
          */
         $scope.saveNoteDevoirEleve = async function (evaluation, $event, eleve, isAnnotaion?) {
+            if(evaluation && evaluation.annotation_libelle_court && !isNaN(parseFloat(evaluation.annotation_libelle_court))){
+                evaluation.valeur = evaluation.annotation_libelle_court;
+            }
             if (evaluation !== undefined && ((evaluation.valeur !== evaluation.oldValeur) || (evaluation.oldAppreciation !== evaluation.appreciation))) {
                 if (evaluation.valeur !== undefined) {
                     evaluation.valeur = evaluation.valeur.replace(",",".");
@@ -3000,7 +3003,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (obj instanceof Devoir) $scope.informations.devoir = obj;
             else if (obj instanceof Evaluation) {
                 let devoir = $scope.releveNote.devoirs.findWhere({id: obj.id_devoir});
-                if (devoir !== undefined) $scope.informations.devoir = devoir;
+                if (devoir !== undefined){
+                    $scope.informations.devoir = devoir;
+                    $scope.currentDevoir = devoir;
+                }
             }
 
             if ($location.$$path === '/releve') {
