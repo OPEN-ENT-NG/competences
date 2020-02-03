@@ -149,7 +149,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
 
             $scope.oldElementsBilanPeriodique = [];
-            $scope.search.classe.periodes.all.forEach(async (periode) => {
+            for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
                 if(periode.id != null){
                     let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                         periode, $scope.structure, $scope.filteredPeriode);
@@ -164,7 +164,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     await oldElement.avisOrientation.syncAvisOrientation();
                     $scope.oldElementsBilanPeriodique.push(oldElement);
                 }
-            });
+        }
 
             $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
             $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
