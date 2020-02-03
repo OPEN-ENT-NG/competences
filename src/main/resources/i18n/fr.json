@@ -668,8 +668,7 @@
   "evaluation.service.choose.a.subject": "Veuillez choisir une matière",
   "evaluation.service.choose.another.subject": "Veuillez choisir une matière différente de celle où le service est créé",
   "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur",
-  "conseil.acquis.moyenne.showColumns" : "Afficher / Masquer les colonnes"
-  "evaluation.no.service.evaluable": "Désolé, vous n'avez aucun service évaluable sur vos classes, Veuillez contacter votre administrateur",
+  "conseil.acquis.moyenne.showColumns" : "Afficher / Masquer les colonnes",
   "viescolaire.create.subEnseignement" : "Ajouter sous matières",
   "evaluation.service.lightboxes.subEducation.create": "Ajouter des sous matières",
   "evaluation.service.lightboxes.subEducation.select": "Sélection des sous matières",
