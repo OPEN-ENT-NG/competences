@@ -22,6 +22,9 @@
         <h4 class="margin-top-05em">
             <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(search.periode)]]
         </h4>
+        <button type="button" ng-click="showHistorise = true;">
+            <i18n>history</i18n>
+        </button>
     </div>
 
     <textarea name="synthese"
@@ -30,34 +33,35 @@
               type="text"
               ng-model="elementBilanPeriodique.syntheseBilanPeriodique.synthese"
               ng-blur="elementBilanPeriodique.syntheseBilanPeriodique.saveSynthese();"
-              ng-disabled="!canSaisiSyntheseBilanPeriodique">
+              ng-disabled="!canSaisiSyntheseBilanPeriodique"
+              ng-maxlength="600">
     </textarea>
 </article>
-
-<article ng-show="selected.suiviAcquis" class="twelve cell"
-         ng-repeat="element in oldElementsBilanPeriodique">
-    <div class="display-flex-space-between">
-        <h4 class="margin-top-05em">
-            <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(element.idTypePeriode)]]
-        </h4>
+<lightbox show="showHistorise" on-close="showHistorise = false;">
+    <div class="header">
+        <h2>
+            <i18n>history</i18n>
+        </h2>
     </div>
+    <div class="twelve cell"
+             ng-repeat="element in oldElementsBilanPeriodique">
+        <div ng-class="{'solid-bottom': oldElementsBilanPeriodique.indexOf(element) != oldElementsBilanPeriodique.length-1}">
+            <div class="display-flex-space-between">
+                <h4>
+                    <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(element.idTypePeriode)]]
+                </h4>
+            </div>
 
-    <textarea name="synthese"
-              class="twelve input-appreciation"
-              rows="5"
-              type="text"
-              ng-model="element.syntheseBilanPeriodique.synthese"
-              ng-disabled="true">
-    </textarea>
+            <article>[[element.syntheseBilanPeriodique.synthese]]</article>
 
-    <div>
-        <i18n>evaluations.evaluation.avis.conseil</i18n> : 
-        <span ng-if="element.avisConseil.id_avis_conseil_bilan">[[translateAvis(element.avisConseil)]]</span>
-        <span ng-if="!element.avisConseil.id_avis_conseil_bilan">-</span>
+            <div>
+                <i18n>evaluations.evaluation.avis.conseil</i18n> :
+                <span ng-if="element.avisConseil.id_avis_conseil_bilan">[[translateAvis(element.avisConseil)]]</span>
+            </div>
+            <div class="vertical-spacing-twice">
+                <i18n>evaluations.evaluation.avis.orientation</i18n> :
+                <span ng-if="element.avisOrientation.id_avis_conseil_bilan">[[translateAvis(element.avisOrientation)]]</span>
+            </div>
+        </div>
     </div>
-    <div ng-if="element.avisOrientation.id_avis_conseil_bilan">
-        <i18n>evaluations.evaluation.avis.orientation</i18n> : 
-        <span ng-if="element.avisOrientation.id_avis_conseil_bilan">[[translateAvis(element.avisOrientation)]]</span>
-        <span ng-if="!element.avisOrientation.id_avis_conseil_bilan">-</span>
-    </div>
-</article>
+</lightbox>
