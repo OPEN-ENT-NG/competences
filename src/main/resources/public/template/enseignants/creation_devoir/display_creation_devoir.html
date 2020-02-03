@@ -64,8 +64,32 @@
                                     <div class="nine cell twelve-mobile">
                                         <label class="select four twelve-mobile" ng-class="{disabled : devoir.id_etablissement === undefined}">
                                             <select ng-model="devoir.id_groupe"
-                                                    ng-change="syncPeriode(devoir.id_groupe); setClasseMatieres();loadEnseignementsByClasse();"
-                                                    ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle','name']">
+                                                    ng-change="syncPeriode(devoir.id_groupe); selectedMatiere(devoir);
+                                                    setClasseEnseignants(); loadEnseignementsByClasse();"
+                                                    ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all
+                                                    | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle','name']">
+                                            </select>
+                                        </label>
+                                    </div>
+                                </section>
+
+                                <!-- Enseignant -->
+                                <section class="row twelve-mobile " ng-if="isChefEtab()">
+                                    <div class="three cell addDevoirTable__libelle twelve-mobile">
+                                        <i18n>viescolaire.utils.teacher</i18n>
+                                        <i class="asterisk obligatoire"></i>
+                                    </div>
+
+                                    <div class="three cell twelve-mobile">
+                                        <label class="select twelve-mobile" ng-class="{disabled : teachersFiltered.length == 0}">
+                                            <select ng-model="devoir.owner"
+                                                    ng-disabled="teachersFiltered.length == 0"
+                                                    ng-disabled="devoir.idEtablissement === undefined"
+                                                    ng-init="setClasseEnseignants()">
+                                                <option ng-repeat="teacher in teachersFiltered = (enseignants.all |
+                                                getEnseignantClasse:devoir.id_groupe:classes:search)  | unique:'displayName'"
+                                                        ng-selected="teacher.id === devoir.owner"
+                                                        value="[[teacher.id]]">[[teacher.displayName]]</option>
                                             </select>
                                         </label>
                                     </div>

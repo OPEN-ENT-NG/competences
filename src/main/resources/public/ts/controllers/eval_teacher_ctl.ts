@@ -1214,7 +1214,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 id_etablissement: $scope.evaluations.structure.id,
                 ramener_sur: false,
                 id_etat: 1,
-                owner: model.me.userId,
+                owner: ($scope.isChefEtab())?undefined:model.me.userId,
                 matieresByClasse: [],
                 controlledDate: true,
                 is_evaluated: false
@@ -1321,6 +1321,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 && ($scope.devoir.is_evaluated
                     || $scope.evaluations.competencesDevoir.length > 0)
                 && $scope.evaluations.competencesDevoir.length <= $scope.MAX_NBR_COMPETENCE
+                && (($scope.devoir.owner && $scope.isChefEtab()) || !$scope.isChefEtab())
             );
         };
 
@@ -1887,14 +1888,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     && $scope.search.classe.id !== '*' && $scope.search.matiere !== '*') {
                     $scope.devoir.id_groupe = $scope.search.classe.id;
                     $scope.devoir.id_matiere = $scope.search.matiere.id;
-                    $scope.setClasseMatieres();
-                    $scope.selectedMatiere($scope.devoir);
+                    //$scope.setClasseMatieres();
                 } else {
                     // selection de la premiere classe par defaut
                     $scope.devoir.id_groupe = $scope.classes.all[0].id;
                     // selection de la premiere matière associée à la classe
-                    $scope.setClasseMatieres();
+                    //$scope.setClasseMatieres();
                 }
+                $scope.selectedMatiere($scope.devoir);
             }
 
             let selectedClasse = _.findWhere($scope.classes.all, {id: $scope.devoir.id_groupe});
@@ -2035,14 +2036,24 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Set les matière en fonction de l'identifiant de la classe
          */
-        $scope.setClasseMatieres = function () {
-            let matieres = $filter('getMatiereClasse')($scope.structure.matieres.all,
+        /*$scope.setClasseMatieres = function () {
+            $scope.devoir.matieresByClasse = $filter('getMatiereClasse')($scope.structure.matieres.all,
                 $scope.devoir.id_groupe, $scope.classes, $scope.search);
-            $scope.devoir.matieresByClasse = matieres;
             if ($scope.devoir.matieresByClasse.length === 1){
                 $scope.devoir.id_matiere = $scope.devoir.matieresByClasse[0].id;
             }
             $scope.selectedMatiere($scope.devoir);
+        };*/
+
+        /**
+         * Set les enseignants en fonction de l'identifiant de la classe
+         */
+        $scope.setClasseEnseignants = function () {
+            $scope.devoir.enseigantsByClasse = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
+                $scope.devoir.id_groupe, $scope.classes, $scope.search);
+            if ($scope.devoir.enseigantsByClasse.length > 0){
+                $scope.devoir.owner = $scope.devoir.enseigantsByClasse[0].id;
+            }
         };
 
         $scope.deleteDevoir = function () {
@@ -2428,6 +2439,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.selectedMatiere = function (devoir) {
             let matieres = $filter('getMatiereClasse')($scope.structure.matieres.all,
                 $scope.devoir.id_groupe, $scope.classes, $scope.search);
+            if (matieres.length === 1){
+                $scope.devoir.id_matiere = matieres[0].id;
+            }
             let matiere = _.findWhere(matieres, {id: devoir.id_matiere});
 
             if (matiere !== undefined) {
