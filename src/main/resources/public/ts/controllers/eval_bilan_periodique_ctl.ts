@@ -29,9 +29,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         let finSaisieBilan: boolean;
         $scope.critereIsEmpty = true;
-        $scope.showHistoric = false;
         $scope.showAvisOrientation = false;
         $scope.showMoyGeneral = false;
+        $scope.showHistorise = false;
         $scope.opened.criteres = true;
         $scope.opened.avis = true;
         $scope.opened.ensCplt = true;
@@ -133,9 +133,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                     "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
             }
+
             $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                 $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
-
             await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
                 $scope.search.periode.id_type, $scope.structure.id);
@@ -147,12 +147,35 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
             await $scope.elementBilanPeriodique.avisOrientation.syncAvisOrientation();
             await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
+
+            $scope.oldElementsBilanPeriodique = [];
+            $scope.search.classe.periodes.all.forEach(async (periode) => {
+                if(periode.id != null){
+                    let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                        periode, $scope.structure, $scope.filteredPeriode);
+                    oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    oldElement.avisConseil = new AvisConseil($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    oldElement.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    await oldElement.syntheseBilanPeriodique.syncSynthese();
+                    await oldElement.avisConseil.syncAvisConseil();
+                    await oldElement.avisOrientation.syncAvisOrientation();
+                    $scope.oldElementsBilanPeriodique.push(oldElement);
+                }
+            });
+
             $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
             $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
             await utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
             template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
             await utils.safeApply($scope);
+        };
+
+        $scope.translateAvis = (avis) => {
+            return _.find($scope.elementBilanPeriodique.avisConseil.avis, {id: avis.id_avis_conseil_bilan}).libelle;
         };
 
         $scope.openProjet = async () => {
@@ -503,7 +526,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
                 await utils.safeApply($scope);
             }
-
         };
 
         $scope.deleteStudent = async function () {
@@ -513,11 +535,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.changeContent();
         };
 
-        //////            Lightbox historique            //////
-
-        $scope.openHistoric = function () {
-            $scope.opened.historic = true;
-        };
 
 
         $scope.filterAvis = function (param) {

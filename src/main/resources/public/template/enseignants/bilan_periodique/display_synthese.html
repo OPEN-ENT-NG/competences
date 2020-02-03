@@ -22,12 +22,10 @@
         <h4 class="margin-top-05em">
             <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(search.periode)]]
         </h4>
-
-        <span ng-show="showHistoric" class="historic italic" ng-click="openHistoric()">
+        <button type="button" ng-click="showHistorise = true;">
             <i18n>history</i18n>
-        </span>
+        </button>
     </div>
-
 
     <textarea name="synthese"
               class="twelve input-appreciation"
@@ -35,54 +33,36 @@
               type="text"
               ng-model="elementBilanPeriodique.syntheseBilanPeriodique.synthese"
               ng-blur="elementBilanPeriodique.syntheseBilanPeriodique.saveSynthese();"
-              ng-disabled="!canSaisiSyntheseBilanPeriodique">
+              ng-disabled="!canSaisiSyntheseBilanPeriodique"
+              ng-maxlength="600"
+              maxlength="600">
     </textarea>
-
-    <lightbox show="opened.historic" on-close="!opened.historic">
-
-        <div class="header">
-            <h2>
-                <i18n>history</i18n>
-            </h2>
-        </div>
-
-
-        <div class="responsive-table">
-
-            <table>
-                <thead>
-                    <tr>
-                        <th class="titleCenter"><i18n>viescolaire.utils.periode</i18n></th>
-                        <th class="titleCenter"><i18n>average.min.eleve</i18n></th>
-                        <th class="titleCenter"><i18n>average.min.classe</i18n></th>
-                        <th class="titleCenter"><i18n>evaluation.synthese.bilan.periodique.title</i18n></th>
-                        <th class="titleCenter"><i18n>evaluations.evaluation.conseil</i18n></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="historique in elementBilanPeriodique">
-                        <td class="width-td-20" data-label="[[translate('viescolaire.utils.periode')]]">
-                            [[historique.periode]]
-                        </td>
-                        <td class="width-td-0" data-label="[[translate('average.min.eleve')]]">
-
-                        </td>
-                        <td class="width-td-0" data-label="[[translate('average.min.classe')]]">
-
-                        </td>
-                        <td class="width-td-0" data-label="[[translate('evaluation.synthese.bilan.periodique.title')]]">
-                            [[historique.synthese]]
-                        </td>
-                        <td class="width-td-0" data-label="[[translate('evaluations.evaluation.avis.conseil')]]">
-
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-        </div>
-
-
-    </lightbox>
-
 </article>
+<lightbox show="showHistorise" on-close="showHistorise = false;">
+    <div class="header">
+        <h2>
+            <i18n>history</i18n>
+        </h2>
+    </div>
+    <div class="twelve cell"
+             ng-repeat="element in oldElementsBilanPeriodique">
+        <div ng-class="{'solid-bottom': oldElementsBilanPeriodique.indexOf(element) != oldElementsBilanPeriodique.length-1}">
+            <div class="display-flex-space-between">
+                <h4>
+                    <i18n>evaluations.synthese.acquis.bilan.periodique</i18n> [[getI18nPeriode(element.idTypePeriode)]]
+                </h4>
+            </div>
+
+            <article>[[element.syntheseBilanPeriodique.synthese]]</article>
+
+            <div>
+                <i18n>evaluations.evaluation.avis.conseil</i18n> :
+                <span ng-if="element.avisConseil.id_avis_conseil_bilan">[[translateAvis(element.avisConseil)]]</span>
+            </div>
+            <div class="vertical-spacing-twice">
+                <i18n>evaluations.evaluation.avis.orientation</i18n> :
+                <span ng-if="element.avisOrientation.id_avis_conseil_bilan">[[translateAvis(element.avisOrientation)]]</span>
+            </div>
+        </div>
+    </div>
+</lightbox>
