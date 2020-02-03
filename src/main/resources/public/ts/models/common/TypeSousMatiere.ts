@@ -59,8 +59,6 @@ export class TypeSousMatiere extends Model implements Selectable{
         }
     }
 }
-//TODO faire le CRUD et faire les controllers backs
-
 export class TypeSousMatieres extends Selection<TypeSousMatiere>{
     id: number;
     libelle: string;
