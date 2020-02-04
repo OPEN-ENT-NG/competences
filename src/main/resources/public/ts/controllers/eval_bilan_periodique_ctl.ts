@@ -353,15 +353,17 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.showGraphMatLoader = true;
             await utils.safeApply($scope);
 
-            let promiseOpenMatiere = [];
-            promiseOpenMatiere.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false,
-                $scope.niveauCompetences, $scope.search.periode.id_type));
+            if(!$scope.informations.eleve.configMixedChart || !$scope.informations.eleve.configRadarChart){
+                let promiseOpenMatiere = [];
+                promiseOpenMatiere.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false,
+                    $scope.niveauCompetences, $scope.search.periode.id_type));
 
-            if ($scope.graphMat !== undefined && $scope.graphMat.comparison === true) {
-                promiseOpenMatiere.push($scope.drawComparison($scope.filteredPeriode, false, $scope.graphMat.darkness,
-                    $scope.graphMat.infoGrouped, true));
+                if ($scope.graphMat !== undefined && $scope.graphMat.comparison === true) {
+                    promiseOpenMatiere.push($scope.drawComparison($scope.filteredPeriode, false, $scope.graphMat.darkness,
+                        $scope.graphMat.infoGrouped, true));
+                }
+                await Promise.all(promiseOpenMatiere);
             }
-            await Promise.all(promiseOpenMatiere);
             template.open('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject');
             $scope.showGraphMatLoader = false;
             await utils.safeApply($scope);
@@ -391,17 +393,25 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             let templateToSet = (forDomaine === true) ? 'comparisonGraphDom' : 'comparisonGraphMatiere';
 
             template.close(templateToSet);
-            await Utils.runMessageLoader($scope);
+            if(forDomaine) {
+                $scope.graphDom.comparison = false;
+                $scope.showGraphDomLoader = true;
+            } else {
+                $scope.graphMat.comparison = false;
+                $scope.showGraphMatLoader = true;
+            }
             try {
                 await ComparisonGraph.buildComparisonGraph($scope.informations.eleve, selectedPeriodes,
                     evaluations.structure, forDomaine, $scope.niveauCompetences, withdarkness, tooltipGroup);
                 let templateToOpen = forDomaine ? 'domaine' : 'subject';
                 template.open(templateToSet, `enseignants/bilan_periodique/graph/comparison_graph_${templateToOpen}`);
-                if (withoutNotification !== true) {
-                    await Utils.stopMessageLoader($scope);
-                }
-            } catch (e) {
-                await Utils.stopMessageLoader($scope);
+            } catch (e) {}
+            if(forDomaine) {
+                $scope.graphDom.comparison = true;
+                $scope.showGraphDomLoader = false;
+            } else {
+                $scope.graphMat.comparison = true;
+                $scope.showGraphMatLoader = false;
             }
         };
 
@@ -416,14 +426,16 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('graphDomaine');
             $scope.showGraphDomLoader = true;
             await utils.safeApply($scope);
-            let promiseDomaine = [];
-            if (template.contains('comparisonGraphDom', 'enseignants/bilan_periodique/graph/comparison_graph_domaine')) {
-                promiseDomaine.push($scope.drawComparison($scope.filteredPeriode, true, $scope.graphDom.darkness,
-                    $scope.graphDom.infoGrouped, true));
+            if(!$scope.informations.eleve.configMixedChartDomaine || !$scope.informations.eleve.configRadarChartDomaine) {
+                let promiseDomaine = [];
+                if (template.contains('comparisonGraphDom', 'enseignants/bilan_periodique/graph/comparison_graph_domaine')) {
+                    promiseDomaine.push($scope.drawComparison($scope.filteredPeriode, true, $scope.graphDom.darkness,
+                        $scope.graphDom.infoGrouped, true));
+                }
+                promiseDomaine.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, true,
+                    $scope.niveauCompetences, $scope.search.periode.id_type));
+                await Promise.all(promiseDomaine);
             }
-            promiseDomaine.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, true,
-                $scope.niveauCompetences, $scope.search.periode.id_type));
-            await Promise.all(promiseDomaine);
             template.open('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine');
             $scope.showGraphDomLoader = false;
             await utils.safeApply($scope);
