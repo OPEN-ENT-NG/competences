@@ -116,27 +116,22 @@
     <div ng-include="'/competences/public/template/setting.html'"></div>
 
     <div class="twelve cell">
-        <input style="display: none" type="button" i18n-value="evaluations.test.edit"
-               ng-if="isChefEtab()"
-               class="right-magnet">
-
-        <input type="button" ng-click="goTo('/devoir/' + currentDevoir.id + '/edit')" i18n-value="evaluations.test.edit"
-               ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
-               class="right-magnet" ng-class="{'button-edit-devoir' : currentDevoir.competences.all.length > 0,
-                                        'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
-
-        <button ng-click="finishCurrentDevoir()" tooltip="evaluations.test.finish"
-                class="right-magnet " ng-class="{'button-finish-devoir' : currentDevoir.competences.all.length > 0,
-                                        'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
-            <i class="check"></i>
-        </button>
-
-        <button ng-click="printOption.display =true ; closeWarningMessages();" tooltip="evaluations.export.format.pdf"
-                class="right-magnet ng-scope"
-                ng-class="{'button-edit-devoir-not-fixed' : currentDevoir.competences.all.length === 0,
-                                        'button-print-devoir' : currentDevoir.competences.all.length > 0}">
-            <i class="download"></i>
-        </button>
+        <div class="div-buttons-evaluation-devoir">
+            <button ng-click="finishCurrentDevoir()" tooltip="evaluations.test.finish"
+                    ng-class="{'button-evaluation-devoir' : currentDevoir.competences.all.length > 0,
+                                            'button-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
+                <i class="check"></i>
+            </button>
+            <button ng-click="printOption.display =true ; closeWarningMessages();" tooltip="evaluations.export.format.pdf"
+                    ng-class="{'button-devoir-not-fixed' : currentDevoir.competences.all.length === 0,
+                                            'button-evaluation-devoir' : currentDevoir.competences.all.length > 0}">
+                <i class="download"></i>
+            </button>
+            <input type="button" ng-click="goTo('/devoir/' + currentDevoir.id + '/edit')" i18n-value="evaluations.test.edit"
+                   ng-disabled="currentDevoir.endSaisie && !isChefEtab()"
+                   ng-class="{'button-evaluation-devoir' : currentDevoir.competences.all.length > 0,
+                                            'button-devoir-not-fixed' : currentDevoir.competences.all.length === 0}">
+        </div>
 
         <section ng-if="currentDevoir.endSaisie && !isChefEtab()" class="row twelve-mobile ng-scope">
             <div class="six warning">

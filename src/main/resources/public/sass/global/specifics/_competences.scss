@@ -2019,26 +2019,17 @@ body.evaluations {
     margin-left: 10px !important;
     height: auto !important;
   }
-
-  .button-edit-devoir {
-    position: fixed !important;
-    right: 0.5% !important;
-    top: 116px !important;
-    z-index: 11 !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-  }
-  .button-print-devoir{
-    position: fixed !important;
-    right: 10.5% !important;
-    top: 116px !important;
+  .button-evaluation-devoir{
+    flex:auto;
+    padding: 8px 0px 10px !important;
     z-index: 11 !important;
   }
-  .button-finish-devoir{
-    position: fixed !important;
-    right: 15% !important;
-    top: 116px !important;
-    z-index: 11 !important;
+  .div-buttons-evaluation-devoir{
+    display: flex;
+    width: 18%;
+    right: -20px;
+    position: absolute;
+    top: -22px;
   }
 
   .columns-popup-wrapper {
@@ -2135,6 +2126,8 @@ body.evaluations {
 
   .button-edit-devoir-not-fixed {
     margin-top: -18px !important;
+    flex:auto;
+    padding: 8px 0px 10px !important;
   }
 
   .button-fixed-top-right {
