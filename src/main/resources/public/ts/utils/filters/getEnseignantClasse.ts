@@ -27,9 +27,11 @@ export let getEnseignantClasseFilter = ng.filter('getEnseignantClasse', function
             let classe = classes.findWhere({id : idClasse});
             if (classe !== undefined) {
                 let enseignantsClasse = enseignants.filter((enseignant) => {
-                    if (enseignant.hasOwnProperty('allClasses')) {
-                        return (_.pluck(enseignant.allClasses,'id').indexOf(classe.id) !== -1)
-                    } else {
+                        if (classe.hasOwnProperty('services')){
+                            return _.findWhere(classe.services, {evaluable: true, id_enseignant : enseignant.id})
+                        }else if (enseignant.hasOwnProperty('allClasses')) {
+                            return (_.pluck(enseignant.allClasses, 'id').indexOf(classe.id) !== -1)
+                        } else {
                         return false;
                     }
                 });

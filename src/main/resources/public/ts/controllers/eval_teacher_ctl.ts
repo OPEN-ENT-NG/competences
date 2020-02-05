@@ -815,8 +815,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 if ($location.path() === '/devoir/create') {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", evaluations.structure.classes.all).id;
-                    $scope.devoir.matiere = $scope.searchOrFirst("matiere", evaluations.structure.matieres.all);
-                    $scope.devoir.id_matiere = $scope.devoir.matiere.id;
 
                     if($scope.devoir.matiere.sousMatieres !== undefined && $scope.devoir.matiere.sousMatieres.all.length > 0) {
                         $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type;
@@ -1945,21 +1943,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
 
-            if ($location.path() === "/devoir/create") {
-                // un fois que la classe est déterminée, on peut choisir la 1ère matière par défaut
-                // sur cette classe
-                //$scope.devoir.matiere = $scope.searchOrFirst("matiere", $scope.structure.matieres.all);
-                $scope.devoir.matiere = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                    $scope.devoir.id_groupe, $scope.classes, $scope.search)[0];
-                let matiere = $scope.devoir.matiere;
-                $scope.devoir.id_matiere = (matiere === undefined)? undefined : matiere.id;
-                if ($scope.devoir.matiere !== undefined &&  $scope.devoir.matiere.sousMatieres !== undefined
-                    && $scope.devoir.matiere.sousMatieres.all.length > 0) {
-                    // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
-                    $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
-                }
-            }
-
             if ($scope.devoir.dateDevoir === undefined
                 && $scope.devoir.date !== undefined) {
                 $scope.devoir.dateDevoir = new Date($scope.devoir.date);
@@ -2085,6 +2068,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.devoir.id_groupe, $scope.classes, $scope.search);
             if ($scope.devoir.enseigantsByClasse.length > 0){
                 $scope.devoir.owner = $scope.devoir.enseigantsByClasse[0].id;
+            }
+        };
+
+        /**
+         * Set les matières en fonction de l'identifiant de l'enseignant choisi
+         */
+        $scope.setEnseignantMatieres = function () {
+            $scope.devoir.matiere = $filter('getMatiereClasse')($scope.structure.matieres.all,
+                $scope.devoir.id_groupe, $scope.classes, $scope.search,$scope.devoir.owner)[0];
+            let matiere = $scope.devoir.matiere;
+            $scope.devoir.id_matiere = (matiere === undefined)? undefined : matiere.id;
+            if ($scope.devoir.matiere !== undefined &&  $scope.devoir.matiere.sousMatieres !== undefined
+                && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+                // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
+                $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
             }
         };
 

@@ -64,8 +64,8 @@
                                     <div class="nine cell twelve-mobile">
                                         <label class="select four twelve-mobile" ng-class="{disabled : devoir.id_etablissement === undefined}">
                                             <select ng-model="devoir.id_groupe"
-                                                    ng-change="syncPeriode(devoir.id_groupe); selectedMatiere(devoir);
-                                                    setClasseEnseignants(); loadEnseignementsByClasse();"
+                                                    ng-change="syncPeriode(devoir.id_groupe);
+                                                    setClasseEnseignants(); setEnseignantMatieres(); loadEnseignementsByClasse();"
                                                     ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all
                                                     | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle','name']">
                                             </select>
@@ -85,7 +85,8 @@
                                             <select ng-model="devoir.owner"
                                                     ng-disabled="teachersFiltered.length == 0"
                                                     ng-disabled="devoir.idEtablissement === undefined"
-                                                    ng-init="setClasseEnseignants()">
+                                                    ng-init="setClasseEnseignants(); setEnseignantMatieres();"
+                                                    ng-change="setEnseignantMatieres()">
                                                 <option ng-repeat="teacher in teachersFiltered = (enseignants.all |
                                                 getEnseignantClasse:devoir.id_groupe:classes:search)  | unique:'displayName'"
                                                         ng-selected="teacher.id === devoir.owner"
@@ -107,8 +108,11 @@
                                             <select ng-model="devoir.id_matiere"
                                                     ng-disabled="matieresFiltered.length == 0"
                                                     ng-disabled="devoir.idEtablissement === undefined"
-                                                    ng-change="selectedMatiere(devoir)">
-                                                <option ng-repeat="matiere in matieresFiltered = (matieres.all | getMatiereClasse:devoir.id_groupe:classes:search) | unique:'name'" ng-selected="matiere.id === devoir.id_matiere" value="[[matiere.id]]">[[matiere.name]]</option>
+                                                    ng-change="selectedMatiere(devoir)"
+                                                    ng-init="setEnseignantMatieres()">
+                                                <option ng-repeat="matiere in matieresFiltered = (matieres.all |
+                                                getMatiereClasse:devoir.id_groupe:classes:search:devoir.owner) |
+                                                unique:'name'" ng-selected="matiere.id === devoir.id_matiere" value="[[matiere.id]]">[[matiere.name]]</option>
                                             </select>
                                         </label>
                                     </div>
