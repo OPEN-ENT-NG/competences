@@ -22,6 +22,7 @@
     <style type="text/css">
         body{
             padding: 10px;
+            display: block;
             font-family: "Calibri";
         }
         .head, .head tr, .display-student, .display-student tr, .display-bulletin, .display-bulletin tr{
@@ -29,6 +30,15 @@
         }
         .head tr td:first-child{
             width: 65%;
+        }
+        table{ page-break-inside:avoid;
+            border-collapse: collapse;
+        }
+        @page {
+            size:  A4 ;
+            margin-left: 5%;
+            margin-right: 5%;
+            margin-top: 3%;
         }
         h1{
             text-align: center;
@@ -168,7 +178,6 @@
 
     {{^printSousMatiere}}
     {{#matieres}}
-    <tr></tr>
     <tr class="avoid-page-break top">
 
         <td class="upper align-left matiere top">
@@ -197,102 +206,105 @@
 
     {{#printSousMatiere}}
     {{#matieres}}
-    <tr></tr>
     <tbody class="avoid-page-break top">
-        <tr class="top">
-            {{#hasSousMatiere}}
-            <td rowspan="{{rowspan}}" class="upper align-left matiere">
-                <span  class="align-left">{{name}}</span>
-                <span  class="align-left professeur">
+    <tr class="top">
+        {{#hasSousMatiere}}
+        <td rowspan="{{rowspan}}" class="upper align-left matiere">
+            <span  class="align-left">{{name}}</span>
+            <span  class="align-left professeur">
                     {{#displayNameEnseignant}}
                     <br/><span>{{.}}</span>
                     {{/displayNameEnseignant}}
                 </span>
-            </td>
-            {{#first_sous_matieres}}
-            {{#isLast}}
-            <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
-            <td class="left-right align-left">
-                {{#devoirs}}
-                <span class="div-note">
+        </td>
+        {{#first_sous_matieres}}
+        {{#isLast}}
+        <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left-right align-left">
+            {{#devoirs}}
+            <span class="div-note">
                 <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
                 {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
                     {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
               </span>
-                {{/devoirs}}
-            </td>
-            <td  class="bottom"><span class="diviseur">{{moyenne}}</span></td>
-            {{/isLast}}
-            {{^isLast}}
-            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
-            <td class="left right align-left">
-                {{#devoirs}}
-                <span class="div-note">
+            {{/devoirs}}
+        </td>
+        <td  class="bottom"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+        {{^isLast}}
+        <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left right align-left">
+            {{#devoirs}}
+            <span class="div-note">
                 <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
                 {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
                     {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
               </span>
-                {{/devoirs}}
-            </td>
-            <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
-            {{/isLast}}
-            {{/first_sous_matieres}}
+            {{/devoirs}}
+        </td>
+        <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+        {{/first_sous_matieres}}
 
-            <td rowspan="{{rowspan}}"  class="right-bottom no-padding"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
-            {{/hasSousMatiere}}
+        <td rowspan="{{rowspan}}"  class="right-bottom no-padding"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        {{/hasSousMatiere}}
 
-            {{^hasSousMatiere}}
-            <td class="upper align-left matiere" colspan="2">
-                <span  class="align-left">{{name}}</span>
-                <span  class="align-left professeur">
+        {{^hasSousMatiere}}
+        <td class="upper align-left matiere" colspan="2">
+            <span  class="align-left">{{name}}</span>
+            <span  class="align-left professeur">
                     {{#displayNameEnseignant}}
                     <br/><span>{{.}}</span>
                     {{/displayNameEnseignant}}
                 </span>
-            </td>
-            <td class="left-right align-left">
-                {{#devoirs}}
-                <span class="div-note">
+        </td>
+        <td class="left-right align-left">
+            {{#devoirs}}
+            <span class="div-note">
                 <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
                 {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
                     {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
               </span>
-                {{/devoirs}}
-            </td>
-            <td class="right-bottom no-padding" colspan="2"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
-            {{/hasSousMatiere}}
+            {{/devoirs}}
+        </td>
+        <td class="right-bottom no-padding" colspan="2"><span class="note">{{moyenne}}</span><span class="diviseur">/20</span></td>
+        {{/hasSousMatiere}}
 
-        </tr>
-        {{#sous_matieres_tail}}
-        <tr>
-            {{^isLast}}
-            <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
-            <td class="left right align-left">
-                {{#devoirs}}
-                <span class="div-note">
+    </tr>
+    {{#sous_matieres_tail}}
+    <tr>
+        {{^isLast}}
+        <td class="sousMat"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left right align-left">
+            {{#devoirs}}
+            <span class="div-note">
                 <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
                 {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
                     {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
               </span>
-                {{/devoirs}}
-            </td>
-            <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
-            {{/isLast}}
-            {{#isLast}}
-            <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
-            <td class="left-right align-left">
-                {{#devoirs}}
-                <span class="div-note">
+            {{/devoirs}}
+        </td>
+        <td  class="none"><span class="diviseur">{{moyenne}}</span></td>
+        {{/isLast}}
+        {{#isLast}}
+        <td class="sousMat bottom"><span class="pretty center">{{libelle}}</span></td>
+        <td class="left-right align-left">
+            {{#devoirs}}
+            <span class="div-note">
                 <span class="note">{{note}}</span><span class="diviseur">/{{diviseur}}</span>
                 {{#hasCoeff}}<sup class="coeff">{{coefficient}}</sup>{{/hasCoeff}}
                     {{#hasMoyenneClasse}}<span class="diviseur">({{moyenneClasse}}</span><span class="diviseur">/{{diviseur}})</span>{{/hasMoyenneClasse}}
               </span>
-                {{/devoirs}}
-            </td>
-            <td  class="bottom"><span class="diviseur no-padding">{{moyenne}}</span></td>
-            {{/isLast}}
-        </tr>
-        {{/sous_matieres_tail}}
+            {{/devoirs}}
+        </td>
+        <td  class="bottom">
+                <span class="diviseur no-padding">
+                {{moyenne}}
+                </span>
+        </td>
+        {{/isLast}}
+    </tr>
+    {{/sous_matieres_tail}}
     </tbody>
     {{/matieres}}
     {{/printSousMatiere}}
