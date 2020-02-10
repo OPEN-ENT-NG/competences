@@ -47,7 +47,23 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public void createCompetenceNote(final JsonObject competenceNote, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
+    public void createCompetenceNote(final JsonObject competenceNote, final String idUser, final Handler<Either<String, JsonObject>> handler) {
+        String query = "INSERT INTO " +  Competences.COMPETENCES_SCHEMA +"." + Competences.COMPETENCES_NOTES_TABLE +
+                "( id_devoir, id_competence, evaluation, owner, id_eleve ) " +
+                "SELECT id AS id_devoir, ? AS id_competence, ? AS evaluation, owner, ? AS id_eleve " +
+                "FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE +
+                " WHERE " + Competences.DEVOIR_TABLE + ".id = ? ON CONFLICT ( id_devoir, id_competence, id_eleve ) " +
+                " DO UPDATE SET evaluation = ? RETURNING id ;";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
+                .add(competenceNote.getInteger("id_competence"))
+                .add(competenceNote.getInteger("evaluation"))
+                .add(competenceNote.getString("id_eleve"))
+                .add(competenceNote.getLong("id_devoir"))
+                .add(competenceNote.getInteger("evaluation"));
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+    /*public void createCompetenceNote(final JsonObject competenceNote, final UserInfos user, final Handler<Either<String, JsonObject>> handler) {
         String query = "SELECT id FROM " +  Competences.COMPETENCES_SCHEMA +".competences_notes " +
                 "WHERE id_competence = ? AND id_devoir = ? AND id_eleve = ?;";
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray()
@@ -64,8 +80,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                 }
             }
         });
-    }
-
+    }*/
     private void add(JsonObject competenceNote, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         super.create(competenceNote, user, handler);
     }
@@ -233,7 +248,7 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
     }
 
     @Override
-    public void createCompetencesNotesDevoir(JsonArray _datas, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+    public void createCompetencesNotesDevoir(JsonArray _datas, String idUser, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         for (int i = 0; i < _datas.size(); i++) {
@@ -244,7 +259,8 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
                     .append(" ON CONFLICT (id_devoir, id_competence, id_eleve) DO UPDATE SET evaluation = ? ;");
             values.add(o.getInteger("id_devoir")).add(o.getInteger("id_competence"))
                     .add(o.getInteger("evaluation"))
-                    .add(user.getUserId()).add(o.getString("id_eleve")).add(o.getInteger("evaluation"));
+                    .add(idUser).add(o.getString("id_eleve"))
+                    .add(o.getInteger("evaluation"));
         }
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
