@@ -24,10 +24,7 @@ import fr.openent.competences.security.CreateEvaluationWorkflow;
 import fr.openent.competences.service.BfcSyntheseService;
 import fr.openent.competences.service.CompetenceNiveauFinalService;
 import fr.openent.competences.service.CompetenceNoteService;
-import fr.openent.competences.service.impl.DefaultBfcSyntheseService;
-import fr.openent.competences.service.impl.DefaultCompetenceNiveauFinalService;
-import fr.openent.competences.service.impl.DefaultCompetenceNoteService;
-import fr.openent.competences.service.impl.DefaultUtilsService;
+import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -58,6 +55,7 @@ public class CompetenceNoteController extends ControllerHelper {
     private final CompetenceNoteService competencesNotesService;
     private final BfcSyntheseService syntheseService;
     private final CompetenceNiveauFinalService competenceNiveauFinalService;
+    private final DefaultDevoirService devoirsService;
     private EventBus eb;
 
 
@@ -66,6 +64,7 @@ public class CompetenceNoteController extends ControllerHelper {
         competencesNotesService = new DefaultCompetenceNoteService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCES_NOTES_TABLE);
         syntheseService = new DefaultBfcSyntheseService(Competences.COMPETENCES_SCHEMA, Competences.BFC_SYNTHESE_TABLE, eb);
         competenceNiveauFinalService = new DefaultCompetenceNiveauFinalService(Competences.COMPETENCES_SCHEMA, Competences.COMPETENCE_NIVEAU_FINAL);
+        devoirsService = new DefaultDevoirService(eb);
     }
 
     /**
@@ -99,20 +98,29 @@ public class CompetenceNoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateEvaluationWorkflow.class)
     public void create(final HttpServerRequest request){
-        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-            @Override
-            public void handle(final UserInfos user) {
-                if(user != null){
-                    RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_NOTE_CREATE, new Handler<JsonObject>() {
-                        @Override
-                        public void handle(JsonObject resource) {
-                            competencesNotesService.createCompetenceNote(resource, user, notEmptyResponseHandler(request));
-                        }
-                    });
-                }else {
-                    log.debug("User not found in session.");
-                    Renders.unauthorized(request);
-                }
+        UserUtils.getUserInfos(eb, request, user -> {
+            if(user != null){
+                RequestUtils.bodyToJson(request, pathPrefix + Competences.SCHEMA_COMPETENCE_NOTE_CREATE, resource -> {
+
+                     if( "Personnel".equals(user.getType())) {
+                         Long id_devoir = resource.getLong("id_devoir");
+                         devoirsService.getDevoir(id_devoir, handlerDevoir -> {
+                            if( handlerDevoir.isLeft()){
+                                log.debug("devoir not found id : " + id_devoir );
+                                Renders.badRequest(request, handlerDevoir.left().getValue());
+                            }else{
+                                JsonObject devoir = handlerDevoir.right().getValue();
+                                String id_owner = devoir.getString("owner");
+                                competencesNotesService.createCompetenceNote(resource, id_owner, notEmptyResponseHandler(request));
+                            }
+                        });
+                    } else {
+                         competencesNotesService.createCompetenceNote(resource, user.getUserId(), notEmptyResponseHandler(request));
+                     }
+                });
+            }else {
+                log.debug("User not found in session.");
+                Renders.unauthorized(request);
             }
         });
     }
@@ -386,16 +394,36 @@ public class CompetenceNoteController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.RESOURCE)
     @ResourceFilter(CreateEvaluationWorkflow.class)
     public void createCompetencesNotesDevoir (final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
-            @Override
-            public void handle(final JsonObject resource) {
-                UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
-                    @Override
-                    public void handle(UserInfos user) {
-                        competencesNotesService.createCompetencesNotesDevoir(resource.getJsonArray("data"), user, arrayResponseHandler(request));
+        UserUtils.getUserInfos(eb, request, user -> {
+            if( user != null) {
+                RequestUtils.bodyToJson(request, resource -> {
+                    if ("Personnel".equals(user.getType())) {
+                        JsonArray datas = resource.getJsonArray("data");
+                        if( !datas.isEmpty()){
+                            Long id_devoir = datas.getJsonObject(0).getLong("id_devoir");
+                            devoirsService.getDevoir(id_devoir, handlerDevoir -> {
+                                if (handlerDevoir.isLeft()) {
+                                    log.debug("devoir not found id : " + id_devoir);
+                                    Renders.badRequest(request, handlerDevoir.left().getValue());
+                                } else {
+                                    JsonObject devoir = handlerDevoir.right().getValue();
+                                    String id_owner = devoir.getString("owner");
+                                    competencesNotesService.createCompetencesNotesDevoir(resource.getJsonArray("data"),
+                                            id_owner, arrayResponseHandler(request));
+                                }
+                            });
+                        }
+
+                    } else {
+                        competencesNotesService.createCompetencesNotesDevoir(resource.getJsonArray("data"),
+                                user.getUserId(), arrayResponseHandler(request));
                     }
                 });
+            } else {
+                log.debug("User not found in session.");
+                Renders.unauthorized(request);
             }
+
         });
     }
 

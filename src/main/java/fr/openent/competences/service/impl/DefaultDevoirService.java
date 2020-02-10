@@ -167,6 +167,21 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validUniqueResultHandler(handler));
     }
 
+    /**
+     * Get only devoir
+     *
+     * @param idDevoir id devoir
+     * @param handler  response
+     */
+    @Override
+    public void getDevoir (Long idDevoir, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT * FROM " + this.resourceTable +" WHERE id = ? ";
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray().add(idDevoir);
+
+        Sql.getInstance().prepared(query,params,SqlResult.validUniqueResultHandler(handler));
+    }
+
+
     @Override
     public JsonArray createStatement(Long idDevoir, JsonObject devoir, UserInfos user) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();

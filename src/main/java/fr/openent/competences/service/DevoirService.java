@@ -48,6 +48,13 @@ public interface DevoirService extends CrudService {
     void getDevoirInfo(final Long idDevoir, final Handler<Either<String, JsonObject>> handler);
 
     /**
+     * Get only devoir
+     * @param idDevoir id devoir
+     * @param handler response
+     */
+    void getDevoir(Long idDevoir, Handler<Either<String, JsonObject>> handler);
+
+    /**
      * récupère les information de plusieurs devoirs
      * @param idDevoirs
      * @param handler handler portant le résultat de la requête
