@@ -746,7 +746,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.getPeriodes = (idClasse) => {
+        /*$scope.getPeriodes = (idClasse) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
             if (classe && classe.periodes && classe.periodes.length() === 0) {
                 classe.periodes.sync().then(() => {
@@ -754,7 +754,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 });
             }
             return (classe !== undefined) ? classe.periodes.all : [];
-        };
+        };*/
 
         $scope.synchronizeStudents = (idClasse): boolean => {
             if (idClasse) {
@@ -3501,6 +3501,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             if (classe.periodes.empty()) {
                 await classe.periodes.sync();
             }
+            $scope.periodes = classe.periodes;
 
             let currentPeriode = _.find(classe.periodes.all, (periode) => {
                 return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
