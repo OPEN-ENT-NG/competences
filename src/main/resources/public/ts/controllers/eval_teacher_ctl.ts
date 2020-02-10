@@ -746,16 +746,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.getPeriodes = (idClasse) => {
-            let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
-            if (classe && classe.periodes && classe.periodes.length() === 0) {
-                classe.periodes.sync().then(() => {
-                    return classe.periodes.all;
-                });
-            }
-            return (classe !== undefined) ? classe.periodes.all : [];
-        };
-
         $scope.synchronizeStudents = (idClasse): boolean => {
             if (idClasse) {
                 let _classe = evaluations.structure.classes.findWhere({id: idClasse});
@@ -3434,7 +3424,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.endSaisie = null;
             $scope.errDateDevoir = null;
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
-            if (classe.periodes.empty()) {
+            if ( classe.periodes.length() === 0 ) {
                 await classe.periodes.sync();
             }
             let current_periode = _.findWhere(classe.periodes.all, {id_type: parseInt(devoir.id_periode)});
@@ -3466,7 +3456,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.checkEndSaisie = async (devoir) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
-            if (classe.periodes.empty()) {
+            if (classe.periodes.length() === 0) {
                 await classe.periodes.sync();
                 utils.safeApply($scope);
             }
@@ -3483,7 +3473,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.checkEndSaisieSeul = async (devoir) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: devoir.id_groupe});
-            if (classe.periodes.empty()) {
+            if ( classe.periodes.length() === 0 ) {
                 await classe.periodes.sync();
                 utils.safeApply($scope);
             }
@@ -3498,9 +3488,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         $scope.getCurrentPeriode = async (classe) => {
 
-            if (classe.periodes.empty()) {
+            if (classe.periodes.length() === 0) {
                 await classe.periodes.sync();
             }
+            $scope.periodes = classe.periodes;
 
             let currentPeriode = _.find(classe.periodes.all, (periode) => {
                 return moment().isBetween(moment(periode.timestamp_dt), moment(periode.timestamp_fn), 'days', '[]');
