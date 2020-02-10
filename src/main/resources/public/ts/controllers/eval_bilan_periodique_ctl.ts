@@ -9,7 +9,7 @@ import {AvisConseil} from "../models/teacher/AvisConseil";
 import {AvisOrientation} from "../models/teacher/AvisOrientation";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import {ComparisonGraph} from "../models/common/ComparisonGraph";
-import {conseilGraphiques,PreferencesUtils} from "../utils/preferences";
+import {conseilGraphiques, conseilColumns, PreferencesUtils} from "../utils/preferences";
 
 
 declare let _: any;
@@ -29,9 +29,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         let finSaisieBilan: boolean;
         $scope.critereIsEmpty = true;
-        $scope.showHistoric = false;
         $scope.showAvisOrientation = false;
         $scope.showMoyGeneral = false;
+        $scope.showHistorise = false;
         $scope.opened.criteres = true;
         $scope.opened.avis = true;
         $scope.opened.ensCplt = true;
@@ -45,9 +45,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         $scope.canLoadStudent = false;
         //init graph choices
         $scope.graph = {competences : true, notes : false, type: "baton",typeDom: "baton"};
-        if(PreferencesUtils.isNotEmpty(conseilGraphiques)  ){
+        if(PreferencesUtils.isNotEmpty(conseilGraphiques)){
             $scope.graph = PreferencesUtils.getPreferences(conseilGraphiques);
         }
+        $scope.showColumns = {moyEleve : true, moyClasse : true, pos : true};
+        if(PreferencesUtils.isNotEmpty(conseilColumns)){
+            $scope.showColumns = PreferencesUtils.getPreferences(conseilColumns);
+        }
+        $scope.showPopUpColumn = false;
         $scope.displayBilanPeriodique = () => {
             let isNotEmptyClasse = ($scope.search.classe !== '*' && $scope.search.classe !== null
                 && $scope.search.classe !== undefined);
@@ -128,9 +133,9 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.canSaisiSyntheseBilanPeriodique = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                     "canSaisiSyntheseBilanPeriodique") && finSaisieBilan;
             }
+
             $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
                 $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
-
             await $scope.elementBilanPeriodique.suivisAcquis.getSuivisDesAcquis();
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
                 $scope.search.periode.id_type, $scope.structure.id);
@@ -142,12 +147,35 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
             await $scope.elementBilanPeriodique.avisOrientation.syncAvisOrientation();
             await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
+
+            $scope.oldElementsBilanPeriodique = [];
+            for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
+                if(periode.id != null){
+                    let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                        periode, $scope.structure, $scope.filteredPeriode);
+                    oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    oldElement.avisConseil = new AvisConseil($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    oldElement.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    await oldElement.syntheseBilanPeriodique.syncSynthese();
+                    await oldElement.avisConseil.syncAvisConseil();
+                    await oldElement.avisOrientation.syncAvisOrientation();
+                    $scope.oldElementsBilanPeriodique.push(oldElement);
+                }
+        }
+
             $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
             $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
             await utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
             template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
             await utils.safeApply($scope);
+        };
+
+        $scope.translateAvis = (avis) => {
+            return _.find($scope.elementBilanPeriodique.avisConseil.avis, {id: avis.id_avis_conseil_bilan}).libelle;
         };
 
         $scope.openProjet = async () => {
@@ -304,6 +332,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             PreferencesUtils.savePreferences(arrayKeys, datasArray);
         };
 
+        $scope.saveColumnsPreferences = function () {
+            let arrayKeys = [], datasArray = [];
+            datasArray.push($scope.showColumns);
+            arrayKeys.push(conseilColumns);
+            PreferencesUtils.savePreferences(arrayKeys, datasArray);
+        };
+
         $scope.unlessOneChecked = function (checkboxClick){
             if(!($scope.graph.competences || $scope.graph.notes))
                 if(checkboxClick == 'competences')
@@ -318,15 +353,17 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.showGraphMatLoader = true;
             await utils.safeApply($scope);
 
-            let promiseOpenMatiere = [];
-            promiseOpenMatiere.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false,
-                $scope.niveauCompetences, $scope.search.periode.id_type));
+            if(!$scope.informations.eleve.configMixedChart || !$scope.informations.eleve.configRadarChart){
+                let promiseOpenMatiere = [];
+                promiseOpenMatiere.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, false,
+                    $scope.niveauCompetences, $scope.search.periode.id_type));
 
-            if ($scope.graphMat !== undefined && $scope.graphMat.comparison === true) {
-                promiseOpenMatiere.push($scope.drawComparison($scope.filteredPeriode, false, $scope.graphMat.darkness,
-                    $scope.graphMat.infoGrouped, true));
+                if ($scope.graphMat !== undefined && $scope.graphMat.comparison === true) {
+                    promiseOpenMatiere.push($scope.drawComparison($scope.filteredPeriode, false, $scope.graphMat.darkness,
+                        $scope.graphMat.infoGrouped, true));
+                }
+                await Promise.all(promiseOpenMatiere);
             }
-            await Promise.all(promiseOpenMatiere);
             template.open('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject');
             $scope.showGraphMatLoader = false;
             await utils.safeApply($scope);
@@ -356,17 +393,25 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             let templateToSet = (forDomaine === true) ? 'comparisonGraphDom' : 'comparisonGraphMatiere';
 
             template.close(templateToSet);
-            await Utils.runMessageLoader($scope);
+            if(forDomaine) {
+                $scope.graphDom.comparison = false;
+                $scope.showGraphDomLoader = true;
+            } else {
+                $scope.graphMat.comparison = false;
+                $scope.showGraphMatLoader = true;
+            }
             try {
                 await ComparisonGraph.buildComparisonGraph($scope.informations.eleve, selectedPeriodes,
                     evaluations.structure, forDomaine, $scope.niveauCompetences, withdarkness, tooltipGroup);
                 let templateToOpen = forDomaine ? 'domaine' : 'subject';
                 template.open(templateToSet, `enseignants/bilan_periodique/graph/comparison_graph_${templateToOpen}`);
-                if (withoutNotification !== true) {
-                    await Utils.stopMessageLoader($scope);
-                }
-            } catch (e) {
-                await Utils.stopMessageLoader($scope);
+            } catch (e) {}
+            if(forDomaine) {
+                $scope.graphDom.comparison = true;
+                $scope.showGraphDomLoader = false;
+            } else {
+                $scope.graphMat.comparison = true;
+                $scope.showGraphMatLoader = false;
             }
         };
 
@@ -381,14 +426,16 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             template.close('graphDomaine');
             $scope.showGraphDomLoader = true;
             await utils.safeApply($scope);
-            let promiseDomaine = [];
-            if (template.contains('comparisonGraphDom', 'enseignants/bilan_periodique/graph/comparison_graph_domaine')) {
-                promiseDomaine.push($scope.drawComparison($scope.filteredPeriode, true, $scope.graphDom.darkness,
-                    $scope.graphDom.infoGrouped, true));
+            if(!$scope.informations.eleve.configMixedChartDomaine || !$scope.informations.eleve.configRadarChartDomaine) {
+                let promiseDomaine = [];
+                if (template.contains('comparisonGraphDom', 'enseignants/bilan_periodique/graph/comparison_graph_domaine')) {
+                    promiseDomaine.push($scope.drawComparison($scope.filteredPeriode, true, $scope.graphDom.darkness,
+                        $scope.graphDom.infoGrouped, true));
+                }
+                promiseDomaine.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, true,
+                    $scope.niveauCompetences, $scope.search.periode.id_type));
+                await Promise.all(promiseDomaine);
             }
-            promiseDomaine.push($scope.elementBilanPeriodique.getDataForGraph($scope.informations.eleve, true,
-                $scope.niveauCompetences, $scope.search.periode.id_type));
-            await Promise.all(promiseDomaine);
             template.open('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine');
             $scope.showGraphDomLoader = false;
             await utils.safeApply($scope);
@@ -491,7 +538,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
                 await utils.safeApply($scope);
             }
-
         };
 
         $scope.deleteStudent = async function () {
@@ -501,11 +547,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.changeContent();
         };
 
-        //////            Lightbox historique            //////
-
-        $scope.openHistoric = function () {
-            $scope.opened.historic = true;
-        };
 
 
         $scope.filterAvis = function (param) {
@@ -761,5 +802,4 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         });
 
     }
-
 ]);

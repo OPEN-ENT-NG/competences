@@ -68,7 +68,7 @@ export const bilanPeriodique = {
 
         openElementLigthbox: async function (param?) {
             await bilanPeriodique.that.getThematique(bilanPeriodique.that.getTypeElement());
-            await bilanPeriodique.that.getClasses();
+            bilanPeriodique.that.classes = evaluations.structure.classes;
             bilanPeriodique.that.enseignants = evaluations.structure.enseignants;
             bilanPeriodique.that.modifElem = param;
             bilanPeriodique.that.openedLightbox = true;
@@ -282,29 +282,6 @@ export const bilanPeriodique = {
             }
             utils.safeApply(this);
         },
-
-        getClasses: async function () {
-            try {
-                HTTP().get(`/viescolaire/classes?idEtablissement=${evaluations.structure.id}&forAdmin=true`)
-                    .done(async function (res) {
-                        bilanPeriodique.that.classes = {
-                            all: bilanPeriodique.that.castClasses(res)
-                        };
-                        await utils.safeApply(bilanPeriodique.that);
-                    });
-            } catch (e) {
-                notify.error('evaluations.classe.get.error');
-            }
-        },
-
-        castClasses: (classes) => {
-            return _.map(classes, (classe) => {
-                classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
-                classe = new Classe(classe);
-                return classe;
-            });
-        },
-
 
         /////       Filtre les thèmes pour savoir si ce sont des EPI / AP / Parcours      /////
 

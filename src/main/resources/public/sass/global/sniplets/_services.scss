@@ -1,0 +1,24 @@
+.lightboxCreate{
+  ul{
+    padding-left: 1.33em;
+    margin-top: 0.4em;
+    li{
+      font-size: 1.2em;
+      list-style-type: none;
+      padding-top: 10px;
+    }
+  }
+  .buttonAbsolute{
+    bottom: 0;
+    position: absolute;
+    right: 0;
+  }
+
+  .fullBorder{
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5)!important;
+  }
+
+  .buttonMargin{
+    margin-top: 10px
+  }
+}

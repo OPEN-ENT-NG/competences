@@ -21,7 +21,7 @@
 import {_, ng} from 'entcore';
 
 export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
-    return function (matieres, idClasse, classes, search) {
+    return function (matieres, idClasse, classes, search, idTeacher?) {
         let hasService = false;
         if (idClasse === '*' || idClasse === undefined) return matieres;
         if (classes.all.length > 0) {
@@ -30,13 +30,16 @@ export let getMatiereClasseFilter = ng.filter('getMatiereClasse', function () {
                 let matieresClasse = matieres.filter((matiere) => {
                     if (classe.hasOwnProperty('services')) {
                         let services = classe.services;
-                        let evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true});
+                        let evaluables;
+                        if(idTeacher)
+                            evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true, id_enseignant : idTeacher});
+                        else
+                            evaluables = _.findWhere(services, {id_matiere: matiere.id, evaluable: true});
                         if (services !== null) {
                             hasService = true;
                         }
-                        return evaluables !== undefined;
-                    }
-                    else {
+                        return evaluables !== undefined
+                    }else {
                         if (matiere.hasOwnProperty('libelleClasses')) {
                             return (matiere.libelleClasses.indexOf(classe.externalId) !== -1)
                         } else {

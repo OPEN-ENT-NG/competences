@@ -2019,26 +2019,66 @@ body.evaluations {
     margin-left: 10px !important;
     height: auto !important;
   }
+  .button-evaluation-devoir{
+    flex:auto;
+    padding: 8px 0px 10px !important;
+    z-index: 11 !important;
+  }
+  .div-buttons-evaluation-devoir{
+    display: flex;
+    width: 18%;
+    right: -20px;
+    position: absolute;
+    top: -22px;
+  }
 
-  .button-edit-devoir {
-    position: fixed !important;
-    right: 0.5% !important;
-    top: 116px !important;
-    z-index: 11 !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
+  .columns-popup-wrapper {
+    position: relative;
+    display: inline-block;
   }
-  .button-print-devoir{
-    position: fixed !important;
-    right: 10.5% !important;
-    top: 116px !important;
-    z-index: 11 !important;
+
+  .columns-popup {
+    position: absolute;
+    right: 10%;
+    top: 82%;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    min-width: 160px;
+    border-radius: 5px;
+
+    height: 0px;
+    -webkit-transition: height 0.15s linear;
+    -moz-transition: height 0.15s linear;
+    -ms-transition: height 0.15s linear;
+    -o-transition: height 0.15s linear;
+    transition: height 0.15s linear;
   }
-  .button-finish-devoir{
-    position: fixed !important;
-    right: 15% !important;
-    top: 116px !important;
-    z-index: 11 !important;
+
+  .columns-popup.open {
+    padding: 10px;
+    border: 1px $primary solid;
+
+    height: 130px;
+    -webkit-transition: height 0.15s linear;
+    -moz-transition: height 0.15s linear;
+    -ms-transition: height 0.15s linear;
+    -o-transition: height 0.15s linear;
+    transition: height 0.15s linear;
+  }
+
+  .columns-popup-button {
+    background-color: $primary;
+    color: white;
+    font-size: 12px;
+    padding: 2px 10px;
+    margin: 10px;
+    border-radius: 10%;
+  }
+
+  .columns-popup-items{
+    margin: 10px;
   }
 
   .checkbox-grid{
@@ -2086,6 +2126,8 @@ body.evaluations {
 
   .button-edit-devoir-not-fixed {
     margin-top: -18px !important;
+    flex:auto;
+    padding: 8px 0px 10px !important;
   }
 
   .button-fixed-top-right {
@@ -3196,7 +3238,7 @@ body.evaluations {
 
   .suiviDesAcquis{
     th{
-      padding: 5px 10px !important;
+      padding: 5px 11px !important;
     }
     .matiere{
       font-weight: bold;
