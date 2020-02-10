@@ -57,7 +57,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                         $scope.initCheckBox(item, parentItem);
                     }
                 }, true);
-                var bLastCompetence = (_.findWhere($scope.devoir.competencesLastDevoirList, {id_competence : item.id}) !== undefined);
+                var bLastCompetence = (_.findWhere($scope.devoir.competencesLastDevoirList, {id : item.id}) !== undefined);
 
                 if(bLastCompetence) {
                     item.open = true;

@@ -25,7 +25,6 @@
                 <i18n>evaluations.bilan.by.subject</i18n>
             </h3>
             <div ng-if="graphMat.opened">
-                <div class="loaderGraph loaderCenter" ng-show="showGraphMatLoader == true"></div>
                 <div class="fancyCheck two cell" ng-show="showGraphMatLoader == false">
                     <input type="checkbox" id="subjectComparison" class="cell"
                            ng-model="graphMat.comparison">
@@ -106,8 +105,9 @@
                     </button>
                 </div>
             </div>
-            <container ng-show="graphMat.opened && !graphMat.comparison" template="graphMatiere"></container>
-            <container ng-show="graphMat.opened && graphMat.comparison"  template="comparisonGraphMatiere"></container>
+            <div class="loaderGraph loaderCenter" ng-show="showGraphMatLoader == true"></div>
+            <container ng-show="graphMat.opened && !graphMat.comparison && !showGraphMatLoader" template="graphMatiere"></container>
+            <container ng-show="graphMat.opened && graphMat.comparison && !showGraphMatLoader"  template="comparisonGraphMatiere"></container>
         </article>
 
         <article class="twelve cell">
@@ -117,7 +117,6 @@
                 <i18n>evaluations.bilan.by.domaine</i18n>
             </h3>
             <div ng-if="graphDom.opened">
-                <div class="loaderGraph loaderCenter" ng-show="showGraphDomLoader == true"></div>
                 <div class="fancyCheck two cell" ng-show="showGraphDomLoader == false">
                     <input type="checkbox" id="domaineComparison" class="cell"
                            ng-model="graphDom.comparison">
@@ -183,8 +182,9 @@
                     </button>
                 </div>
             </div>
-            <container ng-show="graphDom.opened && !graphDom.comparison" template="graphDomaine"></container>
-            <container ng-show="graphDom.opened && graphDom.comparison"  template="comparisonGraphDom"></container>
+            <div class="loaderGraph loaderCenter" ng-show="showGraphDomLoader == true"></div>
+            <container ng-show="graphDom.opened && !graphDom.comparison && !showGraphDomLoader" template="graphDomaine"></container>
+            <container ng-show="graphDom.opened && graphDom.comparison && !showGraphDomLoader"  template="comparisonGraphDom"></container>
         </article>
     </section>
 

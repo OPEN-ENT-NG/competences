@@ -38,8 +38,8 @@ public interface CompetenceNoteService extends CrudService {
      * @param user utilisateur courant
      * @param handler handler portant le résultat de la requête
      */
-    void createCompetenceNote(JsonObject competenceNote, UserInfos user, Handler<Either<String, JsonObject>> handler);
-
+   // void createCompetenceNote(JsonObject competenceNote, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void createCompetenceNote(JsonObject competenceNote, String idUser, Handler<Either<String, JsonObject>> handler);
     /**
      * Met à jour une compétence note
      * @param id identifiant de la compétence note à mettre à jour
@@ -95,8 +95,8 @@ public interface CompetenceNoteService extends CrudService {
      * @param _datas liste des compétences notes à créer
      * @param handler handler portant le résultat de la requête
      */
-    void createCompetencesNotesDevoir(JsonArray _datas, UserInfos user, Handler<Either<String, JsonArray>> handler);
-
+    //void createCompetencesNotesDevoir(JsonArray _datas, UserInfos user, Handler<Either<String, JsonArray>> handler);
+    void createCompetencesNotesDevoir(JsonArray _datas, String idUser, Handler<Either<String, JsonArray>> handler);
     /**
      * Supprimer une liste de compétences notes
      * @param oIdsJsonArray liste d'identifiant à supprimer

@@ -63,6 +63,8 @@ import static fr.wseduc.webutils.http.Renders.badRequest;
 import static fr.wseduc.webutils.http.Renders.getHost;
 import static fr.wseduc.webutils.http.Renders.getScheme;
 
+import java.text.DecimalFormat;
+
 public class DefaultExportService implements ExportService {
 
     protected static final Logger log = LoggerFactory.getLogger(DefaultExportService.class);
@@ -1426,7 +1428,7 @@ public class DefaultExportService implements ExportService {
     public void getDataForExportReleveEleve(String idUser, String idEtablissement, Long idPeriode ,
                                             final MultiMap params, Handler<Either<String, JsonObject>> handler) {
         // TODO verifier que l'utilisateur connecte est bien l'eleve dont essaie d'acceder au releve ou que
-        // le parent connecte essaie bien d'acceder au releve d'un de ses eleves
+        // le parent connecte essaie bien d'acceder au releve d'un de ses enfants
 
         // récupération de l'élève
         Future<JsonObject> infoEleve = Future.future();
@@ -1635,6 +1637,20 @@ public class DefaultExportService implements ExportService {
                 Boolean ramenerSur = devoirJson.getBoolean("ramener_sur");
                 NoteDevoir noteDevoir = new NoteDevoir(note, diviseur, ramenerSur, coefficient);
                 Long idSousMatiere = devoirJson.getLong("id_sousmatiere");
+                Long nbrEleves = devoirJson.getLong("nbr_eleves");
+                Double sumNotes;
+                try {
+                    sumNotes = Double.valueOf(devoirJson.getString("sum_notes"));
+                } catch (ClassCastException exc) {
+                    log.error("[ getDevoirsByMatiere ] : sum_notes of devoirJson cannot be transform to double");
+                    sumNotes = 0.0;
+                }
+                if(isNotNull(nbrEleves) && isNotNull(sumNotes)){
+                    DecimalFormat df = new DecimalFormat("0.##");
+                    Double moyenneClasse = sumNotes/nbrEleves;
+                    devoirJson.put("moyenneClasse", df.format(moyenneClasse));
+                    devoirJson.put("hasMoyenneClasse", true);
+                }
                 if(isNotNull(idSousMatiere)) {
                     if(!listNotesSousMatiere.containsKey(idSousMatiere)){
                         listNotesSousMatiere.put(idSousMatiere, new ArrayList<>());

@@ -372,6 +372,11 @@ export class Structure extends Model {
                         });
                         resolve();
                     } else {
+                        _.map(res, (classe) => {
+                            let services = _.where(allPromise[1].data,
+                                {id_groupe : classe.id});
+                            classe.services = (!_.isEmpty(services))? services : null;
+                        });
                         this.classes.addRange(castClasses(res));
                         this.eleves.sync().then(() => {
                             resolve();

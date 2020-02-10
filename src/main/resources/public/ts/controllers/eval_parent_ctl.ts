@@ -184,6 +184,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return $scope.dataReleve.devoirs.findWhere({ id_matiere : idMatiere });
         };
 
+         $scope.getMoyenneClasse = function(devoirReleveNotes) {
+             return +(parseFloat(devoirReleveNotes.sum_notes)/devoirReleveNotes.nbr_eleves).toFixed(2);
+         };
+
         // Fonction de sélection d'un enfant par le parent
         $scope.chooseChild = async function(eleve, withSyncDevoir?) {
             return new Promise( async (resolve, reject) => {

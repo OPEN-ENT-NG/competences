@@ -64,8 +64,33 @@
                                     <div class="nine cell twelve-mobile">
                                         <label class="select four twelve-mobile" ng-class="{disabled : devoir.id_etablissement === undefined}">
                                             <select ng-model="devoir.id_groupe"
-                                                    ng-change="syncPeriode(devoir.id_groupe); setClasseMatieres();loadEnseignementsByClasse();"
-                                                    ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle','name']">
+                                                    ng-change="syncPeriode(devoir.id_groupe);
+                                                    setClasseEnseignants(); setEnseignantMatieres(); loadEnseignementsByClasse();"
+                                                    ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all
+                                                    | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle','name']">
+                                            </select>
+                                        </label>
+                                    </div>
+                                </section>
+
+                                <!-- Enseignant -->
+                                <section class="row twelve-mobile " ng-if="isChefEtab()">
+                                    <div class="three cell addDevoirTable__libelle twelve-mobile">
+                                        <i18n>viescolaire.utils.teacher</i18n>
+                                        <i class="asterisk obligatoire"></i>
+                                    </div>
+
+                                    <div class="three cell twelve-mobile">
+                                        <label class="select twelve-mobile" ng-class="{disabled : teachersFiltered.length == 0}">
+                                            <select ng-model="devoir.owner"
+                                                    ng-disabled="teachersFiltered.length == 0"
+                                                    ng-disabled="devoir.idEtablissement === undefined"
+                                                    ng-init="setClasseEnseignants(); setEnseignantMatieres();"
+                                                    ng-change="setEnseignantMatieres()">
+                                                <option ng-repeat="teacher in teachersFiltered = (enseignants.all |
+                                                getEnseignantClasse:devoir.id_groupe:classes:search)  | unique:'displayName'"
+                                                        ng-selected="teacher.id === devoir.owner"
+                                                        value="[[teacher.id]]">[[teacher.displayName]]</option>
                                             </select>
                                         </label>
                                     </div>
@@ -83,8 +108,11 @@
                                             <select ng-model="devoir.id_matiere"
                                                     ng-disabled="matieresFiltered.length == 0"
                                                     ng-disabled="devoir.idEtablissement === undefined"
-                                                    ng-change="selectedMatiere(devoir)">
-                                                <option ng-repeat="matiere in matieresFiltered = (matieres.all | getMatiereClasse:devoir.id_groupe:classes:search) | unique:'name'" ng-selected="matiere.id === devoir.id_matiere" value="[[matiere.id]]">[[matiere.name]]</option>
+                                                    ng-change="selectedMatiere(devoir)"
+                                                    ng-init="setEnseignantMatieres()">
+                                                <option ng-repeat="matiere in matieresFiltered = (matieres.all |
+                                                getMatiereClasse:devoir.id_groupe:classes:search:devoir.owner) |
+                                                unique:'name'" ng-selected="matiere.id === devoir.id_matiere" value="[[matiere.id]]">[[matiere.name]]</option>
                                             </select>
                                         </label>
                                     </div>
@@ -483,6 +511,10 @@
 
                 <!-- Competences selectionnees sur le devoir -->
                 <section>
+                    <div  ng-if="toMuchCompetences()" style="color: red; text-align: center;">
+                        <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
+                        <p><i18n>evaluations.max.competences</i18n></p>
+                    </div>
                     <ul sortable-list class="twelve twelve-mobile devoir-skills-list thought-out-actions">
                         <li sortable-element
                             ng-repeat="itemCompetence in evaluations.competencesDevoir| orderBy:'index'"
@@ -538,14 +570,14 @@
             <li ng-if="endSaisie">
                 <span><i18n>end.saisie</i18n></span>
             </li>
+            <li ng-if="toMuchCompetences()">
+                    <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
+                    <p><i18n>evaluations.max.competences</i18n></p>
+            </li>
         </ul>
         <p ng-if="!devoir.is_evaluated && evaluations.competencesDevoir.length === 0">
             <i18n>required.fields.double.asterisk</i18n>
         </p>
-</lightbox>
-<lightbox  show="evaluations.competencesDevoir.length > MAX_NBR_COMPETENCE" on-close="controleNewDevoirForm()">
-    <p><i18n>you.have</i18n>[[evaluations.competencesDevoir.length]] <i18n>evaluations.competences</i18n></p>
-    <p><i18n>evaluations.max.competences</i18n></p>
 </lightbox>
 
 <lightbox  show="opened.lightboxs.updateDevoir.firstConfirmSupp" on-close="opened.lightboxs.updateDevoir.firstConfirmSupp = false">
