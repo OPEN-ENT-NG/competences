@@ -215,12 +215,10 @@ export class SuivisDesAcquis extends Model{
                     if( suiviDesAcquis.positionnements_auto !== null && suiviDesAcquis.positionnements_auto !== undefined
                         && _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}) !== undefined) {
                         let positionnementCalcule = _.find(suiviDesAcquis.positionnements_auto, {id_periode: suiviDesAcquis.idPeriode}).moyenne;
-                        if(positionnementCalcule !== 0) {
-                            let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1,
-                                this.tableConversions.all);
-                            suiviDesAcquis.positionnement_auto =
-                                (positionnementConverti !== -1) ? positionnementConverti : 0;
-                        }
+                        let positionnementConverti = utils.getMoyenneForBFC(positionnementCalcule + 1,
+                            this.tableConversions.all);
+                        suiviDesAcquis.positionnement_auto =
+                            (positionnementConverti !== -1) ? positionnementConverti : 0;
                     }
 
                     if ( suiviDesAcquis.positionnementsFinaux !== null && suiviDesAcquis.positionnementsFinaux !== undefined && suiviDesAcquis.positionnementsFinaux.length > 0) {
@@ -254,7 +252,7 @@ export class SuivisDesAcquis extends Model{
                        }
                     });
 
-                    if (suiviDesAcquis.appreciationByClasse.appreciation === "" && suiviDesAcquis.moyenneEleve === "NN" /*&& suiviDesAcquis.moyenneClasse === "NN"*/
+                    if (suiviDesAcquis.appreciationByClasse.appreciation === "" && suiviDesAcquis.moyenneEleve === "NN"
                     && suiviDesAcquis.positionnement_auto === 0 && suiviDesAcquis.positionnement_final === 0) {
                         suiviDesAcquisToRemove.push(suiviDesAcquis)
                     }
