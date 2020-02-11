@@ -334,17 +334,19 @@ export const paramServices = {
             paramServices.that.subTopicCreationForm = true;
             safeApply(paramServices.that);
         },
-        saveNewSubTopic: async function(){
+        saveNewSubTopic: async function() {
             paramServices.that.subTopicCreationForm = false;
             let subTopic = new TypeSousMatiere();
-            subTopic.libelle = paramServices.that.newSubTopic;
-            let isSaved = await subTopic.save();
-            if(isSaved === false){
-                paramServices.that.lightboxes.subEducationCreate = false;
-                toasts.warning("viesco.subTopic.creation.error");
-            }else{
-                subTopic.selected = true;
-                paramServices.that.subTopics.all.push(subTopic);
+            if (paramServices.that.newSubTopic) {
+                subTopic.libelle = paramServices.that.newSubTopic;
+                let isSaved = await subTopic.save();
+                if (isSaved === false) {
+                    paramServices.that.lightboxes.subEducationCreate = false;
+                    toasts.warning("viesco.subTopic.creation.error");
+                } else {
+                    subTopic.selected = true;
+                    paramServices.that.subTopics.all.push(subTopic);
+                }
             }
             safeApply(paramServices.that)
         },
@@ -442,6 +444,7 @@ export const paramServices = {
         openSwitchEvaluation:function() {
             paramServices.that.lightboxes.subEducationCreate = false;
             paramServices.that.matieresWithoutSubTopic =[];
+            console.log("plop")
             paramServices.that.matieres.forEach(matiere =>{
                 if(matiere.selected && matiere.sous_matieres.length === 0){
                     paramServices.that.matieresWithoutSubTopic.push(matiere)
@@ -456,6 +459,11 @@ export const paramServices = {
             paramServices.that.lightboxes.subEducationCreate = false;
             paramServices.that.services.map(service => {
                 service.selected = false;
+            });
+            paramServices.that.subTopics.forEach(subTopics=>{
+                if(subTopics.selected){
+                    subTopics.selected = false;
+                }
             });
             utils.safeApply(paramServices.that);
         },

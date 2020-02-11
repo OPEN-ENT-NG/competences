@@ -79,7 +79,7 @@ export class TypeSousMatieres extends Selection<TypeSousMatiere>{
         };
         topics.forEach(topic =>{
             if (topic.selected){
-                topic.sous_matieres = this.all;
+                topic.sous_matieres = this.selected;
                 topicsToSend.push(topic.id);
             }
         });
