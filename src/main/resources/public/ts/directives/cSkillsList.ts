@@ -44,7 +44,7 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
             search: '='
         },
         templateUrl : "/"+appPrefix+"/public/template/directives/cSkillsList.html",
-        controller : ['$scope', '$sce','$timeout', function($scope, $sce, $timeout){
+        controller : ['$scope', '$sce','$timeout','$location', function($scope, $sce, $timeout,$location){
 
             $scope.initCheckBox = function(item, parentItem){
 
@@ -70,6 +70,12 @@ export let cSkillsList = ng.directive("cSkillsList", function(){
                     $scope.safeApply();
                 }
                 return (item.selected = parentItem.enseignement && parentItem.enseignement.selected || item.selected || false);
+            };
+
+            $scope.doNotCheckIfCreation = function(item){
+                if ($location.path() === "/devoir/create") {
+                    item.isSelected = false;
+                }
             };
 
             $scope.initHeader = function(item){

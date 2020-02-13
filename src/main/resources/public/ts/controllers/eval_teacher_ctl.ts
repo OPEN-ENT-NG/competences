@@ -1414,16 +1414,16 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         function initCompetencesDevoir() {
             $scope.evaluations.competencesDevoir = [];
+            $scope.devoir.competencesLastDevoirList = [];
             let idCycle = $scope.getClasseData($scope.devoir.id_groupe, 'id_cycle');
             let evaluationCompetencesDevoirPreferences = [];
             if(PreferencesUtils.isNotEmpty(evaluationCreationCompetencesDevoir)  ){
                 evaluationCompetencesDevoirPreferences = PreferencesUtils.getPreferences(evaluationCreationCompetencesDevoir);
                 evaluationCompetencesDevoirPreferences.forEach(ecdp => {
                     if(ecdp.id_cycle == idCycle)
-                        $scope.evaluations.competencesDevoir.push(ecdp)
+                        $scope.devoir.competencesLastDevoirList.push(ecdp)
                 })
             }
-            $scope.devoir.competencesLastDevoirList = _.clone($scope.evaluations.competencesDevoir);
         }
 
         $scope.initFilter = function (pbInitSelected) {
