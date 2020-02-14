@@ -868,7 +868,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
         }
         if (historise) {
-            query.append("( devoirs.eval_lib_historise = ? ");
+            query.append("( devoirs.eval_lib_historise = ? )");
             params.add(historise);
         }
         if (idMatieres.length != 0 || historise) {
@@ -929,7 +929,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             }
         }
         if (historise) {
-            query.append("( devoirs.eval_lib_historise = ? ");
+            query.append("( devoirs.eval_lib_historise = ? )");
             params.add(historise);
         }
         if (idMatieres.length != 0 || historise) {

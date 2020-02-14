@@ -35,7 +35,8 @@
                            class="competence_[[competence.id]]"
                            type="checkbox"
                            ng-model="competencesFilter[competence.id+'_'+competence.id_enseignement].isSelected"
-                           ng-click="toggleCheckbox(competence, $parent.enseignement); doNotApplySearchFilter();">
+                           ng-click="toggleCheckbox(competence, $parent.enseignement); doNotApplySearchFilter();"
+                           ng-init="doNotCheckIfCreation(competencesFilter[competence.id+'_'+competence.id_enseignement]);">
                     <span></span>
                 </label>
                 <span ng-class="{whiteSpaceNormal : competence.hovering}"
@@ -55,7 +56,8 @@
                                        class="competence_[[sousCompetence.id]]"
                                        type="checkbox"
                                        ng-model="competencesFilter[sousCompetence.id+'_'+sousCompetence.id_enseignement].isSelected"
-                                       ng-click="toggleCheckbox(sousCompetence, $parent.competence); doNotApplySearchFilter();">
+                                       ng-click="toggleCheckbox(sousCompetence, $parent.competence); doNotApplySearchFilter();"
+                                       ng-init="doNotCheckIfCreation(competencesFilter[sousCompetence.id+'_'+sousCompetence.id_enseignement]);">
                                 <span></span>
                             </label>
                             <span ng-class="{whiteSpaceNormal : sousCompetence.hovering}"
