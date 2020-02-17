@@ -65,7 +65,7 @@
                                         <label class="select four twelve-mobile" ng-class="{disabled : devoir.id_etablissement === undefined}">
                                             <select ng-model="devoir.id_groupe"
                                                     ng-change="syncPeriode(devoir.id_groupe);
-                                                    setClasseEnseignants(); setEnseignantMatieres(); loadEnseignementsByClasse();"
+                                                    setClasseEnseignants();loadEnseignementsByClasse();"
                                                     ng-options="classe.id as classe.name group by classe.type_groupe_libelle for classe in classes.all
                                                     | filter:filterValidClasseMatiere() | orderBy:['type_groupe_libelle','name']">
                                             </select>
@@ -83,14 +83,12 @@
                                     <div class="three cell twelve-mobile">
                                         <label class="select twelve-mobile" ng-class="{disabled : teachersFiltered.length == 0}">
                                             <select ng-model="devoir.owner"
-                                                    ng-disabled="teachersFiltered.length == 0"
+                                                    ng-disabled="devoir.teachersByClass.length == 0"
                                                     ng-disabled="devoir.idEtablissement === undefined"
-                                                    ng-init="setClasseEnseignants(); setEnseignantMatieres();"
-                                                    ng-change="setEnseignantMatieres()">
-                                                <option ng-repeat="teacher in teachersFiltered = (enseignants.all |
-                                                getEnseignantClasse:devoir.id_groupe:classes:search)  | unique:'displayName'"
-                                                        ng-selected="teacher.id === devoir.owner"
-                                                        value="[[teacher.id]]">[[teacher.displayName]]</option>
+                                                    ng-init="setClasseEnseignants(search);"
+                                                    ng-change="setEnseignantMatieres();"
+                                                    ng-options="teacher.id as teacher.displayName for teacher in devoir.teachersByClass
+                                                    | unique:'displayName'">
                                             </select>
                                         </label>
                                     </div>
@@ -105,15 +103,14 @@
 
                                     <div class="three cell twelve-mobile">
                                         <label class="select twelve-mobile" ng-class="{disabled : matieresFiltered.length == 0}">
-                                            <select ng-model="devoir.id_matiere"
-                                                    ng-disabled="matieresFiltered.length == 0"
-                                                    ng-disabled="devoir.idEtablissement === undefined"
-                                                    ng-change="selectedMatiere(devoir)"
-                                                    ng-init="setEnseignantMatieres()">
-                                                <option ng-repeat="matiere in matieresFiltered = (matieres.all |
-                                                getMatiereClasse:devoir.id_groupe:classes:search:devoir.owner) |
-                                                unique:'name'" ng-selected="matiere.id === devoir.id_matiere" value="[[matiere.id]]">[[matiere.name]]</option>
-                                            </select>
+                                             <select ng-model="devoir.id_matiere"
+                                                     ng-disabled="matieresByClassByTeacher.length == 0"
+                                                     ng-disabled="devoir.idEtablissement === undefined"
+                                                     ng-change="selectedMatiere(devoir)"
+                                                     ng-options =" matiere.id as matiere.name for matiere in  devoir.matieresByClassByTeacher |
+                                                 unique:'name'"
+                                                    >
+                                             </select>
                                         </label>
                                     </div>
 
@@ -124,11 +121,14 @@
                                         </div>
 
                                         <div class="three cell twelve-mobile">
-                                            <label class="select twelve-mobile" ng-class="{disabled : devoir.matiere === undefined || devoir.matiere.sousMatieres.all.length === 0}">
-                                                <select ng-model="devoir.id_sousmatiere"  ng-disabled="devoir.matiere === undefined || devoir.matiere.sousMatieres.all.length === 0">
+                                            <label class="select twelve-mobile"
+                                                   ng-class="{disabled : devoir.matiere === undefined || devoir.matiere.sousMatieres.all.length === 0}">
+                                                <select ng-model="devoir.id_sousmatiere"
+                                                        ng-disabled="devoir.matiere === undefined || devoir.matiere.sousMatieres.all.length === 0">
                                                     <option
                                                             ng-selected="sousMatiere.id_type_sousmatiere == devoir.id_sousmatiere"
-                                                            ng-repeat="sousMatiere in devoir.matiere.sousMatieres.all" value="[[sousMatiere.id_type_sousmatiere]]"
+                                                            ng-repeat="sousMatiere in devoir.matiere.sousMatieres.all"
+                                                            value="[[sousMatiere.id_type_sousmatiere]]"
                                                     >[[sousMatiere.libelle]]</option>
                                                 </select>
                                             </label>
