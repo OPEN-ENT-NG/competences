@@ -2055,6 +2055,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          $scope.setClasseEnseignants = function (search ?) {
             $scope.devoir.teachersByClass = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
                 $scope.devoir.id_groupe, $scope.classes,$scope.search);
+            if($scope.devoir.owner != undefined ){
+                $scope.setEnseignantMatieres();
+            }
             if($scope.devoir.owner === undefined && search !== undefined && search.matiere !== undefined
                 && search.matiere !== "*"  && $scope.search.classe != '*') {
                 if (search.enseignant != undefined && search.enseignant !== "*") {
@@ -2071,6 +2074,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
                 $scope.setEnseignantMatieres();
             }
+
         };
 
         /**
