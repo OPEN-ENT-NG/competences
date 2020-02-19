@@ -71,6 +71,14 @@ public interface UtilsService {
     void getInfoEleve(String id, Handler<Either<String, JsonObject>> result);
 
     /**
+     * Recupère les informations de l'élève en backup
+     *
+     * @param id     identifiant de l'élève
+     * @param result handler portant le résultat de la requête
+     */
+    void getInfoEleveBackup(String id, Handler<Either<String, JsonObject>> result);
+
+    /**
      * Récupère les enfants d'une parent donné
      *
      * @param id      identifiant du parent
