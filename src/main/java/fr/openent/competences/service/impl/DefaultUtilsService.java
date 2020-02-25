@@ -155,6 +155,46 @@ public class DefaultUtilsService  implements UtilsService {
     }
 
     @Override
+    public void getInfoEleveBackup(String id, Handler<Either<String, JsonObject>> result) {
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
+
+        query.append("SELECT DISTINCT \"idEleve\" AS id,\"idEleve\",\"idGroupes\", ")
+                .append(" display_name AS \"displayName\", ")
+                .append(" delete_date AS \"deleteDate\", ")
+                .append(" first_name AS \"firstName\", ")
+                .append(" last_name AS \"lastName\", ")
+                .append(" id_structure AS \"idEtablissement\", ")
+                .append(" id_groupe AS \"idClasse\", ")
+                .append(" birth_date AS \"birthDate\" ")
+                .append(" FROM ")
+                .append(" ( SELECT * FROM ")
+
+                // Selection
+                .append("   (SELECT personnes_supp.id_user AS \"idEleve\", MAX(delete_date) AS \"deleteDate\", ")
+                .append("           string_agg(DISTINCT rel_groupes_personne_supp.id_groupe, ',') AS \"idGroupes\" ")
+                .append("    FROM " + Competences.VSCO_SCHEMA + ".personnes_supp, viesco.rel_groupes_personne_supp ")
+                .append("    WHERE personnes_supp.id = rel_groupes_personne_supp.id ")
+                .append(" AND id_user = ? ")
+                .append("    AND user_type = 'Student' ")
+                .append("    GROUP BY personnes_supp.id_user) AS res ")
+
+
+                .append("  INNER JOIN " + Competences.VSCO_SCHEMA + ".personnes_supp ")
+                .append("   ON \"deleteDate\" = personnes_supp.delete_date ")
+                .append("   AND \"idEleve\" = personnes_supp.id_user)  AS res1 ")
+
+                .append(" LEFT JOIN viesco.rel_groupes_personne_supp ON res1.id = rel_groupes_personne_supp.id ")
+                .append("                                             AND type_groupe = 0 ")
+
+                .append(" INNER JOIN viesco.rel_structures_personne_supp ON res1.id = rel_structures_personne_supp.id");
+
+        params.add(id);
+
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(result));
+    }
+
+    @Override
     public void getEnfants(String id, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         //query.append("MATCH (m:`User` {id: {id}})-[:COMMUNIQUE_DIRECT]->(n:`User`) RETURN n");

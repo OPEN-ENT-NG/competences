@@ -1203,7 +1203,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 ramener_sur: false,
                 id_etat: 1,
                 owner: ($scope.isChefEtab())?undefined:model.me.userId,
-                matieresByClasse: [],
+                matieresByClassByTeacher: [],
+                teachersByClass : [],
                 controlledDate: true,
                 is_evaluated: false
             });
@@ -1856,7 +1857,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return $scope.isValidClasseMatiere(classe.id)});
                 if(!_.isEmpty(classes)) {
                     $scope.devoir.id_groupe = $scope.searchOrFirst("classe", classes).id;
-
                     $scope.devoir.id_type = _.findWhere($scope.structure.types.all, {default_type: true}).id;
 
                     let currentPeriode = await $scope.getCurrentPeriode(_.findWhere(classes,
@@ -1906,14 +1906,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     && $scope.search.classe.id !== '*' && $scope.search.matiere !== '*') {
                     $scope.devoir.id_groupe = $scope.search.classe.id;
                     $scope.devoir.id_matiere = $scope.search.matiere.id;
-                    //$scope.setClasseMatieres();
+
                 } else {
                     // selection de la premiere classe par defaut
                     $scope.devoir.id_groupe = $scope.classes.all[0].id;
-                    // selection de la premiere matière associée à la classe
-                    //$scope.setClasseMatieres();
+
                 }
-                $scope.selectedMatiere($scope.devoir);
+                //$scope.selectedMatiere($scope.devoir);
             }
 
             let selectedClasse = _.findWhere($scope.classes.all, {id: $scope.devoir.id_groupe});
@@ -2016,7 +2015,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param idClasse Identifiant de la classe
          * @returns {Promise<T>} Promesse de retour
          */
-        let getClassesMatieres = function (idClasse) {
+      /* let getClassesMatieres = function (idClasse) {
             return new Promise((resolve, reject) => {
                 let classe = $scope.classes.findWhere({id: idClasse});
                 if (classe !== undefined) {
@@ -2029,7 +2028,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     reject();
                 }
             });
-        };
+        };*/
 
         $scope.searchOrFirst = (key, collection) => {
             if ($scope.search[key] && $scope.search[key] !== "*") {
@@ -2053,79 +2052,102 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         /**
          * Set les enseignants en fonction de l'identifiant de la classe
          */
-        $scope.setClasseEnseignants = function () {
-            $scope.devoir.enseigantsByClasse = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
-                $scope.devoir.id_groupe, $scope.classes, $scope.search);
-            if ($scope.devoir.enseigantsByClasse.length > 0){
-                $scope.devoir.owner = $scope.devoir.enseigantsByClasse[0].id;
+         $scope.setClasseEnseignants = function (search ?) {
+            $scope.devoir.teachersByClass = $filter('getEnseignantClasse')($scope.structure.enseignants.all,
+                $scope.devoir.id_groupe, $scope.classes,$scope.search);
+            if($scope.devoir.owner != undefined ){
+                $scope.setEnseignantMatieres();
             }
+            if($scope.devoir.owner === undefined && search !== undefined && search.matiere !== undefined
+                && search.matiere !== "*"  && $scope.search.classe != '*') {
+                if (search.enseignant != undefined && search.enseignant !== "*") {
+                    $scope.devoir.owner = search.enseignant.id;
+                } else {
+                    let teacher = _.findWhere(search.classe.services,
+                        {id_groupe: search.classe.id, id_matiere: search.matiere.id});
+                    $scope.devoir.owner = (teacher != undefined) ? teacher.id_enseignant : $scope.devoir.teachersByClass[0].id;
+
+                }
+                $scope.setEnseignantMatieres(search);
+
+            }else if($scope.devoir.teachersByClass.length > 0 ) {
+                $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
+                $scope.setEnseignantMatieres();
+            }
+
         };
 
         /**
          * Set les matières en fonction de l'identifiant de l'enseignant choisi
          */
-        $scope.setEnseignantMatieres = function () {
-            $scope.devoir.matiere = $filter('getMatiereClasse')($scope.structure.matieres.all,
-                $scope.devoir.id_groupe, $scope.classes, $scope.search,$scope.devoir.owner)[0];
+        $scope.setEnseignantMatieres = function (search?) {
+            $scope.devoir.matieresByClassByTeacher = $filter('getMatiereClasse')($scope.structure.matieres.all,
+              $scope.devoir.id_groupe, $scope.classes, $scope.search, $scope.devoir.owner);
+            if(search != undefined){
+              $scope.devoir.matiere = $scope.search.matiere;
+            }else{
+              $scope.devoir.matiere = $scope.devoir.matieresByClassByTeacher[0];
+            }
+
             let matiere = $scope.devoir.matiere;
             $scope.devoir.id_matiere = (matiere === undefined)? undefined : matiere.id;
             if ($scope.devoir.matiere !== undefined &&  $scope.devoir.matiere.sousMatieres !== undefined
-                && $scope.devoir.matiere.sousMatieres.all.length > 0) {
-                // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
-                $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
+              && $scope.devoir.matiere.sousMatieres.all.length > 0) {
+              // attention sur le devoir on stocke l'id_type et non l'id de la sous matiere
+              $scope.devoir.id_sousmatiere = $scope.devoir.matiere.sousMatieres.all[0].id_type_sousmatiere;
             }
-        };
+         };
 
         $scope.deleteDevoir = function () {
-            if ($scope.selected.devoirs.list.length > 0) {
-                $scope.selected.devoirs.list.forEach(function (d) {
-                        d.remove().then((res) => {
-                            evaluations.devoirs.sync();
-                            evaluations.devoirs.on('sync', function () {
-                                $scope.opened.lightbox = false;
-                                var index = $scope.selected.devoirs.list.indexOf(d);
-                                if (index > -1) {
-                                    $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, d);
-                                }
-                                utils.safeApply($scope);
-                            });
-                        })
-                            .catch(() => {
-                                notify.error("evaluation.delete.devoir.error");
-                            });
-                    }
-                );
-            }
-            $scope.opened.evaluation.suppressionMsg2 = false;
+          if ($scope.selected.devoirs.list.length > 0) {
+              $scope.selected.devoirs.list.forEach(function (d) {
+                      d.remove().then((res) => {
+                          evaluations.devoirs.sync();
+                          evaluations.devoirs.on('sync', function () {
+                              $scope.opened.lightbox = false;
+                              var index = $scope.selected.devoirs.list.indexOf(d);
+                              if (index > -1) {
+                                  $scope.selected.devoirs.list = _.without($scope.selected.devoirs.list, d);
+                              }
+                              utils.safeApply($scope);
+                          });
+                      })
+                          .catch(() => {
+                              notify.error("evaluation.delete.devoir.error");
+                          });
+                  }
+              );
+          }
+          $scope.opened.evaluation.suppressionMsg2 = false;
         };
 
         $scope.cancelUpdateDevoir = function () {
-            $scope.firstConfirmSuppSkill = false;
-            $scope.secondConfirmSuppSkill = false;
-            $scope.evaluatedDisabel = false;
-            $scope.opened.lightboxs.updateDevoir.firstConfirmSupp = false;
-            $scope.opened.lightboxs.updateDevoir.secondConfirmSupp = false;
-            $scope.opened.lightboxs.updateDevoir.evaluatedSkillDisabel = false;
+          $scope.firstConfirmSuppSkill = false;
+          $scope.secondConfirmSuppSkill = false;
+          $scope.evaluatedDisabel = false;
+          $scope.opened.lightboxs.updateDevoir.firstConfirmSupp = false;
+          $scope.opened.lightboxs.updateDevoir.secondConfirmSupp = false;
+          $scope.opened.lightboxs.updateDevoir.evaluatedSkillDisabel = false;
 
         };
         $scope.ConfirmeUpdateDevoir = function () {
-            if ($scope.opened.lightboxs.updateDevoir.firstConfirmSupp === true) {
-                $scope.firstConfirmSuppSkill = true;
-                if ($scope.evaluatedCompetencesSupp.length > 0) {
-                    $scope.opened.lightboxs.updateDevoir.secondConfirmSupp = true;
-                }
-                $scope.opened.lightboxs.updateDevoir.firstConfirmSupp = false;
-            } else if ($scope.opened.lightboxs.updateDevoir.secondConfirmSupp === true) {
-                $scope.secondConfirmSuppSkill = true;
-                $scope.opened.lightboxs.updateDevoir.secondConfirmSupp = false;
-            } else if ($scope.opened.lightboxs.updateDevoir.evaluatedSkillDisabel) {
-                $scope.evaluatedDisabel = true;
-                $scope.opened.lightboxs.updateDevoir.evaluatedSkillDisabel = false;
-            }
+          if ($scope.opened.lightboxs.updateDevoir.firstConfirmSupp === true) {
+              $scope.firstConfirmSuppSkill = true;
+              if ($scope.evaluatedCompetencesSupp.length > 0) {
+                  $scope.opened.lightboxs.updateDevoir.secondConfirmSupp = true;
+              }
+              $scope.opened.lightboxs.updateDevoir.firstConfirmSupp = false;
+          } else if ($scope.opened.lightboxs.updateDevoir.secondConfirmSupp === true) {
+              $scope.secondConfirmSuppSkill = true;
+              $scope.opened.lightboxs.updateDevoir.secondConfirmSupp = false;
+          } else if ($scope.opened.lightboxs.updateDevoir.evaluatedSkillDisabel) {
+              $scope.evaluatedDisabel = true;
+              $scope.opened.lightboxs.updateDevoir.evaluatedSkillDisabel = false;
+          }
         };
-        /**
-         *
-         */
+      /**
+       *
+       */
         $scope.beforSaveDevoir = function () {
             $scope.competencesSupp = [];
             $scope.evaluatedCompetencesSupp = [];
@@ -2476,7 +2498,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 devoir.id_sousmatiere = matiere.sousMatieres.all[0].id_type_sousmatiere;
             }
 
-            if( matiere.sousMatieres !== undefined && matiere.sousMatieres.all.length === 0 && devoir.id_sousmatiere !== null){
+            if( matiere.sousMatieres !== undefined && matiere.sousMatieres.all.length === 0
+                && devoir.id_sousmatiere !== null){
                 devoir.id_sousmatiere = null;
             }
 
@@ -2571,12 +2594,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param currentDevoir le devoir en cours de visualisation
          * @returns {any} libelle de la sous matière
          */
-        /*$scope.getLibelleSousMatiere = function (currentDevoir) {
-            let id_type_sousmatiere = currentDevoir.id_sousmatiere;
-            if (id_type_sousmatiere === null || id_type_sousmatiere === "" || id_type_sousmatiere === undefined) return "";
-            $scope.selectedMatiere(currentDevoir);
-            return _.findWhere(currentDevoir.matiere.sousMatieres.all, {id_type_sousmatiere: parseInt(id_type_sousmatiere)}).libelle;
-        };*/
 
         $scope.getLibelleSousMatiere = function (currentDevoir) {
             let id_type_sousmatiere = currentDevoir.id_sousmatiere;
@@ -2584,11 +2601,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return _.findWhere($scope.structure.typeSousMatieres, {id: parseInt(id_type_sousmatiere)}).libelle;
         };
 
-
-        // $scope.getLibelleDevoir = function (id) {
-        // let devoir = $scope.devoirs.findWhere({id : id});
-        // if (devoir !== undefined) return devoir.name;
-        // };
 
         $scope.getLibelleDevoir = function (id) {
             if ($scope.mapIdLibelleDevoir !== undefined) return $scope.mapIdLibelleDevoir[parseInt(id)];

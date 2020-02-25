@@ -164,7 +164,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                     await oldElement.avisOrientation.syncAvisOrientation();
                     $scope.oldElementsBilanPeriodique.push(oldElement);
                 }
-        }
+            }
 
             $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
             $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
@@ -534,6 +534,24 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
                 await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
                 await $scope.elementBilanPeriodique.avisOrientation.syncAvisOrientation();
+                $scope.oldElementsBilanPeriodique = [];
+                $scope.oldElementsBilanPeriodique = [];
+                for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
+                    if(periode.id != null){
+                        let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                            periode, $scope.structure, $scope.filteredPeriode);
+                        oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
+                            periode, $scope.structure.id);
+                        oldElement.avisConseil = new AvisConseil($scope.informations.eleve.id,
+                            periode, $scope.structure.id);
+                        oldElement.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
+                            periode, $scope.structure.id);
+                        await oldElement.syntheseBilanPeriodique.syncSynthese();
+                        await oldElement.avisConseil.syncAvisConseil();
+                        await oldElement.avisOrientation.syncAvisOrientation();
+                        $scope.oldElementsBilanPeriodique.push(oldElement);
+                    }
+                }
                 $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
                 $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
                 await utils.safeApply($scope);

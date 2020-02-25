@@ -1434,6 +1434,10 @@ public class DefaultExportService implements ExportService {
         Future<JsonObject> infoEleve = Future.future();
         utilsService.getInfoEleve(idUser, event -> formate(infoEleve, event));
 
+        // récupération du Backup de l'élève s'il est supprimé
+        Future<JsonObject> infoEleveBackup = Future.future();
+        utilsService.getInfoEleveBackup(idUser, event -> formate(infoEleveBackup, event));
+
         // Récupération de la liste des devoirs de la personne avec ses notes associées
         Future<JsonArray> devoirsFuture = Future.future();
         devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode,
@@ -1447,16 +1451,30 @@ public class DefaultExportService implements ExportService {
         Future<JsonArray> subjectF = Future.future();
         new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
 
-        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF)
+        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF, infoEleveBackup)
                 .setHandler(event -> {
                     if (event.failed()) {
-                        Utils.returnFailure("getExportReleveEleve", event, handler);
+                        Utils.returnFailure("getExportReleveEleve : event failed", event, handler);
+                        return;
+                    }
+                    if(infoEleve.result().isEmpty() && infoEleveBackup.result().isEmpty()){
+                        Utils.returnFailure("getExportReleveEleve : No informations about the student", event, handler);
                         return;
                     }
 
-                    final JsonObject userJSON = infoEleve.result();
-                    final String classeEleve = userJSON.getJsonObject("u").getJsonObject("data")
-                            .getJsonArray("classes").getString(0);
+                    final JsonObject userJSON;
+                    final String classeEleve;
+                    Boolean isBackup = false;
+
+                    if(!infoEleve.result().isEmpty()){
+                        userJSON = infoEleve.result();
+                        classeEleve = userJSON.getJsonObject("u").getJsonObject("data")
+                                .getJsonArray("classes").getString(0);
+                    }else{
+                        userJSON = infoEleveBackup.result();
+                        classeEleve = userJSON.getString("idClasse");
+                        isBackup = true;
+                    }
 
                     // devoirs de l'eleve (avec ses notes) sous forme d'objet JSON
                     final JsonArray devoirsJSON = devoirsFuture.result();
@@ -1501,7 +1519,7 @@ public class DefaultExportService implements ExportService {
                         periodeJSON.put("libelle", "Ann\u00E9e");
                     }
                     getEnseignantsMatieres(matieres, classeEleve, idEnseignants, devoirsJSON,
-                            periodeJSON, userJSON, etabJSON, handler);
+                            periodeJSON, userJSON, etabJSON, isBackup, handler);
                 });
     }
 
@@ -1522,7 +1540,7 @@ public class DefaultExportService implements ExportService {
     public void getEnseignantsMatieres(final JsonArray matieres,
                                        final String classe, JsonArray idUsers, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
-                                       final JsonObject etabJson, Handler<Either<String, JsonObject>> handler) {
+                                       final JsonObject etabJson, final boolean isBackup, Handler<Either<String, JsonObject>> handler) {
 
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
@@ -1579,13 +1597,18 @@ public class DefaultExportService implements ExportService {
 
                 templateProps.put("matieres", matieres);
                 templateProps.put("periode", periodeJson);
-                templateProps.put("user", userJson.getJsonObject("u").getJsonObject("data"));
-                templateProps.put("classe", userJson.getJsonObject("c").getJsonObject("data"));
+                String prefixPdfName = "releve-eleve";
+                if(isBackup){
+                    templateProps.put("user", userJson);
+                    prefixPdfName += "-" + userJson.getString("displayName");
+                }else{
+                    templateProps.put("user", userJson.getJsonObject("u").getJsonObject("data"));
+                    templateProps.put("classe", userJson.getJsonObject("c").getJsonObject("data"));
+                    prefixPdfName += "-" + userJson.getJsonObject("u").getJsonObject("data").getString("displayName");
+                    prefixPdfName += "-" + userJson.getJsonObject("c").getJsonObject("data").getString("name");
+                }
                 templateProps.put("etablissement", etabJson);
                 templateProps.put(PRINT_SOUS_MATIERE, printSousMatiere);
-                String prefixPdfName = "releve-eleve";
-                prefixPdfName += "-" + userJson.getJsonObject("u").getJsonObject("data").getString("displayName");
-                prefixPdfName += "-" + userJson.getJsonObject("c").getJsonObject("data").getString("name");
 
                 String etablissementName = etabJson.getString("name");
                 etablissementName = etablissementName.trim().replaceAll(" ", "-");
@@ -1762,11 +1785,11 @@ public class DefaultExportService implements ExportService {
             Future eleveFuture = Future.future();
 
             classeFuture.add(eleveFuture);
-            getDataForEleve(idEleve, idEtablissement, idPeriode, params, eleveFuture, exportResultClasse);
+            getDataForEleve(elevesClasse, idEleve, idEtablissement, idPeriode, params, eleveFuture, exportResultClasse);
         }
     }
 
-    private void getDataForEleve(String idEleve, String idEtablissement, Long idPeriode, MultiMap params,
+    private void getDataForEleve(JsonArray elevesClasse, String idEleve, String idEtablissement, Long idPeriode, MultiMap params,
                                  Future eleveFuture, JsonArray exportResultClasse) {
         getDataForExportReleveEleve(idEleve, idEtablissement, idPeriode, params, event -> {
             if(event.isLeft()){
