@@ -1,0 +1,26 @@
+<section  class="note-table" ng-if="teacherNotesAndAppraisals.length !== 0">
+    <p ng-if="teacherNotesAndAppraisals.length === 0">
+        <i18n>competance.class.info.empty</i18n>
+    </p>
+    <table class="twelve">
+        <thead>
+        <tr>
+            <th ng-repeat=" rowHeader in dataHeaderAppraisals">
+                <i18n>[[rowHeader]]</i18n>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="noteAndAppraisal in teacherNotesAndAppraisals">
+            <td>
+                <p>[[noteAndAppraisal.subjectName || '-']]</p>
+                <p>[[noteAndAppraisal.teacherName || '-']]</p>
+            </td>
+            <td class="testAlignLeft">[[noteAndAppraisal.appraisal.content_text]]</td>
+            <td>[[noteAndAppraisal.average.moyenne]]</td>
+            <td>[[noteAndAppraisal.average.minimum]]</td>
+            <td>[[noteAndAppraisal.average.maximum]]</td>
+        </tr>
+        </tbody>
+    </table>
+</section>

@@ -97,7 +97,7 @@
         </form>
     </section>
     <br>
-    <section>
+    <section  ng-if="displayFollowCompetencesClass === 'followItems'">
         <div>
             <label>
                 <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="true">
@@ -119,7 +119,7 @@
     <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
-<div ng-if="search.classe.id_cycle !== null && structure.cycle !== undefined ">
+<div ng-if="search.classe.id_cycle !== null && structure.cycle !== undefined && displayFollowCompetencesClass === 'followItems'">
     <div ng-if="(isChefEtab(search.classe) && evaluations.structure.moyenneVisible===1)
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_classe/content_vue_suivi_classe')

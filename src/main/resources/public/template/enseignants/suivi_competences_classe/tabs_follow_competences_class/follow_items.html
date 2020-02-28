@@ -1,0 +1,40 @@
+<article>
+    <div align="right">
+        <ul class="selectable-filter-list"
+            ng-if="opened.detailCompetenceSuivi">
+            <li ng-repeat="color in niveauCompetences"
+                ng-click="selected.colors[color.ordre]= ! selected.colors[color.ordre];">
+                <c-skills-bubble
+                        text="color.lettre"
+                        color="color.couleur"
+                        select-cond="selected.colors[color.ordre]">
+                </c-skills-bubble>
+            </li>
+            <li>
+                <span class="rounded grey"
+                      ng-class="{selected : selected.colors[0]}"
+                      ng-click="selected.colors[0] = !selected.colors[0]">
+                </span>
+            </li>
+        </ul>
+    </div>
+    <div class="suivi-eleve-slider" >
+        <div class="suivi-eleve inline-block six"
+             ng-class="{slide : opened.detailCompetenceSuivi}">
+            <container
+                    template="suivi-competence-content"></container>
+        </div>
+        <div class="detail-competence inline-block six">
+            <div class="twelve">
+                <a ng-click="backToSuivi()"
+                   ng-show="opened.detailCompetenceSuivi">
+                    <i class="icon-back"></i>
+                </a>
+            </div>
+            <h2 class="ellipsis ten">
+                [[detailCompetence.nom]]
+            </h2>
+            <container template="suivi-competence-detail"></container>
+        </div>
+    </div>
+</article>

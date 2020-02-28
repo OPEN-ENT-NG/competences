@@ -1,0 +1,38 @@
+body.evaluations {
+  $greyBorder: #D7D7D7;
+  $greyRow: #ECECEC;
+  $greyColumn: #DDDDDD;
+  $greySeparator: #B3B3B3;
+  $greyHoverRow: #CCCCCC;
+
+  @mixin rowWithoutHeader {
+    td{
+      border-left: 1px solid $greyBorder;
+      border-right: 1px solid $greyBorder;
+    }
+    tr:hover td {background-color: $greyHoverRow !important}
+  }
+
+  .note-table{
+    font-size: 0.8em;
+    overflow-x: scroll;
+    table{
+      border: solid 1px $greyBorder;
+      tr:nth-child(even) {background-color: $greyRow}
+      td:nth-child(2n+3) {background-color: $greyColumn}
+      td:first-child, td:last-child{font-weight: bold}
+      td:nth-child(n + 2){text-align: center}
+      tbody{
+        @include rowWithoutHeader;
+      }
+      tfoot{
+        @include rowWithoutHeader;
+        border-top: 3px solid $greySeparator;
+        tr:nth-child(1) > td:nth-child(1) {color: $primary-dark}
+        tr:nth-child(2) > td:nth-child(1) {color: $red}
+        tr:nth-child(3) > td:nth-child(1) {color: $green}
+      }
+    }
+  }
+}
+

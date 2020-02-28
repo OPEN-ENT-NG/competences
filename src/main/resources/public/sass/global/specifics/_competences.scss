@@ -1265,6 +1265,12 @@ body.evaluations {
       font-size: 20px !important;
     }
   }
+  .button-download{
+    margin-left: 20px;
+    top: 0px;
+    position: relative;
+    float: right;
+  }
   .ul-competences{
     list-style-type: none;
     li{
@@ -2363,7 +2369,7 @@ body.evaluations {
 
     .suivi-eleve-ctl {
       background-color: $white;
-      min-height: 95px;
+      min-height: 100px;
       border-bottom: solid 1px $primary-dark;
     }
 
@@ -3302,7 +3308,37 @@ body.evaluations {
   .loaderCenter {
     margin: 0 45%;
   }
-
+  .loaderPage{
+    margin: 20% 45%;
+  }
+  .tabs{
+    header {
+      margin-right: 50px;
+      cursor: pointer;
+    }
+    .tabs-selected::after {
+      transform: scaleX(1);
+    }
+    .tabs-selected{
+      color: #4bafd5;
+    }
+  }
+  .iframeReportClass{
+    display: flex;
+  }
+  .half-width{
+    width: 50%;
+  }
+  .followingClass{
+    margin-left: 15px;
+  }
+  .marginUnderTabs{
+    margin-bottom: 20px;
+  }
+  .choseDownloadFormat{
+    display: flex;
+    justify-content: space-around;
+  }
 }
 
 
