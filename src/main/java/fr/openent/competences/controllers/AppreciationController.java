@@ -295,5 +295,19 @@ public class AppreciationController extends ControllerHelper {
         });
     }
 
+    @Get("/appreciations/:idClasse/class/:idPeriode/period")
+    @ApiDoc("renvoit tous les appréciations d'une classe sur une période donnée")
+    @SecuredAction(value = "", type= ActionType.RESOURCE)
+    @ResourceFilter(AccessAppreciationClasseFilter.class)
+    public void getAppraisalsByClassAndPeriod(final HttpServerRequest request) {
+        try{
+                final String idClass = request.params().get("idClasse");
+                final String typePeriod = request.params().get("idPeriode");
+                appreciationService.getAppraisalsByClassAndPeriod(idClass, typePeriod,  arrayResponseHandler(request));
+        } catch (Exception error){
+            badRequest(request, "Error:" + error);
+        }
+    }
+
 }
 

@@ -15,18 +15,10 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, _, model, notify, Collection, moment} from 'entcore';
-import http from 'axios';
-import {
-    Periode,
-    Classe,
-    Structure,
-    ElementBilanPeriodique,
-    evaluations
-} from './index';
+import {_, Collection, idiom as lang, Model, model, moment, notify} from 'entcore';
+import http, {AxiosResponse} from 'axios';
+import {Classe, ElementBilanPeriodique, evaluations, Matiere, Periode, ReleveNoteTotale, Structure} from './index';
 import {AppreciationElement} from "./AppreciationElement";
-import {AvisConseil} from "./AvisConseil";
-import {AvisOrientation} from "./AvisOrientation";
 import {Utils} from "./Utils";
 
 export class BilanPeriodique extends  Model {
@@ -38,13 +30,18 @@ export class BilanPeriodique extends  Model {
     appreciations : Collection<AppreciationElement>;
     endSaisie : Boolean;
 
+
     static get api() {
         return {
             GET_ELEMENTS: '/competences/elementsBilanPeriodique?idEtablissement=' + evaluations.structure.id,
             GET_ENSEIGNANTS: '/competences/elementsBilanPeriodique/enseignants',
             GET_APPRECIATIONS: '/competences/elementsAppreciations',
             CREATE_APPRECIATIONS_SAISIE_PROJETS: '/competences/elementsAppreciationsSaisieProjet',
-            CREATE_APPRECIATIONS_BILAN_PERIODIQUE: '/competences/elementsAppreciationBilanPeriodique'
+            CREATE_APPRECIATIONS_BILAN_PERIODIQUE: '/competences/elementsAppreciationBilanPeriodique',
+            GET_SYNTHESIS: '/competences/results/class/synthesis',
+            GET_HOMEWORK:"/competences/releve/export/checkDevoirs?idEtablissement=",
+            GET_APPRAISALS:"/competences/appreciations/",
+            GET_SUBJECTS: "/competences/subjects/short-label/subjects?ids="
         }
     }
 
@@ -193,4 +190,217 @@ export class BilanPeriodique extends  Model {
         }
     }
 
+    private async getHomework (parameter:any):Promise<any | Error>{
+        const { data, status }:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_HOMEWORK}${parameter.idEtablissement}&idClasse=${parameter.idClasse}&idPeriode=${parameter.idPeriode}`);
+        if(status === 200) return data;
+        throw new Error("getHomework");
+    }
+
+    private async getSynthesis (parameter:any):Promise<any | Error>{
+        const { data, status }:AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}`, parameter);
+        if(status === 200) return data;
+        throw new Error("getSynthesis");
+    }
+
+    private async getAppraisals(parameter:any):Promise<any | Error> {
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_APPRAISALS}${parameter.idClasse}/class/${parameter.idPeriode}/period`);
+        if(status === 200) return data;
+        throw new Error("getAppraisals");
+    }
+
+    private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.map((subject:Matiere):Boolean=>subject.id).join(",")}`);
+        if(status === 200) return data;
+        throw new Error("getAppraisals");
+    }
+
+    public async summaryEvaluations (idClass:string, idPeriod:number):Promise<void>{
+        const { data, status }:AxiosResponse = await http.get(`/competences/recapEval/print/${idClass}/export?text=false&usePerso=false&idPeriode=${idPeriod}&json=true`);
+        if(status === 200) return data;
+        notify.error(lang.translate("competance.error.results.class"));
+    }
+
+    private async callsDataSynthesisAndAppraisals (initResultPeriodic:any, subjects:Array<Matiere>, scope:any):Promise<any> {
+        try {
+            const noteTotal: ReleveNoteTotale = new ReleveNoteTotale(initResultPeriodic);
+            const parameter: any = {
+                idMatieres: initResultPeriodic.idMatieres,
+                idClasse: noteTotal.idClasse,
+                idEtablissement: noteTotal.idEtablissement,
+                idPeriode: noteTotal.idPeriode,
+                idPeriodes: _.pluck(noteTotal.periodes, 'idPeriode'),
+                typeClasse: noteTotal.classe.type_groupe,
+                idGroups: [],
+            };
+            if (!parameter.idPeriode) {
+                Utils.stopMessageLoader(scope);
+                return;
+            }
+            ;
+            return await Promise.all([
+                this.getHomework(parameter),
+                this.getAppraisals(parameter),
+                this.getSynthesis(parameter),
+                this.getSubjects(subjects),
+            ])
+                .then((dataResponse: any): any => dataResponse)
+                .catch((error: String): void => {
+                    Utils.stopMessageLoader(scope);
+                    console.error(error);
+                    notify.error(lang.translate("competance.error.results.class"))
+                });
+        } catch(errorReturn){
+            Utils.stopMessageLoader(scope);
+            notify.error(lang.translate("competance.error.results.class" + errorReturn));
+            return undefined;
+        }
+    };
+
+    private manageDataView (data:any):Array<any>{
+        let matchingDataApi:Array<any> = [];
+        const homeworks:Array<any> = data.homeworks;
+        const appraisals:Array<any> = data.appraisals;
+        const statistics:any = data.synthesis.statistiques;
+        const subjects = data.subjects;
+        for (let subjectId in statistics) {
+            for (let k = 0; k < homeworks.length ; k++) {
+                if(homeworks[k].id_matiere === subjectId && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)) {
+                    const subject = _.values(subjects).find(subject => subject.id === homeworks[k].id_matiere);
+                    matchingDataApi.push({
+                        idSubject: subjectId,
+                        average: statistics[subjectId].moyenne,
+                        teacherName: homeworks[k].teacher,
+                        subjectName: subject? subject.name : undefined,
+                        subjectShortName:  subject? subject.libelle_court : undefined,
+                        appraisal: appraisals.find(appraisal => appraisal.id_subject === subjectId),
+                    });
+                    break;
+                }
+            }
+        }
+        return matchingDataApi;
+    }
+
+    private async createHeaderTable (data){
+        let resultHeader:Array<any> = [];
+        const dataSynthesis = await this.manageDataView(data);
+        resultHeader =  [
+            {
+                idSubject: undefined,
+                subjectName: lang.translate("student"),
+                teacherName: undefined,
+            },
+            ...dataSynthesis.map(subjectToSynthesis => {
+                const [lastName, firstName ] = subjectToSynthesis.teacherName.split(" ");
+                return {
+                    idSubject: subjectToSynthesis.idSubject,
+                    subjectName: subjectToSynthesis.subjectShortName,
+                    teacherName: Utils.makeShortName(lastName, firstName),
+                }
+            }),
+            {
+                idSubject: undefined,
+                subjectName: lang.translate("average"),
+                teacherName: undefined,
+            },
+        ];
+        return resultHeader;
+    }
+
+    private async createBodyTable (headerArrayTeachers:Array<any>, data:Array<any>):Promise<Array<any>>{
+        let resultBody:Array<any> = [];
+        const students = data['students'];
+        for (let i = 0; i < students.length; i++) {
+            let student = students[i];
+            const subjectsAverages:Array<any> = await this.aggregationNotesBySubjects(headerArrayTeachers, student.moyenneFinale);
+            resultBody.push([
+                `${student.lastName} ${student.firstName}`,
+                ...subjectsAverages,
+                student.moyenne_generale,
+            ]);
+        }
+        return resultBody.sort((firstStudent:Array<string>, secondStudent:Array<string>):number => {
+            return firstStudent[0].localeCompare(secondStudent[0])
+        });
+    }
+
+    private async createFooterTable (headerArrayTeachers:Array<any>, data:Array<any>):Promise<Array<any>>{
+        let resultFooter:Array<any> = [];
+        const statistics = data['statistiques'];
+        resultFooter = await this.aggregationNotesBySubjects(headerArrayTeachers, statistics);
+        resultFooter = [
+            ...resultFooter.map( mapRow => mapRow.moyenne),
+            data['statistiques'].moyenne_generale
+        ];
+        return [
+            [lang.translate("average"), ...resultFooter.map(averageNote => averageNote.moyenne)],
+            [lang.translate("average.minimum"), ...resultFooter.map(minimumNote => minimumNote.minimum)],
+            [lang.translate("average.maximum"), ...resultFooter.map(maximumNote => maximumNote.maximum)],
+        ]
+    }
+
+    private async aggregationNotesBySubjects (subjectsFromHeaderTable:Array<any>, notes:object):Promise<Array<any>>{
+        let subjectsNotes:Array<any> = [];
+        for (let i = 0; i < subjectsFromHeaderTable.length; i++) {
+            let hasNoteSubject:Boolean = false;
+            for(let idSubject in notes){
+                if(subjectsFromHeaderTable[i].idSubject === idSubject){
+                    subjectsNotes.push(notes[idSubject]);
+                    hasNoteSubject = true;
+                    break;
+                }
+                if(!subjectsFromHeaderTable[i].idSubject) {
+                    hasNoteSubject = true;
+                    break;
+                }
+            }
+            if(!hasNoteSubject) subjectsNotes.push('');
+        }
+        return subjectsNotes;
+    }
+
+    public async getAppraisalsAndNotesByClassAndPeriod(data:any):Promise<Array<any>>{
+        return this.manageDataView(data);
+    }
+
+    public async getAverage (data:any):Promise<any>{
+        const headerTable = await this.createHeaderTable(data);
+        return {
+            headerTable: headerTable,
+            bodyTable: await this.createBodyTable(headerTable, data),
+            footerTable: await this.createFooterTable(headerTable, data.synthesis),
+        }
+    }
+
+    public makeCsv (fileName:string, dataHeader:Array<Array<any>>, dataBody:Array<Array<any>>):void{
+        let csvPrepared:Array<Array<any>> = [...dataHeader, ...dataBody];
+        if (csvPrepared.length > 0) {
+            const blob = new Blob([`\ufeff${Utils.prepareCsvString(csvPrepared)}`], {type: ' type: "text/csv;charset=UTF-8"'});
+            const link = document.createElement('a');
+            link.href = (window as any).URL.createObjectURL(blob);
+            link.download = `${fileName}.csv`;
+            document.body.appendChild(link);
+            link.click();
+        }
+    }
+
+    public async synthesisAndAppraisals (initResultPeriodic:any, scope:any, subjects:Array<Matiere>):Promise<any>{
+        const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, subjects, scope);
+        if(result){
+            return {
+                homeworks: result[0],
+                appraisals: result[1],
+                synthesis: result[2],
+                students : result[2].eleves,
+                subjects : result[3].subjects,
+            }
+        }
+        return {
+            homeworks: [],
+            appraisals: [],
+            synthesis: [],
+            students : [],
+            subjects: [],
+        }
+    }
 }

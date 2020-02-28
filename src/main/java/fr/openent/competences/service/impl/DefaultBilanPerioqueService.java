@@ -14,12 +14,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
+import org.entcore.common.neo4j.Neo4j;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Competences.MESSAGE;
 import static fr.openent.competences.Utils.isNotNull;
@@ -28,7 +29,7 @@ import static fr.openent.competences.service.impl.DefaultExportBulletinService.T
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
-import static org.entcore.common.sql.SqlResult.validResultHandler;
+import static org.entcore.common.sql.SqlResult.*;
 
 public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     private static final Logger log = LoggerFactory.getLogger(DefaultBilanPerioqueService.class);

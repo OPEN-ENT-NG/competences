@@ -215,43 +215,73 @@
         </button>
     </div>
 </lightbox>
-<div ng-if="search.classe.id_cycle !== null">
-    <div class="content-suivi-eleve twelve-mobile ten card"
-         ng-if="informations.classe !== '' && informations.classe !== undefined && search.classe !== ''">
-        <div class="twelve suivi-eleve-ctl"  sticky offset="64">
-            <h2 class="align-center"><i class="previous cell" ng-click="incrementClasse(-1)" ng-hide="hideArrow(-1)"></i>
-                [[informations.classe.name]]
-                <i class="next right-magnet" ng-click="incrementClasse(1)" ng-hide="hideArrow(1)"></i></h2>
-            <div align="right">
-                <ul class="selectable-filter-list" ng-if="opened.detailCompetenceSuivi">
-                    <li ng-repeat="color in niveauCompetences" ng-click="selected.colors[color.ordre]= ! selected.colors[color.ordre];">
-                        <!-- <span class="rounded"  ng-class="{selected : selected.colors[color.ordre]}"
-                              style='background-color:[[color.couleur]]'>
-                             <span>[[color.lettre]]</span>
-                             -->
-                        <c-skills-bubble text="color.lettre" color="color.couleur" select-cond="selected.colors[color.ordre]">
-                        </c-skills-bubble>
-                    </li>
-                    <li><span class="rounded grey" ng-class="{selected : selected.colors[0]}"
-                              ng-click="selected.colors[0] = !selected.colors[0]"></span></li>
-                </ul>
-            </div>
-        </div>
-        <div class="suivi-eleve-slider" >
-            <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
-                <container template="suivi-competence-content"></container>
-            </div>
-            <div class="detail-competence inline-block six">
-                <div class="twelve">
-                    <a ng-click="backToSuivi()" ng-show="opened.detailCompetenceSuivi">
-                        <i class="icon-back"></i>
-                    </a>
-                </div>
-                <h2 class="ellipsis ten">
-                    [[detailCompetence.nom]]
-                </h2>
-                <container template="suivi-competence-detail"></container>
-            </div>
+
+<article class="followingClass content-suivi-eleve twelve-mobile twelve card"
+         ng-if="search.classe.id_cycle !== null &&
+         search.classe.id_cycle !== undefined &&
+          informations.classe !== '' &&
+           informations.classe !== undefined &&
+            search.classe !== ''">
+    <div class="twelve suivi-eleve-ctl marginUnderTabs">
+        <h2 class="align-center">
+            <i class="previous cell"
+               ng-click="incrementClasse(-1)"
+               ng-hide="hideArrow(-1)">
+            </i>
+            [[informations.classe.name]]
+            <i class="next right-magnet"
+               ng-click="incrementClasse(1)"
+               ng-hide="hideArrow(1)">
+            </i>
+        </h2>
+        <div class="row tabs">
+            <header ng-class="displayFollowCompetencesClass === 'followItems'? 'tabs-selected': ''"
+                    data-ng-click="selectDisplayClassTabs('followItems')">
+                <i18n>evaluation.class.evaluation.header.followItems</i18n>
+            </header>
+            <header ng-class="displayFollowCompetencesClass === 'positioning'? 'tabs-selected': ''"
+                    data-ng-click="selectDisplayClassTabs('positioning')">
+                <i18n>evaluation.class.evaluation.header.positioning</i18n>
+            </header>
+            <header ng-class="displayFollowCompetencesClass === 'average'? 'tabs-selected': ''"
+                    data-ng-click="selectDisplayClassTabs('average')">
+                <i18n>evaluation.class.evaluation.header.average</i18n>
+            </header>
+            <header ng-class="displayFollowCompetencesClass === 'teacherAppraisals'? 'tabs-selected': ''"
+                    data-ng-click="selectDisplayClassTabs('teacherAppraisals')">
+                <i18n>evaluation.class.evaluation.header.teacherAppraisals</i18n>
+            </header>
         </div>
     </div>
-</div>
+    <button class="button-download"
+            ng-if="isDataOnPage"
+            ng-click="downloadContent()">
+        <i class="download"></i>
+    </button>
+    <div class="warning half-width"
+         ng-if="errorWhenExportPdf">
+        <i18n>competance.information.noExport</i18n>
+    </div>
+    <div ng-if="loadingTab"
+         class="loaderGraph loaderPage">
+    </div>
+    <container ng-if="!loadingTab"
+               template="followCompetencesClass">
+    </container>
+    <lightbox show="openLighBoxChosePdfCsv"
+              on-close="closeLightBox()">
+        <p>
+            <i18n>competance.lightbox.selectFormat</i18n>
+        </p>
+        <div class="choseDownloadFormat">
+            <button ng-click="downloadFileWithType('pdf')"
+                    ng-disabled="isDownloadWaiting">
+                <i18n>.PDF</i18n>
+            </button>
+            <button ng-click="downloadFileWithType('csv')"
+                    ng-disabled="isDownloadWaiting">
+                <i18n>.CSV</i18n>
+            </button>
+        </div>
+    </lightbox>
+</article>

@@ -1,5 +1,6 @@
 package fr.openent.competences.controllers;
 
+import fr.openent.competences.Utils;
 import fr.openent.competences.security.AdministratorRight;
 import fr.openent.competences.service.MatiereService;
 import fr.openent.competences.service.impl.DefaultMatiereService;
@@ -18,8 +19,12 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static fr.openent.competences.Competences.*;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class MatiereController extends ControllerHelper {
 
@@ -91,4 +96,33 @@ public class MatiereController extends ControllerHelper {
     public void updateDevoirs(final HttpServerRequest request) {
         matiereService.updateDevoirs(null, arrayResponseHandler(request));
     }
+
+    @Get("/subjects/short-label/subjects")
+    @ApiDoc("Get subjects with sort-labels")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    public void getShortLabetToSubjects(final HttpServerRequest request) {
+        try{
+            JsonArray idsSubjectPrepared = new JsonArray();
+            String paramsSubjectsIds = request.params().get("ids");
+            List<String> subjectsIds = Arrays.asList(paramsSubjectsIds.split(","));
+            if(subjectsIds.size() == 0){
+                defaultResponseHandler(request, 204);
+            } else {
+                for (String subjectId : subjectsIds) {
+                    idsSubjectPrepared.add(subjectId);
+                }
+                Utils.getLibelleMatiere(eb, idsSubjectPrepared, subjectsEvent -> {
+                    if(subjectsEvent.isLeft()) {
+                        badRequest(request, "Error left subjects: " + subjectsEvent.left().getValue());
+                    } else {
+                        Renders.renderJson(request, new JsonObject().put("subjects", subjectsEvent.right().getValue()));
+                    }
+                });
+            }
+        } catch( Exception errorCatch) {
+            badRequest(request, "Error in catch: " + errorCatch);
+        }
+
+    }
+
 }
