@@ -4676,7 +4676,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.currentDevoir.statistiques.percentDone = 100;
             await $scope.currentDevoir.finishDevoir();
             await utils.safeApply($scope);
-            $scope.goTo("/devoirs/list");
         };
 
         angular.merge = function (s1,s2) {
