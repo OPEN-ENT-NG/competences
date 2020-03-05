@@ -42,6 +42,7 @@ export class SuiviDesAcquis  {
     get api(){
         return{
             POST_DATA_RELEVE_PERIODIQUE: `/competences/bilan/periodique`,
+            POST_DATA_ELEMENT_PROGRAMME: `/competences/releve/element/programme`,
         }
     }
 
@@ -76,6 +77,21 @@ export class SuiviDesAcquis  {
 
             }
     }
+
+    async saveElementsProgrammeMatierePeriodeEleve() {
+        let _data = _.extend(this.toJson(),{
+            idClasse: this.idClasse,
+            texte: this.elementsProgramme
+        });
+
+        try{
+            return await http.post(this.api.POST_DATA_ELEMENT_PROGRAMME, _data);
+        }catch (e){
+            notify.error('evaluations.releve.elementProgramme.classe.save.error');
+            console.log(e);
+        }
+    }
+
    async savePositionnementEleve(positionnement) {
 
        let _data = _.extend(this.toJson(), {

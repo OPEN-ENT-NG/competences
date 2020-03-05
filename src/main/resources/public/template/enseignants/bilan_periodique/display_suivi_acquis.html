@@ -77,7 +77,22 @@
                         </div>
                     </td>
                     <td data-label="[[translate('bilan.perodique.elements.programme.travailles')]]">
-                        <div class ="twelve element">[[suiviDesAcquis.elementsProgramme]] </div>
+                        <ng-form name="elementsProgrammeMatiereForm">
+                                <textarea ng-show="canSaveAppMatierePosiBilanPeriodique"
+                                          name="elementProgramme"
+                                          type ="text"
+                                          ng-maxlength="MAX_CHAR_APPRECIATION_LENGTH"
+                                          maxlength="MAX_CHAR_APPRECIATION_LENGTH"
+                                          ng-model="suiviDesAcquis.elementsProgramme"
+                                          ng-blur="suiviDesAcquis.saveElementsProgrammeMatierePeriodeEleve()">
+                                </textarea>
+                            <div class ="twelve element" ng-show="!canSaveAppMatierePosiBilanPeriodique"
+                                 ng-bind="suiviDesAcquis.elementsProgramme">
+                            </div>
+                            <div ng-if="elementsProgrammeMatiereForm.elementProgramme.$error.maxlength" class="warning">
+                                <i18n>evaluations.releve.elementProgramme.classe.max.length</i18n>
+                            </div>
+                        </ng-form>
                     </td>
                     <td data-label="[[translate('appreciation')]]">
                         <ng-form name="appreciationMatiereForm">
