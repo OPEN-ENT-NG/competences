@@ -22,6 +22,7 @@ import io.vertx.core.logging.LoggerFactory;
 import org.entcore.common.neo4j.Neo4j;
 import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
+import org.entcore.common.sql.SqlResult;
 import org.entcore.common.storage.Storage;
 
 
@@ -167,7 +168,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private final DefaultNiveauDeMaitriseService defaultNiveauDeMaitriseService;
     private HttpClient httpClient;
     private DefaultNoteService noteService;
-    
+
     public DefaultExportBulletinService(EventBus eb, Storage storage) {
         this.eb = eb;
         bilanPeriodiqueService = new DefaultBilanPerioqueService(eb);
@@ -331,6 +332,28 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     }
                 }
                 ));
+    }
+
+    public void saveParameters(JsonArray idStudents, Long idPeriode,
+                               String paramsString, final Handler<Either<String, JsonObject>> finalHandler){
+        JsonArray params = new JsonArray();
+        StringBuilder query = new StringBuilder("INSERT INTO " + COMPETENCES_SCHEMA + ".bulletin_parameters (id_student, id_periode, params) " +
+                " VALUES ");
+        for(Object student : idStudents){
+            query.append(" ( ?, ?, ? ) ,");
+            params.add((String)student).add(idPeriode).add(paramsString);
+        }
+        query = new StringBuilder(query.substring(0, query.length() - 1));
+        query.append(" ON CONFLICT (id_student, id_periode) DO UPDATE SET params = ?");
+        params.add(paramsString);
+
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(finalHandler));
+    }
+
+    public void getParameters(String idStudent, Long idPeriode, final Handler<Either<String, JsonObject>> finalHandler){
+        String query = "SELECT params FROM " + COMPETENCES_SCHEMA + ".bulletin_parameters WHERE id_student = ? AND id_periode = ?";
+        JsonArray params = new JsonArray().add(idStudent).add(idPeriode);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(finalHandler));
     }
 
     private void logBegin(String method, String idEleve) {
@@ -546,7 +569,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 if(isNotNull(params.getValue("simple")) && params.getBoolean("simple")) {
                                     template = "bulletin_lycee.pdf.xhtml";
                                 }
-                                    exportService.genererPdf(request, resultFinal, template, title, vertx, config);
+                                exportService.genererPdf(request, resultFinal, template, title, vertx, config);
                             }
                             if(future != null){
                                 log.debug("EleveDone : " + elevesDone.get()
@@ -1694,7 +1717,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 NoteDevoir noteEleve = new NoteDevoir(moyCuEl, 20.0, false, 1.0, idEleve);
                 notesByDevoirByPeriodeClasse.get(idPeriode).get(idPeriode).add(noteEleve);
             }
-            
+
         }
 
         eleveObject.put(MOYENNE_GENERALE + "Obj", new JsonObject());

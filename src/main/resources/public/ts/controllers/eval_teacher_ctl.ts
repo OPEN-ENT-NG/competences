@@ -783,7 +783,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             try {
                 await devoir.switchVisibilityApprec();
             } catch (e) {
-                console.log(e);
+                console.error(e);
             } finally {
                 utils.safeApply($scope);
             }
@@ -3755,7 +3755,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.opened.releveComp = true;
                     }
                     $scope.errorResult(result);
-                    console.log(result);
+                    console.error(result);
                     utils.safeApply($scope);
 
                 })
@@ -4181,7 +4181,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     await eleve.getDetails($scope.releveNote.idEtablissement,
                         $scope.releveNote.idClasse, $scope.releveNote.idMatiere);
                 } catch (e) {
-                    console.log(e);
+                    console.error(e);
                 }
 
                 let moyenneAnnee = 0;

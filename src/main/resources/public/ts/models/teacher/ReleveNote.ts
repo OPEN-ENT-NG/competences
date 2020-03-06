@@ -250,7 +250,7 @@ export class ReleveNote extends  Model implements IModel {
                         resolve();
                     })
                     .error((res) => {
-                        console.dir(res);
+                        console.error(res);
                         reject();
                     })
             }
@@ -275,7 +275,7 @@ export class ReleveNote extends  Model implements IModel {
                         resolve();
                     })
                     .error((res) => {
-                        console.dir(res);
+                        console.error(res);
                         reject();
                     })
             }
@@ -300,7 +300,7 @@ export class ReleveNote extends  Model implements IModel {
                         resolve();
                     })
                     .error((res) => {
-                        console.dir(res);
+                        console.error(res);
                         reject();
                     })
             }
@@ -319,7 +319,7 @@ export class ReleveNote extends  Model implements IModel {
                         resolve();
                     })
                     .error((res) => {
-                        console.dir(res);
+                        console.error(res);
                         reject();
                     })
             } else {
@@ -345,12 +345,12 @@ export class ReleveNote extends  Model implements IModel {
                                 resolve();
                             })
                             .error((propositions) => {
-                                console.dir(propositions);
+                                console.error(propositions);
                                 reject();
                             })
                     })
                     .error((res) => {
-                        console.dir(res);
+                        console.error(res);
                         reject();
                     })
             } else {

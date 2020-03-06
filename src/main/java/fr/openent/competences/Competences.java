@@ -221,6 +221,7 @@ public class Competences extends BaseServer {
     public static final String NN = "NN";
     public static final String ID_KEY = "id";
     public static final String ID_STRUCTURE_KEY = "idStructure";
+    public static final String ID_STUDENTS_KEY = "idStudents";
     public static final String EXTERNAL_ID_SUBJECT = "external_id_subject";
     public static final String EXTERNAL_ID_KEY = "externalId";
     public static final String TITLE =  "title";

@@ -15,7 +15,6 @@
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
 
-<!DOCTYPE html>
 <div class="custom-mobile-releve"
      ng-include="'/competences/public/template/parent_enfant/accueil/eval_parent_menu.html'"></div>
 
@@ -25,8 +24,8 @@
         <header class="header-viescolaire">
             <h1><span class="no-style ng-scope"><i18n>evaluations.releve.title</i18n></span></h1>
 
-            <section style="margin-top:8px;" ng-if="me.type === 'PERSRELELEVE'" class="row twelve-mobile">
-                <label class="select cell two twelve-mobile" ng-hide="searchReleve.eleve===undefined">
+            <section class="row twelve-mobile margin-top-releve-parentEleve">
+                <label class="select cell two twelve-mobile" ng-hide="me.type === 'PERSRELELEVE' && searchReleve.eleve===undefined">
                     <select ng-model="searchReleve.periode"
                             ng-change="loadReleveNote()"
                             ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all | filter:filterCycle()">
@@ -41,26 +40,9 @@
                     &nbsp;  <i class="download"> </i><i18n>evaluations.export</i18n>
                 </a>
             </section>
-            <section style="margin-top:8px;" ng-if="me.type === 'ELEVE'" class="row twelve-mobile">
-                <label class="select cell two twelve-mobile">
-                    <select ng-model="searchReleve.periode"
-                            ng-change="loadReleveNote()"
-                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all | filter:filterCycle()">
-                        <option class="header-opt" disabled value="">
-                            [[translate('viescolaire.utils.periode')]]
-                        </option>
-                    </select>
-                </label>
-                <a ng-show="dataReleve.devoirs.all.length > 0 && searchReleve.eleve.classe.periode !== null"
-                   class="print-i twelve-mobile"
-                   ng-click="getReleve()">
-
-                    &nbsp;<i class="download"> </i><i18n>print</i18n>
-                </a>
-            </section>
         </header>
 
-        <content ng-show="checkHaveResult()">
+        <div ng-show="checkHaveResult()">
             <div class="responsive-table">
                 <table navigable>
                     <thead>
@@ -194,10 +176,10 @@
                 </table>
             </div>
             <span>* note <sup>n</sup> (m) : </span><i18n>evaluation.notation.explanation</i18n>
-        </content>
-        <content ng-show="!checkHaveResult()">
-            <h1 class="twelve-mobile" style="color: grey;"><i18n>evaluations.no.summary</i18n></h1>
-        </content>
+        </div>
+        <div ng-show="!checkHaveResult()">
+            <h1 class="twelve-mobile grey-color"><i18n>evaluations.no.summary.releve</i18n></h1>
+        </div>
 
     </div>
 </div>

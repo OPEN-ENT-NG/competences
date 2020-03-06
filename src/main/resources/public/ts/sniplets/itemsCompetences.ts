@@ -66,7 +66,7 @@ export const itemsCompetences = {
                     }
                 })
                 .error(function () {
-                    console.log('domaine not founded');
+                    console.error('domaine not founded');
                     itemsCompetences.that.domaines = {
                         all: []
                     };
@@ -208,7 +208,7 @@ export const itemsCompetences = {
                 })
                 .error(() => {
                     this.opened.errorDeletePersoItem = true;
-                    console.log('delete not work');
+                    console.error('delete not work');
                     utils.safeApply(this);
                 }).bind(this);
         },
@@ -325,7 +325,7 @@ export const itemsCompetences = {
                             utils.safeApply(this);
                         })
                         .error((res) => {
-                            console.dir(res);
+                            console.error(res);
                             this.opened.lightboxCreateItem = false;
                             this.opened.error = true;
                             if (res.status === 401) {
@@ -423,7 +423,6 @@ export const itemsCompetences = {
         },
         updateOrder: function (competence) {
             if (competence.oldIndex !== competence.index) {
-                console.log(' ');
                 competence.oldIndex = competence.index;
                 this.competence.oldIndex = competence.oldIndex;
                 let res = [];

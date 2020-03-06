@@ -22,6 +22,7 @@ import { routes, ng } from 'entcore';
 import {evaluationsController} from './controllers/eval_parent_ctl';
 import {cRoundAvatar} from "./utils/directives/cRoundAvatar";
 import {releveController} from "./controllers/eval_parent_releve_ctrl";
+import {bulletinController} from "./controllers/eval_parent_bulletin_ctrl";
 import {cFilAriane} from "./utils/directives/cFilAriane";
 import {listController} from "./controllers/eval_parent_devoirs";
 import {customSearchFilter} from "./filters/customSearch";
@@ -36,6 +37,7 @@ ng.addRequiredModule('chart.js');
 // controllers
 ng.controllers.push(evaluationsController);
 ng.controllers.push(releveController);
+ng.controllers.push(bulletinController);
 ng.controllers.push(listController);
 ng.controllers.push(evalBilanPeriodiqueCtl);
 
@@ -59,6 +61,7 @@ routes.define(function($routeProvider) {
         .when('/devoir/:devoirId', {action:'viewDevoir'})
         .when('/releve', {action:'displayReleveNotes'})
         .when('/competences/eleve', {action:'displayBilanDeCompetence'})
+        .when('/bulletin', {action:'displayBulletin'})
         .when('/bilan/periodique', {action:'displayBilanPeriodique'})
         .otherwise({
             redirectTo : '/'

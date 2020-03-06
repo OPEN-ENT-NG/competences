@@ -19,11 +19,10 @@
  * Created by anabah on 29/11/2017.
  */
 
-import { model, ng, idiom as lang, moment } from 'entcore';
+import { model, ng, idiom as lang } from 'entcore';
 import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
 import {Utils} from "../models/teacher";
-import {Matiere} from "../models/parent_eleve/Matiere";
 
 declare let _: any;
 
@@ -135,13 +134,13 @@ export let releveController = ng.controller('ReleveController', [
                 type: model.me.type
             };
             $scope.matieres = evaluations.matieres;
-            $scope.translate = lang.translate;
             await $scope.loadReleveNote();
             await utils.safeApply($scope);
         };
 
         await $scope.init();
         $scope.initReleve();
+        $scope.translate = lang.translate;
         // Au changement de la période par le parent
         $scope.$on('loadPeriode', async function () {
             $scope.initReleve();

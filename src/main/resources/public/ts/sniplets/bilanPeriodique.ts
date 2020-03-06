@@ -329,7 +329,7 @@ export const bilanPeriodique = {
                 bilanPeriodique.that.options.matieres = data.data;
                 await utils.safeApply(this);
             } catch (e) {
-                console.dir(e);
+                console.error(e);
                 notify.error('evaluations.matiere.get.error');
             }
         },

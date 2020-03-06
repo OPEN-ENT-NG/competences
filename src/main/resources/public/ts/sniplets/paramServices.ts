@@ -444,7 +444,6 @@ export const paramServices = {
         openSwitchEvaluation:function() {
             paramServices.that.lightboxes.subEducationCreate = false;
             paramServices.that.matieresWithoutSubTopic =[];
-            console.log("plop")
             paramServices.that.matieres.forEach(matiere =>{
                 if(matiere.selected && matiere.sous_matieres.length === 0){
                     paramServices.that.matieresWithoutSubTopic.push(matiere)

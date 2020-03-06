@@ -69,7 +69,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 };
             }
             catch (e) {
-                console.log(e);
+                console.error(e);
                 await stopMessageLoader();
             }
             $scope.filteredPeriodes = [];
