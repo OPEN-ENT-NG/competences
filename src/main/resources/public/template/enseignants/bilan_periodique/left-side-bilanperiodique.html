@@ -91,7 +91,7 @@
 
     </div>
 
-    <div ng-if="selected.bfc && !critereIsEmpty" ng-controller ="EvalSuiviCompetenceEleveCtl"
+    <div ng-if="selected.bfc && !critereIsEmpty" ng-controller ="EvalSuiviEleveCtl"
          ng-init = "openTableConversionAndEnsCplt()">
         <div class="criteres card criterion" ng-class="{openedAvis : opened.legend === true}">
             <span class="plus-input" ng-click="openLeftMenu('opened.legend', opened.legend);"></span>
@@ -102,7 +102,7 @@
             </div>
         </div>
         <div class="criteres card criterion openedAvis">
-            <div ng-include = "'/competences/public/template/enseignants/suivi_competences_eleve/left_side_ens_cplt.html'">
+            <div ng-include = "'/competences/public/template/enseignants/suivi_eleve/left_side_ens_cplt.html'">
         </div>
         </div>
     </div>

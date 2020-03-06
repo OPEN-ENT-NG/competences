@@ -3317,12 +3317,20 @@ body.evaluations {
     margin-top:8px;
   }
 
+  .padding-right-downloadButton-SuiviEleve{
+    padding-right: 7px !important;
+  }
+
+  .choice-export-suivi-eleve{
+    top:38px !important; bottom: auto!important;
+  }
+
   .loaderPage{
-    margin: 20% 45%;
+    margin: 20% 50%;
   }
   .tabs{
     header {
-      margin-right: 50px;
+      margin: 0 25px;
       cursor: pointer;
     }
     .tabs-selected::after {
@@ -3331,6 +3339,17 @@ body.evaluations {
     .tabs-selected{
       color: #4bafd5;
     }
+  }
+  .buttons-suiviEleve{
+    position: absolute;
+    right: 0;
+  }
+  .releveNotes-suiviEleve{
+    overflow: overlay;
+    border: none !important;
+  }
+  .encartBlanc-suiviEleve{
+    margin-left: 20px;
   }
   .iframeReportClass{
     display: flex;

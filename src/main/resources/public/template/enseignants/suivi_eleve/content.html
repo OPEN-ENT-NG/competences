@@ -16,7 +16,7 @@
   -->
 
 <article ng-show="search.periode.libelle !== 'cycle' && $location.path() !== '/conseil/de/classe'"
-         class="titre-widget ten centered">
+         class="titre-widget centered encartBlanc-suiviEleve">
     <div class="row twelve">
         <h2 class="cell "><i18n>viescolaire.eleve.recherche</i18n></h2>
         <autocomplete class="ten cell clear-none" options="eleves.all" ng-change="updateSuiviEleve(ngModel)" ng-model="search.eleveName"></autocomplete>
@@ -29,11 +29,6 @@
     <div class="row twelve">
         <h2 class="cell two cycleTitle">[[currentCycle.libelle]]</h2>
     </div>
-</article>
-<article ng-if="suiviCompetence === undefined &&  informations.eleve !== '' && informations.eleve !== '*' && informations.eleve !== undefined"
-         ng-class="{'twelve' : $location.path() === '/conseil/de/classe','ten' : $location.path() !== '/conseil/de/classe'}"
-         class="card"
-><i18n>no.bfc.for.criteres</i18n>
 </article>
 <lightbox show="opened.releveComp" on-close="opened.releveComp = false; exportRelCompObj.errExport = false;"
           ng-if="informations.eleve !== '' && informations.eleve !== undefined && suiviCompetence !== undefined">
@@ -145,29 +140,40 @@
         </button>
     </div>
     <!--<div class="row">-->
-    <!--<img ng-src="competences/public/template/enseignants/suivi_competences_eleve/0.png" alt=""/>-->
+    <!--<img ng-src="competences/public/template/enseignants/suivi_eleve/0.png" alt=""/>-->
     <!--</div>-->
 </lightbox>
 <div  ng-if="search.classe.id_cycle !== null ">
-    <div class="content-suivi-eleve twelve-mobile card"
-         ng-class="{'twelve' : $location.path() === '/conseil/de/classe','ten' : $location.path() !== '/conseil/de/classe'}"
+    <div class="content-suivi-eleve twelve-mobile card encartBlanc-suiviEleve"
          ng-if="informations.eleve !== '' && informations.eleve !== undefined">
-
-        <div ng-if="$location.path() !== '/conseil/de/classe'" class="twelve" ng-class="{'suivi-eleve-ctl' : (suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined)}" sticky offset="64">
+        <div ng-if="$location.path() !== '/conseil/de/classe'" class="twelve suivi-eleve-ctl" sticky offset="64">
             <h2 class="align-center">
                 <i class="previous cell" ng-click="incrementEleve(-1)" ng-hide="hideArrow(-1)"></i>
                 <span ng-class="{'deletedStudent': informations.eleve.deleteDate !== null}">[[informations.eleve.lastName]] [[informations.eleve.firstName]]</span>
                 <i class="next right-magnet" ng-click="incrementEleve(1)" ng-hide="hideArrow(1)"></i>
             </h2>
-            <div class="ten twelve-mobile centered center"
-                     ng-if="suiviCompetence === undefined || suiviCompetence.cycle.id_cycle === undefined">
-                <i18n>evaluation.suivi.eleve.empty</i18n>
-            </div>
-            <div ng-if="suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined">
-                <div ng-show="!opened.detailCompetenceSuivi"
-                     ng-include="'/competences/public/template/enseignants/suivi_competences_eleve/content_buttons.html'"></div>
+            <div>
+                <div>
+                    <div ng-show="!opened.detailCompetenceSuivi && suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined"
+                         ng-include="'/competences/public/template/enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_buttons.html'"
+                         class="buttons-suiviEleve"></div>
+                    <div class="tabs">
+                        <header ng-class="displayFollowEleve === 'followItems'? 'tabs-selected': ''"
+                                data-ng-click="selectDisplayClassTabs('followItems')">
+                            <i18n>evaluation.eleve.header.followItems</i18n>
+                        </header>
+                        <header ng-class="displayFollowEleve === 'followNotes'? 'tabs-selected': ''"
+                                data-ng-click="selectDisplayClassTabs('followNotes')">
+                            <i18n>evaluation.eleve.header.followNotes</i18n>
+                        </header>
+                        <header ng-class="displayFollowEleve === 'bulletins'? 'tabs-selected': ''"
+                                data-ng-click="selectDisplayClassTabs('bulletins')">
+                            <i18n>evaluation.eleve.header.bulletins</i18n>
+                        </header>
+                    </div>
+                </div>
 
-                <div ng-show="opened.detailCompetenceSuivi" class="twelve">
+                <div ng-show="opened.detailCompetenceSuivi && suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined" class="twelve">
                     <div>
                         <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
                         <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
@@ -176,42 +182,24 @@
                         <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
                             <i class="icon-back"></i>
                         </a>
-                        <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau') }"
-                           ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_tableau')"
+                        <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau') }"
+                           ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau')"
                            tooltip="evaluations.suivi.eleve.vue.liste"></i>
-                        <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph') }"
-                           ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_competences_eleve/detail_vue_graph')"
+                        <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph') }"
+                           ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph')"
                            tooltip="evaluations.suivi.eleve.vue.graph"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="suivi-eleve-slider" ng-if="suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined">
-            <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
-                <container template="suivi-competence-content"></container>
-            </div>
-            <div class="detail-competence inline-block six " ng-show="opened.detailCompetenceSuivi">
-                <div ng-show="messages.successEvalLibre" class="info">
-                    <i18n>evaluations.evaluation.libre.add.success</i18n>
-                </div>
-                <lightbox show="opened.lightboxEvalLibre" on-close="opened.lightboxEvalLibre=false">
-                    <container template="lightboxContainerEvalLibre"></container>
-                </lightbox>
-                <h2 class="ellipsis ten align-center whiteSpaceNormal">
-                    [[detailCompetence.nom]]
-                </h2>
-
-                <container template="suivi-competence-detail"></container>
-            </div>
+        <div ng-if="loadingTab"
+             class="loaderGraph loaderPage">
         </div>
+        <container ng-if="!loadingTab" template="followEleve"></container>
     </div>
 </div>
 
-<article class="ten card twelve-mobile centered"
-         ng-if="search.classe.id_cycle === null">
-    <i18n>evaluation.suivi.no.cycle</i18n>
-</article>
-<article class="ten card twelve-mobile centered"
+<article class="encartBlanc-suiviEleve card twelve-mobile centered"
          ng-if="(informations.eleve === '' || informations.eleve === undefined) && search.classe.id_cycle !== null">
     <i18n>evaluation.suivi.eleve.empty</i18n>
 </article>

@@ -278,7 +278,7 @@
   "evaluations.suivi.eleve.vue.details":"Vue détails",
   "evaluations.back.suivi.eleve.title":"Revenir au suivi élève",
   "evaluations.cycle.enseignantNC": "NC",
-  "evaluation.suivi.eleve.empty": "Aucun suivi de compétences élève généré. Vous pouvez en générer un en sélectionnant les critères.",
+  "evaluation.suivi.eleve.empty": "Aucun suivi élève généré. Vous pouvez en générer un en sélectionnant les critères.",
   "evaluation.suivi.niveau":"Niveau",
   "evaluation.suivi.niveau.atteint":"Atteint",
   "evaluation.suivi.niveau.final":"Final",
@@ -541,7 +541,7 @@
   "ariane.competences.viewNotesDevoir":"Saisie",
   "ariane.competences.listDevoirs":"Liste des évaluations",
   "ariane.competences.viewDevoir":"Détails d'une évaluation",
-  "ariane.competences.displaySuiviCompetencesEleve" : "Suivi de compétences élèves",
+  "ariane.competences.displaySuiviEleve" : "Suivi élève",
   "ariane.competences.displaySuiviCompetencesClasse" : "Suivi classe",
   "ariane.competences.displayBilanDeCompetence" :"Bilan de compétences",
   "ariane.competences.listRemplacements":"Remplacements",
@@ -611,6 +611,13 @@
   "evaluations.export.bulletin.legendMaxHeightSignature": "Hauteur max conseillée: 150px",
   "evaluations.export.bulletin.legendMaxWidthStructure": "Largeur max conseillée: 230px",
   "evaluations.export.bulletin.legendMaxHeightStructure": "Hauteur max conseillée: 90px",
+
+  "evaluation.eleve.header.followItems": "SUIVI DES ITEMS",
+  "evaluation.eleve.header.followNotes": "SUIVI DES NOTES",
+  "evaluation.eleve.header.bulletins": "BULLETINS",
+  "competence.error.results.eleve": "Erreur dans la récupération des données",
+  "competence.eleve.bulletin.empty": "Aucun bulletin n'a été généré pour sur la période sélectionnée",
+
 
   "add.annotation":"Dérouler pour ajouter une annotation. Sélectionner 'Évaluer' pour enlever l'annotation.",
   "keyboard.button":"Raccourci clavier" ,

@@ -308,7 +308,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.opened.bfcPeriode = bfcPeriode;
                 closeTemplateButNot([]);
                 await utils.safeApply($scope);
-                template.open('bfc', 'enseignants/suivi_competences_eleve/content');
+                template.open('bfc', 'enseignants/suivi_eleve/content');
                 $scope.selected = {bfc: true};
                 await utils.safeApply($scope);
             }
@@ -808,7 +808,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
             if (bfcClosed) {
                 $scope.selected.bfc = true;
-                template.open('bfc', 'enseignants/suivi_competences_eleve/content');
+                template.open('bfc', 'enseignants/suivi_eleve/content');
             }
 
             await utils.safeApply($scope);

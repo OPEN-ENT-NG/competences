@@ -40,7 +40,7 @@ export let releveController = ng.controller('ReleveController', [
                 return;
             }
 
-            for(let matiere of $scope.matieres.all){
+            for(let matiere of $scope.matieresReleve.all){
                 let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
                 let PromisesMoy = [];
                 if (devoirsMatieres !== undefined && matiere !== undefined) {
@@ -88,7 +88,7 @@ export let releveController = ng.controller('ReleveController', [
             $scope.dataReleve = {
                 devoirs: evaluations.devoirs
             };
-            $scope.matieres = evaluations.matieres;
+            $scope.matieresReleve = evaluations.matieres;
             await $scope.calculMoyenneMatieres();
             await Utils.stopMessageLoader($scope);
         };
@@ -133,7 +133,7 @@ export let releveController = ng.controller('ReleveController', [
             $scope.me = {
                 type: model.me.type
             };
-            $scope.matieres = evaluations.matieres;
+            $scope.matieresReleve = evaluations.matieres;
             await $scope.loadReleveNote();
             await utils.safeApply($scope);
         };
@@ -164,7 +164,7 @@ export let releveController = ng.controller('ReleveController', [
             });
             return _.some(devoirWithNote,
                 {id_matiere: sousMat.id_matiere, id_sousmatiere: sousMat.id_type_sousmatiere, is_evaluated: true});
-        }
+        };
 
         $scope.checkHaveResult = function () {
             let res = false;
