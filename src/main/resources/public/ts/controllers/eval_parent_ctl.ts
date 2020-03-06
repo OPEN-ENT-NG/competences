@@ -55,6 +55,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 template.open('main', 'parent_enfant/releve/eval_parent_dispreleve');
                 utils.safeApply($scope);
             },
+            displayBulletin : async function(params) {
+                await $scope.init(true);
+                template.close('main');
+                template.close('menu');
+                utils.safeApply($scope);
+                template.open('header', 'parent_enfant/accueil/eval_parent_selectEnfants');
+                template.open('main', 'parent_enfant/bulletin/eval_parent_dispbulletin');
+                utils.safeApply($scope);
+            },
             listDevoirs : async function (params) {
                 template.close('main');
                 template.close('menu');
@@ -822,5 +831,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 return item.id_type > -2;
             };
         };
+         $scope.filterCycleAndYear = () => {
+             return (item) => {
+                 return item.id_type > -1;
+             };
+         };
     }
 ]);

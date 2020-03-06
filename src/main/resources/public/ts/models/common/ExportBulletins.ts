@@ -140,8 +140,10 @@ export class ExportBulletins {
             $('.chart-container').empty();
             notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
             this.stopDebug(stopwatch, $scope, options, method);
+            if(data.status == 200)
+                await http.post(`/competences/save/bulletin/parameters`, new ExportBulletins().toJSON(options));
         } catch (data) {
-            console.dir(data);
+            console.error(data);
             if(data.response != undefined && data.response.status === 500){
                 this.manageError(data.response.data, $scope);
             }
@@ -311,7 +313,7 @@ export class ExportBulletins {
                 resolve();
             }
             catch (e) {
-                console.log(e);
+                console.error(e);
                 this.stopDebug(stopwatch, $scope, options, method);
                 reject(e);
             }
@@ -325,7 +327,7 @@ export class ExportBulletins {
         }
 
         catch (e) {
-            console.log(e);
+            console.error(e);
         }
     }
 
@@ -338,7 +340,7 @@ export class ExportBulletins {
         }
 
         catch (e) {
-            console.log(e);
+            console.error(e);
         }
     }
 
@@ -348,7 +350,7 @@ export class ExportBulletins {
         }
 
         catch (e) {
-            console.log(e);
+            console.error(e);
         }
     }
 

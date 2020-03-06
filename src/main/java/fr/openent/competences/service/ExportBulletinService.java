@@ -264,4 +264,22 @@ public interface ExportBulletinService {
                            JsonObject params,Future<JsonArray> elevesFuture , final Map<String, JsonObject> elevesMap,
                            final AtomicBoolean answered,String host, String acceptLanguage,
                            final Handler<Either<String, JsonObject>> finalHandler, Future<JsonObject> future);
+
+    /**
+     * le Chef etab ou le Prof. principal enregistre les paramètres de l'export afin de permettre la génération du bulletin
+     * pour les parents/élèves
+     * @param idStudents
+     * @param idPeriode
+     * @param params
+     * @param finalHandler
+     */
+    void saveParameters(JsonArray idStudents, Long idPeriode,String params,final Handler<Either<String, JsonObject>> finalHandler);
+
+    /**
+     * Récupération des paramètres de génération du bulletin de l'élève sur la période donnée
+     * @param idStudent
+     * @param idPeriode
+     * @param finalHandler
+     */
+    void getParameters(String idStudent, Long idPeriode,final Handler<Either<String, JsonObject>> finalHandler);
 }

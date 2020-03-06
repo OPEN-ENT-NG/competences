@@ -1,0 +1,48 @@
+<!--
+  ~ Copyright (c) Région Hauts-de-France, Département de la Seine-et-Marne, CGI, 2016.
+  ~     This file is part of OPEN ENT NG. OPEN ENT NG is a versatile ENT Project based on the JVM and ENT Core Project.
+  ~
+  ~   This program is free software; you can redistribute it and/or modify
+  ~   it under the terms of the GNU Affero General Public License as
+  ~   published by the Free Software Foundation (version 3 of the License).
+  ~   For the sake of explanation, any module that communicate over native
+  ~   Web protocols, such as HTTP, with OPEN ENT NG is outside the scope of this
+  ~   license and could be license under its own terms. This is merely considered
+  ~   normal use of OPEN ENT NG, and does not fall under the heading of "covered work".
+  ~
+  ~   This program is distributed in the hope that it will be useful,
+  ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+  -->
+<div class="custom-mobile-releve"
+     ng-include="'/competences/public/template/parent_enfant/accueil/eval_parent_menu.html'"></div>
+
+<div class="row" ng-controller="BulletinController">
+    <div class="twelve cell">
+
+        <header class="header-viescolaire">
+            <h1><span class="no-style ng-scope"><i18n>evaluations.bulletin</i18n></span></h1>
+
+            <section class="row twelve-mobile margin-top-releve-parentEleve">
+                <label class="select cell two twelve-mobile" ng-hide="me.type === 'PERSRELELEVE' && searchBulletin.eleve===undefined">
+                    <select ng-model="searchBulletin.periode"
+                            ng-change="loadBulletin()"
+                            ng-options="getI18nPeriode(periode) for periode in searchBulletin.eleve.classe.periodes.all | filter:filterCycleAndYear()">
+                        <option class="header-opt" disabled value="">
+                            [[translate('viescolaire.utils.periode')]]
+                        </option>
+                    </select>
+                </label>
+            </section>
+        </header>
+
+        <div ng-show="checkHaveResult()" class="center">
+            <iframe ng-src="[[content]]"  width="900" height="1200" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+        </div>
+        <div ng-show="!checkHaveResult()" class="center">
+            <h1 class="twelve-mobile grey-color"><i18n>evaluations.no.summary.bulletin</i18n></h1>
+        </div>
+
+    </div>
+</div>
+

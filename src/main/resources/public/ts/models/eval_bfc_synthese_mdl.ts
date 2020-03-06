@@ -94,7 +94,7 @@ export class BfcSynthese extends Model {
                     }
                 }catch (e){
                     notify.error('evaluation.bilan.fin.cycle.synthese.save.error')
-                    console.log(e);
+                    console.error(e);
                     reject(e);
                 }
 
