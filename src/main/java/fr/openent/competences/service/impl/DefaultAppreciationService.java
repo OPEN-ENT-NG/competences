@@ -122,19 +122,4 @@ public class DefaultAppreciationService extends SqlCrudService implements fr.ope
         Sql.getInstance().prepared(params ? query.substring(0, query.length() - 5) : query, values, validResultHandler(handler));
     }
 
-    public void getAppraisalsByClassAndPeriod(String idClass, String typePeriod, Handler<Either<String, JsonArray>> handler){
-        JsonArray values = new JsonArray();
-        String query = "" +
-                "SELECT " +
-                "id_matiere AS id_subject," +
-                "appreciation AS content_text " +
-                "FROM " + Competences.COMPETENCES_SCHEMA + ".appreciation_classe " +
-                "WHERE id_classe = ? AND " +
-                "id_periode = ? ;";
-
-        values.add(idClass)
-                .add(typePeriod);
-
-        Sql.getInstance().prepared(query, values, validResultHandler(handler));
-    }
 }

@@ -1,7 +1,4 @@
 <section  class="note-table" ng-if="teacherNotesAndAppraisals.length !== 0">
-    <p ng-if="teacherNotesAndAppraisals.length === 0">
-        <i18n>competance.class.info.empty</i18n>
-    </p>
     <table class="twelve">
         <thead>
         <tr>
@@ -13,8 +10,8 @@
         <tbody>
         <tr ng-repeat="noteAndAppraisal in teacherNotesAndAppraisals">
             <td>
-                <p>[[noteAndAppraisal.subjectName || '-']]</p>
-                <p>[[noteAndAppraisal.teacherName || '-']]</p>
+                <p>[[noteAndAppraisal.subjectName || '']]</p>
+                <p>[[noteAndAppraisal.teacherName || '']]</p>
             </td>
             <td class="testAlignLeft">[[noteAndAppraisal.appraisal.content_text]]</td>
             <td>[[noteAndAppraisal.average.moyenne]]</td>
@@ -24,3 +21,6 @@
         </tbody>
     </table>
 </section>
+<p ng-if="!isDataOnPage">
+    <i18n>competance.class.info.empty</i18n>
+</p>

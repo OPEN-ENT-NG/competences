@@ -40,7 +40,7 @@ export class BilanPeriodique extends  Model {
             CREATE_APPRECIATIONS_BILAN_PERIODIQUE: '/competences/elementsAppreciationBilanPeriodique',
             GET_SYNTHESIS: '/competences/results/class/synthesis',
             GET_HOMEWORK:"/competences/releve/export/checkDevoirs?idEtablissement=",
-            GET_APPRAISALS:"/competences/appreciations/",
+            GET_APPRAISALS:"/competences/recapAppreciations/print/",
             GET_SUBJECTS: "/competences/subjects/short-label/subjects?ids="
         }
     }
@@ -75,7 +75,7 @@ export class BilanPeriodique extends  Model {
             let url = BilanPeriodique.api.GET_ELEMENTS + "&idClasse=" + this.classe.id
 
             if(param !== "isBilanPeriodique") {
-               url = url + "&idEnseignant=" + model.me.userId;
+                url = url + "&idEnseignant=" + model.me.userId;
             }
 
             let data = await http.get(url);
@@ -181,8 +181,8 @@ export class BilanPeriodique extends  Model {
                     : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=classe",
                     this.toJSON(periode, element, null, classe, this.structure));
             } else {
-                 await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE
-                     + "?type=eleve-bilanPeriodique", this.toJSON(periode, element, eleve, classe, this.structure));
+                await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE
+                    + "?type=eleve-bilanPeriodique", this.toJSON(periode, element, eleve, classe, this.structure));
             }
 
         } catch (e) {
@@ -191,7 +191,9 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getHomework (parameter:any):Promise<any | Error>{
-        const { data, status }:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_HOMEWORK}${parameter.idEtablissement}&idClasse=${parameter.idClasse}&idPeriode=${parameter.idPeriode}`);
+        let url:string = `${BilanPeriodique.api.GET_HOMEWORK}${parameter.idEtablissement}&idClasse=${parameter.idClasse}`;
+        if(parameter.idPeriode) url += `&idPeriode=${parameter.idPeriode}`;
+        const { data, status }:AxiosResponse = await http.get(url);
         if(status === 200) return data;
         throw new Error("getHomework");
     }
@@ -202,9 +204,11 @@ export class BilanPeriodique extends  Model {
         throw new Error("getSynthesis");
     }
 
-    private async getAppraisals(parameter:any):Promise<any | Error> {
-        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_APPRAISALS}${parameter.idClasse}/class/${parameter.idPeriode}/period`);
-        if(status === 200) return data;
+    private async getAppraisals(idClasse:string, idPeriode:string, idStructure:string):Promise<any | Error> {
+        let url:string = `${BilanPeriodique.api.GET_APPRAISALS}${idClasse}/export?text=false&idStructure=${idStructure}&json=true`;
+        if(idPeriode) url += `&idPeriode=${idPeriode}`;
+        const {data, status}:AxiosResponse = await http.get(url);
+        if(status === 200) return data.data;
         throw new Error("getAppraisals");
     }
 
@@ -215,7 +219,10 @@ export class BilanPeriodique extends  Model {
     }
 
     public async summaryEvaluations (idClass:string, idPeriod:number):Promise<void>{
-        const { data, status }:AxiosResponse = await http.get(`/competences/recapEval/print/${idClass}/export?text=false&usePerso=false&idPeriode=${idPeriod}&json=true`);
+        let url:string =`/competences/recapEval/print/${idClass}/export?text=false&usePerso=false`;
+        if(idPeriod) url += `&idPeriode=${idPeriod}`;
+        url += "&json=true";
+        const { data, status }:AxiosResponse = await http.get(url);
         if(status === 200) return data;
         notify.error(lang.translate("competance.error.results.class"));
     }
@@ -239,7 +246,6 @@ export class BilanPeriodique extends  Model {
             ;
             return await Promise.all([
                 this.getHomework(parameter),
-                this.getAppraisals(parameter),
                 this.getSynthesis(parameter),
                 this.getSubjects(subjects),
             ])
@@ -256,15 +262,15 @@ export class BilanPeriodique extends  Model {
         }
     };
 
-    private manageDataView (data:any):Array<any>{
+    private makerHearderWithTeachersAndSubjects (data:any):Array<any>{
         let matchingDataApi:Array<any> = [];
         const homeworks:Array<any> = data.homeworks;
-        const appraisals:Array<any> = data.appraisals;
         const statistics:any = data.synthesis.statistiques;
         const subjects = data.subjects;
         for (let subjectId in statistics) {
             for (let k = 0; k < homeworks.length ; k++) {
-                if(homeworks[k].id_matiere === subjectId && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)) {
+                if(homeworks[k].id_matiere === subjectId
+                    && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)) {
                     const subject = _.values(subjects).find(subject => subject.id === homeworks[k].id_matiere);
                     matchingDataApi.push({
                         idSubject: subjectId,
@@ -272,7 +278,6 @@ export class BilanPeriodique extends  Model {
                         teacherName: homeworks[k].teacher,
                         subjectName: subject? subject.name : undefined,
                         subjectShortName:  subject? subject.libelle_court : undefined,
-                        appraisal: appraisals.find(appraisal => appraisal.id_subject === subjectId),
                     });
                     break;
                 }
@@ -282,8 +287,9 @@ export class BilanPeriodique extends  Model {
     }
 
     private async createHeaderTable (data){
+        if(!Object.keys(data).map( element => data[element]).some(array => array.length > 0)) return [];
         let resultHeader:Array<any> = [];
-        const dataSynthesis = await this.manageDataView(data);
+        const dataSynthesis = await this.makerHearderWithTeachersAndSubjects(data);
         resultHeader =  [
             {
                 idSubject: undefined,
@@ -325,6 +331,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async createFooterTable (headerArrayTeachers:Array<any>, data:Array<any>):Promise<Array<any>>{
+        if(data.length === 0) return [];
         let resultFooter:Array<any> = [];
         const statistics = data['statistiques'];
         resultFooter = await this.aggregationNotesBySubjects(headerArrayTeachers, statistics);
@@ -340,6 +347,7 @@ export class BilanPeriodique extends  Model {
     }
 
     private async aggregationNotesBySubjects (subjectsFromHeaderTable:Array<any>, notes:object):Promise<Array<any>>{
+        if(!notes) return [];
         let subjectsNotes:Array<any> = [];
         for (let i = 0; i < subjectsFromHeaderTable.length; i++) {
             let hasNoteSubject:Boolean = false;
@@ -359,17 +367,40 @@ export class BilanPeriodique extends  Model {
         return subjectsNotes;
     }
 
-    public async getAppraisalsAndNotesByClassAndPeriod(data:any):Promise<Array<any>>{
-        return this.manageDataView(data);
+    public async getAppraisalsAndNotesByClassAndPeriod(idClasse:string, idPeriode:string, idStructure:string):Promise<Array<any>>{
+        let result = [];
+        const appraisals = await this.getAppraisals(idClasse, idPeriode, idStructure);
+
+        result = appraisals.map(appraisal => {
+            let appraisalReturned:any = {
+                teacherName: "",
+                subjectName: "",
+                appraisal:{content_text: ""},
+                average:{
+                    maximum: "",
+                    minimum: "",
+                    moyenne: "",
+                }
+            };
+            appraisalReturned.teacherName = appraisal.prof || "";
+            appraisalReturned.subjectName = appraisal.mat || "";
+            appraisalReturned.average.maximum = appraisal.max || "";
+            appraisalReturned.average.minimum = appraisal.min || "";
+            appraisalReturned.average.moyenne = appraisal.moy || "";
+            appraisalReturned.appraisal.content_text = appraisal.appr || "";
+            return appraisalReturned;
+        });
+        return result;
     }
 
     public async getAverage (data:any):Promise<any>{
         const headerTable = await this.createHeaderTable(data);
-        return {
-            headerTable: headerTable,
-            bodyTable: await this.createBodyTable(headerTable, data),
-            footerTable: await this.createFooterTable(headerTable, data.synthesis),
-        }
+        if(headerTable)
+            return {
+                headerTable: headerTable,
+                bodyTable: await this.createBodyTable(headerTable, data),
+                footerTable: await this.createFooterTable(headerTable, data.synthesis),
+            }
     }
 
     public makeCsv (fileName:string, dataHeader:Array<Array<any>>, dataBody:Array<Array<any>>):void{
@@ -378,6 +409,7 @@ export class BilanPeriodique extends  Model {
             const blob = new Blob([`\ufeff${Utils.prepareCsvString(csvPrepared)}`], {type: ' type: "text/csv;charset=UTF-8"'});
             const link = document.createElement('a');
             link.href = (window as any).URL.createObjectURL(blob);
+            link.setAttribute("target", "_blank");
             link.download = `${fileName}.csv`;
             document.body.appendChild(link);
             link.click();
@@ -387,17 +419,17 @@ export class BilanPeriodique extends  Model {
     public async synthesisAndAppraisals (initResultPeriodic:any, scope:any, subjects:Array<Matiere>):Promise<any>{
         const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, subjects, scope);
         if(result){
-            return {
-                homeworks: result[0],
-                appraisals: result[1],
-                synthesis: result[2],
-                students : result[2].eleves,
-                subjects : result[3].subjects,
+            if(result.length === 3){
+                return {
+                    homeworks: result[0],
+                    synthesis: result[1],
+                    students : result[1].eleves,
+                    subjects : result[2].subjects,
+                }
             }
         }
         return {
             homeworks: [],
-            appraisals: [],
             synthesis: [],
             students : [],
             subjects: [],

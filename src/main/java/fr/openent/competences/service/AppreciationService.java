@@ -71,12 +71,4 @@ public interface AppreciationService extends CrudService {
      * @param handler handler portant le résultat de la requête
      */
     void getAppreciationClasse(String[] id_classes, Integer id_periode, String[] id_matieres, Handler<Either<String, JsonArray>> handler);
-
-    /**
-     *
-     * @param idClass
-     * @param typePeriod
-     * @param handler
-     */
-    void getAppraisalsByClassAndPeriod(String idClass, String typePeriod, Handler<Either<String, JsonArray>> handler);
 }
