@@ -1,11 +1,8 @@
 <section class="note-table" ng-if="averagesClasses.length !== 0">
-    <p ng-if="averagesClasses.length === 0">
-        <i18n>competance.class.info.empty</i18n>
-    </p>
     <table class="twelve">
         <thead>
         <tr>
-            <th ng-repeat="rowData in averagesClasses.headerTable">
+            <th class="light-font-header" ng-repeat="rowData in averagesClasses.headerTable">
                 <div>[[rowData.subjectName]]</div>
                 <div>[[rowData.teacherName]]</div>
             </th>
@@ -27,3 +24,6 @@
         </tfoot>
     </table>
 </section>
+<p ng-if="!isDataOnPage">
+    <i18n>competance.class.info.empty</i18n>
+</p>

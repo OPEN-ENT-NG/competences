@@ -3352,20 +3352,26 @@ body.evaluations {
     margin-left: 20px;
   }
   .iframeReportClass{
-    display: flex;
+    display: inline;
   }
   .half-width{
     width: 50%;
   }
   .followingClass{
     margin-left: 15px;
+    margin-right: 15px;
   }
   .marginUnderTabs{
     margin-bottom: 20px;
+    padding-top: 15px;
   }
   .choseDownloadFormat{
     display: flex;
     justify-content: space-around;
+  }
+  .light-font-header{
+    font-weight: 100!important;
+    font-size: 0.9em;
   }
 }
 

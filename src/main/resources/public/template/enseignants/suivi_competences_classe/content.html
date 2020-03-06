@@ -48,11 +48,29 @@
             <input type="radio" ng-change="changePrintSuiviClasse('printClasseReleve')" ng-model="suiviClasse.print" value="printClasseReleve">
             <span><i18n>evaluation.releve.classe</i18n></span>
         </label>
-        <div ng-if="isChefEtab(informations.classe)">
+        <div class="checkbox-grid"
+             ng-if="isChefEtab(informations.classe)">
             <br/>
             <h4><i18n>evaluations.export.format.csv</i18n>&nbsp;:</h4>
             <label>
-                <input type="radio" ng-change="changePrintSuiviClasse('printTabMoyPosAppr')" ng-model="suiviClasse.print" value="printTabMoyPosAppr">
+                <input type="radio"
+                       ng-change="changePrintSuiviClasse('csvRecapEval')"
+                       ng-model="suiviClasse.print"
+                       value="csvRecapEval">
+                <span><i18n>evaluations.recapEval</i18n></span>
+            </label>
+            <label>
+                <input type="radio"
+                       ng-change="changePrintSuiviClasse('csvTableAverages')"
+                       ng-model="suiviClasse.print"
+                       value="csvTableAverages">
+                <span><i18n>evaluations.tab.moys</i18n></span>
+            </label>
+            <label>
+                <input type="radio"
+                       ng-change="changePrintSuiviClasse('printTabMoyPosAppr')"
+                       ng-model="suiviClasse.print"
+                       value="printTabMoyPosAppr">
                 <span><i18n>evaluations.tab.moysPos</i18n></span>
             </label>
         </div>
@@ -208,7 +226,7 @@
             </div>
         </div>
         <button class="right-magnet"
-                ng-disabled = "disabledExportSuiviClasseButton()"
+                ng-disabled = "disabledExportSuiviClasseButton() || positioningCsvData"
                 ng-click="exportRecapEval(suiviClasse.textMod, suiviClasse.print, suiviClasse.periode.id_type,
                 suiviClasse.exportByEnseignement,suiviClasse.withMoyGeneraleByEleve, suiviClasse.withMoyMinMaxByMat)">
             <i18n>evaluations.export</i18n>
@@ -254,6 +272,7 @@
         </div>
     </div>
     <button class="button-download"
+            ng-disabled="isDownloadWaiting"
             ng-if="isDataOnPage"
             ng-click="downloadContent()">
         <i class="download"></i>
@@ -275,9 +294,17 @@
         </p>
         <div class="choseDownloadFormat">
             <button ng-click="downloadFileWithType('pdf')"
-                    ng-disabled="isDownloadWaiting">
-                <i18n>.PDF</i18n>
+                    ng-disabled="isDownloadWaiting"
+                    ng-if="!isUseLinkForPdf">
+                .PDF
             </button>
+            <a target="_blank"
+               class="button"
+               id="urlPdfSrc"
+               href=[[urlPdfSrc]]
+               ng-if="isUseLinkForPdf">
+                .PDF
+            </a>
             <button ng-click="downloadFileWithType('csv')"
                     ng-disabled="isDownloadWaiting">
                 <i18n>.CSV</i18n>
