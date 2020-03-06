@@ -134,7 +134,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 await Utils.stopMessageLoader($scope);
             } else {
                 //cas 1ere entrée dans le suivi
-                template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
+                template.open('left-side', 'enseignants/suivi_eleve/left_side');
                 await Utils.stopMessageLoader($scope);
             }
         };

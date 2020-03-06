@@ -1,0 +1,19 @@
+<div>
+    <h2 class="cell twelve">
+        <dropdown-buttons class="right-magnet forceTop">
+            <open class="opener forceTop padding-right-downloadButton-SuiviEleve">
+                <i class="download"></i>
+                &nbsp;
+                <i class="sort-desc"></i>
+            </open>
+            <options class="choice-export-suivi-eleve">
+                <bt ng-click="getReleve()"><i18n>evaluation.suivi.export.button.eleve.releve</i18n></bt>
+                <bt ng-click="getClasseReleve()"><i18n>evaluation.suivi.export.button.classe.releve</i18n></bt>
+            </options>
+        </dropdown-buttons>
+    </h2>
+</div>
+<br>
+<br>
+<div ng-include="'/competences/public/template/parent_enfant/releve/releve_notes.html'"
+     class="eval_parent releveNotes-suiviEleve twelve"></div>
