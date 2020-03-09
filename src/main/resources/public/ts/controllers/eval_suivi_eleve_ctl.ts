@@ -29,6 +29,7 @@ import {FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluate
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
 import http from "axios";
 import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
+import {ExportBulletins} from "../models/common/ExportBulletins";
 
 
 
@@ -972,14 +973,15 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             meta.data.forEach(function (element, index) {
                                 // Draw the text invert color of buble, with the specified font
                                 let rgba = dataset.backgroundColor[index];
-                                rgba = rgba.split('(')[1].split(')')[0].split(',');
-                                let r = 255 - parseInt(rgba[0]);
-                                let g = 255 - parseInt(rgba[1]);
-                                let b = 255 - parseInt(rgba[2]);
-                                let a = rgba[3];
+                                if(rgba && rgba.includes('(') && rgba.includes(')') && rgba.includes(',')) {
+                                    rgba = rgba.split('(')[1].split(')')[0].split(',');
+                                    let r = 255 - parseInt(rgba[0]);
+                                    let g = 255 - parseInt(rgba[1]);
+                                    let b = 255 - parseInt(rgba[2]);
+                                    let a = rgba[3];
 
-                                ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + ","
-                                    + b.toString() + "," + a + ")";
+                                    ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
+                                }
                                 let fontSize = 10.5;
                                 let fontStyle = 'normal';
                                 let fontFamily = 'Helvetica Neue';
@@ -1157,27 +1159,56 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             }
         };
 
-        let toJSON = function() {
-            return {idEleve: $scope.search.eleve.id,idPeriode: $scope.search.periode.id_type}
-        };
-
         /**
          * chargement d'un releve
          * @returns {Promise<void>}
          */
         $scope.loadBulletin = async function () {
             try {
-                // lancement de l'export et récupération du fichier généré
-                let data = await http.post(`/competences/student/bulletin`, toJSON(),
-                    {responseType: 'arraybuffer'});
-                if(data.status != 204){
-                    var file = new Blob([data.data], {type: 'application/pdf'});
-                    var fileURL = window.URL.createObjectURL(file);
-                    $scope.content = $sce.trustAsResourceUrl(fileURL);
+                let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id;
+                url += "&idPeriode=" + $scope.searchBulletin.periode.id_type;
+                let data = await http.get(url);
+                if(data.status == 204){
+                    //empty result, le bulletin n'a pas encore été généré
+                    $scope.content = undefined;
+                }else{
+                    let options = data.data;
+                    options.images = {}; // contiendra les id des images par élève
+                    options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
+
+                    options.students = [];
+
+                    _.forEach( options.idStudents, (id) => {
+                        let student = {id:id,idClasse:$scope.searchBulletin.eleve.idClasse};
+                        options.students.push(student);
+                    });
+
+                    if (options.showBilanPerDomaines === true) {
+                        $scope.niveauCompetences = options.niveauCompetences;
+                    }
+
+                    if(!($scope.structure && $scope.structure.id))
+                        $scope.structure = new Structure({id:  model.me.structures[0]});
+
+                    if (options.showBilanPerDomaines === true && options.simple !== true) {
+                        // Si on choisit de déssiner les graphes
+                        await ExportBulletins.createCanvas(options, $scope);
+                    }
+                    // lancement de l'export et récupération du fichier généré
+                    data = await http.post(`/competences/see/bulletins`, new ExportBulletins().toJSON(options),
+                        {responseType: 'arraybuffer'});
+                    if(data.status == 204){
+                        //empty result, le bulletin n'a pas encore été généré
+                        $scope.content = undefined;
+                    }else{
+                        var file = new Blob([data.data], {type: 'application/pdf'});
+                        var fileURL = window.URL.createObjectURL(file);
+                        $scope.content = $sce.trustAsResourceUrl(fileURL);
+                    }
+                    utils.safeApply($scope);
                 }
-                utils.safeApply($scope);
             } catch (data) {
-                console.dir(data);
+                console.error(data);
                 if(data.response != undefined && data.response.status === 500){
                     this.manageError(data.response.data, $scope);
                 }

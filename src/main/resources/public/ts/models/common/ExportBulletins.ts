@@ -5,7 +5,6 @@ import {_, notify, idiom as lang} from 'entcore';
 import http from "axios";
 import {Classe, ElementBilanPeriodique, Utils} from "../teacher";
 import {Stopwatch} from "./StopWatch";
-import {renameSubject} from "../../sniplets/renameSubject";
 
 declare let $ : any;
 declare let Chart: any;
@@ -48,7 +47,10 @@ export class ExportBulletins {
             hasImgSignature: (options.imgSignature !== undefined),
             useModel : (options.useModel === true),
             simple : (options.simple === true),
-            neutre: (options.neutre === true)
+            neutre: (options.neutre === true),
+            niveauCompetences: options.niveauCompetences,
+            withLevelsStudent : options.withLevelsStudent,
+            withLevelsClass : options.withLevelsClass
         };
         if (Utils.isNotNull(options.idPeriode)){
             _.extend(o, {idPeriode: options.idPeriode, typePeriode: options.type});
@@ -114,6 +116,7 @@ export class ExportBulletins {
     public static async  generateBulletins (options, $scope) {
         let method = "generateBulletins";
         let stopwatch = this.startDebug( $scope, options, method);
+        $('.chart-container').empty();
         try {
             options.images = {}; // contiendra les id des images par élève
             options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
@@ -121,6 +124,7 @@ export class ExportBulletins {
             if (options.showBilanPerDomaines === true && options.simple !== true) {
                 // Si on choisit de déssiner les graphes
                 await this.createCanvas(options, $scope);
+                options.niveauCompetences = $scope.niveauCompetences;
             }
 
             // lancement de l'export et récupération du fichier généré
@@ -137,7 +141,6 @@ export class ExportBulletins {
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(link.href);
             }, 100);
-            $('.chart-container').empty();
             notify.success(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.success'));
             this.stopDebug(stopwatch, $scope, options, method);
             if(data.status == 200)
@@ -147,7 +150,6 @@ export class ExportBulletins {
             if(data.response != undefined && data.response.status === 500){
                 this.manageError(data.response.data, $scope);
             }
-            $('.chart-container').empty();
             notify.error(options.classeName + ' : ' + lang.translate('evaluations.export.bulletin.error'));
             this.stopDebug(stopwatch, $scope, options, method);
         }
@@ -285,7 +287,7 @@ export class ExportBulletins {
     }
 
 
-    private static async createCanvas(options, $scope){
+    public static async createCanvas(options, $scope){
         return new Promise(async (resolve, reject) => {
             let students = options.students;
             let method = "DESSIN GRAPH PAR DOMAINE";

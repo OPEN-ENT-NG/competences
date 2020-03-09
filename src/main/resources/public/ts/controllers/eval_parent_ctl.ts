@@ -755,13 +755,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         meta.data.forEach(function(element, index) {
                             // Draw the text invert color of buble, with the specified font
                             let rgba = dataset.backgroundColor[index];
-                            rgba = rgba.split('(')[1].split(')')[0].split(',');
-                            let r = 255 - parseInt(rgba[0]);
-                            let g = 255 - parseInt(rgba[1]);
-                            let b = 255 - parseInt(rgba[2]);
-                            let a = rgba[3];
+                            if(rgba && rgba.includes('(') && rgba.includes(')') && rgba.includes(',')) {
+                                rgba = rgba.split('(')[1].split(')')[0].split(',');
+                                let r = 255 - parseInt(rgba[0]);
+                                let g = 255 - parseInt(rgba[1]);
+                                let b = 255 - parseInt(rgba[2]);
+                                let a = rgba[3];
 
-                            ctx.fillStyle = "rgba(" + r.toString()+ ","+ g.toString() +","+ b.toString() +"," + a + ")";
+                                ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
+                            }
                             let fontSize = 10.5;
                             let fontStyle = 'normal';
                             let fontFamily = 'Helvetica Neue';

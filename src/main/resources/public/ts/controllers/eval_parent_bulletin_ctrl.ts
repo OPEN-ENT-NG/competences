@@ -22,8 +22,9 @@
 import {model, ng,idiom as lang} from 'entcore';
 import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
-import {Utils} from "../models/teacher";
+import {Structure, Utils} from "../models/teacher";
 import http from "axios";
+import {ExportBulletins} from "../models/common/ExportBulletins";
 
 declare let _: any;
 
@@ -44,18 +45,48 @@ export let bulletinController = ng.controller('BulletinController', [
         $scope.loadBulletin = async function () {
             await Utils.runMessageLoader($scope);
             try {
-                // lancement de l'export et récupération du fichier généré
-                let data = await http.post(`/competences/student/bulletin`, toJSON(),
-                    {responseType: 'arraybuffer'});
+                let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id;
+                url += "&idPeriode=" + $scope.searchBulletin.periode.id_type;
+                let data = await http.get(url);
                 if(data.status == 204){
                     //empty result, le bulletin n'a pas encore été généré
                     $scope.content = undefined;
                 }else{
-                    var file = new Blob([data.data], {type: 'application/pdf'});
-                    var fileURL = window.URL.createObjectURL(file);
-                    $scope.content = $sce.trustAsResourceUrl(fileURL);
+                    let options = data.data;
+                    options.images = {}; // contiendra les id des images par élève
+                    options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
+
+                    options.students = [];
+
+                    _.forEach( options.idStudents, (id) => {
+                        let student = {id:id,idClasse:$scope.searchBulletin.eleve.idClasse};
+                        options.students.push(student);
+                    });
+
+                    if (options.showBilanPerDomaines === true) {
+                        $scope.niveauCompetences = options.niveauCompetences;
+                    }
+
+                    if(!($scope.structure && $scope.structure.id))
+                        $scope.structure = new Structure({id:  model.me.structures[0]});
+
+                    if (options.showBilanPerDomaines === true && options.simple !== true) {
+                        // Si on choisit de déssiner les graphes
+                        await ExportBulletins.createCanvas(options, $scope);
+                    }
+                    // lancement de l'export et récupération du fichier généré
+                    data = await http.post(`/competences/see/bulletins`, new ExportBulletins().toJSON(options),
+                        {responseType: 'arraybuffer'});
+                    if(data.status == 204){
+                        //empty result, le bulletin n'a pas encore été généré
+                        $scope.content = undefined;
+                    }else{
+                        var file = new Blob([data.data], {type: 'application/pdf'});
+                        var fileURL = window.URL.createObjectURL(file);
+                        $scope.content = $sce.trustAsResourceUrl(fileURL);
+                    }
+                    utils.safeApply($scope);
                 }
-                utils.safeApply($scope);
             } catch (data) {
                 console.error(data);
                 if(data.response != undefined && data.response.status === 500){

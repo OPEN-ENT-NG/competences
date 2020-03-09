@@ -1269,44 +1269,52 @@ public class ExportPDFController extends ControllerHelper {
         });
     }
 
-    @Post("/student/bulletin")
+    @Post("/see/bulletins")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    public void displayBulletin(final HttpServerRequest request) {
+    public void seeBulletins(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request,  params -> {
             Long idPeriode = params.getLong(ID_PERIODE_KEY);
-            String idStudent = params.getString(ID_ELEVE_KEY);
-            exportBulletinService.getParameters(idStudent, idPeriode, new Handler<Either<String, JsonObject>>() {
-                @Override
-                public void handle(Either<String, JsonObject> event) {
-                    if(event.isLeft()){
-                        leftToResponse(request, event.left());
-                        log.error(event.left().getValue());
-                    } else{
-                        JsonObject parameters = event.right().getValue();
-                        if(!parameters.isEmpty()){
-                            JsonObject paramsJson = new JsonObject(parameters.getString("params"));
-                            JsonArray idStudents = new JsonArray().add(idStudent);
-                            paramsJson.put(ID_PERIODE_KEY,idPeriode);
-                            paramsJson.put(ID_STUDENTS_KEY,idStudents);
-                            String idClasse = paramsJson.getString(ID_CLASSE_KEY);
-                            String idEtablissement = paramsJson.getString(ID_STRUCTURE_KEY);
+            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
+            String idClasse = params.getString(ID_CLASSE_KEY);
+            String idEtablissement = params.getString(ID_STRUCTURE_KEY);
+            Future<JsonArray> elevesFuture = Future.future();
+            final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
+            final AtomicBoolean answered = new AtomicBoolean();
 
-                            Future<JsonArray> elevesFuture = Future.future();
-                            final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
-                            final AtomicBoolean answered = new AtomicBoolean();
+            final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
+                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, params);
 
-                            final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
-                                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, paramsJson);
+            exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
+                    elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
+                    finalHandler, null);
 
-                            exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, paramsJson,
-                                    elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
-                                    finalHandler, null);
-                        }else{
-                            noContent(request);
-                        }
+        });
+    }
+
+    @Get("/student/bulletin/parameters")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getBulletinParameters(final HttpServerRequest request) {
+        Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
+        String idStudent = request.params().get(ID_ELEVE_KEY);
+        exportBulletinService.getParameters(idStudent, idPeriode, new Handler<Either<String, JsonObject>>() {
+            @Override
+            public void handle(Either<String, JsonObject> event) {
+                if(event.isLeft()){
+                    leftToResponse(request, event.left());
+                    log.error(event.left().getValue());
+                } else{
+                    JsonObject parameters = event.right().getValue();
+                    if(!parameters.isEmpty()){
+                        JsonObject paramsJson = new JsonObject(parameters.getString("params"));
+                        JsonArray idStudents = new JsonArray().add(idStudent);
+                        paramsJson.put(ID_PERIODE_KEY,idPeriode);
+                        paramsJson.put(ID_STUDENTS_KEY,idStudents);
+                        Renders.renderJson(request, paramsJson);
+                    }else{
+                        noContent(request);
                     }
                 }
-            });
+            }
         });
     }
 
