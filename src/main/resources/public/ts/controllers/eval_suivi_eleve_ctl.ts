@@ -332,7 +332,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             updateColorAndLetterForSkills($scope, $location);
             await utils.initChartsEval($scope);
             if(template.contains('suivi-competence-content',
-                    'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')){
+                'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')){
                 template.close('suivi-competence-content');
                 await utils.safeApply($scope);
                 await $scope.initSliderBFC();
@@ -1109,11 +1109,11 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             return FilterNotEvaluatedEnseignement(monEnseignement, $scope.selected.grey);
         };
 
-         $scope.initView = async function () {
+        $scope.initView = async function () {
             if ($scope.searchBilan !== undefined  && $scope.searchBilan.parDomaine ===  'false') {
                 $scope.searchBilan.parDomaine = 'true';
             }
-         };
+        };
 
         $scope.showEnseignementChoice = (parDomaine?) => {
             let hideFilterMine = true;
@@ -1165,47 +1165,51 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          */
         $scope.loadBulletin = async function () {
             try {
-                let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.searchBulletin.eleve.id;
-                url += "&idPeriode=" + $scope.searchBulletin.periode.id_type;
-                let data = await http.get(url);
-                if(data.status == 204){
-                    //empty result, le bulletin n'a pas encore été généré
+                if($scope.search.periode.id_type == null){
                     $scope.content = undefined;
-                }else{
-                    let options = data.data;
-                    options.images = {}; // contiendra les id des images par élève
-                    options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
-
-                    options.students = [];
-
-                    _.forEach( options.idStudents, (id) => {
-                        let student = {id:id,idClasse:$scope.searchBulletin.eleve.idClasse};
-                        options.students.push(student);
-                    });
-
-                    if (options.showBilanPerDomaines === true) {
-                        $scope.niveauCompetences = options.niveauCompetences;
-                    }
-
-                    if(!($scope.structure && $scope.structure.id))
-                        $scope.structure = new Structure({id:  model.me.structures[0]});
-
-                    if (options.showBilanPerDomaines === true && options.simple !== true) {
-                        // Si on choisit de déssiner les graphes
-                        await ExportBulletins.createCanvas(options, $scope);
-                    }
-                    // lancement de l'export et récupération du fichier généré
-                    data = await http.post(`/competences/see/bulletins`, new ExportBulletins().toJSON(options),
-                        {responseType: 'arraybuffer'});
-                    if(data.status == 204){
+                }else {
+                    let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.search.eleve.id;
+                    url += "&idPeriode=" + $scope.search.periode.id_type;
+                    let data = await http.get(url);
+                    if (data.status == 204) {
                         //empty result, le bulletin n'a pas encore été généré
                         $scope.content = undefined;
-                    }else{
-                        var file = new Blob([data.data], {type: 'application/pdf'});
-                        var fileURL = window.URL.createObjectURL(file);
-                        $scope.content = $sce.trustAsResourceUrl(fileURL);
+                    } else {
+                        let options = data.data;
+                        options.images = {}; // contiendra les id des images par élève
+                        options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
+
+                        options.students = [];
+
+                        _.forEach(options.idStudents, (id) => {
+                            let student = {id: id, idClasse: $scope.search.eleve.idClasse};
+                            options.students.push(student);
+                        });
+
+                        if (options.showBilanPerDomaines === true) {
+                            $scope.niveauCompetences = options.niveauCompetences;
+                        }
+
+                        if (!($scope.structure && $scope.structure.id))
+                            $scope.structure = new Structure({id: model.me.structures[0]});
+
+                        if (options.showBilanPerDomaines === true && options.simple !== true) {
+                            // Si on choisit de déssiner les graphes
+                            await ExportBulletins.createCanvas(options, $scope);
+                        }
+                        // lancement de l'export et récupération du fichier généré
+                        data = await http.post(`/competences/see/bulletins`, new ExportBulletins().toJSON(options),
+                            {responseType: 'arraybuffer'});
+                        if (data.status == 204) {
+                            //empty result, le bulletin n'a pas encore été généré
+                            $scope.content = undefined;
+                        } else {
+                            var file = new Blob([data.data], {type: 'application/pdf'});
+                            var fileURL = window.URL.createObjectURL(file);
+                            $scope.content = $sce.trustAsResourceUrl(fileURL);
+                        }
+                        utils.safeApply($scope);
                     }
-                    utils.safeApply($scope);
                 }
             } catch (data) {
                 console.error(data);
@@ -1217,12 +1221,12 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
         const filterCycle = () => {
             return (item) => {
-                return item.id_type > -2;
+                return item.libelle != "cycle";
             };
         };
         const filterCycleAndYear = () => {
             return (item) => {
-                return item.id_type > -1;
+                return item.id_type != null;
             };
         };
 
