@@ -1,0 +1,29 @@
+<section class="note-table" ng-if="averagesClasses.length !== 0">
+    <table class="twelve">
+        <thead>
+        <tr>
+            <th class="light-font-header" ng-repeat="rowData in averagesClasses.headerTable">
+                <div>[[rowData.subjectName]]</div>
+                <div>[[rowData.teacherName]]</div>
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="notesStudents in averagesClasses.bodyTable">
+            <td ng-repeat="noteStudent in notesStudents track by $index">
+                [[noteStudent]]
+            </td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr ng-repeat="notesAverages in averagesClasses.footerTable">
+            <td ng-repeat="noteAverage in notesAverages track by $index">
+                [[noteAverage]]
+            </td>
+        </tr>
+        </tfoot>
+    </table>
+</section>
+<p ng-if="!isDataOnPage">
+    <i18n>competance.class.info.empty</i18n>
+</p>

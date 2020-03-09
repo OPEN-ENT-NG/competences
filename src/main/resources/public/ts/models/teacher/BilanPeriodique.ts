@@ -15,18 +15,10 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {Model, _, model, notify, Collection, moment} from 'entcore';
-import http from 'axios';
-import {
-    Periode,
-    Classe,
-    Structure,
-    ElementBilanPeriodique,
-    evaluations
-} from './index';
+import {_, Collection, idiom as lang, Model, model, moment, notify} from 'entcore';
+import http, {AxiosResponse} from 'axios';
+import {Classe, ElementBilanPeriodique, evaluations, Matiere, Periode, ReleveNoteTotale, Structure} from './index';
 import {AppreciationElement} from "./AppreciationElement";
-import {AvisConseil} from "./AvisConseil";
-import {AvisOrientation} from "./AvisOrientation";
 import {Utils} from "./Utils";
 
 export class BilanPeriodique extends  Model {
@@ -38,13 +30,18 @@ export class BilanPeriodique extends  Model {
     appreciations : Collection<AppreciationElement>;
     endSaisie : Boolean;
 
+
     static get api() {
         return {
             GET_ELEMENTS: '/competences/elementsBilanPeriodique?idEtablissement=' + evaluations.structure.id,
             GET_ENSEIGNANTS: '/competences/elementsBilanPeriodique/enseignants',
             GET_APPRECIATIONS: '/competences/elementsAppreciations',
             CREATE_APPRECIATIONS_SAISIE_PROJETS: '/competences/elementsAppreciationsSaisieProjet',
-            CREATE_APPRECIATIONS_BILAN_PERIODIQUE: '/competences/elementsAppreciationBilanPeriodique'
+            CREATE_APPRECIATIONS_BILAN_PERIODIQUE: '/competences/elementsAppreciationBilanPeriodique',
+            GET_SYNTHESIS: '/competences/results/class/synthesis',
+            GET_HOMEWORK:"/competences/releve/export/checkDevoirs?idEtablissement=",
+            GET_APPRAISALS:"/competences/recapAppreciations/print/",
+            GET_SUBJECTS: "/competences/subjects/short-label/subjects?ids="
         }
     }
 
@@ -78,7 +75,7 @@ export class BilanPeriodique extends  Model {
             let url = BilanPeriodique.api.GET_ELEMENTS + "&idClasse=" + this.classe.id
 
             if(param !== "isBilanPeriodique") {
-               url = url + "&idEnseignant=" + model.me.userId;
+                url = url + "&idEnseignant=" + model.me.userId;
             }
 
             let data = await http.get(url);
@@ -184,8 +181,8 @@ export class BilanPeriodique extends  Model {
                     : await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_SAISIE_PROJETS + "?type=classe",
                     this.toJSON(periode, element, null, classe, this.structure));
             } else {
-                 await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE
-                     + "?type=eleve-bilanPeriodique", this.toJSON(periode, element, eleve, classe, this.structure));
+                await http.post(BilanPeriodique.api.CREATE_APPRECIATIONS_BILAN_PERIODIQUE
+                    + "?type=eleve-bilanPeriodique", this.toJSON(periode, element, eleve, classe, this.structure));
             }
 
         } catch (e) {
@@ -193,4 +190,249 @@ export class BilanPeriodique extends  Model {
         }
     }
 
+    private async getHomework (parameter:any):Promise<any | Error>{
+        let url:string = `${BilanPeriodique.api.GET_HOMEWORK}${parameter.idEtablissement}&idClasse=${parameter.idClasse}`;
+        if(parameter.idPeriode) url += `&idPeriode=${parameter.idPeriode}`;
+        const { data, status }:AxiosResponse = await http.get(url);
+        if(status === 200) return data;
+        throw new Error("getHomework");
+    }
+
+    private async getSynthesis (parameter:any):Promise<any | Error>{
+        const { data, status }:AxiosResponse = await http.post(`${BilanPeriodique.api.GET_SYNTHESIS}`, parameter);
+        if(status === 200) return data;
+        throw new Error("getSynthesis");
+    }
+
+    private async getAppraisals(idClasse:string, idPeriode:string, idStructure:string):Promise<any | Error> {
+        let url:string = `${BilanPeriodique.api.GET_APPRAISALS}${idClasse}/export?text=false&idStructure=${idStructure}&json=true`;
+        if(idPeriode) url += `&idPeriode=${idPeriode}`;
+        const {data, status}:AxiosResponse = await http.get(url);
+        if(status === 200) return data.data;
+        throw new Error("getAppraisals");
+    }
+
+    private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.map((subject:Matiere):Boolean=>subject.id).join(",")}`);
+        if(status === 200) return data;
+        throw new Error("getAppraisals");
+    }
+
+    public async summaryEvaluations (idClass:string, idPeriod:number):Promise<void>{
+        let url:string =`/competences/recapEval/print/${idClass}/export?text=false&usePerso=false`;
+        if(idPeriod) url += `&idPeriode=${idPeriod}`;
+        url += "&json=true";
+        const { data, status }:AxiosResponse = await http.get(url);
+        if(status === 200) return data;
+        notify.error(lang.translate("competance.error.results.class"));
+    }
+
+    private async callsDataSynthesisAndAppraisals (initResultPeriodic:any, subjects:Array<Matiere>, scope:any):Promise<any> {
+        try {
+            const noteTotal: ReleveNoteTotale = new ReleveNoteTotale(initResultPeriodic);
+            const parameter: any = {
+                idMatieres: initResultPeriodic.idMatieres,
+                idClasse: noteTotal.idClasse,
+                idEtablissement: noteTotal.idEtablissement,
+                idPeriode: noteTotal.idPeriode,
+                idPeriodes: _.pluck(noteTotal.periodes, 'idPeriode'),
+                typeClasse: noteTotal.classe.type_groupe,
+                idGroups: [],
+            };
+            if (!parameter.idPeriode) {
+                Utils.stopMessageLoader(scope);
+                return;
+            }
+            ;
+            return await Promise.all([
+                this.getHomework(parameter),
+                this.getSynthesis(parameter),
+                this.getSubjects(subjects),
+            ])
+                .then((dataResponse: any): any => dataResponse)
+                .catch((error: String): void => {
+                    Utils.stopMessageLoader(scope);
+                    console.error(error);
+                    notify.error(lang.translate("competance.error.results.class"))
+                });
+        } catch(errorReturn){
+            Utils.stopMessageLoader(scope);
+            notify.error(lang.translate("competance.error.results.class" + errorReturn));
+            return undefined;
+        }
+    };
+
+    private makerHearderWithTeachersAndSubjects (data:any):Array<any>{
+        let matchingDataApi:Array<any> = [];
+        const homeworks:Array<any> = data.homeworks;
+        const statistics:any = data.synthesis.statistiques;
+        const subjects = data.subjects;
+        for (let subjectId in statistics) {
+            for (let k = 0; k < homeworks.length ; k++) {
+                if(homeworks[k].id_matiere === subjectId
+                    && !_.contains(matchingDataApi.map(subject => subject.idSubject), subjectId)) {
+                    const subject = _.values(subjects).find(subject => subject.id === homeworks[k].id_matiere);
+                    matchingDataApi.push({
+                        idSubject: subjectId,
+                        average: statistics[subjectId].moyenne,
+                        teacherName: homeworks[k].teacher,
+                        subjectName: subject? subject.name : undefined,
+                        subjectShortName:  subject? subject.libelle_court : undefined,
+                    });
+                    break;
+                }
+            }
+        }
+        return matchingDataApi;
+    }
+
+    private async createHeaderTable (data){
+        if(!Object.keys(data).map( element => data[element]).some(array => array.length > 0)) return [];
+        let resultHeader:Array<any> = [];
+        const dataSynthesis = await this.makerHearderWithTeachersAndSubjects(data);
+        resultHeader =  [
+            {
+                idSubject: undefined,
+                subjectName: lang.translate("student"),
+                teacherName: undefined,
+            },
+            ...dataSynthesis.map(subjectToSynthesis => {
+                const [lastName, firstName ] = subjectToSynthesis.teacherName.split(" ");
+                return {
+                    idSubject: subjectToSynthesis.idSubject,
+                    subjectName: subjectToSynthesis.subjectShortName,
+                    teacherName: Utils.makeShortName(lastName, firstName),
+                }
+            }),
+            {
+                idSubject: undefined,
+                subjectName: lang.translate("average"),
+                teacherName: undefined,
+            },
+        ];
+        return resultHeader;
+    }
+
+    private async createBodyTable (headerArrayTeachers:Array<any>, data:Array<any>):Promise<Array<any>>{
+        let resultBody:Array<any> = [];
+        const students = data['students'];
+        for (let i = 0; i < students.length; i++) {
+            let student = students[i];
+            const subjectsAverages:Array<any> = await this.aggregationNotesBySubjects(headerArrayTeachers, student.moyenneFinale);
+            resultBody.push([
+                `${student.lastName} ${student.firstName}`,
+                ...subjectsAverages,
+                student.moyenne_generale,
+            ]);
+        }
+        return resultBody.sort((firstStudent:Array<string>, secondStudent:Array<string>):number => {
+            return firstStudent[0].localeCompare(secondStudent[0])
+        });
+    }
+
+    private async createFooterTable (headerArrayTeachers:Array<any>, data:Array<any>):Promise<Array<any>>{
+        if(data.length === 0) return [];
+        let resultFooter:Array<any> = [];
+        const statistics = data['statistiques'];
+        resultFooter = await this.aggregationNotesBySubjects(headerArrayTeachers, statistics);
+        resultFooter = [
+            ...resultFooter.map( mapRow => mapRow.moyenne),
+            data['statistiques'].moyenne_generale
+        ];
+        return [
+            [lang.translate("average"), ...resultFooter.map(averageNote => averageNote.moyenne)],
+            [lang.translate("average.minimum"), ...resultFooter.map(minimumNote => minimumNote.minimum)],
+            [lang.translate("average.maximum"), ...resultFooter.map(maximumNote => maximumNote.maximum)],
+        ]
+    }
+
+    private async aggregationNotesBySubjects (subjectsFromHeaderTable:Array<any>, notes:object):Promise<Array<any>>{
+        if(!notes) return [];
+        let subjectsNotes:Array<any> = [];
+        for (let i = 0; i < subjectsFromHeaderTable.length; i++) {
+            let hasNoteSubject:Boolean = false;
+            for(let idSubject in notes){
+                if(subjectsFromHeaderTable[i].idSubject === idSubject){
+                    subjectsNotes.push(notes[idSubject]);
+                    hasNoteSubject = true;
+                    break;
+                }
+                if(!subjectsFromHeaderTable[i].idSubject) {
+                    hasNoteSubject = true;
+                    break;
+                }
+            }
+            if(!hasNoteSubject) subjectsNotes.push('');
+        }
+        return subjectsNotes;
+    }
+
+    public async getAppraisalsAndNotesByClassAndPeriod(idClasse:string, idPeriode:string, idStructure:string):Promise<Array<any>>{
+        let result = [];
+        const appraisals = await this.getAppraisals(idClasse, idPeriode, idStructure);
+
+        result = appraisals.map(appraisal => {
+            let appraisalReturned:any = {
+                teacherName: "",
+                subjectName: "",
+                appraisal:{content_text: ""},
+                average:{
+                    maximum: "",
+                    minimum: "",
+                    moyenne: "",
+                }
+            };
+            appraisalReturned.teacherName = appraisal.prof || "";
+            appraisalReturned.subjectName = appraisal.mat || "";
+            appraisalReturned.average.maximum = appraisal.max || "";
+            appraisalReturned.average.minimum = appraisal.min || "";
+            appraisalReturned.average.moyenne = appraisal.moy || "";
+            appraisalReturned.appraisal.content_text = appraisal.appr || "";
+            return appraisalReturned;
+        });
+        return result;
+    }
+
+    public async getAverage (data:any):Promise<any>{
+        const headerTable = await this.createHeaderTable(data);
+        if(headerTable)
+            return {
+                headerTable: headerTable,
+                bodyTable: await this.createBodyTable(headerTable, data),
+                footerTable: await this.createFooterTable(headerTable, data.synthesis),
+            }
+    }
+
+    public makeCsv (fileName:string, dataHeader:Array<Array<any>>, dataBody:Array<Array<any>>):void{
+        let csvPrepared:Array<Array<any>> = [...dataHeader, ...dataBody];
+        if (csvPrepared.length > 0) {
+            const blob = new Blob([`\ufeff${Utils.prepareCsvString(csvPrepared)}`], {type: ' type: "text/csv;charset=UTF-8"'});
+            const link = document.createElement('a');
+            link.href = (window as any).URL.createObjectURL(blob);
+            link.setAttribute("target", "_blank");
+            link.download = `${fileName}.csv`;
+            document.body.appendChild(link);
+            link.click();
+        }
+    }
+
+    public async synthesisAndAppraisals (initResultPeriodic:any, scope:any, subjects:Array<Matiere>):Promise<any>{
+        const result = await this.callsDataSynthesisAndAppraisals(initResultPeriodic, subjects, scope);
+        if(result){
+            if(result.length === 3){
+                return {
+                    homeworks: result[0],
+                    synthesis: result[1],
+                    students : result[1].eleves,
+                    subjects : result[2].subjects,
+                }
+            }
+        }
+        return {
+            homeworks: [],
+            synthesis: [],
+            students : [],
+            subjects: [],
+        }
+    }
 }

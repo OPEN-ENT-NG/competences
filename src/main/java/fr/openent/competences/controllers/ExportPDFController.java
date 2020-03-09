@@ -59,6 +59,7 @@ import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
+import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
@@ -310,41 +311,41 @@ public class ExportPDFController extends ControllerHelper {
         }
 
         devoirService.getDevoirInfo(idDevoir, getDevoirInfoEither -> {
-                if (getDevoirInfoEither.isRight()) {
-                    JsonObject devoir = getDevoirInfoEither.right().getValue();
-                    final Boolean only_evaluation = devoir.getLong("nbrcompetence").equals(0L);
-                    String idGroupe = devoir.getString("id_groupe");
-                    String idEtablissement = devoir.getString("id_etablissement");
+            if (getDevoirInfoEither.isRight()) {
+                JsonObject devoir = getDevoirInfoEither.right().getValue();
+                final Boolean only_evaluation = devoir.getLong("nbrcompetence").equals(0L);
+                String idGroupe = devoir.getString("id_groupe");
+                String idEtablissement = devoir.getString("id_etablissement");
 
-                    exportService.getExportEval(text, usePerso, only_evaluation, devoir, idGroupe, idEtablissement,
-                            request,  event -> {
-                                    if (event.isRight()) {
-                                        try {
-                                            JsonObject result = event.right().getValue();
-                                            result.put("notOnlyEvaluation", !only_evaluation);
-                                            if (json) {
-                                                Renders.renderJson(request, result);
-                                            } else {
-                                                String fileName = result.getJsonObject("devoir")
-                                                        .getString("classe") + "_" +
-                                                        result.getJsonObject("devoir").getString("nom")
-                                                                .replace(' ', '_');
-                                                exportService.genererPdf(request, result,
-                                                        "evaluation.pdf.xhtml", fileName, vertx, config);
-                                            }
-                                        } catch (Error err) {
-                                            String error = "An error occured while rendering pdf export : " +
-                                                    err.getMessage();
-                                            log.error(error);
-                                            leftToResponse(request, new Either.Left<>(error));
-                                        }
+                exportService.getExportEval(text, usePerso, only_evaluation, devoir, idGroupe, idEtablissement,
+                        request,  event -> {
+                            if (event.isRight()) {
+                                try {
+                                    JsonObject result = event.right().getValue();
+                                    result.put("notOnlyEvaluation", !only_evaluation);
+                                    if (json) {
+                                        Renders.renderJson(request, result);
                                     } else {
-                                        leftToResponse(request, event.left());
+                                        String fileName = result.getJsonObject("devoir")
+                                                .getString("classe") + "_" +
+                                                result.getJsonObject("devoir").getString("nom")
+                                                        .replace(' ', '_');
+                                        exportService.genererPdf(request, result,
+                                                "evaluation.pdf.xhtml", fileName, vertx, config);
                                     }
-                            });
-                } else {
-                    leftToResponse(request, getDevoirInfoEither.left());
-                }
+                                } catch (Error err) {
+                                    String error = "An error occured while rendering pdf export : " +
+                                            err.getMessage();
+                                    log.error(error);
+                                    leftToResponse(request, new Either.Left<>(error));
+                                }
+                            } else {
+                                leftToResponse(request, event.left());
+                            }
+                        });
+            } else {
+                leftToResponse(request, getDevoirInfoEither.left());
+            }
         });
     }
 
@@ -1251,7 +1252,7 @@ public class ExportPDFController extends ControllerHelper {
     public void exportBulletins(final HttpServerRequest request) {
         RequestUtils.bodyToJson(request,  params -> {
             Long idPeriode = params.getLong(ID_PERIODE_KEY);
-            JsonArray idStudents = params.getJsonArray("idStudents");
+            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
             String idClasse = params.getString(ID_CLASSE_KEY);
             String idEtablissement = params.getString(ID_STRUCTURE_KEY);
             Future<JsonArray> elevesFuture = Future.future();
@@ -1265,6 +1266,97 @@ public class ExportPDFController extends ControllerHelper {
                     elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
                     finalHandler, null);
 
+        });
+    }
+
+    @Post("/see/bulletins")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void seeBulletins(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request,  params -> {
+            Long idPeriode = params.getLong(ID_PERIODE_KEY);
+            JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
+            String idClasse = params.getString(ID_CLASSE_KEY);
+            String idEtablissement = params.getString(ID_STRUCTURE_KEY);
+            Future<JsonArray> elevesFuture = Future.future();
+            final Map<String, JsonObject> elevesMap = new LinkedHashMap<>();
+            final AtomicBoolean answered = new AtomicBoolean();
+
+            final Handler<Either<String, JsonObject>> finalHandler = exportBulletinService
+                    .getFinalBulletinHandler(request, elevesMap, vertx, config, elevesFuture, answered, params);
+
+            exportBulletinService.runExportBulletin(idEtablissement, idClasse, idStudents, idPeriode, params,
+                    elevesFuture, elevesMap, answered, getHost(request), I18n.acceptLanguage(request),
+                    finalHandler, null);
+
+        });
+    }
+
+    @Get("/student/bulletin/parameters")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getBulletinParameters(final HttpServerRequest request) {
+        Long idPeriode = Long.valueOf(request.params().get(ID_PERIODE_KEY));
+        String idStudent = request.params().get(ID_ELEVE_KEY);
+        exportBulletinService.getParameters(idStudent, idPeriode, new Handler<Either<String, JsonObject>>() {
+            @Override
+            public void handle(Either<String, JsonObject> event) {
+                if(event.isLeft()){
+                    leftToResponse(request, event.left());
+                    log.error(event.left().getValue());
+                } else{
+                    JsonObject parameters = event.right().getValue();
+                    if(!parameters.isEmpty()){
+                        JsonObject paramsJson = new JsonObject(parameters.getString("params"));
+                        JsonArray idStudents = new JsonArray().add(idStudent);
+                        paramsJson.put(ID_PERIODE_KEY,idPeriode);
+                        paramsJson.put(ID_STUDENTS_KEY,idStudents);
+                        Renders.renderJson(request, paramsJson);
+                    }else{
+                        noContent(request);
+                    }
+                }
+            }
+        });
+    }
+
+    @Post("/save/bulletin/parameters")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void saveParameters(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                final boolean isChefEtab;
+                if (user != null) {
+                    isChefEtab = new WorkflowActionUtils().hasRight(user,
+                            WorkflowActions.ADMIN_RIGHT.toString());
+                } else {
+                    isChefEtab = false;
+                }
+                RequestUtils.bodyToJson(request, params -> {
+                    Long idPeriode = params.getLong(ID_PERIODE_KEY);
+                    JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
+                    String idClasse = params.getString(ID_CLASSE_KEY);
+
+                    WorkflowActionUtils.hasHeadTeacherRight(user,
+                            new JsonArray().add(idClasse), null, null,
+                            null, null, null,
+                            new Handler<Either<String, Boolean>>() {
+                                @Override
+                                public void handle(Either<String, Boolean> event) {
+                                    Boolean isHeadTeacher;
+                                    if (event.isLeft()) {
+                                        isHeadTeacher = false;
+                                    } else {
+                                        isHeadTeacher = event.right().getValue();
+                                    }
+                                    if (isHeadTeacher || isChefEtab)
+                                        exportBulletinService.saveParameters(idStudents, idPeriode, params.toString(), defaultResponseHandler(request));
+                                    else
+                                        unauthorized(request);
+                                }
+                            });
+                });
+
+            }
         });
     }
 

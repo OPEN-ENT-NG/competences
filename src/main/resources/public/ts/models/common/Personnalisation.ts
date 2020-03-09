@@ -8,7 +8,7 @@ export let selectCycleForView = function ($scope, $location, id_cycle?) {
 
     let idCycle = id_cycle;
 
-    if ($location.path() === `/devoir/${$scope.currentDevoir.id}`) {
+    if ($scope.currentDevoir && $location.path() === `/devoir/${$scope.currentDevoir.id}`) {
         idCycle = $scope.classes.findWhere({id: $scope.currentDevoir.id_groupe}).id_cycle;
     }
 

@@ -774,4 +774,15 @@ export class Utils {
         document.body.appendChild(link);
         link.click();
     };
+
+    static makeShortName (lastName:String, firstName:String):String {
+        if((typeof lastName !== "string" && !lastName) || (typeof firstName !== "string" && !firstName)) return "";
+        return lastName + (firstName.length !== 0? ` ${firstName.charAt(0)}.`: "").toLocaleUpperCase();
+    };
+
+    static prepareCsvString (dataCsv:Array<Array<string | number>>):string {
+        return dataCsv.map((row:Array<any>):string => row.join(';')).join('\n');
+    }
+
+
 }

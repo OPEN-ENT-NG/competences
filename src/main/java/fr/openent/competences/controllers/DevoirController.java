@@ -63,11 +63,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-
-
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Future;
-
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 /**
@@ -90,15 +85,20 @@ public class DevoirController extends ControllerHelper {
     }
 
     @Get("/devoirs")
-    @ApiDoc("Récupère les devoirs d'un utilisateurs")
+    @ApiDoc("Récupère les devoirs d'un utilisateur")
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void getDevoirs(final HttpServerRequest request){
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(final UserInfos user) {
                 if(user != null){
+                    String forStudentReleveString = request.params().get("forStudentReleve");
+                    final String _TRUE = "true";
+                    boolean forStudentReleve = false;
+                    if(forStudentReleveString != null)
+                        forStudentReleve = forStudentReleveString.equals(_TRUE);
                     // si l'utilisateur a la fonction d'admin
-                    if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString())) {
+                    if(new WorkflowActionUtils().hasRight(user, WorkflowActions.ADMIN_RIGHT.toString()) && !forStudentReleve) {
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                         String limit = request.params().get("limit");
                         Integer iLimit = (limit==null) ? null : Integer.valueOf(limit);
@@ -113,7 +113,7 @@ public class DevoirController extends ControllerHelper {
                         final String _STUDENT = "Student";
                         final String _RELATIVE = "Relative";
                         if (idClasse == null && ! _STUDENT.equals(user.getType())
-                                && !_RELATIVE.equals(user.getType())) {
+                                && !_RELATIVE.equals(user.getType()) && !forStudentReleve) {
                             devoirsService.listDevoirs(user,idEtablissement, handler);
                         } else {
 
@@ -126,7 +126,7 @@ public class DevoirController extends ControllerHelper {
                                 idPeriode = testLongFormatParameter("idPeriode", request);
                             }
 
-                            if( _STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType())){
+                            if( _STUDENT.equals(user.getType()) || _RELATIVE.equals(user.getType()) || forStudentReleve){
                                 String idEleve = request.params().get("idEleve");
                                 devoirsService.listDevoirs(idEleve,idEtablissement, idClasse, null,
                                         idPeriode,historise, handler);

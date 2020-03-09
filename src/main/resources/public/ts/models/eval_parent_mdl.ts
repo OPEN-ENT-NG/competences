@@ -132,11 +132,15 @@ export class Evaluations extends Model {
                         if (historise !== undefined) {
                             uri = uri + '&historise=' + historise;
                         }
+                        uri = uri + '&forStudentReleve=true';
                         http().getJson(uri).done((devoirs) => {
 
                             // RECUPERATION DES COMPETENCES
                             let uriCompetences = Evaluations.api.GET_COMPETENCES + userId;
-                            uriCompetences = uriCompetences + '?idClasse=' + this.eleve.classe.id;
+                            if(this.eleve && this.eleve.classe)
+                                uriCompetences = uriCompetences + '?idClasse=' + this.eleve.classe.id;
+                            else if(classeId)
+                                uriCompetences = uriCompetences + '?idClasse=' + classeId;
                             if (idPeriode !== undefined) {
                                 uriCompetences = uriCompetences + '&idPeriode=' + idPeriode;
                             }
@@ -181,10 +185,17 @@ export class Evaluations extends Model {
                                 // RECUPERATION DES ANNOTATIONS
                                 let uriAnnotations = Evaluations.api.GET_ANNOTATION  + userId;
                                 if (idPeriode !== undefined) {
-                                    uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode + '&idClasse=' + this.eleve.classe.id;
+                                    uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode ;
+                                    if(this.eleve && this.eleve.classe)
+                                        uriAnnotations = uriAnnotations + '&idClasse=' + this.eleve.classe.id;
+                                    else if(classeId)
+                                        uriAnnotations = uriAnnotations + '&idClasse=' + classeId;
                                 }
                                 else {
-                                    uriAnnotations = uriAnnotations + '?idClasse=' + this.eleve.classe.id;
+                                    if(this.eleve && this.eleve.classe)
+                                        uriAnnotations = uriAnnotations + '?idClasse=' + this.eleve.classe.id;
+                                    else if(classeId)
+                                        uriAnnotations = uriAnnotations + '?idClasse=' + classeId;
                                 }
 
                                 http().getJson(uriAnnotations).done((annotations) => {

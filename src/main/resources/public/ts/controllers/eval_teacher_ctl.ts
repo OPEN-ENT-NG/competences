@@ -409,7 +409,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
             },
 
-            displaySuiviCompetencesEleve: async function (params) {
+            displaySuiviEleve: async function (params) {
                 $scope.opened.lightbox = false;
                 if (evaluations.structure !== undefined && evaluations.structure.isSynchronized) {
                     $scope.cleanRoot();
@@ -454,7 +454,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.syncPeriode($scope.search.classe.id);
                         await display();
                     }
-                    template.open('main', 'enseignants/suivi_competences_eleve/container');
+                    template.open('main', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/container');
                     await  utils.safeApply($scope);
                 }
             },
@@ -783,7 +783,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             try {
                 await devoir.switchVisibilityApprec();
             } catch (e) {
-                console.log(e);
+                console.error(e);
             } finally {
                 utils.safeApply($scope);
             }
@@ -3755,7 +3755,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         $scope.opened.releveComp = true;
                     }
                     $scope.errorResult(result);
-                    console.log(result);
+                    console.error(result);
                     utils.safeApply($scope);
 
                 })
@@ -4181,7 +4181,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     await eleve.getDetails($scope.releveNote.idEtablissement,
                         $scope.releveNote.idClasse, $scope.releveNote.idMatiere);
                 } catch (e) {
-                    console.log(e);
+                    console.error(e);
                 }
 
                 let moyenneAnnee = 0;
@@ -4676,7 +4676,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             $scope.currentDevoir.statistiques.percentDone = 100;
             await $scope.currentDevoir.finishDevoir();
             await utils.safeApply($scope);
-            $scope.goTo("/devoirs/list");
         };
 
         angular.merge = function (s1,s2) {

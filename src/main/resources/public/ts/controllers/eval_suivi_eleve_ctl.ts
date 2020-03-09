@@ -27,6 +27,9 @@ import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../mo
 import {Mix} from "entcore-toolkit";
 import {FilterNotEvaluatedEnseignement} from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
+import http from "axios";
+import { evaluations as evaluationsParentFormat } from '../models/eval_parent_mdl';
+import {ExportBulletins} from "../models/common/ExportBulletins";
 
 
 
@@ -35,9 +38,9 @@ declare let Chart: any;
 declare let location: any;
 declare let $: any;
 
-export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleveCtl', [
-    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
-    async function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
+export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
+    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout', '$sce',
+    async function ($scope, route, $rootScope, $location, $filter, $route, $timeout,$sce) {
 
 
         /**********************************************************************************************************
@@ -329,12 +332,12 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             updateColorAndLetterForSkills($scope, $location);
             await utils.initChartsEval($scope);
             if(template.contains('suivi-competence-content',
-                    'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')){
+                'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')){
                 template.close('suivi-competence-content');
                 await utils.safeApply($scope);
                 await $scope.initSliderBFC();
                 template.open('suivi-competence-content',
-                    'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle');
+                    'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle');
             }
             await utils.safeApply($scope);
         };
@@ -365,43 +368,8 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         /**
          * Créer un suivi de compétence
          */
-        $scope.selectSuivi = async function (classeHasChange) {
+        $scope.selectSuivi = async function () {
             return new Promise(async (resolve) => {
-                if(classeHasChange === true){
-                    if($scope.search.eleve !== undefined
-                        && $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined){
-                        $scope.search.eleve = "";
-                    }
-                    $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
-                        "canUpdateBFCSynthese");
-                    await $scope.syncPeriode($scope.search.classe.id);
-                     $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
-                }
-                $scope.selected.grey = true;
-                if ($scope.search.classe.id_cycle === null) {
-                    resolve();
-                    return;
-                }
-                if ($scope.search.eleve !== undefined && $scope.search.classe.eleves.empty()) {
-                    await $scope.search.classe.eleves.sync();
-                    $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
-                }
-
-                if ($scope.search.eleve !== undefined && $scope.filteredEleves !== undefined &&
-                    _.findWhere($scope.filteredEleves.all, {id: $scope.search.eleve.id}) === undefined) {
-                    if($scope.search.eleve.id !== undefined){
-                        notify.info('evaluations.student.is.no.more.evaluable');
-                    }
-                    $scope.search.eleve = "";
-                    $scope.informations.eleve = $scope.search.eleve;
-                    delete $scope.suiviCompetence;
-                    await utils.safeApply($scope);
-                    resolve();
-                    return;
-                }
-
-
-                $scope.informations.eleve = $scope.search.eleve;
                 if (Utils.isNotNull($scope.informations.eleve)  && $scope.search.eleve !== "") {
 
                     // Récupérer le suivi de l'élève
@@ -481,7 +449,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
 
                         $scope.template.close('suivi-competence-content');
                         await utils.safeApply($scope);
-                        $scope.template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
+                        $scope.template.open('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_suivi_eleve');
                         if ($scope.displayFromClass) delete $scope.displayFromClass;
                         await utils.safeApply($scope);
                         resolve();
@@ -762,7 +730,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             }
             else {
                 template.open("suivi-competence-detail",
-                    "enseignants/suivi_competences_eleve/detail_vue_graph");
+                    "enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph");
             }
             utils.scrollTo('top');
         };
@@ -817,6 +785,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.filteredEleves.all.length) {
                 $scope.search.eleve = $scope.filteredEleves.all[index + parseInt(num)];
+                await $scope.initDataEleve();
                 await $scope.changeContent();
             }
         };
@@ -828,40 +797,84 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 && index + parseInt(num) < $scope.filteredEleves.all.length);
         };
 
+        $scope.initDataEleve = async function(classeHasChange){
+            $scope.content = undefined;
+            $scope.dataReleve = undefined;
+            delete $scope.suiviCompetence;
+            if(classeHasChange === undefined)
+                classeHasChange = $scope.route.current.$$route.originalPath;
+            if(classeHasChange === true){
+                if($scope.search.eleve !== undefined
+                    && $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined){
+                    $scope.search.eleve = "";
+                }
+                $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
+                    "canUpdateBFCSynthese");
+                await $scope.syncPeriode($scope.search.classe.id);
+                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+            }
+            $scope.selected.grey = true;
+            if ($scope.search.eleve !== undefined && $scope.search.classe.eleves.empty()) {
+                await $scope.search.classe.eleves.sync();
+                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+            }
+
+            if ($scope.search.eleve !== undefined && $scope.filteredEleves !== undefined &&
+                _.findWhere($scope.filteredEleves.all, {id: $scope.search.eleve.id}) === undefined) {
+                if($scope.search.eleve.id !== undefined){
+                    notify.info('evaluations.student.is.no.more.evaluable');
+                }
+                $scope.search.eleve = "";
+            }
+            $scope.informations.eleve = $scope.search.eleve;
+            await utils.safeApply($scope);
+        };
 
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
-                if(template.containers['suivi-competence-content'] !== undefined) {
-                    await Utils.runMessageLoader($scope);
-                    let content = $scope.template.containers['suivi-competence-content']
-                        .split('.html?hash=')[0].split('template/')[1];
-
-                    if (cycle === null || cycle === undefined) {
-                        $scope.selectedCycleRadio = null;
-                        if ($scope.search.periode.libelle === "cycle") {
-                            $scope.currentCycle = null;
-                            $scope.isCycle = true;
-                            $scope.suiviFilter.mine = "false";
-                        }
-                        else {
-                            Utils.initFilterMine($scope);
-                            $scope.currentCycle = {id_cycle: $scope.search.classe.id_cycle};
-                            $scope.isCycle = false;
-                        }
-                    }
-                    else {
-                        $scope.currentCycle = cycle;
-                        $scope.isCycle = true;
-                    }
-                    if (_.isEmpty($scope.search.classe.eleves.all)) {
-                        await $scope.search.classe.eleves.sync();
-                    }
-                    $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
-                    $scope.template.close('suivi-competence-content');
-                    await $scope.selectSuivi($scope.route.current.$$route.originalPath);
-                    $scope.template.open('suivi-competence-content', content);
-                    await Utils.stopMessageLoader($scope);
+                if (_.isEmpty($scope.search.classe.eleves.all)) {
+                    await $scope.search.classe.eleves.sync();
                 }
+                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+                $scope.loadingTab = true;
+                switch ($scope.displayFollowEleve) {
+                    case ('followItems'):
+                        if (template.containers['suivi-competence-content'] !== undefined) {
+                            if($scope.suiviCompetence === undefined)
+                                await $scope.selectSuivi();
+                            let content = $scope.template.containers['suivi-competence-content']
+                                .split('.html?hash=')[0].split('template/')[1];
+
+                            if (cycle === null || cycle === undefined) {
+                                $scope.selectedCycleRadio = null;
+                                if ($scope.search.periode.libelle === "cycle") {
+                                    $scope.currentCycle = null;
+                                    $scope.isCycle = true;
+                                    $scope.suiviFilter.mine = "false";
+                                } else {
+                                    Utils.initFilterMine($scope);
+                                    $scope.currentCycle = {id_cycle: $scope.search.classe.id_cycle};
+                                    $scope.isCycle = false;
+                                }
+                            } else {
+                                $scope.currentCycle = cycle;
+                                $scope.isCycle = true;
+                            }
+                            $scope.template.close('suivi-competence-content');
+                            $scope.template.open('suivi-competence-content', content);
+                        }
+                        break;
+                    case ('followNotes'):
+                        if($scope.dataReleve === undefined)
+                            await $scope.initReleve();
+                        break;
+                    case ('bulletins'):
+                        if($scope.content === undefined)
+                            await $scope.loadBulletin();
+                        break;
+                }
+                $scope.loadingTab = false;
+                await utils.safeApply($scope);
                 resolve();
             });
         };
@@ -903,7 +916,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                     $scope.showRechercheBarFunction(false);
                     $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                     template.open('suivi-competence-content',
-                        'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle');
+                        'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle');
                     await Utils.stopMessageLoader($scope);
                     resolve();
                 }
@@ -960,14 +973,15 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                             meta.data.forEach(function (element, index) {
                                 // Draw the text invert color of buble, with the specified font
                                 let rgba = dataset.backgroundColor[index];
-                                rgba = rgba.split('(')[1].split(')')[0].split(',');
-                                let r = 255 - parseInt(rgba[0]);
-                                let g = 255 - parseInt(rgba[1]);
-                                let b = 255 - parseInt(rgba[2]);
-                                let a = rgba[3];
+                                if(rgba && rgba.includes('(') && rgba.includes(')') && rgba.includes(',')) {
+                                    rgba = rgba.split('(')[1].split(')')[0].split(',');
+                                    let r = 255 - parseInt(rgba[0]);
+                                    let g = 255 - parseInt(rgba[1]);
+                                    let b = 255 - parseInt(rgba[2]);
+                                    let a = rgba[3];
 
-                                ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + ","
-                                    + b.toString() + "," + a + ")";
+                                    ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
+                                }
                                 let fontSize = 10.5;
                                 let fontStyle = 'normal';
                                 let fontFamily = 'Helvetica Neue';
@@ -1095,12 +1109,11 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
             return FilterNotEvaluatedEnseignement(monEnseignement, $scope.selected.grey);
         };
 
-         $scope.initView = async function () {
+        $scope.initView = async function () {
             if ($scope.searchBilan !== undefined  && $scope.searchBilan.parDomaine ===  'false') {
                 $scope.searchBilan.parDomaine = 'true';
-                await $scope.changeContent();
             }
-         };
+        };
 
         $scope.showEnseignementChoice = (parDomaine?) => {
             let hideFilterMine = true;
@@ -1109,9 +1122,216 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 hideFilterMine =  (parDomaine === 'false');
             }
             return hideFilterMine && $scope.template.contains('suivi-competence-content',
-                'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
+                'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_suivi_eleve');
         };
 
+        $scope.selectDisplayClassTabs = async (tabsSelected:string):Promise<void> => {
+            $scope.displayFollowEleve = tabsSelected;
+            switch ($scope.displayFollowEleve) {
+                case ('followItems'):
+                    openTemplateFollowCompetence('follow_items/follow_items');
+                    break;
+                case ('followNotes'):
+                    openTemplateFollowCompetence('follow_notes');
+                    break;
+                case ('bulletins'):
+                    openTemplateFollowCompetence('bulletins');
+                    break;
+                default: openTemplateFollowCompetence('follow_items/follow_items');
+            }
+        };
+
+        $scope.checkHaveResult = function () {
+            switch ($scope.displayFollowEleve) {
+                case ('followNotes'):
+                    let res = false;
+                    _.forEach(evaluations.matieres.all, (matiere) => {
+                        if ($scope.hasEvaluatedDevoir(matiere)) {
+                            res = true;
+                        }
+                    });
+                    return res;
+                case ('bulletins'):
+                    if ($scope.search.periode !== null && $scope.search.periode.id_type !== null)
+                        return $scope.content;
+                    else
+                        return false;
+            }
+        };
+
+        /**
+         * chargement d'un releve
+         * @returns {Promise<void>}
+         */
+        $scope.loadBulletin = async function () {
+            try {
+                if($scope.search.periode.id_type == null){
+                    $scope.content = undefined;
+                }else {
+                    let url = "/competences/student/bulletin/parameters?idEleve=" + $scope.search.eleve.id;
+                    url += "&idPeriode=" + $scope.search.periode.id_type;
+                    let data = await http.get(url);
+                    if (data.status == 204) {
+                        //empty result, le bulletin n'a pas encore été généré
+                        $scope.content = undefined;
+                    } else {
+                        let options = data.data;
+                        options.images = {}; // contiendra les id des images par élève
+                        options.idImagesFiles = []; // contiendra tous les ids d'images à supprimer après l'export
+
+                        options.students = [];
+
+                        _.forEach(options.idStudents, (id) => {
+                            let student = {id: id, idClasse: $scope.search.eleve.idClasse};
+                            options.students.push(student);
+                        });
+
+                        if (options.showBilanPerDomaines === true) {
+                            $scope.niveauCompetences = options.niveauCompetences;
+                        }
+
+                        if (!($scope.structure && $scope.structure.id))
+                            $scope.structure = new Structure({id: model.me.structures[0]});
+
+                        if (options.showBilanPerDomaines === true && options.simple !== true) {
+                            // Si on choisit de déssiner les graphes
+                            await ExportBulletins.createCanvas(options, $scope);
+                        }
+                        // lancement de l'export et récupération du fichier généré
+                        data = await http.post(`/competences/see/bulletins`, new ExportBulletins().toJSON(options),
+                            {responseType: 'arraybuffer'});
+                        if (data.status == 204) {
+                            //empty result, le bulletin n'a pas encore été généré
+                            $scope.content = undefined;
+                        } else {
+                            var file = new Blob([data.data], {type: 'application/pdf'});
+                            var fileURL = window.URL.createObjectURL(file);
+                            $scope.content = $sce.trustAsResourceUrl(fileURL);
+                        }
+                        utils.safeApply($scope);
+                    }
+                }
+            } catch (data) {
+                console.error(data);
+                if(data.response != undefined && data.response.status === 500){
+                    this.manageError(data.response.data, $scope);
+                }
+            }
+        };
+
+        const filterCycle = () => {
+            return (item) => {
+                return item.libelle != "cycle";
+            };
+        };
+        const filterCycleAndYear = () => {
+            return (item) => {
+                return item.id_type != null;
+            };
+        };
+
+        $scope.filterPeriode = function() {
+            if($scope.displayFollowEleve == 'bulletins')
+                return filterCycleAndYear();
+            else if($scope.displayFollowEleve == 'followNotes')
+                return filterCycle();
+        };
+
+        const openTemplateFollowCompetence = async (nameOfPageHtml:string):Promise<void> => {
+            template.close('followEleve');
+            template.open('followEleve', `enseignants/suivi_eleve/tabs_follow_eleve/${nameOfPageHtml}`);
+            $scope.changeContent();
+        };
+
+        /**********************************************************************************************************
+         *  Onglet SUIVI DES NOTES
+         *********************************************************************************************************/
+
+        $scope.calculMoyenneMatieres = async function () {
+
+            if ($scope.dataReleve === undefined) {
+                return;
+            }
+
+            for(let matiere of $scope.matieresReleve.all){
+                let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
+                let PromisesMoy = [];
+                if (devoirsMatieres !== undefined) {
+                    let id_eleve = $scope.search.eleve.id;
+                    PromisesMoy.push( utils.getMoyenne(id_eleve, matiere, devoirsMatieres));
+
+                    if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
+
+                        for (let sousMat of matiere.sousMatieres.all) {
+                            let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
+                            if (devoirsSousMat.length > 0) {
+                                PromisesMoy.push( utils.getMoyenne(id_eleve, sousMat, devoirsSousMat));
+
+                            } else {
+                                sousMat.moyenne = "";
+                            }
+
+                        }
+                    }
+                    await Promise.all(PromisesMoy);
+                    utils.safeApply($scope);
+
+                }
+
+            }
+        };
+
+        $scope.getMoyenneClasse = function(devoirReleveNotes) {
+            return +(parseFloat(devoirReleveNotes.sum_notes)/devoirReleveNotes.nbr_eleves).toFixed(2);
+        };
+
+        // Initialisation des variables du relevé
+        $scope.initReleve = async function () {
+            $scope.translate = lang.translate;
+            await $scope.chooseChild();
+            await utils.safeApply($scope);
+        };
+
+        // Filter
+        $scope.hasEvaluatedDevoir = (matiere) => {
+            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
+                return (devoir.note !== undefined || devoir.annotation !== undefined)
+            });
+            return _.findWhere(devoirWithNote, {id_matiere: matiere.id, is_evaluated: true}) !== undefined;
+        };
+        $scope.isEvaluated = (devoir) => {
+            return devoir.is_evaluated && (devoir.note !== undefined || devoir.annotation !== undefined);
+        };
+
+        $scope.hasDevoirWithUnderSubject = (sousMat) => {
+            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
+                return (devoir.note !== undefined || devoir.annotation !== undefined)
+            });
+            return _.some(devoirWithNote,
+                {id_matiere: sousMat.id_matiere, id_sousmatiere: sousMat.id_type_sousmatiere, is_evaluated: true});
+        };
+
+        // Fonction de sélection d'un enfant par le parent
+        $scope.chooseChild = async function(eleve) {
+            return new Promise( async (resolve, reject) => {
+                try {
+                    await evaluationsParentFormat.devoirs.sync($scope.structure.id,  $scope.search.eleve.id,
+                        undefined, $scope.search.periode.id_type);
+                    $scope.dataReleve = {
+                        devoirs: evaluationsParentFormat.devoirs
+                    };
+                    $scope.matieresReleve = evaluationsParentFormat.matieres;
+                    await $scope.calculMoyenneMatieres();
+                    await utils.safeApply($scope);
+                    await Utils.stopMessageLoader($scope);
+                    resolve();
+                }
+                catch (e) {
+                    console.error(e);
+                    reject(e);
+                }
+            });
+        };
 
 
         /**********************************************************************************************************
@@ -1120,11 +1340,14 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
         $scope.searchBilan = {
             parDomaine: 'true'
         };
+        $scope.loadingTab = false;
+        $scope.displayFollowEleve = "followItems";
+        openTemplateFollowCompetence('follow_items/follow_items');
         if($location.path() === '/competences/eleve') {
             template.open('container', 'layouts/2_10_layout');
-            template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
-            template.open('content', 'enseignants/suivi_competences_eleve/content');
-            template.open('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve');
+            template.open('left-side', 'enseignants/suivi_eleve/left_side');
+            template.open('content', 'enseignants/suivi_eleve/content');
+            template.open('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_suivi_eleve');
 
             $scope.route = $route;
             $scope.lang = lang;
@@ -1146,6 +1369,7 @@ export let evalSuiviCompetenceEleveCtl = ng.controller('EvalSuiviCompetenceEleve
                 }
             });
             await $scope.initSuivi();
+            await evaluationsParentFormat.sync();
             $scope.$watch($scope.displayFromClass, async function (newValue, oldValue) {
                 if (newValue !== oldValue) {
                     await $scope.initSuivi();

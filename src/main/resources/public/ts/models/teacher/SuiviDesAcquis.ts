@@ -69,7 +69,7 @@ export class SuiviDesAcquis  {
                      return await http.post(this.api.POST_DATA_RELEVE_PERIODIQUE, _data);
                 }catch (e){
                     notify.error('evaluations.releve.appreciation.classe.save.error');
-                    console.log(e);
+                    console.error(e);
                 }
             }else{
                 notify.error('evaluations.releve.appreciation.classe.max.length');
@@ -92,7 +92,7 @@ export class SuiviDesAcquis  {
            }
        }catch(e){
            notify.error('bilan.periodique.suivis.des.acquis.error.save.positionnement');
-           console.log(e);
+           console.error(e);
        }
    }
 
@@ -272,7 +272,7 @@ export class SuivisDesAcquis extends Model{
 
         }catch(e){
             notify.error('bilan.periodique.suivis.des.acquis.error.get');
-            console.log(e)
+            console.error(e)
         }
 
     }

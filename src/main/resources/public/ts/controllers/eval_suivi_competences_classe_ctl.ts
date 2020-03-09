@@ -20,21 +20,23 @@
  * Created by ledunoiss on 27/10/2016.
  */
 
-import {ng, template, model, http, notify, Controller} from 'entcore';
+import {ng, template, model, http, notify, idiom as lang, $} from 'entcore';
 import httpAxios from "axios";
-import { SuiviCompetenceClasse, evaluations } from '../models/teacher';
+import {SuiviCompetenceClasse, evaluations, Matiere} from '../models/teacher';
 import * as utils from '../utils/teacher';
 import { Defaultcolors } from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher/";
 import { FilterNotEvaluated, FilterNotEvaluatedEnseignement
 } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {updateColorAndLetterForSkills, updateNiveau} from "../models/common/Personnalisation";
+import {BilanPeriodique} from "../models/teacher/BilanPeriodique";
+import {translate} from "../utils/teacher";
 
 declare let _: any;
 
 export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClasseCtl', [
-    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
-    async function ($scope, route, $rootScope, $location, $filter, $route, $timeout) {
+    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout', '$sce',
+    async function ($scope, route, $rootScope, $location, $filter, $route, $timeout,$sce) {
 
         /** --------------------------------------  Functions définies dans le scope  --------------        */
 
@@ -95,7 +97,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 await utils.safeApply($scope);
                 template.open('suivi-competence-content',
                     'enseignants/suivi_competences_classe/content_vue_suivi_classe');
-                await Utils.stopMessageLoader($scope);
+
                 resolve();
             });
         }
@@ -103,6 +105,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         /**
          * Créer une suivi de compétence
          */
+        $scope.displayFollowCompetencesClass = 'followItems';
         $scope.selectSuivi = async function (classeHasChange) {
             await Utils.runMessageLoader($scope);
             if (classeHasChange === true) {
@@ -115,27 +118,21 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             $scope.Display = {EvaluatedCompetences: true};
             $scope.informations.classe = $scope.search.classe;
             if ($scope.informations.classe !== null && $scope.search.classe !== '' && $scope.search.classe !== '*') {
-                // cas changement période (les élèves sont déjà chargés)
-                if ($scope.informations.classe.eleves !== undefined && $scope.informations.classe.eleves.all.length > 0) {
-                    $scope.suiviCompetence = new SuiviCompetenceClasse(
-                        $scope.search.classe.filterEvaluableEleve($scope.search.periode)
-                        , $scope.search.periode, $scope.structure);
-                    await endSelectSuivi();
-                } else {
-                    // cas 1ère sélection de période : on attend le chargement des élèves avant de passer
-                    // lal iste des élèves au constructeur SuiviCompetenceClasse
+                if (!($scope.informations.classe.eleves !== undefined && $scope.informations.classe.eleves.all.length > 0)) {
                     await $scope.informations.classe.eleves.sync();
-                    $scope.suiviCompetence = new SuiviCompetenceClasse(
-                        $scope.search.classe.filterEvaluableEleve($scope.search.periode)
-                        , $scope.search.periode, $scope.structure);
-                    await  endSelectSuivi();
                 }
+                $scope.suiviCompetence = new SuiviCompetenceClasse(
+                    $scope.search.classe.filterEvaluableEleve($scope.search.periode)
+                    , $scope.search.periode, $scope.structure);
+                $scope.isShowDownloadButton = true;
+                $scope.isDownloadWaiting = false;
+                await $scope.selectDisplayClassTabs($scope.displayFollowCompetencesClass);
+                await Utils.stopMessageLoader($scope);
             } else {
                 //cas 1ere entrée dans le suivi
-                template.open('left-side', 'enseignants/suivi_competences_eleve/left_side');
+                template.open('left-side', 'enseignants/suivi_eleve/left_side');
                 await Utils.stopMessageLoader($scope);
             }
-
         };
 
         $scope.switchEtablissementSuivi = () => {
@@ -273,8 +270,20 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
+        const launchDownloadInNewWindows = (url:string):void => {
+            const link = document.createElement('a');
+            link.href = (url);
+            link.setAttribute("target", "_blank");
+            document.body.appendChild(link);
+            link.click();
+        };
+
+        let infoNameFileEnd;
+        $scope.disabledExportFile = false;
         $scope.exportRecapEval = async (textMod, printSuiviClasse, idPeriode, exportByEnseignement,
                                         withMoyGeneraleByEleve, withMoyMinMaxByMat) => {
+            infoNameFileEnd = `_${$scope.search.classe.name}}`;
+            $scope.errorWhenExportPdf = false;
             switch (printSuiviClasse) {
                 case 'printRecapAppreciations' : {
                     let url = "/competences/recapAppreciations/print/" + $scope.search.classe.id + "/export?text=" + !textMod;
@@ -284,13 +293,14 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     url += "&idStructure=" + $scope.structure.id;
                     http().getJson(url + "&json=true")
                         .error((result) => {
+                            $scope.errorWhenExportPdf = true;
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
                         .done(() => {
                             delete $scope.recapEval;
                             $scope.opened.recapEval = false;
-                            location.replace(url);
+                            launchDownloadInNewWindows(url);
                             utils.safeApply($scope);
                         });
                     break;
@@ -303,13 +313,14 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     }
                     http().getJson(url + "&json=true")
                         .error((result) => {
+                            $scope.errorWhenExportPdf = true;
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
                         .done(() => {
                             delete $scope.recapEval;
                             $scope.opened.recapEval = false;
-                            location.replace(url);
+                            launchDownloadInNewWindows(url);
                             utils.safeApply($scope);
                         });
                     break;
@@ -334,9 +345,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     url += "&byEnseignement=" + exportByEnseignement;
                     http().getJson(url + "&json=true")
                         .error(async (result) => {
+                            $scope.errorWhenExportPdf = true;
                             await Utils.stopMessageLoader($scope);
                             $scope.opened.recapEval = true;
-                            console.log(result);
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
@@ -373,13 +384,14 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     }
                     http().getJson(url)
                         .error((result) => {
+                            $scope.errorWhenExportPdf = true;
                             $scope.errorResult(result);
                             utils.safeApply($scope);
                         })
                         .done((result) => {
                             delete $scope.recapEval;
                             $scope.opened.recapEval = false;
-                            location.replace(url);
+                            launchDownloadInNewWindows(url);
                             utils.safeApply($scope);
                         });
                     break;
@@ -412,6 +424,31 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     catch (e) {
                         await Utils.stopMessageLoader($scope);
                     }
+                    break;
+                }
+                case 'csvRecapEval': {
+                    $scope.disabledExportFile = true;
+                    utils.safeApply($scope);
+                    if(await positioningCsvData(idPeriode)){
+                        await cvsLaunch('csv');
+                        $scope.opened.recapEval = false
+                    } else {
+                        $scope.evalNotFound = true;
+                        $timeout( () => $scope.evalNotFound = false, 1000);
+                    }
+                    $scope.disabledExportFile = false;
+                    break;
+                }
+                case 'csvTableAverages': {
+                    $scope.disabledExportFile = true;
+                    utils.safeApply($scope);
+                    $scope.opened.releveNoteTotaleChoice = "moy";
+                    $scope.suiviClasse.withAppreciations =
+                        $scope.suiviClasse.withAvisConseil =
+                            $scope.suiviClasse.withAvisOrientation =
+                                false;
+                    await $scope.exportMoyennesMatieres();
+                    $scope.disabledExportFile = false;
                     break;
                 }
             }
@@ -528,6 +565,283 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
         /** --------------------------------------  Fin définition des fonctions usuelles  --------------        */
 
-    }
+        const bilanPeriodic:BilanPeriodique = new BilanPeriodique($scope.search.periode, $scope.search.classe);
+        const fileDownloadName:{pdf:string, csv:string} = {pdf:undefined, csv :undefined};
+        let isManualCsvFromAngular:Boolean  = $scope.openLighBoxChosePdfCsv = $scope.loadingTab = $scope.isUseLinkForPdf = false;
+        $scope.downloadContent = () => $scope.openedRecapEval();
+        let dataBodyCsv:Array<Array<any>>;
 
+        const openTemplateFollowCompetance = (nameOfPageHtml:string):void => {
+            template.close('followCompetencesClass');
+            template.open('followCompetencesClass', `enseignants/suivi_competences_classe/tabs_follow_competences_class/${nameOfPageHtml}`);
+        };
+
+        let urlPdf:string = undefined;
+        const getPdfPositioning = async ():Promise<void> => {
+            urlPdf = `/competences/recapEval/print/${$scope.search.classe.id}/export?text=false&usePerso=${$scope.structure.usePerso}`;
+            if ($scope.search.periode.id_type) {
+                urlPdf += `&idPeriode=${$scope.search.periode.id_type}`;
+            }
+            $scope.urlPdfSrc = urlPdf;
+            $scope.contentIframe = await utils.getIframeFromPdfDownload(urlPdf, $sce);
+            $scope.loadingTab = false;
+        };
+
+        const defaultFinallyDownload = (isExportFinish:boolean | undefined):void => {
+            $scope.isDownloadWaiting = false;
+            if(isExportFinish !== undefined){
+                isExportFinish?
+                    notify.success('evaluations.export.bulletin.success'):
+                    notify.error('competance.information.noExport');
+            }
+        };
+
+        const initResultPeriodic = ():typeof initResultPeriodic => {
+            return {
+                idEtablissement: evaluations.structure.id,
+                idClasse: $scope.search.classe.id,
+                idPeriode: $scope.search.periode.id_type,
+                periodeName: null,
+                periodes:[],
+                exportOptions: {
+                    appreciation:$scope.suiviClasse.withAppreciations,
+                    averageFinal: $scope.suiviClasse.withMoyGeneraleByEleve,
+                    statistiques: $scope.suiviClasse.withMoyMinMaxByMat,
+                    positionnementFinal: $scope.opened.releveNoteTotaleChoice === "pos" || $scope.opened.releveNoteTotaleChoice === "moyPos",
+                    moyenneMat: $scope.opened.releveNoteTotaleChoice === "moy" || $scope.opened.releveNoteTotaleChoice === "moyPos",
+                    avisConseil: $scope.suiviClasse.withAvisConseil,
+                    avisOrientation: $scope.suiviClasse.withAvisOrientation
+                },
+                idMatieres: $scope.matieres.all.filter((subject:Matiere):Boolean => subject.id).map((subject:Matiere):Boolean => subject.id),
+                allMatieres: $scope.allMatieresSorted
+            }
+        };
+
+        const getSubjectsNotesAppraisals = async ():Promise<void> => {
+            const dataSynthesisAndAppraisals:Array<any> = await bilanPeriodic.synthesisAndAppraisals( initResultPeriodic(), $scope, $scope.matieres.all);
+            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals);
+        };
+
+        $scope.selectDisplayClassTabs = async (tabsSelected:string):Promise<void> => {
+            $scope.displayFollowCompetencesClass = tabsSelected;
+            $scope.loadingTab = true;
+            $scope.isDataOnPage = $scope.errorWhenExportPdf = $scope.isUseLinkForPdf = false;
+            infoNameFileEnd = `_${$scope.search.classe.name}`;
+            switch ($scope.displayFollowCompetencesClass) {
+                case ('followItems'):
+                    await endSelectSuivi();
+                    $scope.isDataOnPage = true;
+                    fileDownloadName.pdf = undefined;
+                    fileDownloadName.csv = undefined;
+                    await initTabClass('follow_items');
+                    break;
+                case ('positioning'):
+                    await getPdfPositioning();
+                    $scope.isDataOnPage = ($scope.contentIframe.status === 200
+                        && $scope.displayFollowCompetencesClass === 'positioning');
+                    fileDownloadName.pdf = 'printRecapEval';
+                    $scope.isUseLinkForPdf = true;
+                    positioningCsvData($scope.search.periode.id_type);
+                    await initTabClass('positioning');
+                    break;
+                case ('average'):
+                    await getSubjectsNotesAppraisals();
+                    $scope.isDataOnPage = Object.keys($scope.averagesClasses)
+                        .map( element => $scope.averagesClasses[element])
+                        .some(array => array.length > 0);
+                    isManualCsvFromAngular = false;
+                    fileDownloadName.pdf = 'printTabMoys';
+                    fileDownloadName.csv = 'printTabMoyPosAppr';
+                    await initTabClass('average');
+                    break;
+                case ('teacherAppraisals'):$scope.teacherNotesAndAppraisals = await bilanPeriodic
+                    .getAppraisalsAndNotesByClassAndPeriod($scope.search.classe.id, $scope.search.periode.id_type, evaluations.structure.id);
+                    isManualCsvFromAngular = true;
+                    fileDownloadName.pdf = 'printRecapAppreciations';
+                    fileDownloadName.csv = `teacher_appraisals${infoNameFileEnd}`;
+                    $scope.isDataOnPage = $scope.teacherNotesAndAppraisals.length !== 0;dataBodyCsv = prepareBodyAppraisalsForCsv($scope.dataHeaderAppraisals, $scope.teacherNotesAndAppraisals);
+                    await initTabClass('teacher_appraisals');
+                    break;
+                default:
+                    defaultSwitch();
+            }
+            $scope.loadingTab = false;
+        };
+
+        const positioningCsvData = async (idPeriod:number):Promise<boolean> => {
+            try {
+                isManualCsvFromAngular = true;
+                fileDownloadName.csv = `positioning${infoNameFileEnd}`;
+                const resultSummaryEvaluations = await bilanPeriodic.summaryEvaluations( $scope.search.classe.id, idPeriod);
+                dataBodyCsv = prepareBodyPositioningForCsv(resultSummaryEvaluations);
+                return true
+            } catch (e) {
+                return false
+            }
+        };
+
+        const initTabClass:Function = async (htmlTab:string):Promise<any> => {
+            if($scope.isDataOnPage && htmlTab !== 'follow_items'){
+                $scope.downloadContent = async function () {
+                    $("#urlPdfSrc").on("click", () => {
+                        $( '.close-2x' ).click ();
+                    });
+                    $scope.openLighBoxChosePdfCsv = true;
+                };
+            } else {
+                $scope.downloadContent = () => $scope.openedRecapEval();
+            }
+            openTemplateFollowCompetance(htmlTab);
+        };
+
+        $scope.downloadFileWithType = async (formatType:string):Promise<void> => {
+            $scope.openLighBoxChosePdfCsv = false;
+            $scope.isDownloadWaiting = true;
+            switch(formatType) {
+                case 'csv':
+                    await cvsLaunch(formatType);
+                    break;
+                case 'pdf':
+                    await pdfLaunch(formatType);
+                    break;
+                default:
+                    defaultSwitch();
+            }
+        };
+
+        const defaultSwitch = ():void => {
+            fileDownloadName.pdf = undefined;
+            fileDownloadName.csv = undefined;
+            $location.path('/competences');
+        };
+
+        const pdfLaunch  = async (formatType:string):Promise<void> => {
+            let isExportFinish:boolean | undefined = undefined;
+            try {
+                await $scope.exportRecapEval(
+                    $scope.suiviClasse.textMod,
+                    fileDownloadName[formatType],
+                    $scope.search.periode.id_type,
+                    false,
+                    true,
+                    true
+                );
+            } catch (error) {
+                isExportFinish = false;
+            } finally {
+                defaultFinallyDownload(isExportFinish);
+            }
+        };
+
+        const cvsLaunch = async (formatType:string):Promise<void> => {
+            let isExportFinish:boolean | undefined = undefined;
+            try {
+                if(isManualCsvFromAngular){
+                    bilanPeriodic.makeCsv(fileDownloadName[formatType], makeHeaderCsv(), dataBodyCsv);
+                    isExportFinish = true;
+                } else {
+                    $scope.suiviClasse.periode = $scope.search.periode;
+                    $scope.opened.releveNoteTotaleChoice = "moy";
+                    $scope.suiviClasse.withAppreciations =
+                        $scope.suiviClasse.withAvisConseil =
+                            $scope.suiviClasse.withAvisOrientation =
+                                false;
+                    await $scope.exportRecapEval(
+                        $scope.suiviClasse.textMod,
+                        fileDownloadName[formatType],
+                        $scope.search.periode.id_type,
+                        false,
+                        true,
+                        true
+                    );
+                    await Utils.stopMessageLoader($scope);
+                }
+            } catch (error) {
+                isExportFinish = false;
+            } finally {
+                defaultFinallyDownload(isExportFinish);
+            }
+        };
+
+        $scope.closeLightBox = ():void => {
+            $scope.openLighBoxChosePdfCsv = false;
+            $("#urlPdfSrc").off("click");
+        };
+
+        $scope.dataHeaderAppraisals = [
+            lang.translate('matieres'),
+            lang.translate('appreciation'),
+            lang.translate('average.min'),
+            lang.translate('classaverage.min'),
+            lang.translate('classaverage.max'),
+        ];
+
+        const makeHeaderCsv = ():Array<Array<string>> => {
+            return  [[
+                `${lang.translate('evaluations.classe.groupe')}:`,
+                ($scope.search.classe? $scope.search.classe.name : "")
+
+            ], [
+                `${lang.translate('viescolaire.periode.3')}:`,
+                (`${lang.translate('viescolaire.utils.periode')}&nbsp;
+                ${$scope.search.periode
+                    ? $scope.search.periode.ordre || lang.translate("viescolaire.utils.annee") 
+                    : ""}`)
+            ]]
+        };
+
+        const emptyValue:string = "";
+        const emptyRow:any = (defaultValue:boolean = false):Array<string> => defaultValue? new Array(emptyValue) : new Array(0);
+
+        const prepareBodyAppraisalsForCsv = (dataHeader:Array<string | number>, dataBody:Array<any>):Array<Array<string | number>> => {
+            let result:Array<Array<string | number>> = emptyRow();
+            for (let rowIndex = 0; rowIndex < dataBody.length; rowIndex++) {
+                let row:Array<string | number> = emptyRow();
+                let rowBody = dataBody[rowIndex];
+                let appraisal = rowBody.appraisal? rowBody.appraisal.content_text.replace(/\r?\n|\r/," ") : undefined;
+                row.push(
+                    `${rowBody.subjectName || emptyValue} - ${ rowBody.teacherName || emptyValue}`,
+                    appraisal || emptyValue,
+                    rowBody.average.moyenne || emptyValue,
+                    rowBody.average.minimum || emptyValue,
+                    rowBody.average.maximum || emptyValue,
+                );
+                result.push(row);
+            }
+            return [dataHeader, ...result];
+        };
+
+        const prepareBodyPositioningForCsv = (dataBody:any):Array<Array<string | number>> => {
+            let result:Array<Array<string | number>> = emptyRow();
+            let row:Array<string | number> = emptyRow(true);
+            let footer:Array<Array<any>> = emptyRow();
+            if(dataBody.domaines){
+                for (let rowIndex = 0; rowIndex < dataBody.domaines.length; rowIndex++) {
+                    let domaine = dataBody.domaines[rowIndex];
+                    row.push(domaine.codification || emptyValue);
+                    footer.push([[`${domaine.codification || ""} /${domaine.libelle}`]]);
+                }
+                result.push(row);
+            }
+            if(dataBody.eleves){
+                for (let rowIndex = 0; rowIndex < dataBody.eleves.length; rowIndex++) {
+                    row = emptyRow();
+                    let student = dataBody.eleves[rowIndex];
+                    let notesByStudent:Array<string> = emptyRow();
+                    row.push(student.nom || emptyValue,);
+                    if(student.notes){
+                        for (let indexNote = 0; indexNote < student.notes.length; indexNote++) {
+                            let note = student.notes [indexNote];
+                            notesByStudent.push(note.moyenne || emptyValue);
+                        }
+                        row.push(...notesByStudent);
+                    }
+                    result.push(row);
+                }
+                result.push(emptyRow());
+                result.push(...footer);
+            }
+            return result;
+        };
+    }
 ]);

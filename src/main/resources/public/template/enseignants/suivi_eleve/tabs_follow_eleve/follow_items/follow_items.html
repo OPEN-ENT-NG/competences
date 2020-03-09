@@ -1,0 +1,28 @@
+<div class="suivi-eleve-slider" ng-if="suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined">
+    <div class="suivi-eleve inline-block six" ng-class="{slide : opened.detailCompetenceSuivi}">
+        <container template="suivi-competence-content"></container>
+    </div>
+    <div class="detail-competence inline-block six " ng-show="opened.detailCompetenceSuivi">
+        <div ng-show="messages.successEvalLibre" class="info">
+            <i18n>evaluations.evaluation.libre.add.success</i18n>
+        </div>
+        <lightbox show="opened.lightboxEvalLibre" on-close="opened.lightboxEvalLibre=false">
+            <container template="lightboxContainerEvalLibre"></container>
+        </lightbox>
+        <h2 class="ellipsis ten align-center whiteSpaceNormal">
+            [[detailCompetence.nom]]
+        </h2>
+
+        <container template="suivi-competence-detail"></container>
+
+        <article ng-if="suiviCompetence === undefined &&  informations.eleve !== '' && informations.eleve !== '*' && informations.eleve !== undefined"
+                 class="encartBlanc-suiviEleve card twelve-mobile centered"
+        ><i18n>no.bfc.for.criteres</i18n>
+        </article>
+
+        <article class="encartBlanc-suiviEleve card twelve-mobile centered"
+                 ng-if="search.classe.id_cycle === null">
+            <i18n>evaluation.suivi.no.cycle</i18n>
+        </article>
+    </div>
+</div>

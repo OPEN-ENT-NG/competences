@@ -1265,6 +1265,12 @@ body.evaluations {
       font-size: 20px !important;
     }
   }
+  .button-download{
+    margin-left: 20px;
+    top: 0px;
+    position: relative;
+    float: right;
+  }
   .ul-competences{
     list-style-type: none;
     li{
@@ -2363,7 +2369,7 @@ body.evaluations {
 
     .suivi-eleve-ctl {
       background-color: $white;
-      min-height: 95px;
+      min-height: 100px;
       border-bottom: solid 1px $primary-dark;
     }
 
@@ -3303,6 +3309,73 @@ body.evaluations {
     margin: 0 45%;
   }
 
+  .grey-color{
+    color: grey;
+  }
+
+  .margin-top-releve-parentEleve {
+    margin-top:8px;
+  }
+
+  .padding-right-downloadButton-SuiviEleve{
+    padding-right: 7px !important;
+  }
+
+  .choice-export-suivi-eleve{
+    top:38px !important; bottom: auto!important;
+  }
+
+  .loaderPage{
+    margin: 20% 50%;
+  }
+  .tabs{
+    header {
+      margin: 0 25px;
+      cursor: pointer;
+    }
+    .tabs-selected::after {
+      transform: scaleX(1);
+    }
+    .tabs-selected{
+      color: #4bafd5;
+    }
+  }
+  .buttons-suiviEleve{
+    position: absolute;
+    right: 0;
+  }
+  .releveNotes-suiviEleve{
+    overflow: overlay;
+    border: none !important;
+  }
+  .encartBlanc-suiviEleve{
+    margin-left: 20px;
+  }
+  .margin-text-underTabs{
+    margin-bottom: 20px;
+  }
+  .iframeReportClass{
+    display: inline;
+  }
+  .half-width{
+    width: 50%;
+  }
+  .followingClass{
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+  .marginUnderTabs{
+    margin-bottom: 20px;
+    padding-top: 15px;
+  }
+  .choseDownloadFormat{
+    display: flex;
+    justify-content: space-around;
+  }
+  .light-font-header{
+    font-weight: 100!important;
+    font-size: 0.9em;
+  }
 }
 
 

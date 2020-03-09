@@ -1,0 +1,13 @@
+<section class="iframeReportClass">
+    <p ng-if="contentIframe.status !== 200">[[contentIframe.text]]</p>
+    <iframe
+            ng-if="contentIframe.status === 200"
+            ng-src="[[contentIframe.urlSrc]]"
+            align="middle"
+            width="100%"
+            height="875"
+            webkitallowfullscreen
+            mozallowfullscreen
+            allowfullscreen>
+    </iframe>
+</section>

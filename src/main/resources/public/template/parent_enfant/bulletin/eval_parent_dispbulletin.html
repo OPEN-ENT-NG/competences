@@ -14,36 +14,43 @@
   ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
-
 <div class="custom-mobile-releve"
      ng-include="'/competences/public/template/parent_enfant/accueil/eval_parent_menu.html'"></div>
 
-<div class="row" ng-controller="ReleveController">
+<div class="row" ng-controller="BulletinController">
     <div class="twelve cell">
 
         <header class="header-viescolaire">
-            <h1><span class="no-style ng-scope"><i18n>evaluations.releve.title</i18n></span></h1>
+            <h1><span class="no-style ng-scope"><i18n>evaluations.bulletin</i18n></span></h1>
 
             <section class="row twelve-mobile margin-top-releve-parentEleve">
-                <label class="select cell two twelve-mobile" ng-hide="me.type === 'PERSRELELEVE' && searchReleve.eleve===undefined">
-                    <select ng-model="searchReleve.periode"
-                            ng-change="loadReleveNote()"
-                            ng-options="getI18nPeriode(periode) for periode in searchReleve.eleve.classe.periodes.all | filter:filterCycle()">
+                <label class="select cell two twelve-mobile" ng-hide="me.type === 'PERSRELELEVE' && searchBulletin.eleve===undefined">
+                    <select ng-model="searchBulletin.periode"
+                            ng-change="loadBulletin()"
+                            ng-options="getI18nPeriode(periode) for periode in searchBulletin.eleve.classe.periodes.all | filter:filterCycleAndYear()">
                         <option class="header-opt" disabled value="">
                             [[translate('viescolaire.utils.periode')]]
                         </option>
                     </select>
                 </label>
-                <a ng-show="dataReleve.devoirs.all.length > 0 && searchReleve.eleve !== null
-                && searchReleve.periode !== null" class="twelve-mobile print-i"
-                   ng-click="getReleve(searchReleve.periode)">
-                    &nbsp;  <i class="download"> </i><i18n>evaluations.export</i18n>
-                </a>
             </section>
         </header>
 
-        <div ng-include="'/competences/public/template/parent_enfant/releve/releve_notes.html'"></div>
+        <div ng-show="checkHaveResult()" class="center">
+            <iframe ng-src="[[content]]"  width="900" height="1200" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+        </div>
+        <div ng-show="!checkHaveResult()" class="center">
+            <h1 class="twelve-mobile grey-color"><i18n>evaluations.no.summary.bulletin</i18n></h1>
+        </div>
 
+    </div>
+    <div class="zero" id="graph">
+        <div class="twelve">
+            <div class=" twelve cell twelve-mobile">
+                <div class="chart-container" style="position: relative; width:auto; margin: auto; height: auto" >
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

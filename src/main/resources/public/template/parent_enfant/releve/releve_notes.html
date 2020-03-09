@@ -1,0 +1,140 @@
+<div ng-show="checkHaveResult()">
+    <div class="responsive-table">
+        <table navigable>
+            <thead>
+            <tr>
+                <th class="fontLarge two" colspan="2"><i18n>viescolaire.utils.subject</i18n></th>
+                <th class="fontLarge nine center" ><i18n>evaluations.grade</i18n></th>
+                <th class="fontLarge one center" colspan="2" ><i18n>average</i18n></th>
+            </tr>
+
+            <tbody>
+            <tr ng-repeat-start="matiere in filtredMatieres = (matieresReleve.all | filter:hasEvaluatedDevoir)"
+                ng-init="oddMatiere=$odd; evenMatiere=$even">
+                <td data-label="[[translate('viescolaire.utils.subject')]]" colspan="2"
+                    ng-if="matiere.sousMatieres === undefined || matiere.sousMatieres.all.length === 0">
+                    <span class="alignMatiere">[[matiere.name]]</span>
+                    <ul>
+                        <li ng-repeat="ens in matiere.ens track by ens.id">
+                            <span class="nomEnseignant">[[ens.firstName]]. [[ens.name]]</span>
+                        </li>
+                    </ul>
+                </td>
+                <td class="notesDevoir" ng-if="matiere.sousMatieres === undefined || matiere.sousMatieres.all.length === 0"
+                    data-label="[[translate('evaluations.grade')]]" >
+                    <div ng-repeat="devoirReleveNotes in dataReleve.devoirs.all | filter:isEvaluated track by $index">
+                        <div    class=" alignCenterVertically"
+                                ng-class="{noteDevoir: devoirReleveNotes.id_matiere === matiere.id }">
+                            <div ng-if="devoirReleveNotes.id_matiere === matiere.id">
+						<span ng-if="devoirReleveNotes.annotation === undefined"
+                              class="bold fontXLarge">[[devoirReleveNotes.note]]
+						</span>
+                                <span ng-if="devoirReleveNotes.annotation === undefined">
+							/ [[devoirReleveNotes.diviseur]]
+						</span>
+                                <span ng-if="devoirReleveNotes.annotation !== undefined"
+                                      class="bold fontXLarge">[[devoirReleveNotes.annotation.libelle_court]]
+						</span>
+                                <sup ng-show='devoirReleveNotes.coefficient != null
+						  && devoirReleveNotes.coefficient != 1' class="bold fontLarge">
+                                    [[+devoirReleveNotes.coefficient]]
+                                </sup>
+                                <div class="releve-coef"  ng-if="devoirReleveNotes.sum_notes !== undefined &&
+                                    devoirReleveNotes.nbr_eleves !== undefined">
+                                    <span>([[getMoyenneClasse(devoirReleveNotes)]]</span>
+                                    <span> / [[devoirReleveNotes.diviseur]])</span>
+                                </div>
+                            </div>
+                            <div class="gradetooltip"
+                                 ng-if="devoirReleveNotes.id_matiere === matiere.id && me.type === 'PERSRELELEVE'"
+                                 tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<p>[[devoirReleveNotes.name]]<div>[[devoirReleveNotes._sousmatiere_libelle]]</p>[[devoirReleveNotes.appreciation]]"></div>
+                            <div class="gradetooltip"
+                                 ng-if="me.type === 'ELEVE' && devoirReleveNotes.id_matiere === matiere.id"
+                                 tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<br>[[devoirReleveNotes.name]]<div>[[devoirReleveNotes._sousmatiere_libelle]]</div>"></div>
+                        </div>
+                    </div>
+                </td>
+                <td data-label="[[translate('average')]]" colspan="2"
+                    ng-if="matiere.sousMatieres === undefined || matiere.sousMatieres.all.length === 0">
+                    <div class="noteMoyenne alignCenterVertically">
+                        <span class="bold fontXLarge">[[matiere.moyenne]]</span>
+                    </div>
+                </td>
+            </tr>
+            <!-- cas sousMatieres -->
+            <tr ng-repeat="sousMatiere in matiere.sousMatieres.all"
+                ng-class="{'background-grey': oddMatiere,'background-white': evenMatiere}"
+                ng-if="matiere.sousMatieres !== undefined && matiere.sousMatieres.all.length > 0" ng-repeat-end>
+                <td data-label="[[translate('viescolaire.utils.subject')]]" ng-if="$first"
+                    rowspan="[[matiere.sousMatieres.all.length]]" >
+                    <span class="alignMatiere">[[matiere.name]]</span>
+                    <ul>
+                        <li ng-repeat="ens in matiere.ens track by ens.id">
+                            <span class="nomEnseignant">[[ens.firstName]]. [[ens.name]]</span>
+                        </li>
+                    </ul>
+                </td>
+                <td ng-class="{height80: !hasDevoirWithUnderSubject(sousMatiere), center : !$first}">
+                    [[sousMatiere.libelle]]
+                </td>
+                <td class="notesDevoir eight"
+                    data-label="[[translate('evaluations.grade')]]" >
+                    <div ng-repeat="devoirReleveNotes in dataReleve.devoirs.all | filter:isEvaluated
+			            track by $index">
+                        <div class=" alignCenterVertically"
+                             ng-class="{noteDevoir: devoirReleveNotes.id_matiere === matiere.id }"
+                             ng-if="devoirReleveNotes.id_matiere === matiere.id && devoirReleveNotes.id_sousmatiere !== null &&
+						            devoirReleveNotes.id_sousmatiere === sousMatiere.id_type_sousmatiere">
+                            <div >
+                                    <span ng-if="devoirReleveNotes.annotation === undefined"
+                                          class="bold fontXLarge">[[devoirReleveNotes.note]]
+                                    </span>
+                                <span ng-if="devoirReleveNotes.annotation === undefined">
+							            / [[devoirReleveNotes.diviseur]]
+						            </span>
+                                <span ng-if="devoirReleveNotes.annotation !== undefined"
+                                      class="bold fontXLarge">[[devoirReleveNotes.annotation.libelle_court]]
+						            </span>
+                                <sup ng-show='devoirReleveNotes.coefficient != null
+						  && devoirReleveNotes.coefficient != 1' class="bold fontLarge">
+                                    [[+devoirReleveNotes.coefficient]]
+                                </sup>
+                                <div class="releve-coef"  ng-if="devoirReleveNotes.sum_notes !== undefined &&
+                                    devoirReleveNotes.nbr_eleves !== undefined">
+                                    <span>([[getMoyenneClasse(devoirReleveNotes)]]</span>
+                                    <span> / [[devoirReleveNotes.diviseur]])</span>
+                                </div>
+                            </div>
+                            <div class="gradetooltip"
+                                 ng-if="me.type === 'PERSRELELEVE'"
+                                 tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<p>[[devoirReleveNotes.name]]
+						            <div>[[devoirReleveNotes._sousmatiere_libelle]]</p>[[devoirReleveNotes.appreciation]]"></div>
+                            <div class="gradetooltip"
+                                 ng-if="me.type === 'ELEVE'"
+                                 tooltip="[[getFormatedDate(devoirReleveNotes.date)]]<br>[[devoirReleveNotes.name]]
+                                    <div>[[devoirReleveNotes._sousmatiere_libelle]]</div>"></div>
+                        </div>
+                    </div>
+                </td>
+                <td data-label="[[translate('average')]]" ng-class="{one: hasDevoirWithUnderSubject}">
+                    <div class="noteMoyenne alignCenterVertically">
+                        <span class="bold fontXLarge">[[sousMatiere.moyenne]]</span>
+                    </div>
+                </td>
+                <td data-label="[[translate('average')]]" ng-class="{one: hasDevoirWithUnderSubject}" ng-if="$first"
+                    rowspan="[[matiere.sousMatieres.all.length]]">
+                    <div class="noteMoyenne alignCenterVertically">
+                        <span class="bold fontXLarge">[[matiere.moyenne]]</span>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="margin-text-underTabs">
+        <span>* note <sup>n</sup> (m) : </span><i18n>evaluation.notation.explanation</i18n>
+    </div>
+</div>
+<div ng-show="!checkHaveResult()">
+    <h1 class="twelve-mobile grey-color center"><i18n>evaluations.no.summary.releve</i18n></h1>
+</div>

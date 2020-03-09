@@ -27,7 +27,7 @@
     <section>
         <label class="select" >
             <select ng-model="search.classe"
-                    ng-change="selectSuivi(true); displayCycles(null)"
+                    ng-change="initDataEleve(true); selectSuivi(true); displayCycles(null)"
                     ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in classes.all | filter:filterValidClasse() | orderBy:['type_groupe_libelle','name']">
                 <option class="header-opt" value="">[[translate('viescolaire.utils.class.groupe')]]</option>
             </select>
@@ -37,8 +37,8 @@
         <label class="select" ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == ''}">
             <select ng-model="search.periode"
                     ng-disabled="search.classe == null || search.classe == '*' || search.classe == ''"
-                    ng-change="changeContent(); displayCycles(search.periode);"
-                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all | orderBy:'id_type'">
+                    ng-change="initDataEleve(); changeContent(); displayCycles(search.periode);"
+                    ng-options="getI18nPeriode(periode) for periode in search.classe.periodes.all | orderBy:'id_type' | filter:filterPeriode()">
                 <option class="header-opt" disabled value="">[[translate('viescolaire.utils.periode')]]</option>
             </select>
         </label>
@@ -48,13 +48,14 @@
                ng-class="{disabled : search.classe == null || search.classe == '*' || search.classe == '', 'deletedStudent': search.eleve.deleteDate !== null}">
             <select ng-disabled="search.classe === '*' || search.classe === null" ng-model="search.eleve"
                     ng-options="eleve as (eleve.lastName + ' ' + eleve.firstName) for eleve in filteredEleves.all track by eleve.id"
-                    ng-change="changeContent();">
+                    ng-change="initDataEleve(); changeContent();">
                 <option value="" class="header-opt">[[translate('viescolaire.utils.student')]]</option>
             </select>
         </label>
     </section>
-    <section ng-show="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle') && !isChefEtab() && !displayCycle">
-        <div  ng-if="!template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
+    <section ng-show="!template.contains('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')
+    && !isChefEtab() && !displayCycle && displayFollowEleve == 'followItems'">
+        <div  ng-if="!template.contains('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_eleve')">
             <label>
                 <input type="radio" ng-change="suiviCompetence.setMoyenneCompetences(suiviFilter.mine); initChartsEval();"
                        ng-model="$parent.suiviFilter.mine" value="false">
@@ -63,8 +64,7 @@
                 </span>
             </label>
         </div>
-              <div ng-if="
-        !template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
+        <div ng-if="!template.contains('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_eleve')">
             <label>
                 <input type="radio"
                        ng-disabled="searchBilan.parDomaine=='false'"
@@ -72,15 +72,15 @@
                        initChartsEval();"
                        ng-click="searchBilan.parDomaine='true'"
                        ng-model="$parent.suiviFilter.mine" value="true">
-                    <span ng-class="{'disabled': searchBilan.parDomaine=='false'}">
+                <span ng-class="{'disabled': searchBilan.parDomaine=='false'}">
                         [[translate('evaluations.test.mine')]]</span>
             </label>
         </div>
         <div ng-if="
-        template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_eleve')">
+        template.contains('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_eleve')">
             <label>
                 <input type="radio" id="fake" checked >
-                    <span>[[translate('evaluations.test.mine')]]</span>
+                <span>[[translate('evaluations.test.mine')]]</span>
             </label>
         </div>
     </section>
@@ -97,7 +97,7 @@
         </form>
     </section>
     <br>
-    <section>
+    <section ng-if="displayFollowEleve == 'followItems' || displayFollowCompetencesClass === 'followItems'">
         <div>
             <label>
                 <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="true">
@@ -107,7 +107,7 @@
         <div ng-if="showEnseignementChoice()">
             <label>
                 <input ng-disabled="($parent.suiviFilter.mine === 'true')"
-                        type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="false">
+                       type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="false">
                 <span  ng-class="{'disabled': $parent.suiviFilter.mine === 'true'}">
                     [[translate('evaluation.search.by.enseignements')]]</span>
             </label>
@@ -119,9 +119,9 @@
     <span class="plus-input" ng-click="openLeftMenu('openedStudentInfo', openedStudentInfo);"></span>
     <div ng-include="'/competences/public/template/enseignants/informations/display_eleve.html'"></div>
 </div>
-<div ng-if="search.classe.id_cycle !== null && structure.cycle !== undefined ">
+<div ng-if="search.classe.id_cycle !== null && structure.cycle !== undefined && displayFollowEleve != 'followNotes' && displayFollowCompetencesClass === 'followItems'">
     <div ng-if="(isChefEtab(search.classe) && evaluations.structure.moyenneVisible===1)
-            || template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_suivi_eleve')
+            || template.contains('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_suivi_eleve')
             || template.contains('suivi-competence-content', 'enseignants/suivi_competences_classe/content_vue_suivi_classe')
             || evaluations.structure.moyenneVisible===2"
          class="fiche cell card twelve criterion notes-help" ng-class="{opened : opened.legend === true}">
@@ -131,8 +131,8 @@
         </div>
     </div>
 </div>
-<div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_competences_eleve/content_vue_bilan_fin_cycle')
+<div ng-if="template.contains('suivi-competence-content', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')
         && (search.classe.id_cycle === 1) && (selectedCycleRadio.id_cycle !== '2' || selectedCycleRadio.id_cycle === 2)"
      class="cell card twelve criterion">
-    <div ng-include = "'/competences/public/template/enseignants/suivi_competences_eleve/left_side_ens_cplt.html'"></div>
+    <div ng-include = "'/competences/public/template/enseignants/suivi_eleve/left_side_ens_cplt.html'"></div>
 </div>

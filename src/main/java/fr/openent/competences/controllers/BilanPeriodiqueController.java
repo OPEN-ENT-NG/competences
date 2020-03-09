@@ -17,6 +17,7 @@ import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
 
@@ -32,9 +33,11 @@ import org.entcore.common.user.UserUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
+import static fr.openent.competences.Competences.MOYENNE;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 
 public class BilanPeriodiqueController extends ControllerHelper{
@@ -44,6 +47,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     private final DefaultAppreciationCPEService appreciationCPEService;
     private final DefaultAvisConseilService avisConseilService;
     private final DefaultAvisOrientationService avisOrientationService;
+    private final NoteService notesService;
 
     public BilanPeriodiqueController (EventBus eb){
         this.eb = eb;
@@ -52,6 +56,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
         appreciationCPEService = new DefaultAppreciationCPEService();
         avisConseilService = new DefaultAvisConseilService();
         avisOrientationService = new DefaultAvisOrientationService();
+        notesService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE,eb);
     }
 
     @Get("/bilan/periodique/eleve/:idEleve")
@@ -398,6 +403,20 @@ public class BilanPeriodiqueController extends ControllerHelper{
                 }
             }
         });
+    }
+
+    @Post("/results/class/synthesis")
+    @ApiDoc("renvoit bilan d'une classe sur une période donnée")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getSynthesis(final HttpServerRequest request) {
+        try{
+            RequestUtils.bodyToJson(request, param -> {
+                final long typePeriod = param.getLong("idPeriode");
+                notesService.getTotaleDatasReleve(param, typePeriod, false,  notEmptyResponseHandler(request));
+            });
+        } catch (Exception error){
+            badRequest(request, "Error:" + error);
+        }
     }
 }
 
