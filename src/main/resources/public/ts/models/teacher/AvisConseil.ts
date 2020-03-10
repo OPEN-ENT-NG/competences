@@ -3,12 +3,13 @@ import http from 'axios';
 import {DefaultAvis} from "../common/DefaultAvis";
 
 export class AvisConseil extends DefaultAvis {
-    avis: string;
+    avis;
     // avis: [];
 
     get api () {
         return {
             POST_AVIS_CONSEIL: '/competences/avis/conseil',
+            NEW_OPINION: '/competences/avis/bilan/periodique'
         };
     }
 
@@ -24,6 +25,14 @@ export class AvisConseil extends DefaultAvis {
             let data = await http.get(`/competences/avis/bilan/periodique`);
             if(data.data !== undefined) {
                 this.avis = data.data;
+
+                let perso = {
+                    id: 0,
+                    libelle: "-- Personnalisé --",
+                    type_avis: 0,
+                    id_etablissement: null
+                };
+                this.avis.push(perso);
             }
         } catch (e) {
             notify.error('evaluations.avis.conseil.bilan.periodique.get.error');
@@ -62,6 +71,21 @@ export class AvisConseil extends DefaultAvis {
         else {
             this.id_avis_conseil_bilan = -1;
             await http.delete(`/competences/avis/conseil?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
+        }
+    }
+
+    async createNewOpinion (avisLibelle) {
+        if(avisLibelle){
+            try {
+                let result = await http.post(this.api.NEW_OPINION, {
+                    libelle: avisLibelle,
+                    type_avis: 1,
+                    id_etablissement: this.id_structure
+                });
+                return result.data.id;
+            } catch (e) {
+                notify.error('evaluations.avis.conseil.bilan.periodique.save.error');
+            }
         }
     }
 

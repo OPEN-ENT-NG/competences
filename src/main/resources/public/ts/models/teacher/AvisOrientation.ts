@@ -7,6 +7,7 @@ export class AvisOrientation extends DefaultAvis {
     get api () {
         return {
             POST_AVIS_ORIENTATION: '/competences/avis/orientation',
+            NEW_OPINION: '/competences/avis/bilan/periodique'
         };
     }
 
@@ -49,6 +50,21 @@ export class AvisOrientation extends DefaultAvis {
         else {
             this.id_avis_conseil_bilan = -1;
             await http.delete(`/competences/avis/orientation?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
+        }
+    }
+
+    async createNewOpinion (avisLibelle) {
+        if(avisLibelle){
+            try {
+                let result = await http.post(this.api.NEW_OPINION, {
+                    libelle: avisLibelle,
+                    type_avis: 2,
+                    id_etablissement: this.id_structure,
+                });
+                return result.data.id;
+            } catch (e) {
+                notify.error('evaluations.avis.conseil.bilan.periodique.save.error');
+            }
         }
     }
 

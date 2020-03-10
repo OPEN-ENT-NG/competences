@@ -15,6 +15,14 @@ public interface AvisConseilService {
     public void getLibelleAvis(Long typeAvis, Handler<Either<String, JsonArray>> handler);
 
     /**
+     * Créer un avis de conseil de classe / orientation
+     * @param typeAvis 3 - Conseil de classe / 4 - Conseil d'orientation
+     * @param libelle Libelle de l'avis
+     */
+    public void createOpinion (Long typeAvis, String libelle, String idStructure,
+                               Handler<Either<String, JsonObject>> handler);
+
+    /**
      * Selectionner un avis de conseil de classe d'un élève pour une période donnée
      * @param idEleve id eleve
      * @param idPeriode id periode
@@ -32,6 +40,7 @@ public interface AvisConseilService {
      * @param idStructure id de l'établissement où l'avis est saisi
      * @param handler handler portant le résultat de la requête
      */
-    public void getAvisConseil(String idEleve, Long idPeriode, String idStructure, Handler<Either<String, JsonObject>> handler);
+    public void getAvisConseil(String idEleve, Long idPeriode, String idStructure,
+                               Handler<Either<String, JsonObject>> handler);
 
 }

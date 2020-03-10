@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "type_avis": {
+      "type": "integer"
+    },
+    "libelle": {
+      "type" : "string"
+    },
+    "id_etablissement": {
+      "type" : "string"
+    }
+  },
+  "required": [
+    "type_avis",
+    "libelle",
+    "id_etablissement"
+  ]
+}

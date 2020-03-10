@@ -72,18 +72,20 @@
         </div>
         <section>
             <label class="select">
-                <select ng-model="search.idAvisClasse"
-                        ng-options="avis.id as avis.libelle for avis in elementBilanPeriodique.avisConseil.avis | filter:filterAvis(1)"
-                        ng-change="elementBilanPeriodique.avisConseil.saveAvisConseil(search.idAvisClasse);">
+                <select ng-model="search.avisClasse"
+                        ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
+                        | filter:filterAvis([0, 1])"
+                        ng-change="changeClassOpinion()">
                     <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.conseil')]]</option>
                 </select>
             </label>
         </section>
         <section>
             <label class="select">
-                <select ng-model="search.idAvisOrientation"
-                        ng-options="avis.id as avis.libelle for avis in elementBilanPeriodique.avisConseil.avis | filter:filterAvis(2)"
-                        ng-change="elementBilanPeriodique.avisOrientation.saveAvisOrientation(search.idAvisOrientation);">
+                <select ng-model="search.avisOrientation"
+                        ng-options="avis.libelle for avis in elementBilanPeriodique.avisConseil.avis
+                        | filter:filterAvis([0, 2])"
+                        ng-change="changeOrientationOpinion()">
                     <option class="header-opt" value="">[[translate('evaluations.evaluation.avis.orientation')]]</option>
                 </select>
             </label>
@@ -107,3 +109,21 @@
         </div>
     </div>
 </div>
+
+<lightbox show="showNewOpinion" on-close="closeNewOpinion()">
+    <div class="header">
+        <h2>
+            <i18n>viescolaire.utils.avis</i18n>
+        </h2>
+    </div>
+    <div class="twelve">
+        <label>
+            <input type="text" ng-model="newOpinion" ng-maxlength="150" maxlength="150"
+                   class="eleven" style="margin:15px"
+                   ng-keypress="($event.charCode==13) ? createNewOpinion(newOpinion) : return"
+                   i18n-placeholder="evaluations.evaluation.avis.personalize"/>
+        </label>
+        <input type="button" class="right-magnet" ng-click="createNewOpinion(newOpinion); newOpinion = ''"
+               i18n-value="viescolaire.utils.save"/>
+    </div>
+</lightbox>

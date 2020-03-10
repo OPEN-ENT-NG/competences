@@ -1250,7 +1250,7 @@ public class ExportPDFController extends ControllerHelper {
     @Post("/export/bulletins")
     @SecuredAction(value = "export.bulletins.periodique", type = ActionType.WORKFLOW)
     public void exportBulletins(final HttpServerRequest request) {
-        RequestUtils.bodyToJson(request,  params -> {
+        RequestUtils.bodyToJson(request, params -> {
             Long idPeriode = params.getLong(ID_PERIODE_KEY);
             JsonArray idStudents = params.getJsonArray(ID_STUDENTS_KEY);
             String idClasse = params.getString(ID_CLASSE_KEY);

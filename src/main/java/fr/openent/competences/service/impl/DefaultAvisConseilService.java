@@ -17,13 +17,24 @@ public class DefaultAvisConseilService implements AvisConseilService {
         StringBuilder query = new StringBuilder();
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT id, libelle, type_avis ")
+        query.append("SELECT id, libelle, type_avis, id_etablissement ")
                 .append("FROM " + Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique ");
                 if (typeAvis != null) {
                     query.append("WHERE type_avis = ? ");
                     params.add(typeAvis);
                 }
         Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
+    }
+
+    public void createOpinion (Long typeAvis, String libelle, String idStructure, Handler<Either<String, JsonObject>> handler) {
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique " +
+                "(type_avis, libelle, id_etablissement) VALUES (?, ?, ?) " +
+                "RETURNING id";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(typeAvis);
+        values.add(libelle);
+        values.add(idStructure);
+        Sql.getInstance().prepared(query, values, SqlResult.validUniqueResultHandler(handler));
     }
 
     public void createOrUpdateAvisConseil (String idEleve, Long idPeriode,  Long id_avis_conseil_bilan, String idStructure,

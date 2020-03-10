@@ -13,8 +13,13 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
     function ($scope) {
 
+        $scope.mentionClass = lang.translate("conseil.avis.mention");
+        $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
+        $scope.updateMentionClass = false;
+        $scope.updateOrientationOpinion = false;
+
         let runMessageLoader = async function () {
-           await Utils.runMessageLoader($scope);
+            await Utils.runMessageLoader($scope);
         };
 
         let stopMessageLoader = async function(){
@@ -22,7 +27,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
         };
 
         let selectPersonnalisation = (id_cycle) => {
-
             if (evaluations.structure.cycle.id_cycle !== id_cycle) {
                 $scope.niveauCompetences = $scope.selectCycleForView(id_cycle);
             }
@@ -44,8 +48,8 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
             $scope.currentModel = undefined;
             let competences = await Me.preference('competences');
-            let optionsPrintBulletin = (Utils.isNull(competences)? undefined : competences.printBulletin);
-            $scope.print = (Utils.isNull(optionsPrintBulletin))? {} : optionsPrintBulletin;
+            let optionsPrintBulletin = (Utils.isNull(competences) ? undefined : competences.printBulletin);
+            $scope.print = (Utils.isNull(optionsPrintBulletin)) ? {} : optionsPrintBulletin;
             $scope.error = {};
             if(Utils.isNotNull($scope.opened)) {
                 $scope.opened.coefficientConflict = false;
@@ -80,24 +84,28 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 periode : undefined
             };
             $scope.lang = lang;
+
+
+
             await stopMessageLoader();
         };
 
         $scope.setImageStructure = async () => {
-           await ExportBulletins.setImageStructure($scope.structure.id, $scope.print.imgStructure);
+            await ExportBulletins.setImageStructure($scope.structure.id, $scope.print.imgStructure);
         };
 
         $scope.setInformationsCE = async () => {
             await ExportBulletins.setInformationsCE($scope.structure.id, $scope.print.imgSignature,
                 $scope.print.nameCE);
         };
+
         $scope.generateBulletin = async function (options){
             if(Me && Me.preferences) {
                 if(Utils.isNull(Me.preferences.competences)) {
                     Me.preferences.competences = {};
                 }
 
-                Me.preferences.competences.printBulletin = Object.assign({},$scope.print);
+                Me.preferences.competences.printBulletin = Object.assign({}, $scope.print);
                 delete Me.preferences.competences.printBulletin.students;
                 await Me.savePreference('competences');
             }
@@ -112,11 +120,13 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 return ;
             }
 
-            if($scope.selected === undefined
-                || $scope.selected.periode === undefined) {
+            if($scope.selected === undefined || $scope.selected.periode === undefined) {
                 notify.info('evaluations.choose.periode');
                 return ;
             }
+
+            options.mentionOpinion = $scope.mentionClass + " : ";
+            options.orientationOpinion = $scope.orientationOpinion + " : ";
 
             options.idPeriode = $scope.selected.periode.id_type;
             options.type = $scope.selected.periode.type;
@@ -136,7 +146,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             await runMessageLoader();
 
             let classes = _.groupBy($scope.allElevesClasses, 'classeName');
-            for ( let key in classes) {
+            for (let key in classes) {
                 if (classes.hasOwnProperty(key)) {
                     let val = classes[key];
                     options.classeName = key;
@@ -153,7 +163,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     options.idStudents = _.pluck(options.students, 'id');
                     if (options.idStudents !== undefined && options.idStudents.length > 0) {
                         try {
-
                             await ExportBulletins.generateBulletins(options, $scope);
                         }
                         catch (e) {
@@ -162,8 +171,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                     }
                 }
             }
-           await stopMessageLoader();
-
+            await stopMessageLoader();
         };
 
         $scope.chooseClasse = async function (classe) {
@@ -182,7 +190,6 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             await utils.safeApply($scope);
         };
 
-
         $scope.checkIfOneStudent = function () {
             let oneStudentSelected =  _.filter($scope.allElevesClasses, function (student) {
                 return student.selected === true;
@@ -194,11 +201,20 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             return show;
         };
 
-
         $scope.openModel = async function(model){
-          $scope.opened.lightboxModel = true;
-          $scope.currentModel = model;
-          await utils.safeApply($scope);
+            $scope.opened.lightboxModel = true;
+            $scope.currentModel = model;
+            await utils.safeApply($scope);
+        };
+
+        $scope.resetOpinions = () => {
+            if($scope.selected.periode.id_type === 5 || $scope.selected.periode.id_type === 2) {
+                $scope.orientationOpinion = lang.translate("orientation.avis.LastTrimester");
+            }
+            else {
+                $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
+            }
+            $scope.mentionClass = lang.translate("conseil.avis.mention");
         };
     }
 ]);
