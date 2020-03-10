@@ -676,8 +676,9 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
         if (null != idPeriode) {
             query.append(" id_periode = ? ");
             values.add(idPeriode);
-        }else{
-            query = query.delete(query.length() - 4, query.length()-1);
+        }
+        if(query.toString().substring(query.length()-3,query.length()).equals("AND")){
+            query.delete(query.length() - 3, query.length());
         }
         Sql.getInstance().prepared(query.toString(), values,
                 new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG.getInteger("timeout-transaction") * 1000L),
