@@ -1,0 +1,1 @@
+ALTER TABLE notes.moyenne_finale ALTER COLUMN moyenne DROP NOT NULL;

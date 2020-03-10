@@ -220,7 +220,12 @@
             <td class="center">{{moyenne}}</td>
             {{/averageAuto}}
             {{#averageFinal}}
+            {{#hasMoyenneFinaleNN}}
+            <td class="center">NN</td>
+            {{/hasMoyenneFinaleNN}}
+            {{^hasMoyenneFinaleNN}}
             <td class="center">{{moyenneFinale}}</td>
+            {{/hasMoyenneFinaleNN}}
             {{/averageFinal}}
 
             {{#sousMatieres}}

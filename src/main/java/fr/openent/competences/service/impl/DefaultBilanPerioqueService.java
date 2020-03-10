@@ -391,21 +391,25 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 //on récupère la moyenne finale de l'élève pour sa classe principale = idClasse passé en
                 // paramètre
                 //moyennesFinales
-                if( appMoyPosi.getString("moyenne_finale") != null) {
-                    JsonObject moyenne_finale = new JsonObject();
-                    //if(appMoyPosi.getString("id_classe_moyfinale").equals(idClasse)) {
-                    // dans le contexte d'un matiere on est sensé n'avoir qu'une moyenne finale
-                    // qui est soit sur un groupe soit sur une classe
+                JsonObject moyenne_finale = new JsonObject();
+                //if(appMoyPosi.getString("id_classe_moyfinale").equals(idClasse)) {
+                // dans le contexte d'un matiere on est sensé n'avoir qu'une moyenne finale
+                // qui est soit sur un groupe soit sur une classe
+                if( isNotNull(appMoyPosi.getValue("moyenne_finale")) && isNotNull(appMoyPosi.getValue("id_periode_moyenne_finale"))) {
                     moyenne_finale.put("id_periode",
                             appMoyPosi.getInteger("id_periode_moyenne_finale"))
 
                             .put("moyenneFinale",
                                     Double.valueOf(appMoyPosi.getString("moyenne_finale")));
-                    if(!moyennesFinales.contains(moyenne_finale)){
-                        moyennesFinales.add(moyenne_finale);
-                    }
-                    //}
+                }else if(isNotNull(appMoyPosi.getValue("id_periode_moyenne_finale"))){
+                    moyenne_finale.put("id_periode",
+                            appMoyPosi.getInteger("id_periode_moyenne_finale"))
+                            .put("moyenneFinale", "NN");
                 }
+                if(!moyennesFinales.contains(moyenne_finale)){
+                    moyennesFinales.add(moyenne_finale);
+                }
+                //}
                 //Pour le positionnement on ne peut en avoir qu'un par matière
                 //le positionnement n'est pas enregistré par classe
                 if(appMoyPosi.getInteger("positionnement_final") != null){

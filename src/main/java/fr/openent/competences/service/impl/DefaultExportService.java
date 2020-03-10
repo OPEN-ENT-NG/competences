@@ -1443,6 +1443,11 @@ public class DefaultExportService implements ExportService {
         devoirService.listDevoirs(idUser, idEtablissement, null, null, idPeriode,
                 false, event -> formate(devoirsFuture, event));
 
+        // Récupération des moyennes finales
+        Future<JsonArray> moyenneFinaleFuture = Future.future();
+        noteService.getColonneReleve(new JsonArray().add(idUser), idPeriode, null, null, "moyenne",
+                moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
+
         //Récupération de la structure
         Future<JsonObject> structureFuture = Future.future();
         utilsService.getStructure(idEtablissement, event -> formate(structureFuture, event));
@@ -1451,7 +1456,7 @@ public class DefaultExportService implements ExportService {
         Future<JsonArray> subjectF = Future.future();
         new DefaultMatiereService(eb).getMatieresEtab(idEtablissement, event -> formate(subjectF, event));
 
-        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF, infoEleveBackup)
+        CompositeFuture.all(infoEleve, devoirsFuture, structureFuture, subjectF, infoEleveBackup, moyenneFinaleFuture)
                 .setHandler(event -> {
                     if (event.failed()) {
                         Utils.returnFailure("getExportReleveEleve : event failed", event, handler);
@@ -1480,6 +1485,8 @@ public class DefaultExportService implements ExportService {
                     final JsonArray devoirsJSON = devoirsFuture.result();
                     final JsonArray idMatieres = new fr.wseduc.webutils.collections.JsonArray();
                     final JsonArray idEnseignants = new fr.wseduc.webutils.collections.JsonArray();
+
+                    final JsonArray moyennesFinales = moyenneFinaleFuture.result();
 
                     for (int i = 0; i < devoirsJSON.size(); i++) {
                         JsonObject devoir = devoirsJSON.getJsonObject(i);
@@ -1519,7 +1526,7 @@ public class DefaultExportService implements ExportService {
                         periodeJSON.put("libelle", "Ann\u00E9e");
                     }
                     getEnseignantsMatieres(matieres, classeEleve, idEnseignants, devoirsJSON,
-                            periodeJSON, userJSON, etabJSON, isBackup, handler);
+                            periodeJSON, userJSON, etabJSON, isBackup, moyennesFinales, handler);
                 });
     }
 
@@ -1540,7 +1547,8 @@ public class DefaultExportService implements ExportService {
     public void getEnseignantsMatieres(final JsonArray matieres,
                                        final String classe, JsonArray idUsers, final JsonArray devoirsJson,
                                        final JsonObject periodeJson, final JsonObject userJson,
-                                       final JsonObject etabJson, final boolean isBackup, Handler<Either<String, JsonObject>> handler) {
+                                       final JsonObject etabJson, final boolean isBackup, final JsonArray moyennesFinales,
+                                       Handler<Either<String, JsonObject>> handler) {
 
         JsonObject action = new JsonObject()
                 .put(ACTION, "eleve.getUsers")
@@ -1571,7 +1579,16 @@ public class DefaultExportService implements ExportService {
                             if(rowspan > 0 && !printSousMatiere){
                                 printSousMatiere = true;
                             }
-                            getDevoirsByMatiere(devoirsJson, matiereDevoir);
+                            JsonObject moyenneFinale = new JsonObject();
+                            for(int n = 0; n < moyennesFinales.size(); n++)
+                            {
+                                if (moyennesFinales.getJsonObject(n).getString("id_matiere").equals(matiereDevoir.getString("id"))) {
+                                    moyenneFinale = moyennesFinales.getJsonObject(n);
+                                    break;
+                                }
+
+                            }
+                            getDevoirsByMatiere(devoirsJson, matiereDevoir, moyenneFinale);
 
                             if (matiereDevoir.getString("id").equals(devoir.getString("id_matiere"))) {
                                 String firstNameEnsiegnant = enseignantDevoir.getString("firstName");
@@ -1629,7 +1646,7 @@ public class DefaultExportService implements ExportService {
      * @param devoirsJson  la liste de tous les devoirs de l'élève.
      * @param matiereInter la matière dont on cherche les devoirs.
      */
-    private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiereInter) {
+    private void getDevoirsByMatiere(JsonArray devoirsJson, JsonObject matiereInter, JsonObject moyenneFinale) {
 
         JsonArray devoirsMatiereJson = new fr.wseduc.webutils.collections.JsonArray();
 
@@ -1703,7 +1720,12 @@ public class DefaultExportService implements ExportService {
             // calcul de la moyenne de l'eleve pour la matiere
             JsonObject moyenneMatiere = utilsService.calculMoyenne(listeNoteDevoirs, withStat, diviseur, annual);// TODO recuper le diviseur de la matiere
             // ajout sur l'objet json
-            if( moyenneMatiere.getLong(MOYENNE) != null){
+            if(!moyenneFinale.isEmpty()){
+                if(isNotNull(moyenneFinale.getValue("moyenne")))
+                    matiereInter.put(MOYENNE, moyenneFinale.getValue("moyenne").toString());
+                else
+                    matiereInter.put(MOYENNE, "NN");
+            }else if( moyenneMatiere.getLong(MOYENNE) != null){
                 matiereInter.put(MOYENNE, moyenneMatiere.getLong(MOYENNE).toString());
             }
             String keySousMatiere = "sous_matieres";

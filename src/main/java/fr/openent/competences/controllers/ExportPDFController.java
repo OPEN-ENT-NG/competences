@@ -608,8 +608,10 @@ public class ExportPDFController extends ControllerHelper {
                             if (!moyFinal.containsKey(key)) {
                                 moyFinal.put(key, new HashMap<>());
                             }
-
-                            moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString(MOYENNE)), false, new Double(1)));
+                            if(lineObject.getValue(MOYENNE) != null)
+                                moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(Double.parseDouble(lineObject.getString(MOYENNE)), false, new Double(1)));
+                            else
+                                moyFinal.get(key).put(lineObject.getString("id_eleve"), new NoteDevoir(null, false, new Double(1)));
                         });
 
                         moyennesFinalFuture.complete(moyFinal);
@@ -638,9 +640,10 @@ public class ExportPDFController extends ControllerHelper {
                     JsonObject moyObject = new JsonObject();
 
                     idElevesFuture.result().stream().forEach(idEleve -> {
-                        if (moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve)) {
+                        if (moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() != null) {
                             matGrpNotes.add(moyennesFinales.get(matGrp).get(idEleve));
-                        } else if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve)) {
+                        } else if (notes.containsKey(matGrp) && notes.get(matGrp).containsKey(idEleve) &&
+                                !(moyennesFinales.containsKey(matGrp) && moyennesFinales.get(matGrp).containsKey(idEleve) && moyennesFinales.get(matGrp).get(idEleve).getNote() == null)) {
                             matGrpNotes.add(new NoteDevoir(utilsService.calculMoyenne(notes.get(matGrp).get(idEleve), false, null,false).getDouble(MOYENNE), false, new Double(1)));
                         }
                     });
