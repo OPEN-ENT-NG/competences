@@ -477,7 +477,7 @@ export class ReleveNote extends  Model implements IModel {
                 idEleve: eleve.id,
                 colonne: 'moyenne',
                 moyenne: parseFloat(eleve.moyenneFinale),
-                delete: eleve.moyenneFinale === "" || eleve.moyenneFinale.toUpperCase() === "NN"
+                delete: eleve.moyenneFinale === ""
             });
 
             http().postJson(this.api.POST_DATA_RELEVE_PERIODIQUE, _data)
@@ -604,6 +604,8 @@ export class ReleveNote extends  Model implements IModel {
     }
 
     addColumnForExportCsv (line, key): any {
+        if(key === 'moyenneFinale' && line[key] === null)
+            line[key] = 'NN';
         if(line[key] === undefined) {
             line[key] = ' ';
         }
