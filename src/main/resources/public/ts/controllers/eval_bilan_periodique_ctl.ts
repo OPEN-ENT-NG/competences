@@ -67,7 +67,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.canLoadStudent = isNotEmptyClasse && isNotEmptyPeriode;
                 $scope.critereIsEmpty = !(isNotEmptyClasse && isNotEmptyPeriode && isNotEmptyStudent);
             }
-
         };
 
         if (model.me.type === 'PERSRELELEVE') {
@@ -144,9 +143,15 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
                 $scope.search.periode.id_type, $scope.structure.id);
             await $scope.elementBilanPeriodique.syntheseBilanPeriodique.syncSynthese();
+            await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
             await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
             await $scope.elementBilanPeriodique.avisOrientation.syncAvisOrientation();
-            await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
+            $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                {id: $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan});
+            $scope.previousClassOpinion = $scope.search.avisClasse;
+            $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
+            $scope.previousOrientationOpinion = $scope.search.avisOrientation;
 
             $scope.oldElementsBilanPeriodique = [];
             for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
@@ -166,8 +171,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
             }
 
-            $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
-            $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
             await utils.safeApply($scope);
             template.open('suivi-acquis', 'enseignants/bilan_periodique/display_suivi_acquis');
             template.open('synthese', 'enseignants/bilan_periodique/display_synthese');
@@ -175,7 +178,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         };
 
         $scope.translateAvis = (avis) => {
-            return _.find($scope.elementBilanPeriodique.avisConseil.avis, {id: avis.id_avis_conseil_bilan}).libelle;
+            if(avis && $scope.elementBilanPeriodique.avisConseil){
+                let result = _.find($scope.elementBilanPeriodique.avisConseil.avis, {id: avis.id_avis_conseil_bilan});
+                if(result){
+                    return result.libelle;
+                }
+            }
+            return "";
         };
 
         $scope.openProjet = async () => {
@@ -529,12 +538,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
                 await Utils.awaitAndDisplay(allPromise, $scope, undefined, $scope.selected.bfc);
 
-                $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id, $scope.search.periode.id_type, $scope.structure.id);
-                $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id, $scope.search.periode.id_type, $scope.structure.id);
+                $scope.elementBilanPeriodique.avisConseil = new AvisConseil($scope.informations.eleve.id,
+                    $scope.search.periode.id_type, $scope.structure.id);
+                $scope.elementBilanPeriodique.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
+                    $scope.search.periode.id_type, $scope.structure.id);
                 await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
                 await $scope.elementBilanPeriodique.avisConseil.syncAvisConseil();
                 await $scope.elementBilanPeriodique.avisOrientation.syncAvisOrientation();
-                $scope.oldElementsBilanPeriodique = [];
                 $scope.oldElementsBilanPeriodique = [];
                 for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
                     if(periode.id != null){
@@ -552,8 +562,13 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                         $scope.oldElementsBilanPeriodique.push(oldElement);
                     }
                 }
-                $scope.search.idAvisClasse = $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan;
-                $scope.search.idAvisOrientation = $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan;
+                $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                    {id: $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan});
+                $scope.previousClassOpinion = $scope.search.avisClasse;
+                $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                    {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
+                $scope.previousOrientationOpinion = $scope.search.avisOrientation;
+
                 await utils.safeApply($scope);
             }
         };
@@ -565,16 +580,14 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             await $scope.changeContent();
         };
 
-
-
         $scope.filterAvis = function (param) {
             return (avis) => {
-                if (avis.type_avis === param) {
+                if(param.some(x => x === avis.type_avis &&
+                    (avis.id_etablissement === null || avis.id_etablissement === $scope.structure.id))){
                     return avis;
                 }
             }
         };
-
 
         /**
          * Saisir projet   -   Bilan Periodique
@@ -819,5 +832,64 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
             }
         });
 
+        $scope.showNewOpinion = false;
+
+        $scope.changeClassOpinion = function() {
+            if($scope.search.avisClasse.type_avis !== 0){
+                $scope.previousClassOpinion = $scope.search.avisClasse;
+                $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
+            }
+            else {
+                $scope.showNewOpinion = true;
+            }
+        };
+
+        $scope.changeOrientationOpinion = function() {
+            if($scope.search.avisOrientation.type_avis !== 0){
+                $scope.previousOrientationOpinion = $scope.search.avisOrientation;
+                $scope.elementBilanPeriodique.avisOrientation.saveAvisOrientation($scope.search.avisOrientation.id);
+            }
+            else {
+                $scope.showNewOpinion = true;
+            }
+        };
+
+        $scope.createNewOpinion = async function (opinion) {
+            if ($scope.search.avisClasse.type_avis === 0) {
+                $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan =
+                    await $scope.elementBilanPeriodique.avisConseil.createNewOpinion(opinion);
+                await $scope.refreshOpinionList();
+                $scope.elementBilanPeriodique.avisConseil.saveAvisConseil($scope.search.avisClasse.id);
+            } else if ($scope.search.avisOrientation.type_avis === 0) {
+                $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan =
+                    await $scope.elementBilanPeriodique.avisOrientation.createNewOpinion(opinion);
+                await $scope.refreshOpinionList();
+                $scope.elementBilanPeriodique.avisOrientation.saveAvisOrientation($scope.search.avisOrientation.id);
+            }
+
+            $scope.showNewOpinion = false;
+            await utils.safeApply($scope);
+        };
+
+        $scope.refreshOpinionList = async function() {
+            await $scope.elementBilanPeriodique.avisConseil.getLibelleAvis();
+            $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                {id: $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan});
+            $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
+            $scope.previousClassOpinion = $scope.search.avisClasse;
+            $scope.previousOrientationOpinion = $scope.search.avisOrientation;
+        };
+
+        $scope.closeNewOpinion = function() {
+            if($scope.search.avisClasse.type_avis === 0){
+                $scope.search.avisClasse = $scope.previousClassOpinion;
+            }
+            else if($scope.search.avisOrientation.type_avis === 0){
+                $scope.search.avisOrientation = $scope.previousOrientationOpinion;
+            }
+
+            $scope.showNewOpinion = false;
+        };
     }
 ]);

@@ -43,10 +43,10 @@
   "evaluations.csv": "csv",
   "evaluations.both": "Les deux",
 
-  "orientation.avis.LastTrimester": "Avis d'orientation / Proposition du conseil de classe : ",
-  "orientation.avis.FirstSecondTrimester": "Avis provisoire d'orientation : ",
+  "orientation.avis.LastTrimester": "Avis d'orientation / Proposition du conseil de classe",
+  "orientation.avis.FirstSecondTrimester": "Avis provisoire d'orientation",
 
-  "conseil.avis.mention": "Mention du conseil de classe : ",
+  "conseil.avis.mention": "Mention du conseil de classe",
 
   "competences.title": "Compétences",
   "competences.notify.saved": "La donnée a été sauvegardée",
@@ -273,6 +273,7 @@
   "evaluations.synthese.acquis.bilan.periodique" : "Synthèse de l'évolution des acquis pour la période",
   "evaluations.evaluation.avis.conseil" : "Avis conseil",
   "evaluations.evaluation.avis.orientation" : "Avis orientation",
+  "evaluations.evaluation.avis.personalize" : "Personnaliser un avis",
   "evaluation.bilan.fin.cycle.successUpdateEnseignement":"Enseignement sauvegardé.",
   "evaluations.suivi.eleve.title":"Suivi élève",
   "evaluations.suivi.eleve.vue.liste":"Vue liste",
@@ -507,7 +508,8 @@
   "viescolaire.utils.criterion":"Vos critères",
   "viescolaire.utils.options": "Vos options",
   "viescolaire.utils.parameter": "Vos paramètres",
-  "viescolaire.utils.models": "Vos Modèles de libellé",
+  "viescolaire.utils.models": "Vos modèles de libellé de matières",
+  "viescolaire.utils.edit_wording": "Modifier les libellés affichés",
   "viescolaire.utils.your.logo": "Votre logo",
   "viescolaire.utils.avis":"Avis",
   "viescolaire.utils.elements.programme":"Éléments du programme",

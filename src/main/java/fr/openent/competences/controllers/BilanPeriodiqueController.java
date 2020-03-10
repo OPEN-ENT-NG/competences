@@ -234,6 +234,36 @@ public class BilanPeriodiqueController extends ControllerHelper{
         });
     }
 
+    @Post("/avis/bilan/periodique")
+    @ApiDoc("Créer un avis de conseil de classe")
+    @SecuredAction(value = "create.avis.conseil.bilan.periodique", type = ActionType.AUTHENTICATED)
+    public void createOpinion(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    String validator = pathPrefix + Competences.SCHEMA_CREATE_OPINION;
+                    RequestUtils.bodyToJson(request, validator,
+                            new Handler<JsonObject>() {
+                                @Override
+                                public void handle(JsonObject opinion) {
+                                    final Long typeAvis = opinion.getLong("type_avis");
+                                    final String libelle = opinion.getString("libelle");
+                                    final String idStructure = opinion.getString("id_etablissement");
+                                    avisConseilService.createOpinion(
+                                            typeAvis,
+                                            libelle,
+                                            idStructure,
+                                            DefaultResponseHandler.defaultResponseHandler(request));
+                                }
+                            });
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
 
     /**
      * Ajoute un avis du conseil de classe avec les données passées en POST

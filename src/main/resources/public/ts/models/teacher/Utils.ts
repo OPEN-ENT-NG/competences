@@ -307,12 +307,6 @@ export class Utils {
             //set the max of my evaluations on this competence for "niveau final"
             competence.niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations);
         }
-
-        console.log(allEvaluations);
-        console.log(myEvaluations);
-        console.log(competence.niveauFinaltoShowAllEvaluations);
-        console.log(competence.niveauAtteintToShowMyEvaluations);
-        console.log(competence.niveauFinalToShowMyEvaluations);
     }
 
     /**
