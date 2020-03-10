@@ -439,7 +439,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                   final JsonObject classe, String host, String acceptLanguage,
                                   Handler<Either<String, JsonObject>> finalHandler){
         try {
-
             if (!answered.get()) {
                 putLibelleForExport(idEleve, elevesMap, params, finalHandler);
                 getEvenements(idEleve, elevesMap, idPeriode, finalHandler);
@@ -451,8 +450,15 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
                         finalHandler);
                 getAppreciationCPE(idEleve, elevesMap, idPeriode, finalHandler);
-                getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
-                getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
+
+                String beforeAvisConseil = params.getString("mentionOpinion");
+                getAvisConseil(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
+                        finalHandler, beforeAvisConseil);
+
+                String beforeAvisOrientation = params.getString("orientationOpinion");
+                getAvisOrientation(idEleve, elevesMap, idPeriode, params.getString("idStructure"),
+                        finalHandler, beforeAvisOrientation);
+
                 if(params.getBoolean(GET_RESPONSABLE)) {
                     getResponsables(idEleve, elevesMap, finalHandler);
                 }
@@ -467,7 +473,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, finalHandler);
                 if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)!= null){
                     if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
-                        getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE),idPeriode,
+                        getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE), idPeriode,
                                 elevesMap, finalHandler);
                     }
                 }
@@ -872,7 +878,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
-                               Handler<Either<String, JsonObject>> finalHandler) {
+                               Handler<Either<String, JsonObject>> finalHandler, String beforeAvisConseil) {
         logBegin(GET_AVIS_CONSEIL_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
         if (eleveObject == null) {
@@ -900,15 +906,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             errors.add(GET_AVIS_CONSEIL_METHOD);
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_CONSEIL_METHOD);
                         }
-                    }else{
+                    } else {
                         JsonObject avisConseil = event.right().getValue();
                         if(avisConseil != null && !avisConseil.isEmpty()) {
+                            eleveObject.put("beforeAvisConseil", beforeAvisConseil);
 
-                            eleveObject.put("beforeAvisConseil",I18n.getInstance()
-                                    .translate("conseil.avis.mention",
-                                            I18n.DEFAULT_DOMAIN, Locale.FRANCE));
-
-                            eleveObject.put("avisConseil",avisConseil.getString(LIBELLE))
+                            eleveObject.put("avisConseil", avisConseil.getString(LIBELLE))
                                     .put("hasAvisConseil",true);
                         }
                         serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_CONSEIL_METHOD);
@@ -920,7 +923,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
     @Override
     public void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
-                                   Handler<Either<String, JsonObject>> finalHandler) {
+                                   Handler<Either<String, JsonObject>> finalHandler, String beforeAvisOrientation) {
         logBegin(GET_AVIS_ORIENTATION_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
         if (eleveObject == null) {
@@ -953,14 +956,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                         if(avisOrientation != null && !avisOrientation.isEmpty() ) {
                             eleveObject.put("avisOrientation",avisOrientation.getString(LIBELLE))
                                     .put("hasAvisOrientation",true);
-                            if(idPeriode == 5 || idPeriode == 2)
-                                eleveObject.put("beforeAvisOrientation",I18n.getInstance()
-                                        .translate("orientation.avis.LastTrimester",
-                                                I18n.DEFAULT_DOMAIN, Locale.FRANCE));
-                            else
-                                eleveObject.put("beforeAvisOrientation",I18n.getInstance()
-                                        .translate("orientation.avis.FirstSecondTrimester",
-                                                I18n.DEFAULT_DOMAIN, Locale.FRANCE));
+
+                            eleveObject.put("beforeAvisOrientation", beforeAvisOrientation);
                         }
                         serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_ORIENTATION_METHOD);
                     }
@@ -2438,7 +2435,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     private void getPeriodes(String idClasse, Future<JsonArray> periodesFuture){
-
         utilsService.getPeriodes(new JsonArray().add(idClasse), null, periodeEvent ->
                 formate(periodesFuture, periodeEvent));
     }

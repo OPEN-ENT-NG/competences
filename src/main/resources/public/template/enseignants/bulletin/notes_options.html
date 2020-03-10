@@ -1,5 +1,5 @@
-<div ng-if="print.simple === true">
-    <div >
+<div ng-show="print.simple === true">
+    <div>
         <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
             <h2>
                 <i18n>viescolaire.utils.options</i18n>
@@ -204,7 +204,7 @@
 
         </fieldset>
     </div>
-    <div  ng-show="print.useModel === true">
+    <div ng-show="print.useModel === true">
         <div class="header" ng-click="openLeftMenu('opened.criteres', opened.criteres);">
             <h2>
                 <i18n>viescolaire.utils.models</i18n>
@@ -215,17 +215,16 @@
             <ul class="twelve selectable-list">
                 <li ng-repeat="model in (filteredModels = (models.all | filter:filterSearch(search) | orderBy:'title'))"
                     style="margin-bottom: 0px;"  ng-class="{selected: print.idModel === model.id}">
-                                <span
-                                        ng-click="model.show = !model.show"><i18n >evaluations.model</i18n>
-                                    &nbsp;:&nbsp;[[model.title]]
+                                <span ng-click="model.show = !model.show">
+                                    <i18n >evaluations.model</i18n> : [[model.title]]
                                 </span>
                     <dots-menu style="text-align: left;" class="right">
-                        <opt  data-ng-click="print.idModel = model.id">
+                        <opt data-ng-click="print.idModel = model.id">
                             <i class="check">
                             </i>
                             &nbsp;<i18n>evaluations.choose.model</i18n>
                         </opt>
-                        <opt  data-ng-click="openModel(model)">
+                        <opt data-ng-click="openModel(model)">
                             <i class="up-open">
                             </i>
                             &nbsp;<i18n>evaluations.open.model</i18n>
@@ -235,6 +234,30 @@
             </ul>
         </fieldset>
     </div>
+
+    <div class="header">
+        <h2>
+            <i18n>viescolaire.utils.edit_wording</i18n>
+        </h2>
+    </div>
+
+    <fieldset class="eleven">
+        <div class="twelve inputContainer">
+            <input class="eleven" type="text" ng-model="mentionClass"
+                   ng-show="updateMentionClass" ng-blur="updateMentionClass = false"/>
+            <span ng-show="!updateMentionClass">[[mentionClass]]</span>
+            <i style="margin-left : 10px" class="right-magnet" ng-class="!updateMentionClass ? 'edit' : 'ok'"
+               ng-click="updateMentionClass = !updateMentionClass"></i>
+        </div>
+
+        <div class="twelve inputContainer">
+            <input class="eleven" type="text" ng-model="orientationOpinion"
+                   ng-show="updateOrientationOpinion" ng-blur="updateOrientationOpinion = false"/>
+            <span ng-show="!updateOrientationOpinion">[[orientationOpinion]]</span>
+            <i style="margin-left : 10px" class="right-magnet" ng-class="!updateOrientationOpinion ? 'edit' : 'ok'"
+               ng-click="updateOrientationOpinion = !updateOrientationOpinion" ></i>
+        </div>
+    </fieldset>
 
     <div class="twelve">
         <button class ="right right-magnet" style="margin-top: 10px; margin-right : 6%"

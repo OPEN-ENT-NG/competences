@@ -50,7 +50,9 @@ export class ExportBulletins {
             neutre: (options.neutre === true),
             niveauCompetences: options.niveauCompetences,
             withLevelsStudent : options.withLevelsStudent,
-            withLevelsClass : options.withLevelsClass
+            withLevelsClass : options.withLevelsClass,
+            mentionOpinion: options.mentionOpinion,
+            orientationOpinion: options.orientationOpinion
         };
         if (Utils.isNotNull(options.idPeriode)){
             _.extend(o, {idPeriode: options.idPeriode, typePeriode: options.type});
@@ -113,7 +115,7 @@ export class ExportBulletins {
             }
         }
     }
-    public static async  generateBulletins (options, $scope) {
+    public static async generateBulletins (options, $scope) {
         let method = "generateBulletins";
         let stopwatch = this.startDebug( $scope, options, method);
         $('.chart-container').empty();

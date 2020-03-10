@@ -165,7 +165,7 @@ public interface ExportBulletinService {
      * @param finalHandler handler servant à la synchronisation des services
      */
     void getAvisConseil(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
-                        Handler<Either<String, JsonObject>> finalHandler);
+                        Handler<Either<String, JsonObject>> finalHandler, String beforeAvisConseil);
 
     /**
      *
@@ -176,7 +176,7 @@ public interface ExportBulletinService {
      * @param finalHandler handler servant à la synchronisation des services
      */
     void getAvisOrientation(String idEleve, Map<String, JsonObject> elevesMap, Long idPeriode, String idStructure,
-                        Handler<Either<String, JsonObject>> finalHandler);
+                        Handler<Either<String, JsonObject>> finalHandler, String beforeAvisOrientation);
 
 
     /**
