@@ -126,6 +126,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     , $scope.search.periode, $scope.structure);
                 $scope.isShowDownloadButton = true;
                 $scope.isDownloadWaiting = false;
+                cleanScopeTabs();
                 await $scope.selectDisplayClassTabs($scope.displayFollowCompetencesClass);
                 await Utils.stopMessageLoader($scope);
             } else {
@@ -282,7 +283,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         $scope.disabledExportFile = false;
         $scope.exportRecapEval = async (textMod, printSuiviClasse, idPeriode, exportByEnseignement,
                                         withMoyGeneraleByEleve, withMoyMinMaxByMat) => {
-            infoNameFileEnd = `_${$scope.search.classe.name}}`;
+            infoNameFileEnd = `_${$scope.search.classe.name}`;
             $scope.errorWhenExportPdf = false;
             switch (printSuiviClasse) {
                 case 'printRecapAppreciations' : {
@@ -429,7 +430,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 case 'csvRecapEval': {
                     $scope.disabledExportFile = true;
                     utils.safeApply($scope);
-                    if(await positioningCsvData(idPeriode)){
+                    if(await positioningCsvData(idPeriode, $scope.search.classe.id)){
                         await cvsLaunch('csv');
                         $scope.opened.recapEval = false
                     } else {
@@ -617,9 +618,13 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
-        const getSubjectsNotesAppraisals = async ():Promise<void> => {
+        const getSubjectsNotesAppraisals = async (teacherBysubject):Promise<void> => {
             const dataSynthesisAndAppraisals:Array<any> = await bilanPeriodic.synthesisAndAppraisals( initResultPeriodic(), $scope, $scope.matieres.all);
-            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals);
+            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBysubject);
+        };
+
+        const cleanScopeTabs = () => {
+            $scope.contentIframe = $scope.averagesClasses =  $scope.teacherNotesAndAppraisals = undefined;
         };
 
         $scope.selectDisplayClassTabs = async (tabsSelected:string):Promise<void> => {
@@ -636,16 +641,16 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     await initTabClass('follow_items');
                     break;
                 case ('positioning'):
-                    await getPdfPositioning();
+                    if(!$scope.contentIframe) await getPdfPositioning();
                     $scope.isDataOnPage = ($scope.contentIframe.status === 200
                         && $scope.displayFollowCompetencesClass === 'positioning');
                     fileDownloadName.pdf = 'printRecapEval';
                     $scope.isUseLinkForPdf = true;
-                    positioningCsvData($scope.search.periode.id_type);
+                    positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
                     await initTabClass('positioning');
                     break;
                 case ('average'):
-                    await getSubjectsNotesAppraisals();
+                    if(!$scope.averagesClasses) await getSubjectsNotesAppraisals(getTeacherBySubject());
                     $scope.isDataOnPage = Object.keys($scope.averagesClasses)
                         .map( element => $scope.averagesClasses[element])
                         .some(array => array.length > 0);
@@ -654,7 +659,8 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     fileDownloadName.csv = 'printTabMoyPosAppr';
                     await initTabClass('average');
                     break;
-                case ('teacherAppraisals'):$scope.teacherNotesAndAppraisals = await bilanPeriodic
+                case ('teacherAppraisals'):
+                    if(!$scope.teacherNotesAndAppraisals) $scope.teacherNotesAndAppraisals = await bilanPeriodic
                     .getAppraisalsAndNotesByClassAndPeriod($scope.search.classe.id, $scope.search.periode.id_type, evaluations.structure.id);
                     isManualCsvFromAngular = true;
                     fileDownloadName.pdf = 'printRecapAppreciations';
@@ -668,11 +674,25 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             $scope.loadingTab = false;
         };
 
-        const positioningCsvData = async (idPeriod:number):Promise<boolean> => {
+        const getTeacherBySubject = () => {
+            let currentClass = _.chain($scope.classes.all)
+                .findWhere({id: $scope.search.classe.id})
+                .value();
+            let teacherBysubject = {};
+            let teachers = $scope.structure.enseignants.all;
+            currentClass.services.forEach(item => {
+                if(item && item.id_matiere && item.id_enseignant){
+                    teacherBysubject[item.id_matiere] = _.findWhere(teachers, {id:item.id_enseignant});
+                }
+            });
+            return teacherBysubject;
+        }
+
+        const positioningCsvData = async (idPeriod:number, idClass:string):Promise<boolean> => {
             try {
                 isManualCsvFromAngular = true;
                 fileDownloadName.csv = `positioning${infoNameFileEnd}`;
-                const resultSummaryEvaluations = await bilanPeriodic.summaryEvaluations( $scope.search.classe.id, idPeriod);
+                const resultSummaryEvaluations = await bilanPeriodic.summaryEvaluations( idClass, idPeriod);
                 dataBodyCsv = prepareBodyPositioningForCsv(resultSummaryEvaluations);
                 return true
             } catch (e) {
@@ -710,6 +730,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         const defaultSwitch = ():void => {
+            cleanScopeTabs()
             fileDownloadName.pdf = undefined;
             fileDownloadName.csv = undefined;
             $location.path('/competences');
