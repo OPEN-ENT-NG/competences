@@ -14,12 +14,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public interface ExportBulletinService {
     /**
      * Récupère les retards et absences d'un élève
+     * @param idStructure
+     * @param idClasse
      * @param idEleve idEleve
      * @param elevesMap contient à minima map <idEleve, JsonObject{idClasse, idEtablissement}>
      * @param idPeriode idperiode
      * @param finalHandler handler servant à la synchronisation des services
      */
-    void getEvenements(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
+    void getEvenements(String idStructure, String idClasse, String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
                        Handler<Either<String, JsonObject>> finalHandler );
 
     /**

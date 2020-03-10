@@ -23,6 +23,7 @@ import {visibilityDNB} from "./sniplets/visibilityDNB";
 import {bilanPeriodique} from "./sniplets/bilanPeriodique";
 import {paramServices} from './sniplets/paramServices'
 import {renameSubject} from "./sniplets/renameSubject";
+import {paramImportCSV} from "./sniplets/param_import_csv";
 
 Behaviours.register('competences', {
     rights: {
@@ -36,6 +37,7 @@ Behaviours.register('competences', {
             access:"fr.openent.competences.controllers.CompetencesController|view",
             exportBulletins:"fr.openent.competences.controllers.ExportPDFController|exportBulletins",
             canUpdateRetardAndAbscence:'fr.openent.competences.controllers.UtilsController|insertRetardOrAbscence',
+            paramImportCSV:'fr.openent.competences.controllers.UtilsController|insertRetardOrAbscence',
             bilanPeriodique: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createElementBilanPeriodique",
             accessProjets: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationSaisieProjet",
             canUpdateAppreciations: "fr.openent.competences.controllers.ElementBilanPeriodiqueController|createAppreciationBilanPeriodique",
@@ -56,6 +58,7 @@ Behaviours.register('competences', {
         linkGroupCycle: linkGroupCycle,
         epi_ap_parcours: bilanPeriodique,
         paramServices : paramServices,
-        renameSubject: renameSubject
+        renameSubject: renameSubject,
+        param_import_csv: paramImportCSV
     }
 });

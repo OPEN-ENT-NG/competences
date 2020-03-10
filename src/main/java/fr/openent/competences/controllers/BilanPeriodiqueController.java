@@ -2,10 +2,6 @@ package fr.openent.competences.controllers;
 
 import com.mongodb.util.JSON;
 import fr.openent.competences.Competences;
-import fr.openent.competences.Utils;
-import fr.openent.competences.bean.NoteDevoir;
-import fr.openent.competences.security.AccessAppreciationFilter;
-import fr.openent.competences.security.utils.AccessThematiqueBilanPeriodique;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
 import fr.wseduc.rs.ApiDoc;
@@ -82,7 +78,9 @@ public class BilanPeriodiqueController extends ControllerHelper{
     @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
     public void getAbsencesAndRetards (final HttpServerRequest request) {
         final String  idEleve = request.params().get("idEleve");
-        bilanPeriodiqueService.getRetardsAndAbsences(idEleve,arrayResponseHandler(request));
+        final String idStructure = request.params().get("idEtablissement");
+        final String idClasse = request.params().get("idClasse");
+        bilanPeriodiqueService.getRetardsAndAbsences(idStructure,idClasse,idEleve,arrayResponseHandler(request));
     }
 
     /**
