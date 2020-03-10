@@ -51,9 +51,11 @@ import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
 
 /**
@@ -1220,5 +1222,79 @@ public class DefaultUtilsService  implements UtilsService {
                 }
             }
         }));
+    }
+
+    public void getActiveStatePresences ( final String idStructure, Handler<Either<String,JsonObject>> handler){
+        // Récupération de la config vie scolaire
+        Future<JsonObject> configFuture = Future.future();
+        JsonObject action = new JsonObject()
+                .put("action", "config.generale");
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, handlerToAsyncHandler(new Handler<Message<JsonObject>>() {
+            @Override
+            public void handle(Message<JsonObject> message) {
+                JsonObject body = message.body();
+                if (OK.equals(body.getString(STATUS))) {
+                    JsonObject queryResult = body.getJsonObject(RESULT);
+                    configFuture.complete(queryResult);
+                } else {
+                    log.error("getRetardsAndAbsences-getconfigVieScolaire failed : " + body.getString("message"));
+                    configFuture.fail(body.getString("message"));
+
+                }
+            }
+        }));
+
+        // Récupération de l'activation du module présences de l'établissement
+        Future<JsonObject> activationFuture = Future.future();
+        isStructureActivatePresences(idStructure,event -> formate(activationFuture,event));
+
+        CompositeFuture.all(configFuture, activationFuture).setHandler(
+                event -> {
+                    if(event.failed()){
+                        String error = event.cause().getMessage();
+                        log.error("[getRetardsAndAbsences-config] : " + error);
+                    } else{
+                        JsonObject configVieScolaire = configFuture.result();
+                        JsonObject activationStructure = activationFuture.result();
+                        JsonObject result = new JsonObject();
+                        result.put("installed",configVieScolaire.getBoolean("presences"));
+                        if(!activationStructure.isEmpty() && activationStructure.getBoolean("actif"))
+                            result.put("activate",true);
+                        else
+                            result.put("activate",false);
+
+                        handler.handle(new Either.Right<>(result));
+                    }
+                });
+    }
+
+    public void getSyncStatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
+        JsonArray params = new JsonArray().add(idStructure);
+
+        String query = " SELECT presences_sync " +
+                " FROM "+ Competences.COMPETENCES_SCHEMA +".structure_options " +
+                " WHERE id_structure = ? ";
+        Sql.getInstance().prepared(query, params, Competences.DELIVERY_OPTIONS, validUniqueResultHandler(eitherHandler));
+
+    }
+
+    public void activeDeactiveSyncStatePresences(String idStructure, Boolean state, Handler<Either<String, JsonObject>> eitherHandler){
+        StringBuilder query = new StringBuilder().append("INSERT INTO ")
+                .append(Competences.COMPETENCES_SCHEMA + ".structure_options (id_structure, presences_sync) ")
+                .append(" VALUES ")
+                .append(" ( ?, ? )")
+                .append(" ON CONFLICT (id_structure) DO UPDATE SET presences_sync = ?");
+        JsonArray params = new JsonArray().add(idStructure).add(state).add(state);
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validUniqueResultHandler(eitherHandler));
+    }
+
+    private void isStructureActivatePresences(String idStructure, Handler<Either<String, JsonObject>> eitherHandler){
+        JsonArray params = new JsonArray().add(idStructure);
+
+        String query = " SELECT * " +
+                " FROM presences.etablissements_actifs " +
+                " WHERE id_etablissement = ? ";
+        Sql.getInstance().prepared(query, params, Competences.DELIVERY_OPTIONS, validUniqueResultHandler(eitherHandler));
+
     }
 }

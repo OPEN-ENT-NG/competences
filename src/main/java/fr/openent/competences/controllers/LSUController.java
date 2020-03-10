@@ -2424,7 +2424,7 @@ public class LSUController extends ControllerHelper {
                             });
 
 
-                    bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getIdNeo4j(),
+                    bilanPeriodiqueService.getRetardsAndAbsences(idStructure, currentEleve.getId_Class(), currentEleve.getIdNeo4j(),
                             new Handler<Either<String, JsonArray>>() {
                                 AtomicBoolean answer = new AtomicBoolean(false);
                                 AtomicInteger count = new AtomicInteger(0);
@@ -2436,7 +2436,8 @@ public class LSUController extends ControllerHelper {
                                         String error = eventViesco.left().getValue();
                                         if(error != null && error.contains(TIME)){
                                             if(!getRetardsAndAbsencesFuture.isComplete()) {
-                                                bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getIdNeo4j(),
+                                                bilanPeriodiqueService.getRetardsAndAbsences(idStructure,
+                                                        currentEleve.getId_Class(),currentEleve.getIdNeo4j(),
                                                         this);
                                             }
                                             else {

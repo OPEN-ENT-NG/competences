@@ -3068,14 +3068,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param eleve élève
          */
         $scope.getEleveInfo = async function (eleve) {
-            if(Utils.isNull(eleve) || Utils.isNull(eleve.getEvenements)){
+            if(Utils.isNull(eleve)){
                 return;
             }
             $scope.showInfosEleve = true;
             template.close('leftSide-userInfo');
             await utils.safeApply($scope);
             let idPeriode = (Utils.isNotNull($scope.search.periode)?$scope.search.periode.id_type: null);
-            let allPromise = [eleve.getEvenements(), $scope.getAvatar(eleve)];
+            let allPromise = [eleve.getEvenements($scope.structure.id), $scope.getAvatar(eleve)];
             if(Utils.isNotNull(idPeriode)) {
                 eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
                 allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());

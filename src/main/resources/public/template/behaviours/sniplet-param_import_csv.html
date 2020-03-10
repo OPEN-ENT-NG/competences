@@ -1,0 +1,133 @@
+<div id="structure-loader" class="overlay" ng-show="opened.displayMessageLoader">
+    <div>
+        <h4 class="content-loader"><i18n>importation.in.process</i18n></h4>
+    </div>
+</div>
+<article class="twelve" ng-hide="checkBox.hidden">
+    <span class="six"><i18n>activated.data.recuperation.from.presences</i18n></span>
+
+    <div class="cell one">
+        <label class="checkbox">
+            <input type="checkbox"
+                   ng-change="changeAbsencesRetardsFromPresences(absencesRetardsFromPresences, structure.id);"
+                   ng-model="absencesRetardsFromPresences">
+            <span></span>
+        </label>
+    </div>
+</article>
+<div class="row" ng-if="!absencesRetardsFromPresences">
+    <div class="twelve cell ">
+        <article class="row">
+
+            <div class="six cell">
+
+                <!-- periode -->
+                <div class="twelve cell">
+                    <div class="six cell">
+                <span>
+                    <i18n>viescolaire.utils.periode</i18n>
+                     <i class="asterisk obligatoire"></i>
+                </span>
+                        <label  class="select right-magnet">
+                            <select ng-model="import.periode"
+                                    ng-options="displayImportPeriode(p) for p in structure.typePeriodes.all | orderBy : ['type', 'ordre'] ">
+                                <option class="header-opt" disabled value="">[[lang.translate('viescolaire.utils.periode')]]</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+                <!--<div class="twelve cell">-->
+                <!--<div ng-if="import.periode !== undefined"-->
+                <!--class="three cell sous-titre"><i18n>viescolaire.from</i18n>-->
+                <!--[[ formatDatePeriode(import.periode.timestamp_dt) ]]-->
+                <!--</div>-->
+                <!--<div ng-if="import.periode !== undefined"-->
+                <!--class="three cell sous-titre"><i18n>viescolaire.to</i18n>-->
+                <!--[[ formatDatePeriode(import.periode.timestamp_fn) ]]-->
+                <!--</div>-->
+                <!--</div>-->
+
+
+                <!-- attachment list loaded -->
+                <div class="six cell select-file nomargin" drop-files="newAttachments">
+                    <div class="hidden-content pull-left">
+                        <input accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+        application/vnd.ms-excel"
+                               type="file" id="input-attachment-declaration" multiple
+                               files-input-change="postAttachments(newAttachments)"
+                               ng-model="newAttachments">
+                        <input type="text" data-display-file="">
+                    </div>
+                    <div class="twelve cell">
+                        <div class="six cell">
+                        <span>
+                         <i18n>import.add.file</i18n>
+                         </span>
+                        </div>
+                        <div class="six cell">
+                            <button class="flat-button file-button button-sm right-magnet" translate="">
+                                <i18n>viescolaire.parcourir</i18n>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row sous-titre">
+                        <i18n>format.attachment</i18n>: .csv
+                        -
+                        <i18n>taille.max.attachment</i18n>: 3 Mo
+                    </div>
+                </div>
+            </div>
+
+            <div class="six cell">
+                <section ng-if="hasHomonymes === false">
+                    <h4 ng-if="attachments.length"><i18n>import.list.of.files</i18n></h4>
+                    <table class="twelve" drop-files="newAttachments" on-drop="" ng-if="attachments.length">
+                        <tr class="no-margin removable" ng-repeat="attachment in attachments">
+                            <td width="50%" class="title">
+                                [[attachment.filename]]
+                            </td>
+                            <td width="30%" class="status-infos">
+                                <span class="small-text reduce-block-four">[[formatSize(attachment.size)]]</span>
+                            </td>
+                            <td width="20%">
+                                <i class="close"
+                                   ng-click="deleteAttachment(attachment.filename)">
+                                </i>
+                            </td>
+                        </tr>
+                    </table>
+                </section>
+                <section ng-if="hasHomonymes === true">
+                    <div class="twelve cell bold"><i18n>import.homonyme.detected</i18n></div>
+                    <div class="twelve cell"><i18n>import.homonyme.message</i18n></div>
+                    <div class="no-margin removable" ng-repeat="object in homonymes">
+                        <article>
+                            <div class="title twelve">
+                                <i18n>in.file</i18n>
+                                <span class="bold">[[object.filename]]</span>
+                            </div>
+                            <ul>
+                                <li ng-repeat="eleve in object.eleves">
+                                    [[eleve.firstName]]&nbsp;[[eleve.lastName]],&nbsp;<i18n>viescolaire.utils.classes</i18n>&nbsp;[[eleve.classesName]]
+                                </li>
+                            </ul>
+                        </article>
+                    </div>
+                </section>
+            </div>
+            <div ng-show="hasHomonymes === true" class="twelve cell">
+                <input class="right-magnet" type="button"
+                       ng-click="clearHomonymes();"
+                       i18n-value="evaluations.devoir.ok">
+            </div>
+            <div ng-show="hasHomonymes === false" class="twelve cell">
+                <input class="right-magnet" type="button"
+                       ng-disabled="attachments.length === 0 "
+                       ng-click="importAttachments(attachments)"
+                       i18n-value="import.file">
+            </div>
+        </article>
+    </div>
+
+</div>

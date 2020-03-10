@@ -9,9 +9,11 @@ public interface BilanPeriodiqueService {
     /**
      * Récupère les retards et absences d'un élève
      * @param idEleve
+     * @param idStructure
+     * @param idClasse
      * @param eitherHandler
      */
-    void getRetardsAndAbsences(String idEleve, Handler<Either<String, JsonArray>> eitherHandler);
+    void getRetardsAndAbsences(String idStructure, String idClasse, String idEleve, Handler<Either<String, JsonArray>> eitherHandler);
 
     /**
      * Récupères les données pour le suivi des acquis d'un élève

@@ -23,15 +23,15 @@ import fr.openent.competences.service.TransitionService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultTransitionService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
-import fr.wseduc.rs.ApiDoc;
-import fr.wseduc.rs.Get;
-import fr.wseduc.rs.Post;
-import fr.wseduc.rs.Put;
+import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
+import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -43,14 +43,12 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
+
+import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static org.entcore.common.http.response.DefaultResponseHandler.*;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
-import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -61,8 +59,8 @@ public class UtilsController extends ControllerHelper {
     private final TransitionService transitionService;
     private final Storage storage;
 
-    public UtilsController( Storage storage) {
-        utilsService = new DefaultUtilsService();
+    public UtilsController( Storage storage, EventBus eb) {
+        utilsService = new DefaultUtilsService(eb);
         transitionService = new DefaultTransitionService();
         this.storage = storage;
     }
@@ -281,5 +279,74 @@ public class UtilsController extends ControllerHelper {
         });
     }
 
+    /**
+     * Retourne l'activation de la structure du module présences ainsi que l'activation de la récupération des retards/absences du module présence
+     * @param request
+     */
+    @Get("/init/sync/presences")
+    @ApiDoc("Retourne la liste des identifiants des structures de l'utilisateur la récupération des absences/retards du module presences est activée")
+    @SecuredAction(value="", type = ActionType.AUTHENTICATED)
+    public void initRecuperationAbsencesRetardsFromPresences(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if(user != null && request.params().contains("structureId")){
+                    final String structureId = request.params().get("structureId");
+                    // Récupération de l'état d'activation du module présences de l'établissement
+                    Future<JsonObject> activationFuture = Future.future();
+                    utilsService.getActiveStatePresences(structureId,event -> formate(activationFuture,event));
+
+                    // Récupération de l'état de la récupération des données du modules présences
+                    Future<JsonObject> syncFuture = Future.future();
+                    utilsService.getSyncStatePresences(structureId,event -> formate(syncFuture,event));
+
+                    CompositeFuture.all(syncFuture, activationFuture).setHandler(
+                            event -> {
+                                if(event.failed()){
+                                    String error = event.cause().getMessage();
+                                    log.error("[initRecuperationAbsencesRetardsFromPresences] : " + error);
+                                    badRequest(request, "[initRecuperationAbsencesRetardsFromPresences] : " + error);
+                                } else{
+                                    JsonObject activationState = activationFuture.result();
+                                    JsonObject syncState = syncFuture.result();
+                                    JsonObject result = activationState.mergeIn(syncState);
+                                    Renders.renderJson(request, result);
+                                }
+                            });
+                }else{
+                    badRequest(request);
+                }
+            }
+        });
+    }
+
+
+    /**
+     * Active ou désactive la récupération des absences/retards de presences sur compétences pour une structure donnée
+     * @param request
+     */
+    @Post("/sync/presences")
+    @ApiDoc("Active la récupération des absences/retards de presences sur compétences pour une structure donnée")
+    @SecuredAction(value="", type = ActionType.AUTHENTICATED)
+    public void activateStructureRecuperationAbsencesRetardsFromPresences(final HttpServerRequest request){
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                RequestUtils.bodyToJson(request, new Handler<JsonObject>() {
+                    @Override
+                    public void handle(JsonObject body) {
+                        if(user != null && body.containsKey("structureId") && body.containsKey("state")){
+                            final String structureId = body.getString("structureId");
+                            final Boolean state = body.getBoolean("state");
+                            Handler<Either<String, JsonObject>> handler = defaultResponseHandler(request);
+                            utilsService.activeDeactiveSyncStatePresences(structureId, state, handler);
+                        }else{
+                            badRequest(request);
+                        }
+                    }
+                });
+            }
+        });
+    }
 
 }
