@@ -678,7 +678,9 @@ public class NoteController extends ControllerHelper {
                     List<String> idDevoirsList = request.params().getAll("devoirs");
                     String idEleve = request.params().get("idEleve");
                     String idMatiere = request.params().get("idMatiere");
-                    Long idPeriode = Long.valueOf(request.params().get("idPeriode"));
+                    Long idPeriode = null;
+                    if(request.params().get("idPeriode") != null)
+                        idPeriode = Long.valueOf(request.params().get("idPeriode"));
 
                     Long[] idDevoirsArray = new Long[idDevoirsList.size()];
 
@@ -696,6 +698,7 @@ public class NoteController extends ControllerHelper {
                     notesService.getNotesParElevesParDevoirs(new String[]{idEleve}, idDevoirsArray,
                             notesEvent -> formate(notesFuture, notesEvent));
 
+                    Long finalIdPeriode = idPeriode;
                     CompositeFuture.all(notesFuture, moyenneFinaleFuture)
                             .setHandler(event -> {
                                 if (event.failed()) {
@@ -705,7 +708,7 @@ public class NoteController extends ControllerHelper {
                                     JsonArray moyenneFinaleArray = moyenneFinaleFuture.result();
                                     List<NoteDevoir> notes = new ArrayList<>();
 
-                                    if(!moyenneFinaleArray.isEmpty()){
+                                    if(!moyenneFinaleArray.isEmpty() && finalIdPeriode != null){
                                         JsonObject moyenneFinale = moyenneFinaleArray.getJsonObject(0);
                                         if(isNull(moyenneFinale.getValue("moyenne")))
                                             Renders.renderJson(request,new JsonObject().put("moyenne", "NN").put("hasNote", false));

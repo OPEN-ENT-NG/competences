@@ -1,5 +1,5 @@
 <div ng-show="checkHaveResult()">
-    <div class="responsive-table">
+    <div class="responsive-table" ng-class="{'releveNotes-noBorder': $location.path() === '/competences/eleve'}">
         <table navigable>
             <thead>
             <tr>

@@ -50,14 +50,14 @@ export let releveController = ng.controller('ReleveController', [
                     } else {
                         id_eleve = $scope.eleve.id;
                     }
-                    PromisesMoy.push( utils.getMoyenne(id_eleve, matiere, devoirsMatieres));
+                    PromisesMoy.push( utils.getMoyenne(id_eleve, matiere, $scope.searchReleve.periode.id_type, devoirsMatieres));
 
                     if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
 
                         for (let sousMat of matiere.sousMatieres.all) {
                             let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
                             if (devoirsSousMat.length > 0) {
-                                PromisesMoy.push( utils.getMoyenne(id_eleve, sousMat, devoirsSousMat));
+                                PromisesMoy.push( utils.getMoyenne(id_eleve, sousMat, $scope.searchReleve.periode.id_type, devoirsSousMat));
 
                             } else {
                                 sousMat.moyenne = "";
@@ -80,7 +80,7 @@ export let releveController = ng.controller('ReleveController', [
             await Utils.runMessageLoader($scope);
             let eleve = $scope.searchReleve.eleve;
             let idPeriode = undefined;
-            if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id !== null) {
+            if ($scope.searchReleve.periode !== null && $scope.searchReleve.periode.id_type !== null && $scope.searchReleve.periode.id_type !== -1) {
                 idPeriode = $scope.searchReleve.periode.id_type;
             }
             //let idClasse = (eleve.classe!==undefined)?eleve.classe.id : undefined;

@@ -208,7 +208,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.classe = new Classe({id: eleve.idClasse});
                     await eleve.classe.sync();
                     await $scope.setCurrentPeriode();
-                    if (withSyncDevoir === true) {
+                    if (withSyncDevoir === true && $location.path() !== "/releve") {
                         await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined);
                     }
                     $scope.search.periode = evaluations.periode;

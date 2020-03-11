@@ -26,7 +26,7 @@ export function average (arr) {
         }, 0) / (arr.length === 0 ? 1 : arr.length);
 }
 
-export function   getMoyenne (id_eleve, matiere, devoirs?) : Promise<any> {
+export function   getMoyenne (id_eleve, matiere,idPeriode, devoirs?) : Promise<any> {
      return new Promise((resolve, reject) => {
         if (devoirs) {
             let idDevoirsURL = "";
@@ -36,9 +36,10 @@ export function   getMoyenne (id_eleve, matiere, devoirs?) : Promise<any> {
             });
             idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
 
-            idDevoirsURL += "&idMatiere="+matiere.id;
-
-            idDevoirsURL += "&idPeriode="+devoirs[0].id_periode.toString();
+            if(matiere && matiere.id)
+                idDevoirsURL += "&idMatiere="+matiere.id;
+            if(idPeriode)
+                idDevoirsURL += "&idPeriode="+idPeriode.toString();
 
             http().getJson('/competences/eleve/' + id_eleve + "/moyenne?" + idDevoirsURL).done((res) =>{
                 if (!res.error) {
