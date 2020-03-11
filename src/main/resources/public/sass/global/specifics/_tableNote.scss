@@ -16,7 +16,7 @@ body.evaluations {
   .note-table{
     font-size: 0.8em;
     overflow-x: scroll;
-    display: inline;
+    margin-top: 80px;
     table{
       border: solid 1px $greyBorder;
       tr:nth-child(even) {background-color: $greyRow}

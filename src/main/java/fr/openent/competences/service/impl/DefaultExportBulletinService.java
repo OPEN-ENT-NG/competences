@@ -441,7 +441,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         try {
             if (!answered.get()) {
                 putLibelleForExport(idEleve, elevesMap, params, finalHandler);
-                getEvenements(idEleve, elevesMap, idPeriode, finalHandler);
+                getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE), idEleve, elevesMap, idPeriode, finalHandler);
                 getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
                 getStructure(idEleve, elevesMap.get(idEleve), finalHandler);
                 getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
@@ -1440,17 +1440,22 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     }
 
     @Override
-    public void getEvenements(String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
+    public void getEvenements(String idStructure, String idClasse, String idEleve,Map<String, JsonObject> elevesMap, Long idPeriode,
                               Handler<Either<String, JsonObject>> finalHandler ) {
 
         logBegin(GET_EVENEMENT_METHOD, idEleve);
         JsonObject eleveObject = elevesMap.get(idEleve);
-        if (eleveObject == null) {
-            logStudentNotFound(idEleve, GET_EVENEMENT_METHOD);
+        if (eleveObject == null || idStructure == null || idClasse == null) {
+            if(eleveObject == null)
+                logStudentNotFound(idEleve, GET_EVENEMENT_METHOD);
+            else if (idStructure == null)
+                logidEtabNotFound(idEleve,GET_EVENEMENT_METHOD);
+            else
+                logidClasseNotFound(idEleve,GET_EVENEMENT_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         }
         else {
-            bilanPeriodiqueService.getRetardsAndAbsences(idEleve, new Handler<Either<String, JsonArray>>() {
+            bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, new Handler<Either<String, JsonArray>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
@@ -1461,7 +1466,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
 
                         if (message.contains(TIME) && !answer.get()) {
                             count++;
-                            bilanPeriodiqueService.getRetardsAndAbsences(idEleve, this);
+                            bilanPeriodiqueService.getRetardsAndAbsences(idStructure, idClasse, idEleve, this);
 
                         }
                         else {

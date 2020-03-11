@@ -3068,14 +3068,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param eleve élève
          */
         $scope.getEleveInfo = async function (eleve) {
-            if(Utils.isNull(eleve) || Utils.isNull(eleve.getEvenements)){
+            if(Utils.isNull(eleve)){
                 return;
             }
             $scope.showInfosEleve = true;
             template.close('leftSide-userInfo');
             await utils.safeApply($scope);
             let idPeriode = (Utils.isNotNull($scope.search.periode)?$scope.search.periode.id_type: null);
-            let allPromise = [eleve.getEvenements(), $scope.getAvatar(eleve)];
+            let allPromise = [eleve.getEvenements($scope.structure.id), $scope.getAvatar(eleve)];
             if(Utils.isNotNull(idPeriode)) {
                 eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
                 allPromise.push(eleve.appreciationCPE.syncAppreciationCPE());
@@ -3943,11 +3943,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.initMoyenneFinale = function (eleve) {
-            if (eleve.moyenneFinale === undefined || eleve.moyenneFinale === null) {
+            if (eleve.moyenneFinale === undefined) {
                 eleve.moyenneFinale = eleve.moyenne;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
                 eleve.moyenneFinaleIsSet = false;
             }else{
+                if(eleve.moyenneFinale === null)
+                    eleve.moyenneFinale = "NN";
                 eleve.moyenneFinaleIsSet = true;
                 eleve.oldMoyenneFinale = eleve.moyenneFinale;
             }
@@ -4000,10 +4002,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 }
                 let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
                 if (reg.test(eleve.moyenneFinale) && parseFloat(eleve.moyenneFinale) <= 20 ||
-                    eleve.moyenneFinale === ""){
-                    if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.moyenneFinale !== "") {
+                    eleve.moyenneFinale === "" || eleve.moyenneFinale === "NN"){
+                    if(eleve.oldMoyenneFinale !== parseFloat(eleve.moyenneFinale) || eleve.oldMoyenneFinale !== eleve.moyenneFinale
+                        || eleve.moyenneFinale !== "") {
 
-                        if(eleve.oldMoyenneFinale != parseFloat(eleve.moyenneFinale)) {
+                        if(eleve.oldMoyenneFinale != parseFloat(eleve.moyenneFinale) || eleve.oldMoyenneFinale !== eleve.moyenneFinale) {
                             $scope.releveNote.saveMoyenneFinaleEleve(eleve).then(() => {
                                 eleve.moyenneFinaleIsSet = true;
                                 eleve.oldMoyenneFinale = eleve.moyenneFinale ;

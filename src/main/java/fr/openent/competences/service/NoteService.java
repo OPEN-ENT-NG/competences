@@ -190,11 +190,13 @@ public interface NoteService extends CrudService {
      * calcul la moyenne de la classe pour une période
      * @param allNotes allNotes
      * @param moyFinalesElevesByPeriode moyFinalesElevesByPeriode
+     * @param moyFinalesNN  moyFinalesNNElevesByPeriode
      * @param idPeriode idPeriode
      * @return la moyenne
      */
     Double calculMoyenneClasseByPeriode(ArrayList<NoteDevoir> allNotes,
                                         Map<Long, Map<String, Double>> moyFinalesElevesByPeriode,
+                                        Map<Long, List<String>> moyFinalesNNElevesByPeriode,
                                         Long idPeriode);
 
     /**

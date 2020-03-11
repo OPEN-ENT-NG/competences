@@ -218,12 +218,10 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 return;
             }
             await utils.safeApply($scope);
-            $scope.canUpdateRetardAndAbscence = model.me.hasWorkflow(
-                Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbscence) && finSaisieBilan;
 
             $scope.canSaisiAppreciationCPE = Utils.canSaisiAppreciationCPE() && finSaisieBilan;
             if (_.isEmpty($scope.search.eleve.evenements)) {
-                await $scope.search.eleve.getEvenements();
+                await $scope.search.eleve.getEvenements($scope.structure.id);
                 await $scope.setHistoriqueEvenement();
             }
             else {
@@ -234,8 +232,16 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 await $scope.elementBilanPeriodique.appreciationCPE.syncAppreciationCPE();
                 await utils.safeApply($scope);
                 template.open('vie-scolaire', 'enseignants/bilan_periodique/display_vie_scolaire');
-                await utils.safeApply($scope);
             }
+            let fromPresences = false;
+            if(!_.isEmpty($scope.search.eleve.evenements))
+                if($scope.search.eleve.evenements[0].from_presences)
+                    fromPresences = true;
+
+            $scope.canUpdateRetardAndAbscence = model.me.hasWorkflow(
+                Behaviours.applicationsBehaviours.competences.rights.workflow.canUpdateRetardAndAbscence)
+                && finSaisieBilan && !fromPresences;
+            await utils.safeApply($scope);
         };
 
         $scope.setHistoriqueEvenement = async function () {

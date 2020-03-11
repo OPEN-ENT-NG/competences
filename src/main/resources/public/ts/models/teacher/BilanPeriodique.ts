@@ -213,7 +213,8 @@ export class BilanPeriodique extends  Model {
     }
 
     private async getSubjects(subjectsSent:Array<Matiere>):Promise<any | Error>{
-        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent.map((subject:Matiere):Boolean=>subject.id).join(",")}`);
+        const {data, status}:AxiosResponse = await http.get(`${BilanPeriodique.api.GET_SUBJECTS}${subjectsSent
+            .map((subject:Matiere):Boolean=>subject.id).join(",")}`);
         if(status === 200) return data;
         throw new Error("getAppraisals");
     }
@@ -262,7 +263,7 @@ export class BilanPeriodique extends  Model {
         }
     };
 
-    private makerHearderWithTeachersAndSubjects (data:any):Array<any>{
+    private makerHeaderWithTeachersAndSubjects (data:any, teacherBysubject):Array<any>{
         let matchingDataApi:Array<any> = [];
         const homeworks:Array<any> = data.homeworks;
         const statistics:any = data.synthesis.statistiques;
@@ -275,7 +276,8 @@ export class BilanPeriodique extends  Model {
                     matchingDataApi.push({
                         idSubject: subjectId,
                         average: statistics[subjectId].moyenne,
-                        teacherName: homeworks[k].teacher,
+                        teacherName: teacherBysubject && teacherBysubject[subjectId] && teacherBysubject[subjectId].displayName ?
+                            teacherBysubject[subjectId].displayName : undefined,
                         subjectName: subject? subject.name : undefined,
                         subjectShortName:  subject? subject.libelle_court : undefined,
                     });
@@ -286,10 +288,10 @@ export class BilanPeriodique extends  Model {
         return matchingDataApi;
     }
 
-    private async createHeaderTable (data){
+    private async createHeaderTable (data, teacherBysubject){
         if(!Object.keys(data).map( element => data[element]).some(array => array.length > 0)) return [];
         let resultHeader:Array<any> = [];
-        const dataSynthesis = await this.makerHearderWithTeachersAndSubjects(data);
+        const dataSynthesis = await this.makerHeaderWithTeachersAndSubjects(data, teacherBysubject);
         resultHeader =  [
             {
                 idSubject: undefined,
@@ -297,11 +299,14 @@ export class BilanPeriodique extends  Model {
                 teacherName: undefined,
             },
             ...dataSynthesis.map(subjectToSynthesis => {
-                const [lastName, firstName ] = subjectToSynthesis.teacherName.split(" ");
+                let lastName, firstName;
+                if( subjectToSynthesis.teacherName){
+                    [lastName, firstName ] = subjectToSynthesis.teacherName.split(" ");
+                }
                 return {
                     idSubject: subjectToSynthesis.idSubject,
                     subjectName: subjectToSynthesis.subjectShortName,
-                    teacherName: Utils.makeShortName(lastName, firstName),
+                    teacherName: subjectToSynthesis.teacherName ? Utils.makeShortName(lastName, firstName) : "",
                 }
             }),
             {
@@ -393,8 +398,8 @@ export class BilanPeriodique extends  Model {
         return result;
     }
 
-    public async getAverage (data:any):Promise<any>{
-        const headerTable = await this.createHeaderTable(data);
+    public async getAverage (data:any, teacherBysubject):Promise<any>{
+        const headerTable = await this.createHeaderTable(data, teacherBysubject);
         if(headerTable)
             return {
                 headerTable: headerTable,

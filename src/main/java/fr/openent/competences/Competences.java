@@ -279,7 +279,7 @@ public class Competences extends BaseServer {
 		addController(new NoteController(eb));
 		addController(new RemplacementController());
         addController(new ElementProgrammeController());
-		addController(new UtilsController(storage));
+		addController(new UtilsController(storage,eb));
         addController(new BilanPeriodiqueController(eb));
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));

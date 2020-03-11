@@ -2424,7 +2424,7 @@ public class LSUController extends ControllerHelper {
                             });
 
 
-                    bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getIdNeo4j(),
+                    bilanPeriodiqueService.getRetardsAndAbsences(idStructure, currentEleve.getId_Class(), currentEleve.getIdNeo4j(),
                             new Handler<Either<String, JsonArray>>() {
                                 AtomicBoolean answer = new AtomicBoolean(false);
                                 AtomicInteger count = new AtomicInteger(0);
@@ -2436,7 +2436,8 @@ public class LSUController extends ControllerHelper {
                                         String error = eventViesco.left().getValue();
                                         if(error != null && error.contains(TIME)){
                                             if(!getRetardsAndAbsencesFuture.isComplete()) {
-                                                bilanPeriodiqueService.getRetardsAndAbsences(currentEleve.getIdNeo4j(),
+                                                bilanPeriodiqueService.getRetardsAndAbsences(idStructure,
+                                                        currentEleve.getId_Class(),currentEleve.getIdNeo4j(),
                                                         this);
                                             }
                                             else {
@@ -2694,18 +2695,17 @@ public class LSUController extends ControllerHelper {
                                     JsonObject moyClasse = utilsService.getObjectForPeriode(moyennesClasse,
                                             (long) currentPeriode.getTypePeriode(), "id");
                                     //Moyenne Eleve
-                                    String valueMoyEleve = new String();
+                                    String valueMoyEleve;
                                     if (moyEleve != null) {
-                                        valueMoyEleve = (moyFinale != null) ? moyFinale.getValue("moyenneFinale") + "/20" :
-                                                moyEleve.getValue("moyenne") + "/20";
-
+                                        valueMoyEleve = (moyFinale != null) ? ((moyFinale.getValue("moyenneFinale") == "NN") ? "NN" : moyFinale.getValue("moyenneFinale") + "/20") :
+                                                    moyEleve.getValue("moyenne") + "/20";
                                     } else {
-                                        valueMoyEleve = (moyFinale != null) ? moyFinale.getValue("moyenneFinale") + "/20" :
-                                                "NN";
+                                        valueMoyEleve = (moyFinale != null) ? ((moyFinale.getValue("moyenneFinale") == "NN") ? "NN" : moyFinale.getValue("moyenneFinale") + "/20")  :
+                                                    "NN";
                                     }
                                     acquisEleve.setMoyenneEleve(valueMoyEleve);
                                     //MoyenneClasse
-                                    String valueMoyClasse = new String();
+                                    String valueMoyClasse;
                                     valueMoyClasse = (moyClasse != null) ? moyClasse.getValue("moyenne") + "/20" :
                                             "NN";
                                     acquisEleve.setMoyenneStructure(valueMoyClasse);

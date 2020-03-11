@@ -52,6 +52,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.utils.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -630,37 +631,37 @@ public class NoteController extends ControllerHelper {
         if (!idEtablissement.equals("undefined") && !idClasse.equals("undefined")
                 && !request.params().get("idPeriode").equals("undefined")) {
             Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> responseQuerry) {
-                            if (responseQuerry.isLeft()) {
-                                String error = responseQuerry.left().getValue();
-                                log.error(error);
-                                handler.handle(new Either.Left<>(error));
-                            } else {
-                                JsonArray idClasseGroups = responseQuerry.right().getValue();
-                                //List qui contient la idClasse + tous les ids groupes de la classe
-                                if (idClasseGroups.isEmpty()) {
-                                    String[] idsGroups = new String[1];
-                                    idsGroups[0] = idClasse;
-                                    devoirsService.listDevoirs(null, idsGroups, null,
-                                            new Long[]{idPeriode}, new String[]{idEtablissement}, null,
-                                            null, false, handler);
-                                } else {
-                                    String[] idsGroups = new String[idClasseGroups.getJsonObject(0)
-                                            .getJsonArray("id_groupes").size() + 1];
-                                    idsGroups[0] = idClasseGroups.getJsonObject(0).getString("id_classe");
-                                    for (int i = 0; i < idClasseGroups.getJsonObject(0)
-                                            .getJsonArray("id_groupes").size(); i++) {
-                                        idsGroups[i + 1] = idClasseGroups.getJsonObject(0)
-                                                .getJsonArray("id_groupes").getString(i);
-                                        devoirsService.listDevoirs(null, idsGroups, null,
-                                                new Long[]{idPeriode}, new String[]{idEtablissement}, null,
-                                                null, false, handler);
-                                    }
-                                }
+                @Override
+                public void handle(Either<String, JsonArray> responseQuerry) {
+                    if (responseQuerry.isLeft()) {
+                        String error = responseQuerry.left().getValue();
+                        log.error(error);
+                        handler.handle(new Either.Left<>(error));
+                    } else {
+                        JsonArray idClasseGroups = responseQuerry.right().getValue();
+                        //List qui contient la idClasse + tous les ids groupes de la classe
+                        if (idClasseGroups.isEmpty()) {
+                            String[] idsGroups = new String[1];
+                            idsGroups[0] = idClasse;
+                            devoirsService.listDevoirs(null, idsGroups, null,
+                                    new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                    null, false, handler);
+                        } else {
+                            String[] idsGroups = new String[idClasseGroups.getJsonObject(0)
+                                    .getJsonArray("id_groupes").size() + 1];
+                            idsGroups[0] = idClasseGroups.getJsonObject(0).getString("id_classe");
+                            for (int i = 0; i < idClasseGroups.getJsonObject(0)
+                                    .getJsonArray("id_groupes").size(); i++) {
+                                idsGroups[i + 1] = idClasseGroups.getJsonObject(0)
+                                        .getJsonArray("id_groupes").getString(i);
+                                devoirsService.listDevoirs(null, idsGroups, null,
+                                        new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                        null, false, handler);
                             }
                         }
-                    });
+                    }
+                }
+            });
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }
@@ -676,6 +677,10 @@ public class NoteController extends ControllerHelper {
                 if (user != null) {
                     List<String> idDevoirsList = request.params().getAll("devoirs");
                     String idEleve = request.params().get("idEleve");
+                    String idMatiere = request.params().get("idMatiere");
+                    Long idPeriode = null;
+                    if(request.params().get("idPeriode") != null)
+                        idPeriode = Long.valueOf(request.params().get("idPeriode"));
 
                     Long[] idDevoirsArray = new Long[idDevoirsList.size()];
 
@@ -683,28 +688,48 @@ public class NoteController extends ControllerHelper {
                         idDevoirsArray[i] = Long.parseLong(idDevoirsList.get(i));
                     }
 
-                    notesService.getNotesParElevesParDevoirs(new String[]{idEleve}, idDevoirsArray, new Handler<Either<String, JsonArray>>() {
-                        @Override
-                        public void handle(Either<String, JsonArray> event) {
-                            if (event.isRight()) {
-                                JsonArray notesEleve = event.right().getValue();
-                                List<NoteDevoir> notes = new ArrayList<>();
+                    // Récupération des moyennes finales
+                    Future<JsonArray> moyenneFinaleFuture = Future.future();
+                    notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, idMatiere, null, "moyenne",
+                            moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
-                                for (int i = 0; i < notesEleve.size(); i++) {
-                                    JsonObject note = notesEleve.getJsonObject(i);
-                                    if(note.getString("coefficient") != null) {
-                                        notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur")),
-                                                Double.parseDouble(note.getInteger("diviseur").toString()),
-                                                note.getBoolean("ramener_sur"),
-                                                Double.parseDouble(note.getString("coefficient"))));
+                    // Récupération des notes des devoirs
+                    Future<JsonArray> notesFuture = Future.future();
+                    notesService.getNotesParElevesParDevoirs(new String[]{idEleve}, idDevoirsArray,
+                            notesEvent -> formate(notesFuture, notesEvent));
+
+                    Long finalIdPeriode = idPeriode;
+                    CompositeFuture.all(notesFuture, moyenneFinaleFuture)
+                            .setHandler(event -> {
+                                if (event.failed()) {
+                                    renderError(request, new JsonObject().put("error",request.params()));
+                                }else {
+                                    JsonArray notesEleve = notesFuture.result();
+                                    JsonArray moyenneFinaleArray = moyenneFinaleFuture.result();
+                                    List<NoteDevoir> notes = new ArrayList<>();
+
+                                    if(!moyenneFinaleArray.isEmpty() && finalIdPeriode != null){
+                                        JsonObject moyenneFinale = moyenneFinaleArray.getJsonObject(0);
+                                        if(isNull(moyenneFinale.getValue("moyenne")))
+                                            Renders.renderJson(request,new JsonObject().put("moyenne", "NN").put("hasNote", false));
+                                        else
+                                            Renders.renderJson(request, new JsonObject().put("moyenne", moyenneFinale.getValue("moyenne"))
+                                                    .put("hasNote", true));
+
+                                    }else{
+                                        for (int i = 0; i < notesEleve.size(); i++) {
+                                            JsonObject note = notesEleve.getJsonObject(i);
+                                            if(note.getString("coefficient") != null) {
+                                                notes.add(new NoteDevoir(Double.parseDouble(note.getString("valeur")),
+                                                        Double.parseDouble(note.getInteger("diviseur").toString()),
+                                                        note.getBoolean("ramener_sur"),
+                                                        Double.parseDouble(note.getString("coefficient"))));
+                                            }
+                                        }
+                                        Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20,false));
                                     }
                                 }
-                                Renders.renderJson(request, utilsService.calculMoyenne(notes, false, 20,false));
-                            } else {
-                                renderError(request, new JsonObject().put("error", event.left().getValue()));
-                            }
-                        }
-                    });
+                            });
                 }
             }
         });

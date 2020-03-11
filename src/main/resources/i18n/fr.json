@@ -706,6 +706,18 @@
   "viesco.switchEvealuation.message2": " et seront automatiquement rattachés à la sous matière",
   "viesco.switchEvealuation.message3": " Confirmez-vous ?",
   "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
+
+  "activated.data.recuperation.from.presences": "Récupérer les données de l'application Présences pour le conseil de classe et le bulletin",
+  "importation.in.process": "Import en cours...",
+  "import.add.file": "Ajouter un fichier",
+  "format.attachment": "format accepté",
+  "taille.max.attachment": "taille maximale acceptée",
+  "import.homonyme.detected": "HOMONYMES DETECTÉS",
+  "import.homonyme.message": " Les retards et absences des élèves suivants n'ont pas été insérés car des homonymes ont été détectés : ",
+  "in.file": "Dans le fichier ",
+  "viescolaire.utils.classes": "classes",
+
+  "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
   "competance.error.iframe.statusText": "Le contenue est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",

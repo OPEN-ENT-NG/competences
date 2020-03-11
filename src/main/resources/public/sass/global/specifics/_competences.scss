@@ -3346,6 +3346,8 @@ body.evaluations {
   }
   .releveNotes-suiviEleve{
     overflow: overlay;
+  }
+  .releveNotes-noBorder{
     border: none !important;
   }
   .encartBlanc-suiviEleve{
@@ -3375,6 +3377,9 @@ body.evaluations {
   .light-font-header{
     font-weight: 100!important;
     font-size: 0.9em;
+  }
+  .margin-loader{
+    margin-bottom: 10px;
   }
 }
 

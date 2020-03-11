@@ -131,9 +131,9 @@ export class Eleve extends DefaultEleve  {
         }
     }
 
-    getEvenements () {
+    getEvenements (idStructure:string) {
         return new Promise( ((resolve) => {
-            httpCore().getJson(this.api.GET_RETARDS_AND_ABSENCES).done( (res) => {
+            httpCore().getJson(this.api.GET_RETARDS_AND_ABSENCES+`?idEtablissement=${idStructure}&idClasse=${this.idClasse}`).done( (res) => {
                 if (!res.error) {
                     this.evenements = res;
                     resolve ();

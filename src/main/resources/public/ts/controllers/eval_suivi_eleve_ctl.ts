@@ -1258,14 +1258,14 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 let PromisesMoy = [];
                 if (devoirsMatieres !== undefined) {
                     let id_eleve = $scope.search.eleve.id;
-                    PromisesMoy.push( utils.getMoyenne(id_eleve, matiere, devoirsMatieres));
+                    PromisesMoy.push( utils.getMoyenne(id_eleve, matiere, $scope.search.periode.id_type, devoirsMatieres));
 
                     if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
 
                         for (let sousMat of matiere.sousMatieres.all) {
                             let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
                             if (devoirsSousMat.length > 0) {
-                                PromisesMoy.push( utils.getMoyenne(id_eleve, sousMat, devoirsSousMat));
+                                PromisesMoy.push( utils.getMoyenne(id_eleve, sousMat, $scope.search.periode.id_type, devoirsSousMat));
 
                             } else {
                                 sousMat.moyenne = "";
