@@ -125,7 +125,6 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     $scope.search.classe.filterEvaluableEleve($scope.search.periode)
                     , $scope.search.periode, $scope.structure);
                 $scope.isShowDownloadButton = true;
-                $scope.isDownloadWaiting = false;
                 cleanScopeTabs();
                 await $scope.selectDisplayClassTabs($scope.displayFollowCompetencesClass);
                 await Utils.stopMessageLoader($scope);
@@ -589,7 +588,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         const defaultFinallyDownload = (isExportFinish:boolean | undefined):void => {
-            $scope.isDownloadWaiting = false;
+            $scope.loadingTab = false;
             if(isExportFinish !== undefined){
                 isExportFinish?
                     notify.success('evaluations.export.bulletin.success'):
@@ -646,7 +645,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         && $scope.displayFollowCompetencesClass === 'positioning');
                     fileDownloadName.pdf = 'printRecapEval';
                     $scope.isUseLinkForPdf = true;
-                    positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
+                    await positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
                     await initTabClass('positioning');
                     break;
                 case ('average'):
@@ -686,7 +685,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                 }
             });
             return teacherBysubject;
-        }
+        };
 
         const positioningCsvData = async (idPeriod:number, idClass:string):Promise<boolean> => {
             try {
@@ -716,7 +715,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
 
         $scope.downloadFileWithType = async (formatType:string):Promise<void> => {
             $scope.openLighBoxChosePdfCsv = false;
-            $scope.isDownloadWaiting = true;
+            $scope.loadingTab = true;
             switch(formatType) {
                 case 'csv':
                     await cvsLaunch(formatType);
@@ -730,7 +729,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         const defaultSwitch = ():void => {
-            cleanScopeTabs()
+            cleanScopeTabs();
             fileDownloadName.pdf = undefined;
             fileDownloadName.csv = undefined;
             $location.path('/competences');

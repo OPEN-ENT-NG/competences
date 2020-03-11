@@ -273,13 +273,9 @@
     </div>
     <button class="button-download"
             ng-disabled="isDownloadWaiting"
-            ng-if="isDataOnPage && !isDownloadWaiting"
             ng-click="downloadContent()">
         <i class="download"></i>
     </button>
-    <div ng-if="isDownloadWaiting"
-         class="loaderGraph button-download margin-loader">
-    </div>
     <div class="warning half-width"
          ng-if="errorWhenExportPdf">
         <i18n>competance.information.noExport</i18n>
