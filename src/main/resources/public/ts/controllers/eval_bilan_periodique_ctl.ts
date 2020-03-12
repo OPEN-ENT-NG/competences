@@ -574,8 +574,7 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
         $scope.filterAvis = function (param) {
             return (avis) => {
-                if(param.some(x => x === avis.type_avis &&
-                    (avis.id_etablissement === null || avis.id_etablissement === $scope.structure.id))){
+                if(param.some(x => x === avis.type_avis && avis.active)){
                     return avis;
                 }
             }

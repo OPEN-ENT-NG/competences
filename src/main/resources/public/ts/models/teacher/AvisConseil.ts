@@ -22,7 +22,7 @@ export class AvisConseil extends DefaultAvis {
 
     async getLibelleAvis () {
         try {
-            let data = await http.get(`/competences/avis/bilan/periodique`);
+            let data = await http.get(`/competences/avis/bilan/periodique?id_structure=${this.id_structure}`);
             if(data.data !== undefined) {
                 this.avis = data.data;
 
@@ -30,6 +30,7 @@ export class AvisConseil extends DefaultAvis {
                     id: 0,
                     libelle: "-- Personnalisé --",
                     type_avis: 0,
+                    active: true,
                     id_etablissement: null
                 };
                 this.avis.push(perso);

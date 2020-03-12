@@ -23,6 +23,7 @@ import {visibilityDNB} from "./sniplets/visibilityDNB";
 import {bilanPeriodique} from "./sniplets/bilanPeriodique";
 import {paramServices} from './sniplets/paramServices'
 import {renameSubject} from "./sniplets/renameSubject";
+import {opinionConference} from "./sniplets/opinionConference";
 import {paramImportCSV} from "./sniplets/param_import_csv";
 
 Behaviours.register('competences', {
@@ -59,6 +60,7 @@ Behaviours.register('competences', {
         epi_ap_parcours: bilanPeriodique,
         paramServices : paramServices,
         renameSubject: renameSubject,
-        param_import_csv: paramImportCSV
+        param_import_csv: paramImportCSV,
+        opinionConference: opinionConference
     }
 });

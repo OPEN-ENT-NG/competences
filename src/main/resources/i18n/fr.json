@@ -275,6 +275,8 @@
   "evaluations.evaluation.avis.conseil" : "Avis conseil",
   "evaluations.evaluation.avis.orientation" : "Avis orientation",
   "evaluations.evaluation.avis.personalize" : "Personnaliser un avis",
+  "evaluations.evaluation.avis.conseil.create" : "Créer un avis conseil",
+  "evaluations.evaluation.avis.orientation.create" : "Créer un avis orientation",
   "evaluation.bilan.fin.cycle.successUpdateEnseignement":"Enseignement sauvegardé.",
   "evaluations.suivi.eleve.title":"Suivi élève",
   "evaluations.suivi.eleve.vue.liste":"Vue liste",
@@ -719,7 +721,6 @@
   "in.file": "Dans le fichier ",
   "viescolaire.utils.classes": "classes",
 
-  "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
   "competance.error.iframe.statusText": "Le contenue est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",
