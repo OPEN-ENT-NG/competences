@@ -617,9 +617,12 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
-        const getSubjectsNotesAppraisals = async (teacherBysubject):Promise<void> => {
+        const getSubjectsNotesAppraisals = async ():Promise<void> => {
+            const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
+                $scope.search.classe.id,
+                $scope.structure.enseignants.all);
             const dataSynthesisAndAppraisals:Array<any> = await bilanPeriodic.synthesisAndAppraisals( initResultPeriodic(), $scope, $scope.matieres.all);
-            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBysubject);
+            $scope.averagesClasses = await bilanPeriodic.getAverage(dataSynthesisAndAppraisals, teacherBySubject);
         };
 
         const cleanScopeTabs = () => {
@@ -649,7 +652,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     await initTabClass('positioning');
                     break;
                 case ('average'):
-                    if(!$scope.averagesClasses) await getSubjectsNotesAppraisals(getTeacherBySubject());
+                    if(!$scope.averagesClasses) await getSubjectsNotesAppraisals();
                     $scope.isDataOnPage = Object.keys($scope.averagesClasses)
                         .map( element => $scope.averagesClasses[element])
                         .some(array => array.length > 0);
@@ -671,20 +674,6 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     defaultSwitch();
             }
             $scope.loadingTab = false;
-        };
-
-        const getTeacherBySubject = () => {
-            let currentClass = _.chain($scope.classes.all)
-                .findWhere({id: $scope.search.classe.id})
-                .value();
-            let teacherBysubject = {};
-            let teachers = $scope.structure.enseignants.all;
-            currentClass.services.forEach(item => {
-                if(item && item.id_matiere && item.id_enseignant){
-                    teacherBysubject[item.id_matiere] = _.findWhere(teachers, {id:item.id_enseignant});
-                }
-            });
-            return teacherBysubject;
         };
 
         const positioningCsvData = async (idPeriod:number, idClass:string):Promise<boolean> => {

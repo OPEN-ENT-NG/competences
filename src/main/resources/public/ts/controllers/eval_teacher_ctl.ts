@@ -4652,7 +4652,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     });
                 }
                 $scope.releveNoteTotale = new ReleveNoteTotale(p);
-                await $scope.releveNoteTotale.export();
+                const teacherBySubject = utils.getTeacherBySubject($scope.classes.all,
+                    $scope.search.classe.id,
+                    $scope.structure.enseignants.all);
+                await $scope.releveNoteTotale.export(teacherBySubject);
                 await stopLoading();
                 notify.success('evaluations.export.bulletin.success');
             }
