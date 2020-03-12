@@ -52,7 +52,8 @@ export class ExportBulletins {
             withLevelsStudent : options.withLevelsStudent,
             withLevelsClass : options.withLevelsClass,
             mentionOpinion: options.mentionOpinion,
-            orientationOpinion: options.orientationOpinion
+            orientationOpinion: options.orientationOpinion,
+            agricultureLogo: options.agricultureLogo
         };
         if (Utils.isNotNull(options.idPeriode)){
             _.extend(o, {idPeriode: options.idPeriode, typePeriode: options.type});
