@@ -5,7 +5,6 @@ import * as utils from "../../utils/teacher";
 
 
 export let selectCycleForView = function ($scope, $location, id_cycle?) {
-
     let idCycle = id_cycle;
 
     if ($scope.currentDevoir && $location.path() === `/devoir/${$scope.currentDevoir.id}`) {

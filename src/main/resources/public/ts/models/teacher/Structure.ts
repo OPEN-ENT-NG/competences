@@ -162,13 +162,17 @@ export class Structure extends Model {
                                 that.usePerso = 'false';
                             }
                         }
-                        if (_.filter(niveauCompetences, {couleur: null}).length > 0 || defaut) {
+                        if (_.filter(niveauCompetences, {couleur: null}).length > 0 ||
+                            _.filter(niveauCompetences, {libelle: null}).length > 0 || defaut) {
                             niveauCompetences.forEach((niveauCompetence) => {
                                 if (niveauCompetence.couleur === null || defaut) {
                                     niveauCompetence.couleur = Defaultcolors[niveauCompetence.default];
                                 }
                                 if (niveauCompetence.lettre === null || defaut) {
                                     niveauCompetence.lettre = " ";
+                                }
+                                if(niveauCompetence.libelle === null || defaut) {
+                                    niveauCompetence.libelle = niveauCompetence.default_lib;
                                 }
                                 niveauCompetence.id_etablissement = this.composer.id;
                             });

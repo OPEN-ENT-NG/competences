@@ -59,7 +59,6 @@ public class NiveauDeMaitriseController extends ControllerHelper {
         UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
             @Override
             public void handle(UserInfos user) {
-
                 if (user != null) {
                     if (request.params().isEmpty()) {
                         badRequest(request);
@@ -67,7 +66,6 @@ public class NiveauDeMaitriseController extends ControllerHelper {
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                         String idEtablissement = request.params().get("idEtablissement");
                         niveauDeMaitriseService.getNiveauDeMaitrise(idEtablissement, null, handler);
-
                     }
                 }
             }
@@ -88,7 +86,6 @@ public class NiveauDeMaitriseController extends ControllerHelper {
                         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
                         String idUser = request.params().get("idUser");
                         niveauDeMaitriseService.getPersoNiveauMaitrise(idUser, handler);
-
                     }
                 }
             }

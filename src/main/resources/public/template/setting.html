@@ -16,22 +16,22 @@
   -->
 
 <div ng-if="structure.usePerso != 'noPerso'" id="volet_clos" ng-class="{opened: openSetting, closed: !openSetting}">
-    <div id="volet" ng-class="{opened: openSetting, closed: !openSetting}">
+    <div id="volet" ng-class="{opened: openSetting, closed: !openSetting}" class="itemFlex">
         <h2><i18n>evaluations.choose.themes</i18n></h2>
-            <p>
-                <input type="radio" ng-model="structure.usePerso" ng-change="updateNiveau(structure.usePerso)"
-                       value="false">
-                <span>
-                    <i18n>default</i18n>
-                </span>
-            </p>
-            <p>
-                <input type="radio" ng-model="structure.usePerso" ng-change="updateNiveau(structure.usePerso)"
-                       value="true">
-                <span>
-                    <i18n>custom</i18n>
-                </span>
-            </p>
+        <label>
+            <input type="radio" ng-model="structure.usePerso" ng-change="updateNiveau(structure.usePerso)"
+                   value="true"/>
+            <span>
+                <i18n>custom</i18n> (Moi)
+            </span>
+        </label>
+        <label>
+            <input type="radio" ng-model="structure.usePerso" ng-change="updateNiveau(structure.usePerso)"
+                   value="false"/>
+            <span>
+                <i18n>custom</i18n> (Etab)
+            </span>
+        </label>
         <a ng-click="openSetting=!openSetting" class="fermer"><i class="tools">
         </i></a>
     </div>
