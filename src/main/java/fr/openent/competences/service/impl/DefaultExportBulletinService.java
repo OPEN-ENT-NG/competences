@@ -88,6 +88,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     private static final String ID_CLASSE = "idClasse";
     private static final String ID_ELEVE = "id_eleve";
     public static final String ID_ETABLISSEMENT = "id_etablissement";
+    private static final String AGRICULTURE_LOGO = "agricultureLogo";
+    private static final String LOGO_PATH = "pathLogoImg";
     private static final String GET_RESPONSABLE = "getResponsable";
     private static final String MOYENNE = "moyenne";
     private static final String MOYENNE_CLASSE = "moyenneClasse";
@@ -426,7 +428,14 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(PRINT_COEFFICIENT, params.getBoolean(COEFFICIENT))
                     .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES))
                     .put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE))
-                    .put(NEUTRE, params.getBoolean(NEUTRE, false));
+                    .put(NEUTRE, params.getBoolean(NEUTRE, false))
+                    .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO));
+
+            if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
+                eleve.put(LOGO_PATH,"img/ministere_agriculture.png");
+            }else{
+                eleve.put(LOGO_PATH,"img/education_nationale.png");
+            }
 
         }
         log.debug(" -------[" + PUT_LIBELLE_FOR_EXPORT_METHOD +" ]: " + idEleve + " FIN " );
