@@ -53,8 +53,9 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT t1.libelle, t1.ordre, t1.couleur AS default, t1.id_cycle, t1.id AS id_niveau,")
-                .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle  AS cycle")
+        query.append("SELECT niv.libelle, t1.libelle as default_lib, t1.ordre, t1.couleur AS default,")
+                .append(" t1.id_cycle, t1.id AS id_niveau,")
+                .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle AS cycle")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.NIVEAU_COMPETENCES_TABLE + " AS t1")
                 .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.CYCLE_TABLE + " AS t2")
                 .append(" ON t1.id_cycle = t2.id ")
@@ -124,12 +125,11 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         sql.raw(queryNewUserId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
-
                 if (event.isRight()) {
                     final Long userId = event.right().getValue().getLong("id");
                     final String table = Competences.COMPETENCES_SCHEMA + "."+
                             Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
-                    doCreate(handler,userId,idUser, table);
+                    doCreate(handler, userId, idUser, table);
                 }
                 else {
                     handler.handle(new Either.Left<String, JsonArray>(event.left().getValue()));
