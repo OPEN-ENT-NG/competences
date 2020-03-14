@@ -654,10 +654,10 @@ public class NoteController extends ControllerHelper {
                                     .getJsonArray("id_groupes").size(); i++) {
                                 idsGroups[i + 1] = idClasseGroups.getJsonObject(0)
                                         .getJsonArray("id_groupes").getString(i);
-                                devoirsService.listDevoirs(null, idsGroups, null,
-                                        new Long[]{idPeriode}, new String[]{idEtablissement}, null,
-                                        null, false, handler);
                             }
+                            devoirsService.listDevoirs(null, idsGroups, null,
+                                    new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                    null, false, handler);
                         }
                     }
                 }
