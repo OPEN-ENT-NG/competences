@@ -2375,18 +2375,18 @@ public class LSUController extends ControllerHelper {
                     }
 
                     syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique((long) currentPeriode.getTypePeriode(),
-                            currentEleve.getIdNeo4j(),idStructure, new Handler<Either<String, JsonObject>>() {
+                            currentEleve.getIdNeo4j(),idStructure, new Handler<Either<String, JsonArray>>() {
                                 AtomicBoolean answer = new AtomicBoolean(false);
                                 AtomicInteger count = new AtomicInteger(0);
                                 final String thread = "(" + currentEleve.getNom() + " " + currentEleve.getPrenom() + " )";
                                 final String method = "getBaliseBilansPeriodiques |getSyntheseBilanPeriodique ";
 
                                 @Override
-                                public void handle(Either<String, JsonObject> eventSynthese) {
+                                public void handle(Either<String, JsonArray> eventSynthese) {
 
                                     String synthese = "null";
                                     if (eventSynthese.isRight()) {
-                                        final JsonObject rightValue = eventSynthese.right().getValue();
+                                        final JsonObject rightValue = eventSynthese.right().getValue().getJsonObject(0);
                                         if ((rightValue != null) && rightValue.containsKey("synthese")
                                                 && !rightValue.getString("synthese").isEmpty()) {
                                             synthese = rightValue.getString("synthese");

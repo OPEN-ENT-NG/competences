@@ -25,6 +25,6 @@ public interface AvisOrientationService {
      * @param handler handler portant le résultat de la requête
      */
     public void getAvisOrientation(String idEleve, Long idPeriode, String idStructure,
-                                   Handler<Either<String, JsonObject>> handler);
+                                   Handler<Either<String, JsonArray>> handler);
 
 }

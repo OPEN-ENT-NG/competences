@@ -23,8 +23,8 @@ export class SyntheseBilanPeriodique extends Model {
     async syncSynthese() {
         try {
             let {data} = await http.get(`/competences/syntheseBilanPeriodique?id_eleve=${this.id_eleve}&id_typePeriode=${this.id_typePeriode}&id_structure=${this.id_structure}`);
-            if(data.synthese !== undefined) {
-                this.synthese = data.synthese;
+            if(data.all !== undefined) {
+                this.synthese = data[0].synthese;
             }
         } catch (e) {
             notify.error('evaluation.synthese.bilan.periodique.get.error');

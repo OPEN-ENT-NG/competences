@@ -41,7 +41,7 @@ public class DefaultAvisOrientationService implements AvisOrientationService {
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void getAvisOrientation (String idEleve, Long idPeriode, String idStructure, Handler<Either<String, JsonObject>> handler) {
+    public void getAvisOrientation (String idEleve, Long idPeriode, String idStructure, Handler<Either<String, JsonArray>> handler) {
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "";
@@ -50,14 +50,17 @@ public class DefaultAvisOrientationService implements AvisOrientationService {
                 "INNER JOIN "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique " +
                 "ON(avis_conseil_bilan_periodique.id = avis_conseil_orientation.id_avis_conseil_bilan)  " +
                 "WHERE "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation.id_eleve = ? " +
-                "AND "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation.id_periode = ? " +
                 "AND "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation.id_etablissement = ? ";
 
         params.add(idEleve);
-        params.add(idPeriode);
         params.add(idStructure);
 
-        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+        if(idPeriode != null){
+            query += "AND "+ Competences.COMPETENCES_SCHEMA + ".avis_conseil_orientation.id_periode = ? ";
+            params.add(idPeriode);
+        }
+
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 
 

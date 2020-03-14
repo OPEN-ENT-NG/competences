@@ -894,12 +894,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             logStudentNotFound(idEleve, GET_AVIS_CONSEIL_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         }else{
-            avisConseilService.getAvisConseil(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonObject>>() {
+            avisConseilService.getAvisConseil(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonArray>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
                 @Override
-                public void handle(Either<String, JsonObject> event) {
+                public void handle(Either<String, JsonArray> event) {
                     if(event.isLeft()){
                         String message = event.left().getValue();
                         log.error("[getAvisConseil ] : " + idEleve  + " " + message + " " + count);
@@ -916,7 +916,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_CONSEIL_METHOD);
                         }
                     } else {
-                        JsonObject avisConseil = event.right().getValue();
+                        JsonObject avisConseil = event.right().getValue().getJsonObject(0);
                         if(avisConseil != null && !avisConseil.isEmpty()) {
                             eleveObject.put("beforeAvisConseil", beforeAvisConseil);
 
@@ -939,12 +939,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             logStudentNotFound(idEleve, GET_AVIS_ORIENTATION_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         }else{
-            avisOrientationService.getAvisOrientation(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonObject>>() {
+            avisOrientationService.getAvisOrientation(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonArray>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
                 @Override
-                public void handle(Either<String, JsonObject> event) {
+                public void handle(Either<String, JsonArray> event) {
                     if(event.isLeft()){
                         String message = event.left().getValue();
                         log.error("[getAvisOrientation ] : " + idEleve  + " " + message + " " + count);
@@ -961,7 +961,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_ORIENTATION_METHOD);
                         }
                     }else{
-                        JsonObject avisOrientation = event.right().getValue();
+                        JsonObject avisOrientation = event.right().getValue().getJsonObject(0);
                         if(avisOrientation != null && !avisOrientation.isEmpty() ) {
                             eleveObject.put("avisOrientation",avisOrientation.getString(LIBELLE))
                                     .put("hasAvisOrientation",true);
@@ -1178,11 +1178,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve, idStructure,
-                    new Handler<Either<String, JsonObject>>() {
+                    new Handler<Either<String, JsonArray>>() {
                         private int count = 1;
                         private AtomicBoolean answer = new AtomicBoolean(false);
                         @Override
-                        public void handle(Either<String, JsonObject> event) {
+                        public void handle(Either<String, JsonArray> event) {
                             if(event.isLeft()){
                                 String message = event.left().getValue();
                                 log.error("[getSyntheseBilanPeriodique ] : " + idEleve  + " " + message + " " + count);
@@ -1202,7 +1202,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 }
                             }
                             else {
-                                JsonObject synthese = event.right().getValue();
+                                JsonObject synthese = event.right().getValue().getJsonObject(0);
                                 if (synthese != null) {
                                     String syntheseStr = synthese.getString("synthese");
                                     eleveObject.put("syntheseBilanPeriodque",troncateLibelle(syntheseStr,

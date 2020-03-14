@@ -2,16 +2,21 @@ package fr.openent.competences.controllers;
 
 import com.mongodb.util.JSON;
 import fr.openent.competences.Competences;
+import fr.openent.competences.Utils;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
+import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
+import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
@@ -84,7 +89,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
     }
 
     /**
-     * Récupère les synthèses de l'élève
+     * Récupère la synthèses de l'élève sur une période donnée
      * @param request
      */
     @Get("/syntheseBilanPeriodique")
@@ -100,7 +105,75 @@ public class BilanPeriodiqueController extends ControllerHelper{
                             Long.parseLong(request.params().get("id_typePeriode")),
                             request.params().get("id_eleve"),
                             request.params().get("id_structure"),
-                            defaultResponseHandler(request));
+                            arrayResponseHandler(request));
+                } else {
+                    badRequest(request);
+                }
+            }
+        });
+    }
+
+    /**
+     * Récupère les synthèses et avis de l'élève sur l'année
+     * @param request
+     */
+    @Get("/bilan/periodique/datas/avis/synthses")
+    @ApiDoc("Récupère les synthèses et avis de l'élève sur l'année")
+    @SecuredAction(value = "", type= ActionType.AUTHENTICATED)
+    public void getSynthesesAvisBilanPeriodique(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>(){
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    if(request.params().get("idEleve") != null && request.params().get("idEtablissement") != null){
+                        String idEleve = request.params().get("idEleve");
+                        String idStructure = request.params().get("idEtablissement");
+                        Future<JsonArray> libelleAvisFuture = Future.future();
+                        avisConseilService.getLibelleAvis(null, event -> {
+                            formate(libelleAvisFuture, event);
+                        });
+
+                        Future<JsonArray> getSynthesesFuture = Future.future();
+                        syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(
+                                null,idEleve,idStructure,event -> {
+                                    formate(getSynthesesFuture, event);
+                                });
+
+                        Future<JsonArray> getAvisConseilFuture = Future.future();
+                        avisConseilService.getAvisConseil(idEleve,null,idStructure,event -> {
+                            formate(getAvisConseilFuture, event);
+                        });
+                        Future<JsonArray> getAvisOrientationFuture = Future.future();
+                        avisOrientationService.getAvisOrientation(idEleve,null,idStructure,event -> {
+                            formate(getAvisOrientationFuture, event);
+                        });
+                        CompositeFuture.all(libelleAvisFuture, getSynthesesFuture,getAvisConseilFuture,getAvisOrientationFuture).setHandler(event -> {
+                            if(event.succeeded()){
+                                JsonArray libelleAvis = libelleAvisFuture.result();
+                                JsonArray syntheses = getSynthesesFuture.result();
+                                JsonArray avisConseil = getAvisConseilFuture.result();
+                                JsonArray avisOrientation = getAvisOrientationFuture.result();
+                                JsonObject result = new JsonObject();
+
+                                JsonObject avisPerso = new JsonObject().put("id", 0).put("libelle","-- Personnalisé --")
+                                        .put("type_avis", 0);
+                                libelleAvis.add(avisPerso);
+
+                                result.put("libelleAvis",libelleAvis).put("syntheses",syntheses).put("avisConseil",avisConseil).put("avisOrientation",avisOrientation);
+
+                                Renders.renderJson(request,result);
+                            }
+                            else {
+                                String error = event.cause().getMessage();
+                                log.error("getSynthesesAvisBilanPeriodique " + error);
+                                Renders.badRequest(request);
+                            }
+                        });
+
+                    }else{
+                        log.debug("Not all informations that we need to get synthesis and avis : idEleve & idEtablissement");
+                        Renders.badRequest(request);
+                    }
                 } else {
                     badRequest(request);
                 }
@@ -340,7 +413,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                             request.params().get("id_eleve"),
                             Long.parseLong(request.params().get("id_periode")),
                             request.params().get("id_structure"),
-                            defaultResponseHandler(request));
+                            arrayResponseHandler(request));
                 } else {
                     badRequest(request);
                 }
@@ -425,7 +498,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                             request.params().get("id_eleve"),
                             Long.parseLong(request.params().get("id_periode")),
                             request.params().get("id_structure"),
-                            defaultResponseHandler(request));
+                            arrayResponseHandler(request));
                 } else {
                     badRequest(request);
                 }

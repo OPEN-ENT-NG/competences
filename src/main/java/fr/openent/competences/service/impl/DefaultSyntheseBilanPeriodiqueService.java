@@ -49,24 +49,27 @@ public class DefaultSyntheseBilanPeriodiqueService {
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
-    public void getSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, String idStructure, Handler<Either<String, JsonObject>> handler) {
+    public void getSyntheseBilanPeriodique (Long idTypePeriode, String idEleve, String idStructure, Handler<Either<String, JsonArray>> handler) {
 
         JsonArray params = new fr.wseduc.webutils.collections.JsonArray();
         String query = "";
 
         query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique " +
                 "WHERE "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_eleve = ? " +
-                "AND "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_typePeriode = ? " +
-                "AND "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_etablissement = ?";
+                "AND "+ Competences.COMPETENCES_SCHEMA +".synthese_bilan_periodique.id_etablissement = ? ";
 
         params.add(idEleve);
-        params.add(idTypePeriode);
         params.add(idStructure);
+
+        if(idTypePeriode != null){
+            query += "AND "+ Competences.COMPETENCES_SCHEMA + ".synthese_bilan_periodique.id_typePeriode = ? ";
+            params.add(idTypePeriode);
+        }
 
         Sql.getInstance().prepared(query, params,
                 new DeliveryOptions().setSendTimeout(TRANSITION_CONFIG
                         .getInteger("timeout-transaction") * 1000L),
-                SqlResult.validUniqueResultHandler(handler));
+                SqlResult.validResultHandler(handler));
     }
 
 }

@@ -243,6 +243,7 @@
   "evaluation.synthese.bilan.periodique.get.error":"Une erreur est survenue lors de la récupération de la synthèse",
   "evaluations.avis.conseil.bilan.periodique.save.error":"Une erreur est survenue lors de l'enregistrement de l'avis",
   "evaluations.avis.conseil.bilan.periodique.get.error":"Une erreur est survenue lors de la récupération de l'avis",
+  "evaluations.avis.synthses.bilan.periodique.get.error":"Une erreur est survenue lors de la récupération des synthèses et avis de l'élève",
 
   "evaluations.conseil.de.classe": "Conseil de classe",
   "evaluations.bilan.periodique": "Bilan périodique",

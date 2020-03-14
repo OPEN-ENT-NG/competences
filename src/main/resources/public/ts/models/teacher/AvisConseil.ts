@@ -42,8 +42,8 @@ export class AvisConseil extends DefaultAvis {
     async syncAvisConseil () {
         try {
             let {data} = await http.get(`/competences/avis/conseil?id_eleve=${this.id_eleve}&id_periode=${this.id_periode}&id_structure=${this.id_structure}`);
-            if(data.id_avis_conseil_bilan !== undefined) {
-                this.id_avis_conseil_bilan = data.id_avis_conseil_bilan;
+            if(data[0].id_avis_conseil_bilan !== undefined) {
+                this.id_avis_conseil_bilan = data[0].id_avis_conseil_bilan;
             }
         } catch (e) {
             notify.error('evaluations.avis.conseil.bilan.periodique.get.error');
