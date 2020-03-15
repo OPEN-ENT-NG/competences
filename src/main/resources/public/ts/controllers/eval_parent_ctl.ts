@@ -254,9 +254,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         template.open('main', 'parent_enfant/liste_devoirs/display_devoir');
                         await utils.safeApply($scope);
                     }
+                    if($location.path() !== "/releve") {
+                        await utils.safeApply($scope);
+                        await Utils.stopMessageLoader($scope);
+                    }
                     $scope.update = false;
-                    await utils.safeApply($scope);
-                    await Utils.stopMessageLoader($scope);
                     resolve();
                 }
                 catch (e) {

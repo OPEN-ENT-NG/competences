@@ -1253,32 +1253,47 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 return;
             }
 
-            for(let matiere of $scope.matieresReleve.all){
-                let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
-                let PromisesMoy = [];
-                if (devoirsMatieres !== undefined) {
-                    let id_eleve = $scope.search.eleve.id;
-                    PromisesMoy.push( utils.getMoyenne(id_eleve, matiere, $scope.search.periode.id_type, devoirsMatieres));
+            let id_eleve = $scope.search.eleve.id;
+            let id_typePeriode = $scope.search.periode.id_type;
 
-                    if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
-
-                        for (let sousMat of matiere.sousMatieres.all) {
-                            let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
-                            if (devoirsSousMat.length > 0) {
-                                PromisesMoy.push( utils.getMoyenne(id_eleve, sousMat, $scope.search.periode.id_type, devoirsSousMat));
-
-                            } else {
-                                sousMat.moyenne = "";
+            http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?idPeriode="+ + id_typePeriode).then(res => {
+                let moyennesFinales = res.data;
+                for(let matiere of $scope.matieresReleve.all) {
+                    let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
+                    if (devoirsMatieres !== undefined) {
+                        let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:matiere.id});
+                        if(moyenneFinale){
+                            if(moyenneFinale.moyenne == null){
+                                matiere.moyenne = "NN";
+                            }else{
+                                matiere.moyenne = moyenneFinale.moyenne;
                             }
-
+                        }else{
+                            matiere.moyenne = utils.getMoyenne(devoirsMatieres);
+                        }
+                        if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
+                            for (let sousMat of matiere.sousMatieres.all) {
+                                let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
+                                if (devoirsSousMat.length > 0) {
+                                    let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:sousMat.id_type_sousmatiere});
+                                    if(moyenneFinale){
+                                        if(moyenneFinale.moyenne == null){
+                                            matiere.moyenne = "NN";
+                                        }else{
+                                            matiere.moyenne = moyenneFinale.moyenne;
+                                        }
+                                    }else{
+                                        sousMat.moyenne = utils.getMoyenne(devoirsSousMat);
+                                    }
+                                } else {
+                                    sousMat.moyenne = "";
+                                }
+                            }
                         }
                     }
-                    await Promise.all(PromisesMoy);
-                    utils.safeApply($scope);
-
                 }
-
-            }
+                utils.safeApply($scope);
+            });
         };
 
         $scope.getMoyenneClasse = function(devoirReleveNotes) {
@@ -1294,10 +1309,14 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
         // Filter
         $scope.hasEvaluatedDevoir = (matiere) => {
-            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
-                return (devoir.note !== undefined || devoir.annotation !== undefined)
-            });
-            return _.findWhere(devoirWithNote, {id_matiere: matiere.id, is_evaluated: true}) !== undefined;
+            if($scope.dataReleve) {
+                let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
+                    return (devoir.note !== undefined || devoir.annotation !== undefined)
+                });
+                return _.findWhere(devoirWithNote, {id_matiere: matiere.id, is_evaluated: true}) !== undefined;
+            }else{
+                return false;
+            }
         };
         $scope.isEvaluated = (devoir) => {
             return devoir.is_evaluated && (devoir.note !== undefined || devoir.annotation !== undefined);

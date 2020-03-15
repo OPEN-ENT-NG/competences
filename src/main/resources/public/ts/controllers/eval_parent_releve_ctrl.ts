@@ -23,6 +23,7 @@ import { model, ng, idiom as lang } from 'entcore';
 import { evaluations } from '../models/eval_parent_mdl';
 import * as utils from '../utils/parent';
 import {Utils} from "../models/teacher";
+import http from "axios";
 
 declare let _: any;
 
@@ -39,38 +40,52 @@ export let releveController = ng.controller('ReleveController', [
             if ($scope.dataReleve === undefined) {
                 return;
             }
+            let id_eleve;
+            if (model.me.type === 'PERSRELELEVE') {
+                id_eleve = $scope.searchReleve.eleve.id;
+            } else {
+                id_eleve = $scope.eleve.id;
+            }
+            let id_typePeriode = $scope.searchReleve.periode.id_type;
 
-            for(let matiere of $scope.matieresReleve.all){
-                let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
-                let PromisesMoy = [];
-                if (devoirsMatieres !== undefined && matiere !== undefined) {
-                    let id_eleve;
-                    if (model.me.type === 'PERSRELELEVE') {
-                        id_eleve = $scope.searchReleve.eleve.id;
-                    } else {
-                        id_eleve = $scope.eleve.id;
-                    }
-                    PromisesMoy.push( utils.getMoyenne(id_eleve, matiere, $scope.searchReleve.periode.id_type, devoirsMatieres));
-
-                    if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
-
-                        for (let sousMat of matiere.sousMatieres.all) {
-                            let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
-                            if (devoirsSousMat.length > 0) {
-                                PromisesMoy.push( utils.getMoyenne(id_eleve, sousMat, $scope.searchReleve.periode.id_type, devoirsSousMat));
-
-                            } else {
-                                sousMat.moyenne = "";
+            http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?idPeriode="+ + id_typePeriode).then(res => {
+                let moyennesFinales = res.data;
+                for(let matiere of $scope.matieresReleve.all) {
+                    let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
+                    if (devoirsMatieres !== undefined) {
+                        let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:matiere.id});
+                        if(moyenneFinale){
+                            if(moyenneFinale.moyenne == null){
+                                matiere.moyenne = "NN";
+                            }else{
+                                matiere.moyenne = moyenneFinale.moyenne;
                             }
-
+                        }else{
+                            matiere.moyenne = utils.getMoyenne(devoirsMatieres);
+                        }
+                        if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
+                            for (let sousMat of matiere.sousMatieres.all) {
+                                let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
+                                if (devoirsSousMat.length > 0) {
+                                    let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:sousMat.id_type_sousmatiere});
+                                    if(moyenneFinale){
+                                        if(moyenneFinale.moyenne == null){
+                                            matiere.moyenne = "NN";
+                                        }else{
+                                            matiere.moyenne = moyenneFinale.moyenne;
+                                        }
+                                    }else{
+                                        sousMat.moyenne = utils.getMoyenne(devoirsSousMat);
+                                    }
+                                } else {
+                                    sousMat.moyenne = "";
+                                }
+                            }
                         }
                     }
-                    await Promise.all(PromisesMoy);
-                     utils.safeApply($scope);
-
                 }
-
-            }
+                utils.safeApply($scope);
+            });
         };
         /**
          * chargement d'un
@@ -135,6 +150,7 @@ export let releveController = ng.controller('ReleveController', [
             };
             $scope.matieresReleve = evaluations.matieres;
             await $scope.loadReleveNote();
+            await Utils.stopMessageLoader($scope);
             await utils.safeApply($scope);
         };
 
@@ -149,10 +165,14 @@ export let releveController = ng.controller('ReleveController', [
 
         // Filter
         $scope.hasEvaluatedDevoir = (matiere) => {
-            let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
-                return (devoir.note !== undefined || devoir.annotation !== undefined)
-            });
-            return _.findWhere(devoirWithNote, {id_matiere: matiere.id, is_evaluated: true}) !== undefined;
+            if($scope.dataReleve) {
+                let devoirWithNote = $scope.dataReleve.devoirs.filter((devoir) => {
+                    return (devoir.note !== undefined || devoir.annotation !== undefined)
+                });
+                return _.findWhere(devoirWithNote, {id_matiere: matiere.id, is_evaluated: true}) !== undefined;
+            }else{
+                return false;
+            }
         };
         $scope.isEvaluated = (devoir) => {
             return devoir.is_evaluated && (devoir.note !== undefined || devoir.annotation !== undefined);

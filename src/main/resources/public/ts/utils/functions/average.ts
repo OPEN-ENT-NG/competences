@@ -26,39 +26,48 @@ export function average (arr) {
         }, 0) / (arr.length === 0 ? 1 : arr.length);
 }
 
-export function   getMoyenne (id_eleve, matiere,idPeriode, devoirs?) : Promise<any> {
-     return new Promise((resolve, reject) => {
-        if (devoirs) {
-            let idDevoirsURL = "";
+export function   getMoyenne (devoirs) {
+    if(devoirs.length == 0){
+        return "NN";
+    }else {
+        let diviseurM = 20;
 
-            _.each(_.pluck(devoirs,'id'), (id) => {
-                idDevoirsURL += "devoirs=" + id + "&";
-            });
-            idDevoirsURL = idDevoirsURL.slice(0, idDevoirsURL.length - 1);
+        // (SUM ( ni *m *ci /di)  + SUM ( nj *cj)  ) / (S ( ci)  + SUM ( cj  *dj /m)  )
+        // avec d : diviseurs, n : note, c : coefficient, m = 20 : si ramené sur
+        // avec i les notes ramenées sur m, et j les notes non ramenées sur m
 
-            if(matiere && matiere.id)
-                idDevoirsURL += "&idMatiere="+matiere.id;
-            if(idPeriode)
-                idDevoirsURL += "&idPeriode="+idPeriode.toString();
+        let sumCI = 0;
+        let sumCJDJParM = 0;
+        let sumCJDJ = 0;
+        let sumNIMCIParD = 0;
 
-            http().getJson('/competences/eleve/' + id_eleve + "/moyenne?" + idDevoirsURL).done((res) =>{
-                if (!res.error) {
-                    if (!res.hasNote) {
-                        matiere.moyenne = "NN";
-                    }
-                    else {
-                        matiere.moyenne = res.moyenne;
-                    }
-                } else {
-                    matiere.moyenne = "";
+        let hasNote = false;
+
+        devoirs.forEach(devoir => {
+            if(devoir.note && devoir.coefficient && devoir.diviseur) {
+                hasNote = true;
+                let currNote = parseFloat(devoir.note);
+                let currCoefficient = parseFloat(devoir.coefficient);
+                let currDiviseur = devoir.diviseur;
+
+                if (!devoir.ramener_sur) {
+                    sumCJDJParM += (currCoefficient * currDiviseur / diviseurM);
+                    sumCJDJ += (currNote * currCoefficient);
+                } else if (currCoefficient != 0) {
+                    sumNIMCIParD += ((currNote * diviseurM * currCoefficient) / currDiviseur);
+                    sumCI += currCoefficient;
                 }
+            }
+        });
+        if(hasNote) {
 
-                if(resolve && typeof(resolve) === 'function'){
-                   resolve();
-                }
-            }).error(()=> {
-                    reject();
-            });
+            let moyenne = ((sumNIMCIParD + sumCJDJ) / (sumCI + sumCJDJParM));
+
+            if (null == moyenne) moyenne = 0.0;
+
+            return +(moyenne).toFixed(2);
+        }else{
+            return "NN";
         }
-    });
+    }
 }

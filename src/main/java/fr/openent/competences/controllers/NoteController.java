@@ -735,6 +735,29 @@ public class NoteController extends ControllerHelper {
         });
     }
 
+    @Get("/eleve/:idEleve/moyenneFinale")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Retourne les moyennes finales de l'élève dont l'id est passé en paramètre, sur la période passée en paramètre")
+    public void getMoyenneFinaleEleve(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    String idEleve = request.params().get("idEleve");
+                    Long idPeriode = null;
+                    if(request.params().get("idPeriode") != null)
+                        idPeriode = Long.valueOf(request.params().get("idPeriode"));
+
+                    notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, null, null,
+                            "moyenne", arrayResponseHandler(request));
+
+                } else{
+                    unauthorized(request);
+                }
+            }
+        });
+    }
+
 
     @Post("/releve/element/programme")
     @ApiDoc("Ajoute ou modifie un élément du programme")
