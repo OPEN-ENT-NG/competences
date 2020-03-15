@@ -623,7 +623,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
         };
 
         const cleanScopeTabs = () => {
-            $scope.contentIframe = $scope.averagesClasses =  $scope.teacherNotesAndAppraisals = undefined;
+            $scope.contentIframe = $scope.averagesClasses =  $scope.teacherNotesAndAppraisals = dataBodyCsv = undefined;
         };
 
         $scope.selectDisplayClassTabs = async (tabsSelected:string):Promise<void> => {
@@ -645,8 +645,9 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                         && $scope.displayFollowCompetencesClass === 'positioning');
                     fileDownloadName.pdf = 'printRecapEval';
                     $scope.isUseLinkForPdf = true;
-                    await positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
+                    isManualCsvFromAngular = true;
                     await initTabClass('positioning');
+                    await Utils.stopMessageLoader($scope);
                     break;
                 case ('average'):
                     if(!$scope.averagesClasses) await getSubjectsNotesAppraisals(getTeacherBySubject());
@@ -664,13 +665,21 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
                     isManualCsvFromAngular = true;
                     fileDownloadName.pdf = 'printRecapAppreciations';
                     fileDownloadName.csv = `teacher_appraisals${infoNameFileEnd}`;
-                    $scope.isDataOnPage = $scope.teacherNotesAndAppraisals.length !== 0;dataBodyCsv = prepareBodyAppraisalsForCsv($scope.dataHeaderAppraisals, $scope.teacherNotesAndAppraisals);
+                    $scope.isDataOnPage = $scope.teacherNotesAndAppraisals.length !== 0;
                     await initTabClass('teacher_appraisals');
+                    await Utils.stopMessageLoader($scope);
                     break;
                 default:
                     defaultSwitch();
             }
             $scope.loadingTab = false;
+            await utils.safeApply($scope);
+            if($scope.displayFollowCompetencesClass == 'positioning')
+                if(!dataBodyCsv)
+                    await positioningCsvData($scope.search.periode.id_type, $scope.search.classe.id);
+            else if ($scope.displayFollowCompetencesClass == 'teacherAppraisals')
+                    if(!dataBodyCsv)
+                        dataBodyCsv = prepareBodyAppraisalsForCsv($scope.dataHeaderAppraisals, $scope.teacherNotesAndAppraisals);
         };
 
         const getTeacherBySubject = () => {
