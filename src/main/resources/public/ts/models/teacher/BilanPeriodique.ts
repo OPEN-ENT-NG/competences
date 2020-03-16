@@ -263,7 +263,7 @@ export class BilanPeriodique extends  Model {
         }
     };
 
-    private makerHeaderWithTeachersAndSubjects (data:any, teacherBysubject):Array<any>{
+    private makerHeaderWithTeachersAndSubjects (data:any, teacherBySubject):Array<any>{
         let matchingDataApi:Array<any> = [];
         const homeworks:Array<any> = data.homeworks;
         const statistics:any = data.synthesis.statistiques;
@@ -276,8 +276,8 @@ export class BilanPeriodique extends  Model {
                     matchingDataApi.push({
                         idSubject: subjectId,
                         average: statistics[subjectId].moyenne,
-                        teacherName: teacherBysubject && teacherBysubject[subjectId] && teacherBysubject[subjectId].displayName ?
-                            teacherBysubject[subjectId].displayName : undefined,
+                        teacherName: teacherBySubject && teacherBySubject[subjectId] && teacherBySubject[subjectId].displayName ?
+                            teacherBySubject[subjectId].displayName : undefined,
                         subjectName: subject? subject.name : undefined,
                         subjectShortName:  subject? subject.libelle_court : undefined,
                     });
