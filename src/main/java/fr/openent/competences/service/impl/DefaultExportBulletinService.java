@@ -916,7 +916,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_CONSEIL_METHOD);
                         }
                     } else {
-                        JsonObject avisConseil = event.right().getValue().getJsonObject(0);
+                        JsonArray result = event.right().getValue();
+                        JsonObject avisConseil = new JsonObject();
+                        if(!result.isEmpty())
+                            avisConseil = result.getJsonObject(0);
                         if(avisConseil != null && !avisConseil.isEmpty()) {
                             eleveObject.put("beforeAvisConseil", beforeAvisConseil);
 
@@ -961,7 +964,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_ORIENTATION_METHOD);
                         }
                     }else{
-                        JsonObject avisOrientation = event.right().getValue().getJsonObject(0);
+                        JsonArray result = event.right().getValue();
+                        JsonObject avisOrientation = new JsonObject();
+                        if(!result.isEmpty())
+                            avisOrientation = result.getJsonObject(0);
                         if(avisOrientation != null && !avisOrientation.isEmpty() ) {
                             eleveObject.put("avisOrientation",avisOrientation.getString(LIBELLE))
                                     .put("hasAvisOrientation",true);
@@ -1202,8 +1208,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 }
                             }
                             else {
-                                JsonObject synthese = event.right().getValue().getJsonObject(0);
-                                if (synthese != null) {
+                                JsonArray result = event.right().getValue();
+                                JsonObject synthese = new JsonObject();
+                                if(!result.isEmpty())
+                                    synthese = result.getJsonObject(0);
+                                if (synthese != null && !synthese.isEmpty()) {
                                     String syntheseStr = synthese.getString("synthese");
                                     eleveObject.put("syntheseBilanPeriodque",troncateLibelle(syntheseStr,
                                             MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));

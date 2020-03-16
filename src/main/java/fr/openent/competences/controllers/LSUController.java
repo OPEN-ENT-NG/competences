@@ -2386,7 +2386,10 @@ public class LSUController extends ControllerHelper {
 
                                     String synthese = "null";
                                     if (eventSynthese.isRight()) {
-                                        final JsonObject rightValue = eventSynthese.right().getValue().getJsonObject(0);
+                                        JsonArray result = eventSynthese.right().getValue();
+                                        JsonObject rightValue = new JsonObject();
+                                        if(!result.isEmpty())
+                                            rightValue = result.getJsonObject(0);
                                         if ((rightValue != null) && rightValue.containsKey("synthese")
                                                 && !rightValue.getString("synthese").isEmpty()) {
                                             synthese = rightValue.getString("synthese");
