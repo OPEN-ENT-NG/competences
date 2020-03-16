@@ -20,10 +20,10 @@
             <div class="twelve cell">
                 <fieldset ng-repeat="opinion in classOpinions track by $index"
                           class="ten no-border" ng-disabled="opinion.id_etablissement === null">
-                    <label class="one checkbox">
-                        <input type="checkbox" ng-change="updateOpinion(opinion)"
-                               ng-model="opinion.active" />
-                        <span></span>
+                    <label class="one" ng-hide="opinion.id_etablissement === null">
+                        <i ng-class="{'eye-slash': opinion.active, 'eye': !opinion.active}"
+                           ng-click="opinion.active = !opinion.active; updateOpinion(opinion)">
+                        </i>
                     </label>
                     <label>
                         <input class="ten left-spacing-twice" type="text"
@@ -51,10 +51,10 @@
             <div class="twelve cell">
                 <fieldset ng-repeat="opinion in orientationOpinions track by $index"
                           class="ten no-border" ng-disabled="opinion.id_etablissement === null">
-                    <label class="one checkbox">
-                        <input type="checkbox" ng-change="updateOpinion(opinion)"
-                               ng-model="opinion.active" />
-                        <span></span>
+                    <label class="one" ng-hide="opinion.id_etablissement === null">
+                        <i ng-class="{'eye-slash': opinion.active, 'eye': !opinion.active}"
+                           ng-click="opinion.active = !opinion.active; updateOpinion(opinion)">
+                        </i>
                     </label>
                     <label>
                         <input class="ten left-spacing-twice" type="text"
@@ -79,10 +79,10 @@
             <label>
                 <input type="text" ng-model="newOpinion" ng-maxlength="150" maxlength="150"
                        class="eleven" style="margin:15px"
-                       ng-keypress="($event.charCode==13) ? addOpinion(newOpinion) : return"
+                       ng-keydown="$event.keyCode==13 && [addOpinion(newOpinion), newOpinion = '']"
                        i18n-placeholder="evaluations.evaluation.avis.personalize"/>
             </label>
-            <input type="button" class="right-magnet" ng-click="addOpinion(newOpinion);"
+            <input type="button" class="right-magnet" ng-click="addOpinion(newOpinion); newOpinion = ''"
                    i18n-value="viescolaire.utils.save"/>
         </div>
     </lightbox>

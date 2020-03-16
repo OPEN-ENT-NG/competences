@@ -36,9 +36,14 @@ public class DefaultAvisConseilService implements AvisConseilService {
 
     public void createOpinion (Long typeAvis, String libelle, String idStructure, Handler<Either<String, JsonObject>> handler) {
         String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique " +
-                "(type_avis, libelle, id_etablissement, active) VALUES (?, ?, ?, true) " +
+                "(type_avis, libelle, id_etablissement, active) SELECT ?, ?, ?, true " +
+                "WHERE NOT EXISTS (SELECT id FROM " + Competences.COMPETENCES_SCHEMA + ".avis_conseil_bilan_periodique " +
+                "WHERE type_avis = ? AND libelle = ? AND id_etablissement = ?) " +
                 "RETURNING id";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(typeAvis);
+        values.add(libelle);
+        values.add(idStructure);
         values.add(typeAvis);
         values.add(libelle);
         values.add(idStructure);

@@ -568,6 +568,8 @@
   "viescolaire.nb.courses.lost" : "Nb heures de cours manquées",
   "viescolaire.communication.with.familly" : "Communication avec la famille",
   "viescolaire.suivi.des.acquis.libelle.export" :"Bilan de l'acquisition des connaissances et compétences",
+  "viescolaire.utils.hide" : "Masquer",
+  "viescolaire.utils.show" : "Afficher",
 
   "error.note.outbound":"La note doit être comprise entre 0 et ",
   "error.average.outbound":"La moyenne doit être comprise entre 0 et 20",

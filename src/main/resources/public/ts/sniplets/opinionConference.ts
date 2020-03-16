@@ -10,7 +10,6 @@ export const opinionConference = {
     that: undefined,
     controller: {
         init: async function () {
-            console.log("opinionConference");
             this.idStructure = this.source.idStructure;
             this.typeAvis = 0;
             this.newOpinion = '';
