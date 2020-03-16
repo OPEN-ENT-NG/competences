@@ -130,7 +130,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                         String idEleve = request.params().get("idEleve");
                         String idStructure = request.params().get("idEtablissement");
                         Future<JsonArray> libelleAvisFuture = Future.future();
-                        avisConseilService.getLibelleAvis(null, event -> {
+                        avisConseilService.getLibelleAvis(null, idStructure, event -> {
                             formate(libelleAvisFuture, event);
                         });
 
