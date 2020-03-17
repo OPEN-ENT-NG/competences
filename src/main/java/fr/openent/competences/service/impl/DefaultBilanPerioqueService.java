@@ -111,12 +111,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     // Récupération des absences de l'élève
                     Future<JsonArray> absencesFuture = Future.future();
                     sendEventBusGetEvent(EventType.ABSENCE.getType(), Collections.singletonList(idEleve), structureId,
-                            beginningDateYear, endgDateYear,event -> formate(absencesFuture,event));
+                            beginningDateYear, endgDateYear, "HALF_DAY", event -> formate(absencesFuture,event));
 
                     // Récupération des retards de l'élève
                     Future<JsonArray> retardsFuture = Future.future();
                     sendEventBusGetEvent(EventType.LATENESS.getType(), Collections.singletonList(idEleve), structureId,
-                            beginningDateYear, endgDateYear, event -> formate(retardsFuture,event));
+                            beginningDateYear, endgDateYear, "HOUR", event -> formate(retardsFuture,event));
 
                     CompositeFuture.all(absencesFuture, retardsFuture).setHandler(
                             event -> {
@@ -198,7 +198,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void sendEventBusGetEvent(Integer eventType, List<String> students, String structure,
-                                      String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+                                      String startDate, String endDate, String recoveryMethod,
+                                      Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("eventType", eventType)
                 .put("students", new JsonArray(students))
@@ -206,7 +207,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 .put("startDate", startDate)
                 .put("endDate", endDate)
                 .put("noReasons", true)
-                .put("recoveryMethod","HALF_DAY")
+                .put("recoveryMethod",recoveryMethod)
                 .put("action", "get-events-by-student");
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
