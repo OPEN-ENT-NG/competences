@@ -732,6 +732,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 template.open("suivi-competence-detail",
                     "enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph");
             }
+            $scope.opened.detailCompetenceSuivi = true;
             utils.scrollTo('top');
         };
 

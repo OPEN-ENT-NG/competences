@@ -173,7 +173,7 @@
                     </div>
                 </div>
 
-                <div ng-show="opened.detailCompetenceSuivi && suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined" class="twelve">
+                <div ng-show="opened.detailCompetenceSuivi && suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined" class="buttons-suiviEleve-detail">
                     <div>
                         <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
                         <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
