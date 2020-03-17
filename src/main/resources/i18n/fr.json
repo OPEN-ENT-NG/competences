@@ -678,6 +678,8 @@
   "evaluations.model.name": "Nom du modèle ",
   "evaluations.open.model": "Afficher les libellés ",
   "evaluations.close.model":"Masquer les libellés ",
+  "evaluations.show.avis": "Afficher l'avis",
+  "evaluations.hide.avis":"Masquer l'avis",
   "evaluations.choose.model": " Choisir le modèle ",
   "evaluations.default.model.libelle": "Modèle par défaut",
   "evaluations.use.model.libelle": "Utiliser un modèle de libellé de matière",

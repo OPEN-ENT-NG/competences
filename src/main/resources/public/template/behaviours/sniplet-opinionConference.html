@@ -20,7 +20,8 @@
             <div class="twelve cell">
                 <fieldset ng-repeat="opinion in classOpinions track by $index"
                           class="ten no-border" ng-disabled="opinion.id_etablissement === null">
-                    <label class="one" ng-hide="opinion.id_etablissement === null">
+                    <label class="one" ng-hide="opinion.id_etablissement === null"
+                           tooltip="[[opinion.active ? 'evaluations.hide.avis' : 'evaluations.show.avis']]">
                         <i ng-class="{'eye-slash': opinion.active, 'eye': !opinion.active}"
                            ng-click="opinion.active = !opinion.active; updateOpinion(opinion)">
                         </i>
@@ -51,7 +52,8 @@
             <div class="twelve cell">
                 <fieldset ng-repeat="opinion in orientationOpinions track by $index"
                           class="ten no-border" ng-disabled="opinion.id_etablissement === null">
-                    <label class="one" ng-hide="opinion.id_etablissement === null">
+                    <label class="one" ng-hide="opinion.id_etablissement === null"
+                           tooltip="[[opinion.active ? 'evaluations.hide.avis' : 'evaluations.show.avis']]">
                         <i ng-class="{'eye-slash': opinion.active, 'eye': !opinion.active}"
                            ng-click="opinion.active = !opinion.active; updateOpinion(opinion)">
                         </i>
