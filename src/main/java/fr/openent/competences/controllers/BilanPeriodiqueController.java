@@ -10,6 +10,7 @@ import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Delete;
 import fr.wseduc.rs.Get;
 import fr.wseduc.rs.Post;
+import fr.wseduc.rs.Put;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
@@ -129,7 +130,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                         String idEleve = request.params().get("idEleve");
                         String idStructure = request.params().get("idEtablissement");
                         Future<JsonArray> libelleAvisFuture = Future.future();
-                        avisConseilService.getLibelleAvis(null, event -> {
+                        avisConseilService.getLibelleAvis(null, idStructure, event -> {
                             formate(libelleAvisFuture, event);
                         });
 
@@ -295,8 +296,10 @@ public class BilanPeriodiqueController extends ControllerHelper{
                     if (strTypeAvis != null && strTypeAvis != "") {
                         longTypeAvis = Long.parseLong(request.params().get("type_avis"));
                     }
+                    String idStructure = request.params().get("id_structure");
                     avisConseilService.getLibelleAvis(
                             longTypeAvis,
+                            idStructure,
                             arrayResponseHandler(request));
                 }else{
                     unauthorized(request);
@@ -328,6 +331,45 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                             DefaultResponseHandler.defaultResponseHandler(request));
                                 }
                             });
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+    @Delete("/avis/bilan/periodique")
+    @ApiDoc("Supprime un avis de conseil de classe")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void deleteOpinion(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    final Long idAvis = Long.parseLong(request.params().get("id_avis"));
+                    avisConseilService.deleteOpinion(idAvis, DefaultResponseHandler.defaultResponseHandler(request));
+                } else {
+                    log.debug("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            }
+        });
+    }
+
+    @Put("/avis/bilan/periodique")
+    @ApiDoc("Mets à jour un avis de conseil de classe")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void updateOpinion(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    final Long idAvis = Long.parseLong(request.params().get("id_avis"));
+                    final boolean active = Boolean.parseBoolean(request.params().get("active"));
+                    final String libelle = request.params().get("libelle");
+                    avisConseilService.updateOpinion(idAvis, active, libelle,
+                            DefaultResponseHandler.defaultResponseHandler(request));
                 } else {
                     log.debug("User not found in session.");
                     Renders.unauthorized(request);
