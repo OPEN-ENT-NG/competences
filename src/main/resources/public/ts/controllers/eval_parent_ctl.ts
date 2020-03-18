@@ -416,9 +416,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.updateNiveau =  async function (usePerso) {
             if(usePerso == 'true') {
                 evaluations.niveauCompetences.sync().then(async () => {
-                    if ($scope.update) {
-                        await $scope.syncColorAndLetter();
-                    }
+                    $scope.syncColorAndLetter();
                 });
             }
         };
