@@ -29,6 +29,7 @@ import {
     FilterNotEvaluatedEnseignement
 } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {Utils} from "../models/teacher";
+import {updateNiveau} from "../models/common/Personnalisation";
 
 declare let _: any;
 declare let location: any;
@@ -146,7 +147,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.init = async function (withSyncDevoir?) {
             return new Promise( async (resolve) => {
-
                 if ($scope.eleve === undefined) {
                     await evaluations.sync();
                     await initialise(withSyncDevoir);
@@ -413,32 +413,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             evaluations.arrayCompetences =
                 _.groupBy(evaluations.niveauCompetences.all,{id_cycle : evaluations.eleve.classe.id_cycle}).true;
         };
+
+
         $scope.updateNiveau =  async function (usePerso) {
-            if (usePerso === 'true') {
-                evaluations.usePerso = 'true';
-                evaluations.niveauCompetences.sync(false).then(async () => {
-                    if ($scope.update){
+            if(usePerso == 'true') {
+                evaluations.niveauCompetences.sync().then(async () => {
+                    if ($scope.update) {
                         await $scope.syncColorAndLetter();
-
-                    }
-                    else {
-                        evaluations.niveauCompetences.first().markUser().then(async () => {
-                            await $scope.syncColorAndLetter();
-                        });
-                    }
-                });
-
-            }
-            else if (usePerso === 'false') {
-                evaluations.usePerso = 'false';
-                evaluations.niveauCompetences.sync(true).then( async () => {
-                    if($scope.update) {
-                        await $scope.syncColorAndLetter();
-                    }
-                    else {
-                        evaluations.niveauCompetences.first().unMarkUser().then(async () => {
-                            await $scope.syncColorAndLetter();
-                        });
                     }
                 });
             }
@@ -455,14 +436,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getLibelleLimit = function (limit) {
-            return limit +" " + lang.translate('last');
+            return limit + " " + lang.translate('last');
         };
 
         $scope.update = true;
         $scope.reload = function () {
             window.location.hash='#/';
             location.reload();
-        }
+        };
 
         $scope.FilterNotEvaluated = function (maCompetence) {
             return FilterNotEvaluated(maCompetence);

@@ -239,7 +239,10 @@ public class ExportEvaluationHelper {
         JsonArray maitrisesArray = new fr.wseduc.webutils.collections.JsonArray();
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject();
-            _maitrise.put("libelle", maitrise.getString("libelle"));
+
+            _maitrise.put("libelle", maitrise.getString("libelle") != null
+                    ? maitrise.getString("libelle") : maitrise.getString("default_lib"));
+
             _maitrise.put("visu", text ? getMaitrise(maitrise.getString("lettre"),
                     String.valueOf(maitrise.getLong(ORDRE))) : maitrise.getString("default"));
 

@@ -346,14 +346,17 @@ public class DefaultCompetenceNoteService extends SqlCrudService implements fr.o
         //getConversionTableByClass( idEtablissement, Arrays.asList(idClasse),false,  handler);
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         StringBuilder query = new StringBuilder()
-                .append("SELECT valmin, valmax, libelle, ordre, couleur, bareme_brevet ")
+                .append("SELECT valmin, valmax, coalesce(perso.libelle, niv.libelle) as libelle, ordre, niv.couleur, bareme_brevet ")
                 .append("FROM notes.niveau_competences AS niv ")
                 .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".echelle_conversion_niv_note AS echelle ON niv.id = echelle.id_niveau ")
                 .append("INNER JOIN  " + Competences.COMPETENCES_SCHEMA + ".rel_groupe_cycle CC ON cc.id_cycle = niv.id_cycle ")
-                .append("AND cc.id_groupe =?")
+                .append("AND cc.id_groupe = ? ")
                 .append("AND echelle.id_structure = ? ")
+                .append("LEFT JOIN (SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".perso_niveau_competences ")
+                .append("WHERE id_etablissement = ?) AS perso ON (perso.id_niveau = niv.id) ")
                 .append("ORDER BY  ordre DESC");
         values.add(idClasse);
+        values.add(idEtablissement);
         values.add(idEtablissement);
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }

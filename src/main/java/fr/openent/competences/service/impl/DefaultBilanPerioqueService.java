@@ -589,7 +589,6 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         result.put("moyennesFinales",moyennesFinales);
     }
 
-
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
                                       JsonObject result, String idEleve, Long idPeriodAsked) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
@@ -598,8 +597,8 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
         noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
-
     }
+
     public void getBilanPeriodiqueDomaineForGraph(final String idEleve,String idEtablissement,
                                                   final String idClasse,final Integer typeClasse, final String idPeriodeString,
                                                   final Handler<Either<String, JsonArray>> handler){

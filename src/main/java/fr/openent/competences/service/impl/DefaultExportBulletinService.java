@@ -479,8 +479,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 if (params.getBoolean(SHOW_PROJECTS)) {
                     getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, finalHandler);
                 }
+
                 getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, finalHandler);
-                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)!= null){
+
+                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
                     if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
                         getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE), idPeriode,
                                 elevesMap, finalHandler);
