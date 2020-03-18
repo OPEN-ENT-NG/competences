@@ -50,24 +50,31 @@ export const opinionConference = {
         },
 
         addOpinion: async function (text) {
-            let opinion;
-            if(opinionConference.that.typeAvis === 1) {
-                opinion = new AvisConseil(null, null, opinionConference.that.idStructure);
-            } else if(opinionConference.that.typeAvis === 2) {
-                opinion = new AvisOrientation(null, null, opinionConference.that.idStructure);
+            if(text !== "") {
+                let opinion;
+                if (opinionConference.that.typeAvis === 1) {
+                    opinion = new AvisConseil(null, null, opinionConference.that.idStructure);
+                } else if (opinionConference.that.typeAvis === 2) {
+                    opinion = new AvisOrientation(null, null, opinionConference.that.idStructure);
+                }
+                await opinion.createNewOpinion(text);
+                opinionConference.that.cancelCreateOpinion();
+                opinionConference.that.init();
+            }else{
+                notify.info('viescolaire.conference.opinions.service.not.empty');
             }
-            await opinion.createNewOpinion(text);
-            opinionConference.that.cancelCreateOpinion();
-            opinionConference.that.init();
         },
 
         updateOpinion: async function (opinion) {
             try {
-                await http.put("/competences/avis/bilan/periodique?id_avis=" + opinion.id
+                if(opinion.libelle !== "")
+                    await http.put("/competences/avis/bilan/periodique?id_avis=" + opinion.id
                     + "&active=" + opinion.active + "&libelle=" + opinion.libelle);
+                else
+                    opinionConference.that.init();
             }
             catch (e) {
-                notify.error('viescolaire.conference.opinions.service.delete.error');
+                notify.error('viescolaire.conference.opinions.service.save.error');
             }
         },
 

@@ -157,7 +157,7 @@ public class BilanPeriodiqueController extends ControllerHelper{
                                 JsonObject result = new JsonObject();
 
                                 JsonObject avisPerso = new JsonObject().put("id", 0).put("libelle","-- Personnalisé --")
-                                        .put("type_avis", 0);
+                                        .put("type_avis", 0).put("active",true);
                                 libelleAvis.add(avisPerso);
 
                                 result.put("libelleAvis",libelleAvis).put("syntheses",syntheses).put("avisConseil",avisConseil).put("avisOrientation",avisOrientation);

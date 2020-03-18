@@ -678,8 +678,8 @@
   "evaluations.model.name": "Nom du modèle ",
   "evaluations.open.model": "Afficher les libellés ",
   "evaluations.close.model":"Masquer les libellés ",
-  "evaluations.show.avis": "Afficher l'avis",
-  "evaluations.hide.avis":"Masquer l'avis",
+  "evaluations.show.avis": "Avis affiché",
+  "evaluations.hide.avis":"Avis masqué",
   "evaluations.choose.model": " Choisir le modèle ",
   "evaluations.default.model.libelle": "Modèle par défaut",
   "evaluations.use.model.libelle": "Utiliser un modèle de libellé de matière",
@@ -728,5 +728,10 @@
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
   "competance.error.iframe.statusText": "Le contenue est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",
-  "competance.lightbox.selectFormat": "Sélectionnez le format de l'exportation :"
+  "competance.lightbox.selectFormat": "Sélectionnez le format de l'exportation :",
+
+  "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
+  "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
+  "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis"
+
 }
