@@ -310,6 +310,7 @@ export class Evaluations extends Model {
             if (model.me.type === 'PERSRELELEVE') {
                 await this.eleves.sync();
                 this.eleve = this.eleves.first();
+                evaluations.niveauCompetences.sync();
                 //await this.updateUsePerso();
                 resolve ();
             }
