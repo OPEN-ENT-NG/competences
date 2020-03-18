@@ -841,7 +841,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):
                         if (template.containers['suivi-competence-content'] !== undefined) {
-                            if($scope.suiviCompetence === undefined)
+                            if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe')
                                 await $scope.selectSuivi();
                             let content = $scope.template.containers['suivi-competence-content']
                                 .split('.html?hash=')[0].split('template/')[1];
@@ -851,7 +851,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 if ($scope.search.periode.libelle === "cycle") {
                                     $scope.currentCycle = null;
                                     $scope.isCycle = true;
-                                    $scope.suiviFilter.mine = "false";
+                                    if($location.path() == '/conseil/de/classe')
+                                        Utils.initFilterMine($scope);
+                                    else
+                                        $scope.suiviFilter.mine = "false";
                                 } else {
                                     Utils.initFilterMine($scope);
                                     $scope.currentCycle = {id_cycle: $scope.search.classe.id_cycle};
@@ -908,6 +911,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     if ($scope.searchBilan.parDomaine === 'false' || refresh === true) {
                         $scope.searchBilan.parDomaine = 'true';
                         template.close('suivi-competence-content');
+                        $scope.backToSuivi();
                         await utils.safeApply($scope);
                         await $scope.suiviCompetence.domaines.sync();
                         await $scope.initSliderBFC();

@@ -1090,7 +1090,6 @@ public class NoteController extends ControllerHelper {
         final String idClasse = request.params().get("idClasse");
         final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
         final String idPeriodeString = request.params().get("idPeriode");
-        final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
         Utils.getGroupsEleve(eb, idEleve, idEtablissement, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle( Either<String, JsonArray> responseQuerry) {
@@ -1101,9 +1100,6 @@ public class NoteController extends ControllerHelper {
                 } else {
                     JsonArray idGroups = responseQuerry.right().getValue();
                     //idGroups null si l'eleve n'est pas dans un groupe
-                    final String idClasse = request.params().get("idClasse");
-                    final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
-                    final String idPeriodeString = request.params().get("idPeriode");
                     notesService.getDataGraph(idEleve, idGroups, idEtablissement, idClasse, typeClasse,
                             idPeriodeString, arrayResponseHandler(request));
                 }
