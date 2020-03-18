@@ -46,23 +46,9 @@ export let updateColorAndLetterForSkills = function ($scope, $location) {
 
 
 export let updateNiveau = function (usePerso ,$scope) {
-    if (usePerso === 'true') {
-        evaluations.structure.niveauCompetences.sync(false).then(() => {
-            evaluations.structure.niveauCompetences.first().markUser().then(() => {
-                $scope.structure.usePerso = 'true';
-                $scope.updateColorAndLetterForSkills();
-                utils.safeApply($scope);
-            });
-        });
-
-    }
-    else if (usePerso === 'false') {
-        evaluations.structure.niveauCompetences.sync(true).then(() => {
-            evaluations.structure.niveauCompetences.first().unMarkUser().then(() => {
-                $scope.structure.usePerso = 'false';
-                $scope.updateColorAndLetterForSkills();
-                utils.safeApply($scope);
-            });
+    if(usePerso == 'true') {
+        evaluations.structure.niveauCompetences.sync().then(async () => {
+            $scope.updateColorAndLetterForSkills();
         });
     }
 };

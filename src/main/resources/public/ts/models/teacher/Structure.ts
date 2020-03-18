@@ -144,34 +144,21 @@ export class Structure extends Model {
             }.bind(this));
 
         this.collection(NiveauCompetence, {
-            sync: async function (defaut) {
-                if (typeof(defaut) === 'undefined') {
-                    defaut = true;
-                }
+            sync: async function () {
                 // Récupération (sous forme d'arbre) des niveaux de compétences de l'établissement en cours
                 return new Promise((resolve, reject) => {
+                    that.usePerso = 'true';
                     http().getJson(that.api.NIVEAU_COMPETENCES.synchronisation).done(function (niveauCompetences) {
-                        if (_.filter(niveauCompetences, {couleur: null}).length === niveauCompetences.length) {
-                            that.usePerso = 'noPerso';
-                        }
-                        else {
-                            if (that.usePerso) {
-                                that.usePerso = 'true';
-                            }
-                            else  {
-                                that.usePerso = 'false';
-                            }
-                        }
                         if (_.filter(niveauCompetences, {couleur: null}).length > 0 ||
-                            _.filter(niveauCompetences, {libelle: null}).length > 0 || defaut) {
+                            _.filter(niveauCompetences, {libelle: null}).length > 0) {
                             niveauCompetences.forEach((niveauCompetence) => {
-                                if (niveauCompetence.couleur === null || defaut) {
+                                if (niveauCompetence.couleur === null) {
                                     niveauCompetence.couleur = Defaultcolors[niveauCompetence.default];
                                 }
-                                if (niveauCompetence.lettre === null || defaut) {
+                                if (niveauCompetence.lettre === null) {
                                     niveauCompetence.lettre = " ";
                                 }
-                                if(niveauCompetence.libelle === null || defaut) {
+                                if(niveauCompetence.libelle === null) {
                                     niveauCompetence.libelle = niveauCompetence.default_lib;
                                 }
                                 niveauCompetence.id_etablissement = this.composer.id;
@@ -203,12 +190,11 @@ export class Structure extends Model {
                         if (resolve && typeof resolve === 'function') {
                             resolve();
                         }
-                    }.bind(this))
-                        .error(function () {
-                            if (reject && typeof reject === 'function') {
-                                reject();
-                            }
-                        });
+                    }.bind(this)).error(function () {
+                        if (reject && typeof reject === 'function') {
+                            reject();
+                        }
+                    });
                 });
             }
         });
@@ -436,11 +422,12 @@ export class Structure extends Model {
             this.annotations.sync().then(isSynced);
             this.types.sync().then(isSynced);
             this.classes.sync().then(isSynced);
-            this.usePersoFun(model.me.userId).then((res) => {
+            /*this.usePersoFun(model.me.userId).then((res) => {
                 let useDefautTheme = !res;
                 this.usePerso = res;
                 this.niveauCompetences.sync(useDefautTheme).then(isSynced);
-            });
+            });*/
+            this.niveauCompetences.sync().then(isSynced);
             this.syncDevoirs(25).then(isSynced);
             this.getDetailsOfUser().then(isSynced);
             if (Utils.isChefEtab()) {
@@ -508,7 +495,7 @@ export class Structure extends Model {
         });
     }
 
-    usePersoFun(idUser): Promise<boolean> {
+    /*usePersoFun(idUser): Promise<boolean> {
         return new Promise((resolve, reject) => {
             http().getJson(this.api.NIVEAU_COMPETENCES.use).done((res) => {
                 if (!res) {
@@ -522,7 +509,7 @@ export class Structure extends Model {
                 }
             });
         });
-    }
+    }*/
 
     getDetailsOfUser(): Promise<any> {
         return new Promise ( ((resolve, reject) => {

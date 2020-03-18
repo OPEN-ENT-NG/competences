@@ -515,7 +515,7 @@ public class DefaultNoteService extends SqlCrudService implements NoteService {
                                           Long periodeId,  String eleveId, Integer typeClasse, Boolean withDomaineInfo,
                                           Handler<Either<String, JsonArray>> handler) {
         if(typeClasse == null){
-            runGetCompetencesNotesReleve(etablissementId,classeId, groupIds, matiereId, null,
+            runGetCompetencesNotesReleve(etablissementId, classeId, groupIds, matiereId, null,
                     periodeId, eleveId, new ArrayList<>(), withDomaineInfo, handler);
         }
         else {
