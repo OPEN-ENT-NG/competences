@@ -29,7 +29,6 @@ import {
     FilterNotEvaluatedEnseignement
 } from "../utils/filters/filterNotEvaluatedEnseignement";
 import {Utils} from "../models/teacher";
-import {updateNiveau} from "../models/common/Personnalisation";
 
 declare let _: any;
 declare let location: any;
@@ -38,7 +37,7 @@ declare let Chart: any;
 
 export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
-     function ($scope, route, $location, $filter, $sce, $compile, $timeout, $route) {
+    function ($scope, route, $location, $filter, $sce, $compile, $timeout, $route) {
         route({
             accueil : async function (params) {
                 await $scope.init(true);
@@ -54,15 +53,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 utils.safeApply($scope);
                 template.open('header', 'parent_enfant/accueil/eval_parent_selectEnfants');
                 template.open('main', 'parent_enfant/releve/eval_parent_dispreleve');
-                utils.safeApply($scope);
-            },
-            displayBulletin : async function(params) {
-                await $scope.init(true);
-                template.close('main');
-                template.close('menu');
-                utils.safeApply($scope);
-                template.open('header', 'parent_enfant/accueil/eval_parent_selectEnfants');
-                template.open('main', 'parent_enfant/bulletin/eval_parent_dispbulletin');
                 utils.safeApply($scope);
             },
             listDevoirs : async function (params) {
@@ -147,6 +137,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          */
         $scope.init = async function (withSyncDevoir?) {
             return new Promise( async (resolve) => {
+
                 if ($scope.eleve === undefined) {
                     await evaluations.sync();
                     await initialise(withSyncDevoir);
@@ -193,9 +184,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return $scope.dataReleve.devoirs.findWhere({ id_matiere : idMatiere });
         };
 
-         $scope.getMoyenneClasse = function(devoirReleveNotes) {
-             return +(parseFloat(devoirReleveNotes.sum_notes)/devoirReleveNotes.nbr_eleves).toFixed(2);
-         };
+        $scope.getMoyenneClasse = function(devoirReleveNotes) {
+            return +(parseFloat(devoirReleveNotes.sum_notes)/devoirReleveNotes.nbr_eleves).toFixed(2);
+        };
 
         // Fonction de sélection d'un enfant par le parent
         $scope.chooseChild = async function(eleve, withSyncDevoir?) {
@@ -208,7 +199,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.classe = new Classe({id: eleve.idClasse});
                     await eleve.classe.sync();
                     await $scope.setCurrentPeriode();
-                    if (withSyncDevoir === true && $location.path() !== "/releve") {
+                    if (withSyncDevoir === true) {
                         await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined);
                     }
                     $scope.search.periode = evaluations.periode;
@@ -353,21 +344,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-         $scope.getLibelleSousMatiere = function (currentDevoir) {
+        $scope.getLibelleSousMatiere = function (currentDevoir) {
 
-             let idMatiere = currentDevoir.id_matiere;
-             if (idMatiere === undefined || idMatiere == null || idMatiere === "") return "";
-             let matiere = _.findWhere($scope.matieres.all, {id: idMatiere});
-             let idSousmatiere = currentDevoir.id_sousmatiere;
-             if (matiere === undefined || idSousmatiere === undefined || idSousmatiere === null || idSousmatiere === ""  )
-                 return ""
-             let sousmatiere = _.findWhere(matiere.sousMatieres.all, {id_type_sousmatiere: parseInt(idSousmatiere)})
-             if(sousmatiere !== undefined && sousmatiere.hasOwnProperty('libelle')){
-                 return sousmatiere.libelle;
-             }else{
-                 return "";
-             }
-         };
+            let idMatiere = currentDevoir.id_matiere;
+            if (idMatiere === undefined || idMatiere == null || idMatiere === "") return "";
+            let matiere = _.findWhere($scope.matieres.all, {id: idMatiere});
+            let idSousmatiere = currentDevoir.id_sousmatiere;
+            if (matiere === undefined || idSousmatiere === undefined || idSousmatiere === null || idSousmatiere === ""  )
+                return ""
+            let sousmatiere = _.findWhere(matiere.sousMatieres.all, {id_type_sousmatiere: parseInt(idSousmatiere)})
+            if(sousmatiere !== undefined && sousmatiere.hasOwnProperty('libelle')){
+                return sousmatiere.libelle;
+            }else{
+                return "";
+            }
+        };
 
         $scope.getTeacherDisplayName = function (owner) {
             if (owner === undefined || owner === null || owner === "") return "";
@@ -413,12 +404,33 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             evaluations.arrayCompetences =
                 _.groupBy(evaluations.niveauCompetences.all,{id_cycle : evaluations.eleve.classe.id_cycle}).true;
         };
-
-
         $scope.updateNiveau =  async function (usePerso) {
-            if(usePerso == 'true') {
-                evaluations.niveauCompetences.sync().then(async () => {
-                    $scope.syncColorAndLetter();
+            if (usePerso === 'true') {
+                evaluations.usePerso = 'true';
+                evaluations.niveauCompetences.sync(false).then(async () => {
+                    if ($scope.update){
+                        await $scope.syncColorAndLetter();
+
+                    }
+                    else {
+                        evaluations.niveauCompetences.first().markUser().then(async () => {
+                            await $scope.syncColorAndLetter();
+                        });
+                    }
+                });
+
+            }
+            else if (usePerso === 'false') {
+                evaluations.usePerso = 'false';
+                evaluations.niveauCompetences.sync(true).then( async () => {
+                    if($scope.update) {
+                        await $scope.syncColorAndLetter();
+                    }
+                    else {
+                        evaluations.niveauCompetences.first().unMarkUser().then(async () => {
+                            await $scope.syncColorAndLetter();
+                        });
+                    }
                 });
             }
         };
@@ -434,14 +446,14 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         };
 
         $scope.getLibelleLimit = function (limit) {
-            return limit + " " + lang.translate('last');
+            return limit +" " + lang.translate('last');
         };
 
         $scope.update = true;
         $scope.reload = function () {
             window.location.hash='#/';
             location.reload();
-        };
+        }
 
         $scope.FilterNotEvaluated = function (maCompetence) {
             return FilterNotEvaluated(maCompetence);
@@ -736,15 +748,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         meta.data.forEach(function(element, index) {
                             // Draw the text invert color of buble, with the specified font
                             let rgba = dataset.backgroundColor[index];
-                            if(rgba && rgba.includes('(') && rgba.includes(')') && rgba.includes(',')) {
-                                rgba = rgba.split('(')[1].split(')')[0].split(',');
-                                let r = 255 - parseInt(rgba[0]);
-                                let g = 255 - parseInt(rgba[1]);
-                                let b = 255 - parseInt(rgba[2]);
-                                let a = rgba[3];
+                            rgba = rgba.split('(')[1].split(')')[0].split(',');
+                            let r = 255 - parseInt(rgba[0]);
+                            let g = 255 - parseInt(rgba[1]);
+                            let b = 255 - parseInt(rgba[2]);
+                            let a = rgba[3];
 
-                                ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
-                            }
+                            ctx.fillStyle = "rgba(" + r.toString()+ ","+ g.toString() +","+ b.toString() +"," + a + ")";
                             let fontSize = 10.5;
                             let fontStyle = 'normal';
                             let fontFamily = 'Helvetica Neue';
@@ -814,10 +824,5 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 return item.id_type > -2;
             };
         };
-         $scope.filterCycleAndYear = () => {
-             return (item) => {
-                 return item.id_type > -1;
-             };
-         };
     }
 ]);

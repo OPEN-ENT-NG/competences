@@ -132,15 +132,11 @@ export class Evaluations extends Model {
                         if (historise !== undefined) {
                             uri = uri + '&historise=' + historise;
                         }
-                        uri = uri + '&forStudentReleve=true';
                         http().getJson(uri).done((devoirs) => {
 
                             // RECUPERATION DES COMPETENCES
                             let uriCompetences = Evaluations.api.GET_COMPETENCES + userId;
-                            if(this.eleve && this.eleve.classe)
-                                uriCompetences = uriCompetences + '?idClasse=' + this.eleve.classe.id;
-                            else if(classeId)
-                                uriCompetences = uriCompetences + '?idClasse=' + classeId;
+                            uriCompetences = uriCompetences + '?idClasse=' + this.eleve.classe.id;
                             if (idPeriode !== undefined) {
                                 uriCompetences = uriCompetences + '&idPeriode=' + idPeriode;
                             }
@@ -185,17 +181,10 @@ export class Evaluations extends Model {
                                 // RECUPERATION DES ANNOTATIONS
                                 let uriAnnotations = Evaluations.api.GET_ANNOTATION  + userId;
                                 if (idPeriode !== undefined) {
-                                    uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode ;
-                                    if(this.eleve && this.eleve.classe)
-                                        uriAnnotations = uriAnnotations + '&idClasse=' + this.eleve.classe.id;
-                                    else if(classeId)
-                                        uriAnnotations = uriAnnotations + '&idClasse=' + classeId;
+                                    uriAnnotations = uriAnnotations + '?idPeriode=' + idPeriode + '&idClasse=' + this.eleve.classe.id;
                                 }
                                 else {
-                                    if(this.eleve && this.eleve.classe)
-                                        uriAnnotations = uriAnnotations + '?idClasse=' + this.eleve.classe.id;
-                                    else if(classeId)
-                                        uriAnnotations = uriAnnotations + '?idClasse=' + classeId;
+                                    uriAnnotations = uriAnnotations + '?idClasse=' + this.eleve.classe.id;
                                 }
 
                                 http().getJson(uriAnnotations).done((annotations) => {
@@ -310,8 +299,7 @@ export class Evaluations extends Model {
             if (model.me.type === 'PERSRELELEVE') {
                 await this.eleves.sync();
                 this.eleve = this.eleves.first();
-                evaluations.niveauCompetences.sync();
-                //await this.updateUsePerso();
+                await this.updateUsePerso();
                 resolve ();
             }
             // Synchronisation des matières, enseignants, devoirs et de l'élève.
@@ -326,10 +314,7 @@ export class Evaluations extends Model {
                     classe: new Classe({id: model.me.classes[0], name: model.me.classNames[0].split('$')[1]})
                 });
 
-                this.usePerso = 'true';
-                //await Promise.all([this.eleve.classe.sync(), this.updateUsePerso()]);
-                await Promise.all([this.eleve.classe.sync()]);
-
+                await Promise.all([this.eleve.classe.sync(), this.updateUsePerso()]);
                 // await this.devoirs.sync(this.eleve.idStructure, this.eleve.id, null);
                 resolve();
             }
@@ -352,16 +337,15 @@ export class Evaluations extends Model {
 
         location.replace(uri);
     }
-     setCompetenceNotes(poDomaine, poCompetencesNotes) {
+    setCompetenceNotes(poDomaine, poCompetencesNotes) {
         Utils.setCompetenceNotes(poDomaine, poCompetencesNotes);
     }
 
-    /*async updateUsePerso () {
+    async updateUsePerso () {
         // Recup du ...
         if(Behaviours.applicationsBehaviours.viescolaire === undefined){
             await model.me.workflow.load(['viescolaire']);
         }
-
         let s = new Structure({id:  model.me.structures[0]});
         //let s = evaluations.structure;
         s.usePersoFun(model.me.userId).then(async(res) => {
@@ -373,7 +357,7 @@ export class Evaluations extends Model {
                 this.usePerso = 'false';
             }
         });
-    }*/
+    }
 }
 
 
