@@ -495,7 +495,7 @@ export class Structure extends Model {
         });
     }
 
-    /*usePersoFun(idUser): Promise<boolean> {
+    usePersoFun(idUser): Promise<boolean> {
         return new Promise((resolve, reject) => {
             http().getJson(this.api.NIVEAU_COMPETENCES.use).done((res) => {
                 if (!res) {
@@ -509,7 +509,7 @@ export class Structure extends Model {
                 }
             });
         });
-    }*/
+    }
 
     getDetailsOfUser(): Promise<any> {
         return new Promise ( ((resolve, reject) => {

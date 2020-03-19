@@ -46,9 +46,5 @@ export let updateColorAndLetterForSkills = function ($scope, $location) {
 
 
 export let updateNiveau = function (usePerso ,$scope) {
-    if(usePerso == 'true') {
-        evaluations.structure.niveauCompetences.sync().then(async () => {
-            $scope.updateColorAndLetterForSkills();
-        });
-    }
+
 };
