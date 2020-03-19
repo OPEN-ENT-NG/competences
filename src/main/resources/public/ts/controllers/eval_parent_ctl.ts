@@ -407,30 +407,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.updateNiveau =  async function (usePerso) {
             if (usePerso === 'true') {
                 evaluations.usePerso = 'true';
-                evaluations.niveauCompetences.sync(false).then(async () => {
-                    if ($scope.update){
-                        await $scope.syncColorAndLetter();
-
-                    }
-                    else {
-                        evaluations.niveauCompetences.first().markUser().then(async () => {
-                            await $scope.syncColorAndLetter();
-                        });
-                    }
+                evaluations.niveauCompetences.sync().then(async () => {
+                    await $scope.syncColorAndLetter();
                 });
 
             }
             else if (usePerso === 'false') {
                 evaluations.usePerso = 'false';
-                evaluations.niveauCompetences.sync(true).then( async () => {
-                    if($scope.update) {
-                        await $scope.syncColorAndLetter();
-                    }
-                    else {
-                        evaluations.niveauCompetences.first().unMarkUser().then(async () => {
-                            await $scope.syncColorAndLetter();
-                        });
-                    }
+                evaluations.niveauCompetences.sync().then( async () => {
+                    await $scope.syncColorAndLetter();
                 });
             }
         };

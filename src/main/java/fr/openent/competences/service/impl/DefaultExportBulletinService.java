@@ -395,7 +395,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("signature", getLibelle("evaluations.export.bulletin.date.name.visa.responsable"))
                     .put("bornAt", getLibelle("born.on"))
                     .put("classeOf", getLibelle("classe.of"))
-                    .put("footer", "*: " + getLibelle("evaluations.export.bulletin.legendPositionnement"))
                     .put("bilanPerDomainesLibelle", getLibelle("evaluations.bilan.by.domaine"))
                     .put("levelStudent", getLibelle("level.student"))
                     .put("levelClass", getLibelle("level.class"))
@@ -407,7 +406,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("coefficientLibelle", getLibelle("viescolaire.utils.coef"))
                     .put("moyenneAnnuelleLibelle", getLibelle("average.annual"))
                     .put("moyenneGeneraleLibelle", getLibelle("average.general"))
-                    .put(NIVEAU_COMPETENCE, params.getValue(NIVEAU_COMPETENCE))
 
                     // positionnement des options d'impression
                     .put(GET_RESPONSABLE, params.getBoolean(GET_RESPONSABLE))
@@ -430,6 +428,23 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE))
                     .put(NEUTRE, params.getBoolean(NEUTRE, false))
                     .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO));
+
+            JsonArray niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
+            JsonArray footerArray = new JsonArray();
+            for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
+                footerArray.add(niveauCompetences.getJsonObject(i));
+            }
+
+            String footer = "";
+            for (int i = 0; i < footerArray.size(); i++) {
+                JsonObject niv = footerArray.getJsonObject(i);
+
+                String lib = niv.getString(LIBELLE);
+                String id_niv = Integer.toString(niv.getInteger("id_niveau"));
+                footer += id_niv + " : " + lib + " - ";
+            }
+            footer = footer.substring(0, footer.length() - 2);
+            eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
                 eleve.put(LOGO_PATH,"img/ministere_agriculture.png");
