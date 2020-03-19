@@ -55,6 +55,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 template.open('main', 'parent_enfant/releve/eval_parent_dispreleve');
                 utils.safeApply($scope);
             },
+            displayBulletin : async function(params) {
+                await $scope.init(true);
+                template.close('main');
+                template.close('menu');
+                utils.safeApply($scope);
+                template.open('header', 'parent_enfant/accueil/eval_parent_selectEnfants');
+                template.open('main', 'parent_enfant/bulletin/eval_parent_dispbulletin');
+                utils.safeApply($scope);
+            },
             listDevoirs : async function (params) {
                 template.close('main');
                 template.close('menu');
@@ -199,7 +208,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     eleve.classe = new Classe({id: eleve.idClasse});
                     await eleve.classe.sync();
                     await $scope.setCurrentPeriode();
-                    if (withSyncDevoir === true) {
+                    if (withSyncDevoir === true && $location.path() !== "/releve") {
                         await evaluations.devoirs.sync(eleve.idStructure, eleve.id, undefined);
                     }
                     $scope.search.periode = evaluations.periode;
@@ -733,13 +742,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         meta.data.forEach(function(element, index) {
                             // Draw the text invert color of buble, with the specified font
                             let rgba = dataset.backgroundColor[index];
-                            rgba = rgba.split('(')[1].split(')')[0].split(',');
-                            let r = 255 - parseInt(rgba[0]);
-                            let g = 255 - parseInt(rgba[1]);
-                            let b = 255 - parseInt(rgba[2]);
-                            let a = rgba[3];
+                            if(rgba && rgba.includes('(') && rgba.includes(')') && rgba.includes(',')) {
+                                rgba = rgba.split('(')[1].split(')')[0].split(',');
+                                let r = 255 - parseInt(rgba[0]);
+                                let g = 255 - parseInt(rgba[1]);
+                                let b = 255 - parseInt(rgba[2]);
+                                let a = rgba[3];
 
-                            ctx.fillStyle = "rgba(" + r.toString()+ ","+ g.toString() +","+ b.toString() +"," + a + ")";
+                                ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
+                            }
                             let fontSize = 10.5;
                             let fontStyle = 'normal';
                             let fontFamily = 'Helvetica Neue';
@@ -807,6 +818,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.filterCycle = () => {
             return (item) => {
                 return item.id_type > -2;
+            };
+        };
+        $scope.filterCycleAndYear = () => {
+            return (item) => {
+                return item.id_type > -1;
             };
         };
     }
