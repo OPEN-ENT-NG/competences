@@ -8,7 +8,8 @@
         <label  class="bold">
                 <span ng-if="canUpdateRetardAndAbscence">
                     <input id="retard"type="number" min="0" ng-model="search.eleve.evenement.retard"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('retard')">
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('retard')"
+                           ng-click="focusMe($event);">
                 </span>
             <span ng-if="!canUpdateRetardAndAbscence">
                     [[ search.eleve.evenement.retard ]]
@@ -22,7 +23,8 @@
         <label  class="bold">
                 <span  ng-if="canUpdateRetardAndAbscence">
                     <input id="abs_just"type="number" min="0" ng-model="search.eleve.evenement.abs_just"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_just')">
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_just')"
+                           ng-click="focusMe($event);">
                 </span>
             <span ng-if="!canUpdateRetardAndAbscence">
                     [[ search.eleve.evenement.abs_just ]]
@@ -37,7 +39,8 @@
         <label  class="bold">
             <span ng-if="canUpdateRetardAndAbscence">
                     <input id="abs_non_just"type="number" min="0" ng-model="search.eleve.evenement.abs_non_just"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_non_just')">
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_non_just')"
+                           ng-click="focusMe($event);">
             </span>
             <span ng-if="!canUpdateRetardAndAbscence">
                     [[ search.eleve.evenement.abs_non_just ]]
@@ -52,7 +55,8 @@
         <label  class="bold">
              <span ng-if="canUpdateRetardAndAbscence">
                     <input id="abs_totale_heure"type="number" min="0" ng-model="search.eleve.evenement.abs_totale_heure"
-                           ng-disabled="!canUpdateRetardAndAbscence" ng-blur="setColonne('abs_totale_heure')">
+                           ng-disabled="!canUpdateRetardAndAbscence" ng-change="setColonne('abs_totale_heure')"
+                           ng-click="focusMe($event);">
                 </span>
             <span ng-if="!canUpdateRetardAndAbscence">
                     [[ search.eleve.evenement.abs_totale_heure ]]
