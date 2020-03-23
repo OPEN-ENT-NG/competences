@@ -831,6 +831,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             await utils.safeApply($scope);
         };
 
+        $scope.initSuiviCompetences = function() {
+            $scope.suiviCompetence = undefined;
+        };
+
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
                 if (_.isEmpty($scope.search.classe.eleves.all)) {
