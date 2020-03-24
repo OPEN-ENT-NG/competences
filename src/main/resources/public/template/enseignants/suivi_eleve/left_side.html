@@ -88,7 +88,7 @@
         <form name="SelectedCycleForm">
             <div ng-repeat="cycle in search.eleve.cycles">
                 <label>
-                    <input type="radio" ng-click="changeContent(cycle);"
+                    <input type="radio" ng-click="initSuiviCompetences(); changeContent(cycle);"
                            ng-model="$parent.selectedCycleRadio.id_cycle"
                            value="[[::cycle.id_cycle]]">
                     [[::cycle.libelle]]

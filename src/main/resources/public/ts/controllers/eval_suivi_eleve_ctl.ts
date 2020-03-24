@@ -845,8 +845,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):
                         if (template.containers['suivi-competence-content'] !== undefined) {
-                            if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe')
-                                await $scope.selectSuivi();
                             let content = $scope.template.containers['suivi-competence-content']
                                 .split('.html?hash=')[0].split('template/')[1];
 
@@ -868,6 +866,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 $scope.currentCycle = cycle;
                                 $scope.isCycle = true;
                             }
+                            if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe')
+                                await $scope.selectSuivi();
                             $scope.template.close('suivi-competence-content');
                             $scope.template.open('suivi-competence-content', content);
                         }
