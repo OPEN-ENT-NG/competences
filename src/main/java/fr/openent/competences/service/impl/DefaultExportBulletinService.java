@@ -90,6 +90,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String ID_ETABLISSEMENT = "id_etablissement";
     private static final String AGRICULTURE_LOGO = "agricultureLogo";
     private static final String LOGO_PATH = "pathLogoImg";
+    private static final String HIDE_HEADTEACHER = "hideHeadTeacher";
+    private static final String ADD_OTHER_TEACHER = "addOtherTeacher";
+    private static final String FUNCTION_OTHER_TEACHER = "functionOtherTeacher";
+    private static final String OTHER_TEACHER_NAME = "otherTeacherName";
     private static final String GET_RESPONSABLE = "getResponsable";
     private static final String MOYENNE = "moyenne";
     private static final String MOYENNE_CLASSE = "moyenneClasse";
@@ -429,7 +433,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES))
                     .put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE))
                     .put(NEUTRE, params.getBoolean(NEUTRE, false))
-                    .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO));
+                    .put(HIDE_HEADTEACHER,params.getBoolean(HIDE_HEADTEACHER,false))
+                    .put(ADD_OTHER_TEACHER,params.getBoolean(ADD_OTHER_TEACHER,false))
+                    .put(FUNCTION_OTHER_TEACHER,params.getString(FUNCTION_OTHER_TEACHER,""))
+                    .put(OTHER_TEACHER_NAME,params.getString(OTHER_TEACHER_NAME,""))
+                    .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO,false));
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
                 eleve.put(LOGO_PATH,"img/ministere_agriculture.png");
@@ -453,7 +461,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE), idEleve, elevesMap, idPeriode, finalHandler);
                 getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
                 getStructure(idEleve, elevesMap.get(idEleve), finalHandler);
-                getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
+                if(!params.getBoolean(HIDE_HEADTEACHER,false))
+                    getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, finalHandler);
                 getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
@@ -534,6 +543,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 ++nbServices;
             }
         }
+        if(params.getBoolean(HIDE_HEADTEACHER,false))
+            --nbServices;
         return new AtomicInteger(nbServices);
 
     }

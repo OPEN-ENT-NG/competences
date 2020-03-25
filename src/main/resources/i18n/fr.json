@@ -621,6 +621,8 @@
   "evaluations.export.bulletin.legendMaxHeightSignature": "Hauteur max conseillée: 150px",
   "evaluations.export.bulletin.legendMaxWidthStructure": "Largeur max conseillée: 230px",
   "evaluations.export.bulletin.legendMaxHeightStructure": "Hauteur max conseillée: 90px",
+  "evaluations.export.bulletin.hide.headTeacher": "Masquer le professeur principal",
+  "evaluations.export.bulletin.add.function": "Ajouter une fonction : ",
 
   "evaluation.eleve.header.followItems": "SUIVI DES ITEMS",
   "evaluation.eleve.header.followNotes": "SUIVI DES NOTES",
