@@ -300,11 +300,18 @@
             <div style="font-size: small;">{{periode}}</div>
             <div style="font-size: 18px; font-weight: bold">{{firstName}} &nbsp; {{lastName}}  </div>
             <div style="font-size: small;">{{bornAt}} {{birthDateLibelle}}</div>
+            {{^hideHeadTeacher}}
             <div style="font-size: small;">   {{headTeacherLibelle}}
                 {{#headTeachers}}
                 {{civility}} &nbsp; {{initial}} {{name}} <br/>
                 {{/headTeachers}}
             </div>
+            {{/hideHeadTeacher}}
+            {{#addOtherTeacher}}
+            <div style="font-size: small;">   {{functionOtherTeacher}}
+                {{otherTeacherName}} <br/>
+            </div>
+            {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
         </div>
         {{/getResponsable}}
@@ -314,11 +321,18 @@
             <div style="font-size: small;">{{periode}}</div>
             <div style="font-size: 18px; font-weight: bold">{{firstName}} &nbsp; {{lastName}}  </div>
             <div style="font-size: small;">{{bornAt}} {{birthDateLibelle}}</div>
+            {{^hideHeadTeacher}}
             <div style="font-size: small;">   {{headTeacherLibelle}}
                 {{#headTeachers}}
-                {{civility}}&nbsp; {{initial}} {{name}}
+                {{civility}} &nbsp; {{initial}} {{name}} <br/>
                 {{/headTeachers}}
             </div>
+            {{/hideHeadTeacher}}
+            {{#addOtherTeacher}}
+            <div style="font-size: small;">   {{functionOtherTeacher}}
+                {{otherTeacherName}} <br/>
+            </div>
+            {{/addOtherTeacher}}
             <div style="font-size: small;">{{classeOf}} {{classeNameToShow}}</div>
         </div>
         <div class="responsable">

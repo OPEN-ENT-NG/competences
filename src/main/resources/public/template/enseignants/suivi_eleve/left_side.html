@@ -88,7 +88,7 @@
         <form name="SelectedCycleForm">
             <div ng-repeat="cycle in search.eleve.cycles">
                 <label>
-                    <input type="radio" ng-click="changeContent(cycle);"
+                    <input type="radio" ng-click="initSuiviCompetences(); changeContent(cycle);"
                            ng-model="$parent.selectedCycleRadio.id_cycle"
                            value="[[::cycle.id_cycle]]">
                     [[::cycle.libelle]]
@@ -100,14 +100,14 @@
     <section ng-if="displayFollowEleve == 'followItems' || displayFollowCompetencesClass === 'followItems'">
         <div>
             <label>
-                <input type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="true">
+                <input type="radio" ng-change="initSuiviCompetences(); changeContent();"ng-model="searchBilan.parDomaine" value="true">
                 <span><i18n>evaluation.search.by.domaines</i18n></span>
             </label>
         </div>
         <div ng-if="showEnseignementChoice()">
             <label>
                 <input ng-disabled="($parent.suiviFilter.mine === 'true')"
-                       type="radio" ng-change="changeContent();"ng-model="searchBilan.parDomaine" value="false">
+                       type="radio" ng-change="initSuiviCompetences(); changeContent();"ng-model="searchBilan.parDomaine" value="false">
                 <span  ng-class="{'disabled': $parent.suiviFilter.mine === 'true'}">
                     [[translate('evaluation.search.by.enseignements')]]</span>
             </label>

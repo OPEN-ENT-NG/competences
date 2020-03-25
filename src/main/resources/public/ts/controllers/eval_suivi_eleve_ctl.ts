@@ -286,7 +286,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     }
                 });
                 await competenceNiveauFinal.saveNiveaufinal();
-                Utils.setMaxCompetenceShow(competence, $scope.isCycle);
+                Utils.setMaxCompetenceShow(competence, $scope.suiviCompetence.tableConversions);
             }
         };
 
@@ -549,11 +549,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             $scope.search.classe = _.findWhere(evaluations.classes.all, {'id': Eleve.idClasse});
             $scope.search.eleve = _.findWhere($scope.structure.eleves.all, {'id': Eleve.id});
             $scope.syncPeriode($scope.search.classe.id);
-            //$scope.search.periode = '*';
             $scope.search.classe.eleves.sync().then(async function () {
                 $scope.search.eleve = _.findWhere($scope.search.classe.eleves.all, {'id': Eleve.id});
-                await $scope.selectSuivi($scope.route.current.$$route.originalPath);
-                await utils.safeApply($scope);
+                await $scope.initDataEleve();
+                await $scope.changeContent();
             });
         };
 
@@ -831,6 +830,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             await utils.safeApply($scope);
         };
 
+        $scope.initSuiviCompetences = function() {
+            $scope.suiviCompetence = undefined;
+        };
+
         $scope.changeContent = async function (cycle?) {
             return new Promise(async (resolve) => {
                 if (_.isEmpty($scope.search.classe.eleves.all)) {
@@ -841,8 +844,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):
                         if (template.containers['suivi-competence-content'] !== undefined) {
-                            if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe')
-                                await $scope.selectSuivi();
                             let content = $scope.template.containers['suivi-competence-content']
                                 .split('.html?hash=')[0].split('template/')[1];
 
@@ -864,6 +865,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 $scope.currentCycle = cycle;
                                 $scope.isCycle = true;
                             }
+                            if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe')
+                                await $scope.selectSuivi();
                             $scope.template.close('suivi-competence-content');
                             $scope.template.open('suivi-competence-content', content);
                         }
@@ -1392,6 +1395,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     $scope.evaluationLibre.sousmatiere = []
                 }
             });
+            await $scope.initDataEleve();
             await $scope.initSuivi();
             await evaluationsParentFormat.sync();
             $scope.$watch($scope.displayFromClass, async function (newValue, oldValue) {

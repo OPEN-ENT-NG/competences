@@ -135,6 +135,22 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             });
             options.idStudents = _.pluck(students, 'id');
 
+            if(options.addOtherTeacher) {
+                let otherTeacher = _.findWhere($scope.enseignants.all, {id: options.otherTeacherId});
+                if (otherTeacher && otherTeacher.displayName) {
+                    options.otherTeacherName = " : ";
+                    if (otherTeacher.civility)
+                        options.otherTeacherName += otherTeacher.civility;
+                    let initial = " ";
+                    if (otherTeacher.firstName && otherTeacher.firstName.length > 0) {
+                        initial = " " + otherTeacher.firstName[0] + ". ";
+                    }
+                    options.otherTeacherName += initial;
+                    if (otherTeacher.firstName)
+                        options.otherTeacherName += otherTeacher.lastName;
+                }
+            }
+
             if (_.where($scope.allElevesClasses, {selected: true}).length === 0) {
                 notify.info('evaluations.choose.student');
                 return ;
