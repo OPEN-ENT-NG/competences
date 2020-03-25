@@ -549,11 +549,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             $scope.search.classe = _.findWhere(evaluations.classes.all, {'id': Eleve.idClasse});
             $scope.search.eleve = _.findWhere($scope.structure.eleves.all, {'id': Eleve.id});
             $scope.syncPeriode($scope.search.classe.id);
-            //$scope.search.periode = '*';
             $scope.search.classe.eleves.sync().then(async function () {
                 $scope.search.eleve = _.findWhere($scope.search.classe.eleves.all, {'id': Eleve.id});
-                await $scope.selectSuivi($scope.route.current.$$route.originalPath);
-                await utils.safeApply($scope);
+                await $scope.initDataEleve();
+                await $scope.changeContent();
             });
         };
 
@@ -1396,6 +1395,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     $scope.evaluationLibre.sousmatiere = []
                 }
             });
+            await $scope.initDataEleve();
             await $scope.initSuivi();
             await evaluationsParentFormat.sync();
             $scope.$watch($scope.displayFromClass, async function (newValue, oldValue) {

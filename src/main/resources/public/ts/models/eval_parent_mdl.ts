@@ -311,10 +311,11 @@ export class Evaluations extends Model {
                 await this.eleves.sync();
                 this.eleve = this.eleves.first();
                 await this.updateUsePerso();
+                this.synchronised = true;
                 resolve ();
             }
             // Synchronisation des matières, enseignants, devoirs et de l'élève.
-            else {
+            else if(model.me.classNames && model.me.classNames.lenght>0 && model.me.classes && model.me.structures) {
                 this.eleve = new Eleve({
                     id: model.me.userId,
                     idClasse: model.me.classes[0],
@@ -327,9 +328,12 @@ export class Evaluations extends Model {
 
                 await Promise.all([this.eleve.classe.sync(), this.updateUsePerso()]);
                 // await this.devoirs.sync(this.eleve.idStructure, this.eleve.id, null);
+                this.synchronised = true;
                 resolve();
             }
-            this.synchronised = true;
+            else{
+                resolve();
+            }
         });
     }
 
