@@ -281,7 +281,7 @@ export class Utils {
      *
      */
 
-     static setMaxCompetenceShow (competence, isCycle) {
+     static setMaxCompetenceShow (competence, tableConversion) {
         //all evaluations
         // récupèrer toutes les évaluations de type non "formative"
         let allEvaluations = _.filter(competence.competencesEvaluations, (evaluation) => {
@@ -293,7 +293,7 @@ export class Utils {
                 return evaluation.eval_lib_historise === false;
             });
             allEvaluations = (notHistorizedEvals.length > 0) ? notHistorizedEvals : allEvaluations;
-            competence.niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations);
+            competence.niveauFinaltoShowAllEvaluations = Utils.getNiveauMaxOfListEval(allEvaluations, tableConversion);
         }
 
         // my evaluations
@@ -302,10 +302,10 @@ export class Utils {
         });
         if( myEvaluations !== undefined && myEvaluations.length > 0){
             //set the max of my evaluations on this competence for "niveau atteint"
-            competence.niveauAtteintToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, true);
+            competence.niveauAtteintToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion,true);
 
             //set the max of my evaluations on this competence for "niveau final"
-            competence.niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations);
+            competence.niveauFinalToShowMyEvaluations = Utils.getNiveauMaxOfListEval(myEvaluations, tableConversion);
         }
     }
 
@@ -314,7 +314,7 @@ export class Utils {
      * @param listEval
      * @param onlyNote
      */
-    static getNiveauMaxOfListEval (listEval, onlyNote?){
+    static getNiveauMaxOfListEval (listEval, tableConversion, onlyNote?){
         //tableau des max des Evals pour chaque matière
         if(onlyNote !== undefined && onlyNote){
             return  _.max(listEval, (e) => {
@@ -336,11 +336,14 @@ export class Utils {
                     }).evaluation);
                 }
             });
-
-            return _.max(allmaxMats);
+            let sum = 0;
+            allmaxMats.forEach(maxMat =>{
+                sum += maxMat;
+            });
+            return utils.getMoyenneForBFC((sum/allmaxMats.length)+1,tableConversion.all)-1;
         }
     }
-    static setCompetenceNotes(poDomaine, poCompetencesNotes, object?, classe?, tabDomaine?, isCycle?) {
+    static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?) {
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {
                 _.map(poDomaine.competences.all, function (competence) {
@@ -350,7 +353,7 @@ export class Utils {
                     });
 
                     if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence, isCycle);
+                        Utils.setMaxCompetenceShow(competence, tableConversion);
                     }
                 });
                 if (tabDomaine !== undefined) {
@@ -366,7 +369,7 @@ export class Utils {
                 });
 
                 if(competence.competencesEvaluations !== undefined && competence.competencesEvaluations.length > 0){
-                        Utils.setMaxCompetenceShow(competence, isCycle);
+                        Utils.setMaxCompetenceShow(competence, tableConversion);
                 }
 
                 if (object.composer.constructor.name === 'SuiviCompetenceClasse') {
@@ -417,7 +420,7 @@ export class Utils {
 
         if(poDomaine.domaines) {
             for (var i = 0; i < poDomaine.domaines.all.length; i++) {
-                this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, object, classe,
+                this.setCompetenceNotes(poDomaine.domaines.all[i], poCompetencesNotes, tableConversion, object, classe,
                     tabDomaine, isCycle);
             }
         }
