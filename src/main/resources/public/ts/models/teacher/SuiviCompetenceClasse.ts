@@ -15,8 +15,17 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model, Collection } from 'entcore';
-import {Domaine, CompetenceNote, Periode, Classe, Utils, Matiere, Structure} from './index';
+import {Model, Collection, _} from 'entcore';
+import {
+    Domaine,
+    CompetenceNote,
+    Periode,
+    Classe,
+    Utils,
+    Matiere,
+    Structure,
+    SuiviCompetence
+} from './index';
 import {Enseignement} from "../parent_eleve/Enseignement";
 import http from "axios";
 
@@ -44,18 +53,22 @@ export class SuiviCompetenceClasse extends Model {
             sync: () => {
                 return new Promise(async (resolve, reject) => {
                     try {
+                        let uriGetConversionTable = SuiviCompetence.api.getCompetenceNoteConverssion + '?idEtab=' + structure.id + '&idClasse=' + classe.id;
                         let response = await Promise.all([
                             http.get(`${this.api.getArbreDomaines + classe.id}`),
-                            this.getCompetencesNotesClasse(classe, periode)]);
+                            this.getCompetencesNotesClasse(classe, periode),
+                            http.get(uriGetConversionTable)
+                        ]);
 
                         let resDomaines = response[0].data;
                         let resCompetencesNotes = response[1].data;
+                        let resGetConversionTable = {all: response[2].data};
 
                         if(resDomaines) {
                             for(let i=0; i<resDomaines.length; i++) {
                                 let domaine = new Domaine(resDomaines[i]);
                                 this.domaines.all.push(domaine);
-                                Utils.setCompetenceNotes(domaine, resCompetencesNotes, this.domaines, classe);
+                                Utils.setCompetenceNotes(domaine, resCompetencesNotes, resGetConversionTable, this.domaines, classe);
                             }
                         }
                         if (resolve && typeof (resolve) === 'function') {
