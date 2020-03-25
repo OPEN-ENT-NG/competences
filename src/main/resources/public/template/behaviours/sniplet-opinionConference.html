@@ -1,0 +1,92 @@
+<div class="evaluations-sniplet">
+    <div id="structure-loader" class="overlay" ng-show="displayMessageLoader">
+        <div>
+            <h4 class="content-loader">Chargement en cours...</h4>
+        </div>
+    </div>
+
+    <div class="twelve twelve-mobile">
+        <div class="flex-row justify-between">
+            <h3 class="four">
+                <i18n>evaluations.evaluation.avis.conseil</i18n>
+            </h3>
+
+            <button class="three" ng-click="createClassOpinion()">
+                <i18n>viescolaire.conference.opinions.class.create</i18n>
+            </button>
+        </div>
+
+        <div class="row">
+            <div class="twelve cell">
+                <fieldset ng-repeat="opinion in classOpinions track by $index"
+                          class="ten no-border" ng-disabled="opinion.id_etablissement === null">
+                    <label class="one" ng-hide="opinion.id_etablissement === null"
+                           tooltip="[[opinion.active ? 'evaluations.show.avis' : 'evaluations.hide.avis']]">
+                        <i ng-class="{'eye-slash': !opinion.active, 'eye': opinion.active}"
+                           ng-click="opinion.active = !opinion.active; updateOpinion(opinion)">
+                        </i>
+                    </label>
+                    <label>
+                        <input class="ten left-spacing-twice" type="text"
+                               ng-model="opinion.libelle" ng-blur="updateOpinion(opinion)"/>
+                    </label>
+                    <span>
+                        <i class="one trash-orange left-spacing-twice" i18n-placeholder="evaluations.remplacement.delete"
+                           ng-click="deleteOpinion(opinion)" ng-hide="opinion.id_etablissement === null"></i>
+                    </span>
+                </fieldset>
+            </div>
+        </div>
+
+        <div class="flex-row justify-between margin-top-lg">
+            <h3 class="four">
+                <i18n>evaluations.evaluation.avis.orientation</i18n>
+            </h3>
+
+            <button class="three" ng-click="createOrientationOpinion()">
+                <i18n>viescolaire.conference.opinions.orientation.create</i18n>
+            </button>
+        </div>
+
+        <div class="row">
+            <div class="twelve cell">
+                <fieldset ng-repeat="opinion in orientationOpinions track by $index"
+                          class="ten no-border" ng-disabled="opinion.id_etablissement === null">
+                    <label class="one" ng-hide="opinion.id_etablissement === null"
+                           tooltip="[[opinion.active ? 'evaluations.show.avis' : 'evaluations.hide.avis']]">
+                        <i ng-class="{'eye-slash': !opinion.active, 'eye': opinion.active}"
+                           ng-click="opinion.active = !opinion.active; updateOpinion(opinion)">
+                        </i>
+                    </label>
+                    <label>
+                        <input class="ten left-spacing-twice" type="text"
+                               ng-model="opinion.libelle" ng-blur="updateOpinion(opinion)"/>
+                    </label>
+                    <span>
+                        <i class="one trash-orange left-spacing-twice" i18n-placeholder="evaluations.remplacement.delete"
+                           ng-click="deleteOpinion(opinion)" ng-hide="opinion.id_etablissement === null"></i>
+                    </span>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+
+    <lightbox show="createOpinion" on-close="cancelCreateOpinion()">
+        <div class="header">
+            <h2>
+                <i18n>viescolaire.utils.avis</i18n>
+            </h2>
+        </div>
+        <div class="twelve">
+            <label>
+                <input type="text" ng-model="newOpinion" ng-maxlength="150" maxlength="150"
+                       class="eleven" style="margin:15px"
+                       ng-keydown="$event.keyCode==13 && [addOpinion(newOpinion), newOpinion = '']"
+                       i18n-placeholder="evaluations.evaluation.avis.personalize"/>
+            </label>
+            <input type="button" class="right-magnet" ng-click="addOpinion(newOpinion); newOpinion = ''"
+                   i18n-value="viescolaire.utils.save"/>
+        </div>
+    </lightbox>
+
+</div>

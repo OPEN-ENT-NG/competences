@@ -403,6 +403,7 @@ public class DefaultUtilsService  implements UtilsService {
                         "u.activationCode as code, u.login as login, u.firstName as firstName, " +
                         "u.lastName as lastName, u.displayName as displayName, u.source as source, u.attachmentId as attachmentId, " +
                         "u.birthDate as birthDate, " +
+                        "u.title as civility, " +
                         "extract(function IN u.functions | last(split(function, \"$\"))) as aafFunctions, " +
                         "collect(distinct {id: s.id, name: s.name}) as structures, " +
                         "collect(distinct {id: class.id, name: class.name}) as allClasses, " +

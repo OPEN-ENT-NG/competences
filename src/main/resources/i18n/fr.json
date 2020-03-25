@@ -243,6 +243,7 @@
   "evaluation.synthese.bilan.periodique.get.error":"Une erreur est survenue lors de la récupération de la synthèse",
   "evaluations.avis.conseil.bilan.periodique.save.error":"Une erreur est survenue lors de l'enregistrement de l'avis",
   "evaluations.avis.conseil.bilan.periodique.get.error":"Une erreur est survenue lors de la récupération de l'avis",
+  "evaluations.avis.synthses.bilan.periodique.get.error":"Une erreur est survenue lors de la récupération des synthèses et avis de l'élève",
 
   "evaluations.conseil.de.classe": "Conseil de classe",
   "evaluations.bilan.periodique": "Bilan périodique",
@@ -274,6 +275,8 @@
   "evaluations.evaluation.avis.conseil" : "Avis conseil",
   "evaluations.evaluation.avis.orientation" : "Avis orientation",
   "evaluations.evaluation.avis.personalize" : "Personnaliser un avis",
+  "evaluations.evaluation.avis.conseil.create" : "Créer un avis conseil",
+  "evaluations.evaluation.avis.orientation.create" : "Créer un avis orientation",
   "evaluation.bilan.fin.cycle.successUpdateEnseignement":"Enseignement sauvegardé.",
   "evaluations.suivi.eleve.title":"Suivi élève",
   "evaluations.suivi.eleve.vue.liste":"Vue liste",
@@ -565,6 +568,8 @@
   "viescolaire.nb.courses.lost" : "Nb heures de cours manquées",
   "viescolaire.communication.with.familly" : "Communication avec la famille",
   "viescolaire.suivi.des.acquis.libelle.export" :"Bilan de l'acquisition des connaissances et compétences",
+  "viescolaire.utils.hide" : "Masquer",
+  "viescolaire.utils.show" : "Afficher",
 
   "error.note.outbound":"La note doit être comprise entre 0 et ",
   "error.average.outbound":"La moyenne doit être comprise entre 0 et 20",
@@ -616,6 +621,8 @@
   "evaluations.export.bulletin.legendMaxHeightSignature": "Hauteur max conseillée: 150px",
   "evaluations.export.bulletin.legendMaxWidthStructure": "Largeur max conseillée: 230px",
   "evaluations.export.bulletin.legendMaxHeightStructure": "Hauteur max conseillée: 90px",
+  "evaluations.export.bulletin.hide.headTeacher": "Masquer le professeur principal",
+  "evaluations.export.bulletin.add.function": "Ajouter une fonction : ",
 
   "evaluation.eleve.header.followItems": "SUIVI DES ITEMS",
   "evaluation.eleve.header.followNotes": "SUIVI DES NOTES",
@@ -673,6 +680,8 @@
   "evaluations.model.name": "Nom du modèle ",
   "evaluations.open.model": "Afficher les libellés ",
   "evaluations.close.model":"Masquer les libellés ",
+  "evaluations.show.avis": "Avis affiché",
+  "evaluations.hide.avis":"Avis masqué",
   "evaluations.choose.model": " Choisir le modèle ",
   "evaluations.default.model.libelle": "Modèle par défaut",
   "evaluations.use.model.libelle": "Utiliser un modèle de libellé de matière",
@@ -718,9 +727,13 @@
   "in.file": "Dans le fichier ",
   "viescolaire.utils.classes": "classes",
 
-  "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
   "competance.error.iframe.statusText": "Le contenue est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",
-  "competance.lightbox.selectFormat": "Sélectionnez le format de l'exportation :"
+  "competance.lightbox.selectFormat": "Sélectionnez le format de l'exportation :",
+
+  "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
+  "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
+  "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis"
+
 }

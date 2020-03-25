@@ -85,10 +85,10 @@ export class ReleveNoteTotale extends  Model implements IModel {
         };
     }
 
-    async export  () {
+    async export  (teacherBySubject?:Array<any>) {
         return new Promise(async (resolve, reject) => {
             try {
-                await this.formateHeaderAndColumn();
+                await this.formateHeaderAndColumn(teacherBySubject);
                 let columnCsv = [];
                 let blob;
                 let addingAllStudents = false;
@@ -98,7 +98,6 @@ export class ReleveNoteTotale extends  Model implements IModel {
                         idGroups: this.idGroups
                     });
                 let data = await httpAxios.post(this.api.EXPORT, parameter);
-                console.dir(data);
                 let response;
                 let responseOtherPeriodes;
                 if(this.periodes.length > 0){
@@ -315,7 +314,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
         });
     }
 
-    async formateHeaderAndColumn () {
+    async formateHeaderAndColumn (teacherBySubject?:Array<any>) {
         return new Promise(async (resolve, reject) => {
             try {
                 let header = `${lang.translate('evaluations.classe.groupe')} : ${this.classe.name}\r\n${lang.translate('viescolaire.utils.periode')} : ${this.periodeName}\r\n`;
@@ -345,6 +344,7 @@ export class ReleveNoteTotale extends  Model implements IModel {
                 if (this.matieresId.length == 0)
                     throw "Pas d'évaluations réalisées pour cette classe sur cette période";
                 for (let matiere of this.matiereWithDevoirs) {
+                    let teacher:string;
                     let _devoirs = this.dataByMatiere[matiere.id];
                     if (this.exportOptions.moyenneMat) {
                         header += `;${matiere.name}`;
@@ -356,12 +356,9 @@ export class ReleveNoteTotale extends  Model implements IModel {
                     }
                     this.devoirs.load(_devoirs, null, false);
                     this.ennseignantsNames = "; ";
-
-                    for (let i = 0; i < this.devoirs.all.length; i++) {
-                        let teacher = this.devoirs.all[i].teacher;
-                        if (!utils.containsIgnoreCase(this.ennseignantsNames, teacher)) {
-                            this.ennseignantsNames += teacher + " "
-                        }
+                    teacher = teacherBySubject[matiere.id]? teacherBySubject[matiere.id].displayName || " " : " ";
+                    if (!utils.containsIgnoreCase(this.ennseignantsNames, teacher)) {
+                        this.ennseignantsNames += teacher + " "
                     }
                     enseignants.push(this.ennseignantsNames);
                 }

@@ -289,7 +289,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                                                 createPlaceholder();
 
                         $elem
-                            .css('z-index', 10)
+                            .css('z-index', 3)
                             .css('width', initialCSS.width)
                             .css('top', '')
                             .css('bottom', 0)
@@ -322,7 +322,7 @@ export let sticky = ng.directive('sticky', ['$window', '$timeout', function($win
                     createPlaceholder();
 
                     $elem
-                        .css('z-index', '10')
+                        .css('z-index', '3')
                         .css('width', $elem[0].offsetWidth + 'px')
                         .css('position', 'fixed')
                         .css('left', $elem.css('left').replace('px', '') + 'px')

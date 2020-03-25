@@ -185,6 +185,32 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="twelve cell vertical-spacing-twice">
+                            <div class="four cell twelve-mobile">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.hideHeadTeacher"/>
+                                    <span><i18n>evaluations.export.bulletin.hide.headTeacher</i18n></span>
+                                </label>
+                            </div>
+                            <div class="three cell twelve-mobile">
+                                <label class="checkbox">
+                                    <input type="checkbox" ng-model="print.addOtherTeacher"/>
+                                    <span>
+                                        <i18n>evaluations.export.bulletin.add.function</i18n>
+                                    </span>
+                                </label>
+                                <input class="four" type="text" ng-model="print.functionOtherTeacher"/>
+                                <section>
+                                    <label class="select">
+                                        <select ng-model="print.otherTeacherId"
+                                                ng-options="enseignant.id as enseignant.displayName for enseignant in enseignants.all">
+                                            <option class="header-opt" disabled value="">[[translate('viescolaire.utils.teacher')]]
+                                            </option>
+                                        </select>
+                                    </label>
+                                </section>
+                            </div>
+                        </div>
                     </fieldset>
 
                     <!-- Page 2 -->
@@ -274,7 +300,7 @@
 
                     <fieldset class="eleven">
 
-                        <div class="four cell twelve-mobile">
+                        <div class="four cell twelve-mobile vertical-spacing-twice">
                             <label class="checkbox">
                                 <input type="checkbox" ng-model="print.agricultureLogo"/><span>
                             <i18n>evaluations.bulletin.agricole</i18n>

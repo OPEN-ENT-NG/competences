@@ -90,6 +90,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
     public static final String ID_ETABLISSEMENT = "id_etablissement";
     private static final String AGRICULTURE_LOGO = "agricultureLogo";
     private static final String LOGO_PATH = "pathLogoImg";
+    private static final String HIDE_HEADTEACHER = "hideHeadTeacher";
+    private static final String ADD_OTHER_TEACHER = "addOtherTeacher";
+    private static final String FUNCTION_OTHER_TEACHER = "functionOtherTeacher";
+    private static final String OTHER_TEACHER_NAME = "otherTeacherName";
     private static final String GET_RESPONSABLE = "getResponsable";
     private static final String MOYENNE = "moyenne";
     private static final String MOYENNE_CLASSE = "moyenneClasse";
@@ -427,7 +431,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(PRINT_SOUS_MATIERES, params.getBoolean(PRINT_SOUS_MATIERES))
                     .put(PRINT_MOYENNE_ANNUELLE, params.getBoolean(MOYENNE_ANNUELLE))
                     .put(NEUTRE, params.getBoolean(NEUTRE, false))
-                    .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO));
+                    .put(HIDE_HEADTEACHER,params.getBoolean(HIDE_HEADTEACHER,false))
+                    .put(ADD_OTHER_TEACHER,params.getBoolean(ADD_OTHER_TEACHER,false))
+                    .put(FUNCTION_OTHER_TEACHER,params.getString(FUNCTION_OTHER_TEACHER,""))
+                    .put(OTHER_TEACHER_NAME,params.getString(OTHER_TEACHER_NAME,""))
+                    .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO,false));
 
             JsonArray niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
             JsonArray footerArray = new JsonArray();
@@ -468,7 +476,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 getEvenements(params.getString("idStructure"), classe.getString(ID_CLASSE), idEleve, elevesMap, idPeriode, finalHandler);
                 getSyntheseBilanPeriodique(idEleve, elevesMap, idPeriode, params.getString("idStructure"), finalHandler);
                 getStructure(idEleve, elevesMap.get(idEleve), finalHandler);
-                getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
+                if(!params.getBoolean(HIDE_HEADTEACHER,false))
+                    getHeadTeachers(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getLibellePeriode(idEleve, elevesMap, idPeriode, host, acceptLanguage, finalHandler);
                 getAnneeScolaire(idEleve, classe.getString(ID_CLASSE), elevesMap.get(idEleve), finalHandler);
                 getCycle(idEleve, classe.getString(ID_CLASSE), elevesMap,idPeriode, params.getLong(TYPE_PERIODE),
@@ -551,6 +560,8 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 ++nbServices;
             }
         }
+        if(params.getBoolean(HIDE_HEADTEACHER,false))
+            --nbServices;
         return new AtomicInteger(nbServices);
 
     }
@@ -911,12 +922,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             logStudentNotFound(idEleve, GET_AVIS_CONSEIL_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         }else{
-            avisConseilService.getAvisConseil(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonObject>>() {
+            avisConseilService.getAvisConseil(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonArray>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
                 @Override
-                public void handle(Either<String, JsonObject> event) {
+                public void handle(Either<String, JsonArray> event) {
                     if(event.isLeft()){
                         String message = event.left().getValue();
                         log.error("[getAvisConseil ] : " + idEleve  + " " + message + " " + count);
@@ -933,7 +944,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_CONSEIL_METHOD);
                         }
                     } else {
-                        JsonObject avisConseil = event.right().getValue();
+                        JsonArray result = event.right().getValue();
+                        JsonObject avisConseil = new JsonObject();
+                        if(!result.isEmpty())
+                            avisConseil = result.getJsonObject(0);
                         if(avisConseil != null && !avisConseil.isEmpty()) {
                             eleveObject.put("beforeAvisConseil", beforeAvisConseil);
 
@@ -956,12 +970,12 @@ public class DefaultExportBulletinService implements ExportBulletinService{
             logStudentNotFound(idEleve, GET_AVIS_ORIENTATION_METHOD);
             finalHandler.handle(new Either.Right<>(null));
         }else{
-            avisOrientationService.getAvisOrientation(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonObject>>() {
+            avisOrientationService.getAvisOrientation(idEleve, idPeriode, idStructure, new Handler<Either<String, JsonArray>>() {
                 private int count = 1;
                 private AtomicBoolean answer = new AtomicBoolean(false);
 
                 @Override
-                public void handle(Either<String, JsonObject> event) {
+                public void handle(Either<String, JsonArray> event) {
                     if(event.isLeft()){
                         String message = event.left().getValue();
                         log.error("[getAvisOrientation ] : " + idEleve  + " " + message + " " + count);
@@ -978,7 +992,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                             serviceResponseOK(answer, finalHandler, count, idEleve, GET_AVIS_ORIENTATION_METHOD);
                         }
                     }else{
-                        JsonObject avisOrientation = event.right().getValue();
+                        JsonArray result = event.right().getValue();
+                        JsonObject avisOrientation = new JsonObject();
+                        if(!result.isEmpty())
+                            avisOrientation = result.getJsonObject(0);
                         if(avisOrientation != null && !avisOrientation.isEmpty() ) {
                             eleveObject.put("avisOrientation",avisOrientation.getString(LIBELLE))
                                     .put("hasAvisOrientation",true);
@@ -1195,11 +1212,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
         }
         else {
             syntheseBilanPeriodiqueService.getSyntheseBilanPeriodique(idPeriode, idEleve, idStructure,
-                    new Handler<Either<String, JsonObject>>() {
+                    new Handler<Either<String, JsonArray>>() {
                         private int count = 1;
                         private AtomicBoolean answer = new AtomicBoolean(false);
                         @Override
-                        public void handle(Either<String, JsonObject> event) {
+                        public void handle(Either<String, JsonArray> event) {
                             if(event.isLeft()){
                                 String message = event.left().getValue();
                                 log.error("[getSyntheseBilanPeriodique ] : " + idEleve  + " " + message + " " + count);
@@ -1219,8 +1236,11 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                                 }
                             }
                             else {
-                                JsonObject synthese = event.right().getValue();
-                                if (synthese != null) {
+                                JsonArray result = event.right().getValue();
+                                JsonObject synthese = new JsonObject();
+                                if(!result.isEmpty())
+                                    synthese = result.getJsonObject(0);
+                                if (synthese != null && !synthese.isEmpty()) {
                                     String syntheseStr = synthese.getString("synthese");
                                     eleveObject.put("syntheseBilanPeriodque",troncateLibelle(syntheseStr,
                                             MAX_SIZE_SYNTHESE_BILAN_PERIODIQUE));

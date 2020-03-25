@@ -15,13 +15,14 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import { Model} from 'entcore';
+import {Model, notify} from 'entcore';
 import {Classe, Eleve,  Structure, SuivisDesAcquis, TypePeriode} from "./index";
 import {SyntheseBilanPeriodique} from "./SyntheseBilanPeriodique";
 import {AppreciationCPE} from "./AppreciationCPE";
 import {AvisConseil} from "./AvisConseil";
 import {AvisOrientation} from "./AvisOrientation";
 import {Graph} from "../common/Graph";
+import http from "axios";
 
 
 declare  let Chart: any;
@@ -50,7 +51,9 @@ export class ElementBilanPeriodique extends Model {
             GET_DATA_FOR_GRAPH: `/competences/bilan/periodique/datas/graph?idEtablissement=${this.structure.id}&idClasse=${
                 this.classe.id}&typeClasse=${this.classe.type_groupe}`,
             GET_DATA_FOR_GRAPH_DOMAINE: `/competences/bilan/periodique/datas/graph/domaine?idEtablissement=${
-                this.structure.id}&idClasse=${this.classe.id}&typeClasse=${this.classe.type_groupe}`
+                this.structure.id}&idClasse=${this.classe.id}&typeClasse=${this.classe.type_groupe}`,
+            GET_DATA_FOR_AVIS_SYNTHESES: `/competences/bilan/periodique/datas/avis/synthses?idEtablissement=${
+                this.structure.id}&idEleve=${this.eleve.id}`
         }
     }
 
@@ -71,6 +74,15 @@ export class ElementBilanPeriodique extends Model {
     async getDataForGraph(eleve, forDomaine?, niveauCompetences?, idPeriode?) {
         if(idPeriode!==undefined) {this.idPeriode = idPeriode;}
         await Graph.getDataForGraph(this, eleve, forDomaine, niveauCompetences);
+    }
+
+    async getAllAvisSyntheses() {
+        try {
+            let data = await http.get(this.api.GET_DATA_FOR_AVIS_SYNTHESES);
+            return data.data;
+        } catch (e) {
+            notify.error('evaluations.avis.synthses.bilan.periodique.get.error');
+        }
     }
 
 }

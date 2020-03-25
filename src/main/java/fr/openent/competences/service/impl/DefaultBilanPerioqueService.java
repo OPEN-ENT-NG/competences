@@ -111,12 +111,12 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     // Récupération des absences de l'élève
                     Future<JsonArray> absencesFuture = Future.future();
                     sendEventBusGetEvent(EventType.ABSENCE.getType(), Collections.singletonList(idEleve), structureId,
-                            beginningDateYear, endgDateYear,event -> formate(absencesFuture,event));
+                            beginningDateYear, endgDateYear, "HALF_DAY", event -> formate(absencesFuture,event));
 
                     // Récupération des retards de l'élève
                     Future<JsonArray> retardsFuture = Future.future();
                     sendEventBusGetEvent(EventType.LATENESS.getType(), Collections.singletonList(idEleve), structureId,
-                            beginningDateYear, endgDateYear, event -> formate(retardsFuture,event));
+                            beginningDateYear, endgDateYear, "HOUR", event -> formate(retardsFuture,event));
 
                     CompositeFuture.all(absencesFuture, retardsFuture).setHandler(
                             event -> {
@@ -195,10 +195,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
         });
 
-    }
+}
 
     private void sendEventBusGetEvent(Integer eventType, List<String> students, String structure,
-                                      String startDate, String endDate, Handler<Either<String, JsonArray>> handler) {
+                                      String startDate, String endDate, String recoveryMethod,
+                                      Handler<Either<String, JsonArray>> handler) {
         JsonObject action = new JsonObject()
                 .put("eventType", eventType)
                 .put("students", new JsonArray(students))
@@ -206,7 +207,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 .put("startDate", startDate)
                 .put("endDate", endDate)
                 .put("noReasons", true)
-                .put("recoveryMethod","HALF_DAY")
+                .put("recoveryMethod",recoveryMethod)
                 .put("action", "get-events-by-student");
         eb.send(address, action, MessageResponseHandler.messageJsonArrayHandler(handler));
     }
@@ -414,15 +415,22 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             noteService.getColonneReleve(null, null, idMatiere, idsGroups, "moyenne",
                     moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
+            // Récupération du tableau de conversion
+            Future<JsonArray> tableauDeConversionFuture = Future.future();
+            // On récupère le tableau de conversion des compétences notes
+            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
+                    .getConversionNoteCompetence(idEtablissement, idClasse,
+                            tableauEvent -> formate(tableauDeConversionFuture, tableauEvent));
+
             Future<String> subjectFuture = Future.future();
             subjectsFuture.add(subjectFuture);
             CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
-                    moyenneFinaleFuture).setHandler( event -> {
+                    moyenneFinaleFuture, tableauDeConversionFuture).setHandler( event -> {
                 if(event.succeeded()){
                     setElementProgramme(result, elementsProgFuture.result());
                     setAppreciationMoyFinalePositionnementEleve(result,appreciationMoyFinalePosFuture.result());
                     setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(),moyenneFinaleFuture.result(),
-                            result, idEleve, idPeriod);
+                            result, idEleve, idPeriod, tableauDeConversionFuture.result());
                     results.add(result);
                     subjectFuture.complete();
                 }
@@ -589,11 +597,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
     }
 
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
-                                      JsonObject result, String idEleve, Long idPeriodAsked) {
+                                      JsonObject result, String idEleve, Long idPeriodAsked, JsonArray tableauConversion) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
         noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
-        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
+        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
         noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
     }

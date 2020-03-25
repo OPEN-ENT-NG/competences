@@ -654,10 +654,10 @@ public class NoteController extends ControllerHelper {
                                     .getJsonArray("id_groupes").size(); i++) {
                                 idsGroups[i + 1] = idClasseGroups.getJsonObject(0)
                                         .getJsonArray("id_groupes").getString(i);
-                                devoirsService.listDevoirs(null, idsGroups, null,
-                                        new Long[]{idPeriode}, new String[]{idEtablissement}, null,
-                                        null, false, handler);
                             }
+                            devoirsService.listDevoirs(null, idsGroups, null,
+                                    new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                    null, false, handler);
                         }
                     }
                 }
@@ -730,6 +730,29 @@ public class NoteController extends ControllerHelper {
                                     }
                                 }
                             });
+                }
+            }
+        });
+    }
+
+    @Get("/eleve/:idEleve/moyenneFinale")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Retourne les moyennes finales de l'élève dont l'id est passé en paramètre, sur la période passée en paramètre")
+    public void getMoyenneFinaleEleve(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                if (user != null) {
+                    String idEleve = request.params().get("idEleve");
+                    Long idPeriode = null;
+                    if(request.params().get("idPeriode") != null)
+                        idPeriode = Long.valueOf(request.params().get("idPeriode"));
+
+                    notesService.getColonneReleve(new JsonArray().add(idEleve), idPeriode, null, null,
+                            "moyenne", arrayResponseHandler(request));
+
+                } else{
+                    unauthorized(request);
                 }
             }
         });
@@ -1067,7 +1090,6 @@ public class NoteController extends ControllerHelper {
         final String idClasse = request.params().get("idClasse");
         final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
         final String idPeriodeString = request.params().get("idPeriode");
-        final Long idPeriode = (idPeriodeString != null)? Long.parseLong(idPeriodeString): null;
         Utils.getGroupsEleve(eb, idEleve, idEtablissement, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle( Either<String, JsonArray> responseQuerry) {
@@ -1078,9 +1100,6 @@ public class NoteController extends ControllerHelper {
                 } else {
                     JsonArray idGroups = responseQuerry.right().getValue();
                     //idGroups null si l'eleve n'est pas dans un groupe
-                    final String idClasse = request.params().get("idClasse");
-                    final Integer typeClasse = Integer.valueOf(request.params().get("typeClasse"));
-                    final String idPeriodeString = request.params().get("idPeriode");
                     notesService.getDataGraph(idEleve, idGroups, idEtablissement, idClasse, typeClasse,
                             idPeriodeString, arrayResponseHandler(request));
                 }
