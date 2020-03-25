@@ -415,15 +415,22 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             noteService.getColonneReleve(null, null, idMatiere, idsGroups, "moyenne",
                     moyenneFinaleEvent -> formate(moyenneFinaleFuture, moyenneFinaleEvent));
 
+            // Récupération du tableau de conversion
+            Future<JsonArray> tableauDeConversionFuture = Future.future();
+            // On récupère le tableau de conversion des compétences notes
+            new DefaultCompetenceNoteService(COMPETENCES_SCHEMA, COMPETENCES_NOTES_TABLE)
+                    .getConversionNoteCompetence(idEtablissement, idClasse,
+                            tableauEvent -> formate(tableauDeConversionFuture, tableauEvent));
+
             Future<String> subjectFuture = Future.future();
             subjectsFuture.add(subjectFuture);
             CompositeFuture.all(elementsProgFuture, appreciationMoyFinalePosFuture, notesFuture, compNotesFuture,
-                    moyenneFinaleFuture).setHandler( event -> {
+                    moyenneFinaleFuture, tableauDeConversionFuture).setHandler( event -> {
                 if(event.succeeded()){
                     setElementProgramme(result, elementsProgFuture.result());
                     setAppreciationMoyFinalePositionnementEleve(result,appreciationMoyFinalePosFuture.result());
                     setMoyAndPosForSuivi(notesFuture.result(), compNotesFuture.result(),moyenneFinaleFuture.result(),
-                            result, idEleve, idPeriod);
+                            result, idEleve, idPeriod, tableauDeConversionFuture.result());
                     results.add(result);
                     subjectFuture.complete();
                 }
@@ -591,11 +598,11 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
 
 
     private void setMoyAndPosForSuivi(JsonArray notes, JsonArray compNotes, JsonArray moyFinalesEleves,
-                                      JsonObject result, String idEleve, Long idPeriodAsked) {
+                                      JsonObject result, String idEleve, Long idPeriodAsked, JsonArray tableauConversion) {
         JsonArray idsEleves = new fr.wseduc.webutils.collections.JsonArray();
         HashMap<Long, HashMap<Long, ArrayList<NoteDevoir>>> notesByDevoirByPeriodeClasse = noteService.calculMoyennesEleveByPeriode(notes, result, idEleve, idsEleves);
         noteService.getMoyennesMatieresByCoefficient(moyFinalesEleves, notes, result, idEleve, idsEleves);
-        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false);
+        noteService.calculPositionnementAutoByEleveByMatiere(compNotes, result,false, tableauConversion);
         noteService.calculAndSetMoyenneClasseByPeriode(moyFinalesEleves, notesByDevoirByPeriodeClasse, result);
         noteService.setRankAndMinMaxInClasseByPeriode(idPeriodAsked, idEleve, notesByDevoirByPeriodeClasse, moyFinalesEleves, result);
 

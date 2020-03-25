@@ -587,7 +587,7 @@ export class ReleveNote extends  Model implements IModel {
                             let domaine = new Domaine(res[i], eleve.id);
                             eleve.domaines.all.push(domaine);
                             eleve.tabDomaine = [];
-                            Utils.setCompetenceNotes(domaine, eleve.competencesNotes,
+                            Utils.setCompetenceNotes(domaine, eleve.competencesNotes, this.tableConversions,
                                 undefined, undefined, eleve.tabDomaine);
                         }
                     }

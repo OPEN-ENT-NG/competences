@@ -18,19 +18,18 @@
 /**
  * Created by ledunoiss on 08/08/2016.
  */
-import {model, http, Model, Collection, moment, _, Behaviours} from 'entcore';
+import {model, http, Model, Collection, _, Behaviours} from 'entcore';
 import { Classe } from './parent_eleve/Classe';
 import { Devoir } from './parent_eleve/Devoir';
 import { Matiere } from './parent_eleve/Matiere';
 import { Eleve } from './parent_eleve/Eleve';
 import { Enseignant } from './parent_eleve/Enseignant';
 import { Periode } from './parent_eleve/Periode';
-import {Domaine, Structure, Utils} from './teacher';
+import {Domaine, Structure, SuiviCompetence, Utils} from './teacher';
 import { NiveauCompetence } from './eval_niveau_comp';
 import { Enseignement } from './parent_eleve/Enseignement';
 
 declare let location: any;
-declare let console: any;
 declare let require: any;
 
 export class Evaluations extends Model {
@@ -277,17 +276,25 @@ export class Evaluations extends Model {
             this.collection(Domaine, {
                 sync: async function (classe, eleve, competences, idCycle) {
                     let that = this.composer;
-                    return new Promise((resolve, reject) => {
-                        var url = Evaluations.api.GET_ARBRE_DOMAINE + classe.id;
-                        if (idCycle !== undefined) {
-                            url = url + '&idCycle=' + idCycle;
-                        }
-                        http().getJson(url).done((resDomaines) => {
+                    return new Promise(async (resolve, reject) => {
+                        try {
+                            var url = Evaluations.api.GET_ARBRE_DOMAINE + classe.id;
+                            if (idCycle !== undefined) {
+                                url = url + '&idCycle=' + idCycle;
+                            }
+                            let uriGetConversionTable = SuiviCompetence.api.getCompetenceNoteConverssion + '?idEtab=' + model.me.structures[0] + '&idClasse=' + classe.id;
+                            let response = await Promise.all([
+                                http().getJson(url),
+                                http().getJson(uriGetConversionTable)
+                            ]);
+                            let resDomaines = response[0].data;
+                            let resGetConversionTable = {all:response[1].data};
+
                             if (resDomaines) {
                                 let _res = [];
                                 for (let i = 0; i < resDomaines.length; i++) {
                                     let domaine = new Domaine(resDomaines[i]);
-                                    that.setCompetenceNotes(domaine, competences);
+                                    that.setCompetenceNotes(domaine, competences,resGetConversionTable);
                                     _res.push(domaine);
                                 }
                                 that.domaines.load(_res);
@@ -295,7 +302,9 @@ export class Evaluations extends Model {
                             if (resolve && typeof (resolve) === 'function') {
                                 resolve();
                             }
-                        }).bind(this);
+                        } catch (e) {
+                            reject(e);
+                        }
                     });
                 }
             });
@@ -352,8 +361,8 @@ export class Evaluations extends Model {
 
         location.replace(uri);
     }
-     setCompetenceNotes(poDomaine, poCompetencesNotes) {
-        Utils.setCompetenceNotes(poDomaine, poCompetencesNotes);
+     setCompetenceNotes(poDomaine, poCompetencesNotes, tableauConversion) {
+        Utils.setCompetenceNotes(poDomaine, poCompetencesNotes,tableauConversion);
     }
 
     async updateUsePerso () {
