@@ -448,8 +448,7 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 JsonObject niv = footerArray.getJsonObject(i);
 
                 String lib = niv.getString(LIBELLE);
-                String id_niv = Integer.toString(niv.getInteger("id_niveau"));
-                footer += id_niv + " : " + lib + " - ";
+                footer += (i +1) + " : " + lib + " - ";
             }
             footer = footer.substring(0, footer.length() - 2);
             eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);

@@ -667,7 +667,7 @@ public class DefaultExportService implements ExportService {
                                 o.getInteger(ORDRE).toString()) : o.getString("default"));
                         niveau.put(ORDRE, o.getInteger(ORDRE));
 
-                        if(usePerso)
+                        if(usePerso && !text)
                             niveau.put("persoColor", o.getString("couleur"));
 
                         legende.add(niveau);
@@ -884,7 +884,7 @@ public class DefaultExportService implements ExportService {
                     .put("visu", text ? getMaitrise(maitrise
                             .getString("lettre"), String.valueOf(maitrise
                             .getLong(ORDRE))) : maitrise.getString("default"));
-            if(usePerso)
+            if(usePerso && !text)
                 _maitrise.put("persoColor", maitrise.getString("couleur"));
 
             headerMiddle.add(_maitrise);
@@ -1096,7 +1096,7 @@ public class DefaultExportService implements ExportService {
             String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
             competenceNotesObj.put("color", color);
 
-            if(usePerso)
+            if(usePerso && !text)
                 competenceNotesObj.put("persoColor", maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("couleur"));
 
 
