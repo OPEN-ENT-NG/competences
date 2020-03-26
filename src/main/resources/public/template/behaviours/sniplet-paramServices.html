@@ -1,193 +1,213 @@
-<div class="evaluations-sniplet paramServices">
-    <div id="structure-loader" class="overlay" ng-show="displayMessageLoader">
-        <div>
-            <h4 class="content-loader">Chargement en cours...</h4>
-        </div>
-    </div>
-
+<div class="evaluations-sniplet paramServices vsco--global">
     <div class="twelve twelve-mobile">
 
         <h3>
             <i18n>evaluation.service.title</i18n>
         </h3>
 
-        <div class="twelve cell filterButton twelve-mobile">
-            <input type="text" ng-model="search" placeholder="" class="nine">
-            <button class="right-magnet two" ng-click="openCreateLightbox()">
-                <i18n>evaluation.service.lightboxes.create</i18n>
-            </button>
-        </div>
-
-        <div class="twelve tabs vertical-spacing-twice heading-tabs">
-            <header class="horizontal-spacing-twice"
-                    ng-repeat="header in headers"
-                    ng-class="{selected: header.isSelected}"
-                    ng-click="updateFilterEvaluable(header)">
-                <div  class="horizontal-spacing">
-                    <span>[[translate(header.name)]]</span>
+        <div class="row cell twelve-mobile">
+            <div class="row cell twelve-mobile">
+                <input type="text"
+                       i18n-placeholder="viescolaire.utils.search" class="nine cell"
+                       ng-keyup="saveSearch($event)">
+                <div class=" row horizontal-spacing">
+                    <div class="select-blocks">
+                        <div ng-repeat="search in searchToFilter track by $index"
+                             ng-click="dropSearchFilter(search)"
+                             class="labels-in-line">
+                            [[search]]
+                        </div>
+                    </div>
                 </div>
-            </header>
+            </div>
         </div>
 
         <div class="row">
-            <div class="two cell">
-                <ul class="selectable-list">
-                    <li ng-repeat="type in typeGroupes"
+            <div class="twelve cell">
+                <button ng-repeat="type in typeGroupes"
                         ng-class="{selected : type.isSelected}"
-                        ng-click="type.isSelected = !type.isSelected">
-                        <span>[[translate(type.name)]]</span>
-                    </li>
-                </ul>
+                        ng-click="updateFilter(type)"
+                        class="filterButton">
+                    <span>[[translate(type.name)]]</span>
+                </button>
+                <button   ng-repeat="header in headers"
+                          ng-class="{selected: header.isSelected}"
+                          ng-click="updateFilter(header)"
+                          class="filterButton">
+                    <span>[[translate(header.name)]]</span>
+                </button>
             </div>
-            <div class="ten cell">
-                <div class="row" sticky offset="64">
-                    <h4 class="[[columns.delete.size]] cell"></h4>
 
-                    <h4 ng-click="sortOrderBy = 'nom_matiere'"
-                        class="[[columns.matiere.size]] cell-indent cell">[[translate(columns.matiere.name)]]</h4>
-                    <h4  ng-click="sortOrderBy = 'nom_groupe'"
-                         class="[[columns.classe.size]] cell-indent cell">[[translate(columns.classe.name)]]</h4>
-                    <h4 ng-click="sortOrderBy = 'nom_enseignant'"
-                        class="[[columns.enseignant.size]] cell-indent cell">[[translate(columns.enseignant.name)]]</h4>
-                    <h4 class="[[columns.coefficient.size]] cell-indent cell">[[translate(columns.coefficient.name)]]</h4>
-                    <h4 class="[[columns.modalite.size]] cell-indent cell">[[translate(columns.modalite.name)]]</h4>
-                    <h4 class="[[columns.evaluable.size]] cell-indent cell">[[translate(columns.evaluable.name)]]</h4>
-                    <h4 class="[[columns.delete.size]] cell">[[translate(columns.delete.name)]]</h4>
+            <div class="twelve cell">
+                <div class="row tab-header"  offset="64">
 
+                    <span    class="[[columns.matiere.size]] cell-indent cell service-tab-header-center">
+                       <h4 ng-click="changeSort('topicName')"
+                           class="">[[lang.translate(columns.matiere.name)]]
+                           <span ng-show="sortBy === 'topicName'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                       </h4>
+                    </span>
+                    <span    class="[[columns.classe.size]] cell-indent cell service-tab-header-left">
+                    <h4  ng-click="changeSort('nom_groupe')">[[lang.translate(columns.classe.name)]]
+                              <span ng-show="sortBy === 'nom_groupe'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                    </h4>
+
+                    </span>
+                    <span    class="[[columns.enseignant.size]] cell-indent cell service-tab-header-center">
+                    <h4 ng-click="changeSort('nom_enseignant')">[[lang.translate(columns.enseignant.name)]]
+                        <span ng-show="sortBy === 'nom_enseignant'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span>
+                     </h4>
+                    </span>
+                    <span    class="[[columns.remplacement.size]] cell-indent cell service-tab-header-center">
+                    <h4 ng-click="changeSort('remplacement')">[[lang.translate(columns.remplacement.name)]]
+                         <span ng-show="sortBy === 'remplacement'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    </span>
+                    <span    class="[[columns.coefficient.size]] cell-indent cell service-tab-header-center">
+                    <h4 ng-click="changeSort('coefficient')">[[lang.translate(columns.coefficient.name)]]
+                         <span ng-show="sortBy === 'coefficient'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    </span>
+                    <span    class="[[columns.modalite.size]] cell-indent cell service-tab-header-center">
+                    <h4 ng-click="changeSort('modalite')">[[lang.translate(columns.modalite.name)]]
+                         <span ng-show="sortBy === 'modalite'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    </span>
+                    <span    class="[[columns.evaluable.size]] cell-indent cell service-tab-header-center">
+                    <h4 ng-click="changeSort('evaluable')">[[lang.translate(columns.evaluable.name)]]
+                         <span ng-show="sortBy === 'evaluable'" ng-class="{'filter-up' : !sortByAsc,'filter-down' :sortByAsc}"></span> </h4>
+                    </span>
                 </div>
+                <div class="loaderArray loaderCenter" ng-show="showServicesLoader"></div>
 
+                <div ng-show="!showServicesLoader" class="service-list-container"
+                     ng-repeat="service in (filteredItems = ( services | orderBy:sortBy:!sortByAsc  | filter:filterSearch())) track by $index ">
+                    <div class="row serviceList" ng-click="deploySubtopics(service)" ng-class="{'active':service.deploy}">
+                        <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left"  tooltip="[[service.nom_matiere]]"><span>[[service.topicName]]</span></div>
+                        <div class="[[columns.classe.size]]  cellTab ellipsis cellTab-left" tooltip=" [[service.groups_name]]">
+                            [[service.groups_name]]
+                        </div>
 
-                <div ng-repeat="service in (filteredItems = ( services | filter:filterEvaluable(headers) |
-                 filter:filterGroupe(columns.classe.data, typeGroupes) | filter:filterSearch(search) |
-                  orderBy : sortOrderBy)) track by $index "
-                     class="row serviceList">
-                    <label class="one checkbox">
-                        <input type="checkbox"
-                               ng-model="service.selected"
-                        />
-                        <span></span>
-                    </label>
+                        <div class="[[columns.enseignant.size]] cellTab ellipsis cellTab-center">
+                            [[service.nom_enseignant]]
+                        </div>
+                        <div class="[[columns.remplacement.size]] cellTab ellipsis cellTab-center">
+                        <span ng-show="service.remplacement">
+                        [[service.remplacement]]
+                        </span>
+                        </div>
+                        <div class="[[columns.coefficient.size]] ellipsis  cellTab cellTab-center">
+                            <input  type="number" class="eleven cellTab three-mobile cellTab-center"
+                                    ng-blur="service.updateServices()"
+                                    placeholder="[[service.coefficientPlaceHolder]]"
+                                    ng-click="$event.stopPropagation()"
+                                    ng-model="service.coefficient" min="0"></div>
+                        <div class="cellTab cellTab-left  select [[columns.modalite.size]] ">
+                            <select ng-model="service.modalite"
+                                    ng-click="$event.stopPropagation()"
+                                    ng-change="service.updateServices()">
+                                <option   ng-repeat="modalite in columns.modalite.data"
+                                          ng-disabled="modalite ===  lang.translate('multiples')" >[[modalite]]</option>
+                            </select>
+                        </div>
+                        <div class="cellTab one cellTab-center">
+                            <div class="six inline-block">
+                                <div class=" svg-image">
 
-                    <span class="[[columns.matiere.size]] ellipsis" tooltip="[[service.nom_matiere]]">[[service.nom_matiere]]</span>
-                    <span class="[[columns.classe.size]] ellipsis">[[service.nom_groupe]]</span>
-                    <span class="[[columns.enseignant.size]] ellipsis">[[service.nom_enseignant]]</span>
-                    <span class="[[columns.coefficient.size]] ellipsis">
-                        <input  type="number" class="eleven small-input-number three-mobile"
-                                ng-blur="service.updateServiceCoefficient()"
-                                ng-model="service.coefficient" min="0"></span>
-                    <label class="select one">
-                        <select ng-model="service.modalite" style="min-width: 0px !important"
-                                ng-options="modalite for modalite in columns.modalite.data"
-                                ng-change="service.updateServiceModalite()"></select>
-                    </label>
-                    <label class="one checkbox">
-                        <input type="checkbox"
-                               ng-change="switchEvaluableService(service)"
-                               ng-model="service.evaluable"/>
-                        <span></span>
-                    </label>
-                    <label class="one checkbox">
-                        <i class="delete"
-                           ng-if="service.isManual"
-                           ng-click="deleteService(service)"></i>
-                    </label>
+                                    <input ng-show="service.hasAllServicesEvaluable()" type="image" src="/competences/public/img/scss/checkbox-marked.svg"
+                                           ng-click="switchEvaluableService(service);$event.stopPropagation()"alt="switchEvaluableService">
+                                    <input ng-show="service.hasAllServicesNotEvaluable()" type="image" src="/competences/public/img/scss/checkbox-blank-outline.svg"
+                                           ng-click="switchEvaluableService(service);$event.stopPropagation()"alt="switchEvaluableService">
+                                    <input ng-show="service.hasVariousEvaluable()" type="image" src="/competences/public/img/scss/minus-box.svg"
+                                           ng-click="switchEvaluableService(service,true);$event.stopPropagation()"alt="switchEvaluableService">
+                                </div>
+                            </div>
+                            <div class="five inline-block">
+                                <div class=" svg-image">
+                                    <input type="image"  src="/competences/public/img/scss/cog.svg"
+                                           ng-click="openUpdateLightbox(service);$event.stopPropagation()"alt="i18nAfaire">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="twelve row serviceList subList" ng-repeat="subTopic in service.subTopics" ng-show="service.deploy" >
+                        <div class="[[columns.matiere.size]] cellTab ellipsis cellTab-left" tooltip="[[subTopic.libelle]"><span class="tabulation">[[subTopic.libelle]]</span></div>
+                        <div class="[[columns.classe.size]]  cellTab ellipsis cellTab-left" tooltip="[[service.groups_name]]"><span>[[service.groups_name]]</span></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
 
-    <lightbox show="lightboxes.create" on-close="lightboxes.create = false">
+    <lightbox show="lightboxes.update" on-close="lightboxes.update = false">
         <h3>
-            <i18n>evaluation.service.lightboxes.create</i18n>
+            <i18n>evaluation.service.lightboxes.update</i18n>
         </h3>
 
         <div class="lightboxCreate">
             <div class="row">
-                <h4>
-                    <i18n>evaluation.service.columns.matiere</i18n>
-                </h4>
-                <label class="select">
-                    <select ng-model="service.id_matiere"
-                            ng-options="matiere.id as (matiere.name + ' (' + matiere.externalId + ')') for matiere in columns.matiere.data | orderBy:'name'">
-                        <option class="header-opt" disabled value="">[[translate('evaluation.service.columns.matiere')]]</option>
-                    </select>
-                </label>
+                <span class="six">
+                   <b><i18n>evaluation.service.columns.matiere</i18n></b>
+                </span>
+                <span class="six right-magnet">
+                    <b ng-bind="service.topicName"></b>
+                </span>
             </div>
+            <br/>
+            <div class="row tab-header">
+                <span    class="three cellTab ellipsis cell">
+                    <h4>[[lang.translate(columns.classe.name)]]
+                    </h4>
 
-            <div class="row">
-                <h4>
-                    <i18n>viescolaire.competences.classe.groupe</i18n>
-                </h4>
-
-                <label class="select">
-                    <select ng-model="service.id_groupe"
-                            ng-change="pushData(service.id_groupe,classesSelected)"
-                            ng-options="classe as classe.name group by classe.type_groupe_libelle for classe in columns.classe.data | orderBy:['type_groupe_libelle','name']">
-                        <option class="header-opt" disabled value="">[[translate('viescolaire.utils.class.groupe')]]</option>
-                    </select>
-                </label>
-
-                <div class="row">
-                    <label ng-repeat="classe in classesSelected" class="chip multiselect all"
-                           ng-click="deleteClasse(classe)">
-                        <span><i18n>[[classe.name]]</i18n></span>
-                        <input type="checkbox" ng-model="classe.selected"/>
-                    </label>
+                    </span>
+                <span    class="three cellTab ellipsis cell">
+                    <h4 >[[lang.translate(columns.coefficient.name)]]
+                    </h4>
+                    </span>
+                <span    class="three cellTab ellipsis cell">
+                    <h4 >[[lang.translate(columns.modalite.name)]]
+                          </h4>
+                    </span>
+                <span    class="two cellTab ellipsis cell">
+                    <h4 >[[lang.translate(columns.evaluable.name)]]
+                        </h4>
+                    </span>
+            </div>
+            <div  class="service-list-container"
+                  ng-repeat="param in serviceToUpdate.competencesParams | orderBy:'nom_groupe'">
+                <div class="row serviceList" >
+                    <div class="three  cellTab ellipsis cellTab-left" tooltip=" [[param.nom_groupe]]">
+                        [[param.nom_groupe]]
+                    </div>
+                    <div class="two ellipsis  cellTab cellTab-left">
+                        <input  type="number" class="eleven small-input-number cellTab three-mobile cellTab-center"
+                                ng-model="param.coefficient" min="0"></div>
+                    <div class="three cellTab cellTab-left  select  ">
+                        <select ng-model="param.modalite"
+                                ng-options="modalite for modalite in columns.modalite.data"
+                        ></select>
+                    </div>
+                    <div class="two cellTab  cellTab-center">
+                        <div class="six inline-block">
+                            <div class=" svg-image">
+                                <input ng-show="param.evaluable" type="image" src="/competences/public/img/scss/checkbox-marked.svg"
+                                       ng-click="param.evaluable = ! param.evaluable"  alt="plop">
+                                <input ng-show="!param.evaluable" type="image" src="/competences/public/img/scss/checkbox-blank-outline.svg"
+                                       ng-click="param.evaluable = ! param.evaluable" alt="plop">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="row">
-                <h4>
-                    <i18n>evaluation.service.columns.teacher</i18n>
-                </h4>
-
-                <label class="select">
-                    <select ng-model="service.id_enseignant"
-                            ng-options="enseignant.id as enseignant.displayName for enseignant in columns.enseignant.data | orderBy: 'displayName'">
-                        <option class="header-opt" disabled value="">[[translate('evaluation.service.columns.teacher')]]</option>
-                    </select>
-                </label>
-            </div>
-            <div class="row">
-                <h4>
-                    <i18n>evaluation.service.columns.modalite</i18n>
-                </h4>
-
-
-                <label class="select">
-                    <select ng-model="::service.modalite"
-                            ng-options="modalite for modalite in columns.modalite.data | orderBy:modalite.libelle"></select>
-                </label>
-            </div>
-            <div class="row">
-                <h4>
-                    <i18n>viescolaire.utils.coefficient</i18n>
-                </h4>
-                <div class="one cell  eight-mobile">
-                    <input  type="number" class="eleven small-input-number three-mobile" ng-model="service.coefficient" min="0">
-                </div>
-            </div>
-            <div class="row">
-                <h4>
-                    <i18n>evaluation.service.columns.evaluable</i18n>
-                </h4>
-
-                <label class="checkbox">
-                    <input type="checkbox"
-                           ng-model="::service.evaluable"/>
-                    <span></span>
-                </label>
             </div>
         </div>
+        <div class="row">
+            <button class="marginFive right-magnet"
+                    ng-click="updateServices()">
+                <i18n>viescolaire.utils.save</i18n>
+            </button>
+            <button ng-click="lightboxes.update = false" class="marginFive right-magnet cancel">
+                <i18n>viescolaire.utils.cancel</i18n>
+            </button>
+        </div>
 
-        <button class="marginFive magnet-right"
-                ng-disabled="checkIfExistsAndValid(service)"
-                ng-click="createService(service)">
-            <i18n>viescolaire.utils.save</i18n>
-        </button>
-        <button ng-click="lightboxes.create = false" class="right-magnet cancel">
-            <i18n>viescolaire.utils.cancel</i18n>
-        </button>
     </lightbox>
 
     <lightbox show="lightboxes.switchEval" on-close="lightboxes.switchEval = false">
@@ -235,122 +255,4 @@
         </button>
     </lightbox>
 
-    <lightbox show="lightboxes.subEducationCreate" on-close="cancelSubEducationCreate();">
-        <h3>
-            <i18n>evaluation.service.lightboxes.subEducation.create</i18n>
-        </h3>
-
-        <div class="lightboxCreate">
-            <h4>
-                <i18n>evaluation.service.lightboxes.subEducation.select</i18n>
-            </h4>
-            <article class="card fullBorder">
-                <div class="row">
-                    <div class="six cell">
-                        <ul>
-                            <li ng-repeat="matiere in subTopics.all track by matiere.id">
-                                <div ng-show="!matiere.updating">
-                                    <label class="one checkbox">
-                                    <input type="checkbox"
-                                           ng-model="matiere.selected"
-                                    />
-                                    <span></span>
-                                </label>
-                                    <span>[[matiere.libelle]]</span> <i ng-click="openUpdateForm(matiere)" class="edit"></i>
-                                </div>
-                                <div ng-show="matiere.updating">
-                                    <input type="text"  ng-keypress="closeUpdateLibelle($event,matiere)"   ng-blur="updateMatiere(matiere)" ng-model="matiere.libelle">
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                    <div ng-show="!subTopicCreationForm"class="six cell buttonAbsolute">
-                        <button ng-click="openCreationSubTopicCreationInput()" ><i18n>evaluation.service.lightboxes.subEducation.class.sub.create</i18n></button>
-                    </div>
-
-                    <div ng-show="subTopicCreationForm"class="six cell buttonAbsolute">
-
-                        <input class="six cell buttonMargin"
-                               i18n-placeholder="evaluation.service.lightboxes.subEducation.placeholder"
-                               type="text"
-                               ng-model="newSubTopic"
-                               ng-change="updateSubTopic(newSubTopic)" >
-
-                        <button class="five cell" ng-click="saveNewSubTopic();newSubTopic=''" ><i18n>Enregistrer</i18n></button>
-                    </div>
-
-                </div>
-            </article>
-            <h4>
-                <i18n>evaluation.service.lightboxes.subEducation.choice</i18n>
-
-            </h4>
-            <article class="card fullBorder">
-                <div class="row">
-                    <div class="five cell">
-                        <ul>
-                            <li ng-repeat="matiere in matieres track by matiere.id">
-                                <label class="one checkbox">
-                                    <input type="checkbox"
-                                           ng-model="matiere.selected"
-                                    />
-                                    <span></span>
-                                </label>
-                                <span>[[matiere.name]]</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="one cell">
-
-                    </div>
-                    <div class="six cell">
-
-                        <h4>
-                            <i18n>evaluation.service.lightboxes.subEducation.add.matiere</i18n>
-                        </h4>
-                        <select ng-model="matiereToAdd"
-                                ng-options="matiere.name for matiere in matieresForSelect"
-                                ng-change="addMatiereToCreateSubTopic(matiereToAdd)"
-                        >
-                        </select>
-                    </div>
-
-                </div>
-            </article>
-        </div>
-        <div class="row">
-            <button ng-click="checkBeforeSavingNewRelations()" class="marginFive right-magnet">
-                <i18n>viescolaire.utils.save</i18n>
-            </button>
-        </div>
-
-    </lightbox>
-
-    <lightbox show="lightboxes.switchEvaluation" on-close="cancelSwitchEvaluation();">
-        <p><i18n>viesco.switchEvealuation.message1</i18n></p>
-        <ul>
-            <li ng-repeat="matiere in matieresWithoutSubTopic track by matiere.id">
-               <span>[[matiere.name]]</span>
-            </li>        </ul>
-        <p><i18n>viesco.switchEvealuation.message2</i18n><b> "[[defaultSubTopic.libelle]]"</b></p>
-
-        <p><i18n>viesco.switchEvealuation.message3</i18n></p>
-        <div class="row">
-            <button ng-click="saveNewRelationsSubTopics()" class="marginFive right-magnet">
-                <i18n>viescolaire.utils.yes</i18n>
-            </button>
-            <button ng-click="cancelSwitchEvaluation()" class="marginFive cancel right-magnet">
-                <i18n>viescolaire.utils.no</i18n>
-            </button>
-        </div>
-    </lightbox>
-    <section class="toggle-buttons" ng-class="{ hide: !oneDisicplineSelected() }">
-        <div class="toggle">
-            <div class="row">
-                <button ng-click="openSubEducationLightBoxCreation(getSelectedDisciplines())" >
-                    <i18n>viescolaire.create.subEnseignement</i18n>
-                </button>
-            </div>
-        </div>
-    </section>
 </div>

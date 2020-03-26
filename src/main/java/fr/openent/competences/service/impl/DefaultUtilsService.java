@@ -26,7 +26,6 @@ import fr.wseduc.webutils.I18n;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.VertxException;
-import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.eventbus.Message;
 import org.entcore.common.neo4j.Neo4j;
@@ -49,10 +48,9 @@ import java.util.regex.Pattern;
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
-import static fr.openent.competences.utils.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.NodePdfGeneratorClientHelper.CONNECTION_WAS_CLOSED;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
@@ -117,16 +115,17 @@ public class DefaultUtilsService  implements UtilsService {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT DISTINCT id_titulaire ")
-                .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                .append("WHERE id_remplacant = ? ")
-                .append("AND id_etablissement = ? ")
-                .append("AND date_debut <= current_date ")
-                .append("AND current_date <= date_fin ");
+//        query.append("SELECT DISTINCT main_teacher_id ")
+//                .append("FROM " + Competences.VSCO_SCHEMA + ".multi_teaching ")
+//                .append("WHERE second_teacher_id = ? ")
+//                .append("AND structure_id = ? ")
+//                .append("AND start_date <= current_date ")
+//                .append("AND current_date <= end_date ");
 
         values.add(psIdRemplacant);
         values.add(psIdEtablissement);
-
+        log.info(query);
+        log.info(values);
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
 
@@ -1095,25 +1094,6 @@ public class DefaultUtilsService  implements UtilsService {
             }
         }
 
-        return result;
-    }
-
-    public JsonArray flatten(JsonArray collection, String keyToFlatten) {
-        log.debug("DEBUT flatten");
-        JsonArray result = new JsonArray();
-        for (Object o : collection) {
-            JsonObject castedO = (JsonObject) o;
-            if (castedO.containsKey(keyToFlatten)) {
-                JsonArray arrayToFlatten = castedO.getJsonArray(keyToFlatten);
-                for (Object item : arrayToFlatten) {
-                    JsonObject newObject = new JsonObject(new HashMap<>(castedO.getMap()));
-                    newObject.remove(keyToFlatten);
-                    newObject.put(keyToFlatten, item);
-                    result.add(newObject);
-                }
-            }
-        }
-        log.debug("FIN flatten");
         return result;
     }
 

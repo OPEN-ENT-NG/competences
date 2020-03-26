@@ -1,4 +1,4 @@
-package fr.openent.competences.utils;
+package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
 import fr.wseduc.webutils.Either;

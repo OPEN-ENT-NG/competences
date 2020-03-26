@@ -55,12 +55,13 @@ import java.text.DecimalFormat;
 import java.util.stream.Collectors;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.openent.competences.utils.UtilsConvert.strIdGroupesToJsonArray;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static java.util.Objects.isNull;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.leftToResponse;
+import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 
 /**
  * Created by ledunoiss on 05/08/2016.
@@ -69,7 +70,6 @@ public class ExportPDFController extends ControllerHelper {
     private String assetsPath = "../..";
     private Map<String, String> skins = new HashMap<String, String>();
     protected static final Logger log = LoggerFactory.getLogger(ExportPDFController.class);
-    private final static String  COEFFICIENT = "coefficient";
 
     /**
      * Déclaration des services

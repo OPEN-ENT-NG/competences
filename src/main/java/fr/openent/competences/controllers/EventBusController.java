@@ -19,33 +19,38 @@ package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
+import fr.openent.competences.service.DevoirService;
 import fr.openent.competences.service.NoteService;
-import fr.openent.competences.service.ServicesService;
+import fr.openent.competences.service.ShareCompetencesService;
 import fr.openent.competences.service.UtilsService;
+import fr.openent.competences.service.impl.DefaultDevoirService;
 import fr.openent.competences.service.impl.DefaultNoteService;
-import fr.openent.competences.service.impl.DefaultServicesService;
+import fr.openent.competences.service.impl.DefaultShareCompetencesService;
 import fr.openent.competences.service.impl.DefaultUtilsService;
 import fr.wseduc.bus.BusAddress;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.security.SecuredAction;
 import org.entcore.common.controller.ControllerHelper;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.share.impl.SqlShareService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class EventBusController extends ControllerHelper {
 
+    private final ShareCompetencesService competencesShareService;
     private UtilsService utilsService;
     private NoteService noteService;
-    private ServicesService servicesService;
 
-    public EventBusController() {
+    public EventBusController(Map<String, SecuredAction> securedActions) {
         utilsService = new DefaultUtilsService();
         noteService = new DefaultNoteService(Competences.COMPETENCES_SCHEMA, Competences.NOTES_TABLE);
-        servicesService = new DefaultServicesService();
+        competencesShareService = new DefaultShareCompetencesService(eb,securedActions);
     }
 
     @BusAddress("competences")
@@ -72,11 +77,23 @@ public class EventBusController extends ControllerHelper {
                 noteBusService(method, message);
             }
             break;
-            case "service": {
-                serviceBusService(method, message);
+            case "homeworks": {
+                homeworksBusService(method, message);
             }
             break;
         }
+    }
+
+    private void homeworksBusService(String method, Message<JsonObject> message) {
+        switch (method) {
+            case "setShare": {
+                log.info("vf");
+                JsonArray idsArray = message.body().getJsonArray("ids");
+                competencesShareService.shareHomeworks(idsArray, getJsonArrayBusResultHandler(message),this.shareService);
+            }
+            break;
+        }
+
     }
 
     private void utilsBusService(String method, Message<JsonObject> message) {
@@ -123,37 +140,6 @@ public class EventBusController extends ControllerHelper {
                         convertJsonArrayToStringArray(idEleves),
                         convertJsonArrayToLongArray(idDevoirs),
                         getJsonArrayBusResultHandler(message));
-            }
-            break;
-            default: {
-                message.reply(getErrorReply("Method not found"));
-            }
-        }
-    }
-
-    private void serviceBusService(String method, Message<JsonObject> message) {
-        switch (method) {
-            case "getServices": {
-                String idStructure = message.body().getString("idStructure");
-                JsonArray aIdEnseignant = message.body().getJsonArray("aIdEnseignant");
-                JsonArray aIdMatiere = message.body().getJsonArray("aIdMatiere");
-                JsonArray aIdGroupe = message.body().getJsonArray("aIdGroupe");
-
-                JsonObject oService = new JsonObject();
-
-                if(aIdGroupe != null) {
-                    oService.put("id_groupe", aIdGroupe);
-                }
-
-                if(aIdEnseignant != null) {
-                    oService.put("id_enseignant", aIdEnseignant);
-                }
-
-                if(aIdMatiere != null) {
-                    oService.put("id_matiere", aIdMatiere);
-                }
-
-                servicesService.getServices(idStructure, oService, getJsonArrayBusResultHandler(message));
             }
             break;
             default: {

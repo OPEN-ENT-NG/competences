@@ -715,7 +715,6 @@
   "viesco.switchEvealuation.message1": " Des évaluations sont rattachées à(aux) la matière(s) :  ",
   "viesco.switchEvealuation.message2": " et seront automatiquement rattachés à la sous matière",
   "viesco.switchEvealuation.message3": " Confirmez-vous ?",
-  "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
 
   "activated.data.recuperation.from.presences": "Récupérer les données de l'application Présences pour le conseil de classe et le bulletin",
   "importation.in.process": "Import en cours...",
@@ -726,12 +725,16 @@
   "import.homonyme.message": " Les retards et absences des élèves suivants n'ont pas été insérés car des homonymes ont été détectés : ",
   "in.file": "Dans le fichier ",
   "viescolaire.utils.classes": "classes",
+  "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
 
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
   "competance.error.iframe.statusText": "Le contenu est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",
   "competance.lightbox.selectFormat": "Sélectionnez le format de l'exportation :",
-
+  "evaluation.service.lightboxes.update": "Coefficients et Modalités",
+  "error.get.homework.on.update": "Erreur lors de la récupération des devoirs pour la mise à jour du service",
+  "service.homework.update.topic": "Les devoirs ont bien été mis à jour",
+  "multiples": "Multiples",
   "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
   "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
   "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis"

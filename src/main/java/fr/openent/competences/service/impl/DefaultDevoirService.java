@@ -21,6 +21,7 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
+import fr.openent.competences.utils.HomeworkUtils;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -45,7 +46,7 @@ import java.util.regex.Pattern;
 
 import static fr.openent.competences.Competences.DELIVERY_OPTIONS;
 import static fr.openent.competences.Utils.returnFailure;
-import static fr.openent.competences.utils.FormSaisieHelper.*;
+import static fr.openent.competences.helpers.FormSaisieHelper.*;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 
@@ -58,6 +59,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     private DefaultNoteService noteService;
     private final Neo4j neo4j = Neo4j.getInstance();
     private EventBus eb;
+    protected static final Logger log = LoggerFactory.getLogger(DefaultDevoirService.class);
 
     public DefaultDevoirService(EventBus eb) {
         super(Competences.COMPETENCES_SCHEMA, Competences.DEVOIR_TABLE);
@@ -66,27 +68,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         this.eb = eb;
     }
 
-    public StringBuilder formatDate (String date) {
-        Pattern p = Pattern.compile("[0-9]*-[0-9]*-[0-9]*.*");
-        Matcher m = p.matcher(date);
-        if (!m.matches()) {
-            StringBuilder dateFormated = new StringBuilder();
-            String[] splitedDate = date.split("/");
-            if(splitedDate.length < 3) {
-                log.error("Date " + date + " cannot be formated");
-                return new StringBuilder(date);
-            }
-
-            dateFormated.append(date.split("/")[2]).append('-');
-            dateFormated.append(date.split("/")[1]).append('-');
-            dateFormated.append(date.split("/")[0]);
-            return dateFormated;
-        } else {
-            return new StringBuilder(date);
-        }
-
-
-    }
 
     private static final String attributeTypeGroupe = "type_groupe";
     //private static final String attributeCodeTypeClasse = "code_type_classe";
@@ -211,7 +192,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             if(attr.contains("date") && !"competencesUpdate".equals(attr)){
                 queryParams.append(" , ").append(attr);
                 valueParams.append(" , to_date(?,'YYYY-MM-DD') ");
-                params.add(formatDate(devoir.getString(attr)).toString());
+                params.add(HomeworkUtils.formatDate(devoir.getString(attr)).toString());
             }
             else{
                 Boolean isCompetencesAtt = "competencesAdd".equals(attr)
@@ -277,7 +258,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 if(attr.contains("date")){
                     queryCompLibre.append(" , ").append(attr);
                     valueParamsLibre.append(" , to_timestamp(?,'YYYY-MM-DD') ");
-                    paramsCompLibre.add(formatDate(oCompetenceNote.getString(attr)).toString());
+                    paramsCompLibre.add(HomeworkUtils.formatDate(oCompetenceNote.getString(attr)).toString());
                 }
                 else{
                     queryCompLibre.append(" , ").append(attr);
@@ -339,28 +320,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
     }
 
-    private JsonObject formatDevoirForDuplication (JsonObject devoir) {
-        JsonObject o = new JsonObject(devoir.getMap());
-        o.remove("owner");
-        o.remove("created");
-        o.remove("modified");
-        o.remove("id");
-        // le pourcentage d'avancement n'est pas conservé lors de la duplication d'un devoir
-        o.put("percent", 0);
-        try {
-            o.put("coefficient", Double.valueOf(o.getString("coefficient")));
-        } catch (ClassCastException e) {
-            log.error("An error occured when casting devoir object to duplication format.");
-            log.error(e);
-        }
-        if (o.getString("libelle") == null) {
-            o.remove("libelle");
-        }
-        if (o.getLong("id_sousmatiere") == null) {
-            o.remove("id_sousmatiere");
-        }
-        return o;
-    }
 
     private void insertDuplication(JsonArray ids, JsonObject devoir, JsonArray classes, UserInfos user, Integer errors, Handler<Either<String, JsonArray>> handler) {
         if (errors == 0 && ids.size() == classes.size()) {
@@ -369,7 +328,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
             for (int i = 0; i < ids.size(); i++) {
                 try {
                     g = classes.getJsonObject(i);
-                    o = formatDevoirForDuplication(devoir);
+                    o = HomeworkUtils.formatDevoirForDuplication(devoir);
                     o.put("id_groupe", g.getString("id"));
                     o.put("type_groupe", g.getInteger("type_groupe"));
                     o.put("owner", user.getUserId());
@@ -390,7 +349,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         }
     }
 
-    protected static final Logger log = LoggerFactory.getLogger(DefaultDevoirService.class);
+
     @Override
     public void updateDevoir(String id, JsonObject devoir, Handler<Either<String, JsonArray>> handler) {
         JsonArray statements = new fr.wseduc.webutils.collections.JsonArray();
@@ -492,7 +451,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                     || attr.equals(attributeIdGroupe))) {
                 if (attr.contains("date")) {
                     queryParams.append(attr).append(" =to_date(?,'YYYY-MM-DD'), ");
-                    params.add(formatDate(devoir.getString(attr)).toString());
+                    params.add(HomeworkUtils.formatDate(devoir.getString(attr)).toString());
 
                 } else {
                     queryParams.append(attr).append(" = ?, ");
@@ -983,58 +942,11 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                         else {
                             isHeadTeacher = event.right().getValue();
                         }
-                        getNbNotesDevoirs(user,idEleves,idDevoir,handler, isChefEtab || isHeadTeacher);
+                        HomeworkUtils.getNbNotesDevoirs(user,idEleves,idDevoir,handler, isChefEtab || isHeadTeacher);
                     }
                 });
 
 
-    }
-    private void getNbNotesDevoirs(UserInfos user, List<String> idEleves, Long idDevoir,
-                                   Handler<Either<String, JsonArray>> handler, Boolean isChefEtab) {
-        StringBuilder query = new StringBuilder();
-
-
-        query.append("SELECT count(notes.id) as nb_notes , devoirs.id, rel_devoirs_groupes.id_groupe ")
-                .append("FROM "+ Competences.COMPETENCES_SCHEMA +".notes,"+ Competences.COMPETENCES_SCHEMA +".devoirs, "+ Competences.COMPETENCES_SCHEMA +".rel_devoirs_groupes " )
-                .append("WHERE notes.id_devoir = devoirs.id ")
-                .append("AND rel_devoirs_groupes.id_devoir = devoirs.id ")
-                .append("AND devoirs.id = ? ");
-
-        // filtre sur les élèves de la classe à l'instant T
-        if(idEleves != null && idEleves.size() > 0) {
-            query.append(" AND "+ Competences.NOTES_TABLE + ".id_eleve IN ").append(Sql.listPrepared(idEleves.toArray()));
-        }
-
-        if(!isChefEtab) {
-            query.append(" AND (devoirs.owner = ? OR ") // devoirs dont on est le propriétaire
-                    .append("devoirs.owner IN (SELECT DISTINCT id_titulaire ") // ou dont l'un de mes tiulaires le sont (on regarde sur tous mes établissments)
-                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants ")
-                    .append("INNER JOIN " + Competences.COMPETENCES_SCHEMA + ".devoirs ON devoirs.id_etablissement = rel_professeurs_remplacants.id_etablissement  ")
-                    .append("WHERE id_remplacant = ? ")
-                    .append("AND rel_professeurs_remplacants.id_etablissement IN " + Sql.listPrepared(user.getStructures().toArray()) + " ")
-                    .append(") OR ")
-                    .append("? IN (SELECT member_id ") // ou devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir pour un titulaire par exemple)
-                    .append("FROM " + Competences.COMPETENCES_SCHEMA + ".devoirs_shares ")
-                    .append("WHERE resource_id = devoirs.id ")
-                    .append("AND action = '" + Competences.DEVOIR_ACTION_UPDATE + "')")
-                    .append(") ");
-        }
-        query.append("GROUP by devoirs.id, rel_devoirs_groupes.id_groupe");
-
-        JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
-
-        //Ajout des id désirés
-        values.add(idDevoir);
-
-        // Ajout des id pour le filtre sur les élèves de la classe à l'instant T
-        if(idEleves != null && idEleves.size() > 0) {
-            for (String idEleve: idEleves) {
-                values.add(idEleve);
-            }
-        }
-        addValueForRequest(values,user,isChefEtab);
-
-        Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -1126,24 +1038,6 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 .append(" UNION ").append(queryAnnotationNN);
 
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
-    }
-
-    private void addValueForRequest (JsonArray values, UserInfos user, Boolean isChefEtab) {
-        if(!isChefEtab) {
-            // Ajout des params pour les devoirs dont on est le propriétaire
-            values.add( user.getUserId());
-
-            // Ajout des params pour la récupération des devoirs de mes tiulaires
-            values.add(user.getUserId());
-            for (int i = 0; i < user.getStructures().size(); i++) {
-                values.add( user.getStructures().get(i));
-            }
-
-            // Ajout des params pour les devoirs que l'on m'a partagés (lorsqu'un remplaçant a créé un devoir
-            // pour un titulaire par exemple)
-            values.add( user.getUserId());
-        }
-
     }
 
     @Override
@@ -1307,6 +1201,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
 
+    @Override
     public void getNbCompetencesDevoirs(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
 
@@ -1325,6 +1220,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
+    @Override
     public void getNbCompetencesDevoirsByEleve(List<String> idEleves, Long idDevoir,
                                                Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
@@ -1355,6 +1251,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
+    @Override
     public void updatePercent(Long idDevoir, Integer percent, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         query.append(" UPDATE " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE )
@@ -1369,6 +1266,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
     }
 
+    @Override
     public void getDevoirsInfosCompetencesCondition(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
@@ -1391,6 +1289,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         Sql.getInstance().prepared(query.toString(), values, SqlResult.validResultHandler(handler));
     }
 
+    @Override
     public void getDevoirsInfos(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values =  new fr.wseduc.webutils.collections.JsonArray();
@@ -1473,14 +1372,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void listDevoirsService(String idEnseignant, String idMatiere, String idGroupe, Handler<Either<String,JsonArray>> handler) {
+    public void listDevoirsService(String idEnseignant, String idMatiere, List<String> idGroups, Handler<Either<String,JsonArray>> handler) {
         String query = "SELECT devoirs.id, devoirs.id_matiere, devoirs.owner, rel_devoirs_groupes.id_groupe" +
                 " FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.DEVOIR_TABLE + " AS devoirs" +
                 " LEFT JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.REL_DEVOIRS_GROUPES + " AS rel_devoirs_groupes" +
                 " ON devoirs.id = rel_devoirs_groupes.id_devoir" +
-                " WHERE owner=? AND id_matiere=? AND id_groupe = ?";
+                " WHERE owner=? AND id_matiere=? AND id_groupe IN " + Sql.listPrepared(idGroups.toArray()) ;
 
-        JsonArray values = new JsonArray().add(idEnseignant).add(idMatiere).add(idGroupe);
+        JsonArray values = new JsonArray().add(idEnseignant).add(idMatiere).addAll(new JsonArray(idGroups));
+
 
         Sql.getInstance().prepared(query, values, SqlResult.validResultHandler(handler));
     }
@@ -1627,5 +1527,18 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 handler.handle(new Either.Left<>(error));
             }
         });
+    }
+
+    @Override
+    public void getHomeworksFromSubjectAndTeacher(String idSubject, String idTeacher,
+                                    Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT devoirs.*  " +
+                " FROM "+Competences.COMPETENCES_SCHEMA + ".devoirs " +
+                " WHERE owner = ? AND id_matiere = ? ";
+        JsonArray params = new JsonArray().add(idTeacher).add(idSubject);
+
+        Sql.getInstance().prepared(query,params,SqlResult.validResultHandler(handler));
+
+
     }
 }

@@ -54,6 +54,8 @@ public interface DevoirService extends CrudService {
      */
     void getDevoir(Long idDevoir, Handler<Either<String, JsonObject>> handler);
 
+    void getDevoirsInfosCompetencesCondition(Long[] idDevoirs, Handler<Either<String, JsonArray>> handler);
+
     /**
      * récupère les information de plusieurs devoirs
      * @param idDevoirs
@@ -203,7 +205,7 @@ public interface DevoirService extends CrudService {
      */
     void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, Handler<Either<String,JsonArray>> handler);
 
-    void listDevoirsService(String idEnseignant, String idMatiere, String idGroupe, Handler<Either<String, JsonArray>> handler);
+    void listDevoirsService(String idEnseignant, String idMatiere, List<String> idGroups, Handler<Either<String, JsonArray>> handler);
 
     void updateDevoirsService(JsonArray ids, String idMatiere, Handler<Either<String, JsonArray>> handler);
 
@@ -253,4 +255,7 @@ public interface DevoirService extends CrudService {
      */
     void getFormSaisieDevoir(Long idDevoir, String acceptLanguage, String host,
                              Handler<Either<String, JsonObject>> handler);
+
+    void getHomeworksFromSubjectAndTeacher(String idSubject, String idTeacher,
+                                           Handler<Either<String, JsonArray>> handler);
 }

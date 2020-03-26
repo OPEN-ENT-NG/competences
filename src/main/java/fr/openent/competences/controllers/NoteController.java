@@ -52,9 +52,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static fr.openent.competences.Competences.*;
-import static fr.openent.competences.Utils.getLibelle;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
 import java.text.DecimalFormat;

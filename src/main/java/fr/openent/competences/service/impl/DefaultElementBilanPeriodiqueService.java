@@ -49,7 +49,7 @@ import java.util.Map;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNull;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.unauthorized;
 import static fr.wseduc.webutils.http.response.DefaultResponseHandler.defaultResponseHandler;

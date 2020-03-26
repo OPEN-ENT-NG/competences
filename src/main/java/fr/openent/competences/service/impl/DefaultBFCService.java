@@ -24,8 +24,7 @@ import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
-import fr.openent.competences.utils.FormateFutureEvent;
-import fr.openent.competences.utils.MustachHelper;
+import fr.openent.competences.helpers.MustachHelper;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
@@ -44,8 +43,6 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.utils.StringUtils;
 
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,7 +52,7 @@ import static fr.openent.competences.Competences.ACTION;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
 

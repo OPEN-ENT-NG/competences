@@ -2,6 +2,7 @@ import {notify, idiom as lang, angular, _,toasts} from 'entcore';
 import http from "axios";
 import * as utils from '../utils/teacher';
 import {Classe, TypeSousMatiere, TypeSousMatieres, Utils} from "../models/teacher";
+import {Service} from "../models/common/ServiceSnipplet";
 import {safeApply} from "../utils/teacher";
 
 export const paramServices = {
@@ -9,225 +10,53 @@ export const paramServices = {
     description: 'Permet le parametrage des services',
     that: undefined,
     controller: {
-        Service: class Service {
-            id_etablissement: string;
-            id_enseignant: string;
-            id_groupe: string;
-            id_matiere: string;
-            nom_enseignant: object;
-            nom_groupe: object;
-            nom_matiere: object;
-            modalite: string;
-            previous_modalite: string;
-            evaluable: boolean;
-            previous_evaluable: boolean;
-            isManual: boolean;
-            coefficient: number;
-
-
-            constructor(service) {
-                _.extend(this, service);
-                this.previous_modalite = this.modalite;
-                this.previous_evaluable = this.evaluable;
-                this.coefficient = (Utils.isNull(this.coefficient)? 1 : this.coefficient);
-            }
-
-            hasNullProperty(){
-                return !this.nom_enseignant || !this.nom_groupe || !this.nom_matiere;
-            }
-
-            createService(){
-                try {
-                    return http.post('/competences/service', this.toJson());
-                } catch (e) {
-                    notify.error('evaluation.service.error.create');
-                }
-            }
-            updateServiceModalite(){
-
-                let request = () => {
-                    try {
-                        return http.put('/competences/service', this.toJson());
-                    } catch (e) {
-                        notify.error('evaluation.service.error.update');
-                    }
-                };
-
-                paramServices.that.classesSelected = [this.id_groupe];
-
-                if(this.modalite == this.previous_modalite) {
-                    return;
-                } else {
-                    request().then(() => {
-                        this.previous_modalite = this.modalite;
-                    }, () => {
-                        this.modalite = this.previous_modalite;
-                    })
-                }
-            }
-            updateServiceCoefficient () {
-                try {
-                    return http.put('/competences/service', this.toJson());
-                } catch (e) {
-                    notify.error('evaluation.service.error.update');
-                }
-            }
-            updateServiceEvaluable() {
-
-                let request = () => {
-                    try {
-                        return http.put('/competences/service', this.toJson());
-                    } catch (e) {
-                        notify.error('evaluation.service.error.update');
-                    }
-                };
-
-                if (this.evaluable == this.previous_evaluable) {
-                    return;
-                } else {
-                    request().then(() => {
-                        this.previous_evaluable = this.evaluable;
-                    }, () => {
-                        this.evaluable = this.previous_evaluable;
-                    })
-                }
-            }
-
-            deleteService(){
-                try {
-                    return http.delete("/competences/service"+
-                        `?id_matiere=${this.id_matiere}`+
-                        `&id_groupe=${this.id_groupe}`+
-                        `&id_enseignant=${this.id_enseignant}`);
-                } catch (e) {
-                    notify.error('evaluation.service.error.delete');
-                }
-            }
-
-            getDevoirsService(){
-                try {
-                    return http.get("/competences/devoirs/service"+
-                        `?id_matiere=${this.id_matiere}`+
-                        `&id_groupe=${this.id_groupe}`+
-                        `&id_enseignant=${this.id_enseignant}`);
-                } catch (e) {
-                    notify.error("evaluations.service.devoir.error");
-                }
-            }
-
-            updateDevoirsService(devoirs, matiere) {
-                try {
-                    return http.put("/competences/devoirs/service", {
-                        id_devoirs: devoirs,
-                        id_matiere: matiere
-                    });
-                } catch (e) {
-                    notify.error('evaluations.service.devoir.update.error');
-                }
-            }
-
-            deleteDevoirsService(devoirs) {
-                try {
-                    return http.put("/competences/devoirs/delete", {
-                        id_devoirs: devoirs
-                    });
-                } catch (e) {
-                    notify.error('evaluations.service.devoir.delete.error');
-                }
-            }
-
-            toJson() {
-                if(paramServices.that.classesSelected.length == 0 || !paramServices.that.lightboxes.create)
-                    return {
-                        id_etablissement: this.id_etablissement,
-                        id_enseignant: this.id_enseignant,
-                        id_matiere: this.id_matiere,
-                        id_groupes: [this.id_groupe],
-                        modalite: this.modalite,
-                        evaluable: this.evaluable,
-                        coefficient: this.coefficient
-                    };
-                else
-                    return {
-                        id_etablissement: this.id_etablissement,
-                        id_enseignant: this.id_enseignant,
-                        id_matiere: this.id_matiere,
-                        id_groupes: _.map(paramServices.that.classesSelected,(classe) => {return classe.id;}),
-                        modalite: this.modalite,
-                        evaluable: this.evaluable,
-                        coefficient: this.coefficient
-                    };
-            }
-        },
 
         initServices: async function () {
-            await this.runMessageLoader();
-
-            paramServices.that.getServices().then(async ({data}) => {
-                paramServices.that.services = _.reject(_.map(data, service => {
-                    let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
-                    let groupe = _.findWhere(paramServices.that.columns.classe.data, {id: service.id_groupe});
-                    let matiere = _.findWhere(paramServices.that.columns.matiere.data, {id: service.id_matiere});
-                    let missingParams = {
-                        id_etablissement: paramServices.that.idStructure,
-                        nom_enseignant: enseignant ? enseignant.displayName : null,
-                        nom_matiere: matiere ? matiere.name + " (" + matiere.externalId + ")" : null,
-                        nom_groupe: groupe ? groupe.name : null};
-                    return new paramServices.that.Service(_.defaults(service, missingParams ));
-                }), service => service.hasNullProperty());
-
-                await  paramServices.that.subTopics.get();
-                await this.stopMessageLoader();
-            })
-                .catch( async (error) => {
-                    console.error(error);
-                    await this.stopMessageLoader();
-                });
+            await paramServices.that.setServices();
             paramServices.that.classesSelected = [];
         },
+
         init: async function () {
             console.log(" ParamServices");
             this.idStructure = this.source.idStructure;
             this.services = [];
-            this.search = "";
+            this.searchToFilter = [];
             this.matiereSelected = "";
-
+            this.sortBy = "topicName";
+            this.sortByAsc = true;
             this.headers = {
-                all: {name:"all", value: null, isSelected: true},
-                evaluable: {name:"evaluation.service.headers.evaluable", value: true, isSelected: false},
-                notEvaluable: {name:"evaluation.service.headers.notEvaluable", value: false, isSelected: false}
+                evaluable: {name:"evaluation.service.headers.evaluable", filterName:"evaluable", value: true, isSelected: true},//a voir si ca bug
+                notEvaluable: {name:"evaluation.service.headers.notEvaluable", filterName:"notEvaluable", value: false, isSelected: false}
             };
 
             this.typeGroupes= {
-                classes: {isSelected: true, name: "evaluation.service.filter.classes", type: 0},
-                groupes: {isSelected: true, name: "evaluation.service.filter.groupes", type: 1},
-                manualGroupes : {isSelected: true, name:"evaluation.service.filter.manualGroupes", type:2}
+                classes: {isSelected: true, filterName:"classes", name: "evaluation.service.filter.classes", type: 0},
+                groupes: {isSelected: true, filterName:"groups", name: "evaluation.service.filter.groupes", type: 1},
+                manualGroupes : {isSelected: true, filterName:"manualGroups", name:"evaluation.service.filter.manualGroupes", type:2}
             };
 
             this.subTopics = new TypeSousMatieres([]);
             this.columns = {
-                delete: {size : "one", name: "evaluation.service.columns.delete", filtered: false},
-                matiere: {size: "three", data: [], name: "evaluation.service.columns.matiere", filtered: false},
-                enseignant: {size: "one", data: [], name: "evaluation.service.columns.teacher", filtered: false},
-                classe: {size: "two", data: [], name: "evaluation.service.columns.classGroup", filtered: false},
+                matiere: {size: "two", data: [], name: "evaluation.service.columns.matiere", filtered: true},
+                classe: {size:"two", data: [], name: "evaluation.service.columns.classGroup", filtered: false},
+                enseignant: {size: "two", data: [], name: "evaluation.service.columns.teacher", filtered: false},
+                remplacement: {size: "two", data: [], name: "evaluation.service.columns.remplacement", filtered: false},
                 modalite: {size: "one", data: [], name: "evaluation.service.columns.modalite", filtered: false},
                 coefficient: {size: "one", name: "viescolaire.utils.coefficient", filtered: false},
-                evaluable: {size: "one", name: "evaluation.service.columns.evaluable", filtered: false},
+                evaluable: {size: "one", name: "evaluation.service.columns.evaluable", filtered: false}
             };
 
-            this.lightboxes= {
+            this.lightboxes = {
                 switchEval: false,
                 confirm: false,
-                create: false,
+                update: false,
                 subEducationCreate:false,
                 switchEvaluation:false
             };
-
             paramServices.that = this;
             await this.runMessageLoader();
-
-            Promise.all([this.getClasses(), this.getMatieres(), this.getTeachers(), this.getModalite(), this.getRemplacements()])
-                .then(async function([aClasses, aMatieres, aTeachers, aModalite, aRemplacement]) {
+            Promise.all([this.getClasses(), this.getMatieres(), this.getTeachers(), this.getModalite(),  this.getServices()])
+                .then(async function([aClasses, aMatieres, aTeachers, aModalite, aService]) {
                     paramServices.that.columns.classe.data = _.map(aClasses.data,
                         (classe) => {
                             classe.type_groupe_libelle = Classe.get_type_groupe_libelle(classe);
@@ -237,9 +66,11 @@ export const paramServices = {
                     paramServices.that.columns.enseignant.data = _.map(aTeachers.data, teacher => teacher.u.data);
                     paramServices.that.columns.matiere.data = aMatieres.data;
                     paramServices.that.columns.modalite.data = _.pluck(aModalite.data, "id");
-                    paramServices.that.remplacements = aRemplacement.data;
+                    paramServices.that.columns.modalite.data.unshift(lang.translate('multiples'));
+                    // paramServices.that.remplacements = aRemplacement.data;
+                    await  paramServices.that.setServicesWithGroups(aService.data);
 
-                    await paramServices.that.initServices();
+                    // await paramServices.that.initServices();
                 });
             this.classesSelected = [];
         },
@@ -248,42 +79,127 @@ export const paramServices = {
             return lang.translate(key);
         },
         runMessageLoader: async function () {
-            paramServices.that.displayMessageLoader = true;
+            paramServices.that.showServicesLoader = true;
             await utils.safeApply(paramServices.that);
         },
         stopMessageLoader: async function ( ) {
-            paramServices.that.displayMessageLoader = false;
+            paramServices.that.showServicesLoader = false;
             await utils.safeApply(paramServices.that);
         },
-        updateFilterEvaluable: function (selectedHeader) {
-            _.each(paramServices.that.headers, header => header.isSelected = false);
-            selectedHeader.isSelected = true;
-        },
-
-        filterGroupe: function (groupes, typeGroupes) {
-            return (service) => {
-                return _.findWhere(typeGroupes, {type: _.findWhere(groupes, {id: service.id_groupe}).type_groupe}).isSelected;
-            }
-        },
-
-        filterEvaluable: function (headers) {
-            return (service) => {
-                let selectedHeader = _.findWhere(headers, {isSelected: true});
-                if (selectedHeader.value == null) {
-                    return true;
-                } else {
-                    return service.evaluable == selectedHeader.value
+        saveSearch :function async (event) {
+            if (event && (event.which === 13 || event.keyCode === 13 )) {
+                if (!_.contains(paramServices.that.searchToFilter, event.target.value)
+                    && event.target.value.length > 0
+                    && event.target.value.trim()){
+                    paramServices.that.searchToFilter.push(event.target.value);
                 }
+                event.target.value = '';
+            }
+        },
+        dropSearchFilter: function(search) {
+            paramServices.that.searchToFilter = _.without(paramServices.that.searchToFilter, search);
+        },
+        filterSearch: function () {
+            return (service) => {
+                let isInSearched = true;
+                if(paramServices.that.searchToFilter.length !=0){
+                    paramServices.that.searchToFilter.forEach(search =>{
+                        if( !(service.nom_groupe.toUpperCase().includes(search.toUpperCase())
+                            || service.nom_enseignant.toUpperCase().includes(search.toUpperCase())
+                            || service.topicName.toUpperCase().includes(search.toUpperCase()))){
+                            isInSearched = false;
+                        }
+                    });
+                }else{
+                    isInSearched = true;
+
+                }
+                return isInSearched;
             }
         },
 
-        filterSearch: function (search) {
-            return (service) => {
-                return service.nom_groupe.toUpperCase().includes(search.toUpperCase())
-                    || service.nom_enseignant.toUpperCase().includes(search.toUpperCase())
-                    || service.nom_matiere.toUpperCase().includes(search.toUpperCase());
+        setServicesWithGroups: async function (data) {
+            function getGroupsName(service, groups, groups_name: string) {
+                if(service.competencesParams && service.competencesParams.length !== 0)
+                    service.competencesParams.forEach(param => {
+                        let group =  _.findWhere(paramServices.that.columns.classe.data, {id: param.id_groupe});
+                        groups.push(group);
+                        param.nom_groupe = group.name;
+                    });
+                groups.sort((group1, group2) => {
+                    if (group1.name > group2.name) {
+                        return 1;
+                    }
+                    if (group1.name < group2.name) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                groups_name = groups.join(",")
+                return groups_name;
             }
+
+            await paramServices.that.subTopics.get();
+            paramServices.that.services = _.reject(_.map(data, service => {
+                let enseignant = _.findWhere(paramServices.that.columns.enseignant.data, {id: service.id_enseignant});
+                let groupe = _.findWhere(paramServices.that.columns.classe.data, {id: service.id_groupe});
+                let groups = [];
+                let subTopics = [];
+                let matiere = _.findWhere(paramServices.that.columns.matiere.data, {id: service.id_matiere});
+                if (matiere && matiere.sous_matieres && matiere.sous_matieres.length > 0)
+                    matiere.sous_matieres.forEach(sm => {
+                        paramServices.that.subTopics.all.map(sb => {
+                            if (sm.id_type_sousmatiere == sb.id) {
+                                subTopics.push(sb)
+                            }
+                        });
+                    });
+                let groups_name = "";
+
+                groups_name = getGroupsName(service, groups, groups_name);
+                let missingParams = {
+                    id_etablissement: paramServices.that.idStructure,
+                    nom_enseignant: enseignant ? enseignant.displayName : null,
+                    topicName: matiere ? matiere.name + " (" + matiere.externalId + ")" : null,
+                    groups: groups ? groups : null,
+                    groups_name: groups_name ? groups_name : null,
+                    nom_groupe: groupe ? groupe.name : null,
+                    subTopics: subTopics ? subTopics : []
+                };
+
+                return new Service(_.defaults(service, missingParams));
+            }), service => service.hasNullProperty());
+            await paramServices.that.stopMessageLoader();
         },
+
+        setServices : async () => {
+            if( !paramServices.that.showServicesLoader) {
+                await paramServices.that.runMessageLoader();
+            }
+
+
+            paramServices.that.getServices().then(async ({data}) => {
+                await paramServices.that.setServicesWithGroups(data);
+            })
+            /* .catch( async (error) => {
+                 console.error(error);
+                 await paramServices.that.stopMessageLoader();
+             });*/
+        },
+
+        updateFilter: async (selectedHeader) => {
+
+            selectedHeader.isSelected = !selectedHeader.isSelected;
+            let filtersArray = _.values(paramServices.that.typeGroupes).concat(_.values(paramServices.that.headers));
+            if(filtersArray.length != 0 ){
+                paramServices.that.filter= "";
+                filtersArray.forEach(filter =>{
+                    paramServices.that.filter += filter.filterName + "=" + filter.isSelected + "&";
+                })
+            }
+            await paramServices.that.setServices();
+        },
+
 
         checkIfExistsAndValid: function (service) {
             let exist = false;
@@ -300,145 +216,27 @@ export const paramServices = {
                 return true;
             }
         },
-
+        deploySubtopics:function (service) {
+            if(service.subTopics.length != 0)
+                service.deploy = !service.deploy;
+        },
         checkDevoirsService: async function (service, callback) {
+
             service.getDevoirsService().then(async function ({data}) {
                 if (data.length == 0) {
                     await callback();
                 } else {
                     paramServices.that.service = service;
                     paramServices.that.devoirs = data;
+                    console.log("true form  ");
+                    console.log(paramServices.that.devoirs);
+
                     paramServices.that.callback = callback;
                     paramServices.that.error = paramServices.that.translate("evaluations.service.devoir.error").replace("[nbDevoir]", paramServices.that.devoirs.length);
                     paramServices.that.lightboxes.switchEval = true;
                     await utils.safeApply(paramServices.that);
                 }
             })
-        },
-        initMatieresForSelect :function() {
-            let isAlreadyIn = false;
-            paramServices.that.matieresForSelect = [];
-            paramServices.that.columns.matiere.data.map(matiere =>{
-                    paramServices.that.matieres.forEach(mm =>{
-                        if(mm.id === matiere.id)
-                            isAlreadyIn = true;
-                    });
-                    if(!isAlreadyIn)
-                        paramServices.that.matieresForSelect.push(matiere);
-                    isAlreadyIn = false;
-                }
-            )
-
-        },
-        openCreationSubTopicCreationInput: function(){
-            paramServices.that.subTopicCreationForm = true;
-            safeApply(paramServices.that);
-        },
-        saveNewSubTopic: async function() {
-            paramServices.that.subTopicCreationForm = false;
-            let subTopic = new TypeSousMatiere();
-            if (paramServices.that.newSubTopic) {
-                subTopic.libelle = paramServices.that.newSubTopic;
-                let isSaved = await subTopic.save();
-                if (isSaved === false) {
-                    paramServices.that.lightboxes.subEducationCreate = false;
-                    toasts.warning("viesco.subTopic.creation.error");
-                } else {
-                    subTopic.selected = true;
-                    paramServices.that.subTopics.all.push(subTopic);
-                }
-            }
-            safeApply(paramServices.that)
-        },
-        closeUpdatingSubtopic: function(){
-            paramServices.that.subTopics.all.map(topic => {
-                if(topic.updating)
-                    topic.save();
-                topic.updating = false;
-            });
-        },
-        openUpdateForm: function(matiere){
-            paramServices.that.closeUpdatingSubtopic();
-            safeApply(paramServices.that);
-            matiere.updating = true;
-            matiere.oldLibelle = matiere.libelle;
-
-        },
-        updateMatiere:async function(matiere){
-            if( matiere.libelle === "") {
-                matiere.libelle = matiere.oldLibelle;
-            }
-            matiere.updating = false;
-            await matiere.save();
-        },
-        closeUpdateLibelle(event,matiere){
-            if (event.which === 13) {
-                matiere.updating = false;
-            }
-        },
-        updateSubTopic: function(newSubTopic){
-            paramServices.that.newSubTopic = newSubTopic;
-        },
-        openSubEducationLightBoxCreation: function (selectedServices){
-            paramServices.that.matieres =[];
-            paramServices.that.subTopicCreationForm = false;
-            paramServices.that.newSubTopic="";
-            selectedServices.map(service => {
-                paramServices.that.columns.matiere.data.map(matiere => {
-                    if (matiere.id === service.id_matiere && !paramServices.that.matieres.find(m => matiere.id === m.id)) {
-                        matiere.selected = true;
-                        let hasNoSubTopic = true;
-                        paramServices.that.matieres.push(matiere);
-                        matiere.sous_matieres.forEach(sm => {
-                            paramServices.that.subTopics.all.map(sb =>{
-                                if(sm.id_type_sousmatiere == sb.id){
-                                    sb.selected = true;
-                                    hasNoSubTopic = false;
-                                }
-                            });
-                        })
-                    }
-                })
-            });
-            paramServices.that.initMatieresForSelect();
-            paramServices.that.servicesSelected = selectedServices;
-            paramServices.that.lightboxes.subEducationCreate = true;
-
-        },
-        addMatiereToCreateSubTopic: async function(matiereToAdd){
-            matiereToAdd.selected = true;
-            paramServices.that.matieres.push(matiereToAdd);
-            paramServices.that.matieresForSelect.map((matiere,index) =>{
-                if (matiere.id === matiereToAdd.id){
-                    paramServices.that.matieresForSelect.splice(index,1)
-                }
-            });
-            await utils.safeApply(paramServices.that);
-        },
-        cancelSwitchEvaluation:function(){
-            paramServices.that.lightboxes.switchEvaluation = false;
-            paramServices.that.lightboxes.subEducationCreate = true;
-            safeApply(paramServices.that);
-
-        },
-        saveNewRelationsSubTopics:async  function(){
-            if(paramServices.that.matieres.find(matiere => matiere.selected)) {
-                let isSaved = await paramServices.that.subTopics.saveTopicSubTopicRelation(paramServices.that.matieres);
-                if (!isSaved) {
-                    toasts.warning("viesco.subTopic.relation.creation.error");
-                }
-            }
-            paramServices.that.services.map(service => {
-                service.selected = false;
-            });
-            toasts.confirm("viesco.subTopic.creation.confirm");
-            if( paramServices.that.lightboxes.subEducationCreate)
-                paramServices.that.lightboxes.subEducationCreate  = false;
-
-            if( paramServices.that.lightboxes.switchEvaluation)
-                paramServices.that.lightboxes.switchEvaluation  = false;
-
-            await utils.safeApply(paramServices.that);
 
         },
         openSwitchEvaluation:function() {
@@ -454,98 +252,82 @@ export const paramServices = {
             paramServices.that.lightboxes.switchEvaluation = true;
             safeApply(paramServices.that);
         },
-        cancelSubEducationCreate:function(){
-            paramServices.that.lightboxes.subEducationCreate = false;
-            paramServices.that.services.map(service => {
-                service.selected = false;
-            });
-            paramServices.that.subTopics.forEach(subTopics=>{
-                if(subTopics.selected){
-                    subTopics.selected = false;
-                }
-            });
-            utils.safeApply(paramServices.that);
-        },
-        checkBeforeSavingNewRelations: function(){
-            paramServices.that.closeUpdatingSubtopic();
-            if(paramServices.that.matieres.find(matiere => matiere.selected && matiere.sous_matieres.length === 0)
-                && paramServices.that.subTopics.selected.length !== 0 ){
-                paramServices.that.openSwitchEvaluation()
+        switchEvaluableService: async function(service,isVarious?) {
+            if(isVarious){
+                service.evaluable = true;
+            }else{
+                service.evaluable = !service.evaluable;
             }
-            else{
-                paramServices.that.saveNewRelationsSubTopics();
-                paramServices.that.lightboxes.subEducationCreate  = false;
-
-            }
-        },
-        getSelectedDisciplines:function(){
-            let selectedDisciplines = []
-            paramServices.that.services.forEach(service =>{
-                if(service.selected)
-                    selectedDisciplines.push(service);
-            });
-            return selectedDisciplines;
-        },
-        oneDisicplineSelected:function(){
-            let service = paramServices.that.services.find(service => service.selected)
-            return service !== undefined;
-        },
-        switchEvaluableService: async function(service) {
-            if(service.evaluable) {
+            if(service.hasAllServicesNotEvaluable() || service.hasVariousEvaluable()) {
                 await service.updateServiceEvaluable();
             } else {
                 await paramServices.that.checkDevoirsService(service, () => service.updateServiceEvaluable());
             }
         },
+        changeSort:function (nameSort)  {
+            if(paramServices.that.sortBy === nameSort)
+                paramServices.that.sortByAsc = !paramServices.that.sortByAsc;
+            else
+                paramServices.that.sortByAsc = true;
+            paramServices.that.sortBy = nameSort;
 
-        deleteService: async function(service) {
-            await  paramServices.that.checkDevoirsService(service, () => service.deleteService());
-            notify.success('evaluation.service.delete');
-            await paramServices.that.initServices();
         },
-
-        doUpdateOrDelete: function (updateOrDelete, devoirs, service) {
-            let id_devoirs = _.pluck(devoirs, "id");
-            switch (updateOrDelete){
-                case "update": {
-                    if(paramServices.that.matiereSelected) {
-                        let matiere = paramServices.that.matiereSelected;
-                        if(matiere === service.id_matiere){
-                            notify.info('evaluation.service.choose.another.subject');
-                            break;
-                        }
-                        service.updateDevoirsService(id_devoirs, matiere).then(async () => {
-                            let nom_matiere = _.findWhere(paramServices.that.columns.matiere.data, {id : matiere}).name;
-                            let newService = new paramServices.that.Service({...service.toJson(),
-                                id_matiere: matiere, nom_matiere: nom_matiere, evaluable: true});
-                            await newService.createService();
-                            paramServices.that.services.push(newService);
-                            await paramServices.that.callback();
-                            paramServices.that.lightboxes.switchEval = false;
-                            notify.success('evaluation.service.update');
-                            await paramServices.that.initServices();
+        addNewService: async function (service, matiere, topicName) {
+            let newService = new Service({
+                ...service.toJson(),
+                id_matiere: matiere, topicName: topicName, evaluable: true
+            });
+            await newService.createService();
+            paramServices.that.services.push(newService);
+        }, handleUpdateDevoirs: function (service, id_devoirs, matiere) {
+            if(paramServices.that.matiereSelected) {
+                let matiere = paramServices.that.matiereSelected;
+                if(matiere === service.id_matiere){
+                    notify.info('evaluation.service.choose.another.subject');
+                }
+                service.updateDevoirsService(id_devoirs, matiere).then(async () => {
+                    let topicName = _.findWhere(paramServices.that.columns.matiere.data, {id : matiere}).name;
+                    toasts.info("service.homework.update.topic");
+                    if(service.hasCompetencesParams()) {
+                        service.id_groupes = [];
+                        service.id_groupe = undefined;
+                        service.competencesParams.forEach(s => {
+                            service.id_groupes.push(s.id_groupe);
                         });
                     }
-                    else {
-                        notify.info('evaluation.service.choose.a.subject');
+                    await this.addNewService(service, matiere, topicName);
+                    await paramServices.that.callback();
+                    paramServices.that.lightboxes.switchEval = false;
+                    await paramServices.that.initServices();
+                });
+            }
+            else {
+                notify.info('evaluation.service.choose.a.subject');
+            }
+        },
+        handleDeleteDevoirs: function (service, id_devoirs) {
+            {
+                service.deleteDevoirsService(id_devoirs).then(async () => {
+                    try {
+                        await paramServices.that.callback();
+                        paramServices.that.lightboxes.switchEval = false;
+                        toasts.confirm('evaluation.service.delete');
+                        await paramServices.that.initServices();
+                    } catch (e) {
+                        console.error(e);
+                        toasts.warning('evaluation.service.delete.error');
                     }
-                }
+                });
+            }
+        }, doUpdateOrDelete: function (updateOrDelete, devoirs, service) {
+            let id_devoirs = _.pluck(devoirs, "id");
+            switch (updateOrDelete){
+                case "update":
+                    this.handleUpdateDevoirs(service, id_devoirs);
                     break;
-                case "delete" : {
-                    service.deleteDevoirsService(id_devoirs).then(async () => {
-                        try {
-                            await paramServices.that.callback();
-                            paramServices.that.lightboxes.switchEval = false;
-                            notify.success('evaluation.service.delete');
-                            await paramServices.that.initServices();
-                        }
-                        catch (e) {
-                            console.error(e);
-                            notify.error('evaluation.service.delete.error');
-                        }
-
-                    });
-                }
+                case "delete" :
+                    this.handleDeleteDevoirs(service, id_devoirs);
+                    break;
             }
         },
 
@@ -566,50 +348,50 @@ export const paramServices = {
             utils.pushData(classe,listClasses);
         },
 
-        openCreateLightbox: function () {
-            paramServices.that.service = new paramServices.that.Service(
-                {
-                    id_etablissement: paramServices.that.idStructure,
-                    id_matiere: "",
-                    id_enseignant: "",
-                    id_groupe: "",
-                    nom_matiere: "",
-                    nom_enseignant: "",
-                    nom_groupe: "",
-                    isManual: true,
-                    modalite: 'S',
-                    evaluable: true
-                });
-            paramServices.that.lightboxes.create = true;
-        },
+        openUpdateLightbox: function (service) {
+            paramServices.that.oldService = service;
+            paramServices.that.serviceToUpdate = new Service(service);
+            paramServices.that.lightboxes.update = true;
 
-        createService: async function(service) {
-            try {
-                await service.createService();
-                if(paramServices.that.classesSelected.length >1)
-                    notify.success('evaluation.services.create');
-                else
-                    notify.success('evaluation.service.create');
-            } finally {
-                paramServices.that.lightboxes.create = false;
-                await paramServices.that.initServices();
+        },
+        validForm: function (serviceToUpdate) {
+            paramServices.that.lightboxes.update = false;
+            serviceToUpdate.updateServices()
+            paramServices.that.setServices();
+        },
+        updateServices: async function(){
+            let oldService = paramServices.that.oldService;
+            let serviceToUpdate = paramServices.that.serviceToUpdate;
+
+            if(!serviceToUpdate.hasSameEvaluableSubServices(oldService)){
+                let servicesToCheck = serviceToUpdate.getDifferentEvaluableSubServices(oldService)
+                console.log(servicesToCheck);
+                let service = new Service(serviceToUpdate);
+                service.competencesParams = servicesToCheck;
+                await paramServices.that.checkDevoirsService(service, () => {
+                    this.validForm(serviceToUpdate);
+                })
+            }else{
+                this.validForm(serviceToUpdate);
             }
         },
-
         getServices: function () {
             try {
-                return http.get(`/competences/services?idEtablissement=${paramServices.that.idStructure}`);
+                if(!paramServices.that.filter)
+                    paramServices.that.filter = "classes=true&groups=true&manualGroups=true&evaluable=true&notEvaluable=false";
+                return http.get(`/viescolaire/services?idEtablissement=${paramServices.that.idStructure}&${paramServices.that.filter}`);
+
             } catch (e) {
-                notify.error('evaluation.service.error.get');
+                toasts.warning('evaluation.service.error.get');
             }
         },
 
         getClasses: function () {
             try {
                 return http.get(`/viescolaire/classes?idEtablissement=${
-                    paramServices.that.idStructure}&forAdmin=true`)
+                    paramServices.that.idStructure}&forAdmin=true&classOnly=true`)
             } catch (e) {
-                notify.error('evaluations.service.error.classe');
+                toasts.warning('evaluations.service.error.classe');
             }
         },
 
@@ -617,7 +399,7 @@ export const paramServices = {
             try {
                 return http.get(`/viescolaire/matieres?idEtablissement=${paramServices.that.idStructure}`)
             } catch (e) {
-                notify.error('evaluations.service.error.matiere');
+                toasts.warning('evaluations.service.error.matiere');
             }
         },
 
@@ -625,7 +407,7 @@ export const paramServices = {
             try {
                 return http.get("/competences/modalites")
             } catch (e) {
-                notify.error('evaluations.service.error.classe');
+                toasts.warning('evaluations.service.error.classe');
             }
         },
 
@@ -633,7 +415,7 @@ export const paramServices = {
             try {
                 return http.get(`/viescolaire/teachers?idEtablissement=${paramServices.that.idStructure}`)
             } catch (e) {
-                notify.error('evaluations.service.error.teacher');
+                toasts.warning('evaluations.service.error.teacher');
             }
         },
 
@@ -641,7 +423,7 @@ export const paramServices = {
             try {
                 return http.get(`/competences/remplacements/list`)
             } catch (e) {
-                notify.error('evaluations.service.error.remplacement');
+                toasts.warning('evaluations.service.error.remplacement');
             }
         }
     }

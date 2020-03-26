@@ -18,7 +18,6 @@
 package fr.openent.competences.controllers;
 
 import fr.openent.competences.Competences;
-import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.service.TransitionService;
 import fr.openent.competences.service.UtilsService;
 import fr.openent.competences.service.impl.DefaultTransitionService;
@@ -32,7 +31,6 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.http.filter.SuperAdminFilter;
@@ -44,7 +42,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
 import java.util.ArrayList;
@@ -86,6 +84,30 @@ public class UtilsController extends ControllerHelper {
             }
         });
     }
+
+
+
+    /**
+     * Retourne tous les types de devoir par etablissement
+     * @param request
+     */
+    @Get("/mainteachers/:idStructure")
+    @ApiDoc("Retourne tous les types de devoir par etablissement")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void viewTittulaires(final HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+            @Override
+            public void handle(final UserInfos user) {
+                utilsService.getTitulaires(user.getUserId(), request.getParam("idStructure"), new Handler<Either<String, JsonArray>>() {
+                    @Override
+                    public void handle(Either<String, JsonArray> event) {
+                        log.info(event.right().getValue());
+                    }
+                });
+            }
+        });
+    }
+
 
 
     /**

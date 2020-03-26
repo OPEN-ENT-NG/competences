@@ -24,7 +24,7 @@ import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.utils.FormateFutureEvent;
+import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
