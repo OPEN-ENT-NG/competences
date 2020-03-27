@@ -779,12 +779,13 @@ public class ExportPDFController extends ControllerHelper {
         final Boolean json = Boolean.parseBoolean(request.params().get("json"));
         final String idClasse = request.params().get("idClasse");
         final Boolean usePerso = Boolean.parseBoolean(request.params().get("usePerso"));
-
+        Boolean year = false;
         Long idPeriode = null;
-
         try {
             if (request.params().contains("idPeriode")) {
                 idPeriode = Long.parseLong(request.params().get("idPeriode"));
+            }else{
+                year=true;
             }
         } catch (NumberFormatException err) {
             badRequest(request, err.getMessage());
@@ -793,6 +794,7 @@ public class ExportPDFController extends ControllerHelper {
         }
 
         final Long finalIdPeriode = idPeriode;
+        final Boolean finalYear = year;
 
         utilsService.getCycle(Arrays.asList(idClasse), new Handler<Either<String, JsonArray>>() {
             @Override
@@ -845,7 +847,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                     getExportRecapUtils(user, idEtablissement, idCycle,
                                                                             text, json, usePerso, idClasse,
                                                                             finalIdPeriode, request,
-                                                                            isChefEtab || isHeadTeacher);
+                                                                            isChefEtab || isHeadTeacher, finalYear);
                                                                 }
                                                             });
                                                 }
@@ -866,7 +868,7 @@ public class ExportPDFController extends ControllerHelper {
     private void getExportRecapUtils (final UserInfos user, final String idEtablissement, final Long idCycle,
                                       final Boolean text, final Boolean json, final Boolean usePerso,
                                       final String idClasse, final Long finalIdPeriode, final HttpServerRequest request,
-                                      final Boolean isChefEtab) {
+                                      final Boolean isChefEtab, final Boolean isYear) {
 
         if ((user != null) || isChefEtab) {
             //idVisibility = 1 pour la visibilité de la moyBFC
@@ -876,23 +878,14 @@ public class ExportPDFController extends ControllerHelper {
                         public void handle(Either<String, JsonArray> stringJsonArrayEither) {
                             if (stringJsonArrayEither.isRight() || isChefEtab) {
                                 boolean moy = false;
-                                Number state = null;
                                 if (stringJsonArrayEither.isRight()) {
                                     JsonArray result = stringJsonArrayEither.right().getValue();
-                                    JsonObject obj = (JsonObject) result.getJsonObject(0);
-                                    state = (obj).getInteger("visible");
-                                }
-                                if (state != null
-                                        && Competences.BFC_AVERAGE_VISIBILITY_NONE.equals(state)) {
-                                    moy = false;
-                                } else if (state != null && isChefEtab &&
-                                        Competences.BFC_AVERAGE_VISIBILITY_FOR_ADMIN_ONLY
-                                                .equals(state)) {
-                                    moy = true;
-                                } else if (state != null &&
-                                        Competences.BFC_AVERAGE_VISIBILITY_FOR_ALL
-                                                .equals(state)) {
-                                    moy = true;
+                                    JsonObject obj = result.getJsonObject(0);
+                                    Integer state = (obj).getInteger("visible");
+                                    if ((isChefEtab && Competences.BFC_AVERAGE_VISIBILITY_FOR_ADMIN_ONLY.equals(state)) ||
+                                            Competences.BFC_AVERAGE_VISIBILITY_FOR_ALL.equals(state)) {
+                                        moy = true;
+                                    }
                                 }
                                 final boolean isHabilite = moy;
 
@@ -941,7 +934,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                             }
                                                                             boolean recapEval = true;
                                                                             bfcService.buildBFC(recapEval, idEleves, idClasse,
-                                                                                    idEtablissement, finalIdPeriode, idCycle,
+                                                                                    idEtablissement, finalIdPeriode, idCycle, isYear,
                                                                                     new Handler<Either<String, JsonObject>>() {
                                                                                         @Override
                                                                                         public void handle(Either<String, JsonObject> stringMapEither) {
@@ -975,7 +968,7 @@ public class ExportPDFController extends ControllerHelper {
                                                                                                                             note.put(MOYENNE, text ? "- " + moyCalcule
                                                                                                                                     : "" + moyCalcule);
 
-                                                                                                                        domainesEvalues.add(((JsonObject) note).getInteger("id").intValue());
+                                                                                                                        domainesEvalues.add(((JsonObject) note).getInteger("id"));
                                                                                                                         notesEleve.add(note);
                                                                                                                     }
                                                                                                                 }
