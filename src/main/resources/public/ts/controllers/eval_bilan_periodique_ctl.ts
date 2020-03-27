@@ -457,8 +457,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if ($scope.selected.bfc !== true) {
                     finSaisieBilan = !_.find($scope.search.classe.periodes.all,
                         {id_type: $scope.search.periode.id_type}).publication_bulletin;
-                }else{
-                    $scope.search.periode.id_type = -2;
                 }
 
                 let periode = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
