@@ -726,7 +726,7 @@
   "viescolaire.utils.classes": "classes",
 
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
-  "competance.error.iframe.statusText": "Le contenue est vide",
+  "competance.error.iframe.statusText": "Le contenu est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",
   "competance.lightbox.selectFormat": "Sélectionnez le format de l'exportation :",
 
