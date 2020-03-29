@@ -1,6 +1,7 @@
 package fr.openent.competences.utils;
 
 import fr.openent.competences.Competences;
+import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.Future;

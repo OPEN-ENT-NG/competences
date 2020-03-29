@@ -1,5 +1,5 @@
 <section class="iframeReportClass">
-    <p ng-if="contentIframe.status !== 200">[[contentIframe.text]]</p>
+    <p ng-if="contentIframe.status !== 200"><i18n>competance.class.info.empty</i18n></p>
     <iframe
             ng-if="contentIframe.status === 200"
             ng-src="[[contentIframe.urlSrc]]"

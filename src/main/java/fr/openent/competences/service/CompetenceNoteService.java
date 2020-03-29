@@ -152,9 +152,10 @@ public interface CompetenceNoteService extends CrudService {
      * @param idEleves id des élèves
      * @param idPeriode id de la période dont on souhaite récupérer les notes, peut être null pour sélectionner l'année
      * @param idCycle id du cycle dont on souhaite récupérer les notes,
+     * @param isYear afin de savoir si on récupère les notes de toutes l'année ou pas,
      * @param handler handler portant le résultat de la requête
      */
-    void getMaxCompetenceNoteEleve(String[] idEleves, Long idPeriode, Long idCycle, Handler<Either<String, JsonArray>> handler);
+    void getMaxCompetenceNoteEleve(String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, Handler<Either<String, JsonArray>> handler);
 
     /**
      * Récupère les cycles des groupes sur lequels un élève a des devoirs avec compétences notées

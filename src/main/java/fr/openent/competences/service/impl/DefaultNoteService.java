@@ -52,7 +52,7 @@ import static fr.openent.competences.Utils.getLibellePeriode;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.ERROR;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static fr.wseduc.webutils.http.Renders.badRequest;
 import static org.entcore.common.http.response.DefaultResponseHandler.notEmptyResponseHandler;

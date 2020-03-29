@@ -1,4 +1,4 @@
-package fr.openent.competences.utils;
+package fr.openent.competences.helpers;
 
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;

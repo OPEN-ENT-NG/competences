@@ -24,7 +24,7 @@ import fr.openent.competences.bean.lsun.*;
 import fr.openent.competences.security.HasExportLSURight;
 import fr.openent.competences.service.*;
 import fr.openent.competences.service.impl.*;
-import fr.openent.competences.utils.FormateFutureEvent;
+import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.openent.competences.utils.UtilsConvert;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
@@ -1373,7 +1373,7 @@ public class LSUController extends ControllerHelper {
         final String thread = "(" + idClass + ", " + idStructure + ", " + idCycle + ")";
         final String method = "getResultsElevesByDomaine";
 
-        bfcService.buildBFC(false, idsEleve, idClass, idStructure, null, idCycle,
+        bfcService.buildBFC(false, idsEleve, idClass, idStructure, null, idCycle, false,
                 new Handler<Either<String, JsonObject>>() {
                     @Override
                     public void handle(final Either<String, JsonObject> repBuildBFC) {
@@ -1382,7 +1382,7 @@ public class LSUController extends ControllerHelper {
                             lsuService.serviceResponseOK(answer, count.incrementAndGet(), thread, method);
                             if (error!=null && error.contains(TIME)){
                                 bfcService.buildBFC(false, idsEleve, idClass, idStructure, null,
-                                        idCycle,this);
+                                        idCycle, false,this);
                             }
                             else {
                                 handler.handle(new Either.Left<>("getResultsElevesByDomaine : bfcService.buidBFC : " +

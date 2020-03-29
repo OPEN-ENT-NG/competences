@@ -1,14 +1,10 @@
-package fr.openent.competences.utils;
+package fr.openent.competences.helpers;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.impl.*;
-import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
-import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;

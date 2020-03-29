@@ -1,6 +1,5 @@
-package fr.openent.competences.utils;
+package fr.openent.competences.helpers;
 
-import fr.openent.competences.service.impl.DefaultEleveEnseignementComplementService;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
