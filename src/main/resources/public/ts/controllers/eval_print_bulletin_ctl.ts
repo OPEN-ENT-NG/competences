@@ -3,6 +3,9 @@ import {ExportBulletins} from "../models/common/ExportBulletins";
 import * as utils from '../utils/teacher';
 import {evaluations, Utils} from "../models/teacher";
 import http from "axios";
+import {ReportModelPrintExport} from "../models/teacher/ReportModelPrintExport";
+import {PreferencesReportModel, ReportModelPrintExportType} from "../models/type";
+import {ReportModelPrintExportServiceType} from "../services/type";
 
 
 declare let $ : any;
@@ -10,8 +13,8 @@ declare let Chart: any;
 
 
 export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
-    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout',
-    function ($scope) {
+    '$scope', 'ReportModelPrintExportService',
+    function ($scope, ReportModelPrintExportService:ReportModelPrintExportServiceType) {
 
         $scope.mentionClass = lang.translate("conseil.avis.mention");
         $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
@@ -47,9 +50,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             });
 
             $scope.currentModel = undefined;
-            let competences = await Me.preference('competences');
-            let optionsPrintBulletin = (Utils.isNull(competences) ? undefined : competences.printBulletin);
-            $scope.print = (Utils.isNull(optionsPrintBulletin)) ? {} : optionsPrintBulletin;
+            await getPreferences();
             $scope.error = {};
             if(Utils.isNotNull($scope.opened)) {
                 $scope.opened.coefficientConflict = false;
@@ -108,6 +109,10 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 Me.preferences.competences.printBulletin = Object.assign({}, $scope.print);
                 delete Me.preferences.competences.printBulletin.students;
                 await Me.savePreference('competences');
+            }
+            if (userReportModel){
+                userReportModel.setPreferencesWithClean($scope.print);
+                userReportModel.put();
             }
             let selectedClasses = _.where($scope.printClasses.all, {selected : true});
 
@@ -231,6 +236,39 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
                 $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
             }
             $scope.mentionClass = lang.translate("conseil.avis.mention");
+        };
+
+        async function getPreferences():Promise<void>{
+            const competences = await Me.preference('competences');
+            const optionsPrintBulletin = (Utils.isNull(competences) ? undefined : competences.printBulletin);
+            $scope.print = (Utils.isNull(optionsPrintBulletin)) ? {} : optionsPrintBulletin;
+            await getReportModelAllSelected();
+            utils.safeApply($scope);
+        }
+
+        let userReportModel:ReportModelPrintExport;
+        async function getReportModelAllSelected():Promise<void>{
+            userReportModel = await ReportModelPrintExportService.getFirstSelected();
+            syncPreferences(userReportModel.getPreferences());
+        }
+
+        function syncPreferences(preferences:PreferencesReportModel){
+            $scope.print = {
+                ...$scope.print,
+                ...preferences
+            };
+        }
+
+        $scope.isLightBoxReportModelOpen = false;
+        $scope.openLightBoxSelectModelReport = async function(){
+            $scope.preferencesPrint = $scope.print;
+            $scope.isLightBoxReportModelOpen = true;
+        };
+
+        $scope.closeLightBoxSelectModelReport = async function(reportModel = undefined){
+            if(reportModel) syncPreferences(reportModel.getPreferences());
+            userReportModel = reportModel;
+            $scope.isLightBoxReportModelOpen = false;
         };
     }
 ]);

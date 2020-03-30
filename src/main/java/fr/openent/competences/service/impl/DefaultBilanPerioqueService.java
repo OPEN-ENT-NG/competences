@@ -190,7 +190,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
         });
 
-}
+    }
 
     private void sendEventBusGetEvent(Integer eventType, List<String> students, String structure,
                                       String startDate, String endDate, String recoveryMethod,
