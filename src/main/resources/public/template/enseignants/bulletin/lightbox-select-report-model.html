@@ -1,0 +1,74 @@
+<lightbox show="isLightBoxReportModelOpen"
+          on-close="closeLightBoxSelectModelReport()">
+    <form class="formReportModel"
+          ng-submit="submit()">
+        <h1>
+            <i18n>competences.report.model.title.select</i18n>
+        </h1>
+        <ul class="ul-competences">
+            <li class="row"
+                ng-class="reportModel['errorSameTitle']? 'duplication-title' : ''"
+                ng-repeat="reportModel in allReportModelPrintExport | filter: reportModel.getId()">
+                <label class="checkbox cell one">
+                    <input type="checkbox"
+                           ng-model="reportModel.selected"
+                           ng-value="reportModel.title"
+                           ng-change="selectReportModel(reportModel)"
+                    />
+                    <span></span>
+                </label>
+                <!--no edit-->
+                <div class="cell two"
+                     ng-if="!reportModel.iAmUpdated"
+                     ng-click="openUpdateMode(reportModel)">
+                    [[reportModel.title]]
+                </div>
+                <!--edit-->
+                <input class="cell two"
+                       ng-if="reportModel.iAmUpdated"
+                       ng-blur="saveTitleEdit(reportModel)"
+                       type="text"
+                       ng-model="reportModel.title"/>
+                <i ng-click="openUpdateMode(reportModel)"
+                   class="edit cell one"></i>
+                <i ng-click="remove(reportModel)"
+                   class="trash cell one"></i>
+            </li>
+        </ul>
+        <ul class="ul-competences">
+            <li class="row">
+                <label class="checkbox cell one">
+                    <input type="checkbox"
+                           ng-model="newReportModel.selected"
+                           ng-change="makeNewReportModel()"
+                    />
+                    <span></span>
+                </label>
+                <i18n class="cell ten">competences.report.model.add</i18n>
+            </li>
+            <li ng-if="newReportModel.getSelected()"
+                class="row">
+                <div class="cell one">&nbsp</div>
+                <i18n class="cell tree">
+                    competences.report.model.name</i18n>
+                <input class="cell four"
+                       type="text"
+                       ng-model="newReportModel.title"
+                       ng-blur="saveTitleEdit(newReportModel)"/>
+            </li>
+            <div class="warning"
+                 ng-if="infoProblemInTitle">
+                <i18n>competences.reportModel.info.problem.title</i18n>
+            </div>
+            <div class="right-magnet margin-top-1em">
+                <button ng-click="closeLightBoxSelectModelReport()">
+                    <i18n>competences.cancel</i18n>
+                </button>
+                <button type="submit"
+                        ng-disabled="!enableSubmit">
+                    <i18n>competences.valid</i18n>
+                </button>
+            </div>
+        </ul>
+    </form>
+</lightbox>

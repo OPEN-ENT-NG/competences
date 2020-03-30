@@ -239,7 +239,6 @@ public class Competences extends BaseServer {
     public static final String ORDRE = "ordre";
     public static  String TEMPLATE_PATH;
 
-
     @Override
 	public void start() throws Exception {
         super.start();
@@ -280,7 +279,7 @@ public class Competences extends BaseServer {
         addController(new BilanPeriodiqueController(eb));
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));
-
+        addController(new ReportModelPrintExportController());
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,

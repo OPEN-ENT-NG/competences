@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "selected": {
+      "type": "boolean"
+    },
+    "preferences": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "title",
+    "selected",
+    "preferences"
+  ]
+}

@@ -32,6 +32,7 @@ import {evalSuiviCompetenceClasseCtl} from './controllers/eval_suivi_competences
 import {evalBilanPeriodiqueCtl} from './controllers/eval_bilan_periodique_ctl';
 import {exportControleur} from './controllers/eval_export_controller';
 import {evalBulletinCtl} from "./controllers/eval_print_bulletin_ctl";
+import reportModelPrintExportController from "./controllers/reportModelPrintExportController";
 
 ng.controllers.push(evaluationsController);
 ng.controllers.push(evalAcuTeacherController);
@@ -40,6 +41,7 @@ ng.controllers.push(evalSuiviCompetenceClasseCtl);
 ng.controllers.push(evalBilanPeriodiqueCtl);
 ng.controllers.push(exportControleur);
 ng.controllers.push(evalBulletinCtl);
+ng.controllers.push(reportModelPrintExportController);
 
 //FILTERS
 import {uniqueFilter} from './utils/filters/unique';
@@ -59,6 +61,13 @@ ng.filters.push(getEnseignantClasseFilter);
 ng.filters.push(customClassFilters);
 ng.filters.push(customPeriodeFilters);
 ng.filters.push(customClassPeriodeFilters);
+
+//SERVICES
+import * as services from './services';
+
+for (let service in services) {
+    ng.services.push(services[service]);
+}
 
 //DIRECTIVES
 import {cFilAriane} from './utils/directives/cFilAriane';
@@ -99,8 +108,8 @@ ng.directives.push(structureLoader);
 ng.directives.push(messageLoader);
 ng.directives.push(inputTextList);
 ng.directives.push(teachingsSkills);
-
 ng.directives.push(cSkillsBubble);
+
 
 routes.define(function($routeProvider){
     $routeProvider
