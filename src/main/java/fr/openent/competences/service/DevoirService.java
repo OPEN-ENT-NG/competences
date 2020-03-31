@@ -198,12 +198,14 @@ public interface DevoirService extends CrudService {
     void switchVisibilityApprec(Long idDevoir, Handler<Either<String, JsonArray>> handler);
 
     /**
-     * Récupère les ids matières des devoirs sur lesquels un élève a eu une note ou une compétence ou annotation,
+     * Récupère les ids matières des devoirs sur lesquels un élève a eu une note ou une compétence ou annotation ou une appréciation,
      * les enseignants de chaque matière et les groupes de l'élève pour chaque matière pour une période donnée
      * @param id_eleve
+     * @param idEtablissement
+     * @param id_classe
      * @param handler
      */
-    void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, Handler<Either<String,JsonArray>> handler);
+    void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, String id_classe, Handler<Either<String,JsonArray>> handler);
 
     void listDevoirsService(String idEnseignant, String idMatiere, List<String> idGroups, Handler<Either<String, JsonArray>> handler);
 

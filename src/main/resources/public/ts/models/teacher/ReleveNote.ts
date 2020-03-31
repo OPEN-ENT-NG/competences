@@ -84,6 +84,7 @@ export class ReleveNote extends  Model implements IModel {
         }
     }
 
+
     constructor(o?: any) {
         super();
         if (o) this.updateData(o, false);

@@ -2436,13 +2436,11 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.opened.displayMessageLoader = true;
                 let releve = new ReleveNote(p);
                 releve.sync().then(async () => {
-                    if (releve.devoirs.all.length !== 0) {
-                        releve.synchronized.releve = true;
-                        evaluations.releveNotes.push(releve);
-                        $scope.releveNote = releve;
-                        if ($scope.releveNote.elementProgramme !== undefined) {
-                            $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
-                        }
+                    releve.synchronized.releve = true;
+                    evaluations.releveNotes.push(releve);
+                    $scope.releveNote = releve;
+                    if ($scope.releveNote.elementProgramme !== undefined) {
+                        $scope.elementProgrammeDisplay = $scope.releveNote.elementProgramme.texte;
                     }
 
                     // s'il n'ya que des devoirs sans note, on les masque par défaut

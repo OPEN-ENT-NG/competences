@@ -6,6 +6,7 @@ import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
 import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -31,6 +32,7 @@ import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 
 import fr.openent.competences.message.MessageResponseHandler;
 
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
@@ -74,7 +76,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                         JsonObject activationState = activationFuture.result();
                         JsonObject syncState = syncFuture.result();
                         if(activationState.getBoolean("installed") && activationState.getBoolean("activate") &&
-                                syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
+                        syncState.containsKey("presences_sync") && syncState.getBoolean("presences_sync")){
                             getRetardsAndAbsencesFromPresences(structureId, idClasse, idEleve, eitherHandler);
                         }else{
                             getRetardsAndAbsencesFromCompetences(idEleve, eitherHandler);
@@ -181,14 +183,14 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                                     }
                                     eitherHandler.handle(new Either.Right<>(result));
                                 }
-                            });
-                } else {
-                    String message = " " + eventPeriodes.left().getValue();
-                    log.error("[getRetardsAndAbsences-Periodes] : " + idEleve + " " + message);
-                    eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-Periodes] Failed"));
-                }
+                });
+            } else {
+                String message = " " + eventPeriodes.left().getValue();
+                log.error("[getRetardsAndAbsences-Periodes] : " + idEleve + " " + message);
+                eitherHandler.handle(new Either.Left<>("[getRetardsAndAbsences-Periodes] Failed"));
             }
-        });
+        }
+    });
 
     }
 
@@ -241,12 +243,60 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                 });
 
     }
+    private void getServicesAndAddMissingTeachers(final String idEtablissement, final JsonArray idsMatieres, final JsonArray idClasseGroups,
+                             final List<String> matieresMissingTeachers, final  Map<String,JsonObject> idsMatieresIdsTeachers,
+                             final JsonArray idsTeachers, Future<JsonArray> servicesFuture) {
+        JsonObject action = new JsonObject()
+                .put("action", "service.getDefaultServices")
+                .put("idEtablissement", idEtablissement)
+                .put("idsMatiere", idsMatieres)
+                .put("idsGroupe", idClasseGroups);
+        eb.send(Competences.VIESCO_BUS_ADDRESS, action, DELIVERY_OPTIONS, handlerToAsyncHandler( message -> {
+            JsonObject body = message.body();
+            if (OK.equals(body.getString(STATUS))) {
+                matieresMissingTeachers.forEach(idMatiere -> {
+                    message.body().getJsonArray("results").stream().forEach(service -> {
+                        JsonObject serviceObj = (JsonObject) service;
+                        String idServiceMatiere = serviceObj.getString("id_matiere");
+                        if (idServiceMatiere.equals(idMatiere)) {
+                            String owner = serviceObj.getString("id_enseignant");
+                            Long coefficient = serviceObj.getLong(COEFFICIENT);
+                            coefficient = isNull(coefficient)? 1L : coefficient;
+
+                            JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
+                            JsonArray teachers = matiere.getJsonArray("teachers");
+
+                            if (isNotNull(owner) && !teachers.contains(owner) && teachers.isEmpty()) {
+                                teachers.add(owner);
+                                if (!idsTeachers.contains(owner))
+                                    idsTeachers.add(owner);
+
+                                JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
+                                if (!coeffObject.containsKey(coefficient.toString())) {
+                                    coeffObject.put(coefficient.toString(), new JsonArray());
+                                }
+                                if (!coeffObject.getJsonArray(coefficient.toString()).contains(owner))
+                                    coeffObject.getJsonArray(coefficient.toString()).add(owner);
+                            }
+                        }
+                    });
+                });
+                servicesFuture.complete();
+            }
+            else{
+                String error = "getSuiviAcquis : event bus get Services failed ";
+                log.error(error + "\n" + body.encode() + "\n");
+                servicesFuture.fail(error);
+            }
+        }));
+    }
+
     public void getSuiviAcquis(final String idEtablissement, final Long idPeriode, final String idEleve,
                                final String idClasse , Handler<Either<String, JsonArray>> handler) {
 
         Future<JsonArray> subjectFuture = Future.future();
         // Récupération des matières et des professeurs
-        devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, event -> {
+        devoirService.getMatiereTeacherForOneEleveByPeriode(idEleve, idEtablissement, idClasse, event -> {
             formate(subjectFuture,event);
         });
 
@@ -268,31 +318,35 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
                     handler.handle(new Either.Right<>(new JsonArray()));
                 }
                 else {
-                    buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres, idsTeachers, responseArray,idPeriode);
+                    List<String> matieresMissingTeachers = buildSubjectForSuivi(idsMatieresIdsTeachers, idsMatieres,
+                            idsTeachers, responseArray,idPeriode);
+
+                    List<Future> futures = new ArrayList<>();
 
                     // Récupération du libelle des matières et sous Matières
                     Future<Map<String,JsonObject>> libelleMatiereFuture = Future.future();
                     getSubjectLibelleForSuivi(idEtablissement, idsMatieres, libelleMatiereFuture);
+                    futures.add(libelleMatiereFuture);
 
-                    // Récupération des noms et prénoms des professeurs
-                    Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
-                    Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
-                        FormateFutureEvent.formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
-                    });
+                    if(!matieresMissingTeachers.isEmpty()){
+                        // Récupération des services afin de récupérer les idTeachers manquants
+                        Future<JsonArray> servicesFuture = Future.future();
+                        getServicesAndAddMissingTeachers(idEtablissement,idsMatieres,idClasseGroups, matieresMissingTeachers,
+                                idsMatieresIdsTeachers, idsTeachers, servicesFuture);
+                        futures.add(servicesFuture);
+                    }else{
+                        // Récupération des noms et prénoms des professeurs
+                        Future<Map<String,JsonObject>> lastNameAndFirstNameFuture = Future.future();
+                        Utils.getLastNameFirstNameUser(eb, idsTeachers, lastNameAndFirstNameEvent -> {
+                            FormateFutureEvent.formate(lastNameAndFirstNameFuture, lastNameAndFirstNameEvent);
+                        });
+                        futures.add(lastNameAndFirstNameFuture);
+                    }
 
-                    CompositeFuture.all(libelleMatiereFuture, lastNameAndFirstNameFuture).setHandler( event1 -> {
-                        if(event1.succeeded()) {
-                            Map<String, JsonObject> idsMatLibelle = libelleMatiereFuture.result();
-                            Map<String, JsonObject> teachersInfos = lastNameAndFirstNameFuture.result();
-                            JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
-                            setSubjectLibelleAndTeachers (idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
-                                    idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
-
-                        }
-                        else{
-                            handler.handle(new Either.Right<>(new JsonArray()));
-                        }
-                    });
+                    CompositeFuture.all(futures).setHandler(
+                            setSubjectLibelleAndTeachersHandler(idEtablissement, idPeriode, idEleve, idClasse, handler,
+                                    idsMatieresIdsTeachers, idsTeachers, idClasseGroups, matieresMissingTeachers, futures)
+                    );
                 }
 
             }
@@ -303,6 +357,42 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
         });
 
+    }
+
+    private Handler<AsyncResult<CompositeFuture>>
+    setSubjectLibelleAndTeachersHandler(String idEtablissement, Long idPeriode, String idEleve, String idClasse,
+                                        Handler<Either<String, JsonArray>> handler, Map<String, JsonObject> idsMatieresIdsTeachers,
+                                        JsonArray idsTeachers, JsonArray idClasseGroups, List<String> matieresMissingTeachers,
+                                        List<Future> futures) {
+        return event1 -> {
+            if(event1.succeeded()) {
+                Map<String, JsonObject> idsMatLibelle = (Map<String, JsonObject>) futures.get(0).result();
+                JsonArray idsGroups = new fr.wseduc.webutils.collections.JsonArray();
+                if(!matieresMissingTeachers.isEmpty()){
+                    Utils.getLastNameFirstNameUser(eb, idsTeachers, new Handler<Either<String, Map<String, JsonObject>>>() {
+                        @Override
+                        public void handle(Either<String, Map<String, JsonObject>> eventTeachers) {
+                            if(eventTeachers.isRight()){
+                                Map<String, JsonObject> teachersInfos = eventTeachers.right().getValue();
+                                setSubjectLibelleAndTeachers (idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
+                                        idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
+                            }else{
+                                String message = " " + eventTeachers.left().getValue();
+                                log.error("[getLastNameFirstNameUser] : " + idEleve + " " + message);
+                                handler.handle(new Either.Left<>("[getLastNameFirstNameUser] Failed"));
+                            }
+                        }
+                    });
+                }else{
+                    Map<String, JsonObject> teachersInfos = (Map<String, JsonObject>) futures.get(1).result();
+                    setSubjectLibelleAndTeachers (idEleve, idClasseGroups, idClasse, idEtablissement, idsGroups,
+                            idsMatieresIdsTeachers, idsMatLibelle, teachersInfos, idPeriode, handler);
+                }
+            }
+            else{
+                handler.handle(new Either.Right<>(new JsonArray()));
+            }
+        };
     }
 
     private void setSubjectLibelle(String idMatiere, JsonObject result, Map<String, JsonObject> idsMatLibelle){
@@ -451,8 +541,10 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
         });
     }
 
-    private void buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsMatieres,
+    private List<String> buildSubjectForSuivi(Map<String,JsonObject> idsMatieresIdsTeachers, JsonArray idsMatieres,
                                       JsonArray idsTeachers, JsonArray responseArray, final Long idPeriode){
+
+        List<String> matieresMissingTeachers = new ArrayList<>();
 
         for (int i = 0; i < responseArray.size(); i++) {
             JsonObject responseObject = responseArray.getJsonObject(i);
@@ -469,17 +561,22 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
             JsonObject matiere = idsMatieresIdsTeachers.get(idMatiere);
             JsonArray teachers = matiere.getJsonArray("teachers");
-            if (idPeriode.equals(id_periode)) teachers.add(owner);
+            if (idPeriode.equals(id_periode) && isNotNull(owner)) teachers.add(owner);
 
-            if(!idsTeachers.contains(owner)) idsTeachers.add(owner);
+            if(!idsTeachers.contains(owner) && isNotNull(owner)) idsTeachers.add(owner);
 
             JsonObject coeffObject = matiere.getJsonObject("_" + COEFFICIENT);
             if(!coeffObject.containsKey(coefficient.toString())){
                 coeffObject.put(coefficient.toString(), new JsonArray());
             }
-            if(!coeffObject.getJsonArray(coefficient.toString()).contains(owner))
+            if(isNotNull(owner) && !coeffObject.getJsonArray(coefficient.toString()).contains(owner))
                 coeffObject.getJsonArray(coefficient.toString()).add(owner);
+            if(isNull(owner) && !matieresMissingTeachers.contains(idMatiere) && teachers.isEmpty())
+                matieresMissingTeachers.add(idMatiere);
+            else if(!teachers.isEmpty())
+                matieresMissingTeachers.remove(idMatiere);
         }
+        return matieresMissingTeachers;
 
     }
 
