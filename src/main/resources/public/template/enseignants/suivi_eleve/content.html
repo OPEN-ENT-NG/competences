@@ -154,7 +154,43 @@
             </h2>
             <div>
                 <div>
-                    <div ng-show="!opened.detailCompetenceSuivi && suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined"
+                    <div ng-show="opened.detailCompetenceSuivi && suiviCompetence !== undefined
+                && suiviCompetence.cycle.id_cycle !== undefined && displayFollowEleve === 'followItems'"
+                         class="buttons-suiviEleve-detail">
+                        <div>
+                            <a class="button twelve-mobile"
+                               ng-disabled="(search.periode.id == undefined || detailCompetence.masque)
+                           && (!search.eleve.isEvaluable(search.periode))"
+                               ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" >
+                                <i18n>evaluations.evaluation.libre.add</i18n>
+                            </a>
+                            <a class="button twelve-mobile"
+                               ng-disabled="(search.periode.id == undefined || detailCompetence.masque)
+                           && (!search.eleve.isEvaluable(search.periode))"
+                               ng-show=" isChefEtab()" ng-click="displayInConstruction();">
+                                <i18n>evaluations.evaluation.libre.add</i18n>
+                            </a>
+                        </div>
+                        <div class="fix-icon-size right-magnet">
+                            <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
+                                <i class="icon-back"></i>
+                            </a>
+                            <i class="show-list"
+                               ng-class="{ selected: template.contains('suivi-competence-detail',
+                            'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau') }"
+                               ng-click="template.open('suivi-competence-detail',
+                            'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau')"
+                               tooltip="evaluations.suivi.eleve.vue.liste"></i>
+                            <i class="show-chart"
+                               ng-class="{ selected: template.contains('suivi-competence-detail',
+                            'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph') }"
+                               ng-click="template.open('suivi-competence-detail',
+                            'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph')"
+                               tooltip="evaluations.suivi.eleve.vue.graph"></i>
+                        </div>
+                    </div>
+                    <div ng-show="!opened.detailCompetenceSuivi && suiviCompetence !== undefined
+                    && suiviCompetence.cycle.id_cycle !== undefined"
                          ng-include="'/competences/public/template/enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_buttons.html'"
                          class="buttons-suiviEleve"></div>
                     <div class="tabs">
@@ -170,24 +206,6 @@
                                 data-ng-click="selectDisplayClassTabs('bulletins')">
                             <i18n>evaluation.eleve.header.bulletins</i18n>
                         </header>
-                    </div>
-                </div>
-
-                <div ng-show="opened.detailCompetenceSuivi && suiviCompetence !== undefined && suiviCompetence.cycle.id_cycle !== undefined" class="buttons-suiviEleve-detail">
-                    <div>
-                        <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show="!isChefEtab()" ng-click="createEvaluationLibre();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
-                        <a class="button twelve-mobile" ng-disabled="(search.periode.id == undefined || detailCompetence.masque) && (!search.eleve.isEvaluable(search.periode))" ng-show=" isChefEtab()"  ng-click="displayInConstruction();" ><i18n>evaluations.evaluation.libre.add</i18n></a>
-                    </div>
-                    <div class="fix-icon-size right-magnet">
-                        <a ng-click="backToSuivi()" tooltip="evaluations.back.suivi.eleve.title">
-                            <i class="icon-back"></i>
-                        </a>
-                        <i class="show-list" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau') }"
-                           ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_tableau')"
-                           tooltip="evaluations.suivi.eleve.vue.liste"></i>
-                        <i class="show-chart" ng-class="{ selected: template.contains('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph') }"
-                           ng-click="template.open('suivi-competence-detail', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph')"
-                           tooltip="evaluations.suivi.eleve.vue.graph"></i>
                     </div>
                 </div>
             </div>
