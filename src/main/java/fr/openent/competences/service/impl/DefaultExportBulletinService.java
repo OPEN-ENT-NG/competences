@@ -399,7 +399,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("signature", getLibelle("evaluations.export.bulletin.date.name.visa.responsable"))
                     .put("bornAt", getLibelle("born.on"))
                     .put("classeOf", getLibelle("classe.of"))
-                    .put("footer", "*: " + getLibelle("evaluations.export.bulletin.legendPositionnement"))
                     .put("bilanPerDomainesLibelle", getLibelle("evaluations.bilan.by.domaine"))
                     .put("levelStudent", getLibelle("level.student"))
                     .put("levelClass", getLibelle("level.class"))
@@ -411,7 +410,6 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put("coefficientLibelle", getLibelle("viescolaire.utils.coef"))
                     .put("moyenneAnnuelleLibelle", getLibelle("average.annual"))
                     .put("moyenneGeneraleLibelle", getLibelle("average.general"))
-                    .put(NIVEAU_COMPETENCE, params.getValue(NIVEAU_COMPETENCE))
 
                     // positionnement des options d'impression
                     .put(GET_RESPONSABLE, params.getBoolean(GET_RESPONSABLE))
@@ -438,6 +436,23 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                     .put(FUNCTION_OTHER_TEACHER,params.getString(FUNCTION_OTHER_TEACHER,""))
                     .put(OTHER_TEACHER_NAME,params.getString(OTHER_TEACHER_NAME,""))
                     .put(AGRICULTURE_LOGO,params.getBoolean(AGRICULTURE_LOGO,false));
+
+            JsonArray niveauCompetences = (JsonArray) params.getValue(NIVEAU_COMPETENCE);
+            JsonArray footerArray = new JsonArray();
+            for (int i = niveauCompetences.size() - 1; i >= 0; i--) { //reverse Array
+                footerArray.add(niveauCompetences.getJsonObject(i));
+            }
+
+            String footer = "";
+            for (int i = 0; i < footerArray.size(); i++) {
+                JsonObject niv = footerArray.getJsonObject(i);
+
+                String lib = niv.getString(LIBELLE);
+                String id_niv = Integer.toString(niv.getInteger("id_niveau"));
+                footer += id_niv + " : " + lib + " - ";
+            }
+            footer = footer.substring(0, footer.length() - 2);
+            eleve.put(NIVEAU_COMPETENCE, niveauCompetences).put("footer", "* " + footer);
 
             if(isNotNull(params.getValue(AGRICULTURE_LOGO)) && params.getBoolean(AGRICULTURE_LOGO)){
                 eleve.put(LOGO_PATH,"img/ministere_agriculture.png");
@@ -488,8 +503,10 @@ public class DefaultExportBulletinService implements ExportBulletinService{
                 if (params.getBoolean(SHOW_PROJECTS)) {
                     getProjets(idEleve, classe.getString(ID_CLASSE), elevesMap, idPeriode, finalHandler);
                 }
+
                 getSuiviAcquis(idEleve, elevesMap, idPeriode, classe, params, finalHandler);
-                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)!= null){
+
+                if(params.getValue(GET_DATA_FOR_GRAPH_DOMAINE_METHOD) != null){
                     if(params.getBoolean(GET_DATA_FOR_GRAPH_DOMAINE_METHOD)){
                         getBilanPeriodiqueDomaineForGraph(idEleve, classe.getString(ID_CLASSE), idPeriode,
                                 elevesMap, finalHandler);

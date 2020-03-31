@@ -1,0 +1,1 @@
+ALTER TABLE notes.perso_niveau_competences ADD COLUMN libelle varchar(36);

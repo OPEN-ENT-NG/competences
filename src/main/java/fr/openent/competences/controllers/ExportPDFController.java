@@ -891,7 +891,6 @@ public class ExportPDFController extends ControllerHelper {
 
                                 exportService.getExportRecapEval(text, usePerso, idCycle, idEtablissement,
                                         new Handler<Either<String, JsonArray>>() {
-
                                             @Override
                                             public void handle(final Either<String, JsonArray> stringJsonObjectEither) {
                                                 if (stringJsonObjectEither.isRight()) {

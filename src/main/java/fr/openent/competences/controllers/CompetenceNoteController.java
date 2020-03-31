@@ -291,12 +291,11 @@ public class CompetenceNoteController extends ControllerHelper {
             String idClasse = request.params().get("idClasse");
 
             competencesNotesService.getConversionNoteCompetence(idEtab, idClasse, arrayResponseHandler(request));
-
-
         } else {
             Renders.badRequest(request, "Invalid parameters");
         }
     }
+
     @Get("/competence/notes/classe/:idClasse/:typeClasse")
     @ApiDoc("Retourne les compétences notes pour une classee. " +
             "Filtre possible sur la période avec l'ajout du paramètre idPeriode")

@@ -235,11 +235,14 @@ public class ExportEvaluationHelper {
         JsonArray maitrisesArray = new fr.wseduc.webutils.collections.JsonArray();
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject();
-            _maitrise.put("libelle", maitrise.getString("libelle"));
+
+            _maitrise.put("libelle", maitrise.getString("libelle") != null
+                    ? maitrise.getString("libelle") : maitrise.getString("default_lib"));
+
             _maitrise.put("visu", text ? getMaitrise(maitrise.getString("lettre"),
                     String.valueOf(maitrise.getLong(ORDRE))) : maitrise.getString("default"));
 
-            if(usePerso)
+            if(usePerso && !text)
                 _maitrise.put("persoColor", maitrise.getString("couleur"));
 
             maitrisesArray.add(_maitrise);
@@ -300,7 +303,7 @@ public class ExportEvaluationHelper {
                     _competenceNotes.put("visu", text ? getMaitrise(maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("lettre"), String.valueOf(Integer.valueOf(evaluation) + 1))
                             : maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("default"));
 
-                    if(usePerso)
+                    if(usePerso && !text)
                         _competenceNotes.put("persoColor", maitrises.get(String.valueOf(Integer.valueOf(evaluation) + 1)).getString("couleur"));
 
                     competenceNotesEleves.add(_competenceNotes);

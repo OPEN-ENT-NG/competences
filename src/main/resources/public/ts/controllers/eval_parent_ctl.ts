@@ -37,7 +37,7 @@ declare let Chart: any;
 
 export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
-     function ($scope, route, $location, $filter, $sce, $compile, $timeout, $route) {
+    function ($scope, route, $location, $filter, $sce, $compile, $timeout, $route) {
         route({
             accueil : async function (params) {
                 await $scope.init(true);
@@ -193,9 +193,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             return $scope.dataReleve.devoirs.findWhere({ id_matiere : idMatiere });
         };
 
-         $scope.getMoyenneClasse = function(devoirReleveNotes) {
-             return +(parseFloat(devoirReleveNotes.sum_notes)/devoirReleveNotes.nbr_eleves).toFixed(2);
-         };
+        $scope.getMoyenneClasse = function(devoirReleveNotes) {
+            return +(parseFloat(devoirReleveNotes.sum_notes)/devoirReleveNotes.nbr_eleves).toFixed(2);
+        };
 
         // Fonction de sélection d'un enfant par le parent
         $scope.chooseChild = async function(eleve, withSyncDevoir?) {
@@ -353,21 +353,21 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             }
         };
 
-         $scope.getLibelleSousMatiere = function (currentDevoir) {
+        $scope.getLibelleSousMatiere = function (currentDevoir) {
 
-             let idMatiere = currentDevoir.id_matiere;
-             if (idMatiere === undefined || idMatiere == null || idMatiere === "") return "";
-             let matiere = _.findWhere($scope.matieres.all, {id: idMatiere});
-             let idSousmatiere = currentDevoir.id_sousmatiere;
-             if (matiere === undefined || idSousmatiere === undefined || idSousmatiere === null || idSousmatiere === ""  )
-                 return ""
-             let sousmatiere = _.findWhere(matiere.sousMatieres.all, {id_type_sousmatiere: parseInt(idSousmatiere)})
-             if(sousmatiere !== undefined && sousmatiere.hasOwnProperty('libelle')){
-                 return sousmatiere.libelle;
-             }else{
-                 return "";
-             }
-         };
+            let idMatiere = currentDevoir.id_matiere;
+            if (idMatiere === undefined || idMatiere == null || idMatiere === "") return "";
+            let matiere = _.findWhere($scope.matieres.all, {id: idMatiere});
+            let idSousmatiere = currentDevoir.id_sousmatiere;
+            if (matiere === undefined || idSousmatiere === undefined || idSousmatiere === null || idSousmatiere === ""  )
+                return ""
+            let sousmatiere = _.findWhere(matiere.sousMatieres.all, {id_type_sousmatiere: parseInt(idSousmatiere)})
+            if(sousmatiere !== undefined && sousmatiere.hasOwnProperty('libelle')){
+                return sousmatiere.libelle;
+            }else{
+                return "";
+            }
+        };
 
         $scope.getTeacherDisplayName = function (owner) {
             if (owner === undefined || owner === null || owner === "") return "";
@@ -416,30 +416,15 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         $scope.updateNiveau =  async function (usePerso) {
             if (usePerso === 'true') {
                 evaluations.usePerso = 'true';
-                evaluations.niveauCompetences.sync(false).then(async () => {
-                    if ($scope.update){
-                        await $scope.syncColorAndLetter();
-
-                    }
-                    else {
-                        evaluations.niveauCompetences.first().markUser().then(async () => {
-                            await $scope.syncColorAndLetter();
-                        });
-                    }
+                evaluations.niveauCompetences.sync().then(async () => {
+                    await $scope.syncColorAndLetter();
                 });
 
             }
             else if (usePerso === 'false') {
                 evaluations.usePerso = 'false';
-                evaluations.niveauCompetences.sync(true).then( async () => {
-                    if($scope.update) {
-                        await $scope.syncColorAndLetter();
-                    }
-                    else {
-                        evaluations.niveauCompetences.first().unMarkUser().then(async () => {
-                            await $scope.syncColorAndLetter();
-                        });
-                    }
+                evaluations.niveauCompetences.sync().then( async () => {
+                    await $scope.syncColorAndLetter();
                 });
             }
         };
@@ -835,10 +820,10 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 return item.id_type > -2;
             };
         };
-         $scope.filterCycleAndYear = () => {
-             return (item) => {
-                 return item.id_type > -1;
-             };
-         };
+        $scope.filterCycleAndYear = () => {
+            return (item) => {
+                return item.id_type > -1;
+            };
+        };
     }
 ]);

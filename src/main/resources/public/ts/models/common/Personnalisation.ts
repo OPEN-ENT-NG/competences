@@ -5,7 +5,6 @@ import * as utils from "../../utils/teacher";
 
 
 export let selectCycleForView = function ($scope, $location, id_cycle?) {
-
     let idCycle = id_cycle;
 
     if ($scope.currentDevoir && $location.path() === `/devoir/${$scope.currentDevoir.id}`) {
@@ -47,23 +46,5 @@ export let updateColorAndLetterForSkills = function ($scope, $location) {
 
 
 export let updateNiveau = function (usePerso ,$scope) {
-    if (usePerso === 'true') {
-        evaluations.structure.niveauCompetences.sync(false).then(() => {
-            evaluations.structure.niveauCompetences.first().markUser().then(() => {
-                $scope.structure.usePerso = 'true';
-                $scope.updateColorAndLetterForSkills();
-                utils.safeApply($scope);
-            });
-        });
 
-    }
-    else if (usePerso === 'false') {
-        evaluations.structure.niveauCompetences.sync(true).then(() => {
-            evaluations.structure.niveauCompetences.first().unMarkUser().then(() => {
-                $scope.structure.usePerso = 'false';
-                $scope.updateColorAndLetterForSkills();
-                utils.safeApply($scope);
-            });
-        });
-    }
 };

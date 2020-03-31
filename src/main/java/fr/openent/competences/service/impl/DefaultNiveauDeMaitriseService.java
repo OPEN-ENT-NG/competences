@@ -44,7 +44,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         super(Competences.COMPETENCES_SCHEMA, Competences.PERSO_NIVEAU_COMPETENCES_TABLE);
     }
 
-     /**
+    /**
      * Recupère l'ensemble des couleurs des niveaux de maitrise pour un établissement.
      * @param idEtablissement identifiant de l'établissement
      * @param handler handler portant le resultat de la requête 
@@ -53,15 +53,16 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT t1.libelle, t1.ordre, t1.couleur AS default, t1.id_cycle, t1.id AS id_niveau,")
-                .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle  AS cycle")
+        query.append("SELECT niv.libelle, t1.libelle as default_lib, t1.ordre, t1.couleur AS default,")
+                .append(" t1.id_cycle, t1.id AS id_niveau,")
+                .append(" niv.id_etablissement, niv.couleur, niv.lettre, niv.id AS id, t2.libelle AS cycle")
                 .append(" FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.NIVEAU_COMPETENCES_TABLE + " AS t1")
                 .append(" INNER JOIN " + Competences.COMPETENCES_SCHEMA + "." + Competences.CYCLE_TABLE + " AS t2")
                 .append(" ON t1.id_cycle = t2.id ")
                 .append(" LEFT JOIN ")
                 .append(" (SELECT * FROM "+ Competences.COMPETENCES_SCHEMA + "." + Competences.PERSO_NIVEAU_COMPETENCES_TABLE)
                 .append(" WHERE id_etablissement = ? ) AS niv")
-                .append(" ON (niv.id_niveau = t1.id) " );
+                .append(" ON (niv.id_niveau = t1.id) ");
 
         values.add(idEtablissement);
 
@@ -79,11 +80,10 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT niv1.libelle, niv1.ordre, niv1.couleur couleurDefault, niv1.id_cycle  ")
-                .append( " FROM notes.niveau_competences niv1 ")
-                .append("    where id_cycle = ? ")
-                      .append(  "  order By (ordre);" );
-
+        query.append("SELECT niv1.libelle, niv1.ordre, niv1.couleur couleurDefault, niv1.id_cycle ")
+                .append("FROM notes.niveau_competences niv1 ")
+                .append("WHERE id_cycle = ? ")
+                .append("ORDER BY (ordre);");
 
         values.add(Cycle);
 
@@ -101,17 +101,18 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
                 .append(" ON id_groupe = ? AND rel_groupe_cycle.id_cycle = niveau_competences.id_cycle ")
                 .append(" order By (ordre);" );
 
-
         values.add(idClasse);
 
         Sql.getInstance().prepared(query.toString(), values, DELIVERY_OPTIONS, validResultHandler(handler));
     }
+
     public void getPersoNiveauMaitrise(String idUser,Handler<Either<String, JsonArray>> handler) {
         StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
-        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA +"."+Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE)
+        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + "." + Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE)
                 .append(" WHERE id_user = ? ");
+
         values.add(idUser);
         Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
     }
@@ -124,12 +125,11 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
         sql.raw(queryNewUserId, SqlResult.validUniqueResultHandler(new Handler<Either<String, JsonObject>>() {
             @Override
             public void handle(Either<String, JsonObject> event) {
-
                 if (event.isRight()) {
                     final Long userId = event.right().getValue().getLong("id");
                     final String table = Competences.COMPETENCES_SCHEMA + "."+
                             Competences.USE_PERSO_NIVEAU_COMPETENCES_TABLE;
-                    doCreate(handler,userId,idUser, table);
+                    doCreate(handler, userId, idUser, table);
                 }
                 else {
                     handler.handle(new Either.Left<String, JsonArray>(event.left().getValue()));
@@ -149,7 +149,7 @@ public class DefaultNiveauDeMaitriseService extends SqlCrudService implements Ni
                 if (event.isRight()) {
                     final Long niveauCompetenceId = event.right().getValue().getLong("id");
                     maitrise.put("id", niveauCompetenceId);
-                   doCreate(handler,niveauCompetenceId,maitrise,resourceTable);
+                    doCreate(handler,niveauCompetenceId,maitrise,resourceTable);
                 }
                 else {
                     handler.handle(new Either.Left<String, JsonArray>(event.left().getValue()));

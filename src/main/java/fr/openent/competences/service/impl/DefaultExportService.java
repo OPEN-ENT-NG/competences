@@ -659,12 +659,15 @@ public class DefaultExportService implements ExportService {
                     for (int i = result.size() - 1; i >= 0; i--) {
                         JsonObject niveau = new JsonObject();
                         JsonObject o = result.getJsonObject(i);
-                        niveau.put("libelle", o.getString("libelle"));
+
+                        niveau.put("libelle",  o.getString("libelle") != null
+                                ? o.getString("libelle") : o.getString("default_lib"));
+
                         niveau.put("visu", text ? getMaitrise(o.getString("lettre"),
                                 o.getInteger(ORDRE).toString()) : o.getString("default"));
                         niveau.put(ORDRE, o.getInteger(ORDRE));
 
-                        if(usePerso)
+                        if(usePerso && !text)
                             niveau.put("persoColor", o.getString("couleur"));
 
                         legende.add(niveau);
@@ -876,11 +879,12 @@ public class DefaultExportService implements ExportService {
         JsonArray headerMiddle = new fr.wseduc.webutils.collections.JsonArray();
         for (JsonObject maitrise : maitrises.values()) {
             JsonObject _maitrise = new JsonObject()
-                    .put("libelle", maitrise.getString("libelle"))
+                    .put("libelle", maitrise.getString("libelle") != null
+                            ? maitrise.getString("libelle") : maitrise.getString("default_lib"))
                     .put("visu", text ? getMaitrise(maitrise
                             .getString("lettre"), String.valueOf(maitrise
                             .getLong(ORDRE))) : maitrise.getString("default"));
-            if(usePerso)
+            if(usePerso && !text)
                 _maitrise.put("persoColor", maitrise.getString("couleur"));
 
             headerMiddle.add(_maitrise);
@@ -1092,7 +1096,7 @@ public class DefaultExportService implements ExportService {
             String color = text ? "white" : maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("default");
             competenceNotesObj.put("color", color);
 
-            if(usePerso)
+            if(usePerso && !text)
                 competenceNotesObj.put("persoColor", maitrises.get(String.valueOf(notesMaitrises.getKey())).getString("couleur"));
 
 
