@@ -1136,9 +1136,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.selectDisplayClassTabs = async (tabsSelected:string):Promise<void> => {
             $scope.displayFollowEleve = tabsSelected;
             switch ($scope.displayFollowEleve) {
-                case ('followItems'):
-                    openTemplateFollowCompetence('follow_items/follow_items');
-                    break;
                 case ('followNotes'):
                     openTemplateFollowCompetence('follow_notes');
                     break;
@@ -1216,7 +1213,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             var fileURL = window.URL.createObjectURL(file);
                             $scope.content = $sce.trustAsResourceUrl(fileURL);
                         }
-                        utils.safeApply($scope);
+                        await utils.safeApply($scope);
                     }
                 }
             } catch (data) {

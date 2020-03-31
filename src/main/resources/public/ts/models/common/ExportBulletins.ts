@@ -60,7 +60,12 @@ export class ExportBulletins {
             otherTeacherName: options.otherTeacherName
         };
         if (Utils.isNotNull(options.idPeriode)){
-            _.extend(o, {idPeriode: options.idPeriode, typePeriode: options.type});
+            _.extend(o, {idPeriode: options.idPeriode});
+        }
+        if (Utils.isNotNull(options.type)){
+            _.extend(o, {typePeriode: options.type});
+        }else{
+            _.extend(o, {typePeriode: options.typePeriode});
         }
         if(o.showBilanPerDomaines) {
             _.extend(o, {idImagesFiles : options.idImagesFiles});
