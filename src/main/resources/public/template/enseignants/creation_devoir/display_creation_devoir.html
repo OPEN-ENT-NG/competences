@@ -87,6 +87,7 @@
                                                     ng-disabled="devoir.teachersByClass.length == 0"
                                                     ng-disabled="devoir.idEtablissement === undefined"
                                                     ng-change="setEnseignantMatieres();"
+                                                    ng-init="setEnseignantMatieres();"
                                                     ng-options="teacher.id as teacher.displayName for teacher in devoir.teachersByClass
                                                     | unique:'displayName'">
                                             </select>
