@@ -33,7 +33,7 @@ import fr.openent.competences.service.impl.DefaultUtilsService;
 import static fr.openent.competences.Competences.NN;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 
-import fr.openent.competences.utils.FormateFutureEvent;
+import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -58,10 +58,7 @@ import io.vertx.core.CompositeFuture;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.*;
 
@@ -693,9 +690,10 @@ public class DevoirController extends ControllerHelper {
     public void getDevoirsService(HttpServerRequest request) {
 
         String idEnseignant = null, idMatiere = null, idGroupe = null;
-
+        List<String> idGroups = new ArrayList<>();
         if (request.params().contains("id_groupe")) {
             idGroupe = request.getParam("id_groupe");
+            idGroups = Arrays.asList(idGroupe.split(","));
         }
         if (request.params().contains("id_matiere")) {
             idMatiere = request.getParam("id_matiere");
@@ -705,7 +703,7 @@ public class DevoirController extends ControllerHelper {
         }
 
         if(idGroupe != null && idMatiere != null && idEnseignant != null) {
-            devoirsService.listDevoirsService(idEnseignant, idMatiere, idGroupe,
+            devoirsService.listDevoirsService(idEnseignant, idMatiere, idGroups,
                     arrayResponseHandler(request));
         } else {
             badRequest(request);

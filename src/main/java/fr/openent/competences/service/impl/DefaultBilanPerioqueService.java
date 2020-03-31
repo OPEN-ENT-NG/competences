@@ -4,38 +4,33 @@ import fr.openent.competences.Competences;
 import fr.openent.competences.Utils;
 import fr.openent.competences.bean.NoteDevoir;
 import fr.openent.competences.service.*;
-import fr.openent.competences.utils.FormateFutureEvent;
+import fr.openent.competences.helpers.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
-import fr.wseduc.webutils.http.Renders;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
-import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import fr.openent.competences.enums.*;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import org.entcore.common.neo4j.Neo4j;
+
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.TIME;
 import static fr.openent.competences.service.impl.DefaultExportService.COEFFICIENT;
 import static fr.openent.competences.service.impl.DefaultNoteService.SOUS_MATIERES;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
-import static org.entcore.common.sql.SqlResult.*;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
+
 import fr.openent.competences.message.MessageResponseHandler;
 
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validResultHandler;
 import static org.entcore.common.sql.SqlResult.validUniqueResultHandler;
 
@@ -195,7 +190,7 @@ public class DefaultBilanPerioqueService implements BilanPeriodiqueService{
             }
         });
 
-}
+    }
 
     private void sendEventBusGetEvent(Integer eventType, List<String> students, String structure,
                                       String startDate, String endDate, String recoveryMethod,

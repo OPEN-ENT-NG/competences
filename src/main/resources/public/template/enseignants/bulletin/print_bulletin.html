@@ -7,6 +7,12 @@
     <!-- LightBox coefficient conflict -->
     <div ng-include="'/competences/public/template/enseignants/bulletin/lightBox_conflict_coefficient.html'"></div>
     <div ng-include="'/competences/public/template/enseignants/menu_teacher.html'"></div>
+    <!-- LightBox select report model -->
+    <div ng-if="isLightBoxReportModelOpen"
+         ng-controller="reportModelPrintExportController"
+         ng-include="'/competences/public/template/enseignants/bulletin/lightbox-select-report-model.html'">
+    </div>
+
     <div    ng-init="initBulletin()"
             class="ten cell card main-content twelve-mobile">
         <aside class="two cell twelve-mobile left">
@@ -83,6 +89,10 @@
                         <h5 class=" ten "> <span><i18n>viescolaire.bulletin.lycee</i18n></span></h5>
                     </label>
                 </div>
+                <button ng-click="openLightBoxSelectModelReport()"
+                        class="right-magnet button-margin">
+                    <i18n>competences.report.model.button</i18n>
+                </button>
             </div>
             <div ng-show="print.simple !== true">
                 <div >

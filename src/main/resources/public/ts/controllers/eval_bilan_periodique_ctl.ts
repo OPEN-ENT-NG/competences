@@ -457,8 +457,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 if ($scope.selected.bfc !== true) {
                     finSaisieBilan = !_.find($scope.search.classe.periodes.all,
                         {id_type: $scope.search.periode.id_type}).publication_bulletin;
-                }else{
-                    $scope.search.periode.id_type = -2;
                 }
 
                 let periode = _.findWhere($scope.search.classe.periodes.all, {id_type: $scope.search.periode.id_type});
@@ -474,16 +472,8 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
                 $scope.informations.eleve = $scope.search.eleve;
 
-                /*if (template.contains('graphMatiere', 'enseignants/bilan_periodique/graph/graph_subject')) {
-                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve,
-                        $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
-                    allPromise.push($scope.openMatiere());
-                }
-                if (template.contains('graphDomaine', 'enseignants/bilan_periodique/graph/graph_domaine')) {
-                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.informations.eleve,
-                        $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
-                    allPromise.push($scope.openDomaine());
-                }*/
+                $scope.informations.eleve.configMixedChartDomaine = $scope.informations.eleve.configRadarChartDomaine =
+                    $scope.informations.eleve.configMixedChart = $scope.informations.eleve.configRadarChart = undefined;
 
                 if ($scope.selected.graphique) {
                     $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
@@ -492,8 +482,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 }
 
                 if ($scope.selected.suiviAcquis) {
-                    $scope.elementBilanPeriodique = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
-                        $scope.search.periode.id_type, $scope.structure, $scope.filteredPeriode);
                     await $scope.openSuiviAcquis();
                 }
                 if ($scope.elementBilanPeriodique === undefined) {

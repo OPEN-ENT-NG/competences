@@ -255,8 +255,6 @@ public interface UtilsService {
 
     JsonArray pluck(JsonArray collection, String key);
 
-    JsonArray flatten(JsonArray collection, String keyToFlatten);
-
     JsonObject getObjectForPeriode(JsonArray array, Long idPeriode, String key);
 
     /**

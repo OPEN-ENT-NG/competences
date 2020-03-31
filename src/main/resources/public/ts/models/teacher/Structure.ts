@@ -111,7 +111,7 @@ export class Structure extends Model {
                 synchronisation : `/directory/user/${model.me.userId}?manual-groups=true`
             },
             GET_TYPE_SOUS_MATIERES: `/viescolaire/types/sousmatieres`,
-            GET_SERVICES: `/competences/services?idEtablissement=${this.id}`
+            GET_SERVICES: `/viescolaire/services?idEtablissement=${this.id}`
         };
     }
 

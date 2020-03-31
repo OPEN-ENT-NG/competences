@@ -166,7 +166,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 $scope.suiviCompetence.sync().then( async () => {
                     if ($scope.searchBilan.parDomaine ===  'true') {
                         await $scope.suiviCompetence.domaines.sync();
-                        $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                        await $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                         $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
                         await utils.initChartsEval($scope);
 
@@ -425,7 +425,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all,
                                     {id_eleve: $scope.search.eleve.id}));
 
-                            $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                            await $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                             $scope.suiviCompetence.on('refresh-slider', function () {
                                 $scope.baremeBrevet();
                             });
@@ -922,7 +922,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                         "canUpdateBFCSynthese");
                     $scope.showRechercheBarFunction(false);
-                    $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                    await $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
                     template.open('suivi-competence-content',
                         'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle');
                     await Utils.stopMessageLoader($scope);

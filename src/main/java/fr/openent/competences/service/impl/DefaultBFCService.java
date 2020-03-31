@@ -24,8 +24,7 @@ import fr.openent.competences.bean.Eleve;
 import fr.openent.competences.security.utils.WorkflowActionUtils;
 import fr.openent.competences.security.utils.WorkflowActions;
 import fr.openent.competences.service.*;
-import fr.openent.competences.utils.FormateFutureEvent;
-import fr.openent.competences.utils.MustachHelper;
+import fr.openent.competences.helpers.MustachHelper;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
@@ -44,8 +43,6 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.utils.StringUtils;
 
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,7 +52,7 @@ import static fr.openent.competences.Competences.ACTION;
 import static fr.openent.competences.Utils.*;
 import static fr.openent.competences.service.impl.DefaultExportBulletinService.*;
 import static fr.openent.competences.utils.ArchiveUtils.getFileNameForStudent;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.SqlResult.validRowsResultHandler;
 
@@ -271,8 +268,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
      * @param idPeriode  Identifiant de la periode au cours de laquelle on souhaite recuperer les evaluations. Peut etre null.
      * @param handler    Handler contenant une map de note par competence, pour chaque eleve.
      */
-    private void getMaxNoteCompetenceEleve(final String[] idEleves, Long idPeriode, Long idCycle, final Handler<Either<String, Map<String, Map<Long, Long>>>> handler) {
-        competenceNoteService.getMaxCompetenceNoteEleve(idEleves, idPeriode,idCycle, new Handler<Either<String, JsonArray>>() {
+    private void getMaxNoteCompetenceEleve(final String[] idEleves, Long idPeriode, Long idCycle, Boolean isYear, final Handler<Either<String, Map<String, Map<Long, Long>>>> handler) {
+        competenceNoteService.getMaxCompetenceNoteEleve(idEleves, idPeriode,idCycle, isYear, new Handler<Either<String, JsonArray>>() {
             @Override
             public void handle (Either <String, JsonArray> event){
                 if (event.isRight()) {
@@ -463,7 +460,8 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
     @Override
     public void buildBFC(final boolean recapEval, final String[] idEleves, final String idClasse,
                          final String idStructure,
-                         final Long idPeriode, final Long idCycle, final Handler<Either<String, JsonObject>> handler) {
+                         final Long idPeriode, final Long idCycle, final Boolean isYear,
+                         final Handler<Either<String, JsonObject>> handler) {
 
         final Map<String, Map<Long, Long>> notesCompetencesEleve = new HashMap<>();
         final Map<String, Map<Long, Integer>> bfcEleve = new HashMap<>();
@@ -476,7 +474,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         // mais n'effectue le calcul du BFC qu'une fois que ces 4 paramètres sont remplis.
         // Cette vérification de la présence des 4 paramètres est effectuée par calcMoyBFC().
 
-        getMaxNoteCompetenceEleve(idEleves, idPeriode,idCycle,  event -> {
+        getMaxNoteCompetenceEleve(idEleves, idPeriode,idCycle, isYear,  event -> {
             if (event.isRight()) {
                 notesCompetencesEleve.putAll(event.right().getValue());
                 if (notesCompetencesEleve.isEmpty()) {
@@ -506,7 +504,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
                     bfcEleve.get(_o.getString(ID_ELEVE)).put(_o.getLong(ID_DOMAINE), _o.getInteger(VALEUR));
                 }
 
-                if (bfcEleve.isEmpty()) {
+                if (bfcEleve.isEmpty() || idPeriode != null || isYear) {
                     bfcEleve.put(EMPTY, new HashMap<>());
                     // Ajouter une valeur inutilisee dans la map permet de s'assurer que le traitement a ete effectue
                 }
@@ -691,7 +689,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
                     //On récupère pour tous les élèves de la classe leurs résultats pour chaque domainesRacines évalué
                     Future<JsonObject> bfcFuture = Future.future();
-                    buildBFC(false, idsEleves, idClasse, idStructure, idPeriode, idCycle,
+                    buildBFC(false, idsEleves, idClasse, idStructure, idPeriode, idCycle, false,
                             event-> formate(bfcFuture, event));
 
                     CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispenseDomaineFuture, bfcFuture)
@@ -743,7 +741,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
         Future<JsonObject> bfcFuture = Future.future();
         String[] el = new String[1];
         el[0] = idEleve;
-        buildBFC(false, el, idClasse, idStructure, idPeriode, idCycle, event-> formate(bfcFuture, event));
+        buildBFC(false, el, idClasse, idStructure, idPeriode, idCycle, false, event-> formate(bfcFuture, event));
 
         CompositeFuture.all(maxBaremFuture, domainesRacineFuture, dispDomaineFuture, bfcFuture)
                 .setHandler(event -> {
@@ -1115,7 +1113,7 @@ public class DefaultBFCService extends SqlCrudService implements BFCService {
 
         Future<JsonObject> buildBfcFuture = Future.future();
         final Boolean recapEvalForBfc = false;
-        buildBFC(recapEvalForBfc, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, idCycle,
+        buildBFC(recapEvalForBfc, idEleves.toArray(new String[0]), classe.getKey(), idStructure, idPeriode, idCycle, false,
                 buildBfcEvent -> formate(buildBfcFuture, buildBfcEvent));
 
         Future<JsonArray> listCplByEleveFuture = Future.future();

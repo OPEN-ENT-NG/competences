@@ -2,7 +2,6 @@ package fr.openent.competences.service.impl;
 
 import fr.openent.competences.Competences;
 import fr.openent.competences.service.MatiereService;
-import fr.openent.competences.utils.FormateFutureEvent;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
@@ -17,12 +16,11 @@ import io.vertx.core.Handler;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 import static fr.openent.competences.Competences.*;
 import static fr.openent.competences.Utils.*;
-import static fr.openent.competences.utils.FormateFutureEvent.formate;
+import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.sql.Sql.listPrepared;
 

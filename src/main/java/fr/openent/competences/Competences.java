@@ -36,9 +36,9 @@ import org.entcore.common.storage.StorageFactory;
 
 public class Competences extends BaseServer {
 
-    public static String COMPETENCES_SCHEMA;
+    public static String COMPETENCES_SCHEMA = "notes";
 
-    public static String VSCO_SCHEMA;
+    public static String VSCO_SCHEMA = "viesco";
     public final static String EVAL_SCHEMA = "notes";
 
     public static JsonObject LSUN_CONFIG;
@@ -98,7 +98,6 @@ public class Competences extends BaseServer {
     public static final String REL_GROUPE_APPRECIATION_ELT_ELEVE_TABLE = "rel_groupe_appreciation_elt_eleve";
     public static final String REL_PROFESSEURS_REMPLACANTS_TABLE = "rel_professeurs_remplacants";
 
-    public static final String SERVICES_TABLE = "services";
     public static final String STSFILE_TABLE = "sts_file";
     public static final String SYNTHESE_BILAN_PERIODIQUE_TABLE = "synthese_bilan_periodique";
 
@@ -144,7 +143,6 @@ public class Competences extends BaseServer {
     public static final String SCHEMA_NOTES_UPDATE = "eval_updateNote";
     public static final String SCHEMA_USE_PERSO_NIVEAU_COMPETENCE = "eval_usePersoNiveauCompetence";
     public static final String SCHEMA_MAITRISE_UPDATE = "eval_updateMaitrise";
-    public static final String SCHEMA_SERVICE = "eval_service";
     public static final String SCHEMA_COMPETENCE_CREATE = "eval_createCompetence";
     public static final String SCHEMA_COMPETENCE_UPDATE = "eval_updateCompetence";
     public static final String SCHEMA_DISPENSEDOMAINE_ELEVE_CREATE = "eval_createDispenseDomaineEleve";
@@ -154,7 +152,7 @@ public class Competences extends BaseServer {
     // droits
     public static final String DEVOIR_ACTION_UPDATE = "fr-openent-competences-controllers-DevoirController|updateDevoir";
     public static final String PARAM_COMPETENCE_RIGHT = "competences.paramCompetences";
-    public static final String PARAM_SERVICES_RIGHT = "competences.paramServices";
+    public static final String PARAM_SERVICES_RIGHT = "viesco.paramServices";
     public static final String CAN_UPDATE_BFC_SYNTHESE_RIGHT = "competences.canUpdateBFCSynthese";
     public static final String PARAM_LINK_GROUP_CYCLE_RIGHT = "competences.paramLinkGroupCycle";
     public static final String CAN_UPDATE_RETARDS_AND_ABSENCES = "competences.canUpdateRetardsAndAbsences";
@@ -241,7 +239,6 @@ public class Competences extends BaseServer {
     public static final String ORDRE = "ordre";
     public static  String TEMPLATE_PATH;
 
-
     @Override
 	public void start() throws Exception {
         super.start();
@@ -263,7 +260,6 @@ public class Competences extends BaseServer {
 
 		// Controller
         addController(new CompetencesController());
-        addController(new ServicesController());
         addController(new AnnotationController());
 		addController(new AppreciationController());
 		addController(new BFCController(eb, storage));
@@ -283,8 +279,7 @@ public class Competences extends BaseServer {
         addController(new BilanPeriodiqueController(eb));
         addController(new MatiereController(eb));
         addController(new ElementBilanPeriodiqueController(eb));
-        addController(new EventBusController());
-
+        addController(new ReportModelPrintExportController());
         // Devoir Controller
         DevoirController devoirController = new DevoirController(eb);
         SqlCrudService devoirSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
@@ -293,6 +288,14 @@ public class Competences extends BaseServer {
         devoirController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
                 null));
         addController(devoirController);
+
+        EventBusController eventBusController = new EventBusController(securedActions);
+        SqlCrudService eventBusSqlCrudService = new SqlCrudService(COMPETENCES_SCHEMA, DEVOIR_TABLE, DEVOIR_SHARE_TABLE,
+                new fr.wseduc.webutils.collections.JsonArray().add("*"), new JsonArray().add("*"), true);
+        eventBusController.setCrudService(eventBusSqlCrudService);
+        eventBusController.setShareService(new SqlShareService(COMPETENCES_SCHEMA, DEVOIR_SHARE_TABLE, eb, securedActions,
+                null));
+        addController(eventBusController);
 
         // Repository Events
         setRepositoryEvents(new CompetenceRepositoryEvents(eb));

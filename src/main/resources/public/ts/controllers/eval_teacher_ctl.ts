@@ -4028,7 +4028,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     }
                 }
                 else{
-                    if ((eleve.oldMoyenneFinale !== "NN") || (eleve.moyenne !== "NN")) {
+                    if ((eleve.oldMoyenneFinale !== "NN") || (eleve.moyenne !== "NN") || parseFloat(eleve.moyenneFinale) > 20) {
                         notify.error(lang.translate("error.average.outbound"));
                         eleve.moyenneFinale = eleve.oldMoyenneFinale;
                     }
