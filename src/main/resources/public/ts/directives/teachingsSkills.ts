@@ -13,7 +13,11 @@ export let teachingsSkills = ng.directive ('teachingsSkills', function(){
             mapCouleurs : '=',
             mapLettres : '=',
             functionOpenDetailCompetence: '=',
-            functionFilterNotEvaluated: '='
+            functionFilterNotEvaluated: '=',
+            isCycle: '=?',
+            level: '=?',
+            isYear:'=?',
+            trimesters:'=?'
         },
 
         templateUrl : " /"+appPrefix+"/public/template/directives/teachingsSkills.html ",

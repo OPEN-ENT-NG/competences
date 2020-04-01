@@ -39,8 +39,8 @@ declare let location: any;
 declare let $: any;
 
 export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
-    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout', '$sce',
-    async function ($scope, route, $rootScope, $location, $filter, $route, $timeout,$sce) {
+    '$scope', 'route', '$rootScope', '$location', '$filter', '$route', '$timeout', '$sce', '$window',
+    async function ($scope, route, $rootScope, $location, $filter, $route, $timeout,$sce,$window) {
 
 
         /**********************************************************************************************************
@@ -576,6 +576,38 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                     }
                                 }
                             },
+                            annotation: {
+                                drawTime: "afterDraw",
+                                annotations: [{
+                                    type: 'line',
+                                    mode: 'vertical' ,/*set vertical for vertical line */
+                                    scaleID: 'x-axis-0', /* id of the axis */
+                                    value:  '3ème',
+                                    borderColor: '#E35500',
+                                    borderWidth: 3
+                                },{
+                                    type: 'line',
+                                    mode: 'vertical' ,/*set vertical for vertical line */
+                                    scaleID: 'x-axis-0', /* id of the axis */
+                                    value:  '4ème',
+                                    borderColor: '#E35500',
+                                    borderWidth: 3
+                                },{
+                                    type: 'line',
+                                    mode: 'vertical' ,/*set vertical for vertical line */
+                                    scaleID: 'x-axis-0', /* id of the axis */
+                                    value:  '5ème',
+                                    borderColor: '#E35500',
+                                    borderWidth: 3
+                                },{
+                                    type: 'line',
+                                    mode: 'vertical' ,/*set vertical for vertical line */
+                                    scaleID: 'x-axis-0', /* id of the axis */
+                                    value:  '6ème',
+                                    borderColor: '#E35500',
+                                    borderWidth: 3
+                                }]
+                            },
                             elements: {
                                 point: {
                                     radius: 10,
@@ -590,6 +622,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             scales: {
                                 responsive: true,
                                 yAxes: [{
+                                    id : 'y-axis-0',
                                     gridLines: {
                                         display: false,
                                         color: '#000000'
@@ -627,6 +660,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                     },
                                 }],
                                 xAxes: [{
+                                    id : 'x-axis-0',
                                     type: 'category',
                                     display: true,
                                     responsive: false,
@@ -640,7 +674,17 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                         minRotation: 20, // rotation des labels
                                         autoSkip: true,
                                         maxTicksLimit: 20,
-                                        fontColor: 'black'
+                                        fontColor: 'black',
+                                        callback: function (label, index, values) {
+                                            if (label == "3ème" || label == "4ème" || label == "5ème" || label == "6ème" ||
+                                                label == "Trimestre 1" || label == "Trimestre 2" || label == "Trimestre 3" ||
+                                                label == "Semestre 1" || label == "Semestre 2") {
+                                                    return " ";
+                                            }else{
+                                                return label;
+                                            }
+                                        }
+
                                     }
                                 }]
                             }
@@ -724,6 +768,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         $scope.openDetailCompetence = async function (competence, detail) {
             $scope.detailCompetence = competence;
             await utils.initChartsEval($scope);
+
             if (detail !== undefined) {
                 template.open("suivi-competence-detail", detail);
             }
@@ -732,6 +777,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     "enseignants/suivi_eleve/tabs_follow_eleve/follow_items/detail_vue_graph");
             }
             $scope.opened.detailCompetenceSuivi = true;
+            $scope.drawVerticalLine = false;
             utils.scrollTo('top');
         };
 
@@ -966,50 +1012,64 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          */
         Chart.plugins.register({
             afterDatasetsDraw: function (chart, easing) {
+                // To only draw at the end of animation, check for easing === 1
+                let ctx = chart.chart.ctx;
 
-                // Ne pas appliquer la personnalisation sur les graphs du relevé et sur le conseil de classe
-                // et dans l'export de bulletin
-                if ($scope.$location.$$path !== '/releve'
-                    && $scope.$location.$$path !== '/conseil/de/classe'
-                    && $scope.$location.$$path !== '/bulletin') {
-                    // To only draw at the end of animation, check for easing === 1
-                    let ctx = chart.chart.ctx;
+                chart.data.datasets.forEach(function (dataset, i) {
+                    let meta = chart.getDatasetMeta(i);
+                    if (!meta.hidden) {
+                        meta.data.forEach(function (element, index) {
+                            // Draw the text invert color of buble, with the specified font
+                            let rgba = dataset.backgroundColor[index];
+                            if(rgba && rgba.includes('(') && rgba.includes(')') && rgba.includes(',')) {
+                                rgba = rgba.split('(')[1].split(')')[0].split(',');
+                                let r = 255 - parseInt(rgba[0]);
+                                let g = 255 - parseInt(rgba[1]);
+                                let b = 255 - parseInt(rgba[2]);
+                                let a = rgba[3];
 
-                    chart.data.datasets.forEach(function (dataset, i) {
-                        let meta = chart.getDatasetMeta(i);
-                        if (!meta.hidden) {
-                            meta.data.forEach(function (element, index) {
-                                // Draw the text invert color of buble, with the specified font
-                                let rgba = dataset.backgroundColor[index];
-                                if(rgba && rgba.includes('(') && rgba.includes(')') && rgba.includes(',')) {
-                                    rgba = rgba.split('(')[1].split(')')[0].split(',');
-                                    let r = 255 - parseInt(rgba[0]);
-                                    let g = 255 - parseInt(rgba[1]);
-                                    let b = 255 - parseInt(rgba[2]);
-                                    let a = rgba[3];
+                                ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
+                            }
+                            let fontSize = 10.5;
+                            let fontStyle = 'normal';
+                            let fontFamily = 'Helvetica Neue';
+                            ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
+                            // Just naively convert to string for now
+                            let dataString = dataset.data[index].label;
+                            // Make sure alignment settings are correct
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            //var padding = 5;
+                            let position = element.tooltipPosition();
+                            if (dataString === undefined) {
+                                dataString = " ";
+                            }
+                            ctx.fillText(dataString, position.x, position.y);
 
-                                    ctx.fillStyle = "rgba(" + r.toString() + "," + g.toString() + "," + b.toString() + "," + a + ")";
-                                }
-                                let fontSize = 10.5;
-                                let fontStyle = 'normal';
-                                let fontFamily = 'Helvetica Neue';
-                                ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
-                                // Just naively convert to string for now
-                                let dataString = dataset.data[index].label;
-                                // Make sure alignment settings are correct
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'middle';
-                                //var padding = 5;
-                                let position = element.tooltipPosition();
-                                if (dataString === undefined) {
-                                    dataString = " ";
-                                }
-                                ctx.fillText(dataString, position.x, position.y);
-
-                            });
-                        }
-                    });
-                }
+                        });
+                    }
+                });
+                var width = (chart.chart.width-65) / chart.data.labels.length;
+                chart.data.labels.forEach(function (label, i) {
+                    if (label == "3ème" || label == "4ème" || label == "5ème" || label == "6ème" ||
+                        label == "Trimestre 1" || label == "Trimestre 2" || label == "Trimestre 3" ||
+                        label == "Semestre 1" || label == "Semestre 2") {
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(210+width*i, 20);
+                        ctx.lineWidth   = 1;
+                        ctx.strokeStyle = "rgb(169, 169, 169)";
+                        ctx.lineTo(210+width*i, 390);
+                        let fontSize = 13;
+                        let fontStyle = 'normal';
+                        let fontFamily = 'Helvetica Neue';
+                        ctx.font = Chart.helpers.fontString(fontSize, fontStyle, fontFamily);
+                        ctx.fillStyle = "rgb(169, 169, 169)";
+                        ctx.fillText(label, 210+width*i, 10);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                });
             }
         });
         /**

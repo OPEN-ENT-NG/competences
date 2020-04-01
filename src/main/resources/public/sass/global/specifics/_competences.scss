@@ -1288,11 +1288,7 @@ body.evaluations {
   .orange{background-color: $orange !important;}
   .red{background-color: $red !important;}
   .grey{background-color: $grey !important;}
-  .suivi-proportion{
-    height: 20px;
-    display: inline-block;
-    @include transition(all 200ms ease);
-  }
+
   .competence-color{
     display: inline-block;
     padding: 15px 0px 10px 35px;
@@ -1530,16 +1526,6 @@ body.evaluations {
     width: 95%;
     display: block;
     overflow: hidden;
-  }
-  /***
-                      DIRECTIVE COLOR SKILLS LIST : cColorSkillsList
-  ***/
-
-  //       Alignement numéro items évalués
-
-  .nivLetter {
-    display: block;
-    text-align: center;
   }
 
   /***
@@ -3152,11 +3138,6 @@ body.evaluations {
 
   .label-checkbox {
     height: 25px !important;
-  }
-
-  .padding-proportion {
-    padding-left: 5%;
-    padding-top: 3%;
   }
 
   .selectable-list li.positionnementcalculee {

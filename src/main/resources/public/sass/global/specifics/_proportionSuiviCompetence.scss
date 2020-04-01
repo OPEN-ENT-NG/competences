@@ -15,12 +15,44 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-@import "specifics/mixins";
-@import "specifics/competences";
-@import "specifics/slider";
-@import "specifics/fancyCheckBox";
-@import "specifics/messageLoading";
-@import "sniplets/services";
-@import "specifics/_radioPillbox";
-@import "specifics/_tableNote";
-@import "specifics/proportionSuiviCompetence";
+ /**
+* Angular JS slider directive
+*
+* (c) Rafal Zajac <rzajac$gmail.com>
+* (c) Valentin Hervieu <valentin$hervi.eu>
+* http://github.com/angular-slider/angularjs-slider
+*
+* Licensed under the MIT license
+*/
+
+.suivi-proportion{
+  height: 20px;
+  display: inline-block;
+  @include transition(all 200ms ease);
+}
+.suivi-classe{
+  border: grey;
+  border-width: 1px;
+  border-style: solid;
+  border-top: none;
+  border-bottom: none;
+  border-collapse: collapse;
+  margin-left: -1px;
+  margin-top: -1px;
+  height: 43px;
+}
+.space-for-classe{
+  margin-top: -1.25em;
+  margin-bottom: 1.875em;
+}
+.vertical-align-top{
+  vertical-align:top;
+}
+.nivLetter {
+  display: block;
+  text-align: center;
+}
+.padding-proportion {
+  padding-left: 5%;
+  padding-top: 3%;
+}

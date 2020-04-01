@@ -14,13 +14,33 @@
   ~   but WITHOUT ANY WARRANTY; without even the implied warranty of
   ~   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   -->
-<div class="inline-block suivi-proportion"
+<div class="inline-block suivi-proportion vertical-align-top"
      ng-repeat="prop in proportion"
      ng-style="{'width': prop.percent + '%', 'background-color': mapCouleurs[prop.eval]}"
-     style="vertical-align:top"
-     tooltip="[[prop.print + '<br>']]  [[prop.percent.toFixed(0)]] [[translate('%')]] [[addToToolTip]]">
-    <span ng-if="prop.percent>0" class="nivLetter ellipsis"
-          style="color: [[(mapCouleurs[prop.eval])]]; filter: invert(100%); -webkit-filter: invert(100%);" >
+     tooltip="[[prop.tooltip]]"
+     ng-if="!isCycle && !isYear">
+    <span ng-if="prop.percent>0" class="nivLetter ellipsis vertical-align-top">
         [[prop.print]]
     </span>
+</div>
+
+<div ng-if="isCycle || isYear"
+     ng-repeat="periode in periodes"
+     ng-style="{'width': periode.percent + '%'}"
+     ng-class="{'suivi-classe':periode.percent>0}"
+     class="inline-block suivi-proportion">
+    <div class="suivi-proportion vertical-align-top">
+        <span ng-if="periode.percent>0" class="nivLetter ellipsis">
+            [[periode.label]]
+        </span>
+    </div>
+    <br>
+    <div class="suivi-proportion vertical-align-top"
+         ng-repeat="prop in periode.proportion"
+         ng-style="{'width': prop.percent + '%', 'background-color': mapCouleurs[prop.eval]}"
+         tooltip="[[prop.tooltip]]">
+    <span ng-if="prop.percent>0" class="nivLetter ellipsis vertical-align-top">
+        [[prop.print]]
+    </span>
+    </div>
 </div>

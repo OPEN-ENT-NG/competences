@@ -68,7 +68,8 @@
 
             <div class="competence-line" ng-repeat="competence in domaine.competences.all| filter:FilterNotEvaluated">
 
-                <div ng-class="{whiteSpaceNormal: competence.hovering}" ng-mouseenter="showIt(competence)"
+                <div ng-class="{whiteSpaceNormal: competence.hovering || displayCycle || (!search.periode.id && !search.periode.libelle)}"
+                     ng-mouseenter="showIt(competence)"
                      ng-click="openDetailCompetence(competence)" ng-mouseleave="hideIt(competence)"
                      class="six inline-block ellipsis competence">
                     [[competence.nom]]
@@ -108,12 +109,17 @@
                         </span>
                     </div>
                 </div>
-                <div class="three inline-block align-center align-top" ng-click="openDetailCompetence(competence)">
+                <div class="three inline-block align-center align-top" ng-click="openDetailCompetence(competence)"
+                     ng-class="{'space-for-classe': displayCycle || (!search.periode.id && !search.periode.libelle)}">
                     <proportion-suivi-competence evaluations="competence.competencesEvaluations"
                                                  filter="suiviFilter" user="me"
                                                  is-classe="false"
                                                  map-couleurs="mapCouleurs"
-                                                 map-lettres="mapLettres">
+                                                 map-lettres="mapLettres"
+                                                 is-cycle="displayCycle"
+                                                 level="(search.eleve.level)? search.eleve.level : search.classe.name"
+                                                 trimesters="filteredPeriode"
+                                                 is-year="!search.periode.id && !search.periode.libelle">
 
                     </proportion-suivi-competence>
                 </div>
@@ -136,7 +142,11 @@
             <teachings-skills ng-if="enseignement.matieres.all.length === 0" data ="enseignement"
                               suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
                               function-filter-not-evaluated="FilterNotEvaluated"
-                              function-open-detail-competence="openDetailCompetence">
+                              function-open-detail-competence="openDetailCompetence"
+                              is-cycle="displayCycle"
+                              level="(search.eleve.level)? search.eleve.level : search.classe.name"
+                              trimesters="filteredPeriode"
+                              is-year="!search.periode.id && !search.periode.libelle">
             </teachings-skills>
             <div  ng-if="enseignement.matieres.all.length > 0" ng-repeat=" matiere in enseignement.matieres.all | orderBy:['name']">
                 <h2 class="changedAverage" ng-class="{'openedDom' : matiere.OpenMat}" ng-click =" matiere.OpenMat = !matiere.OpenMat"
@@ -145,7 +155,11 @@
                     <teachings-skills data="matiere"
                                       suivi-filter="suiviFilter" me="me" map-lettres="mapLettres" map-couleurs="mapCouleurs"
                                       function-open-detail-competence="openDetailCompetence"
-                                      function-filter-not-evaluated="FilterNotEvaluated">
+                                      function-filter-not-evaluated="FilterNotEvaluated"
+                                      is-cycle="displayCycle"
+                                      level="(search.eleve.level)? search.eleve.level : search.classe.name"
+                                      trimesters="filteredPeriode"
+                                      is-year="!search.periode.id && !search.periode.libelle">
                     </teachings-skills>
                 </div>
             </div>
