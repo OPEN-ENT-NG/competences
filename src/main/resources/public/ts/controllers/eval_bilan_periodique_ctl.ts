@@ -514,45 +514,45 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
                 $scope.search.periode.id_type, $scope.structure.id);
             $scope.elementBilanPeriodique.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
                 $scope.search.periode.id_type, $scope.structure.id);
-            $scope.elementBilanPeriodique.getAllAvisSyntheses().then(res =>{
-                $scope.elementBilanPeriodique.avisConseil.avis = res.libelleAvis;
-                for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
-                    if(periode.id != null){
-                        let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
-                            periode, $scope.structure, $scope.filteredPeriode);
-                        oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
-                            periode, $scope.structure.id);
-                        oldElement.avisConseil = new AvisConseil($scope.informations.eleve.id,
-                            periode, $scope.structure.id);
-                        oldElement.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
-                            periode, $scope.structure.id);
-                        let synthesePeriode = _.findWhere(res.syntheses,{id_typeperiode:periode.id_type});
-                        let avisConseilPeriode = _.findWhere(res.avisConseil,{id_periode:periode.id_type});
-                        let avisOrientationPeriode = _.findWhere(res.avisOrientation,{id_periode:periode.id_type});
+            const res = await $scope.elementBilanPeriodique.getAllAvisSyntheses();
+            $scope.elementBilanPeriodique.avisConseil.avis = res.libelleAvis;
+            for (const periode of $scope.search.classe.periodes.all.sort((a, b) => (a.id_type > b.id_type) ? 1 : -1)) {
+                if(periode.id != null){
+                    let oldElement = new ElementBilanPeriodique($scope.search.classe, $scope.search.eleve,
+                        periode, $scope.structure, $scope.filteredPeriode);
+                    oldElement.syntheseBilanPeriodique = new SyntheseBilanPeriodique($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    oldElement.avisConseil = new AvisConseil($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    oldElement.avisOrientation = new AvisOrientation($scope.informations.eleve.id,
+                        periode, $scope.structure.id);
+                    let synthesePeriode = _.findWhere(res.syntheses,{id_typeperiode:periode.id_type});
+                    let avisConseilPeriode = _.findWhere(res.avisConseil,{id_periode:periode.id_type});
+                    let avisOrientationPeriode = _.findWhere(res.avisOrientation,{id_periode:periode.id_type});
+                    if(synthesePeriode)
+                        oldElement.syntheseBilanPeriodique.synthese = synthesePeriode.synthese;
+                    if(avisConseilPeriode)
+                        oldElement.avisConseil.id_avis_conseil_bilan = avisConseilPeriode.id_avis_conseil_bilan;
+                    if(avisOrientationPeriode)
+                        oldElement.avisOrientation.id_avis_conseil_bilan = avisOrientationPeriode.id_avis_conseil_bilan;
+                    $scope.oldElementsBilanPeriodique.push(oldElement);
+                    if($scope.search.periode.id_type == periode.id_type) {
                         if(synthesePeriode)
-                            oldElement.syntheseBilanPeriodique.synthese = synthesePeriode.synthese;
+                            $scope.elementBilanPeriodique.syntheseBilanPeriodique.synthese =  synthesePeriode.synthese;
                         if(avisConseilPeriode)
-                            oldElement.avisConseil.id_avis_conseil_bilan = avisConseilPeriode.id_avis_conseil_bilan;
+                            $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan = avisConseilPeriode.id_avis_conseil_bilan;
                         if(avisOrientationPeriode)
-                            oldElement.avisOrientation.id_avis_conseil_bilan = avisOrientationPeriode.id_avis_conseil_bilan;
-                        $scope.oldElementsBilanPeriodique.push(oldElement);
-                        if($scope.search.periode.id_type == periode.id_type) {
-                            if(synthesePeriode)
-                                $scope.elementBilanPeriodique.syntheseBilanPeriodique.synthese =  synthesePeriode.synthese;
-                            if(avisConseilPeriode)
-                                $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan = avisConseilPeriode.id_avis_conseil_bilan;
-                            if(avisOrientationPeriode)
-                                $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan = avisOrientationPeriode.id_avis_conseil_bilan;
-                        }
+                            $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan = avisOrientationPeriode.id_avis_conseil_bilan;
                     }
                 }
-                $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
-                    {id: $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan});
-                $scope.previousClassOpinion = $scope.search.avisClasse;
-                $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
-                    {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
-                $scope.previousOrientationOpinion = $scope.search.avisOrientation;
-            });
+            }
+            $scope.search.avisClasse = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                {id: $scope.elementBilanPeriodique.avisConseil.id_avis_conseil_bilan});
+            $scope.previousClassOpinion = $scope.search.avisClasse;
+            $scope.search.avisOrientation = _.find($scope.elementBilanPeriodique.avisConseil.avis,
+                {id: $scope.elementBilanPeriodique.avisOrientation.id_avis_conseil_bilan});
+            $scope.previousOrientationOpinion = $scope.search.avisOrientation;
+
         };
 
         $scope.deleteStudent = async function () {
