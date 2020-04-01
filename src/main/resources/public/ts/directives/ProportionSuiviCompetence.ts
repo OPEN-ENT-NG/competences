@@ -19,7 +19,7 @@
  * Created by ledunoiss on 09/11/2016.
  */
 
-import { ng, appPrefix, _ } from 'entcore';
+import { ng, appPrefix, _,moment } from 'entcore';
 import * as utils from '../utils/teacher';
 import {DefaultLetters} from "../models/eval_niveau_comp";
 import {Utils} from "../models/teacher";
@@ -38,13 +38,16 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
             mapCouleurs : '=',
             mapLettres : '=',
             majProportions : '=?',
-            addToToolTip : '=?'
+            addToToolTip : '=?',
+            isCycle : '=?',
+            level : '=?',
+            trimesters : '=?',
+            isYear : '=?'
         },
         templateUrl : "/"+appPrefix+"/public/template/directives/cProportionSuiviCompetence.html",
         controller : ['$scope', function ($scope) {
 
             $scope.isClasse = $scope.isClasse !== undefined ? $scope.isClasse : false;
-
 
 
             /**
@@ -93,7 +96,6 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
              * Calcul la proportion d'évaluations pour une compétence
              */
             $scope.calculProportion = function () {
-                $scope.competencesEvaluations = $scope.evaluations;
                 $scope.proportion = [];
                 for (var i = -1; i < 4; i++) {
                     $scope.proportion.push({
@@ -151,13 +153,81 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                             $scope.proportion[i].nb = nb.length;
                         }
                         let proportion = $scope.proportion[i];
-                        $scope.proportion[i].print = `${proportion.nb} ${$scope.mapProportionLettres[proportion.eval]}`;
+                        let print = `${proportion.nb} ${$scope.mapProportionLettres[proportion.eval]}`;
+                        $scope.proportion[i].print = print;
+                        if(!$scope.addToToolTip)
+                            $scope.addToToolTip = "";
+                        else
+                            $scope.addToToolTip = " " + $scope.addToToolTip;
+                        $scope.proportion[i].tooltip = print + "<br> " + proportion.percent.toFixed(0).toString() +
+                            " " + $scope.translate('%') + $scope.addToToolTip;
                     }
                 }
             };
 
+            $scope.calculPeriodesAnnes = function () {
+                let niveau = parseInt($scope.level.replace(/[^A-Za-z0-9]/g, '')[0]);
+                if(!isNaN(niveau)) {
+                    let today = moment();
+                    let actualMonth = parseInt(today.format('M'));
+                    let actualYear = today.format('YYYY');
+                    let actualPeriode;
+                    if (actualMonth < 9) {
+                        let pastYear = (parseInt(actualYear) - 1).toString();
+                        actualPeriode = [moment("09-01-" + pastYear, "MM-DD-YYYY"), moment("08-31-" + actualYear, "MM-DD-YYYY")];
+                    } else {
+                        let afterYear = (parseInt(actualYear) + 1).toString();
+                        actualPeriode = [moment("09-01-" + actualYear, "MM-DD-YYYY"), moment("08-31-" + afterYear, "MM-DD-YYYY")];
+                    }
+                    $scope.periodes = [];
+                    for(let i = niveau; i<=6;i++){
+                        if(i!=niveau) {
+                            actualPeriode = [moment(actualPeriode[0]).subtract(1, 'years'),
+                                moment(actualPeriode[1]).subtract(1, 'years')];
+                        }
+                        let dataPeriode = {label:i.toString()+"ème",periode:actualPeriode};
+                        $scope.periodes.push(dataPeriode);
+                    }
+                }else{
+                    $scope.isCycle = false;
+                }
+            };
+
+            $scope.calculPeriodesTrimestres = function () {
+                $scope.trimesters = _.filter($scope.trimesters, trimester =>{return trimester.id});
+                $scope.periodes = [];
+                let trimesterOrSemester = ($scope.trimesters.length == 2)? "Semestre " : "Trimestre ";
+                for(let i = 0; i < $scope.trimesters.length;i++){
+                    let periode = [moment($scope.trimesters[i].timestamp_dt), moment($scope.trimesters[i].timestamp_fn)];
+                    let dataPeriode = {label:trimesterOrSemester+(i+1).toString(),periode:periode};
+                    $scope.periodes.push(dataPeriode);
+                }
+            };
+
             $scope.majInlineText();
-            $scope.calculProportion();
+            if($scope.isCycle || $scope.isYear){
+                if($scope.isCycle) {
+                    $scope.calculPeriodesAnnes();
+                    $scope.periodes.reverse();
+                } else {
+                    $scope.calculPeriodesTrimestres();
+                }
+                let nbPeriodes = $scope.periodes.length;
+                for(let i = 0; i < nbPeriodes; i++){
+                    let beginningYear = moment($scope.periodes[i].periode[0].format());
+                    let endYear = moment($scope.periodes[i].periode[1].format());
+                    $scope.competencesEvaluations = _.filter($scope.evaluations, evaluation => {
+                        return moment(evaluation.evaluation_date).isBefore(endYear) &&
+                            moment(evaluation.evaluation_date).isAfter(beginningYear);
+                    });
+                    $scope.calculProportion();
+                    $scope.periodes[i].proportion = $scope.proportion.slice();
+                    $scope.periodes[i].percent = (($scope.competencesEvaluations.length / $scope.evaluations.length) * 100)-0.3;
+                }
+            }else{
+                $scope.competencesEvaluations = $scope.evaluations;
+                $scope.calculProportion();
+            }
         }]
     };
 });

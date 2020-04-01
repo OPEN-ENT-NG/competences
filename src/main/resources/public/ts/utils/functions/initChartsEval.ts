@@ -1,5 +1,5 @@
 import {Defaultcolors} from "../../models/eval_niveau_comp";
-import {_} from "entcore";
+import {_,moment} from "entcore";
 import {safeApply} from "./safeApply";
 
 let initFirstColumn = function (chartOptionsEval) {
@@ -22,17 +22,73 @@ let initLastColumn = function (chartOptionsEval) {
     chartOptionsEval.tooltipLabels.push(' ');
 };
 
+let calculPeriodesAnnees = function ($scope) {
+    if(!$scope.search.eleve.level)
+        $scope.search.eleve.level = $scope.search.classe.name;
+    let niveau = parseInt($scope.search.eleve.level.replace(/[^A-Za-z0-9]/g, '')[0]);
+    if(!isNaN(niveau)) {
+        let today = moment();
+        let actualMonth = parseInt(today.format('M'));
+        let actualYear = today.format('YYYY');
+        let actualPeriode;
+        if (actualMonth < 9) {
+            let pastYear = (parseInt(actualYear) - 1).toString();
+            actualPeriode = [moment("09-01-" + pastYear, "MM-DD-YYYY"), moment("08-31-" + actualYear, "MM-DD-YYYY")];
+        } else {
+            let afterYear = (parseInt(actualYear) + 1).toString();
+            actualPeriode = [moment("09-01-" + actualYear, "MM-DD-YYYY"), moment("08-31-" + afterYear, "MM-DD-YYYY")];
+        }
+        $scope.periodesChart = [];
+        for (let i = niveau; i <= 6; i++) {
+            if (i != niveau) {
+                actualPeriode = [moment(actualPeriode[0]).subtract(1, 'years'),
+                    moment(actualPeriode[1]).subtract(1, 'years')];
+            }
+            let dataPeriode = {label: i.toString() + "ème", periode: actualPeriode};
+            $scope.periodesChart.push(dataPeriode);
+        }
+    }
+    $scope.periodesChart.reverse();
+};
+
+let calculPeriodesTrimestres = function ($scope) {
+    $scope.trimesters = _.filter($scope.filteredPeriode, trimester =>{return trimester.id});
+    $scope.periodesChart = [];
+    let trimesterOrSemester = ($scope.trimesters.length == 2)? "Semestre " : "Trimestre ";
+    for(let i = 0; i < $scope.trimesters.length;i++){
+        let periode = [moment($scope.trimesters[i].timestamp_dt), moment($scope.trimesters[i].timestamp_fn)];
+        let dataPeriode = {label:trimesterOrSemester+(i+1).toString(),periode:periode};
+        $scope.periodesChart.push(dataPeriode);
+    }
+};
+
 export let initChartsEval = async function ($scope) {
+    $scope.chartOptionsEval.datasets.data.length = $scope.chartOptionsEval.datasets.labels.length =
+        $scope.chartOptionsEval.colors.length = 0;
+    $scope.periodesChart = undefined;
     if ($scope.detailCompetence !== undefined && $scope.detailCompetence !== null) {
         let ListEval = _.filter($scope.detailCompetence.competencesEvaluations, function (evalu) {
             return $scope.filterOwnerSuivi(evalu);
         });
-
-        initFirstColumn($scope.chartOptionsEval);
+        if($scope.displayCycle)
+            calculPeriodesAnnees($scope);
+        else if(!$scope.search.periode.id && !$scope.search.periode.libelle)
+            calculPeriodesTrimestres($scope);
+        else
+            initFirstColumn($scope.chartOptionsEval);
 
         ListEval = _.sortBy(ListEval, function (evalu) {
             return evalu.evaluation_date;
         });
+
+        let actualPeriode = undefined;
+        let beginningYear = undefined;
+        let endYear = undefined;
+        if($scope.periodesChart && $scope.periodesChart.length>0){
+            actualPeriode = $scope.periodesChart[0];
+            beginningYear = moment(actualPeriode.periode[0].format());
+            endYear = moment(actualPeriode.periode[1].format());
+        }
 
         for (let i = 0; i < ListEval.length; i++) {
 
@@ -46,6 +102,21 @@ export let initChartsEval = async function ($scope) {
                 r: 10,
                 label: fontText
             });
+            if (actualPeriode){
+                let j = 1;
+                while (moment(ListEval[i].evaluation_date).isBefore(beginningYear) ||
+                moment(ListEval[i].evaluation_date).isAfter(endYear)) {
+                    actualPeriode = $scope.periodesChart[j];
+                    beginningYear = moment(actualPeriode.periode[0].format());
+                    endYear = moment(actualPeriode.periode[1].format());
+                    j++;
+                }
+                if (moment(ListEval[i].evaluation_date).isBefore(endYear) &&
+                    moment(ListEval[i].evaluation_date).isAfter(beginningYear) &&
+                    !$scope.chartOptionsEval.datasets.labels.includes(actualPeriode.label)) {
+                    $scope.chartOptionsEval.datasets.labels.push(actualPeriode.label);
+                }
+            }
             $scope.chartOptionsEval.datasets.labels.push($scope.getDateFormated(ListEval[i].evaluation_date));
             let colorValue;
             if (ListEval[i].evaluation !== -1) {
@@ -65,9 +136,9 @@ export let initChartsEval = async function ($scope) {
             $scope.chartOptionsEval.tooltipLabels.push(tooltipLabel);
         }
 
-        initLastColumn($scope.chartOptionsEval)
+        initLastColumn($scope.chartOptionsEval);
     }
-   await safeApply($scope);
+    await safeApply($scope);
 };
 
 
