@@ -18,8 +18,7 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
 
         $scope.mentionClass = lang.translate("conseil.avis.mention");
         $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
-        $scope.updateMentionClass = false;
-        $scope.updateOrientationOpinion = false;
+        $scope.updateMentionClass = $scope.updateOrientationOpinion = false;
 
         let runMessageLoader = async function () {
             await Utils.runMessageLoader($scope);
@@ -270,5 +269,12 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             userReportModel = reportModel;
             $scope.isLightBoxReportModelOpen = false;
         };
+
+        $scope.closeEditLabel = function (label:string):void {
+            $scope[label] = false;
+            if($scope.mentionClass === "")$scope.mentionClass = lang.translate("conseil.avis.mention");
+            if($scope.orientationOpinion === "") $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
+        }
+
     }
 ]);

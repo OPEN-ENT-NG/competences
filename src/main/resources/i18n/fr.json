@@ -715,7 +715,6 @@
   "viesco.switchEvealuation.message1": " Des évaluations sont rattachées à(aux) la matière(s) :  ",
   "viesco.switchEvealuation.message2": " et seront automatiquement rattachés à la sous matière",
   "viesco.switchEvealuation.message3": " Confirmez-vous ?",
-
   "activated.data.recuperation.from.presences": "Récupérer les données de l'application Présences pour le conseil de classe et le bulletin",
   "importation.in.process": "Import en cours...",
   "import.add.file": "Ajouter un fichier",
@@ -726,7 +725,6 @@
   "in.file": "Dans le fichier ",
   "viescolaire.utils.classes": "classes",
   "evaluation.notation.explanation": "Note ayant pour coefficient n, ou 1 le cas échéant, suivie de la moyenne de classe sur le devoir m.",
-
   "competance.error.iframe.error": "Erreur lors de la récupération du PDF",
   "competance.error.iframe.statusText": "Le contenu est vide",
   "competance.information.noExport": "Problème rencontré lors de la génération de l'export",
@@ -747,7 +745,6 @@
   "competences.report-model.api.error.getAll": "Erreur lors de la récupération des préferences pour le bulletin",
   "competences.report-model.api.error.update": "Erreur lors de la modification de la préference pour le bulletin",
   "competences.report-model.api.error.create": "Erreur lors de la création de la préference pour le bulletin",
-
   "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
   "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
   "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis"
