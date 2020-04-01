@@ -105,7 +105,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                     });
                 }
                 if ($scope.filter.mine === 'true' || $scope.filter.mine === true) {
-                    $scope.competencesEvaluations = _.filter($scope.evaluations, function (evaluation) {
+                    $scope.competencesEvaluations = _.filter($scope.competencesEvaluations, function (evaluation) {
                         return evaluation.owner === $scope.user.userId;
                     });
                 }
