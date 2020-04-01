@@ -28,7 +28,9 @@
                        ng-if="reportModel.iAmUpdated"
                        ng-blur="saveTitleEdit(reportModel)"
                        type="text"
-                       ng-model="reportModel.title"/>
+                       ng-model="reportModel.title"
+                       autofocus
+                />
                 <i ng-click="openUpdateMode(reportModel)"
                    class="edit cell one"></i>
                 <i ng-click="remove(reportModel)"
