@@ -234,7 +234,7 @@
 
         <section class="ten twelve-mobile cell right">
 
-            <content ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
+            <div ng-show="releveNote.synchronized.releve == true && releveNote !== undefined">
                 <div class="tableReleves">
                     <div class="responsive-table">
                         <table class="list-view twelve tableReleve tableRelevePadding marginTopZero"
@@ -496,13 +496,13 @@
                         </table>
                     </div>
                 </div>
-            </content>
-            <content ng-show="search.periode.id !== null && releveNote === undefined">
+            </div>
+            <div ng-show="search.periode.id !== null && releveNote === undefined">
                 <article class="card tableReleves">
                     <i18n>evaluations.no.summary.releve</i18n>
                     .
                 </article>
-            </content>
+            </div>
         </section>
 
     </div>

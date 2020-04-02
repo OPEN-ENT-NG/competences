@@ -735,10 +735,7 @@
   "competences.valid": "Valider",
   "competences.cancel": "Annuler",
   "competance.lightbox.selectFormat": "Sélectionnez le format de l'exportation :",
-  "evaluation.service.lightboxes.update": "Coefficients et Modalités",
-  "error.get.homework.on.update": "Erreur lors de la récupération des devoirs pour la mise à jour du service",
-  "service.homework.update.topic": "Les devoirs ont bien été mis à jour",
-  "multiples": "Multiples",
+
   "competences.reportModel.info.problem.title" : "Problème de doublon ou de titre vides, ils ne seront pas enregistés",
   "competences.report-model.api.error.getFirstSelected": "Erreur lors de la récupération des préferences pour le bulletin",
   "competences.report-model.api.error.getSelected": "Erreur lors de la récupération des préferences pour le bulletin",
@@ -747,6 +744,10 @@
   "competences.report-model.api.error.create": "Erreur lors de la création de la préference pour le bulletin",
   "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
   "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
-  "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis"
+  "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis",
 
+  "evaluation.service.lightboxes.update": "Coefficients et Modalités",
+  "error.get.homework.on.update": "Erreur lors de la récupération des devoirs pour la mise à jour du service",
+  "service.homework.update.topic": "Les devoirs ont bien été mis à jour",
+  "multiples": "Multiples"
 }

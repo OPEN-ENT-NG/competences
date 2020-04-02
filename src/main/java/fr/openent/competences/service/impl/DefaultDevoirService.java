@@ -1323,7 +1323,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
     }
 
     @Override
-    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, Handler<Either<String, JsonArray>> handler) {
+    public void getMatiereTeacherForOneEleveByPeriode(String id_eleve, String idEtablissement, String id_classe, Handler<Either<String, JsonArray>> handler) {
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 
         String headQuery = " SELECT DISTINCT devoirs.id_matiere, devoirs.owner, services.coefficient, devoirs.id_periode " +
@@ -1362,11 +1362,15 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
 
                 footerQuery +
 
+                " UNION SELECT DISTINCT appreciation.id_matiere, null as owner, null ::integer as coefficient, appreciation.id_periode" +
+                " FROM "+ Competences.COMPETENCES_SCHEMA + ".appreciation_matiere_periode as appreciation" +
+                " WHERE appreciation.id_eleve = ? AND appreciation.id_classe = ? " +
+
                 " ) AS res " +
                 " ORDER BY res.id_periode,res.id_matiere ";
 
         values.add(id_eleve).add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve)
-                .add(idEtablissement).add(id_eleve).add(idEtablissement);
+                .add(idEtablissement).add(id_eleve).add(idEtablissement).add(id_eleve).add(id_classe);
 
         sql.prepared(query,values,Competences.DELIVERY_OPTIONS,SqlResult.validResultHandler(handler));
     }
@@ -1426,7 +1430,8 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
         String query = "DELETE FROM notes.moyenne_finale AS moy WHERE NOT EXISTS " +
                 "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
                 " WHERE moy.id_matiere = dev.id_matiere AND moy.id_periode = dev.id_periode AND moy.id_classe = relDevGr.id_groupe);" +
-                " " +
+                " " /*+
+                SUITE à la demande de la MN-1126 on garde les informations ci-après, à voir si cela n'entraine pas de problème
                 "DELETE FROM notes.appreciation_classe AS appClass WHERE NOT EXISTS " +
                 "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
                 " WHERE appClass.id_matiere = dev.id_matiere AND appClass.id_periode = dev.id_periode" +
@@ -1440,7 +1445,7 @@ public class DefaultDevoirService extends SqlCrudService implements fr.openent.c
                 "DELETE FROM notes.element_programme AS elPro WHERE NOT EXISTS " +
                 "(SELECT * FROM notes.devoirs AS dev INNER JOIN notes.rel_devoirs_groupes AS relDevGr ON relDevGr.id_devoir = dev.id" +
                 " WHERE elPro.id_matiere = dev.id_matiere AND elPro.id_periode = dev.id_periode " +
-                "AND elPro.id_classe = relDevGr.id_groupe);";
+                "AND elPro.id_classe = relDevGr.id_groupe);"*/;
 
         Sql.getInstance().raw(query, SqlResult.validRowsResultHandler(result));
     }
