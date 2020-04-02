@@ -315,7 +315,7 @@ export class Evaluations extends Model {
                 resolve ();
             }
             // Synchronisation des matières, enseignants, devoirs et de l'élève.
-            else if(model.me.classNames && model.me.classNames.lenght>0 && model.me.classes && model.me.structures) {
+            else if(model.me.classNames && model.me.classNames.length>0 && model.me.classes && model.me.structures) {
                 this.eleve = new Eleve({
                     id: model.me.userId,
                     idClasse: model.me.classes[0],
