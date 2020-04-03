@@ -3066,6 +3066,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             template.close('leftSide-userInfo');
             await utils.safeApply($scope);
             let idPeriode = (Utils.isNotNull($scope.search.periode)?$scope.search.periode.id_type: null);
+            if(!eleve.idClasse)
+                eleve.idClasse = $scope.search.classe.id;
             let allPromise = [eleve.getEvenements($scope.structure.id), $scope.getAvatar(eleve)];
             if(Utils.isNotNull(idPeriode)) {
                 eleve.appreciationCPE = new AppreciationCPE(eleve.id, idPeriode);
