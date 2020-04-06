@@ -704,7 +704,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         delete $scope.informations.eleve;
                         delete $scope.suiviCompetence;
                     } else {
-                        await $scope.selectSuivi($scope.route.current.$$route.originalPath);
+                        await $scope.selectSuivi();
                         $scope.displayFromEleve = true;
                         await utils.safeApply($scope);
                     }
@@ -911,8 +911,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 $scope.isCycle = true;
                             }
                             if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe') {
-                                Utils.initFilterMine($scope);
-                                await $scope.selectSuivi();
+                                await $scope.initSuivi();
                             }
                             $scope.template.close('suivi-competence-content');
                             $scope.template.open('suivi-competence-content', content);

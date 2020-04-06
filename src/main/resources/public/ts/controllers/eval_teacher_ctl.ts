@@ -3203,13 +3203,42 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * Afficher le suivi d'un élève depuis le suivi de classe
          * @param eleve
          */
-        $scope.displaySuiviEleve = function (eleve) {
+        $scope.displaySuiviEleve = async function (eleve) {
             $scope.informations.eleve = eleve;
             $scope.search.eleve = eleve;
             $scope.selected.eleve = eleve;
             $scope.displayFromClass = true;
             $scope.displayFromEleve = true;
-            utils.safeApply($scope);
+            let display = async function (){
+                $scope.selected.matieres = [];
+                $scope.exportByEnseignement = "false";
+                $scope.allUnselect = true;
+                $scope.releveComp = {
+                    textMod: true
+                };
+                $scope.showRechercheBar = false;
+                if (!Utils.isChefEtab()) {
+                    http().getJson('/viescolaire/matieres?idEtablissement=' + evaluations.structure.id,).done(function (res) {
+                        $scope.allMatieresSorted = _.sortBy(res, 'name');
+                        utils.safeApply($scope);
+                    });
+                } else {
+                    $scope.allMatieresSorted = _.sortBy($scope.matieres.all, 'name');
+                }
+
+                if ($scope.informations.eleve === undefined) {
+                    $scope.informations.eleve = null;
+                }
+                $scope.sortType = 'title'; // set the default sort type
+                $scope.sortReverse = false;  // set the default sort order
+                $scope.usePerso = evaluations.structure.usePerso;
+                $scope.updateColorAndLetterForSkills();
+                await utils.safeApply($scope);
+            };
+            await $scope.search.classe.eleves.sync();
+            await display();
+            template.open('main', 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/container');
+            await  utils.safeApply($scope);
             $scope.goTo("/competences/eleve");
         };
 
