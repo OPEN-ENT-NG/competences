@@ -15,7 +15,9 @@
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-import {_, http} from 'entcore';
+import {_} from 'entcore';
+import * as utils from "../teacher";
+import http from "axios";
 /**
  * @param arr liste de nombres
  * @returns la moyenne si la liste n'est pas vide
@@ -26,7 +28,7 @@ export function average (arr) {
         }, 0) / (arr.length === 0 ? 1 : arr.length);
 }
 
-export function   getMoyenne (devoirs) {
+function   getMoyenne (devoirs) {
     if(devoirs.length == 0){
         return "NN";
     }else {
@@ -70,4 +72,47 @@ export function   getMoyenne (devoirs) {
             return "NN";
         }
     }
+}
+
+export function   calculMoyennes (periode_idType,id_eleve,matieresReleve,dataReleveDevoirs) {
+    let id_typePeriode = "";
+    if(periode_idType)
+        id_typePeriode = "idPeriode="+periode_idType.toString();
+    http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?" + id_typePeriode).then(res => {
+        let moyennesFinales = res.data;
+        for(let matiere of matieresReleve) {
+            let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
+            if (devoirsMatieres !== undefined) {
+                let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:matiere.id});
+                if(moyenneFinale){
+                    if(moyenneFinale.moyenne == null){
+                        matiere.moyenne = "NN";
+                    }else{
+                        matiere.moyenne = moyenneFinale.moyenne;
+                    }
+                }else{
+                    matiere.moyenne = getMoyenne(devoirsMatieres);
+                }
+                if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
+                    for (let sousMat of matiere.sousMatieres.all) {
+                        let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
+                        if (devoirsSousMat.length > 0) {
+                            let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:sousMat.id_type_sousmatiere});
+                            if(moyenneFinale){
+                                if(moyenneFinale.moyenne == null){
+                                    matiere.moyenne = "NN";
+                                }else{
+                                    matiere.moyenne = moyenneFinale.moyenne;
+                                }
+                            }else{
+                                sousMat.moyenne = getMoyenne(devoirsSousMat);
+                            }
+                        } else {
+                            sousMat.moyenne = "";
+                        }
+                    }
+                }
+            }
+        }
+    });
 }

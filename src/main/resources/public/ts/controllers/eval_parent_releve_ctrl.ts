@@ -36,7 +36,6 @@ export let releveController = ng.controller('ReleveController', [
          * contenue dans $scope.matieres
          */
         $scope.calculMoyenneMatieres = async function () {
-
             if ($scope.dataReleve === undefined) {
                 return;
             }
@@ -46,46 +45,8 @@ export let releveController = ng.controller('ReleveController', [
             } else {
                 id_eleve = $scope.eleve.id;
             }
-            let id_typePeriode = $scope.searchReleve.periode.id_type;
-
-            http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?idPeriode="+ + id_typePeriode).then(res => {
-                let moyennesFinales = res.data;
-                for(let matiere of $scope.matieresReleve.all) {
-                    let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
-                    if (devoirsMatieres !== undefined) {
-                        let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:matiere.id});
-                        if(moyenneFinale){
-                            if(moyenneFinale.moyenne == null){
-                                matiere.moyenne = "NN";
-                            }else{
-                                matiere.moyenne = moyenneFinale.moyenne;
-                            }
-                        }else{
-                            matiere.moyenne = utils.getMoyenne(devoirsMatieres);
-                        }
-                        if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
-                            for (let sousMat of matiere.sousMatieres.all) {
-                                let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
-                                if (devoirsSousMat.length > 0) {
-                                    let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:sousMat.id_type_sousmatiere});
-                                    if(moyenneFinale){
-                                        if(moyenneFinale.moyenne == null){
-                                            matiere.moyenne = "NN";
-                                        }else{
-                                            matiere.moyenne = moyenneFinale.moyenne;
-                                        }
-                                    }else{
-                                        sousMat.moyenne = utils.getMoyenne(devoirsSousMat);
-                                    }
-                                } else {
-                                    sousMat.moyenne = "";
-                                }
-                            }
-                        }
-                    }
-                }
-                utils.safeApply($scope);
-            });
+            utils.calculMoyennes($scope.search.periode.id_type,id_eleve,$scope.matieresReleve.all,$scope.dataReleve.devoirs);
+            await utils.safeApply($scope);
         };
         /**
          * chargement d'un

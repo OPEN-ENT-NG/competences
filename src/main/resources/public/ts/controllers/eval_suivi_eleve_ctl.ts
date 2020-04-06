@@ -698,16 +698,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         colors: []
                     };
                     $scope.selected.grey = true;
-                    if ($scope.displayFromClass !== true) {
-                        $scope.search.eleve = "";
-                        $scope.search.classe = "";
-                        delete $scope.informations.eleve;
-                        delete $scope.suiviCompetence;
-                    } else {
-                        await $scope.selectSuivi();
-                        $scope.displayFromEleve = true;
-                        await utils.safeApply($scope);
-                    }
+                    await $scope.selectSuivi();
+                    $scope.displayFromEleve = true;
+                    await utils.safeApply($scope);
                     resolve();
                 } catch (e) {
                     reject(e);
@@ -853,6 +846,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 if($scope.search.eleve !== undefined
                     && $scope.search.classe.eleves.findWhere({id: $scope.search.eleve.id}) === undefined){
                     $scope.search.eleve = "";
+                    delete $scope.informations.eleve;
                 }
                 $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                     "canUpdateBFCSynthese");
@@ -1313,52 +1307,12 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          *********************************************************************************************************/
 
         $scope.calculMoyenneMatieres = async function () {
-
             if ($scope.dataReleve === undefined) {
                 return;
             }
-
             let id_eleve = $scope.search.eleve.id;
-            let id_typePeriode = $scope.search.periode.id_type;
-
-            http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?idPeriode="+ + id_typePeriode).then(res => {
-                let moyennesFinales = res.data;
-                for(let matiere of $scope.matieresReleve.all) {
-                    let devoirsMatieres = $scope.dataReleve.devoirs.where({id_matiere: matiere.id});
-                    if (devoirsMatieres !== undefined) {
-                        let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:matiere.id});
-                        if(moyenneFinale){
-                            if(moyenneFinale.moyenne == null){
-                                matiere.moyenne = "NN";
-                            }else{
-                                matiere.moyenne = moyenneFinale.moyenne;
-                            }
-                        }else{
-                            matiere.moyenne = utils.getMoyenne(devoirsMatieres);
-                        }
-                        if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
-                            for (let sousMat of matiere.sousMatieres.all) {
-                                let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
-                                if (devoirsSousMat.length > 0) {
-                                    let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:sousMat.id_type_sousmatiere});
-                                    if(moyenneFinale){
-                                        if(moyenneFinale.moyenne == null){
-                                            matiere.moyenne = "NN";
-                                        }else{
-                                            matiere.moyenne = moyenneFinale.moyenne;
-                                        }
-                                    }else{
-                                        sousMat.moyenne = utils.getMoyenne(devoirsSousMat);
-                                    }
-                                } else {
-                                    sousMat.moyenne = "";
-                                }
-                            }
-                        }
-                    }
-                }
-                utils.safeApply($scope);
-            });
+            utils.calculMoyennes($scope.search.periode.id_type,id_eleve,$scope.matieresReleve.all,$scope.dataReleve.devoirs);
+            await utils.safeApply($scope);
         };
 
         $scope.getMoyenneClasse = function(devoirReleveNotes) {
@@ -1457,6 +1411,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             await evaluationsParentFormat.sync();
             $scope.$watch($scope.displayFromClass, async function (newValue, oldValue) {
                 if (newValue !== oldValue) {
+                    await $scope.initDataEleve();
                     await $scope.initSuivi();
                 }
             });
