@@ -55,7 +55,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
              */
             $scope.$watch('filter', function (newValue, oldValue) {
                 if (newValue !== oldValue) {
-                    $scope.calculProportion();
+                    $scope.init();
                 }
             }, true);
 
@@ -64,12 +64,12 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
              */
             $scope.majInlineText = () => {
                 $scope.mapProportionLettres = _.mapObject($scope.mapLettres, function (val, key) {
-                    let letter = (val === " ")? DefaultLetters[key]: val;
+                    let letter = (val === " ") ? DefaultLetters[key] : val;
                     return letter;
                 });
             };
 
-            $scope.$watch('mapLettres',  function(newValue, oldValue) {
+            $scope.$watch('mapLettres', function (newValue, oldValue) {
                 if (newValue !== oldValue) {
                     $scope.majInlineText();
                     $scope.calculProportion();
@@ -77,7 +77,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                 }
             });
 
-            $scope.$watch('majProportions', function(newValue, oldValue) {
+            $scope.$watch('majProportions', function (newValue, oldValue) {
                 if (newValue !== oldValue) {
                     $scope.calculProportion();
                     utils.safeApply($scope);
@@ -99,17 +99,12 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                 $scope.proportion = [];
                 for (var i = -1; i < 4; i++) {
                     $scope.proportion.push({
-                        eval : i,
-                        percent : 0,
-                        nb : 0
+                        eval: i,
+                        percent: 0,
+                        nb: 0
                     });
                 }
-                if ($scope.filter.mine === 'true' || $scope.filter.mine === true) {
-                    $scope.competencesEvaluations = _.filter($scope.competencesEvaluations, function (evaluation) {
-                        return evaluation.owner === $scope.user.userId;
-                    });
-                }
-                if (Utils.isNotNull($scope.competencesEvaluations) && $scope.competencesEvaluations.length > 0 ) {
+                if (Utils.isNotNull($scope.competencesEvaluations) && $scope.competencesEvaluations.length > 0) {
                     var nbEleves = 0;
                     if ($scope.isClasse == true) {
                         var elevesMap = {};
@@ -138,7 +133,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         if ($scope.isClasse == true) {
 
                             // si aucune competence evaluee on n'affiche pas la proportion
-                            if($scope.proportion[0].percent === 100) {
+                            if ($scope.proportion[0].percent === 100) {
                                 $scope.proportion[0].percent = 0;
                                 $scope.proportion[0].nb = 0;
                             } else {
@@ -148,14 +143,14 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                             }
 
                         } else {
-                            var nb = _.where($scope.competencesEvaluations, {evaluation : parseInt($scope.proportion[i].eval)});
+                            var nb = _.where($scope.competencesEvaluations, {evaluation: parseInt($scope.proportion[i].eval)});
                             $scope.proportion[i].percent = (nb.length / $scope.competencesEvaluations.length) * 100;
                             $scope.proportion[i].nb = nb.length;
                         }
                         let proportion = $scope.proportion[i];
                         let print = `${proportion.nb} ${$scope.mapProportionLettres[proportion.eval]}`;
                         $scope.proportion[i].print = print;
-                        if(!$scope.addToToolTip)
+                        if (!$scope.addToToolTip)
                             $scope.addToToolTip = "";
                         else
                             $scope.addToToolTip = " " + $scope.addToToolTip;
@@ -167,7 +162,7 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
 
             $scope.calculPeriodesAnnes = function () {
                 let niveau = parseInt($scope.level.replace(/[^A-Za-z0-9]/g, '')[0]);
-                if(!isNaN(niveau)) {
+                if (!isNaN(niveau)) {
                     let today = moment();
                     let actualMonth = parseInt(today.format('M'));
                     let actualYear = today.format('YYYY');
@@ -180,54 +175,69 @@ export let proportionSuiviCompetence = ng.directive('proportionSuiviCompetence',
                         actualPeriode = [moment("09-01-" + actualYear, "MM-DD-YYYY"), moment("08-31-" + afterYear, "MM-DD-YYYY")];
                     }
                     $scope.periodes = [];
-                    for(let i = niveau; i<=6;i++){
-                        if(i!=niveau) {
+                    for (let i = niveau; i <= 6; i++) {
+                        if (i != niveau) {
                             actualPeriode = [moment(actualPeriode[0]).subtract(1, 'years'),
                                 moment(actualPeriode[1]).subtract(1, 'years')];
                         }
-                        let dataPeriode = {label:i.toString()+"ème",periode:actualPeriode};
+                        let dataPeriode = {label: i.toString() + "ème", periode: actualPeriode};
                         $scope.periodes.push(dataPeriode);
                     }
-                }else{
+                } else {
                     $scope.isCycle = false;
                 }
             };
 
             $scope.calculPeriodesTrimestres = function () {
-                $scope.trimesters = _.filter($scope.trimesters, trimester =>{return trimester.id});
+                $scope.trimesters = _.filter($scope.trimesters, trimester => {
+                    return trimester.id
+                });
                 $scope.periodes = [];
-                let trimesterOrSemester = ($scope.trimesters.length == 2)? "Semestre " : "Trimestre ";
-                for(let i = 0; i < $scope.trimesters.length;i++){
+                let trimesterOrSemester = ($scope.trimesters.length == 2) ? "Semestre " : "Trimestre ";
+                for (let i = 0; i < $scope.trimesters.length; i++) {
                     let periode = [moment($scope.trimesters[i].timestamp_dt), moment($scope.trimesters[i].timestamp_fn)];
-                    let dataPeriode = {label:trimesterOrSemester+(i+1).toString(),periode:periode};
+                    let dataPeriode = {label: trimesterOrSemester + (i + 1).toString(), periode: periode};
                     $scope.periodes.push(dataPeriode);
                 }
             };
 
-            $scope.majInlineText();
-            if($scope.isCycle || $scope.isYear){
-                if($scope.isCycle) {
-                    $scope.calculPeriodesAnnes();
-                    $scope.periodes.reverse();
-                } else {
-                    $scope.calculPeriodesTrimestres();
-                }
-                let nbPeriodes = $scope.periodes.length;
-                for(let i = 0; i < nbPeriodes; i++){
-                    let beginningYear = moment($scope.periodes[i].periode[0].format());
-                    let endYear = moment($scope.periodes[i].periode[1].format());
-                    $scope.competencesEvaluations = _.filter($scope.evaluations, evaluation => {
-                        return moment(evaluation.evaluation_date).isBefore(endYear) &&
-                            moment(evaluation.evaluation_date).isAfter(beginningYear);
+            $scope.init = function () {
+                if ($scope.filter.mine === 'true' || $scope.filter.mine === true) {
+                    $scope.evaluationsToSort = _.filter($scope.evaluations, function (evaluation) {
+                        return evaluation.owner === $scope.user.userId;
                     });
-                    $scope.calculProportion();
-                    $scope.periodes[i].proportion = $scope.proportion.slice();
-                    $scope.periodes[i].percent = (($scope.competencesEvaluations.length / $scope.evaluations.length) * 100)-0.3;
+                }else{
+                    $scope.evaluationsToSort = $scope.evaluations;
                 }
-            }else{
-                $scope.competencesEvaluations = $scope.evaluations;
-                $scope.calculProportion();
-            }
+                if ($scope.isCycle || $scope.isYear) {
+                    if ($scope.isCycle) {
+                        $scope.calculPeriodesAnnes();
+                        $scope.periodes.reverse();
+                    } else {
+                        $scope.calculPeriodesTrimestres();
+                    }
+                    let nbPeriodes = $scope.periodes.length;
+                    for (let i = 0; i < nbPeriodes; i++) {
+                        let beginningYear = moment($scope.periodes[i].periode[0].format());
+                        let endYear = moment($scope.periodes[i].periode[1].format());
+                        $scope.competencesEvaluations = _.filter($scope.evaluationsToSort, evaluation => {
+                            return (moment(evaluation.evaluation_date).isBefore(endYear) &&
+                                moment(evaluation.evaluation_date).isAfter(beginningYear)) ||
+                                moment(evaluation.evaluation_date).isSame(endYear, 'day') ||
+                                moment(evaluation.evaluation_date).isSame(beginningYear, 'day');
+                        });
+                        $scope.calculProportion();
+                        $scope.periodes[i].proportion = $scope.proportion.slice();
+                        $scope.periodes[i].percent = (($scope.competencesEvaluations.length / $scope.evaluationsToSort.length) * 100) - 0.3;
+                    }
+                } else {
+                    $scope.competencesEvaluations = $scope.evaluationsToSort;
+                    $scope.calculProportion();
+                }
+            };
+
+            $scope.majInlineText();
+            $scope.init();
         }]
     };
 });

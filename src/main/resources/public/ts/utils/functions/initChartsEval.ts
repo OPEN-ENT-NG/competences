@@ -104,15 +104,19 @@ export let initChartsEval = async function ($scope) {
             });
             if (actualPeriode){
                 let j = 1;
-                while (moment(ListEval[i].evaluation_date).isBefore(beginningYear) ||
-                moment(ListEval[i].evaluation_date).isAfter(endYear)) {
+                while ((moment(ListEval[i].evaluation_date).isBefore(beginningYear) ||
+                moment(ListEval[i].evaluation_date).isAfter(endYear)) &&
+                !(moment(ListEval[i].evaluation_date).isSame(endYear, 'day')) &&
+                !(moment(ListEval[i].evaluation_date).isSame(beginningYear, 'day'))) {
                     actualPeriode = $scope.periodesChart[j];
                     beginningYear = moment(actualPeriode.periode[0].format());
                     endYear = moment(actualPeriode.periode[1].format());
                     j++;
                 }
-                if (moment(ListEval[i].evaluation_date).isBefore(endYear) &&
-                    moment(ListEval[i].evaluation_date).isAfter(beginningYear) &&
+                if (((moment(ListEval[i].evaluation_date).isBefore(endYear) &&
+                    moment(ListEval[i].evaluation_date).isAfter(beginningYear)) ||
+                    moment(ListEval[i].evaluation_date).isSame(endYear, 'day') ||
+                    moment(ListEval[i].evaluation_date).isSame(beginningYear, 'day')) &&
                     !$scope.chartOptionsEval.datasets.labels.includes(actualPeriode.label)) {
                     $scope.chartOptionsEval.datasets.labels.push(actualPeriode.label);
                 }

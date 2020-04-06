@@ -903,7 +903,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                     else
                                         $scope.suiviFilter.mine = "false";
                                 } else {
-                                    Utils.initFilterMine($scope);
                                     $scope.currentCycle = {id_cycle: $scope.search.classe.id_cycle};
                                     $scope.isCycle = false;
                                 }
@@ -911,8 +910,10 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 $scope.currentCycle = cycle;
                                 $scope.isCycle = true;
                             }
-                            if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe')
+                            if($scope.suiviCompetence === undefined && $location.path() != '/conseil/de/classe') {
+                                Utils.initFilterMine($scope);
                                 await $scope.selectSuivi();
+                            }
                             $scope.template.close('suivi-competence-content');
                             $scope.template.open('suivi-competence-content', content);
                         }
