@@ -270,10 +270,17 @@ export let evalBulletinCtl = ng.controller('EvaluationsBulletinsController', [
             $scope.isLightBoxReportModelOpen = false;
         };
 
+        let defaultValueMentionClass:String, defaultValueOrientationOpinion:String;
+        $scope.openEditLabel = function(label:string):void{
+            $scope[label] = !$scope[label];
+            defaultValueMentionClass = $scope.mentionClass;
+            defaultValueOrientationOpinion = $scope.orientationOpinion;
+        };
+
         $scope.closeEditLabel = function (label:string):void {
             $scope[label] = false;
-            if($scope.mentionClass === "")$scope.mentionClass = lang.translate("conseil.avis.mention");
-            if($scope.orientationOpinion === "") $scope.orientationOpinion = lang.translate("orientation.avis.FirstSecondTrimester");
+            if($scope.mentionClass === "")$scope.mentionClass = defaultValueMentionClass;
+            if($scope.orientationOpinion === "") $scope.orientationOpinion = defaultValueOrientationOpinion;
         }
 
     }
