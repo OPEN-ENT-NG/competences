@@ -2068,7 +2068,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 $scope.setEnseignantMatieres(search);
             } else if(($scope.devoir.teachersByClass.length > 0 && $scope.devoir.owner === undefined) ||
                 _.findWhere($scope.devoir.teachersByClass, {id : $scope.devoir.owner}) === undefined) {
-                $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
+                if($scope.devoir.teachersByClass.length > 0 ){
+                    $scope.devoir.owner = $scope.devoir.teachersByClass[0].id;
+                }
                 $scope.setEnseignantMatieres();
             }
         };
