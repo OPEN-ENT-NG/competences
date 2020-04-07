@@ -56,15 +56,31 @@ public interface ElementProgramme {
     /**
      * @param handler
      */
-    public void getDomainesEnseignement(Handler<Either<String, JsonArray>> handler);
+    public void getDomainesEnseignement(String idCycle, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void getSousDomainesEnseignement(Handler<Either<String, JsonArray>> handler);
+    public void getSousDomainesEnseignement(String idDomaine, Handler<Either<String, JsonArray>> handler);
 
     /**
      * @param handler
      */
-    public void getPropositions(Handler<Either<String, JsonArray>> handler);
+    public void getPropositions(String idStructure, Long idSousDomaine, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * @param handler
+     */
+    public void createProposition(String idStructure, String libelle, Long idSousDomaine, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * @param handler
+     */
+    public void editProposition(Long idProposition, String libelle, Handler<Either<String, JsonArray>> handler);
+
+    /**
+     * @param handler
+     */
+    public void deleteProposition(Long idProposition, Handler<Either<String, JsonArray>> handler);
+
 }

@@ -57,6 +57,10 @@ body.evaluations {
     background: grey !important;
   }
 
+  .height-fit-content{
+    height: fit-content;
+  }
+
   .all {
     background: $orange;
   }
@@ -3594,5 +3598,27 @@ body.evaluations {
         font-style: italic;
       }
     }
+  }
+
+  .cursor-auto {
+    cursor:auto;
+  }
+
+  .domain-header {
+    position:relative;
+    left:10px;
+    top:10px;
+  }
+
+  .margin-top-10 {
+    margin-top:10px;
+  }
+
+  .margin-left-10 {
+    margin-left:10px;
+  }
+
+  .margin-15 {
+    margin: 15px;
   }
 }

@@ -25,6 +25,7 @@ import {paramServices} from './sniplets/paramServices'
 import {renameSubject} from "./sniplets/renameSubject";
 import {opinionConference} from "./sniplets/opinionConference";
 import {paramImportCSV} from "./sniplets/param_import_csv";
+import {programElements} from "./sniplets/programsElement";
 
 Behaviours.register('competences', {
     rights: {
@@ -61,6 +62,7 @@ Behaviours.register('competences', {
         paramServices : paramServices,
         renameSubject: renameSubject,
         param_import_csv: paramImportCSV,
-        opinionConference: opinionConference
+        opinionConference: opinionConference,
+        programElements: programElements
     }
 });

@@ -637,11 +637,11 @@
   "evaluations.add":"Ajouter",
   "evaluations.libelle": "Libellé",
   "evaluations.screenOrExport": "Écrans/export",
-  "evaluations.add.element.programme.summary": "Rappel des élements du programme travaillés : ",
+  "evaluations.add.element.programme.summary": "Rappel des éléments du programme travaillés : ",
   "evaluations.recap.item.evaluate": "Récapitulatif de tous les items évalués : ",
   "evaluations.recap.empty": "Il n'y a pas de compétence évaluée sur la période sélectionnée",
   "evaluations.edit":"Modifier",
-  "evaluations.add.element.programme.title": "Saisie des élements du programme travaillé",
+  "evaluations.add.element.programme.title": "Saisie des éléments du programme travaillé",
   "evaluations.add.element.programme.rappel.matiere": "Rappel matière : ",
   "evaluations.add.element.programme.enseignants": "Enseignant(s) ",
   "evaluations.dispense.domaine.eleve.create.err":"Erreur lors de la sauvegarde de la dispense de l'élève pour un domaine",
@@ -742,9 +742,12 @@
   "competences.report-model.api.error.getAll": "Erreur lors de la récupération des préferences pour le bulletin",
   "competences.report-model.api.error.update": "Erreur lors de la modification de la préference pour le bulletin",
   "competences.report-model.api.error.create": "Erreur lors de la création de la préference pour le bulletin",
+
   "viescolaire.conference.opinions.service.not.empty": "Vous ne pouvez pas saisir d'avis vide",
   "viescolaire.conference.opinions.service.delete.error": "Un problème a eu lieu durant la suppression de l'avis",
   "viescolaire.conference.opinions.service.save.error": "Un problème a eu lieu durant l'enregistrement de l'avis",
+
+  "viescolaire.program.add": "Ajouter un élément à ce sous-domaine",
 
   "evaluation.service.lightboxes.update": "Coefficients et Modalités",
   "error.get.homework.on.update": "Erreur lors de la récupération des devoirs pour la mise à jour du service",

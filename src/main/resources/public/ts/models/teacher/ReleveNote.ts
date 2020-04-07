@@ -64,9 +64,10 @@ export class ReleveNote extends  Model implements IModel {
             GET_INFO_PERIODIQUE: `/competences/releve/periodique?idEtablissement=${this.structure.id}&idClasse=${
                 this.idClasse}&idMatiere=${this.idMatiere}&idPeriode=${this.idPeriode}&typeClasse=${
                 this.classe.type_groupe}`,
-            GET_ELEMENT_PROGRAMME_DOMAINES: `/competences/element/programme/domaines`,
-            GET_ELEMENT_PROGRAMME_SOUS_DOMAINES: `/competences/element/programme/sous/domaines`,
-            GET_ELEMENT_PROGRAMME_PROPOSITIONS: `/competences/element/programme/propositions`,
+            GET_ELEMENT_PROGRAMME_DOMAINES: `/competences/element/programme/domaines?idCycle=`,
+            GET_ELEMENT_PROGRAMME_SOUS_DOMAINES: `/competences/element/programme/sous/domaines?idDomaine=`,
+            GET_ELEMENT_PROGRAMME_PROPOSITIONS: `/competences/element/programme/propositions?idEtablissement=${
+                this.structure.id}&idSousDomaine=`,
             GET_CONVERSION_TABLE: `/competences/competence/notes/bilan/conversion?idEtab=${
                 this.idEtablissement}&idClasse=${this.idClasse}`,
             GET_ARBRE_DOMAINE: `/competences/domaines?idClasse=${this.idClasse}`,
@@ -80,7 +81,6 @@ export class ReleveNote extends  Model implements IModel {
                 this.classe.type_groupe}`,
 
             EXPORT: `/competences/releve/export`
-
         }
     }
 
@@ -112,7 +112,7 @@ export class ReleveNote extends  Model implements IModel {
             moyenneClasse: true
         };
         _.forEach(this.matiere.sousMatieres.all, (sousMatiere) => {
-           this.exportOptions.sousMatieres.moyennes[sousMatiere.id_type_sousmatiere] = true;
+            this.exportOptions.sousMatieres.moyennes[sousMatiere.id_type_sousmatiere] = true;
             this.exportOptions.sousMatieres.positionnements_auto[sousMatiere.id_type_sousmatiere] = true;
         });
         this.collection(Devoir, {
@@ -311,52 +311,48 @@ export class ReleveNote extends  Model implements IModel {
         });
     }
 
-    syncDomainesEnseignement(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (evaluations.domainesEnseignements === undefined || evaluations.domainesEnseignements.length == 0) {
-                http().getJson(this.api.GET_ELEMENT_PROGRAMME_DOMAINES)
-                    .done((res) => {
-                        evaluations.domainesEnseignements = res;
-                        resolve();
-                    })
-                    .error((res) => {
-                        console.error(res);
-                        reject();
-                    })
-            } else {
-                resolve();
-            }
+    syncDomainesEnseignement(cycle): Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            http().getJson(this.api.GET_ELEMENT_PROGRAMME_DOMAINES + cycle.id_cycle)
+                .done((res) => {
+                    evaluations.domainesEnseignements = res;
+                    evaluations.sousDomainesEnseignements = [];
+                    resolve();
+                })
+                .error((res) => {
+                    console.error(res);
+                    reject();
+                })
         });
     }
 
-    syncSousDomainesEnseignement(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            if (evaluations.sousDomainesEnseignements === undefined || evaluations.sousDomainesEnseignements.length == 0) {
-                http().getJson(this.api.GET_ELEMENT_PROGRAMME_SOUS_DOMAINES)
-                    .done((res) => {
-                        evaluations.sousDomainesEnseignements = res;
-                        http().getJson(this.api.GET_ELEMENT_PROGRAMME_PROPOSITIONS)
-                            .done((propositions) => {
-                                _.forEach(evaluations.sousDomainesEnseignements, (sousDomaine) => {
-                                    let _propositions = _.where(propositions, {id_sous_domaine: sousDomaine.id});
-                                    if (_propositions !== undefined && _propositions.length > 0) {
-                                        sousDomaine.propositions = _propositions;
-                                    }
-                                });
-                                resolve();
-                            })
-                            .error((propositions) => {
-                                console.error(propositions);
-                                reject();
-                            })
-                    })
-                    .error((res) => {
-                        console.error(res);
-                        reject();
-                    })
-            } else {
-                resolve();
-            }
+    syncSousDomainesEnseignement(domaine): Promise<any> {
+        evaluations.sousDomainesEnseignements = [];
+        return new Promise(async (resolve, reject) => {
+            http().getJson(this.api.GET_ELEMENT_PROGRAMME_SOUS_DOMAINES + domaine.id)
+                .done((res) => {
+                    evaluations.sousDomainesEnseignements = res;
+                    _.forEach(evaluations.sousDomainesEnseignements, async (sousDomaine) => {
+                        sousDomaine.propositions = await this.syncPropositions(sousDomaine);
+                    });
+                    resolve();
+                })
+                .error((res) => {
+                    console.error(res);
+                    reject();
+                })
+        });
+    }
+
+    syncPropositions(sousDomaine) : Promise<any> {
+        return new Promise(async (resolve, reject) => {
+            http().getJson(this.api.GET_ELEMENT_PROGRAMME_PROPOSITIONS + sousDomaine.id
+                + "&idEtablissement=" + this.structure.id)
+                .done(async (res) => {
+                    resolve(res);
+                }).error(async () => {
+                reject();
+            })
         });
     }
 
@@ -662,9 +658,9 @@ export class ReleveNote extends  Model implements IModel {
                         }
                         _.forEach(line.sousMatieres.moyennes, (sousMatiere) => {
                             if(sousMatiere.print){
-                               let idSousMatiere = sousMatiere.id_sousmatiere;
-                               let key = 'moyenne';
-                               line[key + idSousMatiere] = this.addColumnForExportCsv(sousMatiere, key);
+                                let idSousMatiere = sousMatiere.id_sousmatiere;
+                                let key = 'moyenne';
+                                line[key + idSousMatiere] = this.addColumnForExportCsv(sousMatiere, key);
                             }
                         });
                         if(this.exportOptions.positionnementFinal) {

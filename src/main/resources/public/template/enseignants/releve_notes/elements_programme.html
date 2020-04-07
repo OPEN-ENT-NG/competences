@@ -55,7 +55,7 @@
         <label class="select">
             <select ng-model="aideSaisie.cycle"
                     ng-options="cycle as cycle.libelle for cycle in structure.cycles"
-                    ng-change="aideSaisie.domaineEnseignement = null">
+                    ng-change="syncDomainesEnseignement(aideSaisie.cycle)">
                 <option disabled value="" class="header-opt">[[translate('viescolaire.utils.cycle')]]
                 </option>
             </select>
@@ -67,7 +67,7 @@
     <div class="four cell">
         <label class="select" ng-class="{disabled : aideSaisie.cycle === null || aideSaisie.cycle === '*' || aideSaisie.cycle === ''}">
             <select ng-model="aideSaisie.domaineEnseignement"
-                    ng-change="syncSousDomaines(aideSaisie.domaineEnseignement.id)"
+                    ng-change="syncSousDomainesEnseignement(aideSaisie.domaineEnseignement)"
                     ng-disabled="aideSaisie.cycle === null || aideSaisie.cycle === '*' || aideSaisie.cycle === ''"
                     ng-options="domaine as domaine.libelle for domaine in evaluations.domainesEnseignements | filter:{ id_cycle : aideSaisie.cycle.id_cycle }">
                 <option disabled value="" class="header-opt">[[translate('viescolaire.utils.domaines.enseignements')]]
@@ -77,9 +77,8 @@
     </div>
 </div>
 <div class="row">
-    <ul ng-if="aideSaisie.cycle !== undefined && aideSaisie.cycle !== null && aideSaisie.domaineEnseignement !== undefined && aideSaisie.domaineEnseignement !== null"
-        class="skills-list-aideSaisie">
-        <li ng-repeat="sousDomaine in sousDomaines"
+    <ul class="skills-list-aideSaisie">
+        <li ng-repeat="sousDomaine in evaluations.sousDomainesEnseignements"
             class="twelve skills-header skill-45 ng-scope" ng-class="{opened: sousDomaine.open}">
                     <span ng-click="sousDomaine.open = !sousDomaine.open;" class="skills-text-overflow skills-teach"
                           ng-mouseenter="showIt(sousDomaine)"
@@ -88,12 +87,12 @@
                         <i class="skills-open-icon"></i>
                         <span>[[sousDomaine.libelle]]</span>
                     </span>
-            <ul ng-if="aideSaisie.domaineEnseignement !== undefined" class="skills-list">
+            <ul class="skills-list">
                 <li ng-repeat="proposition in sousDomaine.propositions">
-                            <span ng-click="addProposition(proposition.libelle)" ng-mouseenter="showIt(proposition)"
-                                  ng-class="{whiteSpaceNormal : proposition.hoveringRecap}"
-                                  ng-mouseleave="hideIt(proposition)"
-                                  class="ten skills-list-proposition skills-text-overflow italic">[[proposition.libelle]]</span>
+                    <span ng-click="addProposition(proposition.libelle)" ng-mouseenter="showIt(proposition)"
+                          ng-class="{whiteSpaceNormal : proposition.hoveringRecap}"
+                          ng-mouseleave="hideIt(proposition)"
+                          class="ten skills-list-proposition skills-text-overflow italic">[[proposition.libelle]]</span>
                 </li>
             </ul>
         </li>
