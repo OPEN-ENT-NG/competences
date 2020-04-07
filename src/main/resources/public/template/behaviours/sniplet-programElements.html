@@ -1,0 +1,86 @@
+<div class="evaluations-sniplet">
+    <div class="loaderArray loaderCenter" ng-show="displayMessageLoader"></div>
+
+    <div class="row margin-bottom-30">
+        <div class="one cell">
+            &nbsp;
+        </div>
+        <div class="three cell">
+            <label class="select">
+                <select ng-model="cycle"
+                        ng-change="syncDomainesEnseignements(cycle)"
+                        ng-options="cycle as cycle.libelle for cycle in cycles">
+                    <option value="" selected disabled hidden class="header-opt">
+                        [[translate('viescolaire.utils.cycle')]]
+                    </option>
+                </select>
+            </label>
+        </div>
+        <div class="three cell">
+            &nbsp;
+        </div>
+        <div class="four cell">
+            <label class="select" ng-class="{disabled : cycle === null}">
+                <select ng-model="domaine"
+                        ng-change="syncSousDomainesEnseignements(domaine)"
+                        ng-options="domaine as domaine.libelle for domaine in domainesEnseignements">
+                    <option value="" selected disabled hidden class="header-opt">
+                        [[translate('viescolaire.utils.domaines.enseignements')]]
+                    </option>
+                </select>
+            </label>
+        </div>
+        <div class="one cell">
+            &nbsp;
+        </div>
+    </div>
+
+    <div class="row">
+        <ul ng-if="cycle !== null && domaine !== null"
+            class="skills-list-aideSaisie">
+            <li ng-repeat="sousDomaine in sousDomainesEnseignements" class="twelve skill-45 cursor-auto">
+                <div class="flex-row justify-between margin-top-10">
+                    <h3 class="eight">[[sousDomaine.libelle]]</h3>
+                    <button class="three height-fit-content" ng-click="openAddProp(sousDomaine)">
+                        <i18n>viescolaire.program.add</i18n>
+                    </button>
+                </div>
+                <ul>
+                    <fieldset ng-repeat="proposition in sousDomaine.propositions"
+                              ng-disabled="proposition.id_etablissement == null" class="ten no-border">
+                        <label>
+                            <input class="eight skills-list-proposition skills-text-overflow italic margin-top-10"
+                                   type="text" ng-model="proposition.libelle"
+                                   ng-focus="changeOldProp(proposition)"
+                                   ng-blur="editProposition(proposition)"/>
+                        </label>
+                        <i class="trash-orange margin-left-10"
+                           data-ng-click="deleteProposition(proposition)"
+                           ng-if="proposition.id_etablissement != null"
+                           tooltip="evaluations.test.delete"></i>
+                    </fieldset>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+
+    <lightbox show="addProp" on-close="cancelAddProp()">
+        <div class="header">
+            <h2>
+                <i18n>viescolaire.program.add</i18n>
+            </h2>
+        </div>
+        <div class="twelve">
+            <label>
+                <input type="text" ng-model="newProp" ng-maxlength="255" maxlength="255"
+                       class="eleven margin-15"
+                       ng-keydown="$event.keyCode==13 && [addCustomProposition(newProp), newProp = '']"
+                       i18n-placeholder="viescolaire.program.add"/>
+            </label>
+            <input type="button" class="right-magnet" ng-click="addCustomProposition(newProp); newProp = ''"
+                   i18n-value="viescolaire.utils.save" ng-disabled="newProp == ''"/>
+        </div>
+    </lightbox>
+
+</div>

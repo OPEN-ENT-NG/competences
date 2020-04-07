@@ -4099,12 +4099,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             utils.safeApply($scope);
         };
 
-        $scope.syncSousDomaines = function (id) {
-            $scope.sousDomaines = _.where(evaluations.sousDomainesEnseignements, {
-                id_domaine: id
-            });
-        };
-
         $scope.openElementProgramme = function openElementProgramme() {
             $scope.opened.elementProgramme = !$scope.opened.elementProgramme;
         };
@@ -4143,18 +4137,23 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     return $scope.isEndSaisie();
                 }
             };
-            $scope.releveNote.syncDomainesEnseignement().then(() => {
-                $scope.releveNote.syncSousDomainesEnseignement().then(() => {
-                    $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
-                    $scope.aideSaisie.cycle = null;
-                    $scope.aideSaisie.domaineEnseignement = null;
-                    template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
-                    $scope.opened.lightbox = true;
-                    utils.safeApply($scope);
-                });
-            });
+            $scope.releveNote.elementProgramme.texte = $scope.elementProgrammeDisplay;
+            $scope.aideSaisie.cycle = null;
+            $scope.aideSaisie.domaineEnseignement = null;
+            template.open('lightboxContainer', 'enseignants/releve_notes/elements_programme');
+            $scope.opened.lightbox = true;
+            utils.safeApply($scope);
+        };
 
-        }
+        $scope.syncDomainesEnseignement = async function (cycle) {
+            await $scope.releveNote.syncDomainesEnseignement(cycle);
+            utils.safeApply($scope);
+        };
+
+        $scope.syncSousDomainesEnseignement = async function (domaine) {
+            await $scope.releveNote.syncSousDomainesEnseignement(domaine);
+            utils.safeApply($scope);
+        };
 
         $scope.addProposition = function (libelleProposition) {
             if ($scope.releveNote.elementProgramme.texte === undefined){

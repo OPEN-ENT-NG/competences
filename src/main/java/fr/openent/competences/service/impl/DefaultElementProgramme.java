@@ -32,7 +32,7 @@ import static org.entcore.common.sql.SqlResult.validResultHandler;
 
 public class DefaultElementProgramme implements ElementProgramme {
     private final Sql sql = Sql.getInstance();
-    
+
     @Override
     public void setElementProgramme(String userId, Long idPeriode, String idMatiere, String idClasse,String texte,
                                     Handler<Either<String, JsonArray>> handler){
@@ -95,24 +95,73 @@ public class DefaultElementProgramme implements ElementProgramme {
 
 
     @Override
-    public void getDomainesEnseignement(Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".domaine_enseignement ORDER BY libelle";
+    public void getDomainesEnseignement(String idCycle, Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".domaine_enseignement ");
+        if(idCycle != null){
+            query.append("WHERE id_cycle = " + idCycle + " ");
+        }
+        query.append("ORDER BY libelle");
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
     @Override
-    public void getSousDomainesEnseignement(Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".sous_domaine_enseignement ORDER BY libelle";
+    public void getSousDomainesEnseignement(String idDomaine, Handler<Either<String, JsonArray>> handler){
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT * FROM " + Competences.COMPETENCES_SCHEMA +".sous_domaine_enseignement ");
+        if(idDomaine != null){
+            query.append("WHERE id_domaine = " + idDomaine + " ");
+        }
+        query.append("ORDER BY libelle");
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
     @Override
-    public void getPropositions(Handler<Either<String, JsonArray>> handler){
-        String query = "SELECT * FROM "+ Competences.COMPETENCES_SCHEMA +".proposition ORDER BY libelle";
+    public void getPropositions(String idStructure, Long idSousDomaine, Handler<Either<String, JsonArray>> handler){
+        String query = "SELECT * FROM " + Competences.COMPETENCES_SCHEMA + ".proposition" +
+                " WHERE (id_etablissement = ? OR id_etablissement IS NULL) AND id_sous_domaine = ?" +
+                " ORDER BY libelle";
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(idStructure);
+        values.add(idSousDomaine);
         sql.prepared(query.toString(), values, validResultHandler(handler));
     }
 
+    @Override
+    public void createProposition(String idStructure, String libelle, Long idSousDomaine,
+                                  Handler<Either<String, JsonArray>> handler){
+        String query = "INSERT INTO " + Competences.COMPETENCES_SCHEMA + ".proposition " +
+                "(libelle, id_sous_domaine, id_etablissement) SELECT ?, ?, ? " +
+                "WHERE NOT EXISTS (SELECT id FROM " + Competences.COMPETENCES_SCHEMA + ".proposition " +
+                "WHERE libelle = ? AND id_sous_domaine = ? AND id_etablissement = ?)";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(libelle);
+        values.add(idSousDomaine);
+        values.add(idStructure);
+        values.add(libelle);
+        values.add(idSousDomaine);
+        values.add(idStructure);
+        sql.prepared(query.toString(), values, validResultHandler(handler));
+    }
+
+    @Override
+    public void editProposition(Long idProposition, String libelle, Handler<Either<String, JsonArray>> handler){
+        String query = "UPDATE " + Competences.COMPETENCES_SCHEMA + ".proposition " +
+                "SET libelle = ? WHERE id = ?";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(libelle);
+        values.add(idProposition);
+        sql.prepared(query.toString(), values, validResultHandler(handler));
+    }
+
+    @Override
+    public void deleteProposition(Long idProposition, Handler<Either<String, JsonArray>> handler){
+        String query = "DELETE FROM " + Competences.COMPETENCES_SCHEMA + ".proposition " +
+                "WHERE id = ?";
+        JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
+        values.add(idProposition);
+        sql.prepared(query.toString(), values, validResultHandler(handler));
+    }
 }
