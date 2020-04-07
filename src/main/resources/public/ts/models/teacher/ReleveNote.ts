@@ -691,28 +691,38 @@ export class ReleveNote extends  Model implements IModel {
                     }
                     let classe = response._moyenne_classe;
                     if(this.exportOptions.moyenneClasse){
-                        let moyAuto = classe['null'];
-                        let moyFinal = classe['nullFinal'];
-                        if(Utils.isNotNull(moyAuto)){
-                            moyAuto = moyAuto.moyenne;
-                        }
-                        if(Utils.isNotNull(moyFinal)){
-                            moyFinal = moyFinal.moyenne;
-                        }
-                        moyAuto = Utils.isNull(moyAuto)? '' : moyAuto;
-                        moyFinal = Utils.isNull(moyFinal)? '' : moyFinal;
+                        if(classe) {
+                            let moyAuto = classe['null'];
+                            let moyFinal = classe['nullFinal'];
+                            if (Utils.isNotNull(moyAuto)) {
+                                moyAuto = moyAuto.moyenne;
+                            }
+                            if (Utils.isNotNull(moyFinal)) {
+                                moyFinal = moyFinal.moyenne;
+                            }
+                            moyAuto = Utils.isNull(moyAuto) ? '' : moyAuto;
+                            moyFinal = Utils.isNull(moyFinal) ? '' : moyFinal;
 
-                        csvData += (`${lang.translate('average.class')}`);
-                        if(this.exportOptions.averageAuto) {
-                            csvData += (`;${moyAuto}`);
-                        }
-                        if(this.exportOptions.averageFinal) {
-                            csvData += (`;${moyFinal}`);
+                            csvData += (`${lang.translate('average.class')}`);
+                            if (this.exportOptions.averageAuto) {
+                                csvData += (`;${moyAuto}`);
+                            }
+                            if (this.exportOptions.averageFinal) {
+                                csvData += (`;${moyFinal}`);
+                            }
+                        }else{
+                            csvData += (`${lang.translate('average.class')}`);
+                            if (this.exportOptions.averageAuto) {
+                                csvData += (`; `);
+                            }
+                            if (this.exportOptions.averageFinal) {
+                                csvData += (`; `);
+                            }
                         }
                         let classeSousMat = response.moyenneClasseSousMat;
-                        if(Utils.isNotNull(classeSousMat)) {
+                        if (Utils.isNotNull(classeSousMat)) {
                             _.forEach(classeSousMat, sousMat => {
-                                if(sousMat.print){
+                                if (sousMat.print) {
                                     csvData += (`;${sousMat._moyenne}`);
                                 }
                             })
