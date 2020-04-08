@@ -426,11 +426,11 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
         //////            Changement d'élèves à l'aide des flèches            //////
 
         $scope.incrementEleve = async function (num) {
-            let index = _.findIndex($scope.search.classe.eleves.all, {id: $scope.search.eleve.id});
+            let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
             await Utils.runMessageLoader($scope);
             if (index !== -1 && index + parseInt(num) >= 0
-                && index + parseInt(num) < $scope.search.classe.eleves.all.length) {
-                $scope.search.eleve = $scope.search.classe.eleves.all[index + parseInt(num)];
+                && index + parseInt(num) < $scope.filteredEleves.all.length) {
+                $scope.search.eleve = $scope.filteredEleves.all[index + parseInt(num)];
                 await $scope.changeContent();
                 delete $scope.informations.competencesNotes;
                 $scope.informations.competencesNotes = $scope.informations.eleve.competencesNotes;
