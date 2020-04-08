@@ -74,45 +74,54 @@ function   getMoyenne (devoirs) {
     }
 }
 
-export function   calculMoyennes (periode_idType,id_eleve,matieresReleve,dataReleveDevoirs) {
-    let id_typePeriode = "";
-    if(periode_idType)
-        id_typePeriode = "idPeriode="+periode_idType.toString();
-    http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?" + id_typePeriode).then(res => {
-        let moyennesFinales = res.data;
-        for(let matiere of matieresReleve) {
-            let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
-            if (devoirsMatieres !== undefined) {
-                let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:matiere.id});
-                if(moyenneFinale){
-                    if(moyenneFinale.moyenne == null){
-                        matiere.moyenne = "NN";
-                    }else{
-                        matiere.moyenne = moyenneFinale.moyenne;
-                    }
-                }else{
-                    matiere.moyenne = getMoyenne(devoirsMatieres);
-                }
-                if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
-                    for (let sousMat of matiere.sousMatieres.all) {
-                        let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
-                        if (devoirsSousMat.length > 0) {
-                            let moyenneFinale = _.findWhere(moyennesFinales,{id_matiere:sousMat.id_type_sousmatiere});
-                            if(moyenneFinale){
-                                if(moyenneFinale.moyenne == null){
-                                    matiere.moyenne = "NN";
-                                }else{
-                                    matiere.moyenne = moyenneFinale.moyenne;
-                                }
-                            }else{
-                                sousMat.moyenne = getMoyenne(devoirsSousMat);
+export async function calculMoyennes (periode_idType,id_eleve,matieresReleve,dataReleveDevoirs) {
+    return new Promise( async (resolve, reject) => {
+        try {
+            let id_typePeriode = "";
+            if (periode_idType)
+                id_typePeriode = "idPeriode=" + periode_idType.toString();
+            http.get('/competences/eleve/' + id_eleve + "/moyenneFinale?" + id_typePeriode).then(res => {
+                let moyennesFinales = res.data;
+                for (let matiere of matieresReleve) {
+                    let devoirsMatieres = dataReleveDevoirs.where({id_matiere: matiere.id});
+                    if (devoirsMatieres !== undefined) {
+                        let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: matiere.id});
+                        if (moyenneFinale) {
+                            if (moyenneFinale.moyenne == null) {
+                                matiere.moyenne = "NN";
+                            } else {
+                                matiere.moyenne = moyenneFinale.moyenne;
                             }
                         } else {
-                            sousMat.moyenne = "";
+                            matiere.moyenne = getMoyenne(devoirsMatieres);
+                        }
+                        if (matiere.sousMatieres != undefined && matiere.sousMatieres.all.length > 0) {
+                            for (let sousMat of matiere.sousMatieres.all) {
+                                let devoirsSousMat = _.where(devoirsMatieres, {id_sousmatiere: sousMat.id_type_sousmatiere});
+                                if (devoirsSousMat.length > 0) {
+                                    let moyenneFinale = _.findWhere(moyennesFinales, {id_matiere: sousMat.id_type_sousmatiere});
+                                    if (moyenneFinale) {
+                                        if (moyenneFinale.moyenne == null) {
+                                            matiere.moyenne = "NN";
+                                        } else {
+                                            matiere.moyenne = moyenneFinale.moyenne;
+                                        }
+                                    } else {
+                                        sousMat.moyenne = getMoyenne(devoirsSousMat);
+                                    }
+                                } else {
+                                    sousMat.moyenne = "";
+                                }
+                            }
                         }
                     }
                 }
-            }
+                resolve();
+            });
         }
-    });
+        catch (e) {
+                console.error(e);
+                reject(e);
+            }
+        });
 }
