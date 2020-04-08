@@ -277,7 +277,7 @@ export class Utils {
      *For a list of Evaluations set niveauFinaltoShowAllEvaluations, niveauAtteintToShowMyEvaluations
      * and niveauFinalToShowMyEvaluations for a competence
      * @param competence
-     * @param isCycle
+     * @param tableConversion
      *
      */
 
@@ -312,6 +312,7 @@ export class Utils {
     /**
      *
      * @param listEval
+     * @param tableConversion
      * @param onlyNote
      */
     static getNiveauMaxOfListEval (listEval, tableConversion, onlyNote?){
@@ -343,6 +344,7 @@ export class Utils {
             return utils.getMoyenneForBFC((sum/allmaxMats.length)+1,tableConversion.all)-1;
         }
     }
+
     static setCompetenceNotes(poDomaine, poCompetencesNotes, tableConversion, object?, classe?, tabDomaine?, isCycle?) {
         if (object === undefined && classe === undefined) {
             if (poDomaine.competences) {

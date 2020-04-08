@@ -166,9 +166,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 $scope.suiviCompetence.sync().then( async () => {
                     if ($scope.searchBilan.parDomaine ===  'true') {
                         await $scope.suiviCompetence.domaines.sync();
-                        await $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                        await $scope.suiviCompetence.setMoyenneCompetences();
                         $scope.detailCompetence = $scope.suiviCompetence.findCompetence($scope.detailCompetence.id);
-                        await utils.initChartsEval($scope);
+                        await $scope.initChartsEval();
 
                         await utils.safeApply($scope);
                     }
@@ -330,7 +330,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
 
         $scope.updateColorAndLetterForSkills = async function () {
             updateColorAndLetterForSkills($scope, $location);
-            await utils.initChartsEval($scope);
+            await $scope.initChartsEval();
             if(template.contains('suivi-competence-content',
                 'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle')){
                 template.close('suivi-competence-content');
@@ -425,7 +425,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                                 _.findWhere($scope.suiviCompetence.baremeBrevetEleves.all,
                                     {id_eleve: $scope.search.eleve.id}));
 
-                            await $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                            await $scope.suiviCompetence.setMoyenneCompetences();
                             $scope.suiviCompetence.on('refresh-slider', function () {
                                 $scope.baremeBrevet();
                             });
@@ -565,138 +565,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                         limitTo: 2
                     };
                     $scope.textPeriode = "Hors periode scolaire";
-                    $scope.chartOptionsEval = {
-                        series: ['Evaluation'],
-                        tooltipLabels: [],
-                        options: {
-                            tooltips: {
-                                callbacks: {
-                                    label: function (tooltipItems, data) {
-                                        return $scope.chartOptionsEval.tooltipLabels[tooltipItems.index];
-                                    }
-                                }
-                            },
-                            annotation: {
-                                drawTime: "afterDraw",
-                                annotations: [{
-                                    type: 'line',
-                                    mode: 'vertical' ,/*set vertical for vertical line */
-                                    scaleID: 'x-axis-0', /* id of the axis */
-                                    value:  '3ème',
-                                    borderColor: '#E35500',
-                                    borderWidth: 3
-                                },{
-                                    type: 'line',
-                                    mode: 'vertical' ,/*set vertical for vertical line */
-                                    scaleID: 'x-axis-0', /* id of the axis */
-                                    value:  '4ème',
-                                    borderColor: '#E35500',
-                                    borderWidth: 3
-                                },{
-                                    type: 'line',
-                                    mode: 'vertical' ,/*set vertical for vertical line */
-                                    scaleID: 'x-axis-0', /* id of the axis */
-                                    value:  '5ème',
-                                    borderColor: '#E35500',
-                                    borderWidth: 3
-                                },{
-                                    type: 'line',
-                                    mode: 'vertical' ,/*set vertical for vertical line */
-                                    scaleID: 'x-axis-0', /* id of the axis */
-                                    value:  '6ème',
-                                    borderColor: '#E35500',
-                                    borderWidth: 3
-                                }]
-                            },
-                            elements: {
-                                point: {
-                                    radius: 10,
-
-                                },
-                                line: {
-                                    fill: false,
-                                    borderDash: [0, 15]
-                                }
-                            },
-                            maintainAspectRatio: false,
-                            scales: {
-                                responsive: true,
-                                yAxes: [{
-                                    id : 'y-axis-0',
-                                    gridLines: {
-                                        display: false,
-                                        color: '#000000'
-                                    },
-                                    pointRadius: 10,
-                                    type: 'linear',
-                                    display: true,
-                                    ticks: {
-                                        max: 6,
-                                        min: 0,
-                                        fontColor: 'black',
-                                        stepSize: 1,
-                                        padding: 20,
-                                        callback: function (value, index, values) {
-                                            if (value === 1) {
-                                                return "Compétence non évaluée";
-                                            }
-                                            else if (value === 2) {
-                                                return "Maîtrise insuffisante";
-                                            }
-                                            else if (value === 3) {
-                                                return "Maîtrise fragile";
-                                            }
-                                            else if (value === 4) {
-                                                return "Maîtrise satisfaisante";
-                                            }
-                                            else if (value === 5) {
-                                                return "Très bonne maîtrise";
-                                            }
-                                            else {
-                                                return " ";
-                                            }
-                                            // return parseFloat(value).toFixed(2) + '%';
-                                        }
-                                    },
-                                }],
-                                xAxes: [{
-                                    id : 'x-axis-0',
-                                    type: 'category',
-                                    display: true,
-                                    responsive: false,
-                                    gridLines: {
-                                        display: false,
-                                        offsetGridLines: false,
-                                        color: '#000000'
-                                    },
-                                    ticks: {
-                                        labelOffset: 30,
-                                        minRotation: 20, // rotation des labels
-                                        autoSkip: true,
-                                        maxTicksLimit: 20,
-                                        fontColor: 'black',
-                                        callback: function (label, index, values) {
-                                            if (label == "3ème" || label == "4ème" || label == "5ème" || label == "6ème" ||
-                                                label == "Trimestre 1" || label == "Trimestre 2" || label == "Trimestre 3" ||
-                                                label == "Semestre 1" || label == "Semestre 2") {
-                                                    return " ";
-                                            }else{
-                                                return label;
-                                            }
-                                        }
-
-                                    }
-                                }]
-                            }
-                        },
-                        //les données des axes X: et Y:
-                        datasets: {
-                            labels: [],
-                            data: []
-                        },
-                        //les couleurs des points
-                        colors: []
-                    };
                     $scope.selected.grey = true;
                     await $scope.selectSuivi();
                     $scope.displayFromEleve = true;
@@ -757,10 +625,11 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         /**
          * Lance la séquence d'ouverture du détail d'une compétence permettant d'accéder à la vue liste ou graph
          * @param competence Compétence à ouvrir
+         * @param detail
          */
         $scope.openDetailCompetence = async function (competence, detail) {
             $scope.detailCompetence = competence;
-            await utils.initChartsEval($scope);
+            await $scope.initChartsEval();
 
             if (detail !== undefined) {
                 template.open("suivi-competence-detail", detail);
@@ -929,7 +798,9 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         /**
          *
          * @param refresh
-         * @returns {Promise<any>}
+         * @param init
+         * @param periode
+         * @returns {Promise<>}
          */
         $scope.refreshAndOpenBFC = async function (refresh?, init?, periode? ) {
             return new Promise (async resolve => {
@@ -948,6 +819,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                             $scope.search.classe, $scope.currentCycle, $scope.isCycle, $scope.evaluations.structure);
 
                         await Promise.all([$scope.suiviCompetence.bilanFinDeCycles.sync(),
+                            $scope.suiviCompetence.getConversionTable($scope.structure.id,$scope.search.classe.id,$scope.mapCouleurs),
                             $scope.updateColorAndLetterForSkills(), $scope.baremeBrevet()]);
                     }
                     await Utils.runMessageLoader($scope);
@@ -962,7 +834,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                     $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                         "canUpdateBFCSynthese");
                     $scope.showRechercheBarFunction(false);
-                    await $scope.suiviCompetence.setMoyenneCompetences($scope.suiviFilter.mine);
+                    await $scope.suiviCompetence.setMoyenneCompetences();
                     template.open('suivi-competence-content',
                         'enseignants/suivi_eleve/tabs_follow_eleve/follow_items/content_vue_bilan_fin_cycle');
                     await Utils.stopMessageLoader($scope);
@@ -1070,8 +942,144 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
          *
          */
         $scope.initChartsEval = async function () {
-            utils.initChartsEval($scope);
+            $scope.initValueOfChartOptionsEval();
+            await utils.initChartsEval($scope);
             await utils.safeApply($scope);
+        };
+
+        $scope.initValueOfChartOptionsEval = function () {
+            $scope.chartOptionsEval = {
+                series: ['Evaluation'],
+                tooltipLabels: [],
+                options: {
+                    tooltips: {
+                        callbacks: {
+                            label: function (tooltipItems, data) {
+                                return $scope.chartOptionsEval.tooltipLabels[tooltipItems.index];
+                            }
+                        }
+                    },
+                    annotation: {
+                        drawTime: "afterDraw",
+                        annotations: [{
+                            type: 'line',
+                            mode: 'vertical' ,/*set vertical for vertical line */
+                            scaleID: 'x-axis-0', /* id of the axis */
+                            value:  '3ème',
+                            borderColor: '#E35500',
+                            borderWidth: 3
+                        },{
+                            type: 'line',
+                            mode: 'vertical' ,/*set vertical for vertical line */
+                            scaleID: 'x-axis-0', /* id of the axis */
+                            value:  '4ème',
+                            borderColor: '#E35500',
+                            borderWidth: 3
+                        },{
+                            type: 'line',
+                            mode: 'vertical' ,/*set vertical for vertical line */
+                            scaleID: 'x-axis-0', /* id of the axis */
+                            value:  '5ème',
+                            borderColor: '#E35500',
+                            borderWidth: 3
+                        },{
+                            type: 'line',
+                            mode: 'vertical' ,/*set vertical for vertical line */
+                            scaleID: 'x-axis-0', /* id of the axis */
+                            value:  '6ème',
+                            borderColor: '#E35500',
+                            borderWidth: 3
+                        }]
+                    },
+                    elements: {
+                        point: {
+                            radius: 10,
+
+                        },
+                        line: {
+                            fill: false,
+                            borderDash: [0, 15]
+                        }
+                    },
+                    maintainAspectRatio: false,
+                    scales: {
+                        responsive: true,
+                        yAxes: [{
+                            id : 'y-axis-0',
+                            gridLines: {
+                                display: false,
+                                color: '#000000'
+                            },
+                            pointRadius: 10,
+                            type: 'linear',
+                            display: true,
+                            ticks: {
+                                max: 6,
+                                min: 0,
+                                fontColor: 'black',
+                                stepSize: 1,
+                                padding: 20,
+                                callback: function (value, index, values) {
+                                    if (value === 1) {
+                                        return "Compétence non évaluée";
+                                    }
+                                    else if (value === 2) {
+                                        return "Maîtrise insuffisante";
+                                    }
+                                    else if (value === 3) {
+                                        return "Maîtrise fragile";
+                                    }
+                                    else if (value === 4) {
+                                        return "Maîtrise satisfaisante";
+                                    }
+                                    else if (value === 5) {
+                                        return "Très bonne maîtrise";
+                                    }
+                                    else {
+                                        return " ";
+                                    }
+                                    // return parseFloat(value).toFixed(2) + '%';
+                                }
+                            },
+                        }],
+                        xAxes: [{
+                            id : 'x-axis-0',
+                            type: 'category',
+                            display: true,
+                            responsive: false,
+                            gridLines: {
+                                display: false,
+                                offsetGridLines: false,
+                                color: '#000000'
+                            },
+                            ticks: {
+                                labelOffset: 30,
+                                minRotation: 20, // rotation des labels
+                                autoSkip: true,
+                                maxTicksLimit: 20,
+                                fontColor: 'black',
+                                callback: function (label, index, values) {
+                                    if (label == "3ème" || label == "4ème" || label == "5ème" || label == "6ème" ||
+                                        label == "Trimestre 1" || label == "Trimestre 2" || label == "Trimestre 3" ||
+                                        label == "Semestre 1" || label == "Semestre 2") {
+                                        return " ";
+                                    }else{
+                                        return label;
+                                    }
+                                }
+
+                            }
+                        }]
+                    }
+                },
+                //les données des axes X: et Y:
+                datasets: {
+                    labels: [],
+                    data: []
+                },
+                //les couleurs des points
+                colors: []
+            };
         };
 
         $scope.saveDispenseEleve = async (domaine) => {
@@ -1426,7 +1434,7 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 }
             });
             $scope.$watch($scope.detailCompetence, async function () {
-                await utils.initChartsEval($scope);
+                await $scope.initChartsEval();
             });
             await Utils.stopMessageLoader($scope);
         }
