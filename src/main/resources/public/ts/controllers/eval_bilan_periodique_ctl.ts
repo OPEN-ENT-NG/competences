@@ -272,7 +272,6 @@ export let evalBilanPeriodiqueCtl = ng.controller('EvalBilanPeriodiqueCtl', [
 
             try {
                 if (bfcPeriode === undefined) {
-                    await $scope.search.eleve.getCycles();
                     let cycle = _.findWhere($scope.filteredPeriode, {isCycle: true});
                     let year = _.findWhere($scope.filteredPeriode, {isCycle: false});
                     if (year === undefined) {
