@@ -38,6 +38,7 @@ import {
     evaluationCreationEnseignements,
     PreferencesUtils
 } from "../utils/preferences";
+import {ShortTermAnnotation} from "../constants/ShortTermAnnotation";
 
 declare let $: any;
 declare let document: any;
@@ -45,6 +46,13 @@ declare let window: any;
 declare let console: any;
 declare let location: any;
 declare let Chart: any;
+
+const {
+    SHORT_TERM_ABSENT,
+    SHORT_TERM_NOT_RETURNED,
+    SHORT_TERM_DISPENSE,
+    SHORT_TERM_NOT_NOTED,
+} = ShortTermAnnotation;
 
 export let evaluationsController = ng.controller('EvaluationsController', [
     '$scope', 'route', '$rootScope', '$location', '$filter', '$sce', '$compile', '$timeout', '$route',
@@ -2762,6 +2770,58 @@ export let evaluationsController = ng.controller('EvaluationsController', [
             await  utils.safeApply($scope);
         };
 
+        function getHTMLiD($event):String{
+            if ($event.relatedTarget) {
+                return $($event.relatedTarget).parent().attr('id');
+            }
+        }
+
+        function shortTermIsCorrect(ShortTermAnnotation:String):Boolean{
+            return (ShortTermAnnotation === SHORT_TERM_ABSENT
+                || ShortTermAnnotation === SHORT_TERM_NOT_NOTED
+                || ShortTermAnnotation === SHORT_TERM_NOT_RETURNED
+                || ShortTermAnnotation === SHORT_TERM_DISPENSE);
+        }
+
+        function cleanShortTermCaseValue(evaluation):void{
+            if(evaluation.annotation_libelle_court){
+                const shortTermUpperCase = evaluation.annotation_libelle_court.toString().toUpperCase();
+                if(shortTermIsCorrect(shortTermUpperCase)) {
+                    evaluation.annotation_libelle_court = shortTermUpperCase;
+                    evaluation.valeur = shortTermUpperCase;
+                }
+            }
+            if(evaluation.valeur){
+                const shortTermUpperCase = evaluation.valeur.toString().toUpperCase();
+                if(shortTermIsCorrect(shortTermUpperCase)) {
+                    evaluation.valeur = shortTermUpperCase;
+                }
+            }
+        }
+
+        function giveShortTermToValue(evaluation):void{
+            if(evaluation && evaluation.annotation_libelle_court && !isNaN(parseFloat(evaluation.annotation_libelle_court))){
+                evaluation.valeur = evaluation.annotation_libelle_court;
+            }
+        }
+
+        function cleanComma(evaluation):void{
+            if (evaluation.valeur !== undefined && Utils.isNotNull(evaluation.valeur)) {
+                evaluation.valeur = evaluation.valeur.replace(",",".");
+            }
+        }
+
+        function updateValueToNN(evaluation, isAnnotaion):void{
+            if (evaluation.valeur === "" && isAnnotaion !== undefined && !isAnnotaion) {
+                evaluation.valeur = SHORT_TERM_NOT_NOTED;
+            }
+        }
+        function cleanIdAppreciation(evaluation):void{
+            if (evaluation.data !== undefined && evaluation.data.id_appreciation !== undefined && evaluation.id_appreciation === undefined) {
+                evaluation.id_appreciation = evaluation.data.id_appreciation;
+            }
+        }
+
         /**
          * Séquence d'enregistrement d'une évaluation
          * @param evaluation évaluation à enregistrer
@@ -2769,21 +2829,23 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param eleve élève propriétaire de l'évaluation
          * @param isAnnotaion sauvegarde depuis un champ de type annotation (evaluation devoir actuellement)
          */
+        let isWorkingProgress:Boolean = false;
+        let idHTMLofInput:String;
         $scope.saveNoteDevoirEleve = async function (evaluation, $event, eleve, isAnnotaion?) {
-            if(evaluation && evaluation.annotation_libelle_court && !isNaN(parseFloat(evaluation.annotation_libelle_court))){
-                evaluation.valeur = evaluation.annotation_libelle_court;
-            }
-            if (evaluation !== undefined && ((evaluation.valeur !== evaluation.oldValeur) || (evaluation.oldAppreciation !== evaluation.appreciation))) {
-                if (evaluation.valeur !== undefined && Utils.isNotNull(evaluation.valeur)) {
-                    evaluation.valeur = evaluation.valeur.replace(",",".");
-                }
-                if (evaluation.valeur === "" && isAnnotaion !== undefined && !isAnnotaion) {
-                    evaluation.valeur = utils.getNN();
-                }
-                let reg = /^[0-9]+(\.[0-9]{1,2})?$/;
-                if (evaluation.data !== undefined && evaluation.data.id_appreciation !== undefined && evaluation.id_appreciation === undefined) {
-                    evaluation.id_appreciation = evaluation.data.id_appreciation;
-                }
+            // todo refacto make this function more readable
+            idHTMLofInput = getHTMLiD($event);
+            if(isWorkingProgress) return;
+            const isValueChanged:Boolean = (evaluation.valeur !== evaluation.oldValeur);
+            const reg = /^[0-9]+(\.[0-9]{1,2})?$/;
+            cleanShortTermCaseValue(evaluation);
+            if (evaluation !== undefined
+                && (isValueChanged
+                    || evaluation.oldAppreciation !== evaluation.appreciation)) {
+
+                giveShortTermToValue(evaluation);
+                cleanComma(evaluation);
+                updateValueToNN(evaluation, isAnnotaion);
+                cleanIdAppreciation(evaluation);
                 // On est dans le cas d'une sauvegarde ou création d'appréciation
                 if (evaluation.oldAppreciation !== undefined
                     && evaluation.oldAppreciation !== evaluation.appreciation
@@ -2796,9 +2858,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                         }
                         utils.safeApply($scope);
                     });
-                }
-                else {
-
+                } else {
                     // On est dans le cas d'une suppression d'appréciation
                     if (evaluation.id_appreciation !== undefined && evaluation.appreciation === "") {
                         evaluation.deleteAppreciation().then((res) => {
@@ -2815,21 +2875,24 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                             evaluation.id = evaluation.data.id;
                         }
                         let annotation = _.findWhere($scope.evaluations.annotations.all, {libelle_court: evaluation.valeur});
-                        let oldAnnotation = _.findWhere($scope.evaluations.annotations.all, {id: evaluation.oldId_annotation});
-                        if (!reg.test(evaluation.valeur) && ((annotation !== undefined && annotation !== null && annotation.id !== evaluation.oldId_annotation))) {
+                        if (!reg.test(evaluation.valeur)
+                            && ((annotation !== undefined
+                                && annotation !== null
+                                && annotation.id !== evaluation.oldId_annotation))) {
                             evaluation.id_annotation = annotation.id;
                             $scope.saveAnnotationDevoirEleve(evaluation, $event, eleve, isAnnotaion);
                         } else {
-                            if ((evaluation.oldValeur !== undefined && evaluation.oldValeur !== evaluation.valeur)
+                            if ((evaluation.oldValeur !== undefined && isValueChanged)
                                 || evaluation.oldAppreciation !== undefined && evaluation.oldAppreciation !== evaluation.appreciation) {
                                 if (evaluation.valeur !== "" && evaluation.valeur && reg.test(evaluation.valeur) && evaluation.valeur !== null) {
                                     let devoir = evaluations.devoirs.findWhere({id: evaluation.id_devoir});
                                     if (devoir !== undefined) {
                                         if (parseFloat(evaluation.valeur) <= devoir.diviseur && parseFloat(evaluation.valeur) >= 0) {
-                                            let res  = await evaluation.save();
+                                            isWorkingProgress = true;
+                                            let res = await evaluation.save();
                                             evaluation.valid = true;
                                             evaluation.oldValeur = evaluation.valeur;
-                                            if(devoir.coefficient === null){
+                                            if (devoir.coefficient === null) {
                                                 notify.info('evaluation.devoir.coef.is.null');
                                             }
                                             if (res.id !== undefined) {
@@ -2837,7 +2900,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                                 evaluation.data.id = res.id;
                                             }
 
-                                            if ($location.$$path === '/releve') {
+                                            if ($location.$$path === '/releve' && isValueChanged) {
                                                 await $scope.releveNote.sync();
                                             } else {
                                                 $scope.calculStatsDevoir();
@@ -2845,6 +2908,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                             $scope.opened.lightbox = false;
                                             delete $scope.selected.eleve;
                                             await utils.safeApply($scope);
+                                            isWorkingProgress = false;
+                                            $(`#${idHTMLofInput} > input`).select();
                                         } else {
                                             notify.error(lang.translate("error.note.outbound") + devoir.diviseur);
                                             evaluation.valeur = evaluation.oldValeur;
@@ -2859,6 +2924,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                 } else {
                                     if (evaluation.id !== undefined && evaluation.valeur === "" &&
                                         (evaluation.id_annotation === undefined || evaluation.id_annotation < 0)) {
+                                        isWorkingProgress = true;
                                         let res = await evaluation.delete();
                                         evaluation.valid = true;
                                         evaluation.oldValeur = evaluation.valeur;
@@ -2876,7 +2942,9 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                             $scope.calculStatsDevoir();
 
                                         }
-                                        await  utils.safeApply($scope);
+                                        await utils.safeApply($scope);
+                                        isWorkingProgress = false;
+                                        $(`#${idHTMLofInput} > input`).select();
                                     } else if (evaluation.id !== undefined && evaluation.valeur === "" && (evaluation.id_annotation !== undefined && evaluation.id_annotation > 0)) {
                                         await $scope.deleteAnnotationDevoir(evaluation, true);
                                     } else {
@@ -2999,6 +3067,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
          * @param $event évènement
          */
         $scope.focusMe = function ($event) {
+            if(isWorkingProgress) return;
             $event.target.select();
         };
 
@@ -3040,7 +3109,6 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     };
 
                 }
-                console.log(obj);
                 await utils.safeApply($scope);
             }
         };
