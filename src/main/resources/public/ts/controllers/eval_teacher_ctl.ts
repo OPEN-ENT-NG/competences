@@ -2833,14 +2833,13 @@ export let evaluationsController = ng.controller('EvaluationsController', [
         let idHTMLofInput:String;
         $scope.saveNoteDevoirEleve = async function (evaluation, $event, eleve, isAnnotaion?) {
             // todo refacto make this function more readable
-            idHTMLofInput = getHTMLiD($event);
+            if ($location.$$path === '/releve')
+                idHTMLofInput = getHTMLiD($event);
             if(isWorkingProgress) return;
             const isValueChanged:Boolean = (evaluation.valeur !== evaluation.oldValeur);
             const reg = /^[0-9]+(\.[0-9]{1,2})?$/;
             cleanShortTermCaseValue(evaluation);
-            if (evaluation !== undefined
-                && (isValueChanged
-                    || evaluation.oldAppreciation !== evaluation.appreciation)) {
+            if ((isValueChanged || evaluation.oldAppreciation !== evaluation.appreciation)) {
 
                 giveShortTermToValue(evaluation);
                 cleanComma(evaluation);
@@ -2909,7 +2908,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                             delete $scope.selected.eleve;
                                             await utils.safeApply($scope);
                                             isWorkingProgress = false;
-                                            $(`#${idHTMLofInput} > input`).select();
+                                            if ($location.$$path === '/releve')
+                                                $(`#${idHTMLofInput} > input`).select();
                                         } else {
                                             notify.error(lang.translate("error.note.outbound") + devoir.diviseur);
                                             evaluation.valeur = evaluation.oldValeur;
@@ -2944,7 +2944,8 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                                         }
                                         await utils.safeApply($scope);
                                         isWorkingProgress = false;
-                                        $(`#${idHTMLofInput} > input`).select();
+                                        if ($location.$$path === '/releve')
+                                            $(`#${idHTMLofInput} > input`).select();
                                     } else if (evaluation.id !== undefined && evaluation.valeur === "" && (evaluation.id_annotation !== undefined && evaluation.id_annotation > 0)) {
                                         await $scope.deleteAnnotationDevoir(evaluation, true);
                                     } else {

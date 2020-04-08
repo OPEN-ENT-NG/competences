@@ -112,7 +112,6 @@ public class DefaultUtilsService  implements UtilsService {
      * @param handler handler portant le resultat de la requête : la liste des identifiants neo4j des titulaires
      */
     public void getTitulaires(String psIdRemplacant, String psIdEtablissement, Handler<Either<String, JsonArray>> handler) {
-        StringBuilder query = new StringBuilder();
         JsonArray values = new fr.wseduc.webutils.collections.JsonArray();
 //        query.append("SELECT DISTINCT main_teacher_id ")
 //                .append("FROM " + Competences.VSCO_SCHEMA + ".multi_teaching ")
@@ -120,17 +119,15 @@ public class DefaultUtilsService  implements UtilsService {
 //                .append("AND structure_id = ? ")
 //                .append("AND start_date <= current_date ")
 //                .append("AND current_date <= end_date ");
-        query.append("SELECT DISTINCT id_titulaire ")
-                .append("FROM ").append(Competences.COMPETENCES_SCHEMA).append(".rel_professeurs_remplacants ")
-                .append("WHERE id_remplacant = ? ")
-                .append("AND id_etablissement = ? ")
-                .append("AND date_debut <= current_date ")
-                .append("AND current_date <= date_fin ");
+        String query = "SELECT DISTINCT id_titulaire " +
+                "FROM " + Competences.COMPETENCES_SCHEMA + ".rel_professeurs_remplacants " +
+                "WHERE id_remplacant = ? " +
+                "AND id_etablissement = ? " +
+                "AND date_debut <= current_date " +
+                "AND current_date <= date_fin ";
         values.add(psIdRemplacant);
         values.add(psIdEtablissement);
-        log.info(query);
-        log.info(values);
-        Sql.getInstance().prepared(query.toString(), values, validResultHandler(handler));
+        Sql.getInstance().prepared(query, values, validResultHandler(handler));
     }
 
 
