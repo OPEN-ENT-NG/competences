@@ -52,6 +52,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import static fr.openent.competences.Competences.*;
+import static fr.openent.competences.Utils.isNotNull;
 import static fr.openent.competences.Utils.isNull;
 import static fr.openent.competences.helpers.FormateFutureEvent.formate;
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -626,9 +627,11 @@ public class NoteController extends ControllerHelper {
         final Handler<Either<String, JsonArray>> handler = arrayResponseHandler(request);
         String idEtablissement = request.params().get("idEtablissement");
         String idClasse = request.params().get("idClasse");
-        Long idPeriode =Long.parseLong(request.params().get("idPeriode"));
-        if (!idEtablissement.equals("undefined") && !idClasse.equals("undefined")
-                && !request.params().get("idPeriode").equals("undefined")) {
+        Long[] idPeriode = null;
+        if(isNotNull(request.params().get("idPeriode")))
+            idPeriode =new Long[]{Long.parseLong(request.params().get("idPeriode"))};
+        if (!idEtablissement.equals("undefined") && !idClasse.equals("undefined")) {
+            Long[] finalIdPeriode = idPeriode;
             Utils.getGroupesClasse(eb, new fr.wseduc.webutils.collections.JsonArray().add(idClasse), new Handler<Either<String, JsonArray>>() {
                 @Override
                 public void handle(Either<String, JsonArray> responseQuerry) {
@@ -643,7 +646,7 @@ public class NoteController extends ControllerHelper {
                             String[] idsGroups = new String[1];
                             idsGroups[0] = idClasse;
                             devoirsService.listDevoirs(null, idsGroups, null,
-                                    new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                    finalIdPeriode, new String[]{idEtablissement}, null,
                                     null, false, handler);
                         } else {
                             String[] idsGroups = new String[idClasseGroups.getJsonObject(0)
@@ -655,7 +658,7 @@ public class NoteController extends ControllerHelper {
                                         .getJsonArray("id_groupes").getString(i);
                             }
                             devoirsService.listDevoirs(null, idsGroups, null,
-                                    new Long[]{idPeriode}, new String[]{idEtablissement}, null,
+                                    finalIdPeriode, new String[]{idEtablissement}, null,
                                     null, false, handler);
                         }
                     }

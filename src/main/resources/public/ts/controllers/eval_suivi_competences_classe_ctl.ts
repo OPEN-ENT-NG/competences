@@ -596,7 +596,7 @@ export let evalSuiviCompetenceClasseCtl = ng.controller('EvalSuiviCompetenceClas
             }
         };
 
-        const initResultPeriodic = ():typeof initResultPeriodic => {
+        const initResultPeriodic = ():any => {
             return {
                 idEtablissement: evaluations.structure.id,
                 idClasse: $scope.search.classe.id,
