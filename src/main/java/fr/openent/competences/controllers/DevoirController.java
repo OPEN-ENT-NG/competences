@@ -247,6 +247,7 @@ public class DevoirController extends ControllerHelper {
                                                                         renderJson(request, devoirWithId);
                                                                     } else {
                                                                         leftToResponse(request, event.left());
+                                                                        log.error("DevoirController creationDevoir : shareService.userShare problème par rapport à la requête");
                                                                     }
 
                                                                 }
@@ -257,6 +258,7 @@ public class DevoirController extends ControllerHelper {
                                                 }
                                             }else {
                                                 leftToResponse(request, event.left());
+                                                log.error("DevoirController creationDevoir : utilsService.getTitulaires problème par rapport à la requête");
                                             }
                                         }
                                     });
