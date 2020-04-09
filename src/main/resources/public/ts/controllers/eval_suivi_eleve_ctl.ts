@@ -20,7 +20,7 @@
  */
 import {ng, template, model, moment, idiom as lang, notify} from "entcore";
 import {
-    SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve, Utils
+    SuiviCompetence, Devoir, CompetenceNote, evaluations, Structure, Classe, Eleve, Utils, TypePeriode
 } from "../models/teacher";
 import * as utils from "../utils/teacher";
 import {NiveauLangueCultReg, NiveauLangueCultRegs,BaremeBrevetEleve} from "../models/teacher/index";
@@ -687,8 +687,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
             if (_.isEmpty($scope.search.classe.eleves.all)) {
                 await $scope.search.classe.eleves.sync();
             }
-            $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
-
             let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
             if (index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.filteredEleves.all.length) {
@@ -699,7 +697,6 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
         };
 
         $scope.hideArrow = function (num) {
-            $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
             let index = _.findIndex($scope.filteredEleves.all, {id: $scope.search.eleve.id});
             return !(index !== -1 && index + parseInt(num) >= 0
                 && index + parseInt(num) < $scope.filteredEleves.all.length);
@@ -720,12 +717,16 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 $scope.canUpdateBFCSynthese = await Utils.rightsChefEtabHeadTeacherOnBilanPeriodique($scope.search.classe,
                     "canUpdateBFCSynthese");
                 await $scope.syncPeriode($scope.search.classe.id);
-                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+                if($scope.search.classe.eleves.empty())
+                    await $scope.search.classe.eleves.sync();
+                let periode = new TypePeriode({id:$scope.search.periode.id_type,ordre:$scope.search.periode.ordre,type:$scope.search.periode.type});
+                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
             }
             $scope.selected.grey = true;
             if ($scope.search.eleve !== undefined && $scope.search.classe.eleves.empty()) {
                 await $scope.search.classe.eleves.sync();
-                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+                let periode = new TypePeriode({id:$scope.search.periode.id_type,ordre:$scope.search.periode.ordre,type:$scope.search.periode.type});
+                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
             }
 
             if ($scope.search.eleve !== undefined && $scope.filteredEleves !== undefined &&
@@ -748,7 +749,8 @@ export let evalSuiviEleveCtl = ng.controller('EvalSuiviEleveCtl', [
                 if (_.isEmpty($scope.search.classe.eleves.all)) {
                     await $scope.search.classe.eleves.sync();
                 }
-                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve($scope.search.periode).eleves;
+                let periode = new TypePeriode({id:$scope.search.periode.id_type,ordre:$scope.search.periode.ordre,type:$scope.search.periode.type});
+                $scope.filteredEleves = $scope.search.classe.filterEvaluableEleve(periode).eleves;
                 $scope.loadingTab = true;
                 switch ($scope.displayFollowEleve) {
                     case ('followItems'):

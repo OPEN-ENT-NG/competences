@@ -687,8 +687,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     selectedPeriode = _.findWhere(classe.periodes.all,
                         {id_type: $scope.search.periode.id_type});
                 }
-                if ($scope.search !== undefined && $scope.search.eleve !== undefined &&
-                    $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null ) {
+                if ($scope.search.eleve !== undefined && $scope.search.eleve.deleteDate !== undefined && $scope.search.eleve.deleteDate !== null ) {
                     // On choisit la periode annee ou la période présélectionnée
                     $scope.search.periode = (selectedPeriode !== undefined)? selectedPeriode : year;
                 }else  if ($scope.displayFromClass === true || $scope.displayFromEleve === true){
@@ -704,27 +703,25 @@ export let evaluationsController = ng.controller('EvaluationsController', [
 
         };
 
-        $scope.syncPeriode = (idClasse) => {
+        $scope.syncPeriode = async (idClasse) => {
             let classe = _.findWhere($scope.structure.classes.all, {id: idClasse});
             if (classe && classe.periodes && classe.periodes.length() === 0) {
-                classe.periodes.sync().then(() => {
-                    if ($location.path() === '/competences/eleve' ) {
-                        if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
-                            classe.periodes.all.push({libelle: "cycle", id: null});
-                        }
+                await classe.periodes.sync();
+                if ($location.path() === '/competences/eleve' ) {
+                    if(!_.findWhere(classe.periodes.all, {libelle: "cycle"})) {
+                        classe.periodes.all.push({libelle: "cycle", id: null});
                     }
-                    $scope.getCurrentPeriode(classe).then(function (res) {
-                        setSearchPeriode(classe, res);
-                        if ($location.path() === '/devoir/create' ||
-                            ($scope.devoir !== undefined
-                                && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
-                            $scope.devoir.id_periode = res.id_type;
-                            $scope.controleDate($scope.devoir);
-                            utils.safeApply($scope);
-                        }
+                }
+                $scope.getCurrentPeriode(classe).then(function (res) {
+                    setSearchPeriode(classe, res);
+                    if ($location.path() === '/devoir/create' ||
+                        ($scope.devoir !== undefined
+                            && ($location.path() === "/devoir/" + $scope.devoir.id + "/edit"))) {
+                        $scope.devoir.id_periode = res.id_type;
+                        $scope.controleDate($scope.devoir);
                         utils.safeApply($scope);
-                    });
-
+                    }
+                    utils.safeApply($scope);
                 });
 
             } else if (classe && classe.periodes) {
@@ -751,7 +748,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                     utils.safeApply($scope);
                 });
             }
-            utils.safeApply($scope);
+            await utils.safeApply($scope);
         };
 
         $scope.synchronizeStudents = (idClasse): boolean => {
@@ -760,7 +757,7 @@ export let evaluationsController = ng.controller('EvaluationsController', [
                 evaluations.structure.cycle = _.findWhere(evaluations.structure.cycles, {id_cycle: _classe.id_cycle});
                 $scope.structure.cycle = evaluations.structure.cycle;
                 utils.safeApply($scope);
-                if (_classe !== undefined && !_classe.remplacement && _classe.eleves.empty()) {
+                if (!_classe.remplacement && _classe.eleves.empty()) {
                     _classe.eleves.sync().then(() => {
                         utils.safeApply($scope);
                         _classe.trigger('synchronize-students');
