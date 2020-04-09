@@ -95,12 +95,31 @@ export let initChartsEval = async function ($scope) {
             if (!fontText) {
                 fontText = " ";
             }
-            $scope.chartOptionsEval.datasets.data.push({
+
+            let data = {
                 y: ListEval[i].evaluation + 2,
                 x: $scope.getDateFormated(ListEval[i].evaluation_date),
                 r: 10,
                 label: fontText
-            });
+            };
+
+            let libelle = (ListEval[i].evaluation_libelle !== undefined)
+                ? ListEval[i].evaluation_libelle : ListEval[i].name;
+            if (ListEval[i].formative) {
+                libelle += " (F)"
+            }
+            let ownerName = ListEval[i].owner_name;
+            let tooltipLabel = (ownerName !== undefined) ? `${libelle} : ${ownerName}` : libelle;
+
+            let indexData = _.findIndex($scope.chartOptionsEval.datasets.data, {label : data.label, x : data.x});
+            if(indexData === -1) {
+                $scope.chartOptionsEval.datasets.data.push(data);
+                $scope.chartOptionsEval.tooltipLabels.push(tooltipLabel);
+            }
+            else {
+                $scope.chartOptionsEval.tooltipLabels[indexData] += " / " + tooltipLabel;
+            }
+
             if (actualPeriode){
                 let j = 1;
                 while ((moment(ListEval[i].evaluation_date).isBefore(beginningYear) ||
@@ -131,14 +150,6 @@ export let initChartsEval = async function ($scope) {
                 colorValue = Defaultcolors.unevaluated;
             }
             $scope.chartOptionsEval.colors.push(colorValue);
-
-            let libelle = (ListEval[i].evaluation_libelle !== undefined)? ListEval[i].evaluation_libelle : ListEval[i].name ;
-            if (ListEval[i].formative) {
-                libelle += " (F)"
-            }
-            let ownerName = ListEval[i].owner_name;
-            let tooltipLabel = (ownerName !== undefined)? `${libelle} : ${ownerName}` : libelle;
-            $scope.chartOptionsEval.tooltipLabels.push(tooltipLabel);
         }
 
         initLastColumn($scope.chartOptionsEval);
